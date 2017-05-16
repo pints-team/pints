@@ -1,4 +1,4 @@
-
+from math import sqrt,pi
 from hobo_cpp import e_implicit_exponential_mesh,hobo_map,hobo_vector
 
 class ECModel:
@@ -45,9 +45,10 @@ class ECModel:
 
         self._E0, self._T0, self._L0, self._I0 = self._calculate_characteristic_values()
 
+        self.params = hobo_map()
         self.params['Estart'] = self.dim_params['Estart']/self._E0
         self.params['Ereverse'] = self.dim_params['Ereverse']/self._E0
-        self.params['omega'] = 2*pi*dim_params['omega']*self._T0
+        self.params['omega'] = 2*pi*self.dim_params['omega']*self._T0
         if self.dim_params['reversed']:
             self.params['phase'] = self.dim_params['phase'] + pi
         else:
@@ -55,13 +56,13 @@ class ECModel:
         self.params['dE'] = self.dim_params['dE']/self._E0
 
         self.params['k0'] = self.dim_params['k0']*self._L0/self.dim_params['D']
-        self.params['alpha'] = params['alpha']
-        self.params['E0'] = params['E0']/self._E0
-        self.params['Ru'] = params['Ru']*self._I0/self._E0
-        self.params['Cdl'] = params['Cdl']*dim_params['a']*self._E0/(self._I0*self._T0)
+        self.params['alpha'] = self.dim_params['alpha']
+        self.params['E0'] = self.dim_params['E0']/self._E0
+        self.params['Ru'] = self.dim_params['Ru']*self._I0/self._E0
+        self.params['Cdl'] = self.dim_params['Cdl']*self.dim_params['a']*self._E0/(self._I0*self._T0)
 
     def simulate(self, use_times=None, use_current=None):
-        params = hobo_map(self.params)
+        params = self.params
 
         current = hobo_vector()
         if use_current is None:
@@ -69,14 +70,14 @@ class ECModel:
         elif type(use_current) is hobo_vector:
             current = use_current
         else:
-            current = hobo_vector(use_current)
+            raise TypeError('use_current must be of type hobo_vector')
 
         if use_times is None:
             times = hobo_vector()
         elif type(use_times) is hobo_vector:
             times = use_times
         else:
-            times = hobo_vector(use_times)
+            raise TypeError('use_times must be of type hobo_vector')
 
         e_implicit_exponential_mesh(params,current,times)
 

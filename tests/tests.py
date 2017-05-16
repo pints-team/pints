@@ -40,13 +40,13 @@ def test_ec_model():
 
     model = hobo.electrochemistry.models.ECModel(dim_params)
 
-    I,t = model.simulate(data.time)
+    I,t = model.simulate(use_times=time)
 
-    print 'distance = ',sqrt(np.sum(np.power(np.array(I)*model.I0-data.current,2))/np.sum(np.power(data.current,2)))
+    print 'distance = ',sqrt(np.sum(np.power(np.array(I)*model.I0-np.array(current),2))/np.sum(np.power(np.array(current),2)))
 
     plt.figure()
-    plt.plot(data.time,data.current)
-    plt.plot(t,I)
+    plt.plot(time,current,label='experiment')
+    plt.plot(np.array(t)*model.T0,np.array(I)*model.I0,label='simulation')
     plt.show()
 
 
