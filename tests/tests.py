@@ -27,12 +27,7 @@ def test_ec_model():
         'c_inf': 1*1e-3*1e-3,
         'D': 7.2e-6,
         'Ru': 8.0,
-        'Cdl': 1.0*1e-6,
-        'E0': 0.214,
-        'k0': 0.0101,
-        'alpha': 0.53,
-        'Ru': 8.0,
-        'Cdl': 1.0*1e-6,
+        'Cdl': 20.0*1e-6,
         'E0': 0.214,
         'k0': 0.0101,
         'alpha': 0.53
@@ -40,16 +35,14 @@ def test_ec_model():
 
     model = hobo.electrochemistry.models.ECModel(dim_params)
 
+    #non dimensionalise data
+    time = time/model.T0
+    current = -current/model.I0
+
+    # calculate model at time points given by the data file
     I,t = model.simulate(use_times=time)
 
-    print 'distance = ',sqrt(np.sum(np.power(np.array(I)*model.I0-np.array(current),2))/np.sum(np.power(np.array(current),2)))
-
-    plt.figure()
-    plt.plot(time,current,label='experiment')
-    plt.plot(np.array(t)*model.T0,np.array(I)*model.I0,label='simulation')
-    plt.show()
-
-
+    assert 0.1 > sqrt(np.sum(np.power(I-current,2))/np.sum(np.power(current,2)))
 
 
 
