@@ -18,18 +18,8 @@ def read_cvsin_type_1(filename):
     if filename[-11:] == '_cv_current':
         t_index = 0
         c_index = 1
-        time = exp_data[:,0]
-        current = exp_data[:,1]
     else:
         t_index = 2
         c_index = 1
-        time = exp_data[:,2]
-        current= exp_data[:,1]
-    n = exp_data.shape[0]
-    print 'size = ',n
-    time = hobo_vector()
-    time[0:n] = exp_data[:,t_index]
-    current = hobo_vector()
-    current[0:n] = exp_data[:,c_index]
-    return time,current
+    return exp_data[:,t_index],exp_data[:,c_index]
 

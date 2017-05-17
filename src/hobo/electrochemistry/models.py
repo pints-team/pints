@@ -70,14 +70,16 @@ class ECModel:
         elif type(use_current) is hobo_vector:
             current = use_current
         else:
-            raise TypeError('use_current must be of type hobo_vector')
+            current = hobo_vector()
+            current[0:len(use_current)] = use_current_
 
         if use_times is None:
             times = hobo_vector()
         elif type(use_times) is hobo_vector:
             times = use_times
         else:
-            raise TypeError('use_times must be of type hobo_vector')
+            times = hobo_vector()
+            times[0:len(use_times)] = use_times
 
         e_implicit_exponential_mesh(params,current,times)
 
