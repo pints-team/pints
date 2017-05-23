@@ -1,5 +1,6 @@
 from math import sqrt,pi
 from hobo_cpp import e_implicit_exponential_mesh,hobo_map,hobo_vector
+import pystan
 
 class ECModel:
     """Represents one electron transfer model in solution
@@ -61,6 +62,19 @@ class ECModel:
         self.params['Ru'] = self.dim_params['Ru']*self._I0/self._E0
         self.params['Cdl'] = self.dim_params['Cdl']*self.dim_params['a']*self._E0/(self._I0*self._T0)
 
+        self._nondim_params = {}
+        self._nondim_params['Estart'] = self.params['Estart']
+        self._nondim_params['Ereverse'] = self.params['Ereverse']
+        self._nondim_params['omega'] = self.params['omega']
+        self._nondim_params['phase'] = self.params['phase']
+        self._nondim_params['dE'] = self.params['dE']
+        self._nondim_params['k0'] = self.params['k0']
+        self._nondim_params['alpha'] = self.params['alpha']
+        self._nondim_params['E0'] = self.params['E0']
+        self._nondim_params['Ru'] = self.params['Ru']
+        self._nondim_params['Cdl'] = self.params['Cdl']
+
+
     def simulate(self, use_times=None, use_current=None):
         params = self.params
 
@@ -85,7 +99,107 @@ class ECModel:
 
         return current,times
 
+    def test_model(self):
+        return """
+functions {
+    real[] ec_impexp_thomas(real[] ts, real k0, real alpha, real Cdl, real Ru, real E0, real dE, real omega, real Estart) {
 
+        // spatial mesh
+        real Xmax = 20.0;
+        real dx = 0.02;
+        int Nx = 1000; // 20/0.02
+        real x[Nx];
+        int Nt = size(ts);
+        real dt = ts[2]-ts[1];
+        real mu = dt/pow(dx,2);
+
+        // input signal
+        real E[Nt];
+
+        // solver
+        real a = mu;
+        real b = 1 + 2*mu;
+        real c = mu;
+        real d[Nx];
+        real e[Nx];
+        real f[Nx];
+        real U[Nx];
+        real V[Nx];
+        real Itot[Nt];
+        real b0;
+        real d0;
+
+        // set up spatial mesh
+        for (i in 1:Nx) {
+            x[i] = dx*(i-1);
+        }
+
+        // set up input signal
+        for (i in 1:Nt) {
+            E[i] = Estart + ts[i] + dE*sin(omega*ts[i]);
+        }
+
+        // setup solver
+        for (i in 1:Nx) {
+            e[i] = 0.0;
+            f[i] = 0.0;
+            U[i] = 1.0;
+            V[i] = 0.0;
+        }
+        f[Nx] = 1;
+        for (u in 1:Nx-1) {
+            int i = Nx-u;
+            e[i] = a/(b-c*e[i+1]);
+        }
+
+        Itot[1] = 0.0;
+        //Itot(1)=Cdl+Cdl*dE*omega/(1+(omega*Ru*Cdl)^2);
+
+        for (n in 1:Nt-1) {
+            d = U;
+            for (u in 1:Nx-1) {
+                int i = Nx-u;
+                f[i] = (d[i+1]+f[i+1]*c)/(b-c*e[i+1]);
+            }
+            b0 = 1+dx*k0*(exp((1-alpha)*(E[n]-E0-Itot[n]*Ru))+exp(-alpha*(E[n]-E0-Itot[n]*Ru)));
+            d0 = dx*k0*exp(-alpha*(E[n]-E0-Itot[n]*Ru));
+            U[1] = (d0+f[1])/(b0-e[1]);
+            for (i in 1:Nx-1) {
+                U[i+1] = f[i]+e[i]*U[i];
+            }
+            Itot[n+1] = (dt*(U[2]-U[1])/dx+Cdl*(E[n+1]-E[n])+Ru*Cdl*Itot[n])/(dt+Ru*Cdl);
+        }
+        return Itot;
+    }
+}
+data {
+    int<lower=1> T;
+    real ts[T];
+    real k0;
+    real alpha;
+    real Cdl;
+    real Ru;
+    real E0;
+    real dE;
+    real omega;
+    real Estart;
+}
+model {
+}
+generated quantities {
+    real Itot[T];
+    print("SAMPLING:");
+    Itot = ec_impexp_thomas(ts,k0,alpha,Cdl,Ru,E0,dE,omega,Estart);
+}
+"""
+
+
+    def get_stan_model(self):
+        return pystan.StanModel(model_name='ECmodel',model_code=self.test_model());
+
+    @property
+    def nondim_params(self):
+        return self._nondim_params;
 
     @property
     def E0(self):

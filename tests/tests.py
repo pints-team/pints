@@ -7,6 +7,7 @@ import hobo.electrochemistry.models
 import pylab as plt
 import numpy as np
 from math import sqrt
+import pystan
 
 def test_ec_model():
     time,current = hobo.electrochemistry.data.read_cvsin_type_1('../../GC01_FeIII-1mM_1M-KCl_02_009Hz.txt')
@@ -41,6 +42,21 @@ def test_ec_model():
 
     # calculate model at time points given by the data file
     I,t = model.simulate(use_times=time)
+
+    # calculate model using stan
+    # sm = model.get_stan_model()
+
+    # combined_params = dict(T=len(time),ts=time)
+    # combined_params.update(model.nondim_params)
+    # op = sm.sampling(data=combined_params, chains=1, iter=1, warmup=0,algorithm='Fixed_param')
+
+    # stan_current = op.extract('Itot')
+
+    # f = plt.figure()
+    # plt.plot(time,current,label='exp')
+    # plt.plot(t,I,label='cpp')
+    # plt.show()
+    # plt.plot(time,stan_current,label='stan')
 
     assert 0.1 > sqrt(np.sum(np.power(I-current,2))/np.sum(np.power(current,2)))
 
