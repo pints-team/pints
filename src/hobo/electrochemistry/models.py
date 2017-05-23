@@ -44,23 +44,23 @@ class ECModel:
             self.dim_params['Estart'],self.dim_params['Ereverse'] = self.dim_params['Ereverse'],self.dim_params['Estart']
             self.dim_params['v'] = -self.dim_params['v']
 
-        self._E0, self._T0, self._L0, self._I0 = self._calculate_characteristic_values()
+        self.E0, self.T0, self.L0, self.I0 = self._calculate_characteristic_values()
 
         self.params = hobo_map()
-        self.params['Estart'] = self.dim_params['Estart']/self._E0
-        self.params['Ereverse'] = self.dim_params['Ereverse']/self._E0
-        self.params['omega'] = 2*pi*self.dim_params['omega']*self._T0
+        self.params['Estart'] = self.dim_params['Estart']/self.E0
+        self.params['Ereverse'] = self.dim_params['Ereverse']/self.E0
+        self.params['omega'] = 2*pi*self.dim_params['omega']*self.T0
         if self.dim_params['reversed']:
             self.params['phase'] = self.dim_params['phase'] + pi
         else:
             self.params['phase'] = self.dim_params['phase']
-        self.params['dE'] = self.dim_params['dE']/self._E0
+        self.params['dE'] = self.dim_params['dE']/self.E0
 
-        self.params['k0'] = self.dim_params['k0']*self._L0/self.dim_params['D']
+        self.params['k0'] = self.dim_params['k0']*self.L0/self.dim_params['D']
         self.params['alpha'] = self.dim_params['alpha']
-        self.params['E0'] = self.dim_params['E0']/self._E0
-        self.params['Ru'] = self.dim_params['Ru']*self._I0/self._E0
-        self.params['Cdl'] = self.dim_params['Cdl']*self.dim_params['a']*self._E0/(self._I0*self._T0)
+        self.params['E0'] = self.dim_params['E0']/self.E0
+        self.params['Ru'] = self.dim_params['Ru']*abs(self.I0)/self.E0
+        self.params['Cdl'] = self.dim_params['Cdl']*self.dim_params['a']*self.E0/(abs(self.I0)*self.T0)
 
         self._nondim_params = {}
         self._nondim_params['Estart'] = self.params['Estart']
@@ -74,8 +74,32 @@ class ECModel:
         self._nondim_params['Ru'] = self.params['Ru']
         self._nondim_params['Cdl'] = self.params['Cdl']
 
+    def dimensionalise(self,value,name):
+        if name == 'Estart':
+            return value*self.E0
+        elif name == 'Ereverse':
+            return value*self.E0
+        elif name == 'omega':
+            return value/(2*pi*self.T0)
+        elif name == 'phase':
+            return value
+        elif name == 'dE':
+            return value*self.E0
+        elif name == 'k0':
+            return value*self.dim_params['D']/self.L0
+        elif name == 'alpha':
+            return value
+        elif name == 'E0':
+            return value*self.E0
+        elif name == 'Ru':
+            return value*self.E0/self.I0
+        elif name == 'Cdl':
+            return value*self.I0*self.T0/(self.dim_params['a']*self.E0)
+        else:
+            return NaN
 
-    def simulate(self, use_times=None, use_current=None):
+
+    def simulate(self, use_param_vector=None, use_param_vector_name=None, use_times=None, use_current=None):
         params = self.params
 
         current = hobo_vector()
@@ -98,6 +122,11 @@ class ECModel:
         e_implicit_exponential_mesh(params,current,times)
 
         return current,times
+
+    def set_params_from_vector(self, vector, names):
+        for value,name in zip(vector,names):
+            self.params[name] = value
+            self.dim_params[name] = self.dimensionalise(value,name)
 
     def test_model(self):
         return """
@@ -201,26 +230,6 @@ generated quantities {
     def nondim_params(self):
         return self._nondim_params;
 
-    @property
-    def E0(self):
-        """E0 (double): characteristic voltage"""
-        return self._E0
-
-    @property
-    def T0(self):
-        """T0 (double): characteristic temperature"""
-        return self._T0
-
-    @property
-    def I0(self):
-        """I0 (double): characteristic current"""
-        return self._I0
-
-    @property
-    def L0(self):
-        """L0 (double): characteristic length"""
-        return self._L0
-
     def _calculate_characteristic_values(self):
 
         v = self.dim_params['v']
@@ -238,7 +247,11 @@ generated quantities {
         D = self.dim_params['D']
         L_0 = sqrt(D*T_0)
         c_inf = self.dim_params['c_inf']
-        I_0 = D*F*a*c_inf/L_0
+
+        if self.dim_params['reversed']:
+            I_0 = -D*F*a*c_inf/L_0
+        else:
+            I_0 = D*F*a*c_inf/L_0
 
         return E_0,T_0,L_0,I_0
 
