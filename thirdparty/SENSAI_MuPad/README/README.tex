@@ -1,0 +1,263 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, bm}
+
+
+
+\newcommand{\cvec}{\textbf{c}}
+\newcommand{\evec}{\textbf{e}}
+\newcommand{\fvec}{\textbf{f}}
+\newcommand{\gvec}{\textbf{g}}
+\newcommand{\honevec}{\textbf{h}_\textbf{1}}
+\newcommand{\htwovec}{\textbf{h}_\textbf{2}}
+\newcommand{\hvec}{\textbf{h}}
+\newcommand{\lvec}{\textbf{l}}
+\newcommand{\pvec}{\textbf{p}}
+\newcommand{\qvec}{\textbf{q}}
+\newcommand{\rvec}{\textbf{r}}
+\newcommand{\svec}{\textbf{s}}
+\newcommand{\vvec}{\textbf{v}}
+\newcommand{\wvec}{\textbf{w}}
+\newcommand{\xvec}{\textbf{x}}
+\newcommand{\xnotvec}{\textbf{x}_\textbf{0}}
+\newcommand{\xonevec}{\textbf{x}_\textbf{1}}
+\newcommand{\xtwovec}{\textbf{x}_\textbf{2}}
+\newcommand{\yvec}{\textbf{y}}
+\newcommand{\zvec}{\textbf{z}}
+\newcommand{\zerovec}{\textbf{0}}
+\newcommand{\onevec}{\textbf{1}}
+\newcommand{\gammavec}{\textbf{\gamma}}
+\newcommand{\phivec}{\textbf{\phi}}
+\newcommand{\psivec}{\textbf{\psi}}
+\newcommand{\rhovec}{\textbf{\rho}}
+\newcommand{\thetavec}{\textbf{\theta}}
+\newcommand{\sensai}{\textsc{sensai}}
+%
+\newcommand{\Amat}{\textbf{A}}
+\newcommand{\Bmat}{\textbf{B}}
+\newcommand{\Cmat}{\textbf{C}}
+\newcommand{\Fmat}{\textbf{F}}
+\newcommand{\Imat}{\textbf{I}}
+\newcommand{\Smat}{\textbf{S}}
+\newcommand{\Tmat}{\textbf{T}}
+\newcommand{\Vmat}{\textbf{V}}
+\newcommand{\Wmat}{\textbf{W}}
+\newcommand{\Xmat}{\textbf{X}}
+\newcommand{\zeromat}{\textbf{0}}
+\newcommand{\bzero}{\textbf{0}}
+%
+\newcommand{\reals}{\mathbb R}
+\newcommand{\DD}{\displaystyle}
+\newcommand{\norm}[1]{\left\lVert#1 \right\rVert_{2}}
+
+%\newcommand{\xdim}{{\rm xdim}}
+%\newcommand{\kdim}{{\rm kdim}}
+\newcommand{\xdim}{{\rm M}}
+\newcommand{\kdim}{{\rm K}}
+\newcommand{\xonedim}{{\rm M_1}}
+\newcommand{\xtwodim}{{\rm M_2}}
+
+
+\begin{document}
+\title{SENSAI: README file}
+%\author{Simon Tavener, Michael Mikucki, Stewart Field and Michael Antolin}
+\date{}
+\maketitle
+
+\pagestyle{empty}
+
+\section{Software requirements}
+
+{\sensai} uses M{\sc atlab} and the symbolic M{\sc atlab} software package called MuPad.
+
+
+\section{A Practical Guide to Using {\sc sensai} GUI}
+
+\begin{enumerate}
+    \item Open M{\sc atlab}
+    \item Within M{\sc atlab}, change the directory to the location of sensai.m. This is SENSAI directory, e.g., C:/SENSAI/.
+    \item Open the {\sc sensai} GUI by typing {\tt sensai} in the M{\sc atlab} command window.
+\end{enumerate}
+
+\subsection{Input from the GUI}
+
+Assuming ``Input from GUI?" selected. (This is limited to four equations and six variables.)
+
+\begin{enumerate}
+    \item Select check box ``Iterated nonlinear map?" if the model is in the form of a map.
+    \item Select check box ``Compute solutions only?" to compute solutions but not
+          sensitivities and elasticities.
+    \item Enter data using [.] to denote vector elements, i.e., MuPAD syntax.
+    \item Select ``Create M{\sc atlab} files using MuPAD" which creates {\tt gvec.m}, {\tt dgvec\_dxvec.m},
+      {\tt dgvec\_dparam.m}, {\tt qoi.m} and {\tt dcp\_dparam.m}.  Wait until a popup box appears that says ``M{\sc atlab} files successfully created" before continuing.
+    \item Select plots required in ``Plotting Information'' box.
+    \item Select ``Execute M{\sc atlab} file created by MuPAD".
+    \item {\sensai} creates a directory {\tt SENSAI\_DIRECTORY/JOB\_NAME} in which it stores the M{\sc atlab} files {\tt gvec.m}, {\tt dgvec\_dxvec.m}, {\tt dgvec\_dparam.m},{\tt qoi.m} and {\tt dcp\_dparam.m}, the input data, the plots and a binary file {\tt output.mat} containing {\tt xdim, kdim, tfinal, t, x, p, dxdp, q, dqdparam, elxp} and {\tt elqp}.
+    \item Results from a new run can be saved into another folder in the SENSAI directory by changing the Job Name in the second box in the upper right corner of the {\sensai} GUI.  (E.g. ``run2").
+    \item Back to step $7(b)$ if the model equations or quantity of interest is new.  Back to step $7(d)$ if the only changes are in plotting data, parameter values, or initial conditions.
+\end{enumerate}
+
+
+\subsection{Input from a MuPAD file}
+
+Assuming ``Input from GUI?" is {\em not} selected,
+\begin{enumerate}
+    \item Create MuPAD worksheet {\sf user\_input.mu} using templates e.g., \\ {\sf Examples/ODE\_examples/SIR/SIR.mu}, or \\ {\sf Examples/MAP\_examples/Caswell08/Caswell08.mu}
+    \item Execute MuPAD worksheet {\sf user\_input.mu} which creates M{\sc atlab} files {\tt user\_equations.m}, {\tt user\_input.m}, {\tt user\_plotdata.m}, {\tt user\_QoI.m}, {\tt user\_parameters.m}, {\tt user\_bifndata.m}, and {\tt user\_FIMdata.m}
+    \item Find the folder with the MuPAD file that contains the program and input field for the model  (e.g. {\sf C:/SENSAI/Examples/ODE\_examples/SIR/},\\ {\sf C:/SENSAI/Examples/MAP\_examples/Caswell08/}, etc.).
+    \begin{itemize}
+        \item This is the WORKING directory.
+        \item Copy the path of the WORKING directory into the box in the upper right hand within the GUI \\
+              (e.g. {\sf C:/SENSAI/Examples/ODE\_examples/SIR/}).
+    \end{itemize}
+    \item In the {\sensai}  GUI, select ``Create M{\sc atlab}  files using MuPAD" which creates the files {\tt gvec.m}, {\tt dgvec dxvec.m}, {\tt dgvec dparam.m}, {\tt qoi.m}, and {\tt dcp dparam.m} within the {\sensai} directory.  Note: \textit{The active directory within M{\sc atlab} must be the same one that contains the sensai.m program, i.e. the {\sensai} directory.}  Wait until a popup box appears that says ``M{\sc atlab} files successfully created" before continuing.
+    \item Within M{\sc atlab}, control of the program is through the files {\tt user\_inputs.m} and {\tt user\_plotdata.m}, in the WORKING directory with the MuPAD file containing the program.
+    \begin{itemize}
+        \item Via {\tt user\_inputs.m}, you control parameter values, initial conditions, and the name of the folder in which you wish to save your work (using ``JOB").
+        \item Via {\tt user\_plotdata.m}, you control which solutions ($x$-values) to output and plot (using ``ilist"), and which parameters to have their sensitivities tested (using ``klist").
+    \end{itemize}
+
+    \item Within M{\sc atlab} in the GUI, select ``Execute M{\sc atlab} file created by MuPAD".
+
+\end{enumerate}
+
+\subsection{Outputs}
+
+\begin{enumerate}
+
+\item All of the plots of the solutions, sensitivities, and elasticities specified in the run of the model, and a file with all of the outputs from the model (output.mat) will be saved in the WORKING directory in a folder named by the variable string ``JOB."
+
+ \begin{itemize}
+  \item To get the solutions, sensitivity values, and elasticities into data files that can be plotted, either work within M{\sc atlab} on the data in output.mat, or \dots
+  \item Use the exported information in the text files that can be imported into other programs for plotting (e.g. R).  The (large number of) files each contain the solutions, sensitivities, and elasticities for the run specified above.
+ \end{itemize}
+
+\item Before carrying out another run using the {\sc sensai} GUI, within M{\sc atlab}, return to the {\sc sensai} directory and enter the commands to clear both plots and active memory before moving on (optional, but probably a good idea):\\
+{\tt $>>$ close all, clear all}
+ \begin{enumerate}
+  \item Results from a new run can be saved into another folder in the WORKING directory by changing the name of ``JOB" in {\tt user\_inputs.m}.
+    \begin{itemize}
+    \item (E.g. JOB = `run2').
+    \item This can also be done by changing this line in the MuPAD file. \textit{(But this is overkill, since you must go back to step 8(b) after this point.)}\\
+{\tt $>>$ JOB\_NAME:= "run2";  \#  Sets the folder name for the output.}
+    \end{itemize}
+  \item Modify values in {\tt user\_inputs.m} and {\tt user\_plotdata.m} in the WORKING directory to explore other values.
+  \item Back to step $8(f)$.
+ \end{enumerate}
+
+\end{enumerate}
+
+
+
+\section{Basic reproduction number}
+
+ Please see R0\_readme.pdf
+
+\section{Bifurcation}
+
+  Please see BIFN\_readme.pdf
+
+\section{Active subspaces, Fisher information and parameter estimation}
+
+  Please see FIM\_readme.pdf
+
+
+
+\section{Template Examples}
+
+\subsection{MAP Examples}
+
+  Please see R0\_readme.pdf
+
+\subsection{ODE Examples}
+
+\subsubsection{SIR}
+
+This model is a typical SIR model with logistic growth.
+%
+\begin{equation*}\label{eq:SIR_log}
+\left . \begin{gathered} \begin{aligned}
+\frac{dS}{dt} &= rN \left( 1-\frac{N}{K}\right) - \beta SI - \delta S, \quad \\
+\frac{dI}{dt} &= \beta SI - \gamma I - \mu I - \delta I, \\
+\frac{dR}{dt} &= \gamma I - \delta R,
+\end{aligned} \end{gathered} \right \}
+\end{equation*}
+%
+where $N = S+I+R$ is the total population at any time $t$, $r$ is the per capita growth rate, $K$ is the carrying capacity, $\beta$ is the infection rate, $\delta$ is the natural death rate of the species, $\gamma$ is the recovery rate, and $\mu$ is the disease specific death rate.  Some reasonable parameter values are $r = 0.5$, $K=1000$, $\beta = 0.1$, $\delta = 0.2$, $\gamma$ = 0.02, and $\mu = 0.1$.
+
+The main purpose of this model is that it is a standard ODE infection model with a simple $R_0$ that can be easily verified by hand.  This model also serves as a great template for ODE examples.
+
+\subsubsection{SI (Indirect Transmission)}
+
+This model is an SI model that involves indirect transmission of the infection.
+%
+\begin{equation*}\label{eq:background_si}
+\left.\begin{gathered}\begin{aligned}
+\frac{dS}{dt} &= rN\left(1-\frac{N}{K}\right)\\
+\frac{dI}{dt} &= \beta -\gamma I
+\end{aligned}\end{gathered}\right\}
+\end{equation*}
+%
+where $N(t) = S(t) +I(t)$ is the total population, $r$ is the per capita growth rate, $K$ is the carrying capacity, $\beta$ is the background transmission probability, and $\gamma$ is the recovery rate.
+
+The explaination of this model in detail can be found in \textit{Sensitivity Analysis of the Basic Reproduction Number and other Quantities for Infectious Disease Models}, Masters Thesis by Mikucki, 2012.  Parameter values may be chosen as  $r= 0.5$, $\beta = 0.8$, $\gamma = 0.02$, and $K = 1000$.
+
+The main purpose of this model is to show that models with a background (indirect) transmission of the disease through the environment or some alternative source do not have a valid $R_0$.
+
+\subsubsection{Plague}
+
+This model is given by Buzby et. al. in \textit{Analysis of the sensitivity properties of a model of vector-borne bubonic plague}, 2008.  The first three classes are the SIR classes of rats, $N$ is the average number of fleas living on a rat, and $F$ is the number of free infectious fleas that are searching for a new host.
+
+\begin{equation*}\left.\begin{gathered}\begin{aligned}
+\dot{S}_R &= r_RS_R\left(1-\frac{T_R}{K_R} \right) + r_RR_R(1-p)-d_RS_R - \beta_R\frac{S_R}{T_R}F(1-e^{-aT_R}) \\
+\dot{I}_R &= \beta_R\frac{S_R}{T_R}F(1-e^{-aT_R})-(d_R+m_R)I_R\\
+\dot{R}_R &= r_RR_R\left(p-\frac{T_R}{K_R}\right) + m_Rg_RI_R -d_RR_R\\
+\dot{N} &= r_FN\left(1-\frac{N}{K_F}\right) + \frac{d_F}{T_R}F(1-e^{-aT_R})\\
+\dot{F} &= (d_R+m_R(1-g_R))I_RN-d_FF
+\end{aligned}\end{gathered}\right\}\end{equation*}
+%
+where $T_R = S_R+I_R+R_R$ is the total size of the rat population, $r_R$ is the net rat reproduction rate, $K_R$ is the rat carrying capacity, $p$ is the proportion of offspring that inherity the disease, $d_R$ is the natural rat death rate, $\beta_R$ is the transmission rate from rats to fleas, $m_R$ is the rate that rats leave the infected class, $g_R$ is the fraction of rates that become resistant, $a$ is the searching efficiency of the fleas, $r_F$ is the net flea reproductive rate, $d_F$ is the natural flea death rate, and $K_F$ is the flea carrying capacity.
+
+\subsubsection{Dengue}
+
+This model is given by Garba in \textit{Backward bifurcations in dengue transmission dynamics}, 2008.  It is an SEIR model that descirbes the dynamics of dengue fever, an infection carried by a vector, mosquiteos.  The equations are
+%
+\begin{equation*}\label{eq:dengue}
+\left. \begin{gathered} \begin{aligned}
+\frac{dS_H}{dt} &= \Pi_H-\lambda_HS_H-\mu_HS_H\\
+\frac{dE_H}{dt} &= \lambda_HS_H-(\sigma_H+\mu_H)E_H\\
+\frac{dI_H}{dt} &= \sigma_HE_H-(\tau_H+\mu_H+\delta_H)I_H\\
+\frac{dR_H}{dt} &= \tau_HI_H-\mu_HR_H\\
+\frac{dS_V}{dt} &= \Pi_V-\lambda_VS_V-\mu_VS_V\\
+\frac{dE_V}{dt} &= \lambda_VS_V-(\sigma_V+\mu_V)E_V\\
+\frac{dI_V}{dt} &= \sigma_VE_V-(\mu_V+\delta_V)I_V
+\end{aligned} \end{gathered}\right \}
+\end{equation*}
+%
+where $\lambda_H = \frac{C_{HV}}{N_H}(\eta_VE_V+I_V)$ is the human infection rate, $\lambda_V = \frac{C_{HV}}{N_H}(\eta_HE_H+I_H)$ is the vector infection rate, and $N_H = S_H+E_H+I_H+R_H$ is the total human population.  The parameter values provided are $\mu_H=0.0195$, $\sigma_H=0.5300$, $\Pi_H=10$, $\delta_H=0.9900$, $\eta_H=0.9900$, $\tau_H=0.2000$, $\mu_V=0.0140$, $\sigma_V = 0.2000$, $\Pi_V = 30$, $\delta_V = 0.0057$, $\eta_V=0.9800$, and
+$C_{HV} = 0.038$.
+
+An interesting initial condition for the model is $\textbf{x}_\textbf{0} = (\frac{\Pi_H}{\mu_H}, 0, 0, 0, \frac{\Pi_V}{\mu_V}, 0, 200)$, which will show that even thought $R_0 <1$, infection may still persist in the population.
+
+\subsubsection{Typhoid}
+
+This model is given by Bailey and Duppenthaler in \textit{Sensitivity Analysis in the Modelling of Infectious Disease Dynamics}, 1980.  It is a 9-stage SIR type model where $x_1$ = susceptibles, $x_2$ = incubating noninfectious, $x_3$ = incubating infectious, $x_4$ = sick infectious, $x_5$= sick noninfectious, $x_6$ =  temporary carrier, $x_7$ = permanent carrier, $x_8$ = short resistance, and $x_9$ = long resistance.
+%
+\begin{equation*}\label{eq:typhoid}
+\left.\begin{gathered}\begin{aligned}
+\dot{x_1} &= -(\rho_{12}+\rho_{13})x_1y + \rho_{41}x_4+\rho_{51}x_5+\rho_{61}x_6+\rho_{81}x_8+\rho_{91}x_9-\mu x_1+\mu\\
+\dot{x_2} &= \rho_{12}x_1y - (\rho_{23}+\rho_{24} +\rho_{25}+\mu)x_2 + \rho_{32}x_3\\
+\dot{x_3} &= \rho_{13}x_1y - (\rho_{32}+\rho_{34}+\rho_{35}+\mu)x_3 + \rho_{23}x_2\\
+\dot{x_4} &= \rho_{24}x_2 +\rho_{34}x_3 + \rho_{54}x_5-(\rho_{41}+\rho_{45}+\rho_{46}+\rho_{48}+\mu)x_4\\
+\dot{x_5} &= \rho_{25}x_2 + \rho_{35}x_3+\rho_{45}x_4-(\rho_{51}+\rho_{54}+\rho_{58}+\mu)x_5 \\
+\dot{x_6} &= \rho_{46}x_4-(\rho_{61}+\rho_{67}+\rho_{68}+\mu)x_6\\
+\dot{x_7} &= \rho_{67}x_6 - \mu x_7\\
+\dot{x_8} &= \rho_{48}x_4 + \rho_{58}x_5 + \rho_{68}x_6 - (\rho_{81}+\rho_{89}+\mu)x_8\\
+\dot{x_9} &= \rho_{89}x_8 - (\rho_{91}+\mu)x_9
+\end{aligned}\end{gathered}\right \}
+\end{equation*}
+
+Parameter values are provided by Bailey are as follows:  $\rho_{12} = 8.43381\times10^{-3}$, $\rho_{13} = 8.51900\times10^{-5}$,  $\rho_{23} = 2.85720\times10^{-3}$, $\rho_{24} = 6.78585\times10^{-2}$, $\rho_{25} = 7.14300\times10^{-4}$, $\rho_{32} = 7.14300\times10^{-4}$, $\rho_{34} = 6.42870\times10^{-2}$, $\rho_{35} = 6.42870\times10^{-3}$, $\rho_{41} = 3.46000\times10^{-3}$, $\rho_{45} = 3.46000\times10^{-3}$, $\rho_{46} = 3.46000\times10^{-3}$, $\rho_{48} = 2.40124\times10^{-2}$, $\rho_{51} = 3.46000\times10^{-3}$, $\rho_{54} = 6.92000\times10^{-3}$, $\rho_{58} = 2.40124\times10^{-2}$, $\rho_{61} = 1.11100\times10^{-3}$, $\rho_{67} = 3.33300\times10^{-3}$, $\rho_{68} = 6.66600\times10^{-3}$, $\rho_{81} = 2.74000\times10^{-4}$, $\rho_{89} = 2.46600\times10^{-3}$, $\rho_{91} = 2.74000\times10^{-4}$, and $\mu = 5.48000\times10^{-5}$.
+
+This example demonstates {\sensai}'s ability to implement a large system and compute $R_0$ effectively.  In this model, equations 2-7 are considered infective, so the next generation matrix is a $6\times 6$ matrix with analytical (not numerical) components.
+
+\end{document}

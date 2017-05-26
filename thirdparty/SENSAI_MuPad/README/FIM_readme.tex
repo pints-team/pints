@@ -1,0 +1,468 @@
+%\documentclass[12pt]{article}
+\documentclass{siamltex}
+\usepackage{amsfonts,amsmath,amssymb,bm}
+\usepackage{float}
+\usepackage{timestamp}
+\newcommand{\cvec}{\bm{c}}
+\newcommand{\evec}{\bm{e}}
+\newcommand{\fvec}{\bm{f}}
+\newcommand{\gvec}{\bm{g}}
+\newcommand{\honevec}{\bm{h}_\bm{1}}
+\newcommand{\htwovec}{\bm{h}_\bm{2}}
+\newcommand{\Hvec}{\bm{H}}
+\newcommand{\hvec}{\bm{h}}
+\newcommand{\lvec}{\bm{l}}
+\newcommand{\pvec}{\bm{p}}
+\newcommand{\qvec}{\bm{q}}
+\newcommand{\rvec}{\bm{r}}
+\newcommand{\svec}{\bm{s}}
+\newcommand{\uvec}{\bm{u}}
+\newcommand{\vvec}{\bm{v}}
+\newcommand{\wvec}{\bm{w}}
+\newcommand{\xvec}{\bm{x}}
+\newcommand{\xnotvec}{\bm{x}_\bm{0}}
+\newcommand{\xonevec}{\bm{x}_\bm{1}}
+\newcommand{\xtwovec}{\bm{x}_\bm{2}}
+\newcommand{\yvec}{\bm{y}}
+\newcommand{\zvec}{\bm{z}}
+\newcommand{\zerovec}{\bm{0}}
+\newcommand{\onevec}{\bm{1}}
+\newcommand{\alphavec}{\bm{\alpha}}
+\newcommand{\betavec}{\bm{\beta}}
+\newcommand{\gammavec}{\bm{\gamma}}
+\newcommand{\phivec}{\bm{\phi}}
+\newcommand{\psivec}{\bm{\psi}}
+\newcommand{\rhovec}{\bm{\rho}}
+\newcommand{\thetavec}{\bm{\theta}}
+\newcommand{\sensai}{\textsc{sensai}}
+%
+\newcommand{\Amat}{\bm{A}}
+\newcommand{\Bmat}{\bm{B}}
+\newcommand{\Cmat}{\bm{C}}
+\newcommand{\Fmat}{\bm{F}}
+\newcommand{\Imat}{\bm{I}}
+\newcommand{\Jmat}{\bm{J}}
+\newcommand{\Kmat}{\bm{K}}
+\newcommand{\Mmat}{\bm{M}}
+\newcommand{\Smat}{\bm{S}}
+\newcommand{\Tmat}{\bm{T}}
+\newcommand{\Umat}{\bm{U}}
+\newcommand{\Vmat}{\bm{V}}
+\newcommand{\Wmat}{\bm{W}}
+\newcommand{\Xmat}{\bm{X}}
+\newcommand{\zeromat}{\bm{0}}
+%
+\newcommand{\reals}{\mathbb R}
+\newcommand{\DD}{\displaystyle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert_{2}}
+
+\newcommand{\xdim}{{\tt xdim}}
+\newcommand{\kdim}{{\tt kdim}}
+\newcommand{\qdim}{{\tt qdim}}
+\newcommand{\Adim}{{\tt Adim}}
+\newcommand{\Mdim}{{\tt Mdim}}
+\newcommand{\Sdim}{{\tt Sdim}}
+\newcommand{\Fdim}{{\tt Fdim}}
+\newcommand{\nobs}{{\tt nobs}}
+\newcommand{\kdimhat}{{\widehat{\rm K}}}
+\newcommand{\xonedim}{{\rm M_1}}
+\newcommand{\xtwodim}{{\rm M_2}}
+
+\newcommand{\ntsteps}{{\tt ntsteps}}
+
+
+\begin{document}
+\title{SENSAI \\  Fisher Information,  $k$-rank approximations \\ and parameter estimation}
+\author{Simon Tavener}
+\maketitle
+\hfill Date \& time: \timestamp
+\pagestyle{empty}
+
+
+\section{Introduction}
+
+We seek $\xvec(t,\pvec)$ where $\xvec \in \reals^\xdim$ and $\pvec \in \reals^\kdim$ such that
+\begin{equation}
+\left .
+\begin{gathered}\begin{aligned}
+\frac{d\xvec}{dt} &= \fvec(t,\xvec,\pvec), \\
+         \xvec(0) &= \xvec_0,
+\end{aligned}\end{gathered}
+\quad\right\}
+\end{equation}
+and consider quantities of interest that are functions of both the solution and the parameters, i.e.,
+\begin{equation}
+\qvec(t)=\qvec(t,\xvec(t,\pvec),\pvec)
+\end{equation}
+where $\qvec \in \reals^\qdim$.
+
+
+The Matlab package SENSAI computes sensitivities and elasticities of both the solution variables $\xvec$ and specified quantities of interest $\qvec$, with respect to parameters and initial conditions. It does so by constructing and solving a linear system of differential equations for the sensitivities (which are then scaled to provide elasticities). SENSAI utilizes MuPAD to perform symbolic differentiation to construct the Jacobian matrix
+\begin{equation}
+\Jmat = \frac{\partial \fvec}{\partial \xvec} \in \reals^{\xdim \times \xdim}
+\end{equation}
+and the matrix of partial derivatives with respect to the parameters
+\begin{equation}
+\Kmat = \frac{\partial \fvec}{\partial \pvec} \in \reals^{\xdim \times \kdim},
+\end{equation}
+and to write the Matlab routines to compute these derivatives.
+
+
+\section{Fisher information matrix}
+The sensitivity matrix $\Mmat$ defines the rate of change of the solution, or quantities of interest derived from the solution, with respect to the parameters. In general, the sensitivity matrix is defined as
+\begin{equation}
+\Mmat=\frac{\partial\qvec}{\partial\pvec} \in \reals^{\Mdim\times\Fdim}.
+\end{equation}
+where
+\begin{equation}
+\Mdim =
+\left \{
+\begin{gathered}\begin{aligned}
+&\xdim \hbox{  if using primitive variables} \\
+&\qdim \hbox{  if using quantities of interest}
+\end{aligned}\end{gathered}
+\right .
+\end{equation}
+and $\Fdim$ is the number of parameters we chose to vary. In SENSAI, their indices are contained in the vector $Fp(1:\Fdim)$. The Fisher Information Matrix
+\begin{equation}
+\Fmat = \left( \Mmat^\top \Mmat \right)^{-1} \in \reals^{\Fdim\times\Fdim}.
+\end{equation}
+In practice, we never construct the $\Fmat$ but perform all operations on the sensitivity matrix $\Mmat$. Consider the singular value decomposition
+\begin{equation}
+\Mmat=USV^\top, \quad U\in\reals^{\Mdim\times\Mdim},
+\; S\in\reals^{\Mdim\times\Fdim}, \; V\in\reals^{\Fdim\times\Fdim}
+\end{equation}
+
+We need to consider situations in which $\Mdim > \Fdim$ and $\Mdim < \Fdim$. We define $\Sdim$, the maximal rank of $S$, as
+\begin{equation}
+\Sdim := \hbox{min} \{ \Mdim,\Fdim \}
+\end{equation}
+This is the maximum number of non-zero singular values of $\Mmat$.
+
+A simple calculation shows that the inverse of the Fisher Information matrix is unitarily similar to the $\Sdim \times \Sdim$ diagonal matrix $S^\top S$  and the non-zero real eigenvalues of the Fisher Information Matrix, $\Fmat$, typically labelled $\sigma_i, i=1,\dots,\Sdim$ are related to the singular values of the sensitivity matrix $\Mmat$ as
+\begin{equation}
+\sigma_i = \frac{1}{s_i^2}, \quad i = 1,\dots,\Sdim.
+\end{equation}
+
+
+There are two very different types of Fisher information matrix, one that is a (continuous) function of time discussed in \S \ref{sec:FIM_cts} and one that is a function of a discrete times, discussed in \S \ref{sec:FIM_global}. %We call the latter the global Fisher information matrix.
+
+
+
+\subsection{Continuous Fisher information matrix ({\tt gtype\_FIM})}
+\label{sec:FIM_cts}
+The Fisher information matrix is based on the sensitivities or elasticities of the variables or quantities of interest \emph{at all} times at which the solution is computed, i.e., at all times in the vector {\tt t}. The sensitivity matrix $\Mmat(t)$ is of size $\Mdim\times\Fdim$.
+
+
+\subsection{Global Fisher information matrix ({\tt gtype\_FIM\_global})}
+\label{sec:FIM_global}
+A \emph{globally} defined Fisher information matrix can also be computed based on the sensitivities or elasticities of the variables or quantities of interest \emph{at all} times at which the solution is computed, i.e., at all times in the vector {\tt t}.  The sensitivity matrix $\Mmat$ is now of size $(\Mdim*\ntsteps)\times\Fdim$.
+
+\medskip
+SENSAI also computes the parameter sensitivity score (pss) defined by \cite{CBCL-2009}.
+
+
+
+\section{Active subspaces ({\tt gtype\_active\_subspace})}
+
+The Active Subspace method computes the singular value decomposition of the sensitivity matrix at all times at which the solution is computed. It further computes and plots the singular values as a function of time, and the singular vectors as a function of time.
+
+\subsection{Local $k$-rank approximation in parameter space (surrogate model)}
+We also compute a low dimensional approximation to the function surface in parameter space around each solution point. There are at most $\Sdim$ non-zero singular values. Let $\Adim \le \Sdim$ be the dimension of the active subspace. Consider a linear approximation in parameter space about $\pvec_0$ for either the solution $\xvec$ or a vector-valued quantity of interest $\qvec$. Writing either as $\qvec$, we have
+\begin{equation}
+\qvec(t,\pvec_0+\Delta \pvec) \approx
+\qvec(t,\pvec_0) + \left . \frac{\partial \qvec}{\partial \pvec} \right\vert_{\qvec(t,\pvec_0)}
+                   \Delta \pvec
+= \qvec(t,\pvec_0) + \Mmat \Delta \pvec
+\end{equation}
+where, as before
+\begin{equation}
+\Mmat \in \reals^{\Mdim\times\Fdim}.
+\end{equation}
+Now
+\begin{equation}
+\begin{aligned}
+\Mmat \Delta \pvec &= \Umat \Smat \Vmat^\top \Delta \pvec \\
+&= \left(\sum_{i=1}^{\Sdim} s_i \uvec_i \vvec_i^\top \right)\Delta \pvec
+\end{aligned}
+\end{equation}
+where $\uvec_i$ is the $i$th column of $\Umat$, $\uvec_i \in \reals^{\Mdim\times 1}$, and $\vvec_i^\top$ is the $i$th row of $\Vmat^\top$, i.e., the $i$th column of $\Vmat$,  $\vvec_i^\top \in \reals^{1 \times \Fdim}$. The best $\Adim$-rank approximation of $\Mmat \Delta\pvec$ is
+\begin{equation}\label{eq:f_active_subspace_approx}
+\qvec(t,\pvec_0+\Delta \pvec) \approx \qvec(t,\pvec_0) + \left(\sum_{i=1}^{\Adim} s_i \uvec_i \vvec_i^\top \right) \Delta \pvec.
+\end{equation}
+
+\subsection{Angles between active subspaces}
+We compute the angles between the initial singular vector(s) and the singular vector(s) at subsequent times using the work of \cite{Shonkwiler}. Once the angle exceeds a critical value, the QoIs are deemed ``geometrically distinct''.
+
+
+\subsection{Future work}
+%SENSAI computes the components of the sensitivity matrix $\Mmat$ by simultaneously solving $\xdim*\kdim$ additional linear odes. (Plus an additional $\xdim*\xdim$ additional linear odes if I consider initial conditions as parameters.) This is powerful, but expensive and is probably impractical for partial differential equations.
+%
+%Asynchronous QOI = functional assimilation
+%
+%https://www.imperial.ac.uk/people/m.stumpf
+%https://www.maths.nottingham.ac.uk/personal/spp/
+
+\bigskip
+\noindent\emph{Ideas}
+\begin{enumerate}
+  \item Set sample times once the angle between leading subspaces increases beyond a critical value.
+  \item Choose sample times at equally spaced angles between the leading subspaces.
+  \item Optimal sampling: Locate $n$ sample points so as to maximize the angles between active subspaces. See \cite{BG-1973}
+  \item Use adjoint techniques to compute $\Mmat$ -- see \cite{EN-2006}.
+\end{enumerate}
+
+
+\section{Efficient forward funding evaluation for SIP ({\tt gtype\_SIP})}
+
+
+Algorithm to sample the {\tt kdim}-dimensional parameter space
+
+\begin{enumerate}
+\item Locate {\tt nsample} equally-spaced (global) nodes in the {\tt kdim}-dimensional parameter space (squares).
+
+\item Evaluate the sensitivity matrix and its singular value decomposition to determine the active subspace at each of these nodes.
+    
+\item Randomly sample the {\tt kdim}-dimensional parameter space  at {\tt nsim} points.
+
+\item Find the node closest to every sample point as measured \emph{using the local FIM metric at each node}. The set of samples closest to each node in the local FIM metric is the Voronoi cell for that node as measured in the FIM metric.
+
+\item Approximate the function using \eqref{eq:f_active_subspace_approx} at {\tt msample} equally-spaced points in the active subspace local to each node. Call these local active subspace nodes
+
+\item Project each sample point in to the active subspace within its Voronoi cell and determine the closest global or local active subspace node to the projection. (This is an inherently parallel computation.)
+
+\item  Assign the function value at the nearest node to the random sample.
+\end{enumerate}
+
+
+%\subsection{Old idea}
+%We implement the following algorithm to efficiently generate the input/output map required for inverse sensitivity calculations using SIP.
+%\begin{enumerate}
+%  \item Randomly sample the input space
+%  \item Compute the active subspace of the sensitivity matrix at each point
+%  \item Evaluate the map by locally sampling the leading subspace rejecting samples that lie outside the input domain
+%  \item Create a binary input file for SIP
+%\end{enumerate}
+
+
+%\medskip
+%Examples to date
+%\begin{enumerate}
+%  \item Logistic growth at small time (uses {\tt gtype\_FIM})
+%  \item Logistic growth at large time (uses {\tt gtype\_FIM})
+%  \item Logistic growth at small and large time (uses {\tt gtype\_FIM\_global})
+%\end{enumerate}
+%
+%\medskip
+%Future ... what would be convincing?
+
+\section{Parameter estimation ({\tt gtype\_GESS})}
+Given either the solution vector or quantity (quantities) of interest at all times for which the ode solution is known, SENSAI computes the generalized least squares best fit for the parameters.
+
+
+%\section{Implementation details}
+%
+%\begin{enumerate}
+%
+%\item Parameter selection is performed through the vector {\tt Fp} of length $\Fdim$.
+%
+%\item
+%\begin{itemize}
+%  \item[] {\tt qFIM = 0} $\rightarrow$ use  variables to compute $\Mmat$ (and $\Fmat$)
+%  \item[] {\tt qFIM = 1} $\rightarrow$ use quantities of interest to compute $\Mmat$ (and $\Fmat$)
+%\end{itemize}
+%
+%\item
+%\begin{itemize}
+%  \item[] {\tt eFIM = 0} $\rightarrow$ use sensitivities to compute $\Mmat$ (and $\Fmat$)
+%  \item[] {\tt eFIM = 1} $\rightarrow$ use elasticities to compute $\Mmat$ (and $\Fmat$)
+%\end{itemize}
+%
+%
+%\item
+%\begin{itemize}
+%  \item[] ntsteps = 0, the ode solution is computed at times determined by ode45 and the continuous FIM is computed
+%  \item[] ntsteps = $\ntsteps$, the ode solution is computed at ntsteps equally spaced times between 0 and tfinal and the \emph{global} FIM is computed
+%\end{itemize}
+%
+%\item
+%\begin{itemize}
+%  \item[] pest = 0, use ode solution times to perform least squares parameter estimation
+%  \item[] pest = 1, read {\tt experimental\_data.m} and solve the ode at the times given by {\tt t} array to perform least squares parameter estimation
+%\end{itemize}
+%
+%\end{enumerate}
+
+\section{Optimal experimental design}
+\cite{AP-2002, BHK-2011, CBCL-2009, CH-2008, CBCL-2009, Federov-2010, Pronzato-2008, RWGF-2007}
+
+\emph{Idea:} Base optimal sampling strategies on the \emph{angles between active subspaces}.  Is this approach robust wrt error?. Other optimal sampling techniques based on the \emph{spectrum} of the Fisher Information Matrix are highly sensitive to error. 
+
+\emph{Question} What can we do if the QoI is not a differentiable function of the parameters, e.g., max voltage for the Hodgkin Huxley system of odes.
+
+
+\section{Inverse sensitivities}
+Create data files for SIP using SENSAI.
+
+
+\bigskip
+\noindent\emph{Ideas}
+\begin{enumerate}
+  \item Approximate function near sample points using the best $k$-rank approximation given by \eqref{eq:f_active_subspace_approx}
+  \item Optimal sampling: Locate $n$ sample points so as to maximize the angles between active subspaces. See \cite{BG-1973}.
+  \item Find $\Mmat$ by solving an adjoint problem for a given scalar-valued quantity of interest -- see \cite{PLCS-2006} What can we do for a vector-valued quantities of interest? I believe we will need to solve multiple adjoint problems.
+  \item \cite{MW-2014} uses adjoint ideas to produce simplified models, but do not seem to use the svd. Check this out.
+\end{enumerate}
+
+
+\section{Examples}
+
+\subsection{Logistic growth}
+Let
+\begin{equation}
+\xvec=x \in \reals^1, \quad \pvec=(r,K)^{\sf T}\in\reals^2.
+\end{equation}
+Find $x(t)$ such that
+\begin{equation}
+\begin{gathered}\begin{aligned}
+\frac{dx}{dt} &= rx \left( 1-\frac{x}{K} \right), \\
+         x(0) &= x_0.
+\end{aligned}\end{gathered}
+\end{equation}
+Quantities of interest, $q(iq),iq=1,\dots,\qdim$ are given by
+\begin{equation}
+q(1) = x, \quad q(2) = \frac{x}{K}, \quad q(3) = \frac{x}{x_0}.
+\end{equation}
+%We illustrate the following.
+%\begin{enumerate}
+%  \item Singular values and singular vectors as a function of time.
+%  \item Parameter estimation using $\nobs$ observations of the population assuming iid normally distributed relative error with standard deviation $\sigma$, i.e., observation
+%      \begin{equation}
+%        y(t_i)=x(t_i)(1+\sigma s), i=1,\dots,\nobs
+%      \end{equation}
+%      where $s\sim{\cal N}(0,\sigma^2)$ for small, medium and large $t$.
+%  \item Inverse sensitivity analysis at small, medium and large $t$ (using SIP software).
+%\end{enumerate}
+
+
+\subsection{SEIR}
+
+Let
+\begin{equation}
+\xvec=(S,E,I,R)^{\sf T} \in \reals^4, \quad \pvec=(N,L,D,M,P,\beta_0,a,b)^{\sf T}\in\reals^8.
+\end{equation}
+Find
+\begin{equation}
+\begin{gathered}\begin{aligned}
+\frac{dS}{dt} &= \frac{N}{P} + \frac{R}{L} - \frac{\beta(t) SI}{N} - \frac{S}{P}, \\
+\frac{dE}{dt} &= \frac{\beta SI}{N} - \frac{E}{M} - \frac{E}{P},  \\
+\frac{dI}{dt} &= \frac{E}{M} - \frac{I}{D} - \frac{I}{P}, \\
+\frac{dR}{dt} &= \frac{I}{D} - \frac{R}{L} - \frac{R}{P},
+\end{aligned}\end{gathered}
+\end{equation}
+where
+\begin{equation}
+\beta(t) = \beta_0(1+a \cos(2\pi t) + b\sin(2\pi t))
+\end{equation}
+with initial conditions
+\begin{equation}
+(S,E,I,R)^{\sf T}(0) = (S_0,E_0,I_0,R_0)^{\sf T}.
+\end{equation}
+We choose quantities of interest
+\begin{equation}
+q(1)= \frac{I}{S+E+I+R}, \quad q(2)= \frac{E}{S+E+I+R}, \quad q(3)= \frac{R}{S+E+I+R}.
+\end{equation}
+
+
+\subsection{MSEIR}
+
+Let
+\begin{equation}
+\xvec=(M,S,E,I,R)^{\sf T} \in \reals^5, \quad \pvec=(B,\delta,\mu_M,\beta,\mu_G,1/\epsilon,\mu_I,1/\gamma,f, \iota)^{\sf T}\in\reals^{10}.
+\end{equation}
+where $M$ is the class protected by maternal antibodies.
+Find
+\begin{equation}\label{eq:MSEIRS}
+\begin{gathered}\begin{aligned}
+	\frac{dM}{dt} &= B(S+E+I+R)-(\delta+\mu_M) M \\
+	\frac{dS}{dt} &= \delta M - \beta SI - (\mu_G+\iota) S  + fR \\
+	\frac{dE}{dt} &= \beta SI - (\epsilon + \mu_G)E \\
+	\frac{dI}{dt} &= \epsilon E - (\gamma+\mu_I+\mu_G)I\\
+	\frac{dR}{dt} &= \gamma I - (\mu_G+f)R+\iota S
+\end{aligned}\end{gathered}
+\end{equation}
+
+\begin{table}[H]
+\centering
+
+ \begin{tabular}{l l}
+
+ \begin{tabular}{| l | l | l | l |}
+ \hline
+ B & avg.~birth rate & $[ 2.72E-4,3.04E-4 ]$    &  $3.02E-4$  \\
+ $\delta$ &  avg.~temporary immunity & $[1/12,1/4]$   & 0.16 \\
+ $\mu_M$ & avg.~infant death rate & $[4E-3, 6E-3$  &  $4.5E-3$\\
+ $\beta$ & contact/infectivity rate & $ [1.92E-3, 3.85E-3]$  & $3.4E-3$ \\
+ $\mu_G$ & avg.~general death rate & $[2.4E-4,2.72E-4]$ &  $2.52E-4$\\
+ $1/\epsilon$ & avg.~infection time& $[0.571, 1]$ & 0.7\\
+ $\mu_I$ & avg.~infected death rate & $[4.81E-6 , 2.11E-5]$ & $1.75E-5$\\
+ $1/\gamma$ & avg.~recovery time& $[0.7 , 2.33]$  & $0.8$\\
+ $f$ & avg.~loss of immunity rate & $[0.125, 0.25]$ & 0.18\\
+ $\iota$ & avg.~immunization rate & $[0.015,0.0375]$ & 0.026\\
+ $M_0$ & initial infants & $[2.5,3.5]$ &  3.25 \\
+ $S_0$ & initial susceptibles & $[260,275]$ & 270 \\
+ $E_0$ & initial exposed & $[0.01,0.5]$& 0.425\\
+ $I_0$ &  initial infected & $[0.1,4]$ & 3.8\\
+ $R_0$ &  initial recovered/immunized & $[10,20]$ & 13\\
+ \hline
+ \end{tabular}
+
+ \end{tabular}
+ \caption{Uncertain parameters and initial conditions and their interval bounds in the MSEIRS model given by Eq.~\ref{eq:MSEIRS}.
+ The last column of values are the reference parameter values used to define the mean of the output densities. }
+ \label{tab:MSEIRS_params}
+\end{table}
+
+
+\subsection{Hodgkin Huxley}
+
+Let
+\begin{equation}
+\xvec=(V,m,h,n)^{\sf T} \in \reals^4, \quad \pvec=(gNa,gK,gL)^{\sf T}\in\reals^3.
+\end{equation}
+Find
+\begin{equation}
+\begin{gathered}\begin{aligned}
+\frac{dV}{dt} &= II - gNa* m^3* h* (V-vNa) - gK* n^4* (V-vK) - gL* (V-vL), \\
+\frac{dm}{dt} &= (1-m)* aM - m* bM,  \\
+\frac{dh}{dt} &= (1-h)* aH - h* bH, \\
+\frac{dn}{dt} &= (1-n)* aN - n* bN,
+\end{aligned}\end{gathered}
+\end{equation}
+with initial conditions
+\begin{equation}
+(V,m,h,n)^{\sf T}(0) = (V_0,m_0,h_0,n_0)^{\sf T}
+\end{equation}
+where
+\begin{equation}
+\begin{gathered}\begin{aligned}
+II &= 20, \quad vNa = 115, \quad vK = -12, \quad vL = 10.6, \\
+aM &= 0.1*(25-V)/(\exp((25-V)/10)-1), \\
+aH &= 0.07*\exp(-V/20), \\
+aN &= 0.01*(10-V)/(\exp((10-V)/10)-1), \\
+bM &= 4*\exp(-V/18), \\
+bH &= 1/(\exp((30-V)/10)+1), \\
+bN &= 0.125*\exp(-V/80). \\
+\end{aligned}\end{gathered}
+\end{equation}
+We choose quantities of interest
+\begin{equation}
+q(1)= V, \quad q(2)= \frac{V}{m}, \quad q(3)= \frac{V}{h}, \quad q(4)= \frac{V}{n}.
+\end{equation}
+
+
+\bibliographystyle{siam}
+\bibliography{refs}
+
+
+\end{document}
