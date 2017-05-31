@@ -1,4 +1,4 @@
-CreateUserInputs := proc(DIR,JOB,imap,x0,xdim,p0,kdim,tfinal,ntsteps,qtype,stype,NextGen,R0_only)
+CreateUserInputs := proc(DIR,JOB,imap,x0,xdim,p0,kdim,tfinal,solntimes,ntsteps,qtype,stype,NextGen,R0_only)
 
 local fd, i, n, m;
 
@@ -6,7 +6,7 @@ begin
 
 // Write initial conditions and parameter values to user_inputs.m
 fd:=fopen("user_inputs.m",Text, Write); 
-fprint(Unquoted, fd, "function [DIR,JOB,imap,x0,p0,tfinal,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs \n"); 
+fprint(Unquoted, fd, "function [DIR,JOB,imap,x0,p0,tfinal,solntimes,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs \n"); 
 
 fprint(Unquoted, fd, "DIR = '",DIR,"';");
 fprint(Unquoted, fd, "JOB = '",JOB,"';");
@@ -26,6 +26,7 @@ end_for;
 
 fprint(Unquoted, fd, ""); 
 fprint(Unquoted, fd, "tfinal = ",tfinal,";"); 
+fprint(Unquoted, fd, "solntimes = ",solntimes,";"); 
 fprint(Unquoted, fd, "ntsteps = ",ntsteps,";"); 
 
 fprint(Unquoted, fd, "");
