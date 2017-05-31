@@ -1,4 +1,4 @@
-function [DIR,JOB,imap,x0,p0,tfinal,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs 
+function [DIR,JOB,imap,x0,p0,tfinal,solntimes,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs 
 
 DIR = '/home/michael/sensai/logistic';
 JOB = 'logistic_example';
@@ -11,6 +11,7 @@ p0(1,1) = 0.7;
 p0(2,1) = 17.5;
 
 tfinal = 30;
+solntimes = 0;
 ntsteps = 0;
 
 qtype = 1;
