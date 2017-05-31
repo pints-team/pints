@@ -6,9 +6,13 @@ local fd, i, si, sname;
 
 // Write equations  to user_equations.m
 
-begin
+begin    
+  
+fd:=fopen("user_equations.m",Write,Text);                          // Include the word Text, and change WRITE --> Write
+if testeq(fd,FAIL) then
+    error("Unable to open file for writing, check your WRITEPATH");
+end_if;
 
-fd:=fopen("user_equations.m",Text,Write);                          // Include the word Text, and change WRITE --> Write
 fprint(Unquoted, fd, "function [fparam,fvec]=user_equations");     // fprintf --> fprint.   There are 2 types: Unquoted (inserts new line automatically) and NoNL (No New Line)
 
 fprint(Unquoted, fd, "");
