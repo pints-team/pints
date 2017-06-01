@@ -1,4 +1,4 @@
-function [DIR,JOB,imap,x0,p0,tfinal,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs 
+function [DIR,JOB,imap,x0,p0,tfinal,solntimes,ntsteps,qtype,stype,NextGen,R0_only]=user_inputs 
 
 DIR = '/home/michael/sensai/HodgkinHuxley';
 JOB = 'HH-SpringBreak';
@@ -15,6 +15,7 @@ p0(2,1) = 36;
 p0(3,1) = 0.3;
 
 tfinal = 30;
+solntimes = [];
 ntsteps = 0;
 
 qtype = 1;
