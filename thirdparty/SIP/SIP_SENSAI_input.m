@@ -19,13 +19,13 @@ function [Qindex,fmin,fmax,fnedge,otype,ofname,omean,osigma,pnedge] = SIP_SENSAI
 
 
 Qindex=[1];
-fmin=[0.5];
-fmax=[1.1];
+fmin=[1.3];
+fmax=[2.5];
 fnedge=[21];
 otype=[1];
-omean=[0.78454];
-osigma=[0.05*0.78454];
-pnedge=[21; 21];
+omean=[1.7];
+osigma=[0.05*1.7];
+pnedge=[21; 21; 21];
 ofname='ttt';
 
 % t=3  -> x=0.78454,  fmin=0.5, fmax=1.1, omean=[0.785];    osigma=[0.05*0.785];

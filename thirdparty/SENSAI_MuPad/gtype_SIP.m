@@ -37,6 +37,7 @@ iprint=2;
 [yy,tt]=ode_setup(tfinal,ntsteps,solntimes,1,' ');
 
 [ngrid,sgrid,msample,vmag,nobs,Qindex,nrsample,obserror,pmin,pmax,qmin,qmax,nsim,cvar,nedge]=user_SIP;
+qdim=length(Qindex);
 nvol=prod(ngrid);
 msample=2*msample;   % To ensure msample is even
 

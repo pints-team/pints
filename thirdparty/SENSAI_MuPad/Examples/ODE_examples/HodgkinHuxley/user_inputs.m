@@ -18,8 +18,8 @@ tfinal = 30;
 solntimes = [];
 ntsteps = 0;
 
-qtype = 1;
-stype = 3;
+qtype = 0;
+stype = 1;
 
 NextGen(1,1) = 0;
 R0_only = 0;

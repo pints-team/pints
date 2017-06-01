@@ -20,7 +20,7 @@ function [ngrid,sgrid,msample,vmag,nobs,Qindex,nrsample,obserror,pmin,pmax,qmin,
 %  cvar  = ???  (may be redundant) 
 %  nedge = ??? (may be redundant) 
 
-ngrid=[80 80 80];
+ngrid=[10 10 10];
 sgrid=0.01;
 
 nobs=1;
