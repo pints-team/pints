@@ -1,7 +1,7 @@
 function [eFIM,qFIM,Fdim,Fp,iFtimes,pest,sig]=user_FIMdata
 
 eFIM = 0;
-qFIM = 0;
+qFIM = 1;
 
 Fdim = 3;
 Fp(1) = 1;
