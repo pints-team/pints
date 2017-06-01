@@ -18,15 +18,15 @@ function [Qindex,fmin,fmax,fnedge,otype,ofname,omean,osigma,pnedge] = SIP_SENSAI
 %
 
 
-Qindex=[1];
-fmin=[1.3];
-fmax=[2.5];
-fnedge=[21];
-otype=[1];
-omean=[1.7];
-osigma=[0.05*1.7];
-pnedge=[21; 21; 21];
-ofname='ttt';
+%Qindex=[1];
+%fmin=[1.3];
+%fmax=[2.5];
+%fnedge=[21];
+%otype=[1];
+%omean=[1.7];
+%osigma=[0.05*1.7];
+%pnedge=[21; 21; 21];
+%ofname='ttt';
 
 % t=3  -> x=0.78454,  fmin=0.5, fmax=1.1, omean=[0.785];    osigma=[0.05*0.785];
 % t=10 -> x=15.10363, fmin=11,  fmax=18,  omean=[15.10363]; osigma=[0.05*15.10363]
@@ -49,15 +49,15 @@ ofname='ttt';
 
 % Hodgkin Huxley example
 % ======================
-% Qindex=[1];
-% fmin=[1.3];
-% fmax=[2.6];
-% fnedge=[21];
-% otype=[1];
-% omean=[1.65];
-% osigma=[0.0165];
-% pnedge=[21; 21; 21];
-% ofname='ttt';
+Qindex=[1];
+fmin=[1.3];
+fmax=[2.6];
+fnedge=[21];
+otype=[1];
+omean=[1.65];
+osigma=[0.0165];
+pnedge=[21; 21; 21];
+ofname='ttt';
 
 end
 
