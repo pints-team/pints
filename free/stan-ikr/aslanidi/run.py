@@ -11,7 +11,7 @@ V = d['membrane.V']
 I = d['ikr.IKr']
 
 # Show data
-if True:
+if False:
     pl.figure()
     pl.subplot(2,1,1)
     pl.plot(t, V)
