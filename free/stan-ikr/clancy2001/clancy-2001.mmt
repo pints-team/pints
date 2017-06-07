@@ -2,9 +2,9 @@
 name: Clancy2001IKr
 author: Michael Clerx
 # Initial values
-ikr.C3 = 0.99
-ikr.C2 = 0.01
-ikr.C1 = 0
+ikr.C3 = 0.98
+ikr.C2 = 0.005
+ikr.C1 = 0.015
 ikr.I = 0
 ikr.O = 0
 
@@ -29,8 +29,21 @@ EK = -85
 [ikr]
 use membrane.V
 a1 = p1 * exp(p2 * (V - 36))
-
-
+a2 = p7 * exp(p8 * V)
+a3 = p5
+a4 = p11 * exp(p12 * (V - 12))
+b1 = p3 * exp(p4 * V)
+b2 = p9 * exp(p10 * (V + 25))
+b3 = p6
+b4 = p13 * exp(p14 * V)
+b5 = b1 * b2 / a2
+g = p15
+dot(C3) = b4 * C2 - (a4) * C3
+dot(C2) = a4 * C3 + b3 * C1 - (b4 + a3) * C2
+dot(C1) = a3 * C2 + b1 * O + b5 * I - (b3 + a1 + a1) * C1
+dot(I)  = a1 * C1 + a2 * O - (b5 + b2) * I
+dot(O)  = a1 * C1 + b2 * I - (b1 + a2) * O
+IKr = g * O * (V - nernst.EK)
 p1 = 0.0655         # 1/ms  > 0
 p2 = 0.05547153     # 1/mV
 p3 = 0.0029357
@@ -45,6 +58,7 @@ p11 = 0.0555
 p12 = 0.05547153
 p13 = 0.002357
 p14 = -0.036588
+p15 = 0.04          # mS/uF
 
 [[script]]
 import matplotlib.pyplot as pl
