@@ -1,19 +1,74 @@
 functions{
-  real deriv_aslanidi(real t, real y, real[] theta, real[] V, real[] x_i){
+  int find_interval_elem(real x, vector sorted, int start_ind){
+    int res;
+    int N;
+    int max_iter;
+    real left;
+    real right;
+    int left_ind;
+    int right_ind;
+    int iter;
 
-    real xtau = theta[1] / (1 + exp(V / theta[2])) + theta[3];
-    real xinf = 1 / (1 + exp(-(V + theta[4]) / theta[5]));
-    real rinf = 1 / (1 + exp((V + theta[6]) / theta[7]));
-    //real EK = -85;
-    //IKr = p8 * xr * rr * (V - EK);
-    real dydt = (xinf - y) / xtau;
+    N = num_elements(sorted);
+
+    if(N == 0) return(0);
+
+    left_ind  = start_ind;
+    right_ind = N;
+
+    max_iter = 100 * N;
+    left  = sorted[left_ind ] - x;
+    right = sorted[right_ind] - x;
+
+    if(0 <= left)  return(left_ind-1);
+    if(0 == right) return(N-1);
+    if(0 >  right) return(N);
+
+    iter = 1;
+    while((right_ind - left_ind) > 1  && iter != max_iter) {
+      int mid_ind;
+      real mid;
+      // is there a controlled way without being yelled at with a
+      // warning?
+      mid_ind = (left_ind + right_ind) / 2;
+      mid = sorted[mid_ind] - x;
+      if (mid == 0) return(mid_ind-1);
+      if (left  * mid < 0) { right = mid; right_ind = mid_ind; }
+      if (right * mid < 0) { left  = mid; left_ind  = mid_ind; }
+      iter = iter + 1;
+    }
+    if(iter == max_iter)
+      print("Maximum number of iterations reached.");
+    return(left_ind);
+  }
+  
+  real deriv_aslanidi(real t, real[] I, real[] theta, real[] x_r, int[] x_i){
+    
+    int aLen = x_i[1];
+    vector[aLen] ts = to_vector(x_r[1:aLen]);
+    vector[aLen] V = to_vector(x_r[(aLen+1):(2*aLen)]);
+    int aT = find_interval_elem(t, ts, 1);
+    real aV = V[aT];
+    
+    real xtau = theta[1] / (1 + exp(aV/ theta[2])) + theta[3];
+    real xinf = 1 / (1 + exp(-(aV + theta[4]) / theta[5]));
+    real rinf = 1 / (1 + exp((aV + theta[6]) / theta[7]));
+    real dydt = (xinf - I[1]) / xtau;
     return dydt;
+  }
+  
+  matrix solve_aslanidi_forced_ode(real[] ts, real X0, real[] theta, real[] V) {
+    int x_i[1];
+    x_i[1] = size(V);
+    return(to_matrix(integrate_ode_bdf(deriv_aslanidi, rep_array(X0, 1), 0, ts, theta,
+                                        to_array_1d(append_row(to_vector(ts), to_vector(V))),
+                                        x_i)));
   }
 }
 
 data{
   int N;
-  real V[N,1];
+  real V[N];
   real I[N];
   real ts[N];
   real t0;
@@ -32,13 +87,12 @@ parameters{
   real<lower=0> p5;     // mV
   real p6;              // mV
   real<lower=0> p7;     // mV
-  real<lower=0> p8;     // E, in mS/uF
-  real<lower=0,upper=1> X0[1];
+  real<lower=0,upper=1> X0;
   real<lower=0> sigma;
 }
 
 transformed parameters{
-  real theta[8];
+  real theta[7];
   theta[1] = p1;
   theta[2] = p2;
   theta[3] = p3;
@@ -46,12 +100,14 @@ transformed parameters{
   theta[5] = p5;
   theta[6] = p6;
   theta[7] = p7;
-  theta[8] = p8;
 }
 
 model{
+  // solve ODE using stiff solver
+  matrix[N,2] I_temp;
   vector[N] I_int;
-  I_int = integrate_ode_bdf(deriv_aslanidi, X0, t0, ts, theta, V, x_i);
+  I_temp = solve_aslanidi_forced_ode(ts, X0, theta, V);
+  I_int = col(I_temp,1);
   
   // likelihood
   for(i in 1:N){
@@ -60,8 +116,11 @@ model{
   
   //priors
   p1 ~ normal(900,500);
-  
-  //target += normal_lpdf(p1|900,200);
-  
-  //target += normal_lpdf(I[i]|I_int[i],sigma);
+  p2 ~ normal(5,1);
+  p3 ~ normal(100,10);
+  p4 ~ normal(0.1,0.02);
+  p5 ~ normal(12.25,3);
+  p6 ~ normal(-5.6,1);
+  p7 ~ normal(20.4,3);
+  sigma ~ normal(1,0.1);
 }
