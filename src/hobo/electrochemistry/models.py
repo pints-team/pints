@@ -17,7 +17,7 @@ class ECModel:
     """
     def __init__(self,params):
         try:
-            print 'creating ECModel with parameters:'
+            print 'creating ECModel with (dimensional) parameters:'
             print '\treversed: ',params['reversed']
             print '\tEstart: ',params['Estart']
             print '\tEreverse: ',params['Ereverse']

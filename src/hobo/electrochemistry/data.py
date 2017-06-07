@@ -24,13 +24,26 @@ def read_cvsin_type_1(filename):
 
 
 class ECTimeData:
-    def __init__(self, filename, model, datafile_type='scsin_type_1'):
+    def __init__(self, filename, model, ignore_begin_samples, ignore_end_samples=0,datafile_type='scsin_type_1'):
         print 'ECTimeData: loading data from filename = ',filename,' ...'
         self.time, self.current = read_cvsin_type_1(filename)
-        print '\tdone loading data.'
 
+        print '\tUsing samples from ',ignore_begin_samples,' to ',len(self.time)-ignore_end_samples
+        if (ignore_end_samples > 0):
+            self.time = self.time[ignore_begin_samples:-ignore_end_samples]
+            self.current = self.current[ignore_begin_samples:-ignore_end_samples]
+        else:
+            self.time = self.time[ignore_begin_samples:]
+            self.current = self.current[ignore_begin_samples:]
+
+        print '\tCut data to multiple of period'
         dt = self.time[100]-self.time[99]
         samples_per_period = 1.0/(model.dim_params['omega']*dt)
+        discard_samples = int(len(self.current) % samples_per_period)
+        if (discard_samples > 0):
+            self.time = self.time[0:-discard_samples]
+            self.current = self.current[0:-discard_samples]
+
         downsample = int(floor(samples_per_period/200.0))
         if downsample == 0:
             downsample = 1
