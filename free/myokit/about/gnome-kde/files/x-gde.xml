@@ -1,0 +1,10 @@
+<?xml version='1.0'?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/x-gde">
+    <comment>Myokit GDE Document</comment>
+    <glob pattern="*.gde"/>
+    <magic priority="50">
+        <match type="string" value="# GDE Document" offset="0"/>
+    </magic>
+  </mime-type>
+</mime-info>

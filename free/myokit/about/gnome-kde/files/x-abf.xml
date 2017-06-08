@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/x-abf">
+    <comment>Axon binary file</comment>
+    <glob pattern="*.abf"/>
+    <acronym>ABF</acronym>
+    <expanded-acronym>Axon Binary File</expanded-acronym>
+  </mime-type>
+</mime-info>
