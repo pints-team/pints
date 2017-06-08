@@ -42,27 +42,29 @@ functions{
     return(left_ind);
   }
   
-  real deriv_aslanidi(real t, real[] I, real[] theta, real[] x_r, int[] x_i){
+  real[] deriv_aslanidi(real t, real[] I, real[] theta, real[] x_r, int[] x_i){
     
     int aLen = x_i[1];
     vector[aLen] ts = to_vector(x_r[1:aLen]);
     vector[aLen] V = to_vector(x_r[(aLen+1):(2*aLen)]);
     int aT = find_interval_elem(t, ts, 1);
-    real aV = V[aT];
+    real aV = (aT==0) ? V[1] : V[aT];
     
     real xtau = theta[1] / (1 + exp(aV/ theta[2])) + theta[3];
     real xinf = 1 / (1 + exp(-(aV + theta[4]) / theta[5]));
     real rinf = 1 / (1 + exp((aV + theta[6]) / theta[7]));
-    real dydt = (xinf - I[1]) / xtau;
+    real dydt[1];
+    dydt[1] = (xinf - I[1]) / xtau;
     return dydt;
   }
   
-  matrix solve_aslanidi_forced_ode(real[] ts, real X0, real[] theta, real[] V) {
+  vector solve_aslanidi_forced_ode(real[] ts, real X0, real[] theta, real[] V, real t0){
     int x_i[1];
+    real I[size(V),1];
     x_i[1] = size(V);
-    return(to_matrix(integrate_ode_bdf(deriv_aslanidi, rep_array(X0, 1), 0, ts, theta,
-                                        to_array_1d(append_row(to_vector(ts), to_vector(V))),
-                                        x_i)));
+
+    I = integrate_ode_bdf(deriv_aslanidi, rep_array(X0, 1), t0, ts, theta, to_array_1d(append_row(to_vector(ts), to_vector(V))), x_i);
+    return(to_vector(I[,1]));
   }
 }
 
@@ -104,10 +106,8 @@ transformed parameters{
 
 model{
   // solve ODE using stiff solver
-  matrix[N,2] I_temp;
   vector[N] I_int;
-  I_temp = solve_aslanidi_forced_ode(ts, X0, theta, V);
-  I_int = col(I_temp,1);
+  I_int = solve_aslanidi_forced_ode(ts, X0, theta, V,-0.1);
   
   // likelihood
   for(i in 1:N){
