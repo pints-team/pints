@@ -838,12 +838,15 @@ class AbfFile(object):
             for iDac in range(nDac):
                 c = Channel(self)
                 c._name = dinfo(iDac, 'sDACChannelName').strip()
-                c._numb = iDac
                 c._unit = dinfo(iDac, 'sDACChannelUnits').strip()
+                if self._version < 2:
+                    c._numb = iDac
+                else:
+                    c._numb = int(dinfo(iDac, 'lDACChannelNameIndex'))
                 c._data = np.ones(nSam) * dinfo(iDac, 'fDACHoldingLevel')
                 c._rate = self._rate
                 c._start = start
-                sweep[c._numb] = c
+                sweep[iDac] = c
                 # No stimulation info for this channel? Then continue
                 if not einfo_exists(iDac): continue
                 # Save last sample index
@@ -888,7 +891,7 @@ class AbfFile(object):
         nc = self._nc
         # Sampling rate is constant for all sweeps and channels
         #TODO: This won't work for 2-rate protocols
-        rate = self._rate         
+        rate = self._rate
         # Get binary integer format
         dt = np.dtype('i2') if header['nDataFormat'] == 0 else np.dtype('f4')
         # Get number of channels, create a numpy memory map
@@ -997,7 +1000,7 @@ class AbfFile(object):
                             c._lopass = None
                 c._rate  = rate
                 c._start = start
-                sweep[c._numb] = c
+                sweep[i] = c
             if self._mode == ACMODE_EPISODIC_STIMULATION:
                 # Increase time according to sweeps in episodic stim. mode
                 start += self._sweepStartToStart
@@ -1094,7 +1097,7 @@ class Channel(object):
         self._parent_file = parent_file  # The abf file this channel is from
         self._type = TYPE_UNKNOWN   # Type of recording
         self._name = None   # This channel's name
-        self._numb = None   # This channel's index
+        self._numb = None   # This channel's index (see note below)
         self._unit = None   # The units this channel's data is in
         self._data = None   # The raw data points
         self._rate = None   # Sampling rate in Hz
@@ -1102,11 +1105,19 @@ class Channel(object):
         self._cm = None     # The reported membrane capacitance        
         self._rs = None     # The reported access resistance
         self._lopass = None # The reported low-pass filter cut-off frequency
+        # Note that the channel indices are not necessarily sequential! So a
+        # file with 2 channels can have indices 0 and 3.
     def name(self):
         """
         Returns the name set for this channel.
         """
         return self._name
+    def number(self):
+        """
+        Returns the channel index used by pClamp. Note that this does not
+        necessarily equal its index in the python sweep data!
+        """
+        return self._numb
     def __str__(self):
         return 'Channel(' + str(self._numb) + ' "' + str(self._name) \
             + '"); ' + str(len(self._data)) + ' points sampled at ' \
