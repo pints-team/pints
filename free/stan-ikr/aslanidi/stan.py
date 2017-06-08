@@ -2,10 +2,10 @@
 import numpy as np
 import matplotlib.pyplot as pl
 import pystan
-import csvload
+import myokit
 
 # Load data
-d = csvload.load('simple.csv')
+d = myokit.DataLog.load_csv('simple.csv')
 t = d['engine.time']
 V = d['membrane.V']
 I = d['ikr.IKr']
