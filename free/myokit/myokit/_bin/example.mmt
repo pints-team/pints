@@ -1,0 +1,191 @@
+[[model]]
+name: Luo-Rudy 1991
+desc: """
+Implementation of the Luo-Rudy model I for the ventricular myocyte.
+Based on an updated formulation downloaded from http://rudylab.wustl.edu
+and licensed under a GNU GPL license version 2.
+"""
+# Initial conditions
+membrane.V = -84.5286
+ina.m      = 0.0017
+ina.h      = 0.9832
+ina.j      = 0.995484
+ica.d      = 0.000003
+ica.f      = 1
+ik.x       = 0.0057
+ica.Ca_i   = 0.0002
+
+[membrane]
+desc: """
+Membrane potential and stimulus
+"""
+C = 1.0 [uF/cm^2]
+dot(V) = - (1/C) * (i_ion + i_diff + i_stim) in [mV]
+    label membrane_potential
+    desc: The membrane potential
+i_ion = ina.INa + ik.IK + ib.Ib + ikp.IKp + ik1.IK1 + ica.ICa
+    in [uA/cm^2]
+    label cellular_current
+i_stim = engine.pace * stim_amplitude in [uA/cm^2]
+    stim_amplitude = -80 [uA/cm^2]
+    label stimulus_current
+i_diff = 0 bind diffusion_current
+    in [uA/cm^2]
+
+[ik]
+desc: """
+Time-dependent Potassium current
+"""
+use membrane.V as V
+dot(x) = alpha * (1 - x) - beta * x
+    alpha = 0.0005 [1/ms] * exp(0.083 [1/mV] * (V + 50 [mV])) / (1 + exp(0.057 [1/mV] * (V + 50 [mV])))
+        in [1/ms]
+    beta  = 0.0013 [1/ms] * exp(-0.06 [1/mV] * (V + 20 [mV])) / (1 + exp(-0.04 [1/mV] * (V + 20 [mV])))
+        in [1/ms]
+xi = if(V < -100 [mV], 1, 
+    if(V == -77 [mV],
+        2.837 [mV] * 0.04 [1/mV] / exp(0.04 [1/mV] * (V + 35 [mV])),
+        2.837 [mV] * (exp(0.04 [1/mV] * (V + 77 [mV])) - 1) / ((V + 77 [mV]) * exp(0.04 [1/mV] * (V + 35 [mV])))
+        ))
+IK = gK * xi * x * (V - E)
+    in [uA/cm^2]
+    desc: Time-dependent Potassium current
+    gK = 0.282 [mS/cm^2] * sqrt(cell.K_o / 5.4 [mM])
+        in [mS/cm^2]
+    E = cell.RTF * log((cell.K_o + PNa_K * cell.Na_o) / (cell.K_i + PNa_K * cell.Na_i))
+        in [mV]
+    PNa_K = 0.01833 : Permability ratio of Na to K
+
+# Fast Sodium current
+[ina]
+use membrane.V as V
+ENa = cell.RTF * log(cell.Na_o / cell.Na_i)
+    desc: Nernst potential of Na
+    in [mV]
+a = 1 - 1 / (1 + exp(-(V + 40 [mV]) / 0.24 [mV]))
+    desc: Used instead of if statement.
+dot(m) =  alpha * (1 - m) - beta * m
+    alpha = 0.32 [1/ms/mV] * (V + 47.13 [mV]) / (1 - exp(-0.1 [1/mV] * (V + 47.13 [mV])))
+        in [1/ms]
+    beta  = 0.08 [1/ms] * exp(-V / 11 [mV])
+        in [1/ms]
+dot(h) =  alpha * (1 - h) - beta * h
+    alpha = a * 0.135 [1/ms] * exp((80 [mV] + V) / -6.8 [mV])
+        in [1/ms]
+    beta  = a * (3.56 [1/ms] * exp(0.079 [1/mV] * V) + 3.1e5 [1/ms] * exp(0.35 [1/mV] * V)) \
+          + (1 - a) / (0.13 [ms] * (1 + exp((V + 10.66 [mV]) / -11.1 [mV])))
+        in [1/ms]
+dot(j) =  alpha * (1 - j) - beta * j
+    alpha = a * ( -127140 [1/ms/mV] * exp(0.2444 [1/mV] * V) - 3.474e-5 [1/ms/mV] * exp(-0.04391 [1/mV] * V)) \
+              * (V + 37.78 [mV]) / (1 + exp(0.311 [1/mV] * (V + 79.23 [mV])))
+        in [1/ms]
+    beta  = a * (0.1212 [1/ms] * exp(-0.01052 [1/mV] * V) / (1 + exp(-0.1378 [1/mV] * (V + 40.14 [mV])))) \
+          + (1 - a) * (0.3 [1/ms] * exp(-2.535e-7 [1/mV] * V) / (1 + exp(-0.1 [1/mV] * (V + 32 [mV]))))
+        in [1/ms]
+gNa = 16 [mS/cm^2]
+INa = gNa * m^3 * h * j * (V - ENa)
+    desc: Fast sodium current
+    in [uA/cm^2]
+
+# Plateau Potassium current
+[ikp]
+use membrane.V as V
+gKp = 0.0183 [mS/cm^2]
+Kp = 1 / (1 + exp((7.488 [mV] - V) / 5.98 [mV]))
+IKp = gKp * Kp * (V - ik1.E)
+    desc: Plateau Potassium current
+    in [uA/cm^2]    
+
+# Slow inward Calcium current
+[ica]
+use membrane.V as V
+E = 7.7 [mV] - 13.0287 [mV] * log(Ca_i / cell.Ca_o)
+    desc: Nernst potential
+    in [mV]
+dot(Ca_i) =  -1e-4 [cm^2/uA * mM/ms] * ICa + 0.07 [1/ms] * (1e-4 [mM] - Ca_i)
+    desc: Intracellular Calcium concentration
+    in [mM]
+dot(d) =  alpha * (1 - d) - beta * d
+    alpha = 0.095 [1/ms] * exp(-0.01 [1/mV] * (V - 5 [mV])) / (1 + exp(-0.072 [1/mV] * (V - 5 [mV])))
+        in [1/ms]
+    beta  = 0.07 [1/ms] * exp(-0.017 [1/mV]* (V + 44 [mV])) / (1 + exp(0.05 [1/mV] * (V + 44 [mV])))
+        in [1/ms]
+dot(f) =  alpha * (1-f) - beta * f
+    alpha = 0.012 [1/ms] * exp(-0.008 [1/mV] * (V + 28 [mV])) / (1 + exp(0.15 [1/mV] * (V + 28 [mV])))
+        in [1/ms]
+    beta  = 0.0065 [1/ms] * exp(-0.02 [1/mV] * (V + 30 [mV])) / (1 + exp(-0.2 [1/mV] * (V + 30 [mV])))
+        in [1/ms]
+gCa = 0.09 [mS/cm^2]
+ICa = gCa * d * f * (V - E)
+    in [uA/cm^2]
+desc: """
+The slow inward calcium current.
+"""
+
+# Time-independent potassium current
+[ik1]
+desc: Time-independent potassium current
+use membrane.V as V
+E = cell.RTF * log(cell.K_o / cell.K_i)
+    in [mV]
+gK1 = 0.6047 [mS/cm^2] * sqrt(cell.K_o / 5.4 [mM])
+    in [mS/cm^2]
+g = alpha / (alpha + beta) in [1]
+    alpha = 1.02 [1/ms] / (1 + exp(0.2385 [1/mV] * (V - E - 59.215 [mV])))
+        in [1/ms]
+    beta  = (0.49124 [1/ms] * exp(0.08032 [1/mV] * (V - E + 5.476 [mV])) \
+            + 1 [1/ms] * exp(0.06175 [1/mV] * (V - E - 594.31 [mV])))  \
+            / (1 + exp(-0.5143 [1/mV] * (V - E + 4.753 [mV])))
+        in [1/ms]
+IK1 = gK1 * g * (V - E)
+    in [uA/cm^2]
+
+# Background current
+[ib]
+desc: Background current
+gb = 0.03921 [mS/cm^2]
+Eb = -59.87 [mV]
+Ib = gb * (membrane.V - Eb) : Background current
+    in [uA/cm^2]
+
+# Cell parameters (ventricular mammalian cell)
+[cell]
+desc: Contains a list of cell constants
+K_o = 5.4 [mM]
+K_i = 145 [mM]
+Na_o = 140 [mM]
+Na_i = 10 [mM]
+Ca_o = 1.8 [mM]
+RTF = R*T/F
+    R = 8314 [mJ/mol/K] : Gas constant
+    T = 310 [K] : Absolute temperature
+    F = 96500 [C/mol] : Faraday constant (Value used in LR model)
+    
+# Simulation engine variables
+[engine]
+desc: """
+      Simulation engine variables
+      """
+time = 0 in [ms] bind time : It's the time!
+pace = 0 bind pace
+
+[[protocol]]
+# Level Start Length Period Multiplier
+1.0     50    0.5    1000   0
+
+[[script]]
+import myokit
+import matplotlib.pyplot as pl
+
+# Run simulation
+m = get_model()
+p = get_protocol()
+s = myokit.Simulation(m, p)
+s.pre(1000)
+d = s.run(1000)
+
+# Show results
+pl.figure()
+pl.plot(d['engine.time'], d['membrane.V'])
+pl.show()
+

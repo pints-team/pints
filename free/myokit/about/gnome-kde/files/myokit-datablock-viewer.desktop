@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=DataBlock Viewer
+Name[en_US]=DataBlock Viewer
+Comment=Viewer for Myokit DataBlock files
+Exec=/home/michael/dev/myokit/myo block %f
+Icon=/home/michael/dev/myokit/myokit/_bin/gui/icon-datablock-viewer.png
+#MimeType=
