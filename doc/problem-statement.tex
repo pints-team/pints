@@ -169,8 +169,8 @@ so that the likelihood is maximised for
 \begin{equation}
 \min_{ \theta, \sigma^2 }
     \left[
-        2n\sigma^2 \log(\sigma)
-        + \sum_{i=1}^n \left(z_i - f(t_i|\theta) \right)^2
+        n \log(\sigma)
+        + \frac{1}{2\sigma^2} \sum_{i=1}^n \left(z_i - f(t_i|\theta) \right)^2
     \right]
 \end{equation}
 
