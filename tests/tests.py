@@ -181,23 +181,25 @@ def test_mcmc():
     #prior.add_uniform_parameter('omega',model.params['omega']*0.99,model.params['omega']*1.01)
     #prior.add_uniform_parameter('phase',model.params['phase']-pi/10,model.params['phase']+pi/10)
 
-    #fitted_params,scaled_fitted_params,objective_func = hobo.fit_model_with_cmaes(data,model,prior)
-
-    # choose initial guess as params we set above
+    print 'before cmaes, parameters are:'
     names = prior.get_parameter_names()
-    init_guess = np.empty(prior.n,float)
-    for i,name in zip(range(prior.n),names):
-        init_guess[i] = model.params[name]
+    for name in prior.get_parameter_names():
+        print name,': ',model.params[name]
 
-    samples = hobo.mcmc_with_adaptive_covariance(data,model,prior,guess=init_guess,n_samples_mult=1000)
-    #samples = np.random.uniform(size=(prior.n,1000))
+    hobo.fit_model_with_cmaes(data,model,prior)
 
-    f, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3)
-    for ax,i in zip([ax1,ax2,ax3,ax4,ax5,ax6],range(prior.n+1)):
-        print np.min(samples[i,:]),' ',np.max(samples[i,:])
-        ax.hist(samples[i,:], 50, facecolor='green', alpha=0.75)
-    plt.show(block=True)
+    print 'after cmaes, parameters are:'
+    names = prior.get_parameter_names()
+    for name in prior.get_parameter_names():
+        print name,': ',model.params[name]
 
+
+    samples = hobo.mcmc_with_adaptive_covariance(data,model,prior)
+    #samples = np.random.uniform(size=(1000,prior.n+1))
+
+    fig,axes = hobo.scatter_grid(samples, init_guess)
+    plt.savefig('test_mcmc.pdf')
+    #plt.show(block=True)
 
 
 
