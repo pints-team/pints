@@ -1,8 +1,5 @@
-
 import hobo
 import hobo.electrochemistry
-import hobo.electrochemistry.data
-import hobo.electrochemistry.models
 
 import numpy as np
 from math import sqrt
@@ -34,8 +31,8 @@ def test_ec_model():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.models.ECModel(dim_params)
-    data = hobo.electrochemistry.data.ECTimeData(filename,model,ignore_begin_samples=40)
+    model = hobo.electrochemistry.ECModel(dim_params)
+    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # calculate model at time points given by the data file
     I,t = model.simulate(use_times=data.time)
@@ -72,9 +69,9 @@ def test_nonlin_op():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.models.ECModel(dim_params)
+    model = hobo.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.data.ECTimeData(filename,model,ignore_begin_samples=40)
+    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # specify bounds for parameters
     prior = hobo.Prior()
@@ -117,9 +114,9 @@ def test_stan():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.models.ECModel(dim_params)
+    model = hobo.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.data.ECTimeData(filename,model,ignore_begin_samples=40)
+    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # specify bounds for parameters
     prior = hobo.Prior()
@@ -168,9 +165,9 @@ def test_mcmc():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.models.ECModel(dim_params)
+    model = hobo.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.data.ECTimeData(filename,model,ignore_begin_samples=5,ignore_end_samples=0)
+    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5,ignore_end_samples=0)
 
     # specify bounds for parameters
     prior = hobo.Prior()
