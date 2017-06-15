@@ -1,5 +1,6 @@
 import hobo
 import hobo.electrochemistry
+import pickle
 
 import numpy as np
 from math import sqrt
@@ -76,11 +77,9 @@ def test_nonlin_op():
     # specify bounds for parameters
     prior = hobo.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_uniform_parameter('E0',model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_uniform_parameter('k0',0,10000)
-    prior.add_uniform_parameter('Cdl',0,20)
-    #prior.add_uniform_parameter('omega',model.params['omega']*0.99,model.params['omega']*1.01)
-    #prior.add_uniform_parameter('phase',model.params['phase']-pi/10,model.params['phase']+pi/10)
+    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',hobo.Uniform(),0,10000)
+    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
 
     params = hobo.fit_model_with_cmaes(data,model,prior)
     print params
@@ -121,11 +120,11 @@ def test_stan():
     # specify bounds for parameters
     prior = hobo.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_uniform_parameter('E0',model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_uniform_parameter('k0',0,10000)
-    prior.add_uniform_parameter('Cdl',0,20)
-    prior.add_uniform_parameter('omega',model.params['omega']*0.99,model.params['omega']*1.01)
-    prior.add_uniform_parameter('phase',model.params['phase']-pi/10,model.params['phase']+pi/10)
+    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',hobo.Uniform(),0,10000)
+    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+    prior.add_parameter('omega',hobo.Uniform(),model.params['omega']*0.99,model.params['omega']*1.01)
+    prior.add_parameter('phase',hobo.Uniform(),model.params['phase']-pi/10,model.params['phase']+pi/10)
 
     # calculate model using stan
     sm = model.get_stan_model()
@@ -172,30 +171,39 @@ def test_mcmc():
     # specify bounds for parameters
     prior = hobo.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_uniform_parameter('E0',model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_uniform_parameter('k0',0,10000)
-    prior.add_uniform_parameter('Cdl',0,20)
-    #prior.add_uniform_parameter('omega',model.params['omega']*0.99,model.params['omega']*1.01)
-    #prior.add_uniform_parameter('phase',model.params['phase']-pi/10,model.params['phase']+pi/10)
+    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',hobo.Uniform(),0,10000)
+    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
 
     print 'before cmaes, parameters are:'
     names = prior.get_parameter_names()
     for name in prior.get_parameter_names():
         print name,': ',model.params[name]
 
-    hobo.fit_model_with_cmaes(data,model,prior)
+    model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
+    #hobo.fit_model_with_cmaes(data,model,prior)
+
+
+    pickle.dump( model , open( "model.p", "wb" ) )
+    model = pickle.load( open( "model.p", "rb" ) )
+
+    I,t = model.simulate(use_times=data.time)
+    plt.figure()
+    plt.plot(t,I)
+    plt.plot(data.time,data.current)
+    plt.savefig('test_mcmc_after_cmaes.pdf')
+    plt.close()
 
     print 'after cmaes, parameters are:'
     names = prior.get_parameter_names()
     for name in prior.get_parameter_names():
         print name,': ',model.params[name]
 
-
     samples = hobo.mcmc_with_adaptive_covariance(data,model,prior)
     #samples = np.random.uniform(size=(1000,prior.n+1))
 
-    fig,axes = hobo.scatter_grid(samples, init_guess)
-    plt.savefig('test_mcmc.pdf')
+    fig,axes = hobo.scatter_grid(samples, model, prior)
+    plt.savefig('test_mcmc_after_mcmc.pdf')
     #plt.show(block=True)
 
 

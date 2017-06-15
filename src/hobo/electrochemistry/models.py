@@ -1,6 +1,7 @@
 from math import sqrt,pi
 from hobo_cpp import e_implicit_exponential_mesh,hobo_map,hobo_vector
 import pystan
+import numpy as np
 
 class ECModel:
     """Represents one electron transfer model in solution
@@ -127,6 +128,13 @@ class ECModel:
         for value,name in zip(vector,names):
             self.params[name] = value
             self.dim_params[name] = self.dimensionalise(value,name)
+
+    def get_params_from_vector(self, names):
+        vector = np.zeros(len(names))
+        for i in range(len(names)):
+            vector[i] = self.params[names[i]]
+        return vector
+
 
     def test_model(self):
         return """
