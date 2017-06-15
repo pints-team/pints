@@ -1,56 +1,69 @@
 import numpy as np
 
+class Uniform:
+
+    def __str__(self):
+        return 'Uniform'
+
+    def log_likelihood(self,value):
+        return 0
+
+
+class Normal:
+    def __init__(self,mean,variance):
+        self.mean = mean
+        self.variance = variance
+
+    def __str__(self):
+        return 'Normal with N(mean,variance) = N(',self.mean,',',self.variance,')'
+
+    def log_likelihood(self,value):
+        return -(value-mean)**2/variance
+
 class Prior:
     def __init__(self):
         self.data = {}
         self.n = 0
-        self.mean = np.array([],float)
-        self.variance = np.array([],float)
 
-    def add_uniform_parameter(self, name, min_value, max_value):
-        print 'Prior: adding uniform parameter ',name,' from (',min_value,'--',max_value,')'
-        self.data[name] = ('uniform',min_value,max_value)
+    def add_parameter(self, name, dist, min_value, max_value):
+        print 'Prior: adding parameter ',name,' with prior distribution',dist,'and bounds (',min_value,'--',max_value,')'
+        self.data[name] = (dist,min_value,max_value)
         self.n = len(self.data)
-        np.append(self.mean,[0.5])
-        np.append(self.variance,[1.0/12.0])
+
+    def log_likelihood(self,vector):
+        ll = 0
+        for (name,(prior,min_v,max_v)),j in zip(self.data.items(),range(len(self.data))):
+            ll += prior.log_likelihood(vector[j]);
+        return ll
 
     def get_parameter_names(self):
         ret = []
-        for i in self.data:
-            ret.append(i)
+        for key in self.data:
+            ret.append(key)
         return ret
 
     def scale_sample_periodic(self, vector):
         assert(len(vector)==len(self.data))
         scaled = abs(vector) % 2
-        for i,j in zip(self.data,range(scaled.size)):
-            dist_name,min_val,max_val = self.data[i]
-            if dist_name == 'uniform':
-                if (scaled[j] <= 1):
-                    scaled[j] = min_val + (max_val-min_val)*scaled[j]
-                else:
-                    scaled[j] = max_val - (max_val-min_val)*(scaled[j]-1)
-
+        for (name,(prior,min_v,max_v)),j in zip(self.data.items(),range(scaled.size)):
+            if (scaled[j] <= 1):
+                scaled[j] = min_v + (max_v-min_v)*scaled[j]
+            else:
+                scaled[j] = max_v - (max_v-min_v)*(scaled[j]-1)
         return scaled
 
     def scale_sample(self, vector):
         scaled = np.empty(len(vector),float)
         assert(len(vector)==len(self.data))
-        for i,j in zip(self.data,range(len(scaled))):
-            dist_name,min_val,max_val = self.data[i]
-            if dist_name == 'uniform':
-                scaled[j] = min_val + (max_val-min_val)*vector[j]
-
+        for (name,(prior,min_v,max_v)),j in zip(self.data.items(),range(scaled.size)):
+            scaled[j] = min_v + (max_v-min_v)*vector[j]
         return scaled
 
     def inv_scale_sample(self, vector):
         unscaled = np.empty(len(vector),float)
         assert(len(vector)==len(self.data))
-        for i,j in zip(self.data,range(len(unscaled))):
-            dist_name,min_val,max_val = self.data[i]
-            if dist_name == 'uniform':
-                unscaled[j] = (vector[j]-min_val)/(max_val-min_val)
-
+        for (name,(prior,min_v,max_v)),j in zip(self.data.items(),range(len(self.data))):
+            unscaled[j] = (vector[j]-min_v)/(max_v-min_v)
         return unscaled
 
 
