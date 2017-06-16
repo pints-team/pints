@@ -184,8 +184,6 @@ def test_mcmc():
     #hobo.fit_model_with_cmaes(data,model,prior)
 
 
-    pickle.dump( model , open( "model.p", "wb" ) )
-    model = pickle.load( open( "model.p", "rb" ) )
 
     I,t = model.simulate(use_times=data.time)
     plt.figure()
@@ -202,6 +200,11 @@ def test_mcmc():
     samples = hobo.mcmc_with_adaptive_covariance(data,model,prior)
     #samples = np.random.uniform(size=(1000,prior.n+1))
 
+    pickle.dump( samples, open( "samples.p", "wb" ) )
+    #samples = pickle.load( open( "samples.p", "rb" ) )
+
+    fig,axes = hobo.plot_trace(samples, model, prior)
+    plt.savefig('test_mcmc_trace.pdf')
     fig,axes = hobo.scatter_grid(samples, model, prior)
     plt.savefig('test_mcmc_after_mcmc.pdf')
     #plt.show(block=True)
