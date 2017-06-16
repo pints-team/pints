@@ -2,6 +2,23 @@ import pylab as plt
 import seaborn as sns
 sns.set_style('white')
 
+def plot_trace(param_samples, model, prior, fig_size=(6, 6)):
+    names = prior.get_parameter_names()
+    true_vals = model.get_params_from_vector(names)
+    n_param = param_samples.shape[1]
+
+    fig, axes = plt.subplots(n_param, 1, figsize=fig_size)
+    for i in range(n_param):
+        axes[i].plot(param_samples[:,i])
+        axes[i].set_xticklabels([])
+        if i < len(names):
+            axes[i].set_ylabel(names[i])
+        else:
+            axes[i].set_ylabel(r'$\theta$')
+    fig.tight_layout()
+    return fig, axes
+
+
 def scatter_grid(param_samples, model, prior, fig_size=(6, 6)):
     names = prior.get_parameter_names()
     true_vals = model.get_params_from_vector(names)
