@@ -15,18 +15,21 @@ class Normal:
         self.variance = variance
 
     def __str__(self):
-        return 'Normal with N(mean,variance) = N(',self.mean,',',self.variance,')'
+        return 'Normal with N(mean,variance) = N(%f,%f)'%(self.mean,self.variance)
 
     def log_likelihood(self,value):
-        return -(value-mean)**2/variance
+        return -(value-self.mean)**2/self.variance
 
 class Prior:
     def __init__(self):
         self.data = {}
         self.n = 0
 
-    def add_parameter(self, name, dist, min_value, max_value):
-        print 'Prior: adding parameter ',name,' with prior distribution',dist,'and bounds (',min_value,'--',max_value,')'
+    def add_parameter(self, name, dist, min_value, max_value, quiet=False):
+        if not quiet:
+            print 'Prior: adding parameter ',name,':'
+            print '\tprior distribution = ',dist
+            print '\tbounds = (',min_value,'--',max_value,')'
         self.data[name] = (dist,min_value,max_value)
         self.n = len(self.data)
 
