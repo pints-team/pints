@@ -209,8 +209,83 @@ def test_mcmc():
     plt.savefig('test_mcmc_after_mcmc.pdf')
     #plt.show(block=True)
 
+def test_hierarchical():
+    #filenames = ['../GC01_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC02_FeIII-1mM_1M-KCl_02a_009Hz.txt',
+    #             '../GC03_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC04_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC05_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC06_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC07_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC08_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC09_FeIII-1mM_1M-KCl_02_009Hz.txt',
+    #             '../GC10_FeIII-1mM_1M-KCl_02_009Hz.txt']
+
+    #dim_params = {
+    #    'reversed': True,
+    #    'Estart': 0.5,
+    #    'Ereverse': -0.1,
+    #    'omega': 9.0152,
+    #    'phase': 0,
+    #    'dE': 0.08,
+    #    'v': -0.08941,
+    #    't_0': 0.001,
+    #    'T': 297.0,
+    #    'a': 0.07,
+    #    'c_inf': 1*1e-3*1e-3,
+    #    'D': 7.2e-6,
+    #    'Ru': 8.0,
+    #    'Cdl': 20.0*1e-6,
+    #    'E0': 0.214,
+    #    'k0': 0.0101,
+    #    'alpha': 0.53
+    #    }
+
+    #model = hobo.electrochemistry.ECModel(dim_params)
+
+    #data = []
+    #for filename in filenames:
+    #    data.append(hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5))
+
+    ## specify bounds for parameters
+    #prior = hobo.Prior()
+    #e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
+    #prior.add_parameter('E0',hobo.Uniform(),
+    #                model.params['Estart']+e0_buffer,
+    #                model.params['Ereverse']-e0_buffer)
+    #prior.add_parameter('k0',hobo.Uniform(),0,10000)
+    #prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+
+    #print 'before cmaes, parameters are:'
+    #names = prior.get_parameter_names()
+    #for name in prior.get_parameter_names():
+    #    print name,': ',model.params[name]
+
+    #model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
+    ##hobo.fit_model_with_cmaes(data,model,prior)
+
+    #print 'after cmaes, parameters are:'
+    #names = prior.get_parameter_names()
+    #for name in prior.get_parameter_names():
+    #    print name,': ',model.params[name]
+
+
+    #pickle.dump( (data,model,prior), open( "test_hierarchical.p", "wb" ) )
+    data,model,prior = pickle.load(open( "test_hierarchical.p", "rb" ))
+
+    samples = hobo.hierarchical_gibbs_sampler(data,model,prior)
+
+    pickle.dump( samples, open( "samples.p", "wb" ) )
+    #samples = pickle.load( open( "samples.p", "rb" ) )
+
+    fig,axes = hobo.plot_trace(samples, model, prior)
+    plt.savefig('test_mcmc_trace.pdf')
+    fig,axes = hobo.scatter_grid(samples, model, prior)
+    plt.savefig('test_mcmc_after_mcmc.pdf')
+    #plt.show(block=True)
+
 
 
 
 if __name__ == "__main__":
-    test_mcmc()
+    test_hierarchical()

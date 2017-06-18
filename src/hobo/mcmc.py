@@ -4,37 +4,75 @@ import math
 import multiprocessing
 import time
 import os
+import hobo
+import functools
 
-
-def hierarchical_gibbs_sampler(names,datas,model,prior):
-    assert len(samples) == len(datas)
-    nexp = len(datas)
+def inner_mcmc(sample_send,data,model,prior,means,covariance):
+    quiet = sample_send is not None
+    names = prior.get_parameter_names()
     ntheta = len(names)
-    means_sample = np.zeros(ntheta)
-    covariance_sample = np.zeros(ntheta)
-    theta_sample = np.zeros(nexp,ntheta)
-    names_index = np.zeros(ntheta,int)
+
+
+    for ni in range(ntheta):
+        min_v = prior.data[names[ni]][1]
+        max_v = prior.data[names[ni]][2]
+        prior.add_parameter(names[ni],
+                hobo.Normal(means[ni],covariance[ni,ni]),
+                min_v,max_v,quiet=quiet)
+    # inner mcmc
+    samples = mcmc_with_adaptive_covariance(data,model,prior,quiet=quiet)
+    # take a sample from this distribution
+    random_index = int(rand.uniform(0,samples.shape[0]))
+    if sample_send is not None:
+        sample_send.send(samples[random_index,:])
+    else:
+        return samples[random_index,:]
+
+
+def hierarchical_gibbs_sampler(datas,model,prior,n_samples_mult=1000):
+    nexp = len(datas)
+    names = prior.get_parameter_names()
+    ntheta = len(names)
+    n_samples = n_samples_mult*ntheta
+    theta_sample = np.zeros((nexp,ntheta))
 
     k_0 = 1
     nu_0 = 1
     mu_0 = model.get_params_from_vector(names)
-    Gamma_0 = 1
+    Gamma_0 = np.zeros((ntheta,ntheta),float)
 
-    # find where names are in prior
-    for i,name in zip(range(n),names):
-        names_index[i] = prior.data.index(name)
+    for i,name in zip(range(ntheta),names):
+        min_v = prior.data[name][1]
+        max_v = prior.data[name][2]
+        Gamma_0[i,i] = (1.0/12.0)*(max_v-min_v)**2
+
+    means_sample = mu_0
+    covariance_sample = Gamma_0
 
     for i in range(n_samples):
-        for j,data in zip(range(nexp),datas):
-            # set prior for each name
-            for ni in range(ntheta):
-                prior.data.items[names_index[ni]] = Normal(means_sample[ni],covariance_sample[ni,ni])
-            # inner mcmc
-            samples = mcmc_with_adaptive_covariance(data,model,prior)
-            # take a sample from this distribution
-            theta_sample[j,:] = samples[rand.uniform(0,len(samples)),:]
 
-        # sample from means distribution with a given stddev
+        print '-----------------------------------------'
+        print 'hierarchical_gibbs_sampler iteration',i
+        print 'running mcmc with new sample priors'
+        print '-----------------------------------------'
+        samples_recv = []
+        ps = []
+        for j in range(nexp-1):
+            sample_recv, sample_send = multiprocessing.Pipe(duplex=False)
+            samples_recv.append(sample_recv)
+            p = multiprocessing.Process(target=inner_mcmc,
+                                    args=(sample_send,datas[j],model,prior,
+                                        means_sample,covariance_sample))
+            p.start()
+            ps.append(p)
+
+        theta_sample[nexp-1,:] = inner_mcmc(None,datas[j],model,prior,
+                                  means_sample,covariance_sample)
+        for j in range(nexp-1):
+            theta_sample[j,:] = samples_recv[j].recv()
+            ps[j].join()
+
+        # sample mean and covariance from a normal inverse wishart
         mu_hat = np.sum(theta_sample,axis=0)/nexp
         C = np.zeros(ntheta,ntheta)
         for j in range(nexp):
@@ -47,17 +85,16 @@ def hierarchical_gibbs_sampler(names,datas,model,prior):
         Gamma = Gamma_0 + C + (k_0*nexp)/k*np.outer(mu_hat-mu_0)
 
         # generate means_sample and covariance_sample from normal-inverse-Wishart
-        sample_covariance = scipy.stats.invwishart.rvs(df=nu,scale=Gamma)
-        means_sample = rand.multivariate_normal(mu,sample_covariance/k)
+        covariance_sample = scipy.stats.invwishart.rvs(df=nu,scale=Gamma)
+        means_sample = rand.multivariate_normal(mu,covariance_sample/k)
 
 
 
 
-def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_pipes, data, model, prior, burn_in_mult, n_samples_mult,results_send=None):
+def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_pipes, data, model, prior, burn_in_mult, n_samples_mult,results_send=None,quiet=False):
     master = isinstance(converged_pipes,list)
     if master:
         assert results_send is None
-        print 'have',len(converged_pipes),'children'
     else:
         assert results_send is not None
 
@@ -111,7 +148,7 @@ def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_
     best_theta = theta
     best_log_likelihood = log_likelihood_theta
     for t in range(burn_in):
-        if master and (t % (burn_in/10) == 0) and t != 0:
+        if master and not quiet and (t % (burn_in/10) == 0) and t != 0:
             print t/(burn_in/100),'% of burn-in complete'
         theta_s = rand.multivariate_normal(theta,sample_covariance)
         if np.all(theta_s >= 0) and np.all(theta_s <= 1):
@@ -124,7 +161,7 @@ def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_
                     best_theta = theta
                     best_log_likelihood = log_likelihood_theta
 
-    if master:
+    if master and not quiet:
         print '100 % of burn-in complete'
         print '-------------------------'
 
@@ -159,7 +196,8 @@ def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_
                 W = np.mean(variances,axis=0)
                 var_hat = (n-1.0)/n * W + 1.0/n * B
                 R_hat = np.sqrt(var_hat/W)
-                print s/(n_samples/100),'% complete, accepted ',1000*total_accepted/n_samples,'% R_hat = ',R_hat
+                if not quiet:
+                    print s/(n_samples/100),'% complete, accepted ',1000*total_accepted/n_samples,'% R_hat = ',R_hat
                 if np.max(np.abs(R_hat - 1)) < 1e-1:
                     for converged_pipe in converged_pipes:
                         converged_pipe.send(True)
@@ -193,7 +231,8 @@ def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_
 
     n = len(theta_store)
     if master:
-        print '------------------------'
+        if not quiet:
+            print '------------------------'
         return theta_store[n/2:,:]
     else:
         results_send.send(theta_store[n/2:,:])
@@ -202,10 +241,11 @@ def mcmc_with_adaptive_covariance_chain(converged_pipes, means_pipes, variances_
 
 
 
-def mcmc_with_adaptive_covariance(data, model, prior, nchains=2, burn_in_mult=100, n_samples_mult=1000):
-    print '-----------------------------'
-    print 'MCMC with adaptive covariance'
-    print '-----------------------------'
+def mcmc_with_adaptive_covariance(data, model, prior, nchains=2, burn_in_mult=100, n_samples_mult=1000,quiet=False):
+    if not quiet:
+        print '-----------------------------'
+        print 'MCMC with adaptive covariance'
+        print '-----------------------------'
 
     model_params_save = model.get_params_from_vector(prior.get_parameter_names())
     ps = []
@@ -227,19 +267,22 @@ def mcmc_with_adaptive_covariance(data, model, prior, nchains=2, burn_in_mult=10
         p = multiprocessing.Process(target=mcmc_with_adaptive_covariance_chain,
                                     args=(converged_recv,means_send,variances_send,
                                           data,model,prior,
-                                          burn_in_mult,n_samples_mult,results_send))
+                                          burn_in_mult,n_samples_mult,
+                                          results_send,quiet))
         p.start()
         ps.append(p)
 
     theta_store = mcmc_with_adaptive_covariance_chain(
                             converged_send_pipes,means_recv_pipes,variances_recv_pipes,
-                            data,model,prior,burn_in_mult,n_samples_mult)
+                            data,model,prior,burn_in_mult,n_samples_mult,None,quiet)
 
-    print 'finished, with ',theta_store.shape[0],'samples'
+    if not quiet:
+        print 'finished, with ',theta_store.shape[0],'samples'
     for p,results_recv in zip(ps,results_recv_pipes):
         theta_store = np.concatenate((theta_store,results_recv.recv()),axis=0)
         p.join()
-    print 'got child samples, now have ',theta_store.shape[0],'samples'
+    if not quiet:
+        print 'got child samples, now have ',theta_store.shape[0],'samples'
 
     model.set_params_from_vector(model_params_save,prior.get_parameter_names())
 
