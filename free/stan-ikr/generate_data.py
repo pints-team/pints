@@ -7,6 +7,10 @@ import os
 
 write_dir = ''
 
+# Fix for consistent data?
+if True:
+    np.random.seed(5)
+
 def generate_data(model, debug=False):
     """
     Generates some test data for one or all models.
