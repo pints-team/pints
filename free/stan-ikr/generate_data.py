@@ -124,6 +124,11 @@ models = [
     'diveroli-2013b-ikr',
     'fink-2008-ikr',
     'fox-2002-ikr',
+    'grandi-2010-ikr',
+    'hund-2004-ikr',
+    'inada-2009-ikr',
+    
+    
 ]
 
 print('Generating test data for all models')
