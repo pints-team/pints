@@ -1,11 +1,8 @@
 [[model]]
-name: DiVeroli2013IKr
+name: Fox2002IKr
 author: Michael Clerx
 # Initial values
-ikr.IC = 0
-ikr.C = 1
-ikr.I = 0
-ikr.O = 0
+ikr.x = 0
 
 #
 # Simulation engine variables
@@ -23,37 +20,26 @@ V = engine.pace
     in [mV]
 
 [nernst]
-EK = -85
+EK = -85 [mV]
 
 [ikr]
 use membrane.V
-dot(IC) = -IC * (a1 + b2) + C  * a2 + I * b1
-dot(C)  = -C  * (a1 + a2) + IC * b2 + O * b1
-dot(I)  = -I  * (b1 + b2) + IC * a1 + O * a2
-dot(O)  = -O  * (b1 + a2) + C  * a1 + I * b2
-a1 = p1  + p2  * exp(-((V - p3 ) / p4 )^2)
-b1 = p5  + p6  * exp(-((V - p7 ) / p8 )^2)
-a2 = p9  + p10 * exp(-((V - p11) / p12)^2)
-b2 = p13 + p14 * exp(-((V - p15) / p16)^2)
-g = p17
-IKr = g * O * (V - nernst.EK)
-p1 = 3.4e-5 [1/ms]
-p2 = 0.105 [1/ms]
-p3 = 70 [mV]
-p4 = 35.9 [mV]
-p5 = 2.55e-7 [1/ms]
-p6 = 0.0427 [1/ms]
-p7 = -145.3 [mV]
-p8 = 62.7 [mV]
-p9 = 0.127 [1/ms]
-p10 = 79 [1/ms]
-p11 = 470 [mV]
-p12 = 196 [mV]
-p13 = 8.97e-3 [1/ms]
-p14 = 63.9 [1/ms]
-p15 = -292 [mV]
-p16 = 102.2 [mV]
-p17 = 0.04 [mS/uF]
+dot(x) = (inf - x) / tau
+    tau = p1 + 1 / (exp(p2 + p3 * V) + exp(p4 + p5 * V))
+    inf = 1 / (1 + exp(p6 + p7 * V))
+r = 1 / (1 + p8 * exp(p9 * (V + 28)))
+g = p10
+IKr = g * x * r * (V - nernst.EK)
+p1 = 43 [ms]
+p2 = -5.495 [1]
+p3 = 0.1691 [1/mV]
+p4 = -7.677 [1]
+p5 = -0.0128 [1/mV]
+p6 = -2.182 [1]
+p7 = -0.1819 [1/mV]
+p8 = 2.5 [1]
+p9 = 0.1 [1/mV]
+p10 = 0.04 [mS/uF]
 
 [[script]]
 import matplotlib.pyplot as pl
