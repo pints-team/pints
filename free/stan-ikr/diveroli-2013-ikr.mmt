@@ -1,10 +1,9 @@
 [[model]]
-name: Clancy2001IKr
+name: DiVeroli2013IKr
 author: Michael Clerx
 # Initial values
-ikr.C3 = 0.98
-ikr.C2 = 0.005
-ikr.C1 = 0.015
+ikr.IC = 0
+ikr.C = 1
 ikr.I = 0
 ikr.O = 0
 
@@ -28,37 +27,33 @@ EK = -85
 
 [ikr]
 use membrane.V
-a1 = p1 * exp(p2 * (V - 36))
-a2 = p7 * exp(p8 * V)
-a3 = p5
-a4 = p11 * exp(p12 * (V - 12))
-b1 = p3 * exp(p4 * V)
-b2 = p9 * exp(p10 * (V + 25))
-b3 = p6
-b4 = p13 * exp(p14 * V)
-b5 = b1 * b2 / a2
-g = p15
-dot(C3) = b4 * C2 - (a4) * C3
-dot(C2) = a4 * C3 + b3 * C1 - (b4 + a3) * C2
-dot(C1) = a3 * C2 + b1 * O + b5 * I - (b3 + a1 + a1) * C1
-dot(I)  = a1 * C1 + a2 * O - (b5 + b2) * I
-dot(O)  = a1 * C1 + b2 * I - (b1 + a2) * O
+dot(IC) = -IC * (a1 + b2) + C  * a2 + I * b1
+dot(C)  = -C  * (a1 + a2) + IC * b2 + O * b1
+dot(I)  = -I  * (b1 + b2) + IC * a1 + O * a2
+dot(O)  = -O  * (b1 + a2) + C  * a1 + I * b2
+a1 = p1  + p2  * exp(-((V - p3 ) / p4 )^2)
+b1 = p5  + p6  * exp(-((V - p7 ) / p8 )^2)
+a2 = p9  + p10 * exp(-((V - p11) / p12)^2)
+b2 = p13 + p14 * exp(-((V - p15) / p16)^2)
+g = p17
 IKr = g * O * (V - nernst.EK)
-p1 = 0.0655         # 1/ms  > 0
-p2 = 0.05547153     # 1/mV
-p3 = 0.0029357
-p4 = -0.02158
-p5 = 2.172
-p6 = 1.077
-p7 = 0.6796
-p8 = 0.000942
-p9 = 0.4939
-p10 = -0.02352
-p11 = 0.0555
-p12 = 0.05547153
-p13 = 0.002357
-p14 = -0.036588
-p15 = 0.04          # mS/uF
+p1 = 3.4e-5 [1/ms]
+p2 = 0.105 [1/ms]
+p3 = 70 [mV]
+p4 = 35.9 [mV]
+p5 = 2.55e-7 [1/ms]
+p6 = 0.0427 [1/ms]
+p7 = -145.3 [mV]
+p8 = 62.7 [mV]
+p9 = 0.127 [1/ms]
+p10 = 79 [1/ms]
+p11 = 470 [mV]
+p12 = 196 [mV]
+p13 = 8.97e-3 [1/ms]
+p14 = 63.9 [1/ms]
+p15 = -292 [mV]
+p16 = 102.2 [mV]
+p17 = 0.04 [mS/uF]
 
 [[script]]
 import matplotlib.pyplot as pl

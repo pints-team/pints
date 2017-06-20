@@ -120,6 +120,7 @@ models = [
     'aslanidi-2009-ikr',
     'clancy-2001-ikr',
     'courtemanche-1998-ikr',
+    'diveroli-2013-ikr',
 ]
 
 print('Generating test data for all models')
