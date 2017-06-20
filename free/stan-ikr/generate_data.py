@@ -17,6 +17,13 @@ def generate_data(model, debug=False):
     """
     # Get model
     m = myokit.load_model(model + '.mmt')
+    
+    # Hold at low potential for a while
+    vhold = -80
+    p = pacing.constant(vhold)
+    s = myokit.Simulation(m, p)
+    s.run(10000, log=myokit.LOG_NONE)
+    m.set_state(s.state())
 
     # Set up pacing protocol
     tpre  = 2000        # Time before step to variable V
@@ -25,7 +32,6 @@ def generate_data(model, debug=False):
     ttotal = tpre + tstep + tpost
     vmin = -100
     vmax = 50
-    vhold = -80         # V before and after step
     vres = 10           # Difference in V between steps
     v = np.arange(vmin, vmax + vres, vres)
     p = pacing.steptrain(
