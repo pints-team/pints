@@ -4,6 +4,12 @@
 # the user home directory, adds a mime-type file for .mmt files (again in the
 # user dir) and reloads the mime-type database.
 #
+# This file is part of Myokit
+#  Copyright 2017      Michael Clerx, University of Oxford
+#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Licensed under the GNU General Public License v3.0
+#  See: http://myokit.org
+#
 from __future__ import print_function
 import os
 import sys

@@ -130,8 +130,14 @@ class DataLogViewer(myokit.gui.MyokitApplication):
         filenames = QtWidgets.QFileDialog.getOpenFileNames(self,
             'Open data file', self._path, filter=FILTER_DATA)[0]
         if filenames:
+            # Save current number of tabs
+            tab_count = self._tabs.count()
+            # Load files
             for filename in filenames:
                 self.load_file(str(filename))
+            # If loading went ok, show first of newly loaded files
+            if self._tabs.count() > tab_count:
+                self._tabs.setCurrentIndex(tab_count)
     def closeEvent(self, event=None):
         """
         Called when window is closed. To force a close (and trigger this
@@ -310,9 +316,11 @@ class AbfTab(QtWidgets.QTabWidget):
         self._figures = []
         self._axes = []
         for i in xrange(self._abf.data_channels()):
-            self.addTab(self.create_graph_tab(i), 'AD' + str(i))
+            tab, name = self.create_graph_tab(i)
+            self.addTab(tab, name)
         for i in xrange(self._abf.protocol_channels()):
-            self.addTab(self.create_protocol_tab(i), 'DA' + str(i))
+            tab, name = self.create_protocol_tab(i)
+            self.addTab(tab, name)
         self.addTab(self.create_info_tab(), 'Info')
         del(self._abf)
     def create_graph_tab(self, channel):
@@ -328,9 +336,12 @@ class AbfTab(QtWidgets.QTabWidget):
         axes = figure.add_subplot(1,1,1)        
         toolbar = backend.NavigationToolbar2QT(canvas, widget)
         # Draw lines
+        name = 'AD(' + str(channel) + ')' # Default if no data is present
         times = None
         for i, sweep in enumerate(self._abf):
             if times is None:
+                name = 'AD' + str(sweep[channel].number()) + ': ' \
+                    + sweep[channel].name()
                 times = sweep[channel].times()
             axes.plot(times, sweep[channel].values())
         # Create a layout
@@ -340,7 +351,7 @@ class AbfTab(QtWidgets.QTabWidget):
         widget.setLayout(vbox)
         self._figures.append(figure)
         self._axes.append(axes)
-        return widget
+        return widget, name
     def create_protocol_tab(self, channel):
         """
         Creates a widget displaying a stored D/A signal.
@@ -354,9 +365,12 @@ class AbfTab(QtWidgets.QTabWidget):
         axes = figure.add_subplot(1,1,1)        
         toolbar = backend.NavigationToolbar2QT(canvas, widget)
         # Draw lines
+        name = 'DA(' + str(channel) + ')' # Default if no data is present
         times = None
         for i, sweep in enumerate(self._abf.protocol()):
             if times is None:
+                name = 'DA' + str(sweep[channel].number()) + ': ' \
+                    + sweep[channel].name()
                 times = sweep[channel].times()
             axes.plot(times, sweep[channel].values())
         # Create a layout
@@ -366,7 +380,7 @@ class AbfTab(QtWidgets.QTabWidget):
         widget.setLayout(vbox)
         self._figures.append(figure)
         self._axes.append(axes)
-        return widget
+        return widget, name
     def create_info_tab(self):
         """
         Creates a tab displaying information about the file.

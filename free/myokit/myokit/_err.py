@@ -107,7 +107,29 @@ class ExportError(MyokitError):
     *Extends:* :class:`myokit.MyokitError`.
     
     Raised when an export to another format fails.
+    
+    Arguments:
+    
+    ``message``
+        A helpful error message
+    ``exporter``
+        A `myokit.formats.Exporter` object that can be used to generate log
+        output.
+    
     """
+    def __init__(self, message, exporter):
+        self.message = str(message)
+        self._exporter = exporter
+        self._log_text = None
+        super(ExportError, self).__init__(self.message)
+    def log(self):
+        """
+        Returns logged exporter output.
+        """
+        if self._log_text is None:
+            self.exporter.log_warnings()
+            self._log_text = self._exporter.log_text()
+        return self._log_text
 class FindNanError(MyokitError):
     """
     *Extends:* :class:`myokit.MyokitError`

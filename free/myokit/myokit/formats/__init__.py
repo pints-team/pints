@@ -2,9 +2,13 @@
 # Contains functions for the import and export of Myokit objects.
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import myokit
 import os
@@ -37,8 +41,6 @@ class Exporter(myokit.TextLogger):
         Tests if the given path is writable, if not, errors are logged and a
         :class:`myokit.ExportError` is raised.
         """
-        path = os.path.abspath(os.path.expanduser(path))
-        path = myokit.format_path(path)
         self.log('Storing data in: ' + path)
         if os.path.exists(path):
             if not os.path.isdir(path):
@@ -46,7 +48,7 @@ class Exporter(myokit.TextLogger):
                          ' specified location ' + path
                 self.log_flair('An error occurred.')
                 self.log(msg)
-                raise myokit.ExportError(msg)
+                raise myokit.ExportError(msg, self)
             else:
                 self.log('Using existing directory ' + path)
         else:
@@ -354,13 +356,15 @@ class TemplatedRunnableExporter(Exporter):
     """
     def __init__(self):
         super(TemplatedRunnableExporter, self).__init__()
-    def runnable(self, path, model, protocol=None):
+    def runnable(self, path, model, protocol=None, *args):
         """
         Exports a :class:`myokit.Model` and optionally a
         :class:`myokit.Protocol` to something that can be run or compiled.
         
         The output will be stored in the **directory** ``path``.
         """
+        path = os.path.abspath(os.path.expanduser(path))
+        path = myokit.format_path(path)
         self._test_writable_dir(path)
         # Clone the model, allowing changes to be made during export
         model = model.clone()
@@ -374,14 +378,14 @@ class TemplatedRunnableExporter(Exporter):
             msg = 'Template directory not found: ' + tpl_dir
             self.log_flair('An error occurred.')
             self.log(msg)
-            raise myokit.ExportError(msg)
+            raise myokit.ExportError(msg, self)
         if not os.path.isdir(tpl_dir):
             msg = 'Template path is not a directory:' + tpl_dir
             self.log_flair('An error occurred.')
             self.log(msg)
-            raise Myokit.ExportError(msg)
+            raise Myokit.ExportError(msg, self)
         # Render all templates
-        tpl_vars = self._vars(model, protocol)
+        tpl_vars = self._vars(model, protocol, *args)
         for tpl_name, out_name in self._dict().iteritems():
             # Create any dirs embedded in output file path
             file_dir = os.path.split(out_name)[0]
@@ -394,7 +398,7 @@ class TemplatedRunnableExporter(Exporter):
                         msg += ' A file or link with that name already exists.'
                         self.log_flair('An error occurred.')
                         self.log(msg)
-                        raise myokit.ExportError(msg)
+                        raise myokit.ExportError(msg, self)
                 else:
                     try:
                         os.makedirs(file_dir)
@@ -404,7 +408,7 @@ class TemplatedRunnableExporter(Exporter):
                         msg += ' IOError:' + str(e)
                         self.log_flair('An error occurred.')
                         self.log(msg)
-                        raise myokit.ExportError(msg)
+                        raise myokit.ExportError(msg, self)
             # Check if output file already exists
             out_name = os.path.join(path, out_name)
             if os.path.exists(out_name):
@@ -412,7 +416,7 @@ class TemplatedRunnableExporter(Exporter):
                     msg = 'Directory exists at ' + myokit.format_path(out_name)
                     self.log_flair('An error occurred.')
                     self.log(msg)
-                    raise myokit.ExportError(msg)
+                    raise myokit.ExportError(msg, self)
                 self.log('Overwriting ' + myokit.format_path(out_name))
             # Check template file
             tpl_name = os.path.join(tpl_dir, tpl_name)
@@ -420,13 +424,13 @@ class TemplatedRunnableExporter(Exporter):
                 msg = 'File not found: ' + myokit.format_path(tpl_name)
                 self.log_flair('An error occurred.')
                 self.log(msg)
-                raise myokit.ExportError(msg)
+                raise myokit.ExportError(msg, self)
             if not os.path.isfile(tpl_name):
                 msg = 'Directory found, expecting file at '
                 msg += myokit.format_path(tpl_name)
                 self.log_flair('An error occurred.')
                 self.log(msg)
-                raise myokit.ExportError(msg)
+                raise myokit.ExportError(msg, self)
             # Render
             with open(out_name, 'w') as f:
                 p = myokit.pype.TemplateEngine()
@@ -443,8 +447,8 @@ class TemplatedRunnableExporter(Exporter):
                         d = p.error_details()
                         if d:
                             self.log(d)
-                    raise myokit.ExportError('An error ocurred while'
-                        ' processing a template.')
+                    raise myokit.ExportError('An internal error ocurred while'
+                        ' processing a template.', self)
     def supports_runnable(self):
         """
         Returns ``True`` if this exporter supports export of a model and
@@ -470,6 +474,9 @@ class TemplatedRunnableExporter(Exporter):
     def _vars(self, model, protocol):
         """
         Returns a dict containing all variables the templates will need.
+        
+        Will be called with the arguments `model` and `protocol`, followed by
+        any extra arguments passed to :meth:`runnable`.
 
         *This should be implemented by each subclass.*
         """
