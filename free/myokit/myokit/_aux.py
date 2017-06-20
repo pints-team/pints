@@ -4,11 +4,16 @@
 # myokit function but do not belong to the _core or _parser or _simulation.
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
 #
+# Authors:
+#  Michael Clerx
+#
 import os
+import re
 import sys
 import array
 import timeit
@@ -35,6 +40,18 @@ def time():
     """
     import time as t
     return t.strftime(myokit.TIME_FORMAT)
+_natural_sort_regex = re.compile('([0-9]+)')
+def natural_sort_key(s):
+    """
+    Natural sort key, from: http://stackoverflow.com/questions/4836710/
+    
+    Usage example::
+    
+        values.sort(key=lambda x: myokit.natural_sort_key(x))
+    
+    """
+    return [int(text) if text.isdigit() else text.lower()
+        for text in _natural_sort_regex.split(s)]
 class Benchmarker:
     """
     Allows benchmarking using the with statement.

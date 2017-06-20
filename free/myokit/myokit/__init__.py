@@ -1,8 +1,12 @@
 #
 # This file is part of Myokit
-#  Copyright 2011-2017 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 """
 Myokit: The Maastricht Modeling Toolkit
@@ -43,13 +47,14 @@ if sys.hexversion > 0x03000000:
 del(sys)
 # Constants
 # Version information
-VERSION_INT = 1,24,4
+VERSION_INT = 0,0,0
 VERSION = '.'.join([str(x) for x in VERSION_INT]); del(x)
 RELEASE = ''
 # Licensing
 LICENSE = """
 Myokit
-Copyright 2011-2017 Michael Clerx, Maastricht University
+Copyright 2017      Michael Clerx, University of Oxford
+Copyright 2011-2016 Michael Clerx, Maastricht University
 michael@myokit.org
 
 Myokit is free software: you can redistribute it and/or modify it under
@@ -68,7 +73,8 @@ see http://www.gnu.org/licenses/.
 LICENSE_HTML = """
 <h1>Myokit</h1>
 <p>
-    Copyright 2011-2016 Michael Clerx, Maastricht University
+    Copyright 2017 Michael Clerx, University of Oxford
+    <br />Copyright 2011-2016 Michael Clerx, Maastricht University
     <br /><a href="mailto:michael@myokit.org">michael@myokit.org</a>
 </p>
 <p>
@@ -88,7 +94,8 @@ LICENSE_HTML = """
     <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.
 </p>
 """.strip()
-COPYRIGHT = '(C) 2011-2016 Michael Clerx, Maastricht University'
+COPYRIGHT = '(C) 2017 Michael Clerx, University of Oxford' \
+          + ', 2011-2016 Michael Clerx, Maastricht University'
 # Myokit paths
 import os
 import inspect
@@ -231,6 +238,8 @@ from ._aux import load_state_bin, save_state_bin
 from ._aux import step
 # Output masking
 from ._aux import PyCapture, SubCapture
+# Sorting
+from ._aux import natural_sort_key
 # Data logging
 from ._datalog import DataLog, LoggedVariableInfo
 from ._datalog import dimco, split_key, prepare_log

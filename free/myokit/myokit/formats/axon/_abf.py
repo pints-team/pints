@@ -67,6 +67,7 @@
 #---------------------------------  license  ----------------------------------
 #
 # This file is part of Myokit
+#  Copyright 2017      Michael Clerx, University of Oxford
 #  Copyright 2011-2016 Michael Clerx, Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org

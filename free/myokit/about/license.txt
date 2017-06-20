@@ -1,5 +1,6 @@
 Myokit
-Copyright 2011-2017 Michael Clerx, Maastricht University
+Copyright 2017      Michael Clerx, University of Oxford
+Copyright 2011-2016 Michael Clerx, Maastricht University
 michael@myokit.org
 
 Myokit is free software: you can redistribute it and/or modify it under
