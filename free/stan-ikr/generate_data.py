@@ -50,14 +50,11 @@ def generate_data(model, debug=False):
 
     # Run simulation
     s = myokit.Simulation(m, p)
-    d = s.run(p.characteristic_time(), log=d)
+    d = s.run(p.characteristic_time(), log=d, log_interval=25)
     
     # Convert logged data to numpy arrays
     d = d.npview()
     
-    # Resample data at regular intervals
-    d = d.regularize(25)
-
     # Plot raw data
     if debug:
         pl.figure()
