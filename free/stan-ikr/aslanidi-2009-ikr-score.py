@@ -78,9 +78,13 @@ def score(p):
     simulation.reset()
     for i, name in enumerate(parameters):
         simulation.set_constant(name, p[i])
-    data = simulation.run(duration, log=['ikr.IKr'], log_interval=25)
+    try:
+        data = simulation.run(duration, log=['ikr.IKr'], log_interval=25)
+    except myokit.SimulationError:
+        return float('inf')
     data = data.npview()
-    return np.sum((data['ikr.IKr'] - real['current']))
+    e = np.sum((data['ikr.IKr'] - real['current'])**2)
+    return e
 
 # Print score of true solution
 print('Score of true solution:')
@@ -89,8 +93,82 @@ print(score(real_values))
 # Benchmark
 print('Benchmark:')
 b = myokit.Benchmarker()
-n = 100
+n = 1
 for i in xrange(n):
     score(real_values)
 print(str(b.time() / n) + ' seconds per evaluation')
+
+
+
+
+
+
+
+
+#
+#
+# Just for fun: try PSO
+#
+#
+from myokit.lib import fit
+
+# Define a smaller parameter set
+parameters = [
+    'ikr.p1',
+    'ikr.p2',
+    ]
+    
+# And update the score function with these parameters
+simulation = myokit.Simulation(model, protocol)
+def score(p):
+    simulation.reset()
+    for i, name in enumerate(parameters):
+        simulation.set_constant(name, p[i])
+    try:
+        data = simulation.run(duration, log=['ikr.IKr'], log_interval=25)
+    except myokit.SimulationError:
+        return float('inf')
+    data = data.npview()
+    e = np.sum((data['ikr.IKr'] - real['current'])**2)
+    return e
+
+# Set some wide bounds
+bounds = [
+    (-100, 10000),
+    (-100, 100),
+    ]
+
+print('Running particle swarm optimisation...')
+print('Should take 1-2 minutes on 4 cores')
+with np.errstate(all='ignore'): # Tell numpy not to issue warnings
+    # Run the optimisation with 4 particles
+    x, f = fit.pso(score, bounds, n=4, parallel=True, max_iter=2000)
+print('Final score: ' + str(f))
+    
+# Show solution
+print('Current solution:           Real values:')
+for k, v in enumerate(x):
+    print(myokit.strfloat(v) + '    ' + myokit.strfloat(real_values[k]))
+    
+# Refine the solution using nelder-mead
+x2, f2 = fit.nelder_mead(score, x)
+print('Pure PSO solution:          Refined solution:')
+for k, v in enumerate(x):
+    print(myokit.strfloat(v) + '    ' + myokit.strfloat(x2[k]))
+
+#
+# Plot the parameter space near the real coordinates
+#
+import matplotlib.pyplot as pl
+boundaries = [
+    [800, 1050],
+    [1, 20],
+    ]
+n = 50
+x, fx = fit.map_grid(score, boundaries, n, parallel=True)
+fit.loss_surface_colors(x[:,0], x[:,1], fx, markers=None)
+pl.title('Score function near the true solution')
+fit.loss_surface_colors(x[:,0], x[:,1], np.log(fx), markers=None)
+pl.title('Log of score function near the true solution')
+pl.show()
 
