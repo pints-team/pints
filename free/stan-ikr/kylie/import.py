@@ -67,9 +67,10 @@ for t in jumps:
     i1 = (np.abs(time-t)).argmin()
     i2 = (np.abs(time-t-cap_duration)).argmin()
     # Remove data points during capacitance artefact
-    time = np.concatenate((time[:i1], time[i2:]))
-    current = np.concatenate((current[:i1], current[i2:]))
-    vm = np.concatenate((vm[:i1], vm[i2:]))
+    #time = np.concatenate((time[:i1], time[i2:]))
+    #current = np.concatenate((current[:i1], current[i2:]))
+    #vm = np.concatenate((vm[:i1], vm[i2:]))
+    current[i1:i2] = np.mean(current[i1-(i2-i1): i1])
 
 # Show data without capacitance artefacts
 if show_debug:
