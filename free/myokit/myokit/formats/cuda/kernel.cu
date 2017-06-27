@@ -1,12 +1,22 @@
 <?
 #
 # kernel.cu
+#
 # A pype template for a CUDA kernel
-# Copyright 2013 Michael Clerx & Enno de Lange
 #
 # Required variables
 #-------------------
 # model    A model
+#
+# This file is part of Myokit
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
+#  Licensed under the GNU General Public License v3.0
+#  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
+#  Enno de Lange
 #
 import myokit
 import myokit.formats.cuda as cuda
