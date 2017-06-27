@@ -24,21 +24,23 @@ cells = {
 }
 
 idx = cells[cell]
-abf = 'raw/' + idx + '/sine_wave.abf'
-mat = 'sine_wave_' + idx + '_dofetilide_subtracted_leak_subtracted.mat'
 
-# Load times and voltage from abf file
-abf = myokit.formats.axon.AbfFile(abf)
-abf = abf.myokit_log().npview()
-time = abf.time()
-vm = abf['1.ad']
-del(abf)
+# Load protocol from protocol file
+mat = 'sine_wave_protocol.mat'
+mat = scipy.io.loadmat(mat)
+vm = mat['T']
+vm = vm[:,0]  # Convert from matrix to array
+del(mat)
 
 # Load leak-corrected, dofetilide-subtracted IKr data from matlab file
+mat = 'sine_wave_' + idx + '_dofetilide_subtracted_leak_subtracted.mat'
 mat = scipy.io.loadmat(mat)
 current = mat['T']
 current = current[:,0]  # Convert from matrix to array
 del(mat)
+
+# Create times array, using dt=0.1ms
+time = np.arange(len(current)) * 0.1
 
 # Show data with capacitance artefacts
 if show_debug:
@@ -49,16 +51,16 @@ if show_debug:
     pl.plot(time, current)
 
 # Remove capacitance artefacts
-cap_duration = 0.0015
+cap_duration = 1.5
 jumps = [
-    0.25,
-    0.3,
-    0.5,
-    1.5,
-    2,
-    3,
-    6.5,
-    7,    
+    250,
+    300,
+    500,
+    1500,
+    2000,
+    3000,
+    6500,
+    7000,    
     ]
 for t in jumps:
     # Get indices of capacitance start and end
