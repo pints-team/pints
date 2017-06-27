@@ -19,9 +19,13 @@
 # -----------------------------------------------------------------------------
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import myokit
 import myokit.formats.opencl as opencl
@@ -169,7 +173,7 @@ double dt_min;          // The minimal time increase
 int halt_sim;
 
 // Pacing
-PSys pacing;
+ESys pacing;
 double engine_pace = 0;
 
 // OpenCL work group sizes
@@ -250,7 +254,7 @@ sim_clean()
         clReleaseContext(context); context = NULL;
         
         // Free pacing system memory
-        PSys_Destroy(pacing); pacing = NULL;
+        ESys_Destroy(pacing); pacing = NULL;
         
         // Free dynamically allocated arrays
         free(rvec_state_f); rvec_state_f = NULL;
@@ -470,15 +474,15 @@ sim_init(PyObject* self, PyObject* args)
     //
     // Set up pacing system
     //
-    PSys_Flag flag_pacing;
-    pacing = PSys_Create(&flag_pacing);
-    if(flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_Populate(pacing, protocol);
-    if(flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_AdvanceTime(pacing, tmin, tmax);
-    if(flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    tnext_pace = PSys_GetNextTime(pacing, NULL);
-    engine_pace = PSys_GetLevel(pacing, NULL);
+    ESys_Flag flag_pacing;
+    pacing = ESys_Create(&flag_pacing);
+    if(flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    flag_pacing = ESys_Populate(pacing, protocol);
+    if(flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    flag_pacing = ESys_AdvanceTime(pacing, tmin, tmax);
+    if(flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    tnext_pace = ESys_GetNextTime(pacing, NULL);
+    engine_pace = ESys_GetLevel(pacing, NULL);
     arg_pace = (Real)engine_pace;
     
     #ifdef MYOKIT_DEBUG
@@ -971,7 +975,7 @@ print(4*tab + '}')
 static PyObject*
 sim_step(PyObject *self, PyObject *args)
 {
-    PSys_Flag flag_pacing;
+    ESys_Flag flag_pacing;
     long steps_left_in_run = 6e6 / (nfx * nfy + ntx * nty);
     if(steps_left_in_run < 40) steps_left_in_run = 40;
     cl_int flag;
@@ -1006,10 +1010,10 @@ sim_step(PyObject *self, PyObject *args)
         arg_time = (Real)engine_time;
         
         // Advance pacing mechanism, advancing it to t+dt
-        flag_pacing = PSys_AdvanceTime(pacing, engine_time, tmax);
-        if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-        tnext_pace = PSys_GetNextTime(pacing, NULL);
-        engine_pace = PSys_GetLevel(pacing, NULL);
+        flag_pacing = ESys_AdvanceTime(pacing, engine_time, tmax);
+        if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+        tnext_pace = ESys_GetNextTime(pacing, NULL);
+        engine_pace = ESys_GetLevel(pacing, NULL);
         arg_pace = (Real)engine_pace;
 
         // Check if we're finished

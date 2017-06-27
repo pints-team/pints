@@ -1,10 +1,14 @@
 #
-# CVODE Driven single cell simulation
+# CVODE-driven single cell simulation
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import os
 import myokit
@@ -73,7 +77,7 @@ class Simulation(myokit.CModule):
             model.validate()
         model = model.clone()
         self._model = model
-        # Set protocol
+        # Set protocol (will also set predetermined protocol to None)
         self.set_protocol(protocol)
         # Check potential and threshold values
         if apd_var is None:
@@ -285,6 +289,7 @@ class Simulation(myokit.CModule):
                     state,
                     bound,
                     self._protocol,
+                    self._fixed_form_protocol,
                     log,
                     log_interval,
                     root_list,
@@ -401,11 +406,60 @@ class Simulation(myokit.CModule):
         if dtmin < 0:
             dtmin = 0
         self._sim.set_min_step_size(dtmin)
+    def set_fixed_form_protocol(self, times=None, values=None):
+        """
+        Configures this simulation to run with a predetermined protocol
+        instead of the usual event-based mechanism.
+        
+        A 1D time-series should be given as input. During the simulation, the
+        value of the pacing variable will be determined by linearly
+        interpolating between the two nearest points in the series. If the
+        simulation time is outside the bounds of the time-series, the first or
+        last value in the series will be used.
+        
+        Setting a predetermined protocol clears any previously set (event-based
+        or pre-determined) protocol. To clear all protocols, call this method
+        with `times=None`. When a simulation is run without any protocol, the
+        value of any variables bound to `pace` will be set to 0.
+        
+        Arguments:
+        
+        ``times``
+            A non-decreasing array of times. If any times appear more than
+            once, only the value at the highest index will be used.
+        ``values``
+            An array of values for the pacing variable. Must have the same size
+            as ``times``.
+        
+        """
+        # Check input
+        if times is None:
+            if values is not None:
+                raise ValueError('Values array given, but no times array.')
+        else:       
+            if values is None:
+                raise ValueError('Times array given, but no values array.')
+            if len(times) != len(values):
+                raise ValueError('Times and values array must have same size.')
+        # Clear event-based protocol, if set
+        self._protocol = None
+        # Set new protocol
+        if times is None:
+            # Clear predetermined protocol
+            self._fixed_form_protocol = None
+        else:
+            # Copy data and set
+            self._fixed_form_protocol = (list(times), list(values))
     def set_protocol(self, protocol=None):
         """
-        Changes the pacing protocol used by this simulation. To run without
-        pacing call this method with ``protocol = None``.
+        Sets the pacing :class:`Protocol` used by this simulation.
+        
+        To run without pacing call this method with ``protocol = None``. In
+        this case, the value of any variables bound to `pace` will be set to 0.
         """
+        # Clear predetermined protocol, if set
+        self._fixed_form_protocol = None
+        # Set new protocol
         if protocol is None:
             self._protocol = None
         else:

@@ -1,7 +1,7 @@
 <?
 # simulation.c
 #
-# A pype template for a single file ansi-C simulation, as used by GUI functions
+# A pype template for a single cell CVODE-based simulation.
 #
 # Required variables
 # -----------------------------------------------------------------------------
@@ -11,9 +11,13 @@
 # -----------------------------------------------------------------------------
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import myokit
 import myokit.formats.ansic as ansic
@@ -84,6 +88,10 @@ equations = model.solvable_order()
 #include "pacing.h"
 
 #define N_STATE <?= model.count_states() ?>
+
+// Pacing
+ESys epacing;               // Event-based pacing system
+FSys fpacing;               // Fixed-form pacing system
 
 /*
  * Check sundials flags, set python error
@@ -224,6 +232,15 @@ for label, eqs in equations.iteritems():
 static int
 rhs(realtype t, N_Vector y, N_Vector ydot, void *f_data)
 {
+    // Fixed-form pacing? Then look-up correct value of pacing variable!
+    FSys_Flag flag_fpacing;
+    if (fpacing != NULL) {
+        engine_pace = FSys_GetLevel(fpacing, t, &flag_fpacing);
+        if (flag_fpacing != FSys_OK) { // This should never happen
+            FSys_SetPyErr(flag_fpacing);
+            return -1;  // Negative value signals irrecoverable error to CVODE
+        }
+    }
 <?
 for label, eqs in equations.iteritems():
     if eqs.has_equations(const=False):
@@ -365,7 +382,8 @@ double tmax;            // The final simulation time
 PyObject* state_in;     // The initial state
 PyObject* state_out;    // The final state
 PyObject* inputs;       // A vector used to return the binding inputs` values
-PyObject* protocol;     // The pacing protocol
+PyObject* eprotocol;    // An event-based pacing protocol
+PyObject* fprotocol;    // A fixed-form pacing protocol
 PyObject* log_dict;     // The log dict
 double log_interval;    // The log interval (0 to disable)
 PyObject* root_list;    // Empty list if root finding should be used
@@ -400,9 +418,6 @@ int log_inter;              // True if logging intermediary variables
 int log_deriv;              // True if logging derivatives
 PyObject* list_update_str;  // PyString, used to call "append" method
 
-// Pacing
-PSys pacing;                // Pacing system
-
 /*
  * Cleans up after a simulation
  */
@@ -428,7 +443,7 @@ sim_clean()
         CVodeFree(&cvode_mem); cvode_mem = NULL;
         
         // Free pacing system space
-        PSys_Destroy(pacing); pacing = NULL;
+        ESys_Destroy(epacing); epacing = NULL;
 
         // No longer running
         running = 0;
@@ -456,7 +471,8 @@ sim_init(PyObject *self, PyObject *args)
     int i, j;
     int flag_cvode;
     int log_is_empty;
-    PSys_Flag flag_pacing;
+    ESys_Flag flag_epacing;
+    FSys_Flag flag_fpacing;
     Py_ssize_t pos;
     PyObject *flt;
     PyObject *key;
@@ -484,16 +500,17 @@ sim_init(PyObject *self, PyObject *args)
     dy_log = NULL;
     y_log = NULL;
     cvode_mem = NULL;
-    pacing = NULL;
+    epacing = NULL;
 
     // Check input arguments
-    if (!PyArg_ParseTuple(args, "ddOOOOOdOdO",
+    if (!PyArg_ParseTuple(args, "ddOOOOOOdOdO",
             &tmin,
             &tmax,
             &state_in,
             &state_out,
             &inputs,
-            &protocol,
+            &eprotocol,
+            &fprotocol,
             &log_dict,
             &log_interval,
             &root_list,
@@ -686,15 +703,39 @@ for var in model.variables(deep=True, state=False, bound=False, const=False):
         return sim_clean();
     }
     
-    // Set up pacing
-    pacing = PSys_Create(&flag_pacing);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_Populate(pacing, protocol);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_AdvanceTime(pacing, tmin, tmax);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    tnext = PSys_GetNextTime(pacing, &flag_pacing);
-    engine_pace = PSys_GetLevel(pacing, &flag_pacing);
+    // Set up event-based pacing
+    if (eprotocol != Py_None) {
+        epacing = ESys_Create(&flag_epacing);
+        if (flag_epacing != ESys_OK) { ESys_SetPyErr(flag_epacing); return sim_clean(); }
+        flag_epacing = ESys_Populate(epacing, eprotocol);
+        if (flag_epacing != ESys_OK) { ESys_SetPyErr(flag_epacing); return sim_clean(); }
+        flag_epacing = ESys_AdvanceTime(epacing, tmin, tmax);
+        if (flag_epacing != ESys_OK) { ESys_SetPyErr(flag_epacing); return sim_clean(); }
+        tnext = ESys_GetNextTime(epacing, &flag_epacing);
+        engine_pace = ESys_GetLevel(epacing, &flag_epacing);
+    } else {
+        tnext = tmax;
+    }
+    
+    // Set up fixed-form pacing
+    if (eprotocol == Py_None && fprotocol != Py_None) {
+        // Check 'protocol' is tuple (times, values)
+        if (!PyTuple_Check(fprotocol)) {
+            PyErr_SetString(PyExc_Exception, "Fixed-form pacing protocol should be tuple or None.");
+            return sim_clean();
+        }
+        if (PyTuple_Size(fprotocol) != 2) {
+            PyErr_SetString(PyExc_Exception, "Fixed-form pacing protocol tuple should have size 2.");
+            return sim_clean();
+        }
+        // Create fixed-form pacing object and populate
+        fpacing = FSys_Create(&flag_fpacing);
+        if (flag_fpacing != FSys_OK) { FSys_SetPyErr(flag_fpacing); return sim_clean(); }
+        flag_fpacing = FSys_Populate(fpacing,
+            PyTuple_GetItem(fprotocol, 0),  // Borrowed, no decref
+            PyTuple_GetItem(fprotocol, 1));
+        if (flag_fpacing != FSys_OK) { FSys_SetPyErr(flag_fpacing); return sim_clean(); }
+    }
     
     // Set simulation starting time
     engine_time = tmin;
@@ -791,7 +832,7 @@ for var in model.variables(deep=True, state=False, bound=False, const=False):
 static PyObject*
 sim_step(PyObject *self, PyObject *args)
 {
-    PSys_Flag flag_pacing;
+    ESys_Flag flag_epacing;
     int i;
     int steps_taken = 0;    // Number of integration steps taken in this call
     int flag_cvode;         // CVode flag
@@ -973,14 +1014,17 @@ sim_step(PyObject *self, PyObject *args)
                 }
             }
             
-            // Advance pacing mechanism to next event or tmax
-            // Do this *after* logging: otherwise the interpolated points
-            // logged with fixed step logging by calling rhs() will use the
-            // next engine_pace, which can cause weird entries in the logs.
-            flag_pacing = PSys_AdvanceTime(pacing, engine_time, tmax);
-            if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-            tnext = PSys_GetNextTime(pacing, NULL);
-            engine_pace = PSys_GetLevel(pacing, NULL);
+            // Event-based pacing
+            if (epacing != NULL) {
+                // Advance pacing mechanism to next event or tmax
+                // Do this *after* logging: otherwise the interpolated points
+                // logged with fixed step logging by calling rhs() will use the
+                // next engine_pace, which can cause weird entries in the logs.
+                flag_epacing = ESys_AdvanceTime(epacing, engine_time, tmax);
+                if (flag_epacing!=ESys_OK) { ESys_SetPyErr(flag_epacing); return sim_clean(); }
+                tnext = ESys_GetNextTime(epacing, NULL);
+                engine_pace = ESys_GetLevel(epacing, NULL);
+            }
             
             // Reinitialize if needed
             if (flag_reinit) {

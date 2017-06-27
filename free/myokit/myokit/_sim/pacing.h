@@ -1,26 +1,44 @@
 /*
  * pacing.h
- * 
- * Implements the myokit pacing protocol in ansi C with Python wrappers.
  *
- * How to use:
- *  1. Create a pacing system using PSys_Create
- *  2. Populate it with events using PSys_PopulateFromPyList
- *  3. Set the time in the pacing system with PSys_AdvanceTime.
- *  4. Get the time of the first event with PSys_GetNextTime
- *  5. Get the initial pacing level with PSys_GetLevel
+ * Ansi-C implementation for event-based pacing (using a Myokit Protocol
+ * object) and fixed-form pacing (using a time-series).
+ *
+ * How to use event-based pacing:
+ *
+ *  1. Create a pacing system using ESys_Create
+ *  2. Populate it with events using ESys_Populate
+ *  3. Set the time in the pacing system with ESys_AdvanceTime.
+ *  4. Get the time of the first event with ESys_GetNextTime
+ *  5. Get the initial pacing level with ESys_GetLevel
  *  6. Now at each step of a simulation
- *    - Advance the system to the simulation time with PSys_AdvanceTime
- *    - Get the time of the next event start or finish with PSys_GetNextTime
- *    - Get the pacing level using PSys_GetLevel
+ *    - Advance the system to the simulation time with ESys_AdvanceTime
+ *    - Get the time of the next event start or finish with ESys_GetNextTime
+ *    - Get the pacing level using ESys_GetLevel
+ *  7. Tidy up using ESys_Destroy
  *
  * Events must always start at t>=0, negative times are not supported.
+ *
+ * Flags are used to indicate errors. If a flag other than ESys_OK is set, a
+ * call to ESys_SetPyErr(flag) can be made to set a Python exception.
+ *
+ *
+ * How to use fixed-form pacing:
+ *
+ *  1. Create a pacing system using FSys_Create
+ *  2. Populate it using two Python lists via FSys_Populate
+ *  3. Obtain the pacing value for any time using FSys_GetLevel
+ *  4. Tidy up using FSys_Destroy
  * 
  * This file is part of Myokit
- *  Copyright 2011-2016 Michael Clerx, Maastricht University
+ *  Copyright 2017      University of Oxford
+ *  Copyright 2011-2016 Maastricht University
  *  Licensed under the GNU General Public License v3.0
  *  See: http://myokit.org
- * 
+ *
+ * Authors:
+ *  Michael Clerx
+ *
  */
 #ifndef MyokitPacing
 #define MyokitPacing
@@ -29,89 +47,90 @@
 #include <stdio.h>
 
 /*
- * Pacing error flags
+ * Event-based pacing error flags
  */
-typedef int PSys_Flag;
-#define PSys_OK                              0
-#define PSys_OUT_OF_MEMORY                  -1
+typedef int ESys_Flag;
+#define ESys_OK                              0
+#define ESys_OUT_OF_MEMORY                  -1
 // General
-#define PSys_INVALID_SYSTEM                 -10
-#define PSys_POPULATED_SYSTEM               -11
-#define PSys_UNPOPULATED_SYSTEM             -12
-// PSys_Populate
-#define PSys_POPULATE_INVALID_PROTOCOL      -20
-#define PSys_POPULATE_MISSING_ATTR          -21
-#define PSys_POPULATE_INVALID_ATTR          -22
-#define PSys_POPULATE_NON_ZERO_MULTIPLIER   -23
-#define PSys_POPULATE_NEGATIVE_PERIOD       -24
-#define PSys_POPULATE_NEGATIVE_MULTIPLIER   -25
-// PSys_AdvanceTime
-#define PSys_NEGATIVE_TIME_INCREMENT        -40
-// PSys_ScheduleEvent
-#define PSys_SIMULTANEOUS_EVENT             -50
+#define ESys_INVALID_SYSTEM                 -10
+#define ESys_POPULATED_SYSTEM               -11
+#define ESys_UNPOPULATED_SYSTEM             -12
+// ESys_Populate
+#define ESys_POPULATE_INVALID_PROTOCOL      -20
+#define ESys_POPULATE_MISSING_ATTR          -21
+#define ESys_POPULATE_INVALID_ATTR          -22
+#define ESys_POPULATE_NON_ZERO_MULTIPLIER   -23
+#define ESys_POPULATE_NEGATIVE_PERIOD       -24
+#define ESys_POPULATE_NEGATIVE_MULTIPLIER   -25
+// ESys_AdvanceTime
+#define ESys_NEGATIVE_TIME_INCREMENT        -40
+// ESys_ScheduleEvent
+#define ESys_SIMULTANEOUS_EVENT             -50
 
 /*
- * Sets a python exception based on a pacing error flag.
+ * Sets a python exception based on an event-based pacing error flag.
  *
- * Arguments:
+ * Arguments
  *  flag : The python error flag to base the message on.
  */
 void
-PSys_SetPyErr(PSys_Flag flag)
+ESys_SetPyErr(ESys_Flag flag)
 {
     PyObject *module, *dict, *exception;
     switch(flag) {
-    case PSys_OK:
+    case ESys_OK:
         break;
-    case PSys_OUT_OF_MEMORY:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Memory allocation failed.");
+    case ESys_OUT_OF_MEMORY:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Memory allocation failed.");
         break;
-    case PSys_INVALID_SYSTEM:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Invalid pacing system provided.");
+    // General
+    case ESys_INVALID_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Invalid pacing system provided.");
         break;
-    case PSys_POPULATED_SYSTEM:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Pacing system already populated.");
+    case ESys_POPULATED_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Pacing system already populated.");
         break;
-    case PSys_UNPOPULATED_SYSTEM:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Pacing system not populated.");
+    case ESys_UNPOPULATED_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Pacing system not populated.");
         break;
-    // PSys_ScheduleEvent
-    case PSys_SIMULTANEOUS_EVENT:
+    // ESys_ScheduleEvent
+    case ESys_SIMULTANEOUS_EVENT:
         module = PyImport_ImportModule("myokit");   // New ref
         dict = PyModule_GetDict(module);            // Borrowed ref
         exception = PyDict_GetItemString(dict, "SimultaneousProtocolEventError");   // Borrowed ref
-        PyErr_SetString(exception, "Pacing error: Event scheduled or re-occuring at the same time as another event.");
+        PyErr_SetString(exception, "E-Pacing error: Event scheduled or re-occuring at the same time as another event.");
         Py_DECREF(module);
         break;
-    // PSys_Populate
-    case PSys_POPULATE_INVALID_PROTOCOL:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Protocol.events() failed to return a list.");
+    // ESys_Populate
+    case ESys_POPULATE_INVALID_PROTOCOL:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Protocol.events() failed to return a list.");
         break;
-    case PSys_POPULATE_MISSING_ATTR:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Missing event attribute.");
+    case ESys_POPULATE_MISSING_ATTR:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Missing event attribute.");
         break;        
-    case PSys_POPULATE_INVALID_ATTR:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Failed to convert event attribute to double.");
+    case ESys_POPULATE_INVALID_ATTR:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Failed to convert event attribute to Float.");
         break;
-    case PSys_POPULATE_NON_ZERO_MULTIPLIER:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Non-zero multiplier found for non-periodic stimulus.");
+    case ESys_POPULATE_NON_ZERO_MULTIPLIER:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Non-zero multiplier found for non-periodic stimulus.");
         break;
-    case PSys_POPULATE_NEGATIVE_PERIOD:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Pacing event period cannot be negative.");
+    case ESys_POPULATE_NEGATIVE_PERIOD:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Pacing event period cannot be negative.");
         break;
-    case PSys_POPULATE_NEGATIVE_MULTIPLIER:
-        PyErr_SetString(PyExc_Exception, "Pacing error: Pacing event multiplier cannot be negative.");
+    case ESys_POPULATE_NEGATIVE_MULTIPLIER:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: Pacing event multiplier cannot be negative.");
         break;
-    // PSys_AdvanceTime
-    case PSys_NEGATIVE_TIME_INCREMENT:
-        PyErr_SetString(PyExc_Exception, "Pacing error: New time is before current time.");
+    // ESys_AdvanceTime
+    case ESys_NEGATIVE_TIME_INCREMENT:
+        PyErr_SetString(PyExc_Exception, "E-Pacing error: New time is before current time.");
         break;
     // Unknown
     default:
     {
         int i = (int)flag;
         char buffer[1024];
-        sprintf(buffer, "Pacing error: Unlisted error %d", i);
+        sprintf(buffer, "E-Pacing error: Unlisted error %d", i);
         PyErr_SetString(PyExc_Exception, buffer);
         break;
     }};
@@ -160,10 +179,10 @@ struct EventMem {
  * Returns the new head of the event queue
  */
 static Event
-PSys_ScheduleEvent(Event head, Event add, PSys_Flag* flag)
+ESys_ScheduleEvent(Event head, Event add, ESys_Flag* flag)
 {
     Event e;    // Needs to be declared here for visual C
-    *flag = PSys_OK;
+    *flag = ESys_OK;
     add->next = 0;
     if (add == 0) return head;
     if (head == 0) return add;
@@ -176,17 +195,17 @@ PSys_ScheduleEvent(Event head, Event add, PSys_Flag* flag)
         e = e->next;
     }
     if (add->start == e->start) {
-        *flag = PSys_SIMULTANEOUS_EVENT;
+        *flag = ESys_SIMULTANEOUS_EVENT;
     }
     add->next = e->next;
     e->next = add;
     return head;
 }
 
-/* *  flag : The address of a pacing error flag or NULL
+/*
  * Pacing system 
  */
-struct PSys_Mem {
+struct ESys_Mem {
     double time;    // The current time
     int n_events;   // The number of events in this system
     Event events;   // The events, stored as an array
@@ -196,73 +215,75 @@ struct PSys_Mem {
     double tdown;   // The time the active event is over
     double level;   // The current output value
 };
-typedef struct PSys_Mem* PSys;
+typedef struct ESys_Mem* ESys;
 
 /*
  * Creates a pacing system
  *
  * Arguments
- *  flag : The address of a pacing error flag or NULL
+ *  flag : The address of an event-based pacing error flag or NULL
  *
  * Returns the newly created pacing system
  */
-PSys
-PSys_Create(PSys_Flag* flag)
+ESys
+ESys_Create(ESys_Flag* flag)
 {
-    PSys sys = (PSys)malloc(sizeof(struct PSys_Mem));
+    ESys sys = (ESys)malloc(sizeof(struct ESys_Mem));
     if (sys == 0) {
-        if(flag != 0) *flag = PSys_OUT_OF_MEMORY;
+        if(flag != 0) *flag = ESys_OUT_OF_MEMORY;
         return 0;
     }
     
     sys->time = 0;
     sys->n_events = -1; // Used to indicate unpopulated system
-    sys->events = 0;
-    sys->head = 0;
-    sys->fire = 0;    
+    sys->events = NULL;
+    sys->head = NULL;
+    sys->fire = NULL;
     sys->tnext = 0;
     sys->tdown = 0;
     sys->level = 0;
     
-    if(flag != 0) *flag = PSys_OK;
+    if(flag != 0) *flag = ESys_OK;
     return sys;
 }
 
 /*
  * Destroys a pacing system and frees the memory it occupies.
- * Arguments:
- *  sys : The pacing system to destroy
+ *
+ * Arguments
+ *  sys : The event-based pacing system to destroy
+ *
  * Returns a pacing error flag.
  */
-PSys_Flag
-PSys_Destroy(PSys sys)
+ESys_Flag
+ESys_Destroy(ESys sys)
 {
-    if(sys == 0) return PSys_INVALID_SYSTEM;
-    if(sys->events != 0) {
+    if(sys == NULL) return ESys_INVALID_SYSTEM;
+    if(sys->events != NULL) {
         free(sys->events);
         sys->events = NULL;
     }
     free(sys);
-    return PSys_OK;
+    return ESys_OK;
 }
 
 /*
  * Resets this pacing system to time=0.
  *
- * Arguments:
- *  sys : The pacing system to reset
+ * Arguments
+ *  sys : The event-based pacing system to reset
  *
  * Returns a pacing error flag.
  */
-PSys_Flag
-PSys_Reset(PSys sys)
+ESys_Flag
+ESys_Reset(ESys sys)
 {
     Event next;     // Need to be declared here for C89 Visual C
     Event head;
     int i;
     
-    if(sys == 0) return PSys_INVALID_SYSTEM;
-    if(sys->n_events < 0) return PSys_UNPOPULATED_SYSTEM;
+    if(sys == 0) return ESys_INVALID_SYSTEM;
+    if(sys->n_events < 0) return ESys_UNPOPULATED_SYSTEM;
 
     // Reset all events
     next = sys->events;
@@ -274,12 +295,12 @@ PSys_Reset(PSys sys)
     }
 
     // Set up the event queue
-    PSys_Flag flag;
+    ESys_Flag flag;
     head = sys->events;
     next = head + 1;
     for(i=1; i<sys->n_events; i++) {
-        head = PSys_ScheduleEvent(head, next++, &flag);
-        if (flag != PSys_OK) { return flag; }
+        head = ESys_ScheduleEvent(head, next++, &flag);
+        if (flag != ESys_OK) { return flag; }
     }
     
     // Reset the properties of the event system
@@ -290,29 +311,29 @@ PSys_Reset(PSys sys)
     sys->tdown = 0;
     sys->level = 0;
     
-    return PSys_OK;
+    return ESys_OK;
 }
 
 /*
  * Populates an event system using the events from a myokit.Protocol
  * Returns an error if the system already contains events.
  *
- * Arguments:
+ * Arguments
  *  sys      : The pacing system to schedule the events in.
  *  protocol : A pacing protocol or NULL
  *
  * Returns a pacing error flag.
  */
-PSys_Flag
-PSys_Populate(PSys sys, PyObject* protocol)
+ESys_Flag
+ESys_Populate(ESys sys, PyObject* protocol)
 {
     int i;
     int n;
     Event events;
     Event e;
     
-    if(sys == 0) return PSys_INVALID_SYSTEM;
-    if (sys->n_events != -1) return PSys_POPULATED_SYSTEM;
+    if(sys == 0) return ESys_INVALID_SYSTEM;
+    if (sys->n_events != -1) return ESys_POPULATED_SYSTEM;
 
     // Default values    
     n = 0;
@@ -324,8 +345,8 @@ PSys_Populate(PSys sys, PyObject* protocol)
         // Cast to (char*) happens because CallMethod accepts a mutable char*
         // This should have been const char* and has been fixed in python 3
         PyObject* list = PyObject_CallMethod(protocol, (char*)"events", NULL);
-        if(list == NULL) return PSys_POPULATE_INVALID_PROTOCOL;
-        if(!PyList_Check(list)) return PSys_POPULATE_INVALID_PROTOCOL;
+        if(list == NULL) return ESys_POPULATE_INVALID_PROTOCOL;
+        if(!PyList_Check(list)) return ESys_POPULATE_INVALID_PROTOCOL;
         n = (int)PyList_Size(list);
         
         // Translate python pacing events
@@ -339,64 +360,65 @@ PSys_Populate(PSys sys, PyObject* protocol)
                 item = PyList_GetItem(list, i); // Don't decref!
                 // Level
                 attr = PyObject_GetAttrString(item, "_level");
-                if (attr == NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_MISSING_ATTR; }
+                if (attr == NULL) { // Not a string
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_MISSING_ATTR;
+                }
                 e->level = PyFloat_AsDouble(attr);
                 Py_DECREF(attr); attr = NULL;
                 if (PyErr_Occurred() != NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_INVALID_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_INVALID_ATTR;
+                }
                 // duration
                 attr = PyObject_GetAttrString(item, "_duration");
                 if (attr == NULL) {
                     free(events);
                     Py_DECREF(list);
-                    return PSys_POPULATE_MISSING_ATTR; }
+                    return ESys_POPULATE_MISSING_ATTR;
+                }
                 e->duration = PyFloat_AsDouble(attr);
                 Py_DECREF(attr); attr = NULL;
                 if (PyErr_Occurred() != NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_INVALID_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_INVALID_ATTR;
+                }
                 // start
                 attr = PyObject_GetAttrString(item, "_start");
                 if (attr == NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_MISSING_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_MISSING_ATTR;
+                }
                 e->start = PyFloat_AsDouble(attr);
                 Py_DECREF(attr); attr = NULL;
                 if (PyErr_Occurred() != NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_INVALID_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_INVALID_ATTR;
+                }
                 // Period
                 attr = PyObject_GetAttrString(item, "_period");
                 if (attr == NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_MISSING_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_MISSING_ATTR;
+                }
                 e->period = PyFloat_AsDouble(attr);
                 Py_DECREF(attr); attr = NULL;
                 if (PyErr_Occurred() != NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_INVALID_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_INVALID_ATTR; 
+                }
                 // multiplier
                 attr = PyObject_GetAttrString(item, "_multiplier");
                 if (attr == NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_MISSING_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_MISSING_ATTR;
+                }
                 e->multiplier = PyFloat_AsDouble(attr);
                 Py_DECREF(attr); attr = NULL;
                 if (PyErr_Occurred() != NULL) {
-                    free(events);
-                    Py_DECREF(list);
-                    return PSys_POPULATE_INVALID_ATTR; }
+                    free(events); Py_DECREF(list);
+                    return ESys_POPULATE_INVALID_ATTR;
+                }
                 // Original values
                 e->ostart = e->start;
                 e->operiod = e->period;
@@ -404,15 +426,15 @@ PSys_Populate(PSys sys, PyObject* protocol)
                 e->next = 0;
                 if (e->period == 0 && e->multiplier != 0) {
                     free(events);
-                    return PSys_POPULATE_NON_ZERO_MULTIPLIER;
+                    return ESys_POPULATE_NON_ZERO_MULTIPLIER;
                 }
                 if (e->period < 0) {
                     free(events);
-                    return PSys_POPULATE_NEGATIVE_PERIOD;
+                    return ESys_POPULATE_NEGATIVE_PERIOD;
                 }
                 if (e->multiplier < 0) {
                     free(events);
-                    return PSys_POPULATE_NEGATIVE_MULTIPLIER;
+                    return ESys_POPULATE_NEGATIVE_MULTIPLIER;
                 }
                 e++;
             }
@@ -424,7 +446,7 @@ PSys_Populate(PSys sys, PyObject* protocol)
     sys->events = events;
 
     // Set all remaining properties using reset
-    return PSys_Reset(sys);
+    return ESys_Reset(sys);
 }
 
 /*
@@ -438,19 +460,19 @@ PSys_Populate(PSys sys, PyObject* protocol)
  *
  * Returns a pacing error flag.
  */
-PSys_Flag
-PSys_AdvanceTime(PSys sys, double new_time, double max_time)
+ESys_Flag
+ESys_AdvanceTime(ESys sys, double new_time, double max_time)
 {
-    if(sys == 0) return PSys_INVALID_SYSTEM;
-    if(sys->n_events < 0) return PSys_UNPOPULATED_SYSTEM;
-    if(sys->time > new_time) return PSys_NEGATIVE_TIME_INCREMENT;
+    if(sys == 0) return ESys_INVALID_SYSTEM;
+    if(sys->n_events < 0) return ESys_UNPOPULATED_SYSTEM;
+    if(sys->time > new_time) return ESys_NEGATIVE_TIME_INCREMENT;
     
     // Update internal time
     sys->time = new_time;
     if (new_time > max_time) max_time = new_time;
     
     // Advance
-    PSys_Flag flag;
+    ESys_Flag flag;
     while (sys->tnext <= sys->time && sys->tnext < max_time) {
         // Active event finished
         if (sys->fire != 0 && sys->tnext >= sys->tdown) {
@@ -468,8 +490,8 @@ PSys_AdvanceTime(PSys sys, double new_time, double max_time)
                 if (sys->fire->multiplier != 1) {
                     if (sys->fire->multiplier > 1) sys->fire->multiplier--;
                     sys->fire->start += sys->fire->period;
-                    sys->head = PSys_ScheduleEvent(sys->head, sys->fire, &flag);
-                    if (flag != PSys_OK) { return flag; }
+                    sys->head = ESys_ScheduleEvent(sys->head, sys->fire, &flag);
+                    if (flag != ESys_OK) { return flag; }
                 } else {
                     sys->fire->period = 0;
                 }
@@ -482,7 +504,7 @@ PSys_AdvanceTime(PSys sys, double new_time, double max_time)
         if (sys->head != 0 && sys->tnext > sys->head->start)
             sys->tnext = sys->head->start;
     }
-    return PSys_OK;
+    return ESys_OK;
 }
 
 /*
@@ -491,20 +513,21 @@ PSys_AdvanceTime(PSys sys, double new_time, double max_time)
  * Arguments
  *  sys : The pacing system to query for a time
  *  flag : The address of a pacing error flag or NULL
+ *
  * Returns the next time a pacing event starts or finishes
  */
 double
-PSys_GetNextTime(PSys sys, PSys_Flag* flag)
+ESys_GetNextTime(ESys sys, ESys_Flag* flag)
 {
     if(sys == 0) {
-        if(flag != 0) *flag = PSys_INVALID_SYSTEM;
+        if(flag != 0) *flag = ESys_INVALID_SYSTEM;
         return -1;
     }
     if(sys->n_events < 0) {
-        if(flag != 0) *flag = PSys_UNPOPULATED_SYSTEM;
+        if(flag != 0) *flag = ESys_UNPOPULATED_SYSTEM;
         return -1;
     }
-    if(flag != 0) *flag = PSys_OK;
+    if(flag != 0) *flag = ESys_OK;
     return sys->tnext;
 }
 
@@ -514,21 +537,333 @@ PSys_GetNextTime(PSys sys, PSys_Flag* flag)
  * Arguments
  *  sys : The pacing system to query for a time
  *  flag : The address of a pacing error flag or NULL
+ *
  * Returns the next time a pacing event starts or finishes
  */
 double
-PSys_GetLevel(PSys sys, PSys_Flag* flag)
+ESys_GetLevel(ESys sys, ESys_Flag* flag)
 {
     if(sys == 0) {
-        if(flag != 0) *flag = PSys_INVALID_SYSTEM;
+        if(flag != 0) *flag = ESys_INVALID_SYSTEM;
         return -1;
     }
     if(sys->n_events < 0) {
-        if(flag != 0) *flag = PSys_UNPOPULATED_SYSTEM;
+        if(flag != 0) *flag = ESys_UNPOPULATED_SYSTEM;
         return -1;
     }
-    if(flag != 0) *flag = PSys_OK;
+    if(flag != 0) *flag = ESys_OK;
     return sys->level;
+}
+
+/*
+ *
+ * Fixed-form code starts here
+ *
+ */
+
+/*
+ * Fixed-form pacing error flags
+ */
+typedef int FSys_Flag;
+#define FSys_OK                             0
+#define FSys_OUT_OF_MEMORY                  -1
+// General
+#define FSys_INVALID_SYSTEM                 -10
+#define FSys_POPULATED_SYSTEM               -11
+#define FSys_UNPOPULATED_SYSTEM             -12
+// Populating the system
+#define FSys_POPULATE_INVALID_TIMES         -20
+#define FSys_POPULATE_INVALID_VALUES        -21
+#define FSys_POPULATE_SIZE_MISMATCH         -22
+#define FSys_POPULATE_NOT_ENOUGH_DATA       -23
+#define FSys_POPULATE_INVALID_TIMES_DATA    -24
+#define FSys_POPULATE_INVALID_VALUES_DATA   -25
+#define FSys_POPULATE_DECREASING_TIMES_DATA -26
+
+/*
+ * Sets a python exception based on a fixed-form pacing error flag.
+ *
+ * Arguments
+ *  flag : The python error flag to base the message on.
+ */
+void
+FSys_SetPyErr(FSys_Flag flag)
+{
+    switch(flag) {
+    case FSys_OK:
+        break;
+    case FSys_OUT_OF_MEMORY:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Memory allocation failed.");
+        break;
+    // General
+    case FSys_INVALID_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Invalid pacing system provided.");
+        break;
+    case FSys_POPULATED_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Pacing system already populated.");
+        break;
+    case FSys_UNPOPULATED_SYSTEM:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Pacing system not populated.");
+        break;
+    // Populate
+    case FSys_POPULATE_INVALID_TIMES:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Invalid times array passed.");
+        break;
+    case FSys_POPULATE_INVALID_VALUES:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Invalid values array passed.");
+        break;
+    case FSys_POPULATE_SIZE_MISMATCH:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Sizes of times and values arrays don't match.");
+        break;
+    case FSys_POPULATE_NOT_ENOUGH_DATA:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Time-series must contain at least two data points.");
+        break;
+    case FSys_POPULATE_INVALID_TIMES_DATA:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Times array must contain only floats.");
+        break;
+    case FSys_POPULATE_INVALID_VALUES_DATA:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Values array must contain only floats.");
+        break;
+    case FSys_POPULATE_DECREASING_TIMES_DATA:
+        PyErr_SetString(PyExc_Exception, "F-Pacing error: Times array must be non-decreasing.");
+        break;        
+    // Unknown
+    default:
+    {
+        int i = (int)flag;
+        char buffer[1024];
+        sprintf(buffer, "F-Pacing error: Unlisted error %d", i);
+        PyErr_SetString(PyExc_Exception, buffer);
+        break;
+    }};
+}
+
+/*
+ * Fixed-form pacing system
+ */
+struct FSys_Mem {
+    int n_points;   // The number of entries in the time and pace arrays
+    double* times;  // The time array
+    double* values; // The values array
+    int last_index; // The index of the most recently returned value
+    //double level;   // The current output value
+};
+typedef struct FSys_Mem* FSys;
+
+/*
+ * Creates a fixed-form pacing system
+ *
+ * Arguments
+ *  flag : The address of a fixed-form pacing error flag or NULL
+ *
+ * Returns the newly created fixed-form pacing system
+ */
+FSys
+FSys_Create(FSys_Flag* flag)
+{
+    FSys sys = (FSys)malloc(sizeof(struct FSys_Mem));
+    if (sys == 0) {
+        if(flag != 0) *flag = FSys_OUT_OF_MEMORY;
+        return 0;
+    }
+    
+    sys->n_points = -1;
+    sys->times = NULL;
+    sys->values = NULL;
+    sys->last_index = 0;
+        
+    if(flag != 0) *flag = FSys_OK;
+    return sys;
+}
+
+/*
+ * Destroys a fixed-form pacing system and frees the memory it occupies.
+ *
+ * Arguments
+ *  sys : The fixed-form pacing system to destroy
+ *
+ * Returns a fixed-form pacing error flag.
+ */
+FSys_Flag
+FSys_Destroy(FSys sys)
+{
+    if(sys == 0) return FSys_INVALID_SYSTEM;
+    if(sys->times != NULL) {
+        free(sys->times);
+        sys->times = NULL;
+    }
+    if(sys->values != NULL) {
+        free(sys->values);
+        sys->values = NULL;
+    }
+    free(sys);
+    return FSys_OK;
+}
+
+/*
+ * Populates a fixed-form pacing system using two Python list objects
+ * containing an equal number of floating point numbers.
+ * Returns an error if the system already has data.
+ *
+ * Arguments
+ *  sys    : The fixed-form pacing system to add the data to.
+ *  times  : A Python list of (non-decreasing) floats.
+ *  values : An equally sized Python list of floats.
+ *
+ * Returns a fixed-form pacing error flag.
+ */
+FSys_Flag
+FSys_Populate(FSys sys, PyObject* times_list, PyObject* values_list)
+{
+    int i;
+    int n;
+
+    // Check ESys
+    if(sys == 0) return FSys_INVALID_SYSTEM;
+    if (sys->n_points != -1) return FSys_POPULATED_SYSTEM;
+    
+    // Check input lists
+    if(!PyList_Check(times_list)) return FSys_POPULATE_INVALID_TIMES;
+    if(!PyList_Check(values_list)) return FSys_POPULATE_INVALID_VALUES;
+    n = PyList_Size(times_list);
+    if (n != PyList_Size(values_list)) return FSys_POPULATE_SIZE_MISMATCH;
+    if (n < 2) return FSys_POPULATE_NOT_ENOUGH_DATA;
+    
+    // Convert and check times list
+    sys->times = (double*)malloc(n*sizeof(double));
+    for(i=0; i<n; i++) {
+        // GetItem and convert --> Borrowed reference so ok not to decref!
+        sys->times[i] = PyFloat_AsDouble(PyList_GetItem(times_list, i));
+    }
+    if (PyErr_Occurred()) {
+        free(sys->times); sys->times = NULL;
+        return FSys_POPULATE_INVALID_TIMES_DATA;
+    }
+    for(i=1; i<n; i++) {
+        if(sys->times[i] < sys->times[i-1]) {
+            free(sys->times); sys->times = NULL;
+            return FSys_POPULATE_DECREASING_TIMES_DATA;
+        }
+    }
+    
+    // Convert values list
+    sys->values = (double*)malloc(n*sizeof(double));
+    for(i=0; i<n; i++) {
+        // GetItem and convert --> Borrowed reference so ok not to decref!
+        sys->values[i] = PyFloat_AsDouble(PyList_GetItem(values_list, i));
+    }
+    if (PyErr_Occurred()) {
+        free(sys->times); sys->times = NULL;
+        free(sys->values); sys->values = NULL;
+        return FSys_POPULATE_INVALID_VALUES_DATA;
+    }
+    
+    // Update pacing system and return
+    sys->n_points = n;
+    sys->last_index = 0;
+    return FSys_OK;
+}
+
+/*
+ * Returns the pacing level at the given time.
+ *
+ * Arguments
+ *  sys : The pacing system to query for a value.
+ *  time : The time to find a value for.
+ *  flag : The address of a pacing error flag or NULL.
+ *
+ * Returns the value of the pacing level at the given time.
+ * Will return -1 if an error occurs, so errors should always be checked for
+ * using the flag argument!
+ */
+double
+FSys_GetLevel(FSys sys, double time, FSys_Flag* flag)
+{
+    // Index and time at left, mid and right point, plus guessed point
+    int    ileft, imid, iright, iguess;
+    double tleft, tmid, tright, tguess;
+    double vleft;
+
+    // Check system
+    if(sys == 0) {
+        if(flag != 0) *flag = FSys_INVALID_SYSTEM;
+        return -1;
+    }
+    if(sys->n_points < 0) {
+        if(flag != 0) *flag = FSys_UNPOPULATED_SYSTEM;
+        return -1;
+    }
+    
+    // Find the highest index `i` of sorted array `times` such that
+    // `times[i] <= time`, or `-1` if no such indice can be found.
+    // A guess can be given, which will be used to speed things up
+
+    // Get left point, check value
+    ileft = 0;
+    tleft = sys->times[ileft];
+    if (tleft > time) {
+        // Out-of-bounds on the left, return left-most value
+        if(flag != 0) *flag = FSys_OK;
+        return sys->values[ileft];
+    }
+    
+    // Get right point, check value
+    iright = sys->n_points - 1;
+    tright = sys->times[iright];
+    if (tright <= time) {
+        // Out-of-bounds on the right, return right-most value
+        if(flag != 0) *flag = FSys_OK;
+        return sys->values[iright];
+    }
+    
+    // Have a quick guess at better boundaries, using last
+    iguess = sys->last_index - 1; // -1 is heuristic! Could be smaller
+    if (iguess > ileft) {
+        tguess = sys->times[iguess];
+        if (tguess <= time) {
+            ileft = iguess;
+            tleft = tguess;
+        }
+    }
+    iguess = sys->last_index + 2;   // +2 is heuristic!
+    if (iguess < iright) {
+        tguess = sys->times[iguess];
+        if (tguess > time) {
+            iright = iguess;
+            tright = tguess;
+        }
+    }
+    
+    // Start bisection
+    imid = ileft + (iright - ileft) / 2;
+    while (ileft != imid) {
+        tmid = sys->times[imid];
+        if (tmid < time) {
+            ileft = imid;
+            tleft = tmid;      
+        } else {
+            iright = imid;
+            tright = tmid;
+        }
+        imid = ileft + (iright - ileft) / 2;
+    }
+    
+    // At this stage, tleft < time <= tright
+    
+    // Handle special case of time == tright
+    // (Because otherwise it can happen that tleft == tright, which would give
+    //  a divide-by-zero in the interpolateion)
+    if (time == tright) {
+        if(flag != 0) *flag = FSys_OK;
+        sys->last_index = iright;
+        return sys->values[iright];
+    }
+    
+    // Find the correct value using linear interpolation
+    if(flag != 0) *flag = FSys_OK;
+    sys->last_index = ileft;
+    vleft = sys->values[ileft];
+    return vleft + (sys->values[iright] - vleft) * (time - tleft) / (tright - tleft);
 }
 
 #endif

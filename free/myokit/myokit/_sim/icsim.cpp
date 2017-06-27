@@ -11,9 +11,13 @@
 # -----------------------------------------------------------------------------
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import myokit
 import myokit.formats.cpp as cpp
@@ -179,7 +183,7 @@ unsigned long ilog;         // Index of next logging point
 double tlog;                // Time of next logging point
 
 // Pacing
-PSys pacing = NULL;         // Pacing system
+ESys pacing = NULL;         // Pacing system
 double tpace;               // Time of next event
 
 // Temporary python objects
@@ -208,7 +212,7 @@ extern "C" {
             free(logs); logs = NULL;
             
             // Free pacing system space
-            PSys_Destroy(pacing); pacing = NULL;
+            ESys_Destroy(pacing); pacing = NULL;
 
             // No longer running
             running = 0;
@@ -323,17 +327,17 @@ extern "C" {
         deriv = (Diff*)malloc(sizeof(Diff) * N_STATE);
         
         // Set up pacing
-        PSys_Flag flag_pacing;
-        pacing = PSys_Create(&flag_pacing);
-        if (flag_pacing != PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-        flag_pacing = PSys_Populate(pacing, protocol);
-        if (flag_pacing != PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-        flag_pacing = PSys_AdvanceTime(pacing, tmin, tmax);
-        if (flag_pacing != PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
+        ESys_Flag flag_pacing;
+        pacing = ESys_Create(&flag_pacing);
+        if (flag_pacing != ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+        flag_pacing = ESys_Populate(pacing, protocol);
+        if (flag_pacing != ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+        flag_pacing = ESys_AdvanceTime(pacing, tmin, tmax);
+        if (flag_pacing != ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
         
         // Initialize inputs
         engine_time = tmin;
-        engine_pace = PSys_GetLevel(pacing, NULL);
+        engine_pace = ESys_GetLevel(pacing, NULL);
         
         // Evaluate derivatives at this point. This will be used for logging
         // and to take the first step.
@@ -357,7 +361,7 @@ extern "C" {
         //
         
         // Next event & logging times
-        tpace = PSys_GetNextTime(pacing, NULL);
+        tpace = ESys_GetNextTime(pacing, NULL);
         tlog = tmin;
         
         // Set up logging
@@ -420,7 +424,7 @@ for var in model.variables(deep=True, const=False):
     static PyObject*
     sim_step(PyObject *self, PyObject *args)
     {
-        PSys_Flag flag_pacing;
+        ESys_Flag flag_pacing;
         int i, j;
         int steps_taken = 0;    // Steps taken during this call
         double d;
@@ -436,10 +440,10 @@ for var in model.variables(deep=True, const=False):
             // Advance to next time step
             for(i=0; i<N_STATE; i++) state[i] += deriv[i] * dt;
             engine_time += dt;
-            flag_pacing = PSys_AdvanceTime(pacing, engine_time, tmax);
-            if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-            tpace = PSys_GetNextTime(pacing, NULL);
-            engine_pace = PSys_GetLevel(pacing, NULL);
+            flag_pacing = ESys_AdvanceTime(pacing, engine_time, tmax);
+            if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+            tpace = ESys_GetNextTime(pacing, NULL);
+            engine_pace = ESys_GetLevel(pacing, NULL);
             rhs(state, deriv);
 
             // Check if we're finished
