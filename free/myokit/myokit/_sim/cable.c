@@ -11,9 +11,13 @@
 # ----------------------------------------------
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 import myokit
 import myokit.formats.ansic as ansic
@@ -149,7 +153,7 @@ double tlog;            // Next logging point
 
 // Pacing
 double tpace;           // Next event start or end
-PSys pacing;            // Pacing system
+ESys pacing;            // Pacing system
 
 // Temporary objects: decref before re-using for another var :)
 // (Unless you got it through PyList_GetItem or PyTuble_GetItem) 
@@ -251,7 +255,7 @@ sim_clean()
         free(cells); cells = NULL;
         
         // Free pacing system memory
-        PSys_Destroy(pacing); pacing = NULL;
+        ESys_Destroy(pacing); pacing = NULL;
 
         // No longer running 
         running = 0;
@@ -402,15 +406,15 @@ for var in model.variables(deep=True, const=False):
     }
     
     // Set up pacing
-    PSys_Flag flag_pacing;
-    pacing = PSys_Create(&flag_pacing);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_Populate(pacing, protocol);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    flag_pacing = PSys_AdvanceTime(pacing, tmin, tmax);
-    if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-    tpace = PSys_GetNextTime(pacing, &flag_pacing);
-    engine_pace = PSys_GetLevel(pacing, &flag_pacing);
+    ESys_Flag flag_pacing;
+    pacing = ESys_Create(&flag_pacing);
+    if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    flag_pacing = ESys_Populate(pacing, protocol);
+    if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    flag_pacing = ESys_AdvanceTime(pacing, tmin, tmax);
+    if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+    tpace = ESys_GetNextTime(pacing, &flag_pacing);
+    engine_pace = ESys_GetLevel(pacing, &flag_pacing);
     
     // Set simulation starting time 
     engine_time = tmin;
@@ -472,7 +476,7 @@ if var is not None:
 static PyObject*
 sim_step(PyObject *self, PyObject *args)
 {
-    PSys_Flag flag_pacing;
+    ESys_Flag flag_pacing;
     int icell;
     Cell* cell;
     int steps_taken = 0;
@@ -495,10 +499,10 @@ sim_step(PyObject *self, PyObject *args)
         engine_time += dt;
         
         // Move to next time (2) Update the pacing variable
-        flag_pacing = PSys_AdvanceTime(pacing, engine_time, tmax);
-        if (flag_pacing!=PSys_OK) { PSys_SetPyErr(flag_pacing); return sim_clean(); }
-        tpace = PSys_GetNextTime(pacing, NULL);
-        engine_pace = PSys_GetLevel(pacing, NULL);
+        flag_pacing = ESys_AdvanceTime(pacing, engine_time, tmax);
+        if (flag_pacing!=ESys_OK) { ESys_SetPyErr(flag_pacing); return sim_clean(); }
+        tpace = ESys_GetNextTime(pacing, NULL);
+        engine_pace = ESys_GetLevel(pacing, NULL);
         
         // Move to next time (3) Update the states
         cell = cells;
