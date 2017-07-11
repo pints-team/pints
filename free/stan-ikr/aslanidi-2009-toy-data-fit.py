@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+import os
+import numpy as np
 import myokit
 import myokit.pacing as pacing
-import numpy as np
-import os
+from myokit.lib import fit
 
 #
-# Score function for the Aslanidi model, using the toy-data protocol
+# Fit the Aslanidi model to its own toy data
 # 
 #
 #
@@ -66,6 +67,17 @@ parameters = [
     'ikr.p7',
     'ikr.p8',
     ]
+boundaries = {
+    'ikr.p1' : [1, 1e4],        # ms        900
+    'ikr.p2' : [-100, 100],     # mV        5.0
+    'ikr.p3' : [1, 1e4],        # ms        100
+    'ikr.p4' : [-100, 100],     # mV        0.085
+    'ikr.p5' : [-100, 100],     # mV        12.25
+    'ikr.p6' : [-100, 100],     # mV        -5.4
+    'ikr.p7' : [-100, 100],     # mV        20.4
+    'ikr.p8' : [1e-4, 1],          # mS/uF     0.04
+    }
+bounds = [boundaries[x] for x in parameters]
     
 # Get real parameter values from model
 real_values = [model.get(name).eval() for name in parameters]
@@ -86,10 +98,7 @@ def score(p):
     e = np.sum((data['ikr.IKr'] - real['current'])**2)
     return e
 
-# Print score of true solution
-print('Score of true solution:')
-print(score(real_values))
-
+'''
 # Benchmark
 print('Benchmark:')
 b = myokit.Benchmarker()
@@ -97,53 +106,18 @@ n = 1
 for i in xrange(n):
     score(real_values)
 print(str(b.time() / n) + ' seconds per evaluation')
+'''
 
-
-
-
-
-
-
-
-#
-#
-# Just for fun: try PSO
-#
-#
-from myokit.lib import fit
-
-# Define a smaller parameter set
-parameters = [
-    'ikr.p1',
-    'ikr.p2',
-    ]
-    
-# And update the score function with these parameters
-simulation = myokit.Simulation(model, protocol)
-def score(p):
-    simulation.reset()
-    for i, name in enumerate(parameters):
-        simulation.set_constant(name, p[i])
-    try:
-        data = simulation.run(duration, log=['ikr.IKr'], log_interval=25)
-    except myokit.SimulationError:
-        return float('inf')
-    data = data.npview()
-    e = np.sum((data['ikr.IKr'] - real['current'])**2)
-    return e
-
-# Set some wide bounds
-bounds = [
-    (-100, 10000),
-    (-100, 100),
-    ]
+def cb(x, fx):
+    print(fx)
 
 print('Running particle swarm optimisation...')
-print('Should take 1-2 minutes on 4 cores')
 with np.errstate(all='ignore'): # Tell numpy not to issue warnings
     # Run the optimisation with 4 particles
-    x, f = fit.pso(score, bounds, n=4, parallel=True, max_iter=2000)
+    x, f = fit.pso(score, bounds, n=4, parallel=True, max_iter=2000,
+        callback=cb)
 print('Final score: ' + str(f))
+print('Score at true solution: ' + str(score(real_values)))
     
 # Show solution
 print('Current solution:           Real values:')
@@ -156,6 +130,7 @@ print('Pure PSO solution:          Refined solution:')
 for k, v in enumerate(x):
     print(myokit.strfloat(v) + '    ' + myokit.strfloat(x2[k]))
 
+'''
 #
 # Plot the parameter space near the real coordinates
 #
@@ -171,4 +146,4 @@ pl.title('Score function near the true solution')
 fit.loss_surface_colors(x[:,0], x[:,1], np.log(fx), markers=None)
 pl.title('Log of score function near the true solution')
 pl.show()
-
+'''
