@@ -1222,6 +1222,180 @@ def ga(f, bounds, hints=None, n=64, fbest=0.01, fworst=0.01, pmutate=0.2,
         if callback:
             callback(np.array(xs[0], copy=True), fs[0])
     return xs[0], fs[0]
+def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
+        callback=None, verbose=False, args=None):
+    """
+    Global optimizer that minimizes a function ``f`` within a specified set of
+    ``bounds`` using the CMA-ES methods provided by the `cma` module [1, 2].
+    
+    CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
+    designed for non-linear derivative-free optimization problems [1].
+    To run, the `cma` module must have been installed (for example via PIP).
+    
+    The method halts when ``f`` is below ``tolerance``.
+    
+    A parallel (multiprocessing) version of the algorithm can be run by setting
+    ``parallel`` to ``True``. Please keep in mind that the objective function
+    ``f`` cannot access any shared memory in this scenario. See
+    :class:`ParallelEvaluator` for details.
+    
+    Arguments:
+    
+    ``f``
+        A function to minimize. The function ``f(x)`` must be callable with
+        ``x`` a sequence of ``m`` coordinates and should return a single scalar
+        value.
+    ``bounds``
+        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
+        maximum values in the search space for each dimension ``i``.
+    ``hint``
+        A suggested starting point. Must be within the given bounds.
+    ``popsize=None``
+        Can be used to manually overrule the population size used in CMA-ES. By
+        default, this is set by CMA-ES to be `4+int(3*np.log(n_dim))` where
+        `n_dim` is the number of dimensions of the search space.
+        When running in parallel, Myokit will round this up to the nearest
+        multiple of the cpu count. To set manually, use this parameter.
+    ``parallel=False``
+        Set this to ``True`` to run a multi-process version of the search that
+        utilizes all available cores. See :class:`EvaluatorProcess` for the
+        details of using multi-process parallelisation and the requirements
+        this places on the function ``f``.
+    ``tolerance=1e-6``
+        The method will stop searching when a score below the tolerance value
+        is found, but will also stop sooner if successive updates fail to find
+        any significant improvement.
+    ``callback=None``
+        An optional function to be called after each iteration with arguments
+        ``(pg, fg)`` where ``pg`` is the current best position and ``fg`` is
+        the corresponding score.
+    ``verbose``
+        Set to ``True`` to enable logging of all sorts of information into the
+        console window.
+    ``args=None``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+                    
+    The method returns a tuple ``(xbest, fbest)`` where ``xbest`` is the best
+    position found and ``fbest = f(xbest)``.
+    
+    An `ImportError` will be raised
+    
+    References:
+    
+    [1] https://www.lri.fr/~hansen/cmaesintro.html
+    
+    [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
+    the derandomized evolution strategy with covariance matrix adaptation
+    (CMA-ES).
+    
+    """
+    # Test if CMAES is installed
+    try:
+        import cma
+    except ImportError:
+        raise ImportError('This method requires the `cma` module to be'
+            ' installed')
+    # Test if function is callable
+    if not callable(f):
+        raise ValueError('The argument f must be a callable function.')
+    # Check bounds
+    d = len(bounds)
+    if d < 1:
+        raise ValueError('Dimension must be at least 1.')
+    lower = np.zeros(d)
+    upper = np.zeros(d)
+    for i, b in enumerate(bounds):
+        if len(b) != 2:
+            raise ValueError('Each entry in `bounds` must be a tuple'
+                ' `(min, max)`.')
+        lo, up = float(b[0]), float(b[1])
+        if not lo < up:
+            raise ValueError('The lower bounds must be smaller than the upper'
+                ' bounds.')
+        lower[i] = lo
+        upper[i] = up
+    del(bounds)
+    # Check hint
+    if hint:
+        hint = np.array(hint, copy=True)
+        if hint.shape != lower.shape:
+            raise ValueError('Hint must have the shape ' + str(lower.shape))
+        if np.any(hint < lower) or np.any(hint > upper):
+            j = np.argmax(np.logical_or(hint < lower, hint > upper))
+            raise ValueError('Hint must be within the specified bounds (error'
+                ' with parameter ' + str(1+j) + ').')
+    else:
+        hint = lower + 0.5 * (upper - lower)
+    # Check if parallelization is required
+    parallel = bool(parallel)
+    # Set population size
+    if popsize is not None:
+        popsize = int(popsize)
+        if popsize < 1:
+            raise ValueError('Population size must be `None` or non-zero'
+                ' integer')
+    elif parallel:
+        default_popsize = 4 + int(3 * np.log(d))
+        cpu_count = multiprocessing.cpu_count()
+        popsize = (((d - 1) // cpu_count) + 1) * cpu_count
+        if verbose:
+            print('Running with population size: ' + str(popsize))
+    # Check tolerance
+    tolerance = float(tolerance)
+    # Check callback function
+    if callback is not None:
+        if not callable(callback):
+            raise ValueError('Argument `callback` must be a callable function'
+                ' or `None`.')
+    # Check if verbose mode is enabled
+    verbose = bool(verbose)
+    # Report first point
+    if callback:
+        if args is None:
+            callback(np.array(hint, copy=True), f(hint))
+        else:
+            callback(np.array(hint, copy=True), f(hint, *args))
+    # Create evaluator object
+    if parallel:
+        evaluator = ParallelEvaluator(f, args=args)
+    else:
+        evaluator = SequentialEvaluator(f, args=args)
+    # Guess initial sigma as 1/6 of the bounds (CMAES works best if the optimal
+    # solution is within +/- 3*sigma from the initial guess, see API docs).
+    sigma0 = np.min(upper - lower) / 6.0
+    # Set up simulation
+    options = cma.CMAOptions()
+    options.set('bounds', [lower, upper])
+    options.set('ftarget', tolerance)
+    #options.set('tolfun', update_tolerance)
+    if popsize is not None:
+        options.set('popsize', popsize)
+    if not verbose:
+        options.set('verbose', -9)
+    es = cma.CMAEvolutionStrategy(hint, sigma0, options)
+    # Start searching
+    while not es.stop():
+        candidates = es.ask()
+        es.tell(candidates, evaluator.evaluate(candidates))
+        if callback is not None:
+            r = es.result()
+            callback(r[0], r[1])
+        if verbose:
+            es.disp()
+    if verbose:
+        es.result_pretty()
+    # Get result
+    (xbest, fxbest, evaluations_xbest, evaluations, iterations, pheno_xmean,
+    effective_stds) = es.result()
+    # No result found? Then return hint and score of hint
+    if xbest is None:
+        if args is None:
+            return (hint, f(hint))
+        else:
+            return (hint, f(hint, *args))
+    # Return proper result
+    return (xbest, fxbest)
 class SequentialEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
