@@ -97,6 +97,7 @@ elif pyqt4:
         return QtWidgets.QFileDialog.getOpenFileNameAndFilter(parent, caption,
             directory, filter, initialFilter, options)
     QtWidgets.QFileDialog.getOpenFileName = staticmethod(gofn)
+    del(gofn)
     # Fix getOpenFileNames
     def gofns(parent=None, caption='', directory='', filter='',
             initialFilter='', options=0):
@@ -105,6 +106,7 @@ elif pyqt4:
         return QtWidgets.QFileDialog.getOpenFileNamesAndFilter(parent, caption,
             directory, filter, initialFilter, options)
     QtWidgets.QFileDialog.getOpenFileNames = staticmethod(gofns)
+    del(gofns)
     # Fix getSaveFileName
     def gsfn(parent=None, caption='', directory='', filter='',
             initialFilter='', options=0):
@@ -113,6 +115,7 @@ elif pyqt4:
         return QtWidgets.QFileDialog.getSaveFileNameAndFilter(parent, caption,
             directory, filter, initialFilter, options)
     QtWidgets.QFileDialog.getSaveFileName = staticmethod(gsfn)
+    del(gsfn)
     # Configure Matplotlib for use with PyQt4
     import matplotlib
     matplotlib.use('Qt4Agg')
@@ -152,6 +155,7 @@ elif pyside:
         return gofn_org(parent, caption, directory, filter, initialFilter,
             options)
     QtWidgets.QFileDialog.getOpenFileName = staticmethod(gofn)
+    del(gofn)
     # Fix getOpenFileNames
     gofns_org = QtWidgets.QFileDialog.getOpenFileNames
     def gofns(parent=None, caption='', directory='', filter='',
@@ -161,15 +165,17 @@ elif pyside:
         return gofns_org(parent, caption, directory, filter, initialFilter,
             options)
     QtWidgets.QFileDialog.getOpenFileNames = staticmethod(gofns)
+    del(gofns)
     # Fix getSaveFileName
     gsfn_org = QtWidgets.QFileDialog.getSaveFileName
-    def gsfn(parent=None, caption='', dir='', filter='', selectedFilter='',
-            options=0):
+    def gsfn(parent=None, caption='', directory='', filter='',
+            initialFilter='', options=0):
         if options == 0:
             options = QtWidgets.QFileDialog.Options()
         return gsfn_org(parent, caption, directory, filter, initialFilter,
             options)
     QtWidgets.QFileDialog.getSaveFileName = staticmethod(gsfn)
+    del(gsfn)
     # Configure Matplotlib for use with PySide
     import matplotlib
     matplotlib.use('Qt4Agg')
