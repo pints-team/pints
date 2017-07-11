@@ -1317,7 +1317,7 @@ def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
         upper[i] = up
     del(bounds)
     # Check hint
-    if hint:
+    if hint is not None:
         hint = np.array(hint, copy=True)
         if hint.shape != lower.shape:
             raise ValueError('Hint must have the shape ' + str(lower.shape))
