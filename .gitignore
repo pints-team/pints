@@ -1,3 +1,8 @@
+#
+# Massive gitignore file created by github!
+# Bit aggressive here and there, so I commented a few things out
+#
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -15,7 +20,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+#lib/
 lib64/
 parts/
 sdist/
