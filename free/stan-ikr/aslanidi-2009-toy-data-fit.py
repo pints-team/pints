@@ -69,13 +69,13 @@ parameters = [
     ]
 boundaries = {
     'ikr.p1' : [1, 1e4],        # ms        900
-    'ikr.p2' : [-100, 100],     # mV        5.0
+    'ikr.p2' : [0, 100],        # mV        5.0
     'ikr.p3' : [1, 1e4],        # ms        100
-    'ikr.p4' : [-100, 100],     # mV        0.085
-    'ikr.p5' : [-100, 100],     # mV        12.25
-    'ikr.p6' : [-100, 100],     # mV        -5.4
-    'ikr.p7' : [-100, 100],     # mV        20.4
-    'ikr.p8' : [1e-4, 1],          # mS/uF     0.04
+    'ikr.p4' : [0, 100],        # mV        0.085
+    'ikr.p5' : [0, 100],        # mV        12.25
+    'ikr.p6' : [-10, 0],        # mV        -5.4
+    'ikr.p7' : [0, 100],        # mV        20.4
+    'ikr.p8' : [1e-4, 1],       # mS/uF     0.04
     }
 bounds = [boundaries[x] for x in parameters]
     
@@ -108,14 +108,26 @@ for i in xrange(n):
 print(str(b.time() / n) + ' seconds per evaluation')
 '''
 
+run = 0
 def cb(x, fx):
-    print(fx)
+    global run
+    print(run, fx)
+    run += 1
 
-print('Running particle swarm optimisation...')
-with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-    # Run the optimisation with 4 particles
-    x, f = fit.pso(score, bounds, n=4, parallel=True, max_iter=2000,
-        callback=cb)
+if False:
+    print('Running particle swarm optimisation...')
+    with np.errstate(all='ignore'): # Tell numpy not to issue warnings
+        x, f = fit.pso(score, bounds, n=96, parallel=True, max_iter=10000,
+            callback=cb)
+else:
+    with np.errstate(all='ignore'):
+        x = None
+        print('Running pso optimisation to get starting point')
+        x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True, callback=cb)
+    
+        print('Running CMA-ES...')
+        x, f = fit.cmaes(score, bounds, hint=x, parallel=True, verbose=True)        
+
 print('Final score: ' + str(f))
 print('Score at true solution: ' + str(score(real_values)))
     
@@ -123,27 +135,3 @@ print('Score at true solution: ' + str(score(real_values)))
 print('Current solution:           Real values:')
 for k, v in enumerate(x):
     print(myokit.strfloat(v) + '    ' + myokit.strfloat(real_values[k]))
-    
-# Refine the solution using nelder-mead
-x2, f2 = fit.nelder_mead(score, x)
-print('Pure PSO solution:          Refined solution:')
-for k, v in enumerate(x):
-    print(myokit.strfloat(v) + '    ' + myokit.strfloat(x2[k]))
-
-'''
-#
-# Plot the parameter space near the real coordinates
-#
-import matplotlib.pyplot as pl
-boundaries = [
-    [800, 1050],
-    [1, 20],
-    ]
-n = 50
-x, fx = fit.map_grid(score, boundaries, n, parallel=True)
-fit.loss_surface_colors(x[:,0], x[:,1], fx, markers=None)
-pl.title('Score function near the true solution')
-fit.loss_surface_colors(x[:,0], x[:,1], np.log(fx), markers=None)
-pl.title('Log of score function near the true solution')
-pl.show()
-'''
