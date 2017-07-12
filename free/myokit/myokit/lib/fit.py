@@ -1222,8 +1222,8 @@ def ga(f, bounds, hints=None, n=64, fbest=0.01, fworst=0.01, pmutate=0.2,
         if callback:
             callback(np.array(xs[0], copy=True), fs[0])
     return xs[0], fs[0]
-def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
-        callback=None, verbose=False, args=None):
+def cmaes(f, bounds, hint=None, popsize=None, ipop=0, parallel=False,
+        tolerance=1e-6, callback=None, verbose=False, args=None):
     """
     Global optimizer that minimizes a function ``f`` within a specified set of
     ``bounds`` using the CMA-ES methods provided by the `cma` module [1, 2].
@@ -1256,6 +1256,13 @@ def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
         `n_dim` is the number of dimensions of the search space.
         When running in parallel, Myokit will round this up to the nearest
         multiple of the cpu count. To set manually, use this parameter.
+    ``ipop=0``
+        Set to any integer greater than 1 to enable increasing population size
+        restarts (IPOP). This will re-run the simulation ``ipop`` times (for a
+        total number of ``ipop + 1`` runs). Each re-run will be from a randomly
+        chosen starting point (within the boundaries) and with the population
+        size increased by a factor 2. The rrecommended value for ``ipop`` is
+        either ``0`` or ``8``.
     ``parallel=False``
         Set this to ``True`` to run a multi-process version of the search that
         utilizes all available cores. See :class:`EvaluatorProcess` for the
@@ -1316,6 +1323,7 @@ def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
         lower[i] = lo
         upper[i] = up
     del(bounds)
+    brange = upper - lower
     # Check hint
     if hint is not None:
         hint = np.array(hint, copy=True)
@@ -1330,17 +1338,23 @@ def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
     # Check if parallelization is required
     parallel = bool(parallel)
     # Set population size
-    if popsize is not None:
+    if popsize is None:
+        # Explicitly set default used by cma-es
+        popsize = 4 + int(3 * np.log(d))
+        # If parallel, round up to the number of cores (incl. hyperthreaded)
+        if parallel:
+            cpu_count = multiprocessing.cpu_count()
+            popsize = (((popsize - 1) // cpu_count) + 1) * cpu_count
+    else:
+        # Custom popsize
         popsize = int(popsize)
         if popsize < 1:
             raise ValueError('Population size must be `None` or non-zero'
                 ' integer')
-    elif parallel:
-        default_popsize = 4 + int(3 * np.log(d))
-        cpu_count = multiprocessing.cpu_count()
-        popsize = (((d - 1) // cpu_count) + 1) * cpu_count
-        if verbose:
-            print('Running with population size: ' + str(popsize))
+    # Check number of IPOP restarts
+    ipop = int(ipop)
+    if ipop < 0:
+        raise ValueError('Number of IPOP restarts must be zero or positive.')
     # Check tolerance
     tolerance = float(tolerance)
     # Check callback function
@@ -1364,38 +1378,54 @@ def cmaes(f, bounds, hint=None, popsize=None, parallel=False, tolerance=1e-6,
     # Guess initial sigma as 1/6 of the bounds (CMAES works best if the optimal
     # solution is within +/- 3*sigma from the initial guess, see API docs).
     sigma0 = np.min(upper - lower) / 6.0
-    # Set up simulation
+    # Set up simulation options
+    best_solution = cma.BestSolution()
     options = cma.CMAOptions()
     options.set('bounds', [lower, upper])
     options.set('ftarget', tolerance)
     #options.set('tolfun', update_tolerance)
-    if popsize is not None:
-        options.set('popsize', popsize)
     if not verbose:
         options.set('verbose', -9)
-    es = cma.CMAEvolutionStrategy(hint, sigma0, options)
-    # Start searching
-    while not es.stop():
-        candidates = es.ask()
-        es.tell(candidates, evaluator.evaluate(candidates))
-        if callback is not None:
-            r = es.result()
-            callback(r[0], r[1])
+    # Start one or multiple runs
+    for i in xrange(1 + ipop):
+        # Set population size, increase for ipop restarts
+        options.set('popsize', popsize)
         if verbose:
-            es.disp()
-    if verbose:
-        es.result_pretty()
-    # Get result
-    (xbest, fxbest, evaluations_xbest, evaluations, iterations, pheno_xmean,
-    effective_stds) = es.result()
+            print('Run ' + str(1+i) + ': population size ' + str(popsize))
+        popsize *= 2
+        # Run repeats from random points
+        if i > 0:
+            hint = lower + brange * np.random.uniform(0, 1, d)
+        # Search
+        es = cma.CMAEvolutionStrategy(hint, sigma0, options)
+        while not es.stop():
+            candidates = es.ask()
+            es.tell(candidates, evaluator.evaluate(candidates))
+            if callback is not None:
+                r = es.result()
+                callback(r[0], r[1])
+            if verbose:
+                es.disp()
+        # Show result
+        if verbose:
+            es.result_pretty()
+        # Update best solution
+        best_solution.update(es.best)
+        # Stop if target was already met
+        x, f, evals = best_solution.get()
+        if f is not None and f < tolerance:
+            print(x, f)
+            break
+        else:
+            print(f, tolerance, f < tolerance)
     # No result found? Then return hint and score of hint
-    if xbest is None:
+    if x is None:
         if args is None:
             return (hint, f(hint))
         else:
             return (hint, f(hint, *args))
     # Return proper result
-    return (xbest, fxbest)
+    return (x, f)
 class SequentialEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
