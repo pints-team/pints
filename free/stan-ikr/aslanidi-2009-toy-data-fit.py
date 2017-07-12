@@ -75,7 +75,7 @@ boundaries = {
     'ikr.p5' : [0, 100],        # mV        12.25
     'ikr.p6' : [-10, 0],        # mV        -5.4
     'ikr.p7' : [0, 100],        # mV        20.4
-    'ikr.p8' : [1e-4, 1],       # mS/uF     0.04
+    'ikr.p8' : [1e-3, 0.5],       # mS/uF     0.04
     }
 bounds = [boundaries[x] for x in parameters]
     
@@ -83,7 +83,7 @@ bounds = [boundaries[x] for x in parameters]
 real_values = [model.get(name).eval() for name in parameters]
 print('True solution:')
 print(real_values)
-    
+
 # define score function (sum of squares)
 simulation = myokit.Simulation(model, protocol)
 def score(p):
@@ -108,10 +108,12 @@ for i in xrange(n):
 print(str(b.time() / n) + ' seconds per evaluation')
 '''
 
-run = 0
+# Get score at true solution
+target = score(real_values)
+
+# Define callback function
 def cb(x, fx):
-    global run
-    print(run, fx)
+    print(fx)
     run += 1
 
 if False:
@@ -122,14 +124,19 @@ if False:
 else:
     with np.errstate(all='ignore'):
         x = None
-        print('Running pso optimisation to get starting point')
-        x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True, callback=cb)
-    
-        print('Running CMA-ES...')
-        x, f = fit.cmaes(score, bounds, hint=x, parallel=True, verbose=True)        
+        f = float('inf')
+        #print('Running pso optimisation to get starting point')
+        #x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True, callback=cb,
+        #        tolerance=target)
+        if f <= target:
+            print('Target met, skipping cmaes')
+        else:
+            print('Running CMA-ES...')
+            x, f = fit.cmaes(score, bounds, hint=x, ipop=4, parallel=True, 
+                    tolerance=target, verbose=True)
 
 print('Final score: ' + str(f))
-print('Score at true solution: ' + str(score(real_values)))
+print('Score at true solution: ' + str(target))
     
 # Show solution
 print('Current solution:           Real values:')
