@@ -2,9 +2,13 @@
 # A set of tools to fit models to data.
 #
 # This file is part of Myokit
-#  Copyright 2011-2016 Michael Clerx, Maastricht University
+#  Copyright 2017      University of Oxford
+#  Copyright 2011-2016 Maastricht University
 #  Licensed under the GNU General Public License v3.0
 #  See: http://myokit.org
+#
+# Authors:
+#  Michael Clerx
 #
 from __future__ import division
 from __future__ import print_function
@@ -54,7 +58,7 @@ def bfgs(f, x, bounds, max_iter=500, args=None):
     bound constrained optimization. Zhu, C and R H Byrd and J Nocedal (1997)
     ACM Transactions on Mathematical Software 23 (4): 550-560.
     
-    *Note: This method requires Scipy to be installed.*
+    *Note: This method requires SciPy to be installed.*
     """
     from scipy.optimize import minimize
     if not callable(f):
@@ -73,10 +77,231 @@ def bfgs(f, x, bounds, max_iter=500, args=None):
     #if not res.success:
     #    raise Exception('Error optimizing function: ' + str(res.message))
     return res.x, res.fun
-class _BoundedWrapper(object):
+def cmaes(f, bounds, hint=None, sigma=None, n=None, ipop=0,
+        parallel=False, fatol=1e-11, target=1e-6, callback=None, verbose=False,
+        args=None):
     """
-    Wraps around a one-variable function and returns `inf` for any input
-    outside a specified set of bounds.
+    Global/local optimizer that minimizes a function ``f`` within a specified
+    set of ``bounds`` using the CMA-ES methods provided by the `cma` module
+    [1, 2].
+    
+    CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
+    designed for non-linear derivative-free optimization problems [1].
+    To run, the `cma` module must have been installed (for example via PIP).
+    
+    A parallel (multiprocessing) version of the algorithm can be run by setting
+    ``parallel`` to ``True``. Please keep in mind that the objective function
+    ``f`` cannot access any shared memory in this scenario. See
+    :class:`ParallelEvaluator` for details.
+
+    The method will stop when one of the following criteria is met:
+    
+    1. Absolute changes in ``f(x)`` are smaller than ``fatol``
+    2. The value of ``f(x)`` is smaller than ``target``.
+    3. The maximum number of iterations is reached.
+    
+    Arguments:
+    
+    ``f``
+        A function to minimize. The function ``f(x)`` must be callable with
+        ``x`` a sequence of ``m`` coordinates and should return a single scalar
+        value.
+    ``bounds``
+        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
+        maximum values in the search space for each dimension ``i``.
+    ``hint=None``
+        A suggested starting point. Must be within the given bounds. If no
+        hint is given the center of the parameter space is used.
+    ``sigma=None``
+        A suggsted standard deviation; the method works best if the global
+        optimum lies within +/- 3*sigma from the initial guess. If no value for
+        sigma is given, the default value is ``1/6 * min(upper - lower)``,
+        where ``upper`` and ``lower`` are the boundaries on the parameter
+        space.
+    ``n=None``
+        Can be used to manually overrule the population size used in CMA-ES. By
+        default, this is set by CMA-ES to be ``4+int(3*np.log(d))`` where ``d``
+        is the number of dimensions of the search space. When running in
+        parallel, Myokit will round this up to the nearest multiple of the CPU
+        count. To set manually, use this parameter.
+    ``ipop=0``
+        Set to any integer greater than 1 to enable increasing population size
+        restarts (IPOP). This will re-run the simulation ``ipop`` times (for a
+        total number of ``ipop + 1`` runs). Each re-run will be from a randomly
+        chosen starting point (within the boundaries) and with the population
+        size increased by a factor 2. The rrecommended value for ``ipop`` is
+        either ``0`` or ``8``.
+    ``parallel=False``
+        Set this to ``True`` to run a multi-process version of the search that
+        utilizes all available cores. See :class:`EvaluatorProcess` for the
+        details of using multi-process parallelisation and the requirements
+        this places on the function ``f``.
+    ``fatol``
+        The smallest difference in ``f(x)`` between subsequent iterations that
+        is acceptable for convergence.
+    ``target=1e-6``
+        The value of ``f(x)`` that is acceptable for convergence.
+    ``callback=None``
+        An optional function to be called after each iteration with arguments
+        ``(pg, fg)`` where ``pg`` is the current best position and ``fg`` is
+        the corresponding score.
+    ``verbose``
+        Set to ``True`` to enable logging of all sorts of information into the
+        console window.
+    ``args=None``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+                    
+    The method returns a tuple ``(xbest, fbest)`` where ``xbest`` is the best
+    position found and ``fbest = f(xbest)``.
+    
+    References:
+    
+    [1] https://www.lri.fr/~hansen/cmaesintro.html
+    
+    [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
+    the derandomized evolution strategy with covariance matrix adaptation
+    (CMA-ES).
+    
+    *Note: This method requires the `cma` module to be installed.*
+    """
+    # Test if CMAES is installed
+    try:
+        import cma
+    except ImportError:
+        raise ImportError('This method requires the `cma` module to be'
+            ' installed')
+    # Test if function is callable
+    if not callable(f):
+        raise ValueError('The argument f must be a callable function.')
+    # Check extra arguments
+    if args is None:
+        args = ()
+    elif type(args) != tuple:
+        raise ValueError('The argument `args` must be either None or a tuple.')
+    # Check bounds
+    d = len(bounds)
+    if d < 1:
+        raise ValueError('Dimension must be at least 1.')
+    lower = np.zeros(d)
+    upper = np.zeros(d)
+    for i, b in enumerate(bounds):
+        if len(b) != 2:
+            raise ValueError('Each entry in `bounds` must be a tuple'
+                ' `(min, max)`.')
+        lo, up = float(b[0]), float(b[1])
+        if not lo < up:
+            raise ValueError('The lower bounds must be smaller than the upper'
+                ' bounds.')
+        lower[i] = lo
+        upper[i] = up
+    del(bounds)
+    brange = upper - lower
+    # Check hint
+    if hint is not None:
+        hint = np.array(hint, copy=True)
+        if hint.shape != lower.shape:
+            raise ValueError('Hint must have the shape ' + str(lower.shape))
+        if np.any(hint < lower) or np.any(hint > upper):
+            j = np.argmax(np.logical_or(hint < lower, hint > upper))
+            raise ValueError('Hint must be within the specified bounds (error'
+                ' with parameter ' + str(1+j) + ').')
+    else:
+        hint = lower + 0.5 * (upper - lower)
+    # Check sigma hint
+    if sigma is not None:
+        sigma = float(sigma)
+        if sigma <= 0:
+            raise ValueError('Sigma must be greater than 0.')
+    else:
+        # Guess initial sigma as 1/6 of the bounds (CMAES works best if the
+        # optimal solution is within +/- 3*sigma from the initial guess, see
+        # API docs).
+        sigma = np.min(upper - lower) / 6.0
+    # Check if parallelization is required
+    parallel = bool(parallel)
+    # Set population size
+    if n is None:
+        # Explicitly set default used by cma-es
+        n = 4 + int(3 * np.log(d))
+        # If parallel, round up to a multiple of the reported number of cores
+        if parallel:
+            cpu_count = multiprocessing.cpu_count()
+            n = (((n - 1) // cpu_count) + 1) * cpu_count
+    else:
+        # Custom population size
+        n = int(n)
+        if n < 1:
+            raise ValueError('Population size must be `None` or non-zero'
+                ' integer')
+    # Check number of IPOP restarts
+    ipop = int(ipop)
+    if ipop < 0:
+        raise ValueError('Number of IPOP restarts must be zero or positive.')
+    # Check convergence criteria
+    fatol = float(fatol)
+    target = float(target)
+    # Check callback function
+    if callback is not None:
+        if not callable(callback):
+            raise ValueError('Argument `callback` must be a callable function'
+                ' or `None`.')
+    # Check if verbose mode is enabled
+    verbose = bool(verbose)
+    # Report first point
+    if callback is not None:
+        callback(np.array(hint, copy=True), f(hint, *args))
+    # Create evaluator object
+    if parallel:
+        evaluator = ParallelEvaluator(f, args=args)
+    else:
+        evaluator = SequentialEvaluator(f, args=args)
+    # Set up simulation options
+    best_solution = cma.BestSolution()
+    options = cma.CMAOptions()
+    options.set('bounds', [lower, upper])
+    options.set('tolfun', fatol)
+    options.set('ftarget', target)
+    if not verbose:
+        options.set('verbose', -9)
+    # Start one or multiple runs
+    for i in xrange(1 + ipop):
+        # Set population size, increase for ipop restarts
+        options.set('popsize', n)
+        if verbose:
+            print('Run ' + str(1+i) + ': population size ' + str(n))
+        n *= 2
+        # Run repeats from random points
+        if i > 0:
+            hint = lower + brange * np.random.uniform(0, 1, d)
+        # Search
+        es = cma.CMAEvolutionStrategy(hint, sigma, options)
+        while not es.stop():
+            candidates = es.ask()
+            es.tell(candidates, evaluator.evaluate(candidates))
+            if callback is not None:
+                r = es.result()
+                callback(np.array(r[0], copy=True), r[1])
+            if verbose:
+                es.disp()
+        # Show result
+        if verbose:
+            es.result_pretty()
+        # Update best solution
+        best_solution.update(es.best)
+        # Stop if target was already met
+        x, fx, evals = best_solution.get()
+        if fx is not None and fx < target:
+            break
+    # No result found? Then return hint and score of hint
+    if x is None:
+        return (hint, f(hint, *args))
+    # Return proper result
+    return (x, fx)
+class _DiscontinuousBoundedWrapper(object):
+    """
+    Wraps around a (scalar-valued) score function and returns `inf` for any
+    input outside a specified set of bounds.
     """
     def __init__(self, function, lower, upper):
         # Using a class for this, rather than a nested function as a wrapper
@@ -90,10 +315,10 @@ class _BoundedWrapper(object):
             return float('inf')
         else:
             return self.function(x, *args)
-class _BoundedWrapperHybrid(object):
+class _DiscontinuousBoundedWrapper2(object):
     """
-    Wraps around a one-variable function and returns `(original input, inf)`
-    for any input outside a specified set of bounds.
+    Wraps around a (scalar-valued) score function and returns
+    `(original input, inf)` for any input outside a specified set of bounds.
     """
     def __init__(self, function, lower, upper):
         self.function = function
@@ -104,22 +329,6 @@ class _BoundedWrapperHybrid(object):
             return (x, float('inf'))
         else:
             return self.function(x, *args)
-def evaluate(f, x, parallel=False, args=None):
-    """
-    Evaluates the function ``f`` on every value present in ``x`` and returns
-    a sequence of evaluations ``f(x[i])``.
-
-    To run the evaluations on all available cores, set ``parallel=True``. For
-    details see :class:`ParallelEvaluator`.
-    
-    Extra arguments to pass to ``f`` can be given in the optional tuple
-    ``args``. If used, ``f`` will be called as ``f(x[i], *args)``.
-    """
-    if parallel:
-        evaluator = ParallelEvaluator(f, args)
-    else:
-        evaluator = SequentialEvaluator(f, args)
-    return evaluator.evaluate(x)
 class Evaluator(object):
     """
     *Abstract class*
@@ -146,11 +355,11 @@ class Evaluator(object):
         self._function = function
         if args is None:
             self._args = ()
-        elif type(args) == tuple:
-            self._args = args
+        elif type(args) != tuple:
+            raise ValueError('The argument `args` must be either None or a'
+                ' tuple.')
         else:
-            raise ValueError('Optional argument `args` must be either `None`'
-                ' or a tuple.')
+            self._args = args
     def evaluate(self, positions):
         """
         Evaluate the function for every value in the sequence ``positions``.
@@ -168,6 +377,298 @@ class Evaluator(object):
         Internal version of :meth:`evaluate()`.
         """
         raise NotImplementedError
+def evaluate(f, x, parallel=False, args=None):
+    """
+    Evaluates the function ``f`` on every value present in ``x`` and returns
+    a sequence of evaluations ``f(x[i])``.
+
+    To run the evaluations on all available cores, set ``parallel=True``. For
+    details see :class:`ParallelEvaluator`.
+    
+    Extra arguments to pass to ``f`` can be given in the optional tuple
+    ``args``. If used, ``f`` will be called as ``f(x[i], *args)``.
+    """
+    if parallel:
+        evaluator = ParallelEvaluator(f, args)
+    else:
+        evaluator = SequentialEvaluator(f, args)
+    return evaluator.evaluate(x)
+
+'''
+def ga(f, bounds, hints=None, n=64, fbest=0.01, fworst=0.01, pmutate=0.2,
+        rmax=0.1, rmin=0.001, parallel=False, target=1e-6, max_iter=50,
+        callback=None, args=None):
+    """
+    Global optimizer that minimizes a function ``f`` within a specified set of
+    ``bounds`` using a genetic algorithm (GA).
+    
+    A population of ``n`` individuals (i.e. points in parameter space) is
+    generated and each individual's fitness (i.e. the returned value of the
+    score function) is evaluated. At each step of the algorithm, a new
+    population is created based on the following rules:
+    
+    1. The ``nbest`` individuals with the highest scores are passed on to the
+       next generation unchanged. This is not what nature would do, but it
+       stops the algorithm from discarding the best solution(s) so far. The
+       number of individuals to pass on this way must be at least one.
+    2. The ``nworst`` individuals with the lowest scores are replaced by new
+       ones, randomly sampled from the parameter space. The number of
+       individuals to replace must be at least 1.
+    3. The remaining ``nbreed = n - nworst - nbest`` individuals are created by
+       recombining and mutating a selected set of individuals from the entire
+       population.
+       
+    Recombination and mutation happens in a three stage process. First,
+    ``nbreed`` individuals are selected from the population by randomly pairing
+    individuals from the entire population and selecting the one with the best
+    score. In the second step, a pairing is made between a randomly selected
+    individual from the pool and a randomly selected individual from the group
+    of best solutions. These two parents are then uesd to create a new
+    individual. Each of the new individual's parameter values is randomly
+    selected from either parent 1 or parent 2. Finally, for each new
+    individual a fraction of parameter values is selected for mutation. Mutated
+    parameters are resampled from a range around the original value. The size
+    of this range can be set relative to the variable's bounds. At each step of
+    the algorithm, the range is decreased.
+    
+    A parallel (multiprocessing) version of the algorithm can be run by setting
+    ``parallel`` to ``True``. Please keep in mind that the objective function
+    ``f`` cannot access any shared memory in this scenario. See
+    :class:`ParallelEvaluator` for details.
+    
+    Arguments:
+    
+    ``f``
+        A function to minimize. The function ``f(x)`` must be callable with
+        ``x`` a sequence of ``m`` coordinates and should return a single scalar
+        value.
+    ``bounds``
+        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
+        maximum values in the search space for each dimension ``i``. The
+        returned solution is guaranteed to be within these bounds.
+    ``hints``
+        A (possibly empty) list of points to use as initial values. Each point
+        ``x`` is specified as a sequence of ``m`` coordinates, such as can be
+        passed to ``f(x)``. Hints will be used as long as they are available.
+        If there are more hints than individuals, only the first hints in the
+        sequence will be used. If there are more individuals than hints, the
+        remaining individuals will be initialized at uniformly random positions
+        in the search space.
+    ``n``
+        The number of individuals in each population. This should be at least
+        3, but probably a great deal higher.
+    ``fbest``
+        The fraction of the population to transfer, unchanged, to the next
+        generation.
+    ``fworst``
+        The fraction of the population that is discarded at every step and
+        replaced by randomly generated individuals. 
+    ``pmutate``
+        The chance with which mutations occur in offspring.
+    ``rmax``
+        Each mutation triggers a resampling of a parameter value from an
+        interval around its current value. The maximum size of this interval,
+        used at the start of the genetic algorithm, is a fraction ``rmax`` of
+        the range indicated by the variable boundaries.
+    ``rmin``
+        The range used for mutations in the final step of the algorith. The
+        range varies linearly bewtween ``rmax`` and ``rmin`` during the course
+        of the algorithm.
+    ``parallel``
+        Set this to ``True`` to run a multi-process version of the search that
+        utilizes all available cores. See :class:`EvaluatorProcess` for the
+        details of using multi-process parallelisation and the requirements
+        this places on the function ``f``.
+    ``target``
+        The method will stop searching when a score below the `target` value
+        is found. If no such score is found, the method will halt after the
+        maximum number of iterations.
+    ``max_iter``
+        The maximum number of iterations to perform.
+    ``callback``
+        An optional function to be called after each global step with a tuple
+        ``(x, fx)`` where ``x`` is the current best individual and
+        ``fx = f(x)``.
+    ``args``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+    
+    The method returns a tuple ``(x, fx)`` where ``x`` is the best position
+    found and ``fx = f(x)``.
+    """
+    # Test if function is callable
+    if not callable(f):
+        raise ValueError('The argument f must be a callable function.')
+    if args is None:
+        args = ()
+    elif type(args) != tuple:
+        raise ValueError('The argument `args` must be either None or a tuple.')
+    # Check bounds
+    d = len(bounds)
+    if d < 1:
+        raise ValueError('Dimension must be at least 1.')
+    lower = np.zeros(d)
+    upper = np.zeros(d)
+    for i, b in enumerate(bounds):
+        if len(b) != 2:
+            raise ValueError('Each entry in `bounds` must be a tuple'
+                ' `(min, max)`.')
+        lo, up = float(b[0]), float(b[1])
+        if not lo < up:
+            raise ValueError('The lower bounds must be smaller than the upper'
+                ' bounds.')
+        lower[i] = lo
+        upper[i] = up
+    del(bounds)
+    # Check number of individuals per population
+    n = int(n)
+    if n < 3:
+        raise ValueError('The number of individuals per population should be'
+            ' at least 3 (and probably much more).')
+    # Check fraction of individuals to retain
+    fbest = float(fbest)
+    if fbest < 0 or fbest > 1:
+        raise ValueError('The fraction of individuals to retain each step,'
+            ' fbest, must be a float in the range [0, 1].')
+    # Determine the number of individuals to retain. Always maintain at least
+    # one individual to prevent losing a good solution.
+    nbest = max(1, int(fbest * n))
+    # Check fraction of individuals to replace
+    fworst = float(fworst)
+    if fworst < 0 or fworst > 1:
+        raise ValueError('The fraction of individuals to replace each step,'
+            ' fworst, must be a float in the range [0, 1].')
+    # Determine the number of individuals to replace at every step. Always
+    # replace at least one individual to get some more randomness.
+    nworst = max(1, int(fworst * n))
+    # Determine the number of individuals to create by breeding
+    nbreed = n - nbest - nworst
+    if nbreed < 1:
+        raise ValueError('The total number of individuals and the fractions'
+            ' to pass on and discard must be chosen such that there is at'
+            ' least one best individual passed on, at least one individual'
+            ' discarded and at least one individual generated by recombination'
+            ' and mutation. Current situation: (' + str(nbest) + ') best, ('
+            + str(nworst) + ') worst and (' + str(nbreed) + ') remaining.')
+    # Determine the probability with which offspring parameters mutate
+    pmutate = float(pmutate)
+    if pmutate < 0 or pmutate > 1:
+        raise ValueError('The chance of a parameter mutating after'
+            ' recombination, pmutate, must be in the range [0,1].')
+    # Check the fraction of the parameter space to use for mutations
+    rmax = float(rmax)
+    rmin = float(rmin)
+    if rmax < 0 or rmax > 1:
+        raise ValueError('The maximum fraction of the parameter space to use'
+            ' in mutations, rmax, must be in the range [0,1].')
+    if rmin < 0 or rmin > 1:
+        raise ValueError('The minimum fraction of the parameter space to use'
+            ' in mutations, rmin, must be in the range [0,1].')
+    if rmax < rmin:
+        raise ValueError('The maximum fraction of the parameter space to use'
+            ' in mutations, rmax, cannot be smaller than rmin.')
+    # Check hints
+    if hints:
+        _hints = hints
+        hints = []
+        for hint in _hints:
+            hint = np.array(hint, copy=True)
+            if hint.shape != lower.shape:
+                raise ValueError('Each hint must have the shape '
+                    + str(lower.shape))
+            if np.any(hint < lower) or np.any(hint > upper):
+                raise ValueError('All hints must be within the specified'
+                    ' bounds.')
+            hints.append(hint)
+        del(_hints)
+    else:
+        hints = []
+    # Check if parallelization is required
+    parallel = bool(parallel)
+    # Check stopping criteria
+    target = float(target)
+    # Check maximum iterations
+    max_iter = int(max_iter)
+    if max_iter < 1:
+        raise ValueError('Maximum iterations must be greater than zero.')
+    # Check callback function
+    if callback is not None:
+        if not callable(callback):
+            raise ValueError('Callback function must be callable or None.')
+    # Create an objective function that returns inf outside of bounds
+    function = _DiscontinuousBoundedWrapper(f, lower, upper)
+    # Set up data structure
+    xs = [] # Coordinate vectors
+    fs = [] # Scores
+    # Initialize population
+    brange = upper - lower
+    nhints = len(hints)
+    for i in xrange(n):
+        if i < nhints:
+            xs.append(hints[i])
+        else:
+            xs.append(lower + brange * np.random.uniform(0, 1, d))
+    xs = np.array(xs)
+    # Create evaluator object
+    if parallel:
+        evaluator = ParallelEvaluator(function, args)
+    else:
+        evaluator = SequentialEvaluator(function, args)
+    # Evaluate scores for initial points
+    fs = np.array(evaluator.evaluate(xs))
+    # Sort points from best to worst
+    i = np.argsort(fs)
+    fs = fs[i]
+    xs = xs[i]
+    # Report best point
+    if callback is not None:
+        callback(np.array(xs[0], copy=True), fs[0])
+    # Start searching
+    for step in xrange(max_iter):
+        # Check target
+        if fs[0] < target:
+            break
+        # Start creating the next generation
+        xnext = np.array(xs, copy=True)
+        fnext = np.array(fs, copy=True)
+        # Set fraction of range to use in mutations
+        r = rmax - (rmax - rmin) * step / (max_iter - 1)
+        # Create a pool of individuals to breed
+        pool = np.zeros(fs.shape)
+        for i in xrange(nbreed):
+            a, b = np.random.randint(0, n, 2)
+            pool[i] = a if fs[a] > fs[b] else b
+        # Generate new individuals through recombination
+        for i in xrange(nbreed):
+            # Select a best solution and a pool solution
+            a = np.random.randint(nbest)
+            b = pool[np.random.randint(nbreed)]
+            # Select which parameters to take from a
+            p = np.random.randint(0, 2, d)
+            # Create a new individual
+            c = a * p + b * (1 - p)
+            # Select parameters to mutate
+            p = np.nonzero(np.random.uniform(0, 1, d) < pmutate)[0]
+            # Mutate parameters
+            lo = np.maximum(lower[p], c[p] - r * brange[p])
+            hi = np.minimum(upper[p], c[p] + r * brange[p])
+            c[p] = lo + (hi - lo) * np.random.uniform(0, 1, len(p))
+            xnext[nbest + i] = c            
+        # Generate new individuals by random sampling
+        for i in xrange(nworst):
+            xnext[nbest + nbreed + i] = \
+                lower + brange * np.random.uniform(0, 1, d)
+        # Evaluate new positions
+        fnext[nbest:] = evaluator.evaluate(xnext[nbest:])
+        # Sort population from lowest to highest scores
+        i = np.argsort(fnext)
+        fs = fnext[i]
+        xs = xnext[i]
+        # Report first point (with "inf" as score)
+        if callback is not None:
+            callback(np.array(xs[0], copy=True), fs[0])
+    return xs[0], fs[0]
+'''
 def loss_surface_colors(x, y, f, xlim=None, ylim=None, markers='+'):
     """
     Takes irregularly spaced points ``(x, y, f)`` and creates a 2d colored
@@ -328,10 +829,16 @@ def map_grid(f, bounds, n, parallel=False, args=None):
     x = x.reshape((ndims, ntotal)).transpose()
     # Evaluate and return
     return x, evaluate(f, x, parallel=parallel, args=args)
-def nelder_mead(f, x, tolerance=1e-6, max_iter=500, args=None):
+def nelder_mead(f, x, xatol=1e-4, fatol=1e-4, max_iter=500, args=None):
     """
     Local optimizer that minimizes a function ``f`` using the Nelder-Mead
     simplex method provided by SciPy [1,2].
+    
+    The method will stop when one of the following criteria is met:
+    
+    1. Absolute changes in ``x`` are smaller than ``xatol`` _and_ absolute
+       changes in ``f(x)`` are smaller than ``fatol``
+    2. The maximum number of iterations is reached.
     
     Arguments:
     
@@ -341,10 +848,12 @@ def nelder_mead(f, x, tolerance=1e-6, max_iter=500, args=None):
         value.
     ``x``
         An initial guess for the ``x`` with the lowest ``f(x)``.
-    ``tolerance``
-        The method will stop searching when a score below the tolerance value
-        is found. If no such score is found, the method will halt after the
-        maximum number of iterations.
+    ``xatol``
+        Sets the _absolute_ difference in ``x`` between iterations that is
+        acceptable for convergence.
+    ``fatol``
+        Sets the _absolute_ difference in ``f(x)`` between iterations that is
+        acceptable for convergence.
     ``max_iter``
         The maximum number of iterations to perform.
     ``args``
@@ -361,21 +870,34 @@ def nelder_mead(f, x, tolerance=1e-6, max_iter=500, args=None):
     [2] A Simplex Method for Function Minimization. Nelder, J A, and R Mead
     (1965) The Computer Journal 7: 308-13.
     
-    *Note: This method requires Scipy to be installed.*
+    *Note: This method requires SciPy to be installed.*
     """
     from scipy.optimize import minimize
+    # Check if function is callable
     if not callable(f):
         raise ValueError('The argument `f` must be a callable function.')
+    # Check extra arguments
     if args is None:
         args = ()
     elif type(args) != tuple:
         raise ValueError('The argument `args` must be either None or a tuple.')
-    tolerance = float(tolerance)
+    # Check stopping criteria
+    # SciPy's Nelder-Mead has the following stopping criteria:
+    #  `fatol` (used to be called ftol): Absolute error in x between iterations
+    #  `xatol` (used to be called xtol): Absolute error in f between iterations
+    #  maxiter: Maximum iterations
+    #  maxfev: Maximum number of function evaluations
+    # The argument `tol` sets `fatol` and `xatol` simultaneously
+    # Both fatol and xatol must be met for the method to halt
+    fatol = float(fatol)
+    xatol = float(xatol)
     max_iter = int(max_iter)
     if max_iter < 1:
         raise ValueError('Maximum number of iterations must be at least 1.')
-    res = minimize(f, x, args=args, method='Nelder-Mead', tol=tolerance,
-        options={'maxiter': max_iter, 'disp': False})
+    # Minimize
+    res = minimize(f, x, args=args, method='Nelder-Mead', tol=None,
+        options={'xatol':xatol, 'fatol':fatol, 'maxiter': max_iter,
+        'disp': False})
     # The success flag is only false on max_iter (not an error) or max function
     # evaluations (should that be an error?)
     #if not res.success:
@@ -593,13 +1115,19 @@ multiprocessing.html#all-platforms>`_ for details).
         self._error = multiprocessing.Event()
         # Return errors
         return errors
-def powell(f, x, tolerance=1e-6, max_iter=500, args=None):
+def powell(f, x, xtol=1e-4, ftol=1e-4, max_iter=500, args=None):
     """
     Local optimizer that minimizes a function ``f`` using the implementation of
     Powell's conjugate direction method provided by SciPy [1, 2].
     
     Powell created a number of derivative free optimization methods. The method
     used here is one of the earliest, and is described in [2].
+    
+    The method will stop when one of the following criteria is met:
+    
+    1. Relative changes in ``x`` are smaller than ``xtol``
+    2. Relative changes in ``f(x)`` are smaller than ``ftol``
+    3. The maximum number of iterations is reached.
     
     Arguments:
     
@@ -609,10 +1137,12 @@ def powell(f, x, tolerance=1e-6, max_iter=500, args=None):
         value.
     ``x``
         An initial guess for the ``x`` with the lowest ``f(x)``.
-    ``tolerance``
-        The method will stop searching when a score below the tolerance value
-        is found. If no such score is found, the method will halt after the
-        maximum number of iterations.
+    ``xtol``
+        Sets the _relative_ difference in ``x`` between iterations that is
+        acceptable for convergence.
+    ``ftol``
+        Sets the _relative_ difference in ``f(x)`` between iterations that is
+        acceptable for convergence.
     ``max_iter``
         The maximum number of iterations to perform.
     ``args``
@@ -630,27 +1160,32 @@ def powell(f, x, tolerance=1e-6, max_iter=500, args=None):
     variables without calculating derivatives. Powell, M. J. D. (1964)
     Computer Journal 7 (2): 155-162. doi:10.1093/comjnl/7.2.155
     
-    *Note: This method requires Scipy to be installed.*
+    *Note: This method requires SciPy to be installed.*
     """
     from scipy.optimize import minimize
+    # Check if function is callable
     if not callable(f):
         raise ValueError('The argument `f` must be a callable function.')
+    # Check extra arguments
     if args is None:
         args = ()
     elif type(args) != tuple:
         raise ValueError('The argument `args` must be either None or a tuple.')
-    tolerance = float(tolerance)
+    # Check stopping criteria
+    xtol = float(xtol)
+    ftol = float(ftol)
     max_iter = int(max_iter)
     if max_iter < 1:
         raise ValueError('Maximum number of iterations must be at least 1.')
-    res = minimize(f, x, args=args, method='Powell', tol=tolerance,
-        options={'maxiter': max_iter, 'disp': False})
+    # Minimize
+    res = minimize(f, x, args=args, method='Powell', tol=None, options={
+        'xtol': xtol, 'ftol': ftol, 'maxiter': max_iter, 'disp': False})
     if not res.success:
         raise Exception('Error optimizing function: ' + str(res.message))
     return res.x, res.fun
-def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
-        tolerance=1e-6, max_iter=500, hybrid=False, return_all=False,
-        callback=None, callback_particles=None, args=None):
+def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
+        max_iter=500, hybrid=False, return_all=False, callback=None,
+        callback_particles=None, args=None):
     """
     Global optimizer that minimizes a function ``f`` within a specified set of
     ``bounds`` using particle swarm optimization (PSO) [1].
@@ -660,14 +1195,16 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
     the parameter space, guided by their own personal best score and the global
     optimum found so far.
     
-    The method halts when the best value found is smaller than the set
-    ``tolerance``, or after ``max_iter`` steps (where one "step" means each
-    of the ``n`` particles has been updated).
-    
     A parallel (multiprocessing) version of the algorithm can be run by setting
     ``parallel`` to ``True``. Please keep in mind that the objective function
     ``f`` cannot access any shared memory in this scenario. See
     :class:`ParallelEvaluator` for details.
+    
+    The method will stop when one of the following criteria is met:
+    
+    1. The value of ``f(x)`` is smaller than ``target``.
+    2. The maximum number of iterations is met (where one "iteration" means
+       each of the ``n`` particles has been updated).
     
     Arguments:
     
@@ -705,10 +1242,9 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
         utilizes all available cores. See :class:`EvaluatorProcess` for the
         details of using multi-process parallelisation and the requirements
         this places on the function ``f``.
-    ``tolerance=1e-6``
-        The method will stop searching when a score below the tolerance value
-        is found. If no such score is found, the method will halt after the
-        maximum number of iterations.
+    ``target=1e-6``
+        The method will stop searching when a score below the target value
+        is found.
     ``max_iter=500``
         The maximum number of iterations to perform.
     ``hybrid=False``
@@ -791,6 +1327,12 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
     # Test if function is callable
     if not callable(f):
         raise ValueError('The argument f must be a callable function.')
+    # Test extra arguments
+    if args is None:
+        args = ()
+    elif type(args) != tuple:
+        raise ValueError('The argument `args` must be either None or a'
+            ' tuple.')
     # Check bounds
     d = len(bounds)
     if d < 1:
@@ -844,8 +1386,8 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
         hints = []
     # Check if parallelization is required
     parallel = bool(parallel)
-    # Check tolerance
-    tolerance = float(tolerance)
+    # Check target
+    target = float(target)
     # Check maximum iterations
     max_iter = int(max_iter)
     if max_iter < 1:
@@ -884,18 +1426,18 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
     fg = float('inf')
     pg = xs[0]
     # Report first point (with "inf" as score)
-    if callback:
+    if callback is not None:
         callback(np.array(pg, copy=True), fg)
-    if callback_particles:
+    if callback_particles is not None:
         callback_particles([np.array(x, copy=True) for x in xs],
             [np.array(x, copy=True) for x in vs], list(fs))
     # Wrap around function to check bounds
     if hybrid:
         # Create bounded wrapper that returns (x_old, inf)
-        function = _BoundedWrapperHybrid(f, lower, upper)
+        function = _DiscontinuousBoundedWrapper2(f, lower, upper)
     else:
         # Create an objective function that returns inf outside of bounds
-        function = _BoundedWrapper(f, lower, upper)    
+        function = _DiscontinuousBoundedWrapper(f, lower, upper)    
     # Create evaluator object
     if parallel:
         evaluator = ParallelEvaluator(function, args=args)
@@ -903,8 +1445,8 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
         evaluator = SequentialEvaluator(function, args=args)
     # Start searching
     for step in xrange(max_iter):
-        # Check tolerance criterion
-        if fg < tolerance:
+        # Check target criterion
+        if fg <= target:
             break
         # Calculate scores and, in hybrid mode, update positions
         if hybrid:
@@ -937,9 +1479,9 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
             fg = fl[i]
             pg = np.array(pl[i], copy=True)
         # Callbacks
-        if callback:
+        if callback is not None:
             callback(np.array(pg, copy=True), fg)
-        if callback_particles:
+        if callback_particles is not None:
             callback_particles([np.array(x, copy=True) for x in xs],
                 [np.array(x, copy=True) for x in vs], list(fs))
     # Return best position and score
@@ -953,479 +1495,29 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False,
         return (pl, fl)
     else:
         return (pg, fg)
-def ga(f, bounds, hints=None, n=64, fbest=0.01, fworst=0.01, pmutate=0.2,
-        rmax=0.1, rmin=0.001, parallel=False, tolerance=1e-6, max_iter=50,
-        callback=None, args=None):
+class _QuadraticBoundedWrapper(object):
     """
-    Global optimizer that minimizes a function ``f`` within a specified set of
-    ``bounds`` using a genetic algorithm (GA).
-    
-    A population of ``n`` individuals (i.e. points in parameter space) is
-    generated and each individual's fitness (i.e. the returned value of the
-    score function) is evaluated. At each step of the algorithm, a new
-    population is created based on the following rules:
-    
-    1. The ``nbest`` individuals with the highest scores are passed on to the
-       next generation unchanged. This is not what nature would do, but it
-       stops the algorithm from discarding the best solution(s) so far. The
-       number of individuals to pass on this way must be at least one.
-    2. The ``nworst`` individuals with the lowest scores are replaced by new
-       ones, randomly sampled from the parameter space. The number of
-       individuals to replace must be at least 1.
-    3. The remaining ``nbreed = n - nworst - nbest`` individuals are created by
-       recombining and mutating a selected set of individuals from the entire
-       population.
-       
-    Recombination and mutation happens in a three stage process. First,
-    ``nbreed`` individuals are selected from the population by randomly pairing
-    individuals from the entire population and selecting the one with the best
-    score. In the second step, a pairing is made between a randomly selected
-    individual from the pool and a randomly selected individual from the group
-    of best solutions. These two parents are then uesd to create a new
-    individual. Each of the new individual's parameter values is randomly
-    selected from either parent 1 or parent 2. Finally, for each new
-    individual a fraction of parameter values is selected for mutation. Mutated
-    parameters are resampled from a range around the original value. The size
-    of this range can be set relative to the variable's bounds. At each step of
-    the algorithm, the range is decreased.
-    
-    A parallel (multiprocessing) version of the algorithm can be run by setting
-    ``parallel`` to ``True``. Please keep in mind that the objective function
-    ``f`` cannot access any shared memory in this scenario. See
-    :class:`ParallelEvaluator` for details.
-    
-    Arguments:
-    
-    ``f``
-        A function to minimize. The function ``f(x)`` must be callable with
-        ``x`` a sequence of ``m`` coordinates and should return a single scalar
-        value.
-    ``bounds``
-        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
-        maximum values in the search space for each dimension ``i``. The
-        returned solution is guaranteed to be within these bounds.
-    ``hints``
-        A (possibly empty) list of points to use as initial values. Each point
-        ``x`` is specified as a sequence of ``m`` coordinates, such as can be
-        passed to ``f(x)``. Hints will be used as long as they are available.
-        If there are more hints than individuals, only the first hints in the
-        sequence will be used. If there are more individuals than hints, the
-        remaining individuals will be initialized at uniformly random positions
-        in the search space.
-    ``n``
-        The number of individuals in each population. This should be at least
-        3, but probably a great deal higher.
-    ``fbest``
-        The fraction of the population to transfer, unchanged, to the next
-        generation.
-    ``fworst``
-        The fraction of the population that is discarded at every step and
-        replaced by randomly generated individuals. 
-    ``pmutate``
-        The chance with which mutations occur in offspring.
-    ``rmax``
-        Each mutation triggers a resampling of a parameter value from an
-        interval around its current value. The maximum size of this interval,
-        used at the start of the genetic algorithm, is a fraction ``rmax`` of
-        the range indicated by the variable boundaries.
-    ``rmin``
-        The range used for mutations in the final step of the algorith. The
-        range varies linearly bewtween ``rmax`` and ``rmin`` during the course
-        of the algorithm.
-    ``parallel``
-        Set this to ``True`` to run a multi-process version of the search that
-        utilizes all available cores. See :class:`EvaluatorProcess` for the
-        details of using multi-process parallelisation and the requirements
-        this places on the function ``f``.
-    ``tolerance``
-        The method will stop searching when a score below the tolerance value
-        is found. If no such score is found, the method will halt after the
-        maximum number of iterations.
-    ``max_iter``
-        The maximum number of iterations to perform.
-    ``callback``
-        An optional function to be called after each global step with a tuple
-        ``(x, fx)`` where ``x`` is the current best individual and
-        ``fx = f(x)``.
-    ``args``
-        An optional tuple containing extra arguments to ``f``. If ``args`` is
-        specified, ``f`` will be called as ``f(x, *args)``.
-    
-    The method returns a tuple ``(x, fx)`` where ``x`` is the best position
-    found and ``fx = f(x)``.
+    Wraps around a (scalar-valued) score function and multiplies it by a
+    quadratic function outside a given set of bounds.
     """
-    # Test if function is callable
-    if not callable(f):
-        raise ValueError('The argument f must be a callable function.')
-    # Check bounds
-    d = len(bounds)
-    if d < 1:
-        raise ValueError('Dimension must be at least 1.')
-    lower = np.zeros(d)
-    upper = np.zeros(d)
-    for i, b in enumerate(bounds):
-        if len(b) != 2:
-            raise ValueError('Each entry in `bounds` must be a tuple'
-                ' `(min, max)`.')
-        lo, up = float(b[0]), float(b[1])
-        if not lo < up:
-            raise ValueError('The lower bounds must be smaller than the upper'
-                ' bounds.')
-        lower[i] = lo
-        upper[i] = up
-    del(bounds)
-    # Check number of individuals per population
-    n = int(n)
-    if n < 3:
-        raise ValueError('The number of individuals per population should be'
-            ' at least 3 (and probably much more).')
-    # Check fraction of individuals to retain
-    fbest = float(fbest)
-    if fbest < 0 or fbest > 1:
-        raise ValueError('The fraction of individuals to retain each step,'
-            ' fbest, must be a float in the range [0, 1].')
-    # Determine the number of individuals to retain. Always maintain at least
-    # one individual to prevent losing a good solution.
-    nbest = max(1, int(fbest * n))
-    # Check fraction of individuals to replace
-    fworst = float(fworst)
-    if fworst < 0 or fworst > 1:
-        raise ValueError('The fraction of individuals to replace each step,'
-            ' fworst, must be a float in the range [0, 1].')
-    # Determine the number of individuals to replace at every step. Always
-    # replace at least one individual to get some more randomness.
-    nworst = max(1, int(fworst * n))
-    # Determine the number of individuals to create by breeding
-    nbreed = n - nbest - nworst
-    if nbreed < 1:
-        raise ValueError('The total number of individuals and the fractions'
-            ' to pass on and discard must be chosen such that there is at'
-            ' least one best individual passed on, at least one individual'
-            ' discarded and at least one individual generated by recombination'
-            ' and mutation. Current situation: (' + str(nbest) + ') best, ('
-            + str(nworst) + ') worst and (' + str(nbreed) + ') remaining.')
-    # Determine the probability with which offspring parameters mutate
-    pmutate = float(pmutate)
-    if pmutate < 0 or pmutate > 1:
-        raise ValueError('The chance of a parameter mutating after'
-            ' recombination, pmutate, must be in the range [0,1].')
-    # Check the fraction of the parameter space to use for mutations
-    rmax = float(rmax)
-    rmin = float(rmin)
-    if rmax < 0 or rmax > 1:
-        raise ValueError('The maximum fraction of the parameter space to use'
-            ' in mutations, rmax, must be in the range [0,1].')
-    if rmin < 0 or rmin > 1:
-        raise ValueError('The minimum fraction of the parameter space to use'
-            ' in mutations, rmin, must be in the range [0,1].')
-    if rmax < rmin:
-        raise ValueError('The maximum fraction of the parameter space to use'
-            ' in mutations, rmax, cannot be smaller than rmin.')
-    # Check hints
-    if hints:
-        _hints = hints
-        hints = []
-        for hint in _hints:
-            hint = np.array(hint, copy=True)
-            if hint.shape != lower.shape:
-                raise ValueError('Each hint must have the shape '
-                    + str(lower.shape))
-            if np.any(hint < lower) or np.any(hint > upper):
-                raise ValueError('All hints must be within the specified'
-                    ' bounds.')
-            hints.append(hint)
-        del(_hints)
-    else:
-        hints = []
-    # Check if parallelization is required
-    parallel = bool(parallel)
-    # Check tolerance
-    tolerance = float(tolerance)
-    # Check maximum iterations
-    max_iter = int(max_iter)
-    if max_iter < 1:
-        raise ValueError('Maximum iterations must be greater than zero.')
-    # Check callback function
-    if callback is not None:
-        if not callable(callback):
-            raise ValueError('Callback function must be callable or None.')
-    # Create an objective function that returns inf outside of bounds
-    function = _BoundedWrapper(f, lower, upper)
-    # Set up data structure
-    xs = [] # Coordinate vectors
-    fs = [] # Scores
-    # Initialize population
-    brange = upper - lower
-    nhints = len(hints)
-    for i in xrange(n):
-        if i < nhints:
-            xs.append(hints[i])
-        else:
-            xs.append(lower + brange * np.random.uniform(0, 1, d))
-    xs = np.array(xs)
-    # Create evaluator object
-    if parallel:
-        evaluator = ParallelEvaluator(function, args=args)
-    else:
-        evaluator = SequentialEvaluator(function, args=args)
-    # Evaluate scores for initial points
-    fs = np.array(evaluator.evaluate(xs))
-    # Sort points from best to worst
-    i = np.argsort(fs)
-    fs = fs[i]
-    xs = xs[i]
-    # Report best point
-    if callback:
-        callback(np.array(xs[0], copy=True), fs[0])
-    # Start searching
-    for step in xrange(max_iter):
-        # Check tolerance criterion
-        if fs[0] < tolerance:
-            break
-        # Start creating the next generation
-        xnext = np.array(xs, copy=True)
-        fnext = np.array(fs, copy=True)
-        # Set fraction of range to use in mutations
-        r = rmax - (rmax - rmin) * step / (max_iter - 1)
-        # Create a pool of individuals to breed
-        pool = np.zeros(fs.shape)
-        for i in xrange(nbreed):
-            a, b = np.random.randint(0, n, 2)
-            pool[i] = a if fs[a] > fs[b] else b
-        # Generate new individuals through recombination
-        for i in xrange(nbreed):
-            # Select a best solution and a pool solution
-            a = np.random.randint(nbest)
-            b = pool[np.random.randint(nbreed)]
-            # Select which parameters to take from a
-            p = np.random.randint(0, 2, d)
-            # Create a new individual
-            c = a * p + b * (1 - p)
-            # Select parameters to mutate
-            p = np.nonzero(np.random.uniform(0, 1, d) < pmutate)[0]
-            # Mutate parameters
-            lo = np.maximum(lower[p], c[p] - r * brange[p])
-            hi = np.minimum(upper[p], c[p] + r * brange[p])
-            c[p] = lo + (hi - lo) * np.random.uniform(0, 1, len(p))
-            xnext[nbest + i] = c            
-        # Generate new individuals by random sampling
-        for i in xrange(nworst):
-            xnext[nbest + nbreed + i] = \
-                lower + brange * np.random.uniform(0, 1, d)
-        # Evaluate new positions
-        fnext[nbest:] = evaluator.evaluate(xnext[nbest:])
-        # Sort population from lowest to highest scores
-        i = np.argsort(fnext)
-        fs = fnext[i]
-        xs = xnext[i]
-        # Report first point (with "inf" as score)
-        if callback:
-            callback(np.array(xs[0], copy=True), fs[0])
-    return xs[0], fs[0]
-def cmaes(f, bounds, hint=None, popsize=None, ipop=0, parallel=False,
-        tolerance=1e-6, callback=None, verbose=False, args=None):
-    """
-    Global optimizer that minimizes a function ``f`` within a specified set of
-    ``bounds`` using the CMA-ES methods provided by the `cma` module [1, 2].
-    
-    CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
-    designed for non-linear derivative-free optimization problems [1].
-    To run, the `cma` module must have been installed (for example via PIP).
-    
-    The method halts when ``f`` is below ``tolerance``.
-    
-    A parallel (multiprocessing) version of the algorithm can be run by setting
-    ``parallel`` to ``True``. Please keep in mind that the objective function
-    ``f`` cannot access any shared memory in this scenario. See
-    :class:`ParallelEvaluator` for details.
-    
-    Arguments:
-    
-    ``f``
-        A function to minimize. The function ``f(x)`` must be callable with
-        ``x`` a sequence of ``m`` coordinates and should return a single scalar
-        value.
-    ``bounds``
-        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
-        maximum values in the search space for each dimension ``i``.
-    ``hint``
-        A suggested starting point. Must be within the given bounds.
-    ``popsize=None``
-        Can be used to manually overrule the population size used in CMA-ES. By
-        default, this is set by CMA-ES to be `4+int(3*np.log(n_dim))` where
-        `n_dim` is the number of dimensions of the search space.
-        When running in parallel, Myokit will round this up to the nearest
-        multiple of the cpu count. To set manually, use this parameter.
-    ``ipop=0``
-        Set to any integer greater than 1 to enable increasing population size
-        restarts (IPOP). This will re-run the simulation ``ipop`` times (for a
-        total number of ``ipop + 1`` runs). Each re-run will be from a randomly
-        chosen starting point (within the boundaries) and with the population
-        size increased by a factor 2. The rrecommended value for ``ipop`` is
-        either ``0`` or ``8``.
-    ``parallel=False``
-        Set this to ``True`` to run a multi-process version of the search that
-        utilizes all available cores. See :class:`EvaluatorProcess` for the
-        details of using multi-process parallelisation and the requirements
-        this places on the function ``f``.
-    ``tolerance=1e-6``
-        The method will stop searching when a score below the tolerance value
-        is found, but will also stop sooner if successive updates fail to find
-        any significant improvement.
-    ``callback=None``
-        An optional function to be called after each iteration with arguments
-        ``(pg, fg)`` where ``pg`` is the current best position and ``fg`` is
-        the corresponding score.
-    ``verbose``
-        Set to ``True`` to enable logging of all sorts of information into the
-        console window.
-    ``args=None``
-        An optional tuple containing extra arguments to ``f``. If ``args`` is
-        specified, ``f`` will be called as ``f(x, *args)``.
-                    
-    The method returns a tuple ``(xbest, fbest)`` where ``xbest`` is the best
-    position found and ``fbest = f(xbest)``.
-    
-    An `ImportError` will be raised
-    
-    References:
-    
-    [1] https://www.lri.fr/~hansen/cmaesintro.html
-    
-    [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
-    the derandomized evolution strategy with covariance matrix adaptation
-    (CMA-ES).
-    
-    """
-    # Test if CMAES is installed
-    try:
-        import cma
-    except ImportError:
-        raise ImportError('This method requires the `cma` module to be'
-            ' installed')
-    # Test if function is callable
-    if not callable(f):
-        raise ValueError('The argument f must be a callable function.')
-    # Check bounds
-    d = len(bounds)
-    if d < 1:
-        raise ValueError('Dimension must be at least 1.')
-    lower = np.zeros(d)
-    upper = np.zeros(d)
-    for i, b in enumerate(bounds):
-        if len(b) != 2:
-            raise ValueError('Each entry in `bounds` must be a tuple'
-                ' `(min, max)`.')
-        lo, up = float(b[0]), float(b[1])
-        if not lo < up:
-            raise ValueError('The lower bounds must be smaller than the upper'
-                ' bounds.')
-        lower[i] = lo
-        upper[i] = up
-    del(bounds)
-    brange = upper - lower
-    # Check hint
-    if hint is not None:
-        hint = np.array(hint, copy=True)
-        if hint.shape != lower.shape:
-            raise ValueError('Hint must have the shape ' + str(lower.shape))
-        if np.any(hint < lower) or np.any(hint > upper):
-            j = np.argmax(np.logical_or(hint < lower, hint > upper))
-            raise ValueError('Hint must be within the specified bounds (error'
-                ' with parameter ' + str(1+j) + ').')
-    else:
-        hint = lower + 0.5 * (upper - lower)
-    # Check if parallelization is required
-    parallel = bool(parallel)
-    # Set population size
-    if popsize is None:
-        # Explicitly set default used by cma-es
-        popsize = 4 + int(3 * np.log(d))
-        # If parallel, round up to the number of cores (incl. hyperthreaded)
-        if parallel:
-            cpu_count = multiprocessing.cpu_count()
-            popsize = (((popsize - 1) // cpu_count) + 1) * cpu_count
-    else:
-        # Custom popsize
-        popsize = int(popsize)
-        if popsize < 1:
-            raise ValueError('Population size must be `None` or non-zero'
-                ' integer')
-    # Check number of IPOP restarts
-    ipop = int(ipop)
-    if ipop < 0:
-        raise ValueError('Number of IPOP restarts must be zero or positive.')
-    # Check tolerance
-    tolerance = float(tolerance)
-    # Check callback function
-    if callback is not None:
-        if not callable(callback):
-            raise ValueError('Argument `callback` must be a callable function'
-                ' or `None`.')
-    # Check if verbose mode is enabled
-    verbose = bool(verbose)
-    # Report first point
-    if callback:
-        if args is None:
-            callback(np.array(hint, copy=True), f(hint))
-        else:
-            callback(np.array(hint, copy=True), f(hint, *args))
-    # Create evaluator object
-    if parallel:
-        evaluator = ParallelEvaluator(f, args=args)
-    else:
-        evaluator = SequentialEvaluator(f, args=args)
-    # Guess initial sigma as 1/6 of the bounds (CMAES works best if the optimal
-    # solution is within +/- 3*sigma from the initial guess, see API docs).
-    sigma0 = np.min(upper - lower) / 6.0
-    # Set up simulation options
-    best_solution = cma.BestSolution()
-    options = cma.CMAOptions()
-    options.set('bounds', [lower, upper])
-    options.set('ftarget', tolerance)
-    #options.set('tolfun', update_tolerance)
-    if not verbose:
-        options.set('verbose', -9)
-    # Start one or multiple runs
-    for i in xrange(1 + ipop):
-        # Set population size, increase for ipop restarts
-        options.set('popsize', popsize)
-        if verbose:
-            print('Run ' + str(1+i) + ': population size ' + str(popsize))
-        popsize *= 2
-        # Run repeats from random points
-        if i > 0:
-            hint = lower + brange * np.random.uniform(0, 1, d)
-        # Search
-        es = cma.CMAEvolutionStrategy(hint, sigma0, options)
-        while not es.stop():
-            candidates = es.ask()
-            es.tell(candidates, evaluator.evaluate(candidates))
-            if callback is not None:
-                r = es.result()
-                callback(r[0], r[1])
-            if verbose:
-                es.disp()
-        # Show result
-        if verbose:
-            es.result_pretty()
-        # Update best solution
-        best_solution.update(es.best)
-        # Stop if target was already met
-        x, f, evals = best_solution.get()
-        if f is not None and f < tolerance:
-            print(x, f)
-            break
-        else:
-            print(f, tolerance, f < tolerance)
-    # No result found? Then return hint and score of hint
-    if x is None:
-        if args is None:
-            return (hint, f(hint))
-        else:
-            return (hint, f(hint, *args))
-    # Return proper result
-    return (x, f)
+    def __init__(self, function, lower, upper):
+        self.function = function
+        self.lower = lower
+        self.upper = upper
+        # Get 5% of interval size
+        part = 0.05 * (upper - lower)
+        # Select points 5% into the interval, and 3*5% outside of it
+        self._xlo1 = lower + part * 0   # Leave the score function untouched
+        self._xlo2 = lower - part * 3   #  inside of the interval!
+        self._xup1 = upper - part * 0
+        self._xup2 = upper + part * 3
+        # Scale to make point at 15% out of the interval have multiplier 2
+        self._alo = (2 - 1) / (self._xlo1 - self._xlo2) ** 2
+        self._aup = (2 - 1) / (self._xup1 - self._xup2) ** 2
+    def __call__(self, x, *args):
+        return self.function(x, *args) * np.prod(1
+            + (x < self._xlo1) * (self._alo * (x - self._xlo1) ** 2)
+            + (x > self._xup1) * (self._aup * (x - self._xup1) ** 2))
 class SequentialEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
@@ -1647,7 +1739,7 @@ def quadfit_minimum(A, B, C):
             return False
         raise
 '''
-def trr(f, x, tolerance=1e-8, max_nfev=None, args=None):
+def trr(f, x, ftol=1e-8, max_nfev=None, args=None):
     """
     Local optimizer that minimizes a function ``f`` using a trust-region
     reflective least squares optimization provided by SciPy [1].
@@ -1660,9 +1752,9 @@ def trr(f, x, tolerance=1e-8, max_nfev=None, args=None):
         value.
     ``x``
         An initial guess for the ``x`` with the lowest ``f(x)``.
-    ``tolerance``
-        The method will stop searching when the score function changes by less
-        than ``tolerance`` between iterations.
+    ``ftol``
+        The relative difference in ``f(x)`` beween iterations that is
+        acceptable as convergence.
     ``max_nfev``
         The maximum number of function evaluations to perform.
     ``args``
@@ -1687,19 +1779,22 @@ def trr(f, x, tolerance=1e-8, max_nfev=None, args=None):
             raise ImportError('This method requires SciPy version 0.17.0 or'
                 ' newer, found version ' + str(sp.__version__) + '.')
         raise
+    # Check if function is callable
     if not callable(f):
         raise ValueError('The argument `f` must be a callable function.')
+    # Check extra arguments
     if args is None:
         args = ()
     elif type(args) != tuple:
         raise ValueError('The argument `args` must be either None or a tuple.')
-    tolerance = float(tolerance)
+    # Check stopping criteria
+    ftol = float(ftol)
     if max_nfev is not None:
         max_nfev = int(max_nfev)
         if max_nfev < 1:
             raise ValueError('Maximum number of function evaluations must be'
                 ' at least 1 (or None).')
-    res = least_squares(f, x, ftol=tolerance, max_nfev=max_nfev, args=args,
+    res = least_squares(f, x, ftol=ftol, max_nfev=max_nfev, args=args,
         method='trf')
     return res.x, res.cost
 '''
@@ -1722,7 +1817,7 @@ def voronoi_regions(x, y, f, xlim, ylim):
     The code to extract the voronoi regions was (heavily) adapted from:
     http://stackoverflow.com/a/20678647/423420
     
-    *Note: This method requires Scipy to be installed.*
+    *Note: This method requires SciPy to be installed.*
     """
     from scipy.spatial import Voronoi
     from itertools import izip # Like zip, but works as an iterator
@@ -1979,3 +2074,238 @@ class _Worker(multiprocessing.Process):
         except (Exception, KeyboardInterrupt, SystemExit) as e:
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
+
+def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
+        max_iter=500, callback=None, verbose=False, args=None):
+    """
+    Global/local optimizer that minimizes a function ``f`` within a specified
+    set of ``bounds`` using the xNES method described in [1].
+    
+    xNES stands for Exponential Natural Evolution Strategy, and is
+    designed for non-linear derivative-free optimization problems [1].
+    
+    A parallel (multiprocessing) version of the algorithm can be run by setting
+    ``parallel`` to ``True``. Please keep in mind that the objective function
+    ``f`` cannot access any shared memory in this scenario. See
+    :class:`ParallelEvaluator` for details.
+
+    The method will stop when one of the following criteria is met:
+    
+    1. The value of ``f(x)`` is smaller than ``target``.
+    2. The maximum number of iterations is reached.
+    
+    Arguments:
+    
+    ``f``
+        A function to minimize. The function ``f(x)`` must be callable with
+        ``x`` a sequence of ``m`` coordinates and should return a single scalar
+        value.
+    ``bounds``
+        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
+        maximum values in the search space for each dimension ``i``.
+    ``hint=None``
+        A suggested starting point. Must be within the given bounds. If no
+        hint is given the center of the parameter space is used.
+    ``n=None``
+        Can be used to manually overrule the population size used in xNES. By
+        default, this is set to be `4+int(3*np.log(d))` where ``d`` is the
+        number of dimensions of the search space. When running in parallel,
+        Myokit will round this default value up to the nearest multiple of the
+        cpu count. To overrule these defaults, use this parameter.
+    ``parallel=False``
+        Set this to ``True`` to run a multi-process version of the search that
+        utilizes all available cores. See :class:`EvaluatorProcess` for the
+        details of using multi-process parallelisation and the requirements
+        this places on the function ``f``.
+    ``target=1e-6``
+        The value of ``f(x)`` that is acceptable for convergence.
+    ``max_iter=500``
+        The maximum number of iterations to perform.
+    ``callback=None``
+        An optional function to be called after each iteration with arguments
+        ``(pg, fg)`` where ``pg`` is the current best position and ``fg`` is
+        the corresponding score.
+    ``args=None``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+                    
+    The method returns a tuple ``(xbest, fbest)`` where ``xbest`` is the best
+    position found and ``fbest = f(xbest)``.
+    
+    References:
+    
+    [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
+    evolution strategies.
+    Proceedings of the 12th annual conference on Genetic and evolutionary
+    computation
+    
+    *Note: This method requires the `scipy` module to be installed.*
+
+    """
+    # Test if scipy installed
+    try:
+        import scipy
+        import scipy.linalg
+    except ImportError:
+        raise ImportError('The xnes() method requires SciPy to be installed.')
+    # Test if function is callable
+    if not callable(f):
+        raise ValueError('The argument f must be a callable function.')
+    # Test extra arguments
+    if args is None:
+        args = ()
+    elif type(args) != tuple:
+        raise ValueError('The argument `args` must be either None or a'
+            ' tuple.')
+    # Get dimension of the search space
+    d = len(bounds)
+    if d < 1:
+        raise ValueError('Dimension must be at least 1.')
+    # Check bounds
+    lower = np.zeros(d)
+    upper = np.zeros(d)
+    for i, b in enumerate(bounds):
+        if len(b) != 2:
+            raise ValueError('Each entry in `bounds` must be a tuple'
+                ' `(min, max)`.')
+        lo, up = float(b[0]), float(b[1])
+        if not lo < up:
+            raise ValueError('The lower bounds must be smaller than the upper'
+                ' bounds.')
+        lower[i] = lo
+        upper[i] = up
+    del(bounds)
+    brange = upper - lower
+    # Wrap quadratic multiplier around function to implement boundaries
+    function = _QuadraticBoundedWrapper(f, lower, upper)
+    # Check hint
+    if hint is not None:
+        hint = np.array(hint, copy=True)
+        if hint.shape != lower.shape:
+            raise ValueError('Hint must have the shape ' + str(lower.shape))
+        if np.any(hint < lower) or np.any(hint > upper):
+            j = np.argmax(np.logical_or(hint < lower, hint > upper))
+            raise ValueError('Hint must be within the specified bounds (error'
+                ' with parameter ' + str(1+j) + ').')
+    else:
+        hint = lower + 0.5 * (upper - lower)
+    # Check if parallelization is required
+    parallel = bool(parallel)
+    # Set population size
+    if n is None:
+        # Explicitly set default
+        n = 4 + int(3 * np.log(d))
+        # If parallel, round up to a multiple of the reported number of cores
+        if parallel:
+            cpu_count = multiprocessing.cpu_count()
+            n = (((n - 1) // cpu_count) + 1) * cpu_count
+    else:
+        # Custom population size
+        n = int(n)
+        if n < 1:
+            raise ValueError('Population size must be `None` or non-zero'
+                ' integer')
+    # Show configuration info
+    if verbose:
+        if parallel:
+            print('Running in parallel mode with population size ' + str(n))
+        else:
+            print('Running in sequential mode with population size ' + str(n))
+    # Check convergence critera
+    max_iter = int(max_iter)
+    if max_iter < 1:
+        raise ValueError('Maximum iterations must be greater than zero.')
+    target = float(target)
+    # Check callback function
+    if callback is not None:
+        if not callable(callback):
+            raise ValueError('Argument `callback` must be a callable function'
+                ' or `None`.')
+    # Create evaluator object
+    if parallel:
+        evaluator = ParallelEvaluator(function, args=args)
+    else:
+        evaluator = SequentialEvaluator(function, args=args)
+    # Set up progress reporting in verbose mode
+    nextMessage = 0
+    # Set up algorithm
+    # Learning rates
+    eta_mu = 1
+    eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
+    # Pre-calculated utilities
+    us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
+    us /= np.sum(us)
+    us -= 1/n
+    # Center of distribution
+    mu = hint
+    # Square root of covariance matrix
+    A = np.eye(d)
+    # Identity matrix for later use
+    I = np.eye(d)
+    # Best solution found
+    xbest = hint
+    fbest = function(hint, *args)
+    # Report first point
+    if callback is not None:
+        callback(np.array(hint, copy=True), fbest)
+    # Start running
+    for iteration in xrange(1, 1 + max_iter):
+        # Create new samples
+        zs = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
+        xs = np.array([mu + np.dot(A, zs[i]) for i in xrange(n)])
+        # Evaluate at the samples
+        fxs = evaluator.evaluate(xs)
+        # Order the normalized samples according to the scores
+        zs = zs[np.argsort(fxs)]
+        # Update center        
+        Gd = np.dot(us, zs)
+        mu += eta_mu * np.dot(A,  Gd)
+        # Calculate current score at mu
+        #TODO Can we replace this by the best value in fxs?
+        fmu = function(mu, *args)
+        # Update best if needed
+        if fmu < fbest:
+            xbest = mu
+            fbest = fmu
+            # Target reached? Then break and return
+            if fbest <= target:
+                # Report to callback if requested
+                if callback is not None:
+                    callback(np.array(mu, copy=True), fmu)
+                if verbose:
+                    print('Target reached, halting')
+                break
+        # Report to callback if requested
+        if callback is not None:
+            callback(np.array(mu, copy=True), fmu)
+        # Show progress in verbose mode:
+        if verbose:
+            if iteration >= nextMessage:
+                print(str(iteration) + ': ' + str(fbest))
+                if iteration < 3:
+                    nextMessage = iteration + 1
+                else:
+                    nextMessage = 100 * (1 + iteration // 100)
+        # Update root of covariance matrix
+        Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
+        A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
+    if verbose:
+        print(str(iteration) + ': ' + str(fbest))
+    if fbest > target:
+        if verbose:
+            print('Maximum iterations reached, halting')
+    return xbest, fbest
+
+
+if __name__ == '__main__':
+    bounds = (
+        [-50, 50],
+        [-50, 50],
+        )
+    def f(x):
+        return (x[0] - 5.123) ** 2 + (x[1] - 10.123) ** 2
+    x = np.array([-10.0, 40.0])
+    print(x, f(x))
+    x, fx = xnes(f, bounds, hint=x, target=0)
+    print(x, fx)
+    

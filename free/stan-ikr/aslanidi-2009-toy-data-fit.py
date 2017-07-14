@@ -121,7 +121,7 @@ if False:
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
         x, f = fit.pso(score, bounds, n=96, parallel=True, max_iter=10000,
             callback=cb)
-else:
+elif False:
     with np.errstate(all='ignore'):
         x = None
         f = float('inf')
@@ -133,7 +133,16 @@ else:
         else:
             print('Running CMA-ES...')
             x, f = fit.cmaes(score, bounds, hint=x, ipop=4, parallel=True, 
-                    tolerance=target, verbose=True)
+                    target=target, verbose=True)
+elif False:
+    with np.errstate(all='ignore'):
+        x, f = fit.xnes(score, bounds, parallel=True, target=target,
+                max_iter=5000, verbose=True)
+else:
+    with np.errstate(all='ignore'):
+        x, f = fit.cmaes(score, bounds, parallel=True, target=target,
+                verbose=True)
+
 
 print('Final score: ' + str(f))
 print('Score at true solution: ' + str(target))
