@@ -1185,7 +1185,7 @@ def powell(f, x, xtol=1e-4, ftol=1e-4, max_iter=500, args=None):
     return res.x, res.fun
 def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         max_iter=500, hybrid=False, return_all=False, callback=None,
-        callback_particles=None, args=None):
+        callback_particles=None, verbose=False, args=None):
     """
     Global optimizer that minimizes a function ``f`` within a specified set of
     ``bounds`` using particle swarm optimization (PSO) [1].
@@ -1401,6 +1401,14 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         if not callable(callback_particles):
             raise ValueError('Argument `callback_particles` must be a callable'
                 ' or `None`.')
+    # Give some info at start-up
+    if verbose:
+        if parallel:
+            print('Running in parallel mode with ' + str(n) + ' particles')
+        else:
+            print('Running in sequential mode with ' + str(n) + ' particles')
+        # Set up messaging
+        nextMessage = 0
     # Initialize swarm
     xs = [] # Particle coordinate vectors
     vs = [] # Particle velocity vectors
@@ -1444,9 +1452,11 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
     else:
         evaluator = SequentialEvaluator(function, args=args)
     # Start searching
-    for step in xrange(max_iter):
+    for iteration in xrange(1, 1 + max_iter):
         # Check target criterion
         if fg <= target:
+            if verbose:
+                print('Target reached, halting')
             break
         # Calculate scores and, in hybrid mode, update positions
         if hybrid:
@@ -1484,6 +1494,19 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         if callback_particles is not None:
             callback_particles([np.array(x, copy=True) for x in xs],
                 [np.array(x, copy=True) for x in vs], list(fs))
+        # Show progress in verbose mode:
+        if verbose:
+            if iteration >= nextMessage:
+                print(str(iteration) + ': ' + str(fg))
+                if iteration < 3:
+                    nextMessage = iteration + 1
+                else:
+                    nextMessage = 100 * (1 + iteration // 100)
+    # Show final iteration
+    if verbose:
+        if fg > target:
+            print('Maximum iterations reached, halting')
+        print(str(iteration) + ': ' + str(fg))            
     # Return best position and score
     if return_all:
         # Sort from best to worst
@@ -1518,32 +1541,6 @@ class _QuadraticBoundedWrapper(object):
         return self.function(x, *args) * np.prod(1
             + (x < self._xlo1) * (self._alo * (x - self._xlo1) ** 2)
             + (x > self._xup1) * (self._aup * (x - self._xup1) ** 2))
-class SequentialEvaluator(Evaluator):
-    """
-    *Extends:* :class:`Evaluator`
-    
-    Evaluates a function (or callable object) for a list of input values.
-    
-    Runs sequentially, but shares an interface with the
-    :class:`ParallelEvaluator`, allowing parallelism to be switched on/off.
-    
-    Arguments:
-    
-    ``function``
-        The function to evaluate.
-    ``args``
-        An optional tuple containing extra arguments to ``f``. If ``args`` is
-        specified, ``f`` will be called as ``f(x, *args)``.
-    
-    Returns a list containing the calculated function evaluations.
-    """
-    def __init__(self, function, args=None):
-        super(SequentialEvaluator, self).__init__(function, args)
-    def _evaluate(self, positions):
-        scores = [0] * len(positions)
-        for k, x in enumerate(positions):
-            scores[k] = self._function(x, *self._args)
-        return scores
 def quadfit(x, y):
     """
     Calculates the unique quadratic polynomial through a set of points.
@@ -1738,6 +1735,248 @@ def quadfit_minimum(A, B, C):
         if 'not positive definite' in e.message:
             return False
         raise
+class SequentialEvaluator(Evaluator):
+    """
+    *Extends:* :class:`Evaluator`
+    
+    Evaluates a function (or callable object) for a list of input values.
+    
+    Runs sequentially, but shares an interface with the
+    :class:`ParallelEvaluator`, allowing parallelism to be switched on/off.
+    
+    Arguments:
+    
+    ``function``
+        The function to evaluate.
+    ``args``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+    
+    Returns a list containing the calculated function evaluations.
+    """
+    def __init__(self, function, args=None):
+        super(SequentialEvaluator, self).__init__(function, args)
+    def _evaluate(self, positions):
+        scores = [0] * len(positions)
+        for k, x in enumerate(positions):
+            scores[k] = self._function(x, *self._args)
+        return scores
+def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
+        max_iter=1000, callback=None, verbose=False, args=None):
+    """
+    Global/local optimizer that minimizes a function ``f`` within a specified
+    set of ``bounds`` using the SNES method described in [1].
+    
+    SNES stands for Seperable Natural Evolution Strategy, and is designed for
+    non-linear derivative-free optimization problems in high dimensions and
+    with many local minima [1].
+    
+    A parallel (multiprocessing) version of the algorithm can be run by setting
+    ``parallel`` to ``True``. Please keep in mind that the objective function
+    ``f`` cannot access any shared memory in this scenario. See
+    :class:`ParallelEvaluator` for details.
+
+    The method will stop when one of the following criteria is met:
+    
+    1. The value of ``f(x)`` is smaller than ``target``.
+    2. The maximum number of iterations is reached.
+    
+    Arguments:
+    
+    ``f``
+        A function to minimize. The function ``f(x)`` must be callable with
+        ``x`` a sequence of ``m`` coordinates and should return a single scalar
+        value.
+    ``bounds``
+        A list of ``m`` tuples ``(min_i, max_i)`` specifying the minimum and
+        maximum values in the search space for each dimension ``i``.
+    ``hint=None``
+        A suggested starting point. Must be within the given bounds. If no
+        hint is given the center of the parameter space is used.
+    ``n=None``
+        Can be used to manually overrule the population size used in SNES. By
+        default, this is set to be `4+int(3*np.log(d))` where ``d`` is the
+        number of dimensions of the search space. When running in parallel,
+        Myokit will round this default value up to the nearest multiple of the
+        cpu count. To overrule these defaults, use this parameter.
+    ``parallel=False``
+        Set this to ``True`` to run a multi-process version of the search that
+        utilizes all available cores. See :class:`EvaluatorProcess` for the
+        details of using multi-process parallelisation and the requirements
+        this places on the function ``f``.
+    ``target=1e-6``
+        The value of ``f(x)`` that is acceptable for convergence.
+    ``max_iter=500``
+        The maximum number of iterations to perform.
+    ``callback=None``
+        An optional function to be called after each iteration with arguments
+        ``(pg, fg)`` where ``pg`` is the current best position and ``fg`` is
+        the corresponding score.
+    ``args=None``
+        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
+                    
+    The method returns a tuple ``(xbest, fbest)`` where ``xbest`` is the best
+    position found and ``fbest = f(xbest)``.
+    
+    References:
+    
+    [1] Schaul, Glasmachers, Schmidhuber (2011) High dimensions and heavy tails
+    for natural evolution strategies.
+    Proceedings of the 13th annual conference on Genetic and evolutionary
+    computation. ACM, 2011.
+
+    """
+    # Test if function is callable
+    if not callable(f):
+        raise ValueError('The argument f must be a callable function.')
+    # Test extra arguments
+    if args is None:
+        args = ()
+    elif type(args) != tuple:
+        raise ValueError('The argument `args` must be either None or a'
+            ' tuple.')
+    # Get dimension of the search space
+    d = len(bounds)
+    if d < 1:
+        raise ValueError('Dimension must be at least 1.')
+    # Check bounds
+    lower = np.zeros(d)
+    upper = np.zeros(d)
+    for i, b in enumerate(bounds):
+        if len(b) != 2:
+            raise ValueError('Each entry in `bounds` must be a tuple'
+                ' `(min, max)`.')
+        lo, up = float(b[0]), float(b[1])
+        if not lo < up:
+            raise ValueError('The lower bounds must be smaller than the upper'
+                ' bounds.')
+        lower[i] = lo
+        upper[i] = up
+    del(bounds)
+    brange = upper - lower
+    # Wrap quadratic multiplier around function to implement boundaries
+    function = _QuadraticBoundedWrapper(f, lower, upper)
+    # Check hint
+    if hint is not None:
+        hint = np.array(hint, copy=True)
+        if hint.shape != lower.shape:
+            raise ValueError('Hint must have the shape ' + str(lower.shape))
+        if np.any(hint < lower) or np.any(hint > upper):
+            j = np.argmax(np.logical_or(hint < lower, hint > upper))
+            raise ValueError('Hint must be within the specified bounds (error'
+                ' with parameter ' + str(1+j) + ').')
+    else:
+        hint = lower + 0.5 * (upper - lower)
+    # Check if parallelization is required
+    parallel = bool(parallel)
+    # Set population size
+    if n is None:
+        # Explicitly set default
+        n = 4 + int(3 * np.log(d))
+        # If parallel, round up to a multiple of the reported number of cores
+        if parallel:
+            cpu_count = multiprocessing.cpu_count()
+            n = (((n - 1) // cpu_count) + 1) * cpu_count
+    else:
+        # Custom population size
+        n = int(n)
+        if n < 1:
+            raise ValueError('Population size must be `None` or non-zero'
+                ' integer')
+    # Show configuration info
+    if verbose:
+        if parallel:
+            print('Running in parallel mode with population size ' + str(n))
+        else:
+            print('Running in sequential mode with population size ' + str(n))
+    # Check convergence critera parameters
+    max_iter = int(max_iter)
+    if max_iter < 1:
+        raise ValueError('Maximum iterations must be greater than zero.')
+    target = float(target)
+    # Check callback function
+    if callback is not None:
+        if not callable(callback):
+            raise ValueError('Argument `callback` must be a callable function'
+                ' or `None`.')
+    # Create evaluator object
+    if parallel:
+        evaluator = ParallelEvaluator(function, args=args)
+    else:
+        evaluator = SequentialEvaluator(function, args=args)
+    # Set up progress reporting in verbose mode
+    nextMessage = 0
+    # Set up algorithm
+    # Learning rates
+    eta_mu = 1
+    eta_sigmas = 0.2 * (3 + np.log(d)) * d ** -0.5
+    # Pre-calculated utilities
+    us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
+    us /= np.sum(us)
+    us -= 1/n
+    # Center of distribution
+    mu = hint
+    # Sigmas
+    sigmas = np.ones(d)
+    # Best solution found
+    xbest = hint
+    fbest = function(hint, *args)
+    # Report first point
+    if callback is not None:
+        callback(np.array(hint, copy=True), fbest)
+    # Start running
+    for iteration in xrange(1, 1 + max_iter):
+        # Create new samples
+        ss = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
+        xs = mu + sigmas * ss
+        # Evaluate at the samples
+        fxs = evaluator.evaluate(xs)
+        # Order the normalized samples according to the scores
+        order = np.argsort(fxs)
+        ss = ss[order]
+        # Update center
+        mu += eta_mu * sigmas * np.dot(us, ss)
+        # Update variances
+        sigmas *= np.exp(0.5 * eta_sigmas * np.dot(us, ss**2 - 1))
+        # Update best if needed
+        if fxs[order[0]] < fbest:
+            xbest = xs[order[0]]
+            fbest = fxs[order[0]]
+            # Target reached? Then break and return
+            if fbest <= target:
+                # Report to callback if requested
+                if callback is not None:
+                    callback(np.array(mu, copy=True), fmu)
+                if verbose:
+                    print('Target reached, halting')
+                break
+        # Report to callback if requested
+        if callback is not None:
+            callback(np.array(mu, copy=True), fmu)
+        # Show progress in verbose mode:
+        if verbose:
+            if iteration >= nextMessage:
+                print(str(iteration) + ': ' + str(fbest))
+                if iteration < 3:
+                    nextMessage = iteration + 1
+                else:
+                    nextMessage = 100 * (1 + iteration // 100)
+    # Show stopping criterion
+    if fbest > target:
+        if verbose:
+            print('Maximum iterations reached, halting')
+    # Get final score at mu
+    fmu = function(mu, *args)
+    if fmu < fbest:
+        if verbose:
+            print('Final score at mu beats best sample')
+        xbest = mu
+        fbest = fmu
+    # Show final value and return
+    if verbose:
+        print(str(iteration) + ': ' + str(fbest))
+    return xbest, fbest
 '''
 def trr(f, x, ftol=1e-8, max_nfev=None, args=None):
     """
@@ -2074,9 +2313,8 @@ class _Worker(multiprocessing.Process):
         except (Exception, KeyboardInterrupt, SystemExit) as e:
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
-
 def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
-        max_iter=500, callback=None, verbose=False, args=None):
+        max_iter=1000, callback=None, verbose=False, args=None):
     """
     Global/local optimizer that minimizes a function ``f`` within a specified
     set of ``bounds`` using the xNES method described in [1].
@@ -2256,17 +2494,15 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         # Evaluate at the samples
         fxs = evaluator.evaluate(xs)
         # Order the normalized samples according to the scores
-        zs = zs[np.argsort(fxs)]
-        # Update center        
+        order = np.argsort(fxs)
+        zs = zs[order]
+        # Update center
         Gd = np.dot(us, zs)
         mu += eta_mu * np.dot(A,  Gd)
-        # Calculate current score at mu
-        #TODO Can we replace this by the best value in fxs?
-        fmu = function(mu, *args)
         # Update best if needed
-        if fmu < fbest:
-            xbest = mu
-            fbest = fmu
+        if fxs[order[0]] < fbest:
+            xbest = xs[order[0]]
+            fbest = fxs[order[0]]
             # Target reached? Then break and return
             if fbest <= target:
                 # Report to callback if requested
@@ -2289,23 +2525,18 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         # Update root of covariance matrix
         Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
         A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
-    if verbose:
-        print(str(iteration) + ': ' + str(fbest))
+    # Show stopping criterion
     if fbest > target:
         if verbose:
             print('Maximum iterations reached, halting')
+    # Get final score at mu
+    fmu = function(mu, *args)
+    if fmu < fbest:
+        if verbose:
+            print('Final score at mu beats best sample')
+        xbest = mu
+        fbest = fmu
+    # Show final value and return
+    if verbose:
+        print(str(iteration) + ': ' + str(fbest))
     return xbest, fbest
-
-
-if __name__ == '__main__':
-    bounds = (
-        [-50, 50],
-        [-50, 50],
-        )
-    def f(x):
-        return (x[0] - 5.123) ** 2 + (x[1] - 10.123) ** 2
-    x = np.array([-10.0, 40.0])
-    print(x, f(x))
-    x, fx = xnes(f, bounds, hint=x, target=0)
-    print(x, fx)
-    

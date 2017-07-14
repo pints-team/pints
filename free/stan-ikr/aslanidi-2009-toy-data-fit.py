@@ -111,23 +111,18 @@ print(str(b.time() / n) + ' seconds per evaluation')
 # Get score at true solution
 target = score(real_values)
 
-# Define callback function
-def cb(x, fx):
-    print(fx)
-    run += 1
-
 if False:
     print('Running particle swarm optimisation...')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
         x, f = fit.pso(score, bounds, n=96, parallel=True, max_iter=10000,
-            callback=cb)
+            verbose=True)
 elif False:
     with np.errstate(all='ignore'):
         x = None
         f = float('inf')
         #print('Running pso optimisation to get starting point')
-        #x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True, callback=cb,
-        #        tolerance=target)
+        #x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True,
+        #        target=target, verbose=True)
         if f <= target:
             print('Target met, skipping cmaes')
         else:
@@ -135,13 +130,20 @@ elif False:
             x, f = fit.cmaes(score, bounds, hint=x, ipop=4, parallel=True, 
                     target=target, verbose=True)
 elif False:
+    print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds, parallel=True, target=target,
                 max_iter=5000, verbose=True)
-else:
+elif False:
+    print('Running CMA-ES')
     with np.errstate(all='ignore'):
         x, f = fit.cmaes(score, bounds, parallel=True, target=target,
                 verbose=True)
+else:
+    print('Running SNES')
+    with np.errstate(all='ignore'):
+        x, f = fit.snes(score, bounds, parallel=True, target=target,
+                max_iter=5000, verbose=True)
 
 
 print('Final score: ' + str(f))
