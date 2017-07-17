@@ -138,7 +138,7 @@ if method == 'pso':
     print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
         x, f = fit.pso(score, bounds2, n=48, parallel=True, target=target,
-                hints=[hint2], max_iter=5000, verbose=True)
+                hints=[hint2], max_iter=20, verbose=True)
 elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
