@@ -81,22 +81,27 @@ boundaries = {
     'ikr.p3' : [1, 1e4],        # ms        100
     'ikr.p4' : [0, 100],        # mV        0.085
     'ikr.p5' : [0, 100],        # mV        12.25
-    'ikr.p6' : [-10, 0],        # mV        -5.4
+    'ikr.p6' : [0, 10],         # mV        5.4
     'ikr.p7' : [0, 100],        # mV        20.4
     'ikr.p8' : [5e-3, 1],       # mS/uF     0.04
     }
 bounds = [boundaries[x] for x in parameters]
 
+# Transform on parameter space!
+bounds2 = [np.log(boundaries[x]) for x in parameters]
+
 # define score function (sum of squares)
 simulation = myokit.Simulation(model, protocol)
 def score(p):
+    # Simulate
     simulation.reset()
     for i, name in enumerate(parameters):
-        simulation.set_constant(name, p[i])
+        simulation.set_constant(name, np.exp(p[i]))
     try:
         data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
     except myokit.SimulationError:
         return float('inf')
+    # Calculate error and return
     e = fcap * (np.asarray(data['ikr.IKr']) - real['current'])
     return np.sum(e**2)
 target = 0
@@ -107,29 +112,37 @@ hint[-1] = 0.06
 print('Initial solution:')
 for k,v in enumerate(hint):
     print(myokit.strfloat(v))
-print('Hint score: ' + str(score(hint)))
+
+# Log-transform on parameters
+hint2 = np.log(hint)
+
+print('Hint score: ' + str(score(hint2)))
+
+print(hint2)
+print(bounds2)
+
 
 # Run
 if method == 'pso':
     print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-        x, f = fit.pso(score, bounds, n=48, parallel=True, target=target,
-                hints=[hint], max_iter=500, verbose=True)
+        x, f = fit.pso(score, bounds2, n=48, parallel=True, target=target,
+                hints=[hint2], max_iter=500, verbose=True)
 elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
-        x, f = fit.xnes(score, bounds, parallel=True, target=target,
-                hint=hint, max_iter=500, verbose=True)
+        x, f = fit.xnes(score, bounds2, parallel=True, target=target,
+                hint=hint2, max_iter=500, verbose=True)
 elif method == 'cmaes':
     print('Running CMA-ES')
     with np.errstate(all='ignore'):
-        x, f = fit.cmaes(score, bounds, parallel=True, target=target,
-                hint=hint, verbose=True)
+        x, f = fit.cmaes(score, bounds2, parallel=True, target=target,
+                hint=hint2, verbose=True)
 elif method == 'snes':
     print('Running SNES')
     with np.errstate(all='ignore'):
-        x, f = fit.snes(score, bounds, parallel=True, target=target,
-                hint=hint, max_iter=500, verbose=True)
+        x, f = fit.snes(score, bounds2, parallel=True, target=target,
+                hint=hint2, max_iter=500, verbose=True)
 else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)
@@ -147,7 +160,7 @@ with open('last-solution.txt', 'w') as f:
     for k, v in enumerate(x):
         f.write(myokit.strfloat(v) + '\n')
 
-if True:
+if False:
     simulation.reset()
     for k, v in zip(parameters, x):
         simulation.set_constant(k, v)
