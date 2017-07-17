@@ -81,22 +81,33 @@ boundaries = {
     'ikr.p3' : [1, 1e4],        # ms        100
     'ikr.p4' : [0, 100],        # mV        0.085
     'ikr.p5' : [0, 100],        # mV        12.25
-    'ikr.p6' : [0, 10],         # mV        5.4
+    'ikr.p6' : [-10, 0],        # mV        -5.4
     'ikr.p7' : [0, 100],        # mV        20.4
     'ikr.p8' : [5e-3, 1],       # mS/uF     0.04
     }
-bounds = [boundaries[x] for x in parameters]
+def transform(x):
+    y = np.array(x, copy=True)
+    y[0] = np.log(x[0])
+    y[2] = np.log(x[2])
+    return y
+def mrofsnart(y):
+    x = np.array(y, copy=True)
+    x[0] = np.exp(y[0])
+    x[2] = np.exp(y[2])
+    return x
 
-# Transform on parameter space!
-bounds2 = [np.log(boundaries[x]) for x in parameters]
+bounds = [boundaries[x] for x in parameters]
+bounds2 = transform(bounds)
 
 # define score function (sum of squares)
 simulation = myokit.Simulation(model, protocol)
 def score(p):
+    # Inverse transform p
+    p = mrofsnart(p)
     # Simulate
     simulation.reset()
     for i, name in enumerate(parameters):
-        simulation.set_constant(name, np.exp(p[i]))
+        simulation.set_constant(name, p[i])
     try:
         data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
     except myokit.SimulationError:
@@ -113,8 +124,8 @@ print('Initial solution:')
 for k,v in enumerate(hint):
     print(myokit.strfloat(v))
 
-# Log-transform on parameters
-hint2 = np.log(hint)
+# Transform parameter space
+hint2 = transform(hint)
 
 print('Hint score: ' + str(score(hint2)))
 
@@ -146,6 +157,9 @@ elif method == 'snes':
 else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)
+
+# Inverse-transform found x
+x = mrofsnart(x)
 
 # Show final score
 print('Final score: ' + str(f))
