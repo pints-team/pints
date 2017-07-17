@@ -1498,10 +1498,10 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         if verbose:
             if iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fg))
-                if iteration < 3:
+                if iteration < 5:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 100 * (1 + iteration // 100)
+                    nextMessage = 20 * (1 + iteration // 20)
     # Show final iteration
     if verbose:
         if fg > target:
@@ -1961,7 +1961,7 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
                 if iteration < 3:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 100 * (1 + iteration // 100)
+                    nextMessage = 20 * (1 + iteration // 20)
     # Show stopping criterion
     if fbest > target:
         if verbose:
@@ -2518,10 +2518,10 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         if verbose:
             if iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fbest))
-                if iteration < 3:
+                if iteration < 5:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 100 * (1 + iteration // 100)
+                    nextMessage = 20 * (1 + iteration // 20)
         # Update root of covariance matrix
         Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
         A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
