@@ -2,10 +2,22 @@
 from __future__ import division
 from __future__ import print_function
 import os
+import sys
 import numpy as np
 import myokit
 import myokit.pacing as pacing
 from myokit.lib import fit
+
+# Get optimization method from arguments
+if len(sys.argv) != 2:
+    print('No method specified, using CMAES')
+    method = 'cmaes'
+else:
+    method = sys.argv[1]
+    if method not in ['cmaes', 'pso', 'snes', 'xnes']:
+        print('Unknown method "' + str(method) + '"')
+        print('Choose one of: ' + ', '.join(methods))
+        sys.exit(1)
 
 #
 # Fit the Aslanidi model to real data
@@ -64,7 +76,7 @@ boundaries = {
     'ikr.p5' : [0, 100],        # mV        12.25
     'ikr.p6' : [-10, 0],        # mV        -5.4
     'ikr.p7' : [0, 100],        # mV        20.4
-    'ikr.p8' : [1e-3, 0.5],       # mS/uF     0.04
+    'ikr.p8' : [5e-3, 1],       # mS/uF     0.04
     }
 bounds = [boundaries[x] for x in parameters]
 
@@ -83,39 +95,38 @@ def score(p):
     return e
 target = 0
 
-if True:
-    print('Running particle swarm optimisation...')
+# Get hint
+hint = [model.get(x).eval() for x in parameters]
+hint[-1] = 0.06
+print('Initial solution:')
+for k,v in enumerate(hint):
+    print(myokit.strfloat(v))
+print('Hint score: ' + str(score(hint)))
+
+# Run
+if method == 'pso':
+    print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-        x, f = fit.pso(score, bounds, n=96, parallel=True, max_iter=10000,
-            verbose=True)
-elif False:
-    with np.errstate(all='ignore'):
-        x = None
-        f = float('inf')
-        #print('Running pso optimisation to get starting point')
-        #x, f = fit.pso(score, bounds, n=192, max_iter=500, parallel=True,
-        #        target=target, verbose=True)
-        if f <= target:
-            print('Target met, skipping cmaes')
-        else:
-            print('Running CMA-ES...')
-            x, f = fit.cmaes(score, bounds, hint=x, ipop=4, parallel=True, 
-                    target=target, verbose=True)
-elif False:
+        x, f = fit.pso(score, bounds, n=96, parallel=True, target=target,
+                hints=[hint], max_iter=500, verbose=True)
+elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds, parallel=True, target=target,
-                max_iter=5000, verbose=True)
-elif False:
+                hint=hint, max_iter=500, verbose=True)
+elif method == 'cmaes':
     print('Running CMA-ES')
     with np.errstate(all='ignore'):
         x, f = fit.cmaes(score, bounds, parallel=True, target=target,
-                verbose=True)
-else:
+                hint=hint, verbose=True)
+elif method == 'snes':
     print('Running SNES')
     with np.errstate(all='ignore'):
         x, f = fit.snes(score, bounds, parallel=True, target=target,
-                max_iter=5000, verbose=True)
+                hint=hint, max_iter=500, verbose=True)
+else:
+    print('Unknown method: "' + str(method) + '"')
+    sys.exit(1)
 
 print('Final score: ' + str(f))
     
