@@ -9,10 +9,8 @@ import myokit.pacing as pacing
 from myokit.lib import fit
 
 # Get optimization method from arguments
-if len(sys.argv) != 2:
-    print('No method specified, using CMAES')
-    method = 'cmaes'
-else:
+method = ''
+if len(sys.argv) == 2:
     method = sys.argv[1]
     if method not in ['cmaes', 'pso', 'snes', 'xnes']:
         print('Unknown method "' + str(method) + '"')
@@ -24,7 +22,7 @@ else:
 # 
 
 # Load data
-real = myokit.DataLog.load_csv('real-data.csv')
+real = myokit.DataLog.load_csv('real-data.csv').npview()
 
 # Load model
 model = myokit.load_model('aslanidi-2009-ikr.mmt')
@@ -47,6 +45,18 @@ protocol.add_step(-30, 3500)
 protocol.add_step(-120, 500)
 protocol.add_step(-80, 1000)
 duration = protocol.characteristic_time()
+
+# Create capacitance filter
+cap_duration = 1.5
+dt = 0.1
+fcap = np.ones(duration / dt, dtype=int)
+for event in protocol:
+    i1 = int(event.start() / dt)
+    i2 = i1 + int(cap_duration / dt)
+    fcap[i1:i2] = 0
+
+# Apply filter to real current
+real_current = real['current'][fcap]
 
 # Change RHS of membrane.V
 model.get('membrane.V').set_rhs('if(engine.time < 3000 or engine.time >= 6500,'
@@ -90,8 +100,8 @@ def score(p):
         data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
     except myokit.SimulationError:
         return float('inf')
-    data = data.npview()
-    e = np.sum((data['ikr.IKr'] - real['current'])**2) #/ len(real['current'])
+    model_current = np.asarray(data['ikr.IKr'])[fcap]
+    e = np.sum((model_current - real_current)**2)
     return e
 target = 0
 
@@ -128,10 +138,16 @@ else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)
 
+# Show final score
 print('Final score: ' + str(f))
     
 # Show solution
 print('Current solution:')
 for k, v in enumerate(x):
     print(myokit.strfloat(v))
+
+# Store solution
+with open('last-solution.txt', 'w') as f:
+    for k, v in enumerate(x):
+        f.write(myokit.strfloat(v) + '\n')
 
