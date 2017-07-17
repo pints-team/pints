@@ -138,12 +138,12 @@ if method == 'pso':
     print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
         x, f = fit.pso(score, bounds2, n=48, parallel=True, target=target,
-                hints=[hint2], max_iter=500, verbose=True)
+                hints=[hint2], max_iter=5000, verbose=True)
 elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=500, verbose=True)
+                hint=hint2, max_iter=5000, verbose=True)
 elif method == 'cmaes':
     print('Running CMA-ES')
     with np.errstate(all='ignore'):
@@ -153,7 +153,7 @@ elif method == 'snes':
     print('Running SNES')
     with np.errstate(all='ignore'):
         x, f = fit.snes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=500, verbose=True)
+                hint=hint2, max_iter=5000, verbose=True)
 else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)
