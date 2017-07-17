@@ -49,7 +49,7 @@ duration = protocol.characteristic_time()
 # Create capacitance filter
 cap_duration = 1.5
 dt = 0.1
-fcap = np.ones(duration / dt, dtype=int)
+fcap = np.ones(int(duration / dt), dtype=int)
 for event in protocol:
     i1 = int(event.start() / dt)
     i2 = i1 + int(cap_duration / dt)
