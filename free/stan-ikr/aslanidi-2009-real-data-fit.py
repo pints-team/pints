@@ -97,7 +97,7 @@ def score(p):
         data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
     except myokit.SimulationError:
         return float('inf')
-    e = fcap * (np.asarray(data['ikr.IKr'])[fcap] - real['current'])
+    e = fcap * (np.asarray(data['ikr.IKr']) - real['current'])
     return np.sum(e**2)
 target = 0
 
@@ -113,7 +113,7 @@ print('Hint score: ' + str(score(hint)))
 if method == 'pso':
     print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-        x, f = fit.pso(score, bounds, n=96, parallel=True, target=target,
+        x, f = fit.pso(score, bounds, n=48, parallel=True, target=target,
                 hints=[hint], max_iter=500, verbose=True)
 elif method == 'xnes':
     print('Running xNES')
@@ -147,3 +147,18 @@ with open('last-solution.txt', 'w') as f:
     for k, v in enumerate(x):
         f.write(myokit.strfloat(v) + '\n')
 
+if True:
+    simulation.reset()
+    for k, v in zip(parameters, x):
+        simulation.set_constant(k, v)
+    data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
+    import matplotlib.pyplot as pl
+    pl.figure()
+    pl.plot(real['time'], real['current'], label='real')
+    pl.plot(real['time'], data['ikr.IKr'], label='aslanidi')
+    pl.plot(real['time'], fcap, label='filter')
+    e = fcap * (np.asarray(data['ikr.IKr']) - real['current'])
+    pl.plot(real['time'], e, label='error')
+    print(np.sum(e**2))
+    pl.legend()
+    pl.show()
