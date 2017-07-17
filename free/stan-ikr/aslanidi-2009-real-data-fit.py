@@ -55,9 +55,6 @@ for event in protocol:
     i2 = i1 + int(cap_duration / dt)
     fcap[i1:i2] = 0
 
-# Apply filter to real current
-real_current = real['current'][fcap]
-
 # Change RHS of membrane.V
 model.get('membrane.V').set_rhs('if(engine.time < 3000 or engine.time >= 6500,'
     + ' engine.pace, '
@@ -100,9 +97,8 @@ def score(p):
         data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
     except myokit.SimulationError:
         return float('inf')
-    model_current = np.asarray(data['ikr.IKr'])[fcap]
-    e = np.sum((model_current - real_current)**2)
-    return e
+    e = fcap * (np.asarray(data['ikr.IKr'])[fcap] - real['current'])
+    return np.sum(e**2)
 target = 0
 
 # Get hint
