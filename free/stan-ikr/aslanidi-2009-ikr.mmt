@@ -27,7 +27,7 @@ use membrane.V
 g = p8
 IKr = g * xr * rr * (V - nernst.EK)
     in [uA/uF]
-rr = 1 / (1 + exp((V - p6) / p7))
+rr = 1 / (1 + exp((V + p6) / p7))
 dot(xr) = (inf - xr) / tau
     tau = p1 / (1 + exp(V / p2)) + p3
     inf = 1 / (1 + exp(-(V + p4) / p5))
@@ -36,7 +36,7 @@ p2 = 5.0 [mV]
 p3 = 100.0 [ms]
 p4 = 0.085 [mV]
 p5 = 12.25 [mV]
-p6 = 5.4 [mV]
+p6 = -5.4 [mV]
 p7 = 20.4 [mV]
 p8 = 0.04 [mS/uF]
 
