@@ -40,10 +40,11 @@ duration = protocol.characteristic_time()
 # Create capacitance filter
 cap_duration = 1.5
 dt = 0.1
-fcap = np.ones(duration / dt, dtype=int)
+fcap = np.ones(int(duration / dt), dtype=int)
 for event in protocol:
     i1 = int(event.start() / dt)
     i2 = i1 + int(cap_duration / dt)
+    print(i1, i2)
     if i1 > 0: # Skip first one
         fcap[i1:i2] = 0
 
@@ -76,7 +77,7 @@ with open('last-solution.txt', 'r') as f:
             + ' lines, only found ' + str(len(lines)))
         sys.exit(1)
     try:
-        solution = [float(x) for x in lines[:len(parameters)]]
+        solution = [float(x.strip()) for x in lines[:len(parameters)]]
     except ValueError:
         print('Unable to read last solution')
         raise
