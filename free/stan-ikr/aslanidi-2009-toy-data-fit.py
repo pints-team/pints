@@ -129,7 +129,7 @@ elif False:
             print('Running CMA-ES...')
             x, f = fit.cmaes(score, bounds, hint=x, ipop=4, parallel=True, 
                     target=target, verbose=True)
-elif False:
+elif True:
     print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds, parallel=True, target=target,
