@@ -53,7 +53,8 @@ fcap = np.ones(int(duration / dt), dtype=int)
 for event in protocol:
     i1 = int(event.start() / dt)
     i2 = i1 + int(cap_duration / dt)
-    fcap[i1:i2] = 0
+    if i1 > 0: # Skip first one
+        fcap[i1:i2] = 0
 
 # Change RHS of membrane.V
 model.get('membrane.V').set_rhs('if(engine.time < 3000 or engine.time >= 6500,'
@@ -138,12 +139,12 @@ if method == 'pso':
     print('Running PSO')
     with np.errstate(all='ignore'): # Tell numpy not to issue warnings
         x, f = fit.pso(score, bounds2, n=48, parallel=True, target=target,
-                hints=[hint2], max_iter=20, verbose=True)
+                hints=[hint2], max_iter=2000, verbose=True)
 elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=5000, verbose=True)
+                hint=hint2, max_iter=2000, verbose=True)
 elif method == 'cmaes':
     print('Running CMA-ES')
     with np.errstate(all='ignore'):
@@ -153,7 +154,7 @@ elif method == 'snes':
     print('Running SNES')
     with np.errstate(all='ignore'):
         x, f = fit.snes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=5000, verbose=True)
+                hint=hint2, max_iter=2000, verbose=True)
 else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)

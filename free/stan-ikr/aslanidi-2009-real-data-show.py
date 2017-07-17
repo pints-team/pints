@@ -82,9 +82,24 @@ with open('last-solution.txt', 'r') as f:
         print('Unable to read last solution')
         raise
 
+# define score function (sum of squares)
+simulation = myokit.Simulation(model, protocol)
+def score(p):
+    # Simulate
+    simulation.reset()
+    for i, name in enumerate(parameters):
+        simulation.set_constant(name, p[i])
+    try:
+        data = simulation.run(duration, log=['ikr.IKr'], log_interval=0.1)
+    except myokit.SimulationError:
+        return float('inf')
+    # Calculate error and return
+    e = fcap * (np.asarray(data['ikr.IKr']) - real['current'])
+    return np.sum(e**2)
+
 # Run simulation
 log_vars = ['engine.time', 'ikr.IKr']
-simulation = myokit.Simulation(model, protocol)
+simulation.reset()
 for p, v in zip(parameters, solution):
     simulation.set_constant(p, v)
 d = simulation.run(duration, log=log_vars, log_interval=0.1)
@@ -93,6 +108,9 @@ d = simulation.run(duration, log=log_vars, log_interval=0.1)
 print('Current solution:')
 for k, v in enumerate(solution):
     print(myokit.strfloat(v))
+
+
+print('Score: ' + str(score(solution)))
 
 # Show plots
 pl.figure()
