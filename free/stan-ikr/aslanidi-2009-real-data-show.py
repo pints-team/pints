@@ -12,6 +12,17 @@ import matplotlib.pyplot as pl
 # Show the real data vs the aslanidi model
 #
 
+# Select solution file
+solution = 'last-solution.txt'
+if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
+        print('Syntax: show <filename>')
+        sys.exit(1)
+    solution = sys.argv[1]
+    if not os.path.isfile(solution):
+        print('File not found: ' + solution)
+        sys.exit(1)
+
 # Load data
 real = myokit.DataLog.load_csv('real-data.csv').npview()
 
@@ -44,7 +55,6 @@ fcap = np.ones(int(duration / dt), dtype=int)
 for event in protocol:
     i1 = int(event.start() / dt)
     i2 = i1 + int(cap_duration / dt)
-    print(i1, i2)
     if i1 > 0: # Skip first one
         fcap[i1:i2] = 0
 
@@ -70,7 +80,8 @@ parameters = [
     ]
 
 # Read last solution
-with open('last-solution.txt', 'r') as f:
+with open(solution, 'r') as f:
+    print('Showing solution from: ' + solution)
     lines = f.readlines()
     if len(lines) < len(parameters):
         print('Unable to read last solution, expected ' + str(len(parameters))
@@ -105,7 +116,7 @@ for p, v in zip(parameters, solution):
 d = simulation.run(duration, log=log_vars, log_interval=0.1)
 
 # Show solution
-print('Current solution:')
+print('Parameters:')
 for k, v in enumerate(solution):
     print(myokit.strfloat(v))
 
@@ -114,7 +125,14 @@ print('Score: ' + str(score(solution)))
 
 # Show plots
 pl.figure()
+pl.subplot(2,1,1)
+pl.xlabel('Time [ms]')
+pl.ylabel('V [mV]')
+pl.plot(real['time'], real['voltage'], label='Vm')
+pl.subplot(2,1,2)
+pl.xlabel('Time [ms]')
 pl.plot(real['time'], real['current'], label='real')
 pl.plot(real['time'], d['ikr.IKr'], label='aslanidi')
 pl.plot(real['time'], fcap, label='filter')
+pl.legend(loc='lower right')
 pl.show()
