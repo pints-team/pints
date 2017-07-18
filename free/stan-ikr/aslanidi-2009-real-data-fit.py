@@ -144,7 +144,7 @@ elif method == 'xnes':
     print('Running xNES')
     with np.errstate(all='ignore'):
         x, f = fit.xnes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=2000, verbose=True)
+                hint=hint2, max_iter=20000, verbose=True)
 elif method == 'cmaes':
     print('Running CMA-ES')
     with np.errstate(all='ignore'):
@@ -154,7 +154,7 @@ elif method == 'snes':
     print('Running SNES')
     with np.errstate(all='ignore'):
         x, f = fit.snes(score, bounds2, parallel=True, target=target,
-                hint=hint2, max_iter=200, verbose=True)
+                hint=hint2, max_iter=20000, verbose=True)
 else:
     print('Unknown method: "' + str(method) + '"')
     sys.exit(1)
