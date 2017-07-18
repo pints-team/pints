@@ -1498,10 +1498,10 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         if verbose:
             if iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fg))
-                if iteration < 5:
+                if iteration < 3:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 20 * (1 + iteration // 20)
+                    nextMessage = 100 * (1 + iteration // 100)
     # Show final iteration
     if verbose:
         if fg > target:
@@ -1518,29 +1518,6 @@ def pso(f, bounds, hints=None, n=4, r=0.5, v=1e-3, parallel=False, target=1e-6,
         return (pl, fl)
     else:
         return (pg, fg)
-class _QuadraticBoundedWrapper(object):
-    """
-    Wraps around a (scalar-valued) score function and multiplies it by a
-    quadratic function outside a given set of bounds.
-    """
-    def __init__(self, function, lower, upper):
-        self.function = function
-        self.lower = lower
-        self.upper = upper
-        # Get 5% of interval size
-        part = 0.05 * (upper - lower)
-        # Select points 5% into the interval, and 3*5% outside of it
-        self._xlo1 = lower + part * 0   # Leave the score function untouched
-        self._xlo2 = lower - part * 3   #  inside of the interval!
-        self._xup1 = upper - part * 0
-        self._xup2 = upper + part * 3
-        # Scale to make point at 15% out of the interval have multiplier 2
-        self._alo = (2 - 1) / (self._xlo1 - self._xlo2) ** 2
-        self._aup = (2 - 1) / (self._xup1 - self._xup2) ** 2
-    def __call__(self, x, *args):
-        return self.function(x, *args) * np.prod(1
-            + (x < self._xlo1) * (self._alo * (x - self._xlo1) ** 2)
-            + (x > self._xup1) * (self._aup * (x - self._xup1) ** 2))
 def quadfit(x, y):
     """
     Calculates the unique quadratic polynomial through a set of points.
@@ -1855,8 +1832,10 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         upper[i] = up
     del(bounds)
     brange = upper - lower
-    # Wrap quadratic multiplier around function to implement boundaries
-    function = _QuadraticBoundedWrapper(f, lower, upper)
+    # Create periodic parameter space transform to implement boundaries
+    transform = _TriangleWaveTransform(lower, upper)
+    # Wrap transform around score function
+    function = _ParameterTransformWrapper(f, transform)
     # Check hint
     if hint is not None:
         hint = np.array(hint, copy=True)
@@ -1947,13 +1926,13 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
             if fbest <= target:
                 # Report to callback if requested
                 if callback is not None:
-                    callback(np.array(mu, copy=True), fmu)
+                    callback(transform(xbest), fbest)
                 if verbose:
                     print('Target reached, halting')
                 break
         # Report to callback if requested
         if callback is not None:
-            callback(np.array(mu, copy=True), fmu)
+            callback(transform(xbest), fbest)
         # Show progress in verbose mode:
         if verbose:
             if iteration >= nextMessage:
@@ -1961,7 +1940,7 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
                 if iteration < 3:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 20 * (1 + iteration // 20)
+                    nextMessage = 100 * (1 + iteration // 100)
     # Show stopping criterion
     if fbest > target:
         if verbose:
@@ -1976,7 +1955,32 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
     # Show final value and return
     if verbose:
         print(str(iteration) + ': ' + str(fbest))
-    return xbest, fbest
+    return transform(xbest), fbest
+class _ParameterTransformWrapper(object):
+    """
+    Wraps around a score function, calls a parameter transform before
+    evaluating the function.
+    """
+    def __init__(self, function, transform):
+        self.function = function
+        self.transform = transform
+    def __call__(self, x, *args):
+        return self.function(self.transform(x), *args)
+class _TriangleWaveTransform(object):
+    """
+    Transforms parameters from an unbounded space to a bounded space, using a
+    triangle waveform (``/\/\/\...``).
+    """
+    def __init__(self, lower, upper):
+        self.lower = lower
+        self.upper = upper
+        self.range = upper - lower
+        self.range2 = 2 * self.range
+    def __call__(self, x, *args):
+        y = np.remainder(x - self.lower, self.range2)
+        z = np.remainder(y, self.range)
+        return ((self.lower + z) * (y < self.range)
+            + (self.upper - z) * (y >= self.range))
 '''
 def trr(f, x, ftol=1e-8, max_nfev=None, args=None):
     """
@@ -2414,8 +2418,10 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         upper[i] = up
     del(bounds)
     brange = upper - lower
-    # Wrap quadratic multiplier around function to implement boundaries
-    function = _QuadraticBoundedWrapper(f, lower, upper)
+    # Create periodic parameter space transform to implement boundaries
+    transform = _TriangleWaveTransform(lower, upper)
+    # Wrap transform around score function
+    function = _ParameterTransformWrapper(f, transform)
     # Check hint
     if hint is not None:
         hint = np.array(hint, copy=True)
@@ -2507,21 +2513,21 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
             if fbest <= target:
                 # Report to callback if requested
                 if callback is not None:
-                    callback(np.array(mu, copy=True), fmu)
+                    callback(transform(xbest), fbest)
                 if verbose:
                     print('Target reached, halting')
                 break
         # Report to callback if requested
         if callback is not None:
-            callback(np.array(mu, copy=True), fmu)
+            callback(transform(xbest), fbest)
         # Show progress in verbose mode:
         if verbose:
             if iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fbest))
-                if iteration < 5:
+                if iteration < 3:
                     nextMessage = iteration + 1
                 else:
-                    nextMessage = 20 * (1 + iteration // 20)
+                    nextMessage = 100 * (1 + iteration // 100)
         # Update root of covariance matrix
         Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
         A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
@@ -2539,4 +2545,4 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
     # Show final value and return
     if verbose:
         print(str(iteration) + ': ' + str(fbest))
-    return xbest, fbest
+    return transform(xbest), fbest
