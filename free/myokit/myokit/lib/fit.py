@@ -1,6 +1,8 @@
 #
 # A set of tools to fit models to data.
 #
+#---------------------------------  license  ----------------------------------
+#
 # This file is part of Myokit
 #  Copyright 2017      University of Oxford
 #  Copyright 2011-2016 Maastricht University
@@ -9,6 +11,20 @@
 #
 # Authors:
 #  Michael Clerx
+#
+#---------------------------------  credits  ----------------------------------
+#
+# Some of the local optimisers in this module are simply wrappers around SciPy
+# implementations, as such, they require SciPy to run.
+#
+# Similarly, the CMA-ES method relies on the `cma` package by Nikolaus Hansen.
+#
+# The xNES and SNES methods are original implementations, but were written
+# using both the published papers (see below) and the implementation in PyBrain
+# (http://pybrain.org) as references.
+#
+# The remaining algorithsm and optimisation routines are original
+# implementations, and try to credit the algorithm's authors were possible.
 #
 from __future__ import division
 from __future__ import print_function
@@ -77,9 +93,8 @@ def bfgs(f, x, bounds, max_iter=500, args=None):
     #if not res.success:
     #    raise Exception('Error optimizing function: ' + str(res.message))
     return res.x, res.fun
-def cmaes(f, bounds, hint=None, sigma=None, n=None, ipop=0,
-        parallel=False, fatol=1e-11, target=1e-6, callback=None, verbose=False,
-        args=None):
+def cmaes(f, bounds, hint=None, sigma=None, n=None, ipop=0, parallel=False,
+        fatol=1e-11, target=1e-6, callback=None, verbose=False, args=None):
     """
     Global/local optimizer that minimizes a function ``f`` within a specified
     set of ``bounds`` using the CMA-ES methods provided by the `cma` module
@@ -1742,7 +1757,7 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         max_iter=1000, callback=None, verbose=False, args=None):
     """
     Global/local optimizer that minimizes a function ``f`` within a specified
-    set of ``bounds`` using the SNES method described in [1].
+    set of ``bounds`` using the SNES method described in [1, 2].
     
     SNES stands for Seperable Natural Evolution Strategy, and is designed for
     non-linear derivative-free optimization problems in high dimensions and
@@ -1802,6 +1817,8 @@ def snes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
     for natural evolution strategies.
     Proceedings of the 13th annual conference on Genetic and evolutionary
     computation. ACM, 2011.
+    
+    [2] PyBrain: The Python machine learning library (http://pybrain.org)
 
     """
     # Test if function is callable
@@ -2321,7 +2338,7 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
         max_iter=1000, callback=None, verbose=False, args=None):
     """
     Global/local optimizer that minimizes a function ``f`` within a specified
-    set of ``bounds`` using the xNES method described in [1].
+    set of ``bounds`` using the xNES method described in [1, 2].
     
     xNES stands for Exponential Natural Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems [1].
@@ -2380,6 +2397,8 @@ def xnes(f, bounds, hint=None, n=None, parallel=False, target=1e-6,
     evolution strategies.
     Proceedings of the 12th annual conference on Genetic and evolutionary
     computation
+    
+    [2] PyBrain: The Python machine learning library (http://pybrain.org)
     
     *Note: This method requires the `scipy` module to be installed.*
 

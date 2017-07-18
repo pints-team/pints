@@ -762,17 +762,12 @@ for var in model.variables(deep=True, state=False, bound=False, const=False):
     flag_cvode = CVodeSetMinStep(cvode_mem, dt_min);
     if (check_cvode_flag(&flag_cvode, "CVodeSetminStep", 1)) return sim_clean();
 
-    // Benchmarking? Then set engine_realtime
+    // Benchmarking? Then set engine_realtime to 0.0
     if (benchtime != Py_None) {
-        flt = PyObject_CallFunction(benchtime, "");
-        if (!PyFloat_Check(flt)) {
-            Py_XDECREF(flt); flt = NULL;
-            PyErr_SetString(PyExc_Exception, "Call to benchmark time function didn't return float.");
-            return sim_clean();
-        }
-        engine_starttime = PyFloat_AsDouble(flt);
+        // Store initial time as 0
         engine_realtime = 0.0;
-        Py_DECREF(flt); flt = NULL;
+        // Tell sim_step to set engine_starttime
+        engine_starttime = -1;
     }
 
     // Test if the sequences inside the log are empty
@@ -839,6 +834,20 @@ sim_step(PyObject *self, PyObject *args)
     int flag_root;          // Root finding flag
     int flag_reinit = 0;    // Set if CVODE needs to be reset during a simulation step
     PyObject *flt, *ret;
+    
+    // Benchmarking? Then make sure start time is set.
+    // This is handled here instead of in sim_init so it only includes time
+    // taken performing steps, not time initialising memory etc.
+    if (benchtime != Py_None && engine_starttime < 0) {
+        flt = PyObject_CallFunction(benchtime, "");
+        if (!PyFloat_Check(flt)) {
+            Py_XDECREF(flt); flt = NULL;
+            PyErr_SetString(PyExc_Exception, "Call to benchmark time function didn't return float.");
+            return sim_clean();
+        }
+        engine_starttime = PyFloat_AsDouble(flt);
+        Py_DECREF(flt); flt = NULL;
+    }
     
     // Go!
     while(1) {
