@@ -47,7 +47,7 @@ if sys.hexversion > 0x03000000:
 del(sys)
 # Constants
 # Version information
-VERSION_INT = 0,0,0
+VERSION_INT = 1,25,2
 VERSION = '.'.join([str(x) for x in VERSION_INT]); del(x)
 RELEASE = ''
 # Licensing
