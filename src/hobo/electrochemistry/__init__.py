@@ -1,2 +1,2 @@
 from data import ECTimeData
-from models import ECModel
+from models import ECModel,POMModel

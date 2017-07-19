@@ -2,6 +2,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include "utilities.hpp"
+#include "seq_electron_transfer3_explicit.hpp"
 #include "e_implicit_exponential_mesh.hpp"
 
 
@@ -86,4 +87,5 @@ BOOST_PYTHON_MODULE(hobo_cpp)
             ;
 
         py::def("e_implicit_exponential_mesh", e_implicit_exponential_mesh, (py::arg("params"), py::arg("Itot"), py::arg("t")), "Solves E problem using implicit thomas method, exponentially expanding mesh");
+        py::def("seq_electron_transfer3_explicit", seq_electron_transfer3_explicit, (py::arg("params"), py::arg("Itot"), py::arg("t")), "placeholder");
         }
