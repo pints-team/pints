@@ -7,7 +7,12 @@ from math import sqrt
 import pystan
 import cma
 from math import pi
+
+import matplotlib as mpl
+mpl.use('Agg')
 import pylab as plt
+
+import seaborn as sns
 
 def test_ec_model():
     filename = '../GC01_FeIII-1mM_1M-KCl_02_009Hz.txt'
@@ -46,6 +51,52 @@ def test_ec_model():
     error = data.distance(I)
     print 'error = ',error
     assert 0.07 > error
+
+def test_pom_model():
+    filename = '../POMGCL_6020104_1.0M_SFR_d16.txt'
+    dim_params = {
+        'reversed': False,
+        'Estart': 0.6,
+        'Ereverse': -0.1,
+        'omega': 60.05168,
+        'phase': 0,
+        'dE': 20e-3,
+        'v': -0.1043081,
+        't_0': 0.00,
+        'T': 298.2,
+        'a': 0.0707,
+        'c_inf': 0.1*1e-3*1e-3,
+        'Ru': 50.0,
+        'Cdl': 0.000008,
+        'alpha1': 0.5,
+        'alpha2': 0.5,
+        'Gamma' : 0.7*53.0e-12,
+        'E01': 0.368,
+        'E02': 0.338,
+        'E11': 0.227,
+        'E12': 0.227,
+        'E21': 0.011,
+        'E22': -0.016,
+        'k01': 7300,
+        'k02': 7300,
+        'k11': 1e4,
+        'k12': 1e4,
+        'k21': 2500,
+        'k22': 2500
+        }
+
+    model = hobo.electrochemistry.POMModel(dim_params)
+
+    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
+
+    # calculate model at time points given by the data file
+    I,t = model.simulate(use_times=data.time)
+
+    plt.figure()
+    plt.plot(t,I)
+    plt.plot(data.time,data.current)
+    plt.show(block=True)
+
 
 def test_nonlin_op():
     filename = '../GC01_FeIII-1mM_1M-KCl_02_009Hz.txt'
@@ -174,16 +225,19 @@ def test_mcmc():
     prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
     prior.add_parameter('k0',hobo.Uniform(),0,10000)
     prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+    prior.add_parameter('alpha',hobo.Uniform(),0.4,0.6)
+    prior.add_parameter('Ru',hobo.Uniform(),0.0,0.1)
 
     print 'before cmaes, parameters are:'
     names = prior.get_parameter_names()
     for name in prior.get_parameter_names():
         print name,': ',model.params[name]
 
-    model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
+    #model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
     #hobo.fit_model_with_cmaes(data,model,prior)
 
-
+    #pickle.dump( (data,model,prior), open( "test_mcmc.p", "wb" ) )
+    data,model,prior = pickle.load(open( "test_mcmc.p", "rb" ))
 
     I,t = model.simulate(use_times=data.time)
     plt.figure()
@@ -197,7 +251,7 @@ def test_mcmc():
     for name in prior.get_parameter_names():
         print name,': ',model.params[name]
 
-    samples = hobo.mcmc_with_adaptive_covariance(data,model,prior)
+    samples = hobo.mcmc_with_adaptive_covariance(data,model,prior,nchains=4)
     #samples = np.random.uniform(size=(1000,prior.n+1))
 
     pickle.dump( samples, open( "samples.p", "wb" ) )
@@ -241,51 +295,97 @@ def test_hierarchical():
     #    'alpha': 0.53
     #    }
 
-    #model = hobo.electrochemistry.ECModel(dim_params)
 
-    #data = []
+    #datas = []
+    #models = []
+    #priors = []
     #for filename in filenames:
-    #    data.append(hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5))
+    #    model = hobo.electrochemistry.ECModel(dim_params)
+    #    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5)
+    #    prior = hobo.Prior()
+    #    e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
+    #    prior.add_parameter('E0',hobo.Uniform(),
+    #                    model.params['Estart']+e0_buffer,
+    #                    model.params['Ereverse']-e0_buffer)
+    #    prior.add_parameter('k0',hobo.Uniform(),0,10000)
+    #    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+    #    prior.add_parameter('alpha',hobo.Uniform(),0.4,0.6)
+    #    prior.add_parameter('Ru',hobo.Uniform(),0.0,0.1)
 
-    ## specify bounds for parameters
-    #prior = hobo.Prior()
-    #e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    #prior.add_parameter('E0',hobo.Uniform(),
-    #                model.params['Estart']+e0_buffer,
-    #                model.params['Ereverse']-e0_buffer)
-    #prior.add_parameter('k0',hobo.Uniform(),0,10000)
-    #prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+    #    hobo.fit_model_with_cmaes(data,model,prior)
 
-    #print 'before cmaes, parameters are:'
-    #names = prior.get_parameter_names()
-    #for name in prior.get_parameter_names():
-    #    print name,': ',model.params[name]
+    #    datas.append(data)
+    #    models.append(model)
+    #    priors.append(prior)
 
-    #model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
-    ##hobo.fit_model_with_cmaes(data,model,prior)
-
-    #print 'after cmaes, parameters are:'
-    #names = prior.get_parameter_names()
-    #for name in prior.get_parameter_names():
-    #    print name,': ',model.params[name]
+    #pickle.dump( (datas,models,priors), open( "test_hierarchical.p", "wb" ) )
+    datas,models,priors = pickle.load(open( "test_hierarchical.p", "rb" ))
+    #plt.figure()
+    #for i,data,model,prior in zip(range(len(datas)),datas,models,priors):
+    #    print 'plotting cmaes fit',i
+    #    plt.clf()
+    #    I,t = model.simulate(use_times=data.time)
+    #    plt.plot(t,I,label='sim')
+    #    plt.plot(data.time,data.current,label='exp')
+    #    plt.savefig('cmaes_fit_%d.pdf'%i)
 
 
-    #pickle.dump( (data,model,prior), open( "test_hierarchical.p", "wb" ) )
-    data,model,prior = pickle.load(open( "test_hierarchical.p", "rb" ))
+    #samples,theta_samples = hobo.hierarchical_gibbs_sampler(priors[0].get_parameter_names(),datas,models,priors)
 
-    samples = hobo.hierarchical_gibbs_sampler(data,model,prior)
+    #pickle.dump( (samples,theta_samples), open( "hmcmc_done.p", "wb" ) )
+    samples,theta_samples = pickle.load( open( "hmcmc_done.p", "rb" ) )
+    #theta_samples = pickle.load(open( "hmcmc.p", "rb" ))
+    #for i,data,model,prior,theta_sample in zip(range(len(datas)),datas,models,priors,theta_samples):
+    #    print 'plotting samples mcmc',i
+    #    fig,axes = hobo.plot_trace(theta_sample, model, prior)
+    #    plt.savefig('mcmc_trace_%d.pdf'%i)
+    #    plt.close(fig)
 
-    pickle.dump( samples, open( "samples.p", "wb" ) )
-    #samples = pickle.load( open( "samples.p", "rb" ) )
+    #for i,data,model,prior,theta_sample in zip(range(len(datas)),datas,models,priors,theta_samples):
+    #    print 'plotting samples mcmc',i
+    #    fig,axes = hobo.scatter_grid(theta_sample, model, prior)
+    #    plt.savefig('mcmc_scatter_grid%d.pdf'%i)
+    #    plt.close(fig)
 
-    fig,axes = hobo.plot_trace(samples, model, prior)
-    plt.savefig('test_mcmc_trace.pdf')
-    fig,axes = hobo.scatter_grid(samples, model, prior)
-    plt.savefig('test_mcmc_after_mcmc.pdf')
+
+
+    print 'plotting heirarchical samples mcmc diagonal'
+
+    n_param = theta_samples[0].shape[1]
+    fig,axes = hobo.scatter_diagonal(samples, models[0], priors[0], fig_size=(6, 4*n_param))
+    for theta_sample_i in theta_samples:
+        print 'plotting sample'
+        for i in range(n_param):
+            sns.kdeplot(theta_sample_i[:, i], ax=axes[i].twinx(),shade=False)
+    #axes = [[line.get_ydata()/np.amax(line.get_ydata()) for line in ax.get_lines()] for ax in axes]
+
+    #for i in range(n_param):
+    #    lines = axes[i].get_lines()
+    #    for j,line in enumerate(lines):
+    #        axes[i].lines[j].set_ydata(line.get_ydata()/np.amax(line.get_ydata()))
+
+    plt.savefig('hmcmc_diagonal.pdf')
+
+    print 'plotting heirarchical samples mcmc trace'
+    fig,axes = hobo.plot_trace(samples, models[0], priors[0])
+    plt.savefig('test_hmcmc_trace.pdf')
+
+    print 'plotting heirarchical samples mcmc grid'
+    fig,axes = hobo.scatter_grid(samples, models[0], priors[0])
+    for theta_sample_i in theta_samples:
+        for i in range(n_param):
+            print i,prior.get_parameter_names()[i],': (min,max) = (',np.min(theta_sample_i[:,i]),',',np.max(theta_sample_i[:,i]),')'
+            for j in range(n_param):
+                if i == j:
+                    print 'plotting'
+                    sns.kdeplot(theta_sample_i[:, i], ax=axes[i, j])
+
+    plt.savefig('hmcmc.pdf')
+    plt.close(fig)
     #plt.show(block=True)
 
 
 
 
 if __name__ == "__main__":
-    test_hierarchical()
+    test_mcmc()

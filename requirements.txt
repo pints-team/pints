@@ -1,1 +1,1 @@
-pystan
+cma Cython numpy matplotlib seaborn pystan
