@@ -5,9 +5,8 @@
 #include "seq_electron_transfer3_explicit.hpp"
 #include "e_implicit_exponential_mesh.hpp"
 
-
 namespace py = boost::python;
-using namespace hobo;
+using namespace pints;
 
 template <class C>
 struct pickle_suite: public py::pickle_suite { BOOST_STATIC_ASSERT(sizeof(C)==0); };
@@ -73,15 +72,15 @@ struct pickle_suite< std::map<K,T> >: public py::pickle_suite
     }
 };
 
-BOOST_PYTHON_MODULE(hobo_cpp)
+BOOST_PYTHON_MODULE(pints_cpp)
 {
 
-        py::class_<vector>("hobo_vector")
+        py::class_<vector>("pints_vector")
             .def(py::vector_indexing_suite<vector>())
             .def_pickle(pickle_suite<vector>());
             ;
 
-        py::class_<map>("hobo_map")
+        py::class_<map>("pints_map")
             .def(py::map_indexing_suite<map>())
             .def_pickle(pickle_suite<map>());
             ;

@@ -8,7 +8,7 @@
 #include "utilities.hpp"
 
 
-namespace hobo {
+namespace pints {
 void e_implicit_exponential_mesh(map& params, vector& Itot, vector& t);
 }
 

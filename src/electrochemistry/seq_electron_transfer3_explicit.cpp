@@ -8,7 +8,7 @@
 #include <exception>
 #include <Eigen/Dense>
 
-namespace hobo {
+namespace pints {
 template <unsigned int N>
 struct seq_elec_fun {
 
