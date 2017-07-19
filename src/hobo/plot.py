@@ -19,12 +19,30 @@ def plot_trace(param_samples, model, prior, fig_size=(6, 6)):
     return fig, axes
 
 
+def scatter_diagonal(param_samples, model, prior, fig_size=(6, 6)):
+    names = prior.get_parameter_names()
+    true_vals = model.get_params_from_vector(names)
+
+    n_param = param_samples.shape[1]
+    fig, axes = plt.subplots(n_param, 1, figsize=fig_size)
+    for i in range(n_param):
+        sns.kdeplot(param_samples[:, i], ax=axes[i],shade=True)
+        if i < len(names):
+            axes[i].set_ylabel(names[i])
+            axes[i].set_xlabel(names[i])
+        else:
+            axes[i].set_ylabel(r'$\theta$')
+            axes[i].set_xlabel(r'$\theta$')
+
+    fig.tight_layout(pad=0)
+    return fig, axes
+
+
 def scatter_grid(param_samples, model, prior, fig_size=(6, 6)):
     names = prior.get_parameter_names()
     true_vals = model.get_params_from_vector(names)
 
     n_param = param_samples.shape[1]
-    print 'scatter_grid: n_param = ',n_param
     fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
     for i in range(n_param):
         for j in range(n_param):
