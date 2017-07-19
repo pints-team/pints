@@ -7,7 +7,7 @@
 #include <iostream>
 #include <exception>
 
-namespace hobo {
+namespace pints {
 
 struct BCfun {
         BCfun(const double h0,

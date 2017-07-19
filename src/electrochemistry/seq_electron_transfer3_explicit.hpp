@@ -7,7 +7,7 @@
 
 #include "utilities.hpp"
 
-namespace hobo {
+namespace pints {
 void seq_electron_transfer3_explicit(map& params, vector& Itot, vector& t);
 }
 
