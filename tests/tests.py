@@ -1,5 +1,5 @@
-import hobo
-import hobo.electrochemistry
+import pints
+import pints.electrochemistry
 import pickle
 
 import numpy as np
@@ -37,8 +37,8 @@ def test_ec_model():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.ECModel(dim_params)
-    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
+    model = pints.electrochemistry.ECModel(dim_params)
+    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # calculate model at time points given by the data file
     I,t = model.simulate(use_times=data.time)
@@ -85,9 +85,9 @@ def test_pom_model():
         'k22': 2500
         }
 
-    model = hobo.electrochemistry.POMModel(dim_params)
+    model = pints.electrochemistry.POMModel(dim_params)
 
-    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
+    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # calculate model at time points given by the data file
     I,t = model.simulate(use_times=data.time)
@@ -121,18 +121,18 @@ def test_nonlin_op():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.ECModel(dim_params)
+    model = pints.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
+    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # specify bounds for parameters
-    prior = hobo.Prior()
+    prior = pints.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_parameter('k0',hobo.Uniform(),0,10000)
-    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
+    prior.add_parameter('E0',pints.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',pints.Uniform(),0,10000)
+    prior.add_parameter('Cdl',pints.Uniform(),0,20)
 
-    params = hobo.fit_model_with_cmaes(data,model,prior)
+    params = pints.fit_model_with_cmaes(data,model,prior)
     print params
 
     model.set_params_from_vector(params,prior.get_parameter_names())
@@ -164,18 +164,18 @@ def test_stan():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.ECModel(dim_params)
+    model = pints.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
+    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=40)
 
     # specify bounds for parameters
-    prior = hobo.Prior()
+    prior = pints.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_parameter('k0',hobo.Uniform(),0,10000)
-    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
-    prior.add_parameter('omega',hobo.Uniform(),model.params['omega']*0.99,model.params['omega']*1.01)
-    prior.add_parameter('phase',hobo.Uniform(),model.params['phase']-pi/10,model.params['phase']+pi/10)
+    prior.add_parameter('E0',pints.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',pints.Uniform(),0,10000)
+    prior.add_parameter('Cdl',pints.Uniform(),0,20)
+    prior.add_parameter('omega',pints.Uniform(),model.params['omega']*0.99,model.params['omega']*1.01)
+    prior.add_parameter('phase',pints.Uniform(),model.params['phase']-pi/10,model.params['phase']+pi/10)
 
     # calculate model using stan
     sm = model.get_stan_model()
@@ -215,18 +215,18 @@ def test_mcmc():
         'alpha': 0.53
         }
 
-    model = hobo.electrochemistry.ECModel(dim_params)
+    model = pints.electrochemistry.ECModel(dim_params)
 
-    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5,ignore_end_samples=0)
+    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5,ignore_end_samples=0)
 
     # specify bounds for parameters
-    prior = hobo.Prior()
+    prior = pints.Prior()
     e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    prior.add_parameter('E0',hobo.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
-    prior.add_parameter('k0',hobo.Uniform(),0,10000)
-    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
-    prior.add_parameter('alpha',hobo.Uniform(),0.4,0.6)
-    prior.add_parameter('Ru',hobo.Uniform(),0.0,0.1)
+    prior.add_parameter('E0',pints.Uniform(),model.params['Estart']+e0_buffer,model.params['Ereverse']-e0_buffer)
+    prior.add_parameter('k0',pints.Uniform(),0,10000)
+    prior.add_parameter('Cdl',pints.Uniform(),0,20)
+    prior.add_parameter('alpha',pints.Uniform(),0.4,0.6)
+    prior.add_parameter('Ru',pints.Uniform(),0.0,0.1)
 
     print 'before cmaes, parameters are:'
     names = prior.get_parameter_names()
@@ -234,7 +234,7 @@ def test_mcmc():
         print name,': ',model.params[name]
 
     #model.set_params_from_vector([0.00312014718956,2.04189332425,7.274953392],['Cdl','k0','E0'])
-    #hobo.fit_model_with_cmaes(data,model,prior)
+    #pints.fit_model_with_cmaes(data,model,prior)
 
     #pickle.dump( (data,model,prior), open( "test_mcmc.p", "wb" ) )
     data,model,prior = pickle.load(open( "test_mcmc.p", "rb" ))
@@ -251,15 +251,15 @@ def test_mcmc():
     for name in prior.get_parameter_names():
         print name,': ',model.params[name]
 
-    samples = hobo.mcmc_with_adaptive_covariance(data,model,prior,nchains=4)
+    samples = pints.mcmc_with_adaptive_covariance(data,model,prior,nchains=4)
     #samples = np.random.uniform(size=(1000,prior.n+1))
 
     pickle.dump( samples, open( "samples.p", "wb" ) )
     #samples = pickle.load( open( "samples.p", "rb" ) )
 
-    fig,axes = hobo.plot_trace(samples, model, prior)
+    fig,axes = pints.plot_trace(samples, model, prior)
     plt.savefig('test_mcmc_trace.pdf')
-    fig,axes = hobo.scatter_grid(samples, model, prior)
+    fig,axes = pints.scatter_grid(samples, model, prior)
     plt.savefig('test_mcmc_after_mcmc.pdf')
     #plt.show(block=True)
 
@@ -300,19 +300,19 @@ def test_hierarchical():
     #models = []
     #priors = []
     #for filename in filenames:
-    #    model = hobo.electrochemistry.ECModel(dim_params)
-    #    data = hobo.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5)
-    #    prior = hobo.Prior()
+    #    model = pints.electrochemistry.ECModel(dim_params)
+    #    data = pints.electrochemistry.ECTimeData(filename,model,ignore_begin_samples=5)
+    #    prior = pints.Prior()
     #    e0_buffer = 0.1*(model.params['Ereverse'] - model.params['Estart'])
-    #    prior.add_parameter('E0',hobo.Uniform(),
+    #    prior.add_parameter('E0',pints.Uniform(),
     #                    model.params['Estart']+e0_buffer,
     #                    model.params['Ereverse']-e0_buffer)
-    #    prior.add_parameter('k0',hobo.Uniform(),0,10000)
-    #    prior.add_parameter('Cdl',hobo.Uniform(),0,20)
-    #    prior.add_parameter('alpha',hobo.Uniform(),0.4,0.6)
-    #    prior.add_parameter('Ru',hobo.Uniform(),0.0,0.1)
+    #    prior.add_parameter('k0',pints.Uniform(),0,10000)
+    #    prior.add_parameter('Cdl',pints.Uniform(),0,20)
+    #    prior.add_parameter('alpha',pints.Uniform(),0.4,0.6)
+    #    prior.add_parameter('Ru',pints.Uniform(),0.0,0.1)
 
-    #    hobo.fit_model_with_cmaes(data,model,prior)
+    #    pints.fit_model_with_cmaes(data,model,prior)
 
     #    datas.append(data)
     #    models.append(model)
@@ -330,20 +330,20 @@ def test_hierarchical():
     #    plt.savefig('cmaes_fit_%d.pdf'%i)
 
 
-    #samples,theta_samples = hobo.hierarchical_gibbs_sampler(priors[0].get_parameter_names(),datas,models,priors)
+    #samples,theta_samples = pints.hierarchical_gibbs_sampler(priors[0].get_parameter_names(),datas,models,priors)
 
     #pickle.dump( (samples,theta_samples), open( "hmcmc_done.p", "wb" ) )
     samples,theta_samples = pickle.load( open( "hmcmc_done.p", "rb" ) )
     #theta_samples = pickle.load(open( "hmcmc.p", "rb" ))
     #for i,data,model,prior,theta_sample in zip(range(len(datas)),datas,models,priors,theta_samples):
     #    print 'plotting samples mcmc',i
-    #    fig,axes = hobo.plot_trace(theta_sample, model, prior)
+    #    fig,axes = pints.plot_trace(theta_sample, model, prior)
     #    plt.savefig('mcmc_trace_%d.pdf'%i)
     #    plt.close(fig)
 
     #for i,data,model,prior,theta_sample in zip(range(len(datas)),datas,models,priors,theta_samples):
     #    print 'plotting samples mcmc',i
-    #    fig,axes = hobo.scatter_grid(theta_sample, model, prior)
+    #    fig,axes = pints.scatter_grid(theta_sample, model, prior)
     #    plt.savefig('mcmc_scatter_grid%d.pdf'%i)
     #    plt.close(fig)
 
@@ -352,7 +352,7 @@ def test_hierarchical():
     print 'plotting heirarchical samples mcmc diagonal'
 
     n_param = theta_samples[0].shape[1]
-    fig,axes = hobo.scatter_diagonal(samples, models[0], priors[0], fig_size=(6, 4*n_param))
+    fig,axes = pints.scatter_diagonal(samples, models[0], priors[0], fig_size=(6, 4*n_param))
     for theta_sample_i in theta_samples:
         print 'plotting sample'
         for i in range(n_param):
@@ -367,11 +367,11 @@ def test_hierarchical():
     plt.savefig('hmcmc_diagonal.pdf')
 
     print 'plotting heirarchical samples mcmc trace'
-    fig,axes = hobo.plot_trace(samples, models[0], priors[0])
+    fig,axes = pints.plot_trace(samples, models[0], priors[0])
     plt.savefig('test_hmcmc_trace.pdf')
 
     print 'plotting heirarchical samples mcmc grid'
-    fig,axes = hobo.scatter_grid(samples, models[0], priors[0])
+    fig,axes = pints.scatter_grid(samples, models[0], priors[0])
     for theta_sample_i in theta_samples:
         for i in range(n_param):
             print i,prior.get_parameter_names()[i],': (min,max) = (',np.min(theta_sample_i[:,i]),',',np.max(theta_sample_i[:,i]),')'
