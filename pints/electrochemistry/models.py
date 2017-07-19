@@ -1,5 +1,5 @@
 from math import sqrt,pi
-from hobo_cpp import seq_electron_transfer3_explicit,e_implicit_exponential_mesh,hobo_map,hobo_vector
+from pints_cpp import seq_electron_transfer3_explicit,e_implicit_exponential_mesh,pints_map,pints_vector
 import pystan
 import numpy as np
 import copy
@@ -48,7 +48,7 @@ class ECModel:
 
         self.E0, self.T0, self.L0, self.I0 = self._calculate_characteristic_values()
 
-        self.params = hobo_map()
+        self.params = pints_map()
         self.params['Estart'] = self.dim_params['Estart']/self.E0
         self.params['Ereverse'] = self.dim_params['Ereverse']/self.E0
         self.params['omega'] = 2*pi*self.dim_params['omega']*self.T0
@@ -104,21 +104,21 @@ class ECModel:
     def simulate(self, use_param_vector=None, use_param_vector_name=None, use_times=None, use_current=None):
         params = self.params
 
-        current = hobo_vector()
+        current = pints_vector()
         if use_current is None:
-            current = hobo_vector()
-        elif type(use_current) is hobo_vector:
+            current = pints_vector()
+        elif type(use_current) is pints_vector:
             current = use_current
         else:
-            current = hobo_vector()
+            current = pints_vector()
             current[0:len(use_current)] = use_current_
 
         if use_times is None:
-            times = hobo_vector()
-        elif type(use_times) is hobo_vector:
+            times = pints_vector()
+        elif type(use_times) is pints_vector:
             times = use_times
         else:
-            times = hobo_vector()
+            times = pints_vector()
             times[0:len(use_times)] = use_times
 
         e_implicit_exponential_mesh(params,current,times)
@@ -299,7 +299,7 @@ class POMModel:
 
         self.E0, self.T0, self.L0, self.I0 = self._calculate_characteristic_values()
 
-        self.params = hobo_map()
+        self.params = pints_map()
         self.params['Estart'] = self.dim_params['Estart']/self.E0
         self.params['Ereverse'] = self.dim_params['Ereverse']/self.E0
         self.params['omega'] = 2*pi*self.dim_params['omega']*self.T0
@@ -389,21 +389,21 @@ class POMModel:
     def simulate(self, use_param_vector=None, use_param_vector_name=None, use_times=None, use_current=None):
         params = self.params
 
-        current = hobo_vector()
+        current = pints_vector()
         if use_current is None:
-            current = hobo_vector()
-        elif type(use_current) is hobo_vector:
+            current = pints_vector()
+        elif type(use_current) is pints_vector:
             current = use_current
         else:
-            current = hobo_vector()
+            current = pints_vector()
             current[0:len(use_current)] = use_current_
 
         if use_times is None:
-            times = hobo_vector()
-        elif type(use_times) is hobo_vector:
+            times = pints_vector()
+        elif type(use_times) is pints_vector:
             times = use_times
         else:
-            times = hobo_vector()
+            times = pints_vector()
             times[0:len(use_times)] = use_times
 
         seq_electron_transfer3_explicit(params,current,times)

@@ -1,5 +1,5 @@
 import numpy as np
-from hobo_cpp import hobo_vector
+from pints_cpp import pints_vector
 from math import pi,floor,ceil
 
 def read_cvsin_type_1(filename):

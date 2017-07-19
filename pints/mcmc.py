@@ -4,7 +4,7 @@ import math
 import multiprocessing
 import time
 import os
-import hobo
+import pints
 import functools
 import pickle
 import scipy
@@ -20,7 +20,7 @@ def inner_mcmc(sample_send,names,data,model,prior,means,covariance):
         min_v = prior.data[names[ni]][1]
         max_v = prior.data[names[ni]][2]
         prior.add_parameter(names[ni],
-                hobo.Normal(means[ni],covariance[ni,ni]),
+                pints.Normal(means[ni],covariance[ni,ni]),
                 min_v,max_v,quiet=quiet)
     # inner mcmc
     samples = mcmc_with_adaptive_covariance(data,model,prior,quiet=quiet)
@@ -43,7 +43,7 @@ def inner_mcmc_all(sample_send,names, data,model,prior,means,covariance):
         min_v = prior.data[names[ni]][1]
         max_v = prior.data[names[ni]][2]
         prior.add_parameter(names[ni],
-                hobo.Normal(means[ni],covariance[ni,ni]),
+                pints.Normal(means[ni],covariance[ni,ni]),
                 min_v,max_v,quiet=quiet)
     # inner mcmc
     samples = mcmc_with_adaptive_covariance(data,model,prior,nchains=4,quiet=quiet)
