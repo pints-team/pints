@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 #
-# Simply tests if the pints module can be imported
+# Tests if pints can be loaded without issues.
 #
 import unittest
-
-class TestUM(unittest.TestCase):
-     def setUp(self):
-        pass
-     def test_import(self):
+class TestBasics(unittest.TestCase):
+    def test_import(self):
         import pints
-
-if __name__ == '__main__':
-    unittest.main()
