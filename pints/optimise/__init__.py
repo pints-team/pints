@@ -7,5 +7,18 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-# Optmisation
+import pints
+import numpy as np
+
+#
+# Base classes
+#
+
+    
+# Transforms
+
+# Optmisation methods
+from _optimiser import Optimiser
 from _cmaes import fit_model_with_cmaes
+from _xnes import XNES
+

@@ -1,1 +1,1 @@
-cma numpy matplotlib seaborn pystan
+cma matplotlib numpy pystan scipy seaborn 
