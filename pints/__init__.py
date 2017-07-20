@@ -7,12 +7,12 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-# Optmisation
-from _cmaes import fit_model_with_cmaes
-# Bayesian inference
-from _mcmc import mcmc_with_adaptive_covariance,hierarchical_gibbs_sampler
+# Core classes
+from _forward_model import ForwardModel
 #
 from _plot import scatter_grid,plot_trace,scatter_diagonal
 #
 from _prior import Prior,Uniform,Normal
-
+#
+import optimise
+import mcmc
