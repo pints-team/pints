@@ -10,4 +10,4 @@ Building:
 
 Testing:
 
-- Run test.sh
+- Run run-test.sh
