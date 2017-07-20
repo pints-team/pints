@@ -13,6 +13,12 @@ class ForwardModel(object):
     
     def __init__(self):
         super(ForwardModel, self).__init__()
+
+    def dimension(self):
+        """
+        Returns the dimension of the parameter space.
+        """
+        raise NotImplementedError
         
     def simulate(self, parameters, times):
         """
@@ -29,7 +35,11 @@ class ForwardModel(object):
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
 
-        For efficiency, neither ``parameters`` or ``times`` will be copied: No
+        Note: For efficiency, neither ``parameters`` or ``times`` should be
+        copied when `simulate` is called.
+        
+        
+        copied: No
         changes to either should be made by processes running in parallel while
         a simulation is being run!
         """
