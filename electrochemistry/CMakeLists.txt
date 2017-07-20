@@ -36,5 +36,5 @@ target_link_libraries(pints_cpp models ${pints_LIBRARIES} )
 
 set_target_properties(pints_cpp PROPERTIES PREFIX "" )
 
-enable_testing()
-add_subdirectory(tests)
+#enable_testing()
+#add_subdirectory(tests)
