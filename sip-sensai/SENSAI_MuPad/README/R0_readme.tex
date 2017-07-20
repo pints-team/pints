@@ -1,0 +1,283 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, bm}
+\usepackage{timestamp}
+
+\newcommand{\cvec}{\textbf{c}}
+\newcommand{\evec}{\textbf{e}}
+\newcommand{\fvec}{\textbf{f}}
+\newcommand{\gvec}{\textbf{g}}
+\newcommand{\honevec}{\textbf{h}_\textbf{1}}
+\newcommand{\htwovec}{\textbf{h}_\textbf{2}}
+\newcommand{\hvec}{\textbf{h}}
+\newcommand{\lvec}{\textbf{l}}
+\newcommand{\pvec}{\textbf{p}}
+\newcommand{\qvec}{\textbf{q}}
+\newcommand{\rvec}{\textbf{r}}
+\newcommand{\svec}{\textbf{s}}
+\newcommand{\vvec}{\textbf{v}}
+\newcommand{\wvec}{\textbf{w}}
+\newcommand{\xvec}{\textbf{x}}
+\newcommand{\xnotvec}{\textbf{x}_\textbf{0}}
+\newcommand{\xonevec}{\textbf{x}_\textbf{1}}
+\newcommand{\xtwovec}{\textbf{x}_\textbf{2}}
+\newcommand{\yvec}{\textbf{y}}
+\newcommand{\zvec}{\textbf{z}}
+\newcommand{\zerovec}{\textbf{0}}
+\newcommand{\onevec}{\textbf{1}}
+\newcommand{\gammavec}{\textbf{\gamma}}
+\newcommand{\phivec}{\textbf{\phi}}
+\newcommand{\psivec}{\textbf{\psi}}
+\newcommand{\rhovec}{\textbf{\rho}}
+\newcommand{\thetavec}{\textbf{\theta}}
+\newcommand{\sensai}{\textsc{sensai}}
+%
+\newcommand{\Amat}{\textbf{A}}
+\newcommand{\Bmat}{\textbf{B}}
+\newcommand{\Cmat}{\textbf{C}}
+\newcommand{\Fmat}{\textbf{F}}
+\newcommand{\Imat}{\textbf{I}}
+\newcommand{\Smat}{\textbf{S}}
+\newcommand{\Tmat}{\textbf{T}}
+\newcommand{\Vmat}{\textbf{V}}
+\newcommand{\Wmat}{\textbf{W}}
+\newcommand{\Xmat}{\textbf{X}}
+\newcommand{\zeromat}{\textbf{0}}
+\newcommand{\bzero}{\textbf{0}}
+%
+\newcommand{\reals}{\mathbb R}
+\newcommand{\DD}{\displaystyle}
+\newcommand{\norm}[1]{\left\lVert#1 \right\rVert_{2}}
+
+%\newcommand{\xdim}{{\rm xdim}}
+%\newcommand{\kdim}{{\rm kdim}}
+\newcommand{\xdim}{{\rm M}}
+\newcommand{\kdim}{{\rm K}}
+\newcommand{\xonedim}{{\rm M_1}}
+\newcommand{\xtwodim}{{\rm M_2}}
+
+
+\begin{document}
+\title{SENSAI: R0\_README file}
+\author{Simon Tavener \& Michael Mikucki}
+\maketitle
+\hfill Date \& time: \timestamp
+%\date{}
+
+\pagestyle{empty}
+
+\section{How to Define $R_0$ in {\sc sensai}}
+
+{\sc sensai} is capable of automatically defining the basic reproduction ratio, $R_0$, as defined by the Next Generation method, for appropriate epidemiological models.  However, {\sc sensai} is not limited to infection modeling, so specific syntax is required so that {\sc sensai} recognizes if a model is compatible to the definition of $R_0$.  The following guide will instruct the user on how to edit the MuPAD templates so that {\sc sensai} will produce $R_0$ and its sensitivity analysis.
+
+\begin{enumerate}
+\item Edit the MuPAD templates to define your model equations.  These should be stored as the vector $g[i]$, the right-hand side of the equation for the variable $x[i]$.
+
+\item Define which equations from $g$ define the dynamics of infected classes.  Store these indices in the variable $NextGen$.  Note that $NextGen$ must be written in \textit{matrix} syntax.  Consider the following examples.
+ \begin{enumerate}
+  \item For example, if the model includes three states, $S$, $I$, and $R$, in that order, $NextGen := matrix([2]);$.
+  \item If the model has more than one equation describing an infected class, list them in the order they appear.  For example, if the model describes $S_1, I_1, R_1, S_2, I_2, R_2$ in that order, $NextGen := matrix([2,5]);$.
+  \item \textit{If you do not wish to calculate $R_0$ for the model, define $NextGen = matrix([0])$, or let the first entry of $NextGen$ be 0.}
+ \end{enumerate}
+
+\item If the model has four or more infected classes, you may want to consider computing $R_0$ without its sensitivities.  $R_0$ will be a very lengthy expression for such models, and the derivatives will require a lot of time to compute.  If this is the case, define ``R0\_only" to be 1.  If you wish to calculate the sensitivities anyway, define ``R0\_only" = 0.
+ \begin{enumerate}
+  \item While running the {\sc sensai} GUI, you may encounter large delays in ``Create M{\sc atlab} files using MuPAD" if R0\_only = 0.  If your patience has run thin, you must terminate the program through the task manager.  The emergency stop in M{\sc{atlab}} of CTRL+c in the command window will not work, as the computation of $R_0$ is done externally in a MuPAD procedure call.
+ \end{enumerate}
+
+\item If the analytical expression for $R_0$ is already known, it may be faster (and more accurate if MuPAD can not solve $R_0$) to use this expression of $R_0$ for the quantity of interest ($qoi$) instead of re-deriving the expression during the ``Create M{\sc atlab} files using MuPAD" phase.
+
+\end{enumerate}
+
+\subsection{Possible Problems with $R_0$}
+
+There are some examples in which the Next Generation construction of $R_0$ is not valid, or is not compatible with {\sc sensai}.  The following are possible problems the user might encounter when trying to define $R_0$.
+
+\begin{enumerate}
+
+\item \textbf{ Problems with ODE models.}  For $R_0$ to be valid, the model must satisfy the conditions of Theorem 2 in \textit{Reproduction numbers and sub-threshold endemic equilibria for compartmental models of disease transmission}, van den Driessche 2002.  Recall for ODEs, the Next Generation definition of $R_0 = \rho(FV^{-1})$ where $F = \DD\frac{\partial \mathcal{F}_i}{\partial x_j}(x^{\star}) \quad 1 \leq i,j \leq m$ describes new infections and $V = \DD\frac{\partial \mathcal{V}_i}{\partial x_j}(x^{\star}) \quad 1 \leq i,j \leq m$ describes transfer of existing infections, $x^{\star}$ is the disease-free equilibrium, the infected classes are $1,\dots,m$, and $\rho(\cdot)$ denotes the spectral radius operator.
+
+ \begin{enumerate}
+
+  \item The fecundity matrix $F$ is not nonnegative.  This is part of assumption (A1) of van den Driessche 2002.
+  \item The transition matrix $V$ is singular.  This can occur if an equation is in the model as a placeholder, but the right-hand side is identically 0.  This state must be removed from the system for $R_0$ to be valid.
+  \item The disease-free subspace is not invariant.  That is, infection can enter a disease-free population through a nonzero component in a state that is identified as disease-free.  This can occur in models with background infection rates, or in models where the infective classes are not identified properly.  This is assumption (A4).
+  \item The equilibrium is not asymptotically stable in the absence of disease.  That is, if $\mathcal{F} = 0$, there is an eigenvalue of the Jacobian of the full system evaluated at $x^{\star}$ that has a positive real part.  This is assumption (A5).
+
+ \end{enumerate}
+
+\item \textbf{Problems with map models.}  For $R_0$ to be valid, the model must satisfy the conditions of Theorem 2.1 in \textit{The Basic Reproduction Number in Some Discrete-Time Epidemic Models}, Allen 2008.  Recall for maps, the Next Generation definition of $R_0 = \rho(F(I-T)^{-1})$, where $I$ is the $m\times m$ identity and $F$ and $-T$ are defined the same as $F$ and $V$ for ODEs, respectively.
+
+ \begin{enumerate}
+
+  \item The fecundity matrix $F$ is not nonnegative.
+  \item The transition matrix $T$ is not nonnegative.
+  \item The transition matrix $T$ is singular.  This can occur if an equation is in the model as a placeholder, but the right-hand side is identically 0.  This state must be removed from the system for $R_0$ to be valid.
+  \item The transition matrix $T$ is not asymptotically stable.  That is, $\rho(T) \geq 1$.
+  \item The equilibrium is not asymptotically stable in the absence of disease.  That is, $\rho(C) \geq 1$ where $C$ is the Jacobian of the right-hand side of the noninfectious states.
+
+ \end{enumerate}
+
+\end{enumerate}
+
+Notice that assumptions (A2) and (A3) for ODE models are not automatically checked by {\sensai}.  These assumptions must be verified by the user, but are usually true.  For map models, the assumption of a unique DFE is not checked by {\sensai}, nor is the condition that $F+T$ is irreducible.  These should also be checked by the user to ensure a valid $R_0$.  It is difficult to check both of these conditions, but again, for most models, $F+T$ is irreducible based on the structure of $T$ having a nonzero main diagonal and a sub-diagonal and the structure of $F$ having a nonzero top row.
+
+There are a number of reasons for any of the problems in lists 1 and 2 to occur.  Perhaps the model does not have a valid Next Generation construction of $R_0$.  If this is the case, some alternative means to calculate $R_0$ should be sought, if desired.  Alternatively, {\sc sensai} may not be able to recognize which terms describe new infections and belong in $\mathcal{F}$ and which terms describe transfer of existing infections and belong in $\mathcal{V}$ or $\mathcal{T}$.  The following criteria are used by {\sc sensai} to determine the placement of each term.  If the terms of the model will not be placed in the biologically correct vectors, {\sensai} fails to compute the Next Generation $R_0$.
+
+\begin{enumerate}
+
+\item If the term $X$ in an equation describing an infective class involves a state variable from a noninfectious class, $X \in \mathcal{F}$, unless the occurrence of the noninfectious state variable is part of a sum of all state variables (that is, the term is scaled by the total population).\\
+
+\textbf{Important Note for MuPAD}:  At this point, MuPAD is not as effective as {\sf Maple} at analytical computations.  There may be examples (like the Hantavirus model) where MuPAD can not account for the scaling by the total population.  This problem will hopefully be fixed in a future version of MuPAD and is based on the inefficiency of the {\tt subs()} command.\\
+
+\item If the term $X$ in an equation describing an infective class does not involve any state variables and is only a parameter, product of parameters, or quotient of parameters, $X \in \mathcal{F}$.  If terms like these exist, the disease-free subspace will not be invariant, and the model will not have a valid Next Generation $R_0$.
+
+\item Every other term $X$ that does not satisfy the above will be placed in $\mathcal{V}$ for ODEs, or $\mathcal{T}$ for maps.
+
+\end{enumerate}
+
+
+
+\section{Template Examples}
+
+\subsection{MAP Examples}
+
+\subsubsection{Caswell 08}
+
+This model is from Caswell's \textit{Perturbation analysis of nonlinear matrix population models}, 2008.  It involves two stages, juveniles ($x_1$) and adults ($x_2$).
+%
+\begin{equation*}
+\xvec(t+1) = \begin{pmatrix} \sigma_1 (1-\gamma) & f \\ \sigma_1 \gamma & \sigma_2 \end{pmatrix} \xvec(t)
+\end{equation*}
+%
+where the juvenile survival $\sigma_1(\xvec) = \tilde{\sigma} e^{-\textbf{e}^\textrm{T}\xvec}$, where $\textbf{e}$ is a vector of ones, $\sigma_2$ is the adult survival, $\gamma$ is the maturation probability, and $f$ is the adult fertility.  The parameter values given are $(f, \gamma, \tilde{\sigma}, \sigma_2) = ( 0.25, 1/15, 0.98, 0.95)$.
+
+The main purpose of this model is to verify that {\sensai} gives the same equilibrium and sensitivities to those mentioned in the paper.  This model also serves as a great template for MAP examples.
+
+\subsubsection{Hantavirus}
+
+This model is from Allen and van den Driessche, \textit{The Basic Reproduction Number in Some Discrete-Time Epidemic Models}, 2008.  It involves susceptible and infected male and female rodents.
+%
+\begin{equation*}\label{eq:hantavirus}
+\left.\begin{gathered}\begin{aligned}
+S_m(t+1) &= \Big[ \frac{B}{2}+e^{-\beta_mI_m(t) - \beta_f I_f(t)}S_m(t)\Big]D(N)\\
+I_m(t+1) &= \Big[ (1-e^{-\beta_mI_m(t)-\beta_f I_f(t)})S_m(t) + I_m(t)\Big]D(N)\\
+S_f(t+1) &= \Big[ \frac{B}{2}+e^{-\beta_f I_m(t)-\beta_f I_f(t)}S_f(t)\Big] D(N)\\
+I_f(t+1) &= \Big[ (1-e^{-\beta_f I_m(t)-\beta_f I_f(t)})S_f(t)+I_f(t)\Big]D(N)
+\end{aligned}\end{gathered} \right \}
+\end{equation*}
+%
+where the logistic growth is scaled by
+%
+\begin{equation*}
+D(N) = \frac{K}{K+(b/2)N}.
+\end{equation*}
+%
+where $K$ is the carrying capacity and $N$ is the total population; the harmonic mean birth function is
+%
+\begin{equation*}
+B(N_m,N_f) = \frac{2bN_mN_f}{N}
+\end{equation*}
+%
+where $N_m = S_m+I_m$ is the total number of males, $N_f = S_f+I_f$ is the total number of females, and $b>0$ is the average litter size, $k$ is the number of contacts that result in an infection, and $\beta_m$ and $\beta_f$ are the infection rate constants of males and females, respectively.  Parameter values are not provided in the paper, but some reasonable values are $K= 1000$, $\beta_f=0.09$, $\beta_m=0.9$, and $b=6$.
+
+The main purpose of this model is to verify that {\sensai} gives the same value of $R_0$ as the paper.  This example exhibits two common practices in model formulation which {\sensai} performs extremely well \textit{in the Maple version}.  First, every term is scaled by the total population $N$.  Second, the infection rate is given by a probability of a non-infection not occurring.  Unfortunately, while {\sensai} handles the second issue, it is not able to handle the first.  This is due to MuPAD's ineffective {\tt subs()} command.
+
+As an illustration, consider the following term.  Suppose there are two states $x_1$ and $x_2$ and the term in consideration is $p_1x_2 / (p_1 + x_1+x_2)$.  If $x_2$ is the infectious state, then this term belongs in $\mathcal{V}$, since the only appearance of a non-infective state is in the denominator, which is just a scaling by the total population.  This illustrates what occurs for the Hantavirus model with the scaling $D(N)$, with $p_1$ acting as $K$.  While the {\sf Maple} command {\tt subs(term, $x_1 + x_2 = N$)} converts this term to $p_1x_2 / (p_1 + N)$, the identical MuPAD command does not.  If $p_1$ were not in the denominator, the MuPAD command would work as desired.  Unfortunately, the computation of $R_0$ for models with the scaling of the total population is not available in the MuPAD version of {\sensai}, although it is available for the {\sf Maple} version.
+
+\subsubsection{Six Stage Genetics}
+
+This model is based on Caswell08, adding partially dominant selection based on viability and two alleles.
+
+\subsection{ODE Examples}
+
+\subsubsection{SIR}
+
+This model is a typical SIR model with logistic growth.
+%
+\begin{equation*}\label{eq:SIR_log}
+\left . \begin{gathered} \begin{aligned}
+\frac{dS}{dt} &= rN \left( 1-\frac{N}{K}\right) - \beta SI - \delta S, \quad \\
+\frac{dI}{dt} &= \beta SI - \gamma I - \mu I - \delta I, \\
+\frac{dR}{dt} &= \gamma I - \delta R,
+\end{aligned} \end{gathered} \right \}
+\end{equation*}
+%
+where $N = S+I+R$ is the total population at any time $t$, $r$ is the per capita growth rate, $K$ is the carrying capacity, $\beta$ is the infection rate, $\delta$ is the natural death rate of the species, $\gamma$ is the recovery rate, and $\mu$ is the disease specific death rate.  Some reasonable parameter values are $r = 0.5$, $K=1000$, $\beta = 0.1$, $\delta = 0.2$, $\gamma$ = 0.02, and $\mu = 0.1$.
+
+The main purpose of this model is that it is a standard ODE infection model with a simple $R_0$ that can be easily verified by hand.  This model also serves as a great template for ODE examples.
+
+\subsubsection{SI (Indirect Transmission)}
+
+This model is an SI model that involves indirect transmission of the infection.
+%
+\begin{equation*}\label{eq:background_si}
+\left.\begin{gathered}\begin{aligned}
+\frac{dS}{dt} &= rN\left(1-\frac{N}{K}\right)\\
+\frac{dI}{dt} &= \beta -\gamma I
+\end{aligned}\end{gathered}\right\}
+\end{equation*}
+%
+where $N(t) = S(t) +I(t)$ is the total population, $r$ is the per capita growth rate, $K$ is the carrying capacity, $\beta$ is the background transmission probability, and $\gamma$ is the recovery rate.
+
+The explaination of this model in detail can be found in \textit{Sensitivity Analysis of the Basic Reproduction Number and other Quantities for Infectious Disease Models}, Masters Thesis by Mikucki, 2012.  Parameter values may be chosen as  $r= 0.5$, $\beta = 0.8$, $\gamma = 0.02$, and $K = 1000$.
+
+The main purpose of this model is to show that models with a background (indirect) transmission of the disease through the environment or some alternative source do not have a valid $R_0$.
+
+\subsubsection{Plague}
+
+This model is given by Buzby et. al. in \textit{Analysis of the sensitivity properties of a model of vector-borne bubonic plague}, 2008.  The first three classes are the SIR classes of rats, $N$ is the average number of fleas living on a rat, and $F$ is the number of free infectious fleas that are searching for a new host.
+
+\begin{equation*}\left.\begin{gathered}\begin{aligned}
+\dot{S}_R &= r_RS_R\left(1-\frac{T_R}{K_R} \right) + r_RR_R(1-p)-d_RS_R - \beta_R\frac{S_R}{T_R}F(1-e^{-aT_R}) \\
+\dot{I}_R &= \beta_R\frac{S_R}{T_R}F(1-e^{-aT_R})-(d_R+m_R)I_R\\
+\dot{R}_R &= r_RR_R\left(p-\frac{T_R}{K_R}\right) + m_Rg_RI_R -d_RR_R\\
+\dot{N} &= r_FN\left(1-\frac{N}{K_F}\right) + \frac{d_F}{T_R}F(1-e^{-aT_R})\\
+\dot{F} &= (d_R+m_R(1-g_R))I_RN-d_FF
+\end{aligned}\end{gathered}\right\}\end{equation*}
+%
+where $T_R = S_R+I_R+R_R$ is the total size of the rat population, $r_R$ is the net rat reproduction rate, $K_R$ is the rat carrying capacity, $p$ is the proportion of offspring that inherity the disease, $d_R$ is the natural rat death rate, $\beta_R$ is the transmission rate from rats to fleas, $m_R$ is the rate that rats leave the infected class, $g_R$ is the fraction of rates that become resistant, $a$ is the searching efficiency of the fleas, $r_F$ is the net flea reproductive rate, $d_F$ is the natural flea death rate, and $K_F$ is the flea carrying capacity.
+
+\subsubsection{Dengue}
+
+This model is given by Garba in \textit{Backward bifurcations in dengue transmission dynamics}, 2008.  It is an SEIR model that descirbes the dynamics of dengue fever, an infection carried by a vector, mosquiteos.  The equations are
+%
+\begin{equation*}\label{eq:dengue}
+\left. \begin{gathered} \begin{aligned}
+\frac{dS_H}{dt} &= \Pi_H-\lambda_HS_H-\mu_HS_H\\
+\frac{dE_H}{dt} &= \lambda_HS_H-(\sigma_H+\mu_H)E_H\\
+\frac{dI_H}{dt} &= \sigma_HE_H-(\tau_H+\mu_H+\delta_H)I_H\\
+\frac{dR_H}{dt} &= \tau_HI_H-\mu_HR_H\\
+\frac{dS_V}{dt} &= \Pi_V-\lambda_VS_V-\mu_VS_V\\
+\frac{dE_V}{dt} &= \lambda_VS_V-(\sigma_V+\mu_V)E_V\\
+\frac{dI_V}{dt} &= \sigma_VE_V-(\mu_V+\delta_V)I_V
+\end{aligned} \end{gathered}\right \}
+\end{equation*}
+%
+where $\lambda_H = \frac{C_{HV}}{N_H}(\eta_VE_V+I_V)$ is the human infection rate, $\lambda_V = \frac{C_{HV}}{N_H}(\eta_HE_H+I_H)$ is the vector infection rate, and $N_H = S_H+E_H+I_H+R_H$ is the total human population.  The parameter values provided are $\mu_H=0.0195$, $\sigma_H=0.5300$, $\Pi_H=10$, $\delta_H=0.9900$, $\eta_H=0.9900$, $\tau_H=0.2000$, $\mu_V=0.0140$, $\sigma_V = 0.2000$, $\Pi_V = 30$, $\delta_V = 0.0057$, $\eta_V=0.9800$, and
+$C_{HV} = 0.038$.
+
+An interesting initial condition for the model is $\textbf{x}_\textbf{0} = (\frac{\Pi_H}{\mu_H}, 0, 0, 0, \frac{\Pi_V}{\mu_V}, 0, 200)$, which will show that even thought $R_0 <1$, infection may still persist in the population.
+
+\subsubsection{Typhoid}
+
+This model is given by Bailey and Duppenthaler in \textit{Sensitivity Analysis in the Modelling of Infectious Disease Dynamics}, 1980.  It is a 9-stage SIR type model where $x_1$ = susceptibles, $x_2$ = incubating noninfectious, $x_3$ = incubating infectious, $x_4$ = sick infectious, $x_5$= sick noninfectious, $x_6$ =  temporary carrier, $x_7$ = permanent carrier, $x_8$ = short resistance, and $x_9$ = long resistance.
+%
+\begin{equation*}\label{eq:typhoid}
+\left.\begin{gathered}\begin{aligned}
+\dot{x_1} &= -(\rho_{12}+\rho_{13})x_1y + \rho_{41}x_4+\rho_{51}x_5+\rho_{61}x_6+\rho_{81}x_8+\rho_{91}x_9-\mu x_1+\mu\\
+\dot{x_2} &= \rho_{12}x_1y - (\rho_{23}+\rho_{24} +\rho_{25}+\mu)x_2 + \rho_{32}x_3\\
+\dot{x_3} &= \rho_{13}x_1y - (\rho_{32}+\rho_{34}+\rho_{35}+\mu)x_3 + \rho_{23}x_2\\
+\dot{x_4} &= \rho_{24}x_2 +\rho_{34}x_3 + \rho_{54}x_5-(\rho_{41}+\rho_{45}+\rho_{46}+\rho_{48}+\mu)x_4\\
+\dot{x_5} &= \rho_{25}x_2 + \rho_{35}x_3+\rho_{45}x_4-(\rho_{51}+\rho_{54}+\rho_{58}+\mu)x_5 \\
+\dot{x_6} &= \rho_{46}x_4-(\rho_{61}+\rho_{67}+\rho_{68}+\mu)x_6\\
+\dot{x_7} &= \rho_{67}x_6 - \mu x_7\\
+\dot{x_8} &= \rho_{48}x_4 + \rho_{58}x_5 + \rho_{68}x_6 - (\rho_{81}+\rho_{89}+\mu)x_8\\
+\dot{x_9} &= \rho_{89}x_8 - (\rho_{91}+\mu)x_9
+\end{aligned}\end{gathered}\right \}
+\end{equation*}
+
+Parameter values are provided by Bailey are as follows:  $\rho_{12} = 8.43381\times10^{-3}$, $\rho_{13} = 8.51900\times10^{-5}$,  $\rho_{23} = 2.85720\times10^{-3}$, $\rho_{24} = 6.78585\times10^{-2}$, $\rho_{25} = 7.14300\times10^{-4}$, $\rho_{32} = 7.14300\times10^{-4}$, $\rho_{34} = 6.42870\times10^{-2}$, $\rho_{35} = 6.42870\times10^{-3}$, $\rho_{41} = 3.46000\times10^{-3}$, $\rho_{45} = 3.46000\times10^{-3}$, $\rho_{46} = 3.46000\times10^{-3}$, $\rho_{48} = 2.40124\times10^{-2}$, $\rho_{51} = 3.46000\times10^{-3}$, $\rho_{54} = 6.92000\times10^{-3}$, $\rho_{58} = 2.40124\times10^{-2}$, $\rho_{61} = 1.11100\times10^{-3}$, $\rho_{67} = 3.33300\times10^{-3}$, $\rho_{68} = 6.66600\times10^{-3}$, $\rho_{81} = 2.74000\times10^{-4}$, $\rho_{89} = 2.46600\times10^{-3}$, $\rho_{91} = 2.74000\times10^{-4}$, and $\mu = 5.48000\times10^{-5}$.
+
+This example demonstates {\sensai}'s ability to implement a large system and compute $R_0$ effectively.  In this model, equations 2-7 are considered infective, so the next generation matrix is a $6\times 6$ matrix with analytical (not numerical) components.
+
+\end{document}

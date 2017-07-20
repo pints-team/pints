@@ -1,0 +1,263 @@
+\documentclass[12pt]{article}
+\usepackage{amsfonts,amsmath,amssymb,bm}
+\usepackage{timestamp}
+\newcommand{\cvec}{\bm{c}}
+\newcommand{\evec}{\bm{e}}
+\newcommand{\fvec}{\bm{f}}
+\newcommand{\gvec}{\bm{g}}
+\newcommand{\honevec}{\bm{h}_\bm{1}}
+\newcommand{\htwovec}{\bm{h}_\bm{2}}
+\newcommand{\Hvec}{\bm{H}}
+\newcommand{\hvec}{\bm{h}}
+\newcommand{\lvec}{\bm{l}}
+\newcommand{\pvec}{\bm{p}}
+\newcommand{\qvec}{\bm{q}}
+\newcommand{\rvec}{\bm{r}}
+\newcommand{\svec}{\bm{s}}
+\newcommand{\uvec}{\bm{u}}
+\newcommand{\vvec}{\bm{v}}
+\newcommand{\wvec}{\bm{w}}
+\newcommand{\xvec}{\bm{x}}
+\newcommand{\xnotvec}{\bm{x}_\bm{0}}
+\newcommand{\xonevec}{\bm{x}_\bm{1}}
+\newcommand{\xtwovec}{\bm{x}_\bm{2}}
+\newcommand{\yvec}{\bm{y}}
+\newcommand{\zvec}{\bm{z}}
+\newcommand{\zerovec}{\bm{0}}
+\newcommand{\onevec}{\bm{1}}
+\newcommand{\alphavec}{\bm{\alpha}}
+\newcommand{\betavec}{\bm{\beta}}
+\newcommand{\gammavec}{\bm{\gamma}}
+\newcommand{\phivec}{\bm{\phi}}
+\newcommand{\psivec}{\bm{\psi}}
+\newcommand{\rhovec}{\bm{\rho}}
+\newcommand{\thetavec}{\bm{\theta}}
+\newcommand{\sensai}{\textsc{sensai}}
+%
+\newcommand{\Amat}{\bm{A}}
+\newcommand{\Bmat}{\bm{B}}
+\newcommand{\Cmat}{\bm{C}}
+\newcommand{\Fmat}{\bm{F}}
+\newcommand{\Imat}{\bm{I}}
+\newcommand{\Smat}{\bm{S}}
+\newcommand{\Tmat}{\bm{T}}
+\newcommand{\Vmat}{\bm{V}}
+\newcommand{\Wmat}{\bm{W}}
+\newcommand{\Xmat}{\bm{X}}
+\newcommand{\zeromat}{\bm{0}}
+%
+\newcommand{\reals}{\mathbb R}
+\newcommand{\DD}{\displaystyle}
+\newcommand{\norm}[1]{\left\lVert#1 \right\rVert_{2}}
+
+%\newcommand{\xdim}{{\rm xdim}}
+%\newcommand{\kdim}{{\rm kdim}}
+\newcommand{\xdim}{{\rm M}}
+\newcommand{\kdim}{{\rm K}}
+\newcommand{\kdimhat}{{\widehat{\rm K}}}
+\newcommand{\xonedim}{{\rm M_1}}
+\newcommand{\xtwodim}{{\rm M_2}}
+
+
+\begin{document}
+\title{SENSAI+: README file}
+\author{Simon Tavener and Rachel Popp}
+\maketitle
+\hfill Date \& time: \timestamp
+\pagestyle{empty}
+
+
+\section{Introduction}
+
+SENSAI+ is an enhancement of the earlier SENSAI package with additional bifurcation capabilities for systems of differential equations. (Bifurcation capabilities for maps will be added to the next release.) SENSAI+ computes paths of solutions to parametrized systems of nonlinear equations and simultaneously computes the sensitivities and elasticities to all parameters. 
+
+\bigskip
+Let $n \, (=\xdim)$ and $\kdim$  be respectively the number of variables and number of parameters of the basic, underlying system of nonlinear equations
+\begin{equation}
+\gvec(\xvec,\pvec) = \zerovec, \quad \gvec: \reals^n \times \reals^\kdim \mapsto \reals^n.
+\end{equation}
+Let $m$ and $\widehat K$ be respectively the number of variables and parameters of the ``extended system'' of nonlinear equations 
+\begin{equation}
+\hvec(\uvec,\widehat\pvec) = \zerovec, \quad \hvec: \reals^m \times \reals^\kdimhat \mapsto \reals^m.
+\end{equation}
+SENSAI+  performs arclength continuation on $\hvec(\uvec,\widehat\pvec)$ for one of five different types of extended systems, specified by the variable {\tt imap}. These  are:
+\begin{itemize}
+  \item Regular solutions {\tt (imap=2)}
+  \item Bifurcation from a trivial solution {\tt (imap=3)}
+  \item Limit points {\tt (imap=4)}
+  \item Hopf bifurcation points {\tt (imap=5)}
+\item Symmetry breaking bifurcation point {\tt (imap=6)} ... coming soon??
+\item Step to branch {\tt (imap=13)}
+\end{itemize}
+
+\noindent{\em Note:} Bifurcations of maps will require different extended systems that will again be selected through different choices of {\tt imap}.
+
+
+\section{Solution types}
+
+\subsection{Regular solutions (imap=2)}
+Let
+\begin{equation*}
+m=n, \; \uvec=\xvec\in \reals^{n}, \; \kdimhat = \kdim, 
+\end{equation*}
+and
+\begin{equation}
+\hvec(\uvec,\widehat\pvec) = \gvec(\xvec,\pvec) = \zerovec,
+\quad \hvec: \reals^n \times \reals^\kdim \mapsto \reals^n.
+\end{equation}
+
+
+\subsection{Bifurcation from a trivial solution (imap=3)}
+Let
+\begin{equation*}
+m=(n+1), \; \uvec=\begin{pmatrix} \phivec \\ \mu \end{pmatrix} \in \reals^{n+1}, \; \kdimhat=(\kdim-1)
+\end{equation*}
+and
+\begin{equation}
+\hvec(\uvec,\widehat\pvec) = \begin{pmatrix} \gvec_{\xvec} \phivec \\ \lvec^\top \phivec-1 \end{pmatrix} = \zerovec,
+\quad \hvec: \reals^{n+1} \times \reals^\kdimhat \mapsto \reals^{n+1}.
+\end{equation}
+
+
+
+\subsection{Limit points (imap=4)}
+Let
+\begin{equation*}
+m=(2n+1), \; \uvec=\begin{pmatrix} \xvec \\ \phivec \\ \mu \end{pmatrix} \in \reals^{2n+1}, \; \kdimhat=(\kdim-1)
+\end{equation*}
+and
+\begin{equation}
+\hvec(\uvec,\widehat\pvec) = \begin{pmatrix} \gvec \\ \gvec_{\xvec} \phivec \\ \lvec^\top \phivec-1 \end{pmatrix} = \zerovec,
+\quad \hvec: \reals^{2n+1} \times \reals^\kdimhat \mapsto \reals^{2n+1}.
+\end{equation}
+
+
+\subsection{Hopf bifurcation points (imap=5)}
+Let
+\begin{equation*}
+m=(3n+2), \; \uvec=\begin{pmatrix} \xvec \\ \alphavec \\ \betavec \\ \omega \\ \mu \end{pmatrix} \in \reals^{3n+2}, \; \kdimhat=(\kdim-1)
+\end{equation*}
+where
+\begin{equation*}
+\phivec = \alphavec + i\betavec
+\end{equation*}
+and
+\begin{equation}
+\hvec(\uvec,\widehat\pvec) =
+\begin{pmatrix} \gvec \\ \gvec_{\xvec} \alphavec + \omega\betavec \\
+\gvec_{\xvec} \betavec - \omega\alphavec \\ \lvec^\top \alphavec  \\ \lvec^\top \betavec -1 \end{pmatrix}
+\quad \hvec: \reals^{3n+2} \times \reals^\kdimhat \mapsto \reals^{3n+2}. 
+\end{equation}
+
+
+\subsection{Symmetry breaking bifurcation point (imap=6)}
+\begin{center}
+... coming soon ...
+\end{center}
+
+\subsection{Step to branch (imap=13)}
+\begin{center}
+[from bifurcation from a trivial solution]
+\end{center}
+Let
+\begin{equation*}
+m=n, \; \uvec= \xvec,  \; \kdimhat=\kdim.
+\end{equation*}
+Restore trivial solution $\xvec_0$ at $\lambda_0$ and $\phivec$ and $\mu$ from the ``bifurcation from a trivial solution'' solution vector. Construct initial guess $\uvec = \xvec_0 + \epsilon\phi$ at $\lambda = \lambda_0 + \epsilon$. Change imap from 13 to 2 and perform continuation of a regular point.
+
+\newpage
+\section{Paths using arclength continuation}
+
+\begin{equation}\label{eq:arclength}
+\Hvec(\wvec(s),\widehat\pvec) = \begin{pmatrix} \hvec(\uvec(s),\lambda(s)) \\ N(\uvec(s),\lambda(s),s) \end{pmatrix} = \zerovec,  \quad \Hvec: \reals^{m+1} \times \reals^\kdimhat \mapsto \reals^{m+1}
+\end{equation}
+where
+\begin{equation}
+\wvec = \begin{pmatrix} \uvec \\ \lambda \end{pmatrix}  \in \reals^{m+1}.
+\end{equation}
+Here
+\begin{itemize}
+  \item Regular solutions (imap=2) 
+        \[ m=n, \uvec=\xvec \;\hbox{and}\; \kdimhat=(\kdim-1) \]
+  \item Bifurcation from a trivial solution (imap=3) 
+        \[ m=(n+1), \uvec=\begin{pmatrix} \phivec \\ \mu \end{pmatrix} \;\hbox{and}\; \kdimhat=(\kdim-2) \]
+  \item Limit points (imap=4) 
+        \[ m=(2n+1), \uvec=\begin{pmatrix} \xvec \\ \phivec \\ \mu \end{pmatrix} \;\hbox{and}\; \kdimhat=(\kdim-2) \]
+  \item Hopf bifurcation points (imap=5)
+        \[ m=(3n+2), \uvec=\begin{pmatrix} \xvec \\ \alphavec \\ \betavec \\ \omega \\ \mu \end{pmatrix} \;\hbox{and}\; \kdimhat=(\kdim-2) \]
+\item Symmetry breaking bifurcation points (imap=6) \\
+      \begin{center}
+             ... coming soon ...
+      \end{center}       
+  \item Step to branch (imap=13)
+        \[ m=n, \uvec=\xvec \;\hbox{and}\; \kdimhat=(\kdim-1) \]
+\end{itemize}
+
+\noindent{\em Note:} This may be unnecessary repetition
+
+\newpage
+\section{Sensitivities along solution paths}
+
+Differentiating \eqref{eq:arclength} with respect to $p_k$
+
+\begin{equation}
+\frac{\partial\Hvec}{\partial \wvec} \frac{\partial\wvec}{\partial \widehat p_k} +
+\frac{\partial\Hvec}{\partial \widehat p_k} = \zerovec, \quad k=1, 2, \dots, \widehat K
+\end{equation}
+or
+\begin{equation*}
+\frac{\partial\wvec}{\partial \widehat p_k} = -\left[ \frac{\partial\Hvec}{\partial \wvec} \right]^{-1} \frac{\partial\Hvec}{\partial \widehat p_k}, \quad k=1, 2, \dots, \widehat K
+\end{equation*}
+where
+\begin{equation*}
+\dfrac{\partial \Hvec}{\partial \wvec} =
+\begin{pmatrix} 
+\dfrac{\partial \hvec}{\partial \uvec} & \dfrac{\partial \hvec}{\partial \lambda} \\
+& \\
+\dfrac{\partial N}{\partial \uvec}     & \dfrac{\partial N}{\partial \lambda}
+\end{pmatrix}.
+\end{equation*}
+The matrix ${\partial\Hvec}/{\partial \wvec}$ is already available since it is required to solve \eqref{eq:arclength} via Newton's method. The (1,1)-block, the matrix ${\partial\hvec}/{\partial \uvec}$ is  constructed in  {\tt dhvec\_duvec.m}. The (1,2)-block, the vector ${\partial\hvec}/{\partial \lambda}$ is constructed in {\tt dhvec\_dparam.m}. In fact ${\partial\hvec}/{\partial p_k}$ is constructed in {\tt dhvec\_dparam.m} \emph{for all} values $k=1, \dots, \kdim$ and previously only the values for $\lambda$ was selected. Sensitivities and elasticities with respect to all parameters are now computed along all paths of solutions computed using Keller arclength continuation.
+
+\bigskip
+Sensitivities and elasticities of functionals $Q(\wvec(\widehat\pvec),\widehat\pvec)$ can be computed as before. (... coming immediately ...) For example, the sensitivity and elasticity of the \emph{frequency} at the Hopf bifurcation point with respect to all parameters can be computed through an appropriate choice of the functional $Q$.
+
+\newpage
+\section{Examples}
+
+\subsection{Limit points - Examples/BIFN\_examples/Combustion}
+
+Examples/BIFN\_examples/Combustion \\
+Run MuFile \\
+Create Matlab files \\
+\\
+JOBNAME = ONE \\
+IMAP = 2, ilambda=1, imu=2, ds = 0.1,  nstep=50,  nu=1 \\
+IMAP = 3, ilambda=2, imu=1, ds = 0.01, nstep=100, nu=1 \\
+
+
+
+
+\subsection{Hopf bifurcation points}
+
+Examples/BIFN\_examples/Oscillator \\
+Run MuFile \\
+Create Matlab files \\
+
+\subsubsection{Limit points}
+
+JOBNAME = ONE \\
+IMAP = 2, ilambda=2, imu=1, ds = 0.01, nstep=3,   nu=-1 \\
+IMAP = 3, ilambda=1, imu=2, ds = 0.01, nstep=150, nu=-1 \\
+
+\subsubsection{Hopf points}
+
+JOBNAME = TWO \\
+IMAP = 2, ilambda=2, imu=1, ds = 0.001, nstep=7,   nu=1 \\
+IMAP = 4, ilambda=1, imu=2, ds = 0.01,  nstep=350, nu=-1
+
+
+
+
+
+\end{document}

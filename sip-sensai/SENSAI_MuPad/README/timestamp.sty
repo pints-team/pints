@@ -1,0 +1,43 @@
+%% timestamp.sty
+%%
+%% Provides \timestamp command to include current date and time in the form
+%% YYYY-MM-DD HH:MM.
+%%
+%% By David Flater, reusing code from datetime package version 2.1,
+%% 2003-12-17, found at:
+%% http://theoval.cmp.uea.ac.uk/~gcc/family/nicky/latex/latex.htm
+%%
+%%   datetime.dtx 
+%%   Copyright (C) 2000 Nicola Talbot, all rights reserved.
+%%   If you modify this file, you must change its name first.
+%%   You are NOT ALLOWED to distribute this file alone. You are NOT
+%%   ALLOWED to take money for the distribution or use of either this
+%%   file or a changed version, except for a nominal charge for copying
+%%   etc.
+
+\NeedsTeXFormat{LaTeX2e}
+%% Using dashed date format in the next line causes an error!
+\ProvidesPackage{timestamp}[2004/02/03 Timestamp package version 1.0]
+
+\newcount\@DT@modctr
+\newcount\@dtctr
+
+\def\@modulo#1#2{%
+\@DT@modctr=#1\relax
+\divide \@DT@modctr by #2\relax
+\multiply \@DT@modctr by #2\relax
+\advance #1 by -\@DT@modctr}
+
+\newcommand{\xxivtime}{%
+\@dtctr=\time%
+\divide\@dtctr by 60
+\ifnum\@dtctr<10 0\fi\the\@dtctr:%
+\@dtctr=\time%
+\@modulo{\@dtctr}{60}%
+\ifnum\@dtctr<10 0\fi\the\@dtctr}
+
+\newcommand{\timestamp}{\the\year-%
+\ifnum\month<10 0\fi\the\month-%
+\ifnum\day<10 0\fi\the\day\ \xxivtime}
+
+\endinput
