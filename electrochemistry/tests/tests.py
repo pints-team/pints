@@ -1,3 +1,14 @@
+import matplotlib as mpl
+#mpl.use('Agg') # Set this in ~/.config/matplotlib/matplotlibrc if you need it!
+import pylab as plt
+
+# The CMA module touches matplotlib: this is temporary fix!
+# See: https://github.com/CMA-ES/pycma/issues/17
+matplotlib_is_interactive = plt.isinteractive()
+import cma
+if not matplotlib_is_interactive:
+    plt.ioff()
+
 import pints
 import electrochemistry
 import pickle
@@ -5,14 +16,11 @@ import pickle
 import numpy as np
 from math import sqrt
 import pystan
-import cma
 from math import pi
 
-import matplotlib as mpl
-mpl.use('Agg')
-import pylab as plt
-
 import seaborn as sns
+
+
 
 def test_ec_model():
     filename = '../GC01_FeIII-1mM_1M-KCl_02_009Hz.txt'
@@ -46,7 +54,7 @@ def test_ec_model():
     plt.figure()
     plt.plot(t,I)
     #plt.plot(data.time,data.current)
-    plt.show(block=True)
+    plt.show()
 
     #error = data.distance(I)
     #print 'error = ',error
