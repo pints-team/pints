@@ -6,8 +6,11 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
+
 class TestLogistic(unittest.TestCase):
+
     def test_start_with_zero(self):
+        # Test the special case where the initial size is zero
         model = pints.toy.LogisticModel(0)
         times = [0, 1, 2, 10000]
         parameters = [1, 5]        
@@ -15,6 +18,7 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(len(values), len(times))
         for v in values:
             self.assertEqual(v, 0)
+
     def test_start_with_two(self):
         # Run small simulation
         model = pints.toy.LogisticModel(2)

@@ -22,6 +22,9 @@ class LogisticModel(pints.ForwardModel):
         if self._p0 < 0:
             raise ValueError('Population size cannot be negative.')
     
+    def dimension(self):
+        return 2
+    
     def simulate(self, parameters, times):
         r, k = [float(x) for x in parameters]
         times = np.asarray(times)
