@@ -4,3 +4,16 @@ We are working on problems in the area of inverse modelling and baysian
 inference as applied to problems in electrochemistry and cardiac 
 electrophysiology. Pints (Probabilistic Inference on Noisy Time-Series) 
 is a collaborative repository to organise our efforts and share tools.
+
+# Testing pints
+
+To run all tests, lone the repository, navigate to the pints directory
+and type:
+
+```
+python -m unittest discover -v test
+```
+
+Or use the bash script `run-tests.sh`
+
+
