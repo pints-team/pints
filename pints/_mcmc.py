@@ -1,3 +1,12 @@
+#
+# Implements different forms of MCMC
+#
+# This file is part of PINTS.
+#  Copyright (c) 2017, University of Oxford.
+#  For licensing information, see the LICENSE file distributed with the PINTS
+#  software package.
+#
+
 import numpy as np
 import numpy.random as rand
 import math
