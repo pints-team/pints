@@ -7,11 +7,12 @@
 #  software package.
 #
 import pints
-import pints.optimise
+import numpy as np
 import scipy
 import scipy.linalg
+import multiprocessing
 
-class XNES(pints.optimise.Optimiser):
+class XNES(pints.Optimiser):
     """
     Finds the best parameters using the xNES method described in [1, 2].
     
@@ -26,39 +27,30 @@ class XNES(pints.optimise.Optimiser):
     [2] PyBrain: The Python machine learning library (http://pybrain.org)
     
     """
-    def __init__(model, times, values, lower, upper, hint=None):
-        super(XNES, self).__init__(model, times, values, lower, upper, hint)
-
-    def fit(self, parallel=True, verbose=True):
-
-        # Check if parallelization is required
-        parallel = bool(parallel)
-
-        # Check if in verbose mode
-        verbose = bool(verbose)
-        
-        # Create periodic parameter space transform to implement boundaries
-        transform = pints.optimise._TriangleWaveTransform(self._lower,
-            self._upper)
+    def run(self):
     
-        # Wrap transform around score function
-        function = pints.optimise._ParameterTransformWrapper(f, transform)
+        print(self._function)
 
         # Default search parameters
+        parallel = True
+        verbose = True
+        
         # Search is terminated after max_iter iterations
         max_iter = 10000
+
         # Or if ntol iterations don't improve the best solution by more than
         # ftol
         ntol = 20
         ftol = 1e-11
+        iterations_without_change = 0
 
         # Parameter space dimension
-        d = self._model.dimension()
+        d = self._dimension
 
         # Population size
-        n = 4 + int(3 * np.log(d))
         # If parallel, round up to a multiple of the reported number of cores
-        if parallel:
+        n = 4 + int(3 * np.log(d))
+        if parallel:            
             cpu_count = multiprocessing.cpu_count()
             n = (((n - 1) // cpu_count) + 1) * cpu_count
 
@@ -72,13 +64,17 @@ class XNES(pints.optimise.Optimiser):
                 print('Running in sequential mode with population size '
                     + str(n))
 
+        # Apply wrapper to implement boundaries
+        if self._boundaries is None:
+            xtransform = lambda x: x
+        else:
+            xtransform = pints.TriangleWaveTransform(self._boundaries)
+
         # Create evaluator object
         if parallel:
-            evaluator = ParallelEvaluator(function, args=args)
+            evaluator = pints.ParallelEvaluator(self._function)
         else:
-            evaluator = SequentialEvaluator(function, args=args)
-
-        # Set up algorithm
+            evaluator = pints.SequentialEvaluator(self._function)
 
         # Learning rates
         eta_mu = 1
@@ -99,65 +95,85 @@ class XNES(pints.optimise.Optimiser):
         I = np.eye(d)
 
         # Best solution found
-        xbest = hint
-        fbest = function(hint, *args)
-
-        # Report first point
-        if callback is not None:
-            callback(np.array(hint, copy=True), fbest)
+        xbest = mu
+        fbest = float('inf')
 
         # Start running
         for iteration in xrange(1, 1 + max_iter):
+        
             # Create new samples
             zs = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
             xs = np.array([mu + np.dot(A, zs[i]) for i in xrange(n)])
+            
             # Evaluate at the samples
-            fxs = evaluator.evaluate(xs)
+            fxs = evaluator.evaluate(xtransform(xs))
+            
             # Order the normalized samples according to the scores
             order = np.argsort(fxs)
             zs = zs[order]
+            
             # Update center
             Gd = np.dot(us, zs)
             mu += eta_mu * np.dot(A,  Gd)
+            
             # Update best if needed
             if fxs[order[0]] < fbest:
+                
+                # Check if this counts as a significant change
+                fnew = fxs[order[0]]
+                if np.sum(np.abs(fnew - fbest)) < ftol:
+                    iterations_without_change += 1
+                else:
+                    iterations_without_change = 0
+            
+                # Update best
                 xbest = xs[order[0]]
-                fbest = fxs[order[0]]
-                # Target reached? Then break and return
-                if fbest <= target:
-                    # Report to callback if requested
-                    if callback is not None:
-                        callback(transform(xbest), fbest)
-                    if verbose:
-                        print('Target reached, halting')
-                    break
-            # Report to callback if requested
-            if callback is not None:
-                callback(transform(xbest), fbest)
+                fbest = fnew
+                
+            else:
+                iterations_without_change += 1
+            
             # Show progress in verbose mode:
-            if verbose:
-                if iteration >= nextMessage:
-                    print(str(iteration) + ': ' + str(fbest))
-                    if iteration < 3:
-                        nextMessage = iteration + 1
-                    else:
-                        nextMessage = 100 * (1 + iteration // 100)
+            if verbose and iteration >= nextMessage:
+                print(str(iteration) + ': ' + str(fbest))
+                if iteration < 3:
+                    nextMessage = iteration + 1
+                else:
+                    nextMessage = 20 * (1 + iteration // 20)
+            
+            # Stop if no change for too long
+            if iterations_without_change >= ntol:
+                if verbose:
+                    print('No significant change for ' + str(ntol)
+                        + ' iterations: halting.')
+                break
+            
             # Update root of covariance matrix
             Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
             A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
+            
         # Show stopping criterion
-        if fbest > target:
-            if verbose:
-                print('Maximum iterations reached, halting')
+        if verbose and iterations_without_change < ntol:
+            print('Maximum iterations reached: halting')
+        
         # Get final score at mu
-        fmu = function(mu, *args)
+        fmu = self._function(xtransform(mu))
         if fmu < fbest:
             if verbose:
                 print('Final score at mu beats best sample')
             xbest = mu
             fbest = fmu
-        # Show final value and return
+        
+        # Show final value
         if verbose:
             print(str(iteration) + ': ' + str(fbest))
-        return transform(xbest), fbest
+        
+        # Return best solution
+        return xtransform(xbest), fbest
+
+def xnes(function, boundaries=None, hint=None):
+    """
+    Runs an XNES optimisation with the default settings.
+    """
+    return XNES(function, boundaries, hint).run() 
 

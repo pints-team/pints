@@ -7,8 +7,6 @@
 #  software package.
 #
 import pylab as plt
-import seaborn as sns
-sns.set_style('white')
 
 def plot_trace(param_samples, model, prior, fig_size=(6, 6)):
     names = prior.get_parameter_names()
@@ -28,6 +26,10 @@ def plot_trace(param_samples, model, prior, fig_size=(6, 6)):
 
 
 def scatter_diagonal(param_samples, model, prior, fig_size=(6, 6)):
+
+    import seaborn as sns
+    sns.set_style('white')
+
     names = prior.get_parameter_names()
     true_vals = model.get_params_from_vector(names)
 
@@ -47,6 +49,10 @@ def scatter_diagonal(param_samples, model, prior, fig_size=(6, 6)):
 
 
 def scatter_grid(param_samples, model, prior, fig_size=(6, 6)):
+
+    import seaborn as sns
+    sns.set_style('white')
+
     names = prior.get_parameter_names()
     true_vals = model.get_params_from_vector(names)
 

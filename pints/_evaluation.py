@@ -7,10 +7,15 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-
-#TODO: Rewrite with ForwardModel in mind
-#TODO: Update evaluator to allow boundary transform
-#
+from __future__ import division
+from __future__ import print_function
+import gc
+import os
+import sys
+import time
+import Queue
+import traceback
+import multiprocessing
 
 def evaluate(f, x, parallel=False, args=None):
     """
@@ -60,6 +65,7 @@ class Evaluator(object):
                 ' tuple.')
         else:
             self._args = args
+
     def evaluate(self, positions):
         """
         Evaluate the function for every value in the sequence ``positions``.
@@ -72,6 +78,7 @@ class Evaluator(object):
             raise ValueError('The argument `positions` must be a sequence of'
                 ' input values to the evaluator\'s function.')
         return self._evaluate(positions)
+
     def _evaluate(self, positions):
         """
         Internal version of :meth:`evaluate()`.
@@ -158,12 +165,14 @@ multiprocessing.html#all-platforms>`_ for details).
         self._errors = multiprocessing.Queue()
         # Flag set if an error is encountered
         self._error = multiprocessing.Event()
+
     def __del__(self):
         # Cancel everything
         try:
             self._stop()
         except Exception:
             pass
+
     def _clean(self):
         """
         Cleans up any dead workers & return the number of workers tidied up.
@@ -178,6 +187,7 @@ multiprocessing.html#all-platforms>`_ for details).
         if cleaned:
             gc.collect()
         return cleaned
+
     def _populate(self):
         """
         Populates (but usually repopulates) the worker pool.
@@ -194,6 +204,7 @@ multiprocessing.html#all-platforms>`_ for details).
                 )
             self._workers.append(w)
             w.start()
+
     def _evaluate(self, positions):
         """
         Evaluate all tasks in parallel, in batches of size self._max_tasks.
@@ -255,7 +266,8 @@ multiprocessing.html#all-platforms>`_ for details).
             else:
                 raise Exception('Unknown exception in subprocess.')
         # Return results
-        return results            
+        return results         
+
     def _stop(self):
         """
         Forcibly halts the workers
@@ -312,6 +324,7 @@ class SequentialEvaluator(Evaluator):
     """
     def __init__(self, function, args=None):
         super(SequentialEvaluator, self).__init__(function, args)
+        
     def _evaluate(self, positions):
         scores = [0] * len(positions)
         for k, x in enumerate(positions):
@@ -369,6 +382,7 @@ class _Worker(multiprocessing.Process):
         self._max_tasks = max_tasks
         self._errors = errors
         self._error = error
+        
     def run(self):
         # Worker processes should never write to stdout or stderr.
         # This can lead to unsafe situations if they have been redicted to
