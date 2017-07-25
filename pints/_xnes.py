@@ -28,8 +28,6 @@ class XNES(pints.Optimiser):
     
     """
     def run(self):
-    
-        print(self._function)
 
         # Default search parameters
         parallel = True
@@ -38,11 +36,10 @@ class XNES(pints.Optimiser):
         # Search is terminated after max_iter iterations
         max_iter = 10000
 
-        # Or if ntol iterations don't improve the best solution by more than
-        # ftol
-        ntol = 20
-        ftol = 1e-11
-        iterations_without_change = 0
+        # Or if the result doesn't change significantly for a while
+        max_unchanged_iterations = 100
+        min_significant_change = 1e-11
+        unchanged_iterations = 0
 
         # Parameter space dimension
         d = self._dimension
@@ -90,7 +87,13 @@ class XNES(pints.Optimiser):
 
         # Square root of covariance matrix
         A = np.eye(d)
-
+        
+        # Use hint to guess at parameter scaling
+        # If no hint is given, a hint may have been set based on user given
+        # boundaries, if they're not given, it'll simply be zero
+        if np.sum(np.abs(self._hint)) > 1e-11: # not zero
+            A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
+        
         # Identity matrix for later use
         I = np.eye(d)
 
@@ -121,17 +124,17 @@ class XNES(pints.Optimiser):
                 
                 # Check if this counts as a significant change
                 fnew = fxs[order[0]]
-                if np.sum(np.abs(fnew - fbest)) < ftol:
-                    iterations_without_change += 1
+                if np.sum(np.abs(fnew - fbest)) < min_significant_change:
+                    unchanged_iterations += 1
                 else:
-                    iterations_without_change = 0
+                    unchanged_iterations = 0
             
                 # Update best
                 xbest = xs[order[0]]
                 fbest = fnew
                 
             else:
-                iterations_without_change += 1
+                unchanged_iterations += 1
             
             # Show progress in verbose mode:
             if verbose and iteration >= nextMessage:
@@ -142,10 +145,10 @@ class XNES(pints.Optimiser):
                     nextMessage = 20 * (1 + iteration // 20)
             
             # Stop if no change for too long
-            if iterations_without_change >= ntol:
+            if unchanged_iterations >= max_unchanged_iterations:
                 if verbose:
-                    print('No significant change for ' + str(ntol)
-                        + ' iterations: halting.')
+                    print('Halting: No significant change for '
+                        + str(unchanged_iterations) + ' iterations.')
                 break
             
             # Update root of covariance matrix
@@ -153,8 +156,8 @@ class XNES(pints.Optimiser):
             A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
             
         # Show stopping criterion
-        if verbose and iterations_without_change < ntol:
-            print('Maximum iterations reached: halting')
+        if verbose and unchanged_iterations < max_unchanged_iterations:
+            print('Halting: Maximum iterations reached.')
         
         # Get final score at mu
         fmu = self._function(xtransform(mu))
