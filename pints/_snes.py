@@ -10,8 +10,6 @@
 #
 import pints
 import numpy as np
-import scipy
-import scipy.linalg
 import multiprocessing
 
 class SNES(pints.Optimiser):
