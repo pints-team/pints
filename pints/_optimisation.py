@@ -72,14 +72,14 @@ class TriangleWaveTransform(object):
     def __init__(self, boundaries):
         self._lower = boundaries._lower
         self._upper = boundaries._upper
-        self.range = self._upper - self._lower
-        self.range2 = 2 * self.range
+        self._range = self._upper - self._lower
+        self._range2 = 2 * self._range
 
     def __call__(self, x, *args):
-        y = np.remainder(x - self.lower, self.range2)
-        z = np.remainder(y, self.range)
-        return ((self.lower + z) * (y < self.range)
-            + (self.upper - z) * (y >= self.range))
+        y = np.remainder(x - self._lower, self._range2)
+        z = np.remainder(y, self._range)
+        return ((self._lower + z) * (y < self._range)
+            + (self._upper - z) * (y >= self._range))
 
 
 
