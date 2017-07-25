@@ -56,11 +56,27 @@ class Optimiser(object):
                 if not self._boundaries.check(hint):
                     raise ValueError('Hint must lie within given boundaries.')
         
+        # Print info to console
+        self._verbose = True
+        
     def run(self):
         """
         Runs an optimisation and returns the best found value.
         """
         raise NotImplementedError
+    
+    def set_verbose(self, value):
+        """
+        Enables or disables verbose mode for this optimiser. In verbose mode,
+        lots of output is generated during an optimisation.
+        """
+        self._verbose = bool(value)
+    
+    def verbose(self):
+        """
+        Returns `True` if the optimiser is set to run in verbose mode.
+        """
+        return self._verbose
 
 class TriangleWaveTransform(object):
     """
