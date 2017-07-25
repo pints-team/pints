@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 #
-# Simply tests if the pints module can be imported
+# Tests if the logistic (toy) model works.
+#
+# This file is part of PINTS.
+#  Copyright (c) 2017, University of Oxford.
+#  For licensing information, see the LICENSE file distributed with the PINTS
+#  software package.
 #
 import unittest
 import numpy as np
@@ -8,7 +13,10 @@ import pints
 import pints.toy
 
 class TestLogistic(unittest.TestCase):
-
+    """
+    Tests if the logistic (toy) model works.
+    """
+    
     def test_start_with_zero(self):
         # Test the special case where the initial size is zero
         model = pints.toy.LogisticModel(0)
