@@ -26,8 +26,8 @@ class Boundaries(object):
     def __init__(self, lower, upper):
     
         # Convert to shape (n,) vectors, copy to ensure they remain unchanged
-        self._lower = pints.vector(lower)
-        self._upper = pints.vector(upper)
+        self._lower = pints.as_vector(lower)
+        self._upper = pints.as_vector(upper)
 
         # Get and check dimension    
         self._dimension = len(self._lower)
@@ -108,14 +108,14 @@ class SingleSeriesProblem(object):
         self._dimension = model.dimension()
 
         # Check times, copy so that they can no longer be changed
-        self._times = pints.vector(times)
+        self._times = pints.as_vector(times)
         if np.any(self._times < 0):
             raise ValueError('Times cannot be negative.')
         if np.any(self._times[:-1] > self._times[1:]):
             raise ValueError('Times must be non-decreasing.')
 
         # Check values, copy so that they can no longer be changed
-        self._values = pints.vector(values)
+        self._values = pints.as_vector(values)
         if len(self._times) != len(self._values):
             raise ValueError('Times and values arrays must have same length.')
     
@@ -126,7 +126,7 @@ class SingleSeriesProblem(object):
         """
         return self._model.simulate(parameters, self._times)
         
-def vector(x, copy=True):
+def as_vector(x, copy=True):
     """
     Returns ``x`` as a 1d numpy array of floats with shape `(n,)`.
     Raises a `ValueError` if `x` has an incompatible shape.

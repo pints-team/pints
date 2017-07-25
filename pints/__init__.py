@@ -19,7 +19,7 @@ FLOAT_FORMAT = '{:< 1.17e}'
 # Core classes and methods
 #
 from _core import ForwardModel, Boundaries, SingleSeriesProblem
-from _core import vector
+from _core import as_vector
 
 #
 # Utility classes and methods
@@ -42,6 +42,7 @@ from _evaluation import evaluate
 # Optimisation
 #
 from _optimisation import Optimiser, TriangleWaveTransform
+from _cmaes import CMAES, cmaes
 from _xnes import XNES, xnes
 
 #

@@ -22,9 +22,15 @@ score = pints.SumOfSquaresError(problem)
 # Select some boundaries
 boundaries = pints.Boundaries([0, 400], [0.03, 600])
 
-# Perform an optimization with boundaries and a hint
-hint = 0.015, 500
-found_parameters, found_solution = pints.xnes(score, boundaries, hint)
+# Perform an optimization with boundaries and hints
+x0 = 0.015, 500
+sigma0 = [0.0001, 0.01]
+found_parameters, found_solution = pints.cmaes(
+    score,
+    boundaries,
+    x0,
+    sigma0,
+    )
 
 print('Score at true solution: ')
 print(score(real_parameters))
