@@ -91,8 +91,8 @@ class XNES(pints.Optimiser):
         # Use hint to guess at parameter scaling
         # If no hint is given, a hint may have been set based on user given
         # boundaries, if they're not given, it'll simply be zero
-        if np.sum(np.abs(self._hint)) > 1e-11: # not zero
-            A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
+        #if np.sum(np.abs(self._hint)) > 1e-11: # not zero
+        #    A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
         
         # Identity matrix for later use
         I = np.eye(d)
