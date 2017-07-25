@@ -31,7 +31,6 @@ class XNES(pints.Optimiser):
 
         # Default search parameters
         parallel = True
-        verbose = True
         
         # Search is terminated after max_iter iterations
         max_iter = 10000
@@ -53,7 +52,7 @@ class XNES(pints.Optimiser):
 
         # Set up progress reporting in verbose mode
         nextMessage = 0
-        if verbose:
+        if self._verbose:
             if parallel:
                 print('Running in parallel mode with population size '
                     + str(n))
@@ -85,14 +84,23 @@ class XNES(pints.Optimiser):
         # Center of distribution
         mu = self._hint
 
-        # Square root of covariance matrix
+        # Guess initial square root of covariance matrix
         A = np.eye(d)
         
-        # Use hint to guess at parameter scaling
-        # If no hint is given, a hint may have been set based on user given
-        # boundaries, if they're not given, it'll simply be zero
-        #if np.sum(np.abs(self._hint)) > 1e-11: # not zero
-        #    A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
+        # Improve guess of covariance using boundaries or hint
+        if self._boundaries:
+            A *= (self._boundaries._upper - self._boundaries._lower) / 6.0
+        else:
+            # Use hint to guess at parameter scaling
+            # If no hint is given, a hint may have been set based on user given
+            # boundaries, if they're not given, it'll simply be zero
+            if np.sum(np.abs(self._hint)) > 1e-11: # not zero
+                A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
+        
+        # Show initial guess of square of covariance
+        if self._verbose:
+            print('Initial guess for square of covariance matrix:')
+            print(A)
         
         # Identity matrix for later use
         I = np.eye(d)
@@ -137,7 +145,7 @@ class XNES(pints.Optimiser):
                 unchanged_iterations += 1
             
             # Show progress in verbose mode:
-            if verbose and iteration >= nextMessage:
+            if self._verbose and iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fbest))
                 if iteration < 3:
                     nextMessage = iteration + 1
@@ -146,7 +154,7 @@ class XNES(pints.Optimiser):
             
             # Stop if no change for too long
             if unchanged_iterations >= max_unchanged_iterations:
-                if verbose:
+                if self._verbose:
                     print('Halting: No significant change for '
                         + str(unchanged_iterations) + ' iterations.')
                 break
@@ -156,19 +164,19 @@ class XNES(pints.Optimiser):
             A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
             
         # Show stopping criterion
-        if verbose and unchanged_iterations < max_unchanged_iterations:
+        if self._verbose and unchanged_iterations < max_unchanged_iterations:
             print('Halting: Maximum iterations reached.')
         
         # Get final score at mu
         fmu = self._function(xtransform(mu))
         if fmu < fbest:
-            if verbose:
+            if self._verbose:
                 print('Final score at mu beats best sample')
             xbest = mu
             fbest = fmu
         
         # Show final value
-        if verbose:
+        if self._verbose:
             print(str(iteration) + ': ' + str(fbest))
         
         # Return best solution
