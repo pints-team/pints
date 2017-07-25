@@ -125,7 +125,21 @@ class TriangleWaveTransform(object):
     Transforms from unbounded to bounded parameter space using a periodic
     triangle-wave transform.
     
-    Can be applied to single values or arrays of values.
+    Note: The transform is applied _inside_ optimisation methods, there is no
+    need to wrap this around your own problem or score function.
+
+    This can be applied as a transformation on ``x`` to implement boundaries in
+    methods with no natural boundary mechanism. It effectively mirrors the
+    search space at every boundary, leading to a continuous (but non-smooth)
+    periodic landscape. While this effectively creates an infinite number of
+    minima/maxima, each one maps to the same point in parameter space.
+    
+    It should work well for that maintain a single search position or a single
+    search distribution (e.g. CMA-ES, xNES, SNES), which will end up in one of
+    the many mirror images. However, for methods that use independent search
+    particles (e.g. PSO) it could lead to a scattered population, with
+    different particles exploring different mirror images. Other strategies
+    should be used for such problems.
     """
     def __init__(self, boundaries):
         self._lower = boundaries._lower
@@ -133,11 +147,31 @@ class TriangleWaveTransform(object):
         self._range = self._upper - self._lower
         self._range2 = 2 * self._range
 
-    def __call__(self, x, *args):
+    def __call__(self, x):
         y = np.remainder(x - self._lower, self._range2)
         z = np.remainder(y, self._range)
         return ((self._lower + z) * (y < self._range)
             + (self._upper - z) * (y >= self._range))
 
+class InfBoundaryTransform(object):
+    """
+    Wraps around score functions and returns `NaN` whenever an evaluation is
+    requested for a parameter set that's out of bounds.
+    
+    Note: The transform is applied _inside_ optimisation methods, there is no
+    need to wrap this around your own problem or score function.
+    
+    This method should work well for optimisers that only require a ranking of
+    positions (x1 > x2 > x3 etc.), e.g. PSO.
+    """
+    def __init__(self, function, boundaries):
+        self._function = function
+        self._lower = boundaries._lower
+        self._upper = boundaries._upper
 
+    def __call__(self, x, *args):
+        if np.any(x < self._lower) or np.any(x > self._upper):
+            return float('inf')
+        return self._function(x, *args)
+        
 
