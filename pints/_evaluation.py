@@ -7,6 +7,8 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+# Some code in this file was adapted from Myokit (see http://myokit.org)
+#
 from __future__ import division
 from __future__ import print_function
 import gc
