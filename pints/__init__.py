@@ -43,10 +43,14 @@ from _evaluation import evaluate
 #
 from _optimisation import Optimiser
 from _optimisation import TriangleWaveTransform, InfBoundaryTransform
-from _cmaes import CMAES, cmaes
-from _pso import PSO, pso
-from _snes import SNES, snes
-from _xnes import XNES, xnes
+from _optimisers._cmaes import CMAES, cmaes
+from _optimisers._pso import PSO, pso
+from _optimisers._snes import SNES, snes
+from _optimisers._xnes import XNES, xnes
+
+# MCMC
+# Parameter space exploration
+# Visualisation
 
 #
 #TODO
