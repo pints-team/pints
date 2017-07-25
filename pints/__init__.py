@@ -43,6 +43,7 @@ from _evaluation import evaluate
 #
 from _optimisation import Optimiser, TriangleWaveTransform
 from _cmaes import CMAES, cmaes
+from _snes import SNES, snes
 from _xnes import XNES, xnes
 
 #
