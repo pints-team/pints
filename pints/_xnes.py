@@ -6,6 +6,8 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+# Some code in this file was adapted from Myokit (see http://myokit.org)
+#
 import pints
 import numpy as np
 import scipy
@@ -82,25 +84,10 @@ class XNES(pints.Optimiser):
         us -= 1/n
 
         # Center of distribution
-        mu = self._hint
+        mu = self._x0
 
-        # Guess initial square root of covariance matrix
-        A = np.eye(d)
-        
-        # Improve guess of covariance using boundaries or hint
-        if self._boundaries:
-            A *= (self._boundaries._upper - self._boundaries._lower) / 6.0
-        else:
-            # Use hint to guess at parameter scaling
-            # If no hint is given, a hint may have been set based on user given
-            # boundaries, if they're not given, it'll simply be zero
-            if np.sum(np.abs(self._hint)) > 1e-11: # not zero
-                A *= np.abs(self._hint) / np.sum(np.abs(self._hint))
-        
-        # Show initial guess of square of covariance
-        if self._verbose:
-            print('Initial guess for square of covariance matrix:')
-            print(A)
+        # Initial square root of covariance matrix
+        A = np.eye(d) * self._sigma0
         
         # Identity matrix for later use
         I = np.eye(d)
@@ -182,9 +169,9 @@ class XNES(pints.Optimiser):
         # Return best solution
         return xtransform(xbest), fbest
 
-def xnes(function, boundaries=None, hint=None):
+def xnes(function, boundaries=None, x0=None, sigma0=None):
     """
     Runs an XNES optimisation with the default settings.
     """
-    return XNES(function, boundaries, hint).run() 
+    return XNES(function, boundaries, x0, sigma0).run() 
 

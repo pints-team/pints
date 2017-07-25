@@ -6,6 +6,9 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+# Some code in this file was adapted from Myokit (see http://myokit.org)
+#
+from __future__ import division
 import pints
 import numpy as np
 
@@ -21,11 +24,19 @@ class Optimiser(object):
         space.
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
-    ``hint=None``
-        An optional starting point for searches in the parameter space.
+    ``x0=None``
+        An optional starting point for searches in the parameter space. This
+        value may be used directly (for example as the initial position of a
+        particle in :class:`PSO`) or indirectly (for example as the center of
+        a distribution in :class:`XNES`).
+    ``sigma0=None``
+        An optional initial standard deviation around ``x0``. Can be specified
+        either as a scalar value (one standard deviation for all coordinates)
+        or as an array with one entry per dimension. Not all methods will use
+        this information.
     
     """
-    def __init__(self, function, boundaries=None, hint=None):
+    def __init__(self, function, boundaries=None, x0=None, sigma0=None):
         
         # Store function
         self._function = function
@@ -38,23 +49,54 @@ class Optimiser(object):
                 raise ValueError('Boundaries must have same dimension as'
                     ' function.')
         
-        # Check hint
-        if hint is None:
+        # Check initial solution
+        if x0 is None:
             # Use value in middle of search space
             if self._boundaries is None:
-                self._hint = np.zeros(self._dimension)
+                self._x0 = np.zeros(self._dimension)
             else:
-                self._hint = 0.5 * (self._boundaries._lower
+                self._x0 = 0.5 * (self._boundaries._lower
                     + self._boundaries._upper)
         else:
             # Check given value
-            self._hint = pints.vector(hint)
-            if len(self._hint) != self._dimension:
-                raise ValueError('Hint must have same dimension as'
+            self._x0 = pints.as_vector(x0)
+            if len(self._x0) != self._dimension:
+                raise ValueError('Initial position must have same dimension as'
                     ' function.')
             if self._boundaries is not None:
-                if not self._boundaries.check(hint):
-                    raise ValueError('Hint must lie within given boundaries.')
+                if not self._boundaries.check(self._x0):
+                    raise ValueError('Initial position must lie within given'
+                        ' boundaries.')
+        
+        # Check initial standard deviation
+        if sigma0 is None:
+            if self._boundaries:
+                # Use boundaries to guess 
+                self._sigma0 = (1 / 6.0) * (
+                    self._boundaries._upper - self._boundaries._lower)
+            else:
+                # Use initial position to guess at parameter scaling
+                self._sigma0 = (1 / 3.0) * np.abs(self._x0)
+                # But add 1 for any initial value that's zero
+                self._sigma0 += (self._sigma0 == 0)
+        
+        elif np.isscalar(sigma0):
+            # Single number given, convert to vector
+            sigma0 = float(sigma0)
+            if sigma0 <= 0:
+                raise ValueError('Initial standard deviation must be greater'
+                    ' than zero.')
+            self._sigma0 = np.ones(self._dimension) * sigma0
+        
+        else:
+            # Vector given
+            self._sigma0 = pints.as_vector(sigma0)
+            if len(self._sigma0) != self._dimension:
+                raise ValueError('Initial standard deviation must be None,'
+                    ' scalar, or have same dimension as function.')
+            if np.any(self._sigma0 <= 0):
+                raise ValueError('Initial standard deviations must be greater'
+                    ' than zero.')
         
         # Print info to console
         self._verbose = True
