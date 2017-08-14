@@ -60,10 +60,10 @@ class ECTimeData:
 
         self.current = self.current / model.I0
         self.time = self.time / model.T0
-        self.distance_scale = np.linalg.norm(self.current)
+        #self.distance_scale = np.linalg.norm(self.current)
 
         print '\tAfter downsampling, have ',len(self.time),' data points'
 
-    def log_likelihood(self,current,noise_variance):
-        diff = current-self.current
-        return -(0.5/noise_variance)*np.inner(diff,diff)
+    #def log_likelihood(self,current,noise_variance):
+    #    diff = current-self.current
+    #    return -(0.5/noise_variance)*np.inner(diff,diff)

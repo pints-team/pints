@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+#
+# File to muck about in
+#
+import os
+import sys
+import numpy as np
+
+# Add paths
+ROOT = os.path.abspath(os.path.dirname(__file__))
+PINTS = os.path.abspath(os.path.join(ROOT, '..', '..'))
+BUILD = os.path.join(ROOT, 'build')
+for path in [PINTS, BUILD]:
+    if path not in sys.path:
+        sys.path.append(path)
+
+import pints
+import electrochemistry
+
+DEFAULT = {
+    'reversed': True,
+    'Estart': 0.5,
+    'Ereverse': -0.1,
+    'omega': 9.0152,
+    'phase': 0,
+    'dE': 0.08,
+    'v': -0.08941,
+    't_0': 0.001,
+    'T': 297.0,
+    'a': 0.07,
+    'c_inf': 1*1e-3*1e-3,
+    'D': 7.2e-6,
+    'Ru': 8.0,
+    'Cdl': 20.0*1e-6,
+    'E0': 0.214,
+    'k0': 0.0101,
+    'alpha': 0.53,
+    }
+
+# Define wrapper around echem model
+class Model(pints.ForwardModel):
+    def __init__(self):
+        self._model = electrochemistry.ECModel(DEFAULT)
+        self._parameters = ['E0', 'k0', 'Cdl']
+    def dimension(self):
+        return len(self._parameters)
+    def simulate(self, parameters, times):
+        self._model.set_params_from_vector(parameters,
+            self._parameters)
+        
+        current, t = self._model.simulate(use_times = times)
+        return current
+
+# Create some toy data
+ecmodel = electrochemistry.ECModel(DEFAULT)
+values, times = ecmodel.simulate()
+
+# Create forward model
+model = Model()
+
+# Get real parameter values (non-dimensionalised)
+real = np.array([ecmodel.params[x] for x in model._parameters])
+
+# Set up problem
+problem = pints.SingleSeriesProblem(model, times, values)
+score = pints.SumOfSquaresError(problem)
+boundaries = pints.Boundaries(real*0.8, real*1.25)
+
+hint = real*0.99
+
+# Run optimisation
+found, fscore = pints.cmaes(score, boundaries, x0=hint)
+
+print('Best score:')
+print(fscore)
+
+print('Score at true solution: ')
+print(score(real))
+
+print('Found solution:          True parameters:' )
+for k, x in enumerate(found):
+    print(pints.strfloat(x) + '    ' + pints.strfloat(real[k]))
+
+
+
+
+
+
+
+
+
+
+
