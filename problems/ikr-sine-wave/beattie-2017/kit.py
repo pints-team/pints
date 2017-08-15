@@ -5,10 +5,10 @@ import os
 import sys
 import numpy as np
 sys.path.append(os.path.abspath(os.path.join('..', '..')))
-import pints
 sys.path.append(os.path.abspath(os.path.join('..', 'myokit')))
 import myokit
 import myokit.pacing as pacing
+from myokit.lib import fit
 
 model_file = os.path.realpath(os.path.join('..', 'models', 
     'beattie-2017-ikr.mmt'))
