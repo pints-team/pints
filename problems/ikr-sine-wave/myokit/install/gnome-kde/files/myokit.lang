@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Myokit .mmt language definition file
+
+	This file is part of Myokit
+	  Copyright 2011-2017 Maastricht University
+      michael@myokit.org
+
+    Myokit is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your
+    option) any later version.
+
+    Myokit is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    For a copy of the GNU General Public License,
+    see http://www.gnu.org/licenses/.
+
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	This file was based on the python language definition bundled with
+	 gtksourceview 3.0
+	The original copyright notice is given below:
+
+	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	 This file is part of GtkSourceView
+
+	 Author: Gustavo Giráldez <gustavo.giraldez@gmx.net>
+	 Copyright (C) 2003 Gustavo Giráldez <gustavo.giraldez@gmx.net>
+	 Copyright (C) 2004 Benoît Dejean <TaZForEver@free.fr>
+	 Copyright (C) 2006 Steve Frécinaux <nud@apinc.org>
+
+	 GtkSourceView is free software; you can redistribute it and/or
+	 modify it under the terms of the GNU Lesser General Public
+	 License as published by the Free Software Foundation; either
+	 version 2.1 of the License, or (at your option) any later version.
+
+	 GtkSourceView is distributed in the hope that it will be useful,
+	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	 Lesser General Public License for more details.
+
+	 You should have received a copy of the GNU Lesser General Public
+	 License along with this library; if not, write to the Free Software
+	 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+-->
+<language id="myokit" _name="Myokit" version="2.0" _section="Scientific">
+  <metadata>
+    <property name="mimetypes">text/x-myokit</property>
+    <property name="globs">*.mmt</property>
+    <property name="line-comment-start">#</property>
+  </metadata>
+
+  <styles>
+    <style id="string"            _name="String"                map-to="def:string"/>
+    <style id="floating-point"    _name="Floating point number" map-to="def:floating-point"/>
+    <style id="decimal"           _name="Decimal number"        map-to="def:decimal"/>
+    <style id="type"              _name="Type"                  map-to="def:type"/>
+    <style id="keyword"           _name="Keyword"               map-to="def:keyword"/>
+    <style id="keyword-weak"      _name="Keyword (weak)"        map-to="def:builtin"/>
+    <style id="conditional"       _name="Conditional"           map-to="def:builtin"/>
+    <style id="builtin-function"  _name="Builtin Function"      map-to="def:builtin"/>
+  </styles>
+
+  <definitions>
+
+	<context id="quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>"""</start>
+      <end>"""</end>
+    </context>
+
+    <context id="myokit" class="no-spell-check">
+      <include>
+        <context ref="def:shebang"/>
+        <context ref="def:shell-like-comment"/>
+
+        <context ref="quoted-string"/>
+
+        <define-regex id="float" extended="true">
+          ( (\d+)?\.\d+ | \d+\. ) |
+          ( (\d+|(\d+)?\.\d+|\d+\.)[eE][+-]?\d+ )
+        </define-regex>
+
+        <context id="float" style-ref="floating-point">
+          <match>(?&lt;![\w\.])\%{float}(?![\w\.])</match>
+        </context>
+
+        <context id="decimal" style-ref="decimal">
+          <match>(?&lt;![\w\.])([1-9][0-9]*|0)[lL]?(?![\w\.])</match>
+        </context>
+
+        <context id="keyword" style-ref="keyword">
+          <keyword>dot</keyword>
+        </context>
+
+        <context id="keyword-weak" style-ref="keyword-weak">
+          <keyword>bind</keyword>
+          <keyword>label</keyword>
+          <keyword>^use</keyword>
+          <keyword>as</keyword>
+          <keyword>and</keyword>
+          <keyword>if</keyword>
+          <keyword>not</keyword>
+          <keyword>or</keyword>
+        </context>
+
+        <context id="builtin-function" style-ref="builtin-function">
+          <prefix>(?&lt;![\w\.])</prefix>
+          <keyword>abs</keyword>
+          <keyword>acos</keyword>
+          <keyword>asin</keyword>
+          <keyword>atan</keyword>
+          <keyword>ceil</keyword>
+          <keyword>cos</keyword>
+          <keyword>exp</keyword>
+          <keyword>floor</keyword>
+          <keyword>log</keyword>
+          <keyword>log10</keyword>
+          <keyword>sin</keyword>
+          <keyword>sqrt</keyword>
+          <keyword>tan</keyword>
+        </context>
+      </include>
+    </context>
+  </definitions>
+</language>

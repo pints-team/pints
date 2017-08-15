@@ -1,0 +1,106 @@
+[[model]]
+name: DiVeroli2013aIKr
+author: Michael Clerx
+# Initial values
+ikr.IC = 0
+ikr.C = 1
+ikr.I = 0
+ikr.O = 0
+
+#
+# Simulation engine variables
+#
+[engine]
+time = 0 bind time
+pace = 0 bind pace
+
+#
+# Membrane potential
+#
+[membrane]
+V = engine.pace
+    desc: membane potential
+    in [mV]
+
+[nernst]
+EK = -85
+
+[ikr]
+use membrane.V
+dot(IC) = -IC * (a1 + b2) + C  * a2 + I * b1
+dot(C)  = -C  * (a1 + a2) + IC * b2 + O * b1
+dot(I)  = -I  * (b1 + b2) + IC * a1 + O * a2
+dot(O)  = -O  * (b1 + a2) + C  * a1 + I * b2
+a1 = p1  + p2  * exp(-((V - p3 ) / p4 )^2)
+b1 = p5  + p6  * exp(-((V - p7 ) / p8 )^2)
+a2 = p9  + p10 * exp(-((V - p11) / p12)^2)
+b2 = p13 + p14 * exp(-((V - p15) / p16)^2)
+g = p17
+IKr = g * O * (V - nernst.EK)
+p1 = 3.4e-5 [1/ms]
+p2 = 0.105 [1/ms]
+p3 = 70 [mV]
+p4 = 35.9 [mV]
+p5 = 2.55e-7 [1/ms]
+p6 = 0.0427 [1/ms]
+p7 = -145.3 [mV]
+p8 = 62.7 [mV]
+p9 = 0.127 [1/ms]
+p10 = 79 [1/ms]
+p11 = 470 [mV]
+p12 = 196 [mV]
+p13 = 8.97e-3 [1/ms]
+p14 = 63.9 [1/ms]
+p15 = -292 [mV]
+p16 = 102.2 [mV]
+p17 = 0.04 [mS/uF]
+
+[[script]]
+import myokit
+import myokit.pacing as pacing
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as pl
+
+#
+# Simple IKr test script
+#
+
+# Get model
+m = get_model()
+
+# Create pacing protocol
+v = np.arange(-100, 50 + 10, 10)
+p = pacing.steptrain(
+        vsteps=v,
+        vhold=-80,
+        tpre=2000,
+        tstep=5000,
+        tpost=3000)
+
+d = [
+    'engine.time',
+    'membrane.V',
+    'ikr.IKr',
+    ]
+
+# Run simulation
+s = myokit.Simulation(m, p)
+d = s.run(p.characteristic_time(), log=d)
+
+# Create colormap for plotting
+cmap = matplotlib.cm.get_cmap('viridis')
+norm = matplotlib.colors.Normalize(0, len(v))
+
+# Plot data as overlapping steps
+d2 = d.npview()
+d2 = d2.regularize(0.5)
+d2 = d2.fold(10000)
+pl.figure()
+for k in xrange(len(v)):
+    pl.subplot(2,1,1)
+    pl.plot(d2.time(), d2['membrane.V', k], color=cmap(norm(k)))
+    pl.subplot(2,1,2)
+    pl.plot(d2.time(), d2['ikr.IKr', k], color=cmap(norm(k)))
+pl.show()
+

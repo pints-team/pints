@@ -1,0 +1,110 @@
+[[model]]
+name: Fink2008IKr
+author: Michael Clerx
+# Initial values
+ikr.C3 = 0.99
+ikr.C2 = 0.01
+ikr.C1 = 0
+ikr.O = 0
+ikr.I = 0
+
+#
+# Simulation engine variables
+#
+[engine]
+time = 0 bind time
+pace = 0 bind pace
+
+#
+# Membrane potential
+#
+[membrane]
+V = engine.pace
+    desc: membane potential
+    in [mV]
+
+[nernst]
+EK = -85 [mV]
+
+[ikr]
+use membrane.V
+dot(C3) = -C3 * (a4     ) + C2 * b4
+dot(C2) = -C2 * (a3 + b4) + C1 * b3 + C3 * a4
+dot(C1) = -C1 * (a1 + b3) + O  * b1 + C2 * a3
+dot(O)  = -O  * (a2 + b1) + I  * b2 + C1 * a1
+dot(I)  = -I  * (     b2)           + O  * a2
+a1 = exp(p2 * V - p1)
+b1 = exp(p4 * V - p3)
+a2 = exp(p5)
+b2 = exp(p6)
+a3 = exp(p8 * V - p7) * (5.4/4)^0.4
+b3 = exp(p10 * V - p9)
+a4 = exp(p12 * V - p11)
+b4 = exp(p14 * V - p13)
+g = p15
+IKr = g * O * (V - nernst.EK)
+p1 = 5.1198 [1]
+p2 = 0.0383 [1/mV]
+p3 = 9.1843 [1]
+p4 = -0.0419 [1/mV]
+p5 = -4.4718 [1]
+p6 = -3.3043 [1]
+p7 = 2.4261 [1]
+p8 = 0.0234 [1/mV]
+p9 = 4.8546 [1]
+p10 = -0.0328 [1/mV]
+p11 = 2.8828 [1]
+p12 = 0.0118 [1/mV]
+p13 = 2.8093 [1]
+p14 = -0.0633 [1/mV]
+p15 = 0.04 [mS/uF]
+
+[[script]]
+import myokit
+import myokit.pacing as pacing
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as pl
+
+#
+# Simple IKr test script
+#
+
+# Get model
+m = get_model()
+
+# Create pacing protocol
+v = np.arange(-100, 50 + 10, 10)
+p = pacing.steptrain(
+        vsteps=v,
+        vhold=-80,
+        tpre=2000,
+        tstep=5000,
+        tpost=3000)
+
+d = [
+    'engine.time',
+    'membrane.V',
+    'ikr.IKr',
+    ]
+
+# Run simulation
+s = myokit.Simulation(m, p)
+d = s.run(p.characteristic_time(), log=d)
+
+# Create colormap for plotting
+cmap = matplotlib.cm.get_cmap('viridis')
+norm = matplotlib.colors.Normalize(0, len(v))
+
+# Plot data as overlapping steps
+d2 = d.npview()
+d2 = d2.regularize(0.5)
+d2 = d2.fold(10000)
+pl.figure()
+for k in xrange(len(v)):
+    pl.subplot(2,1,1)
+    pl.plot(d2.time(), d2['membrane.V', k], color=cmap(norm(k)))
+    pl.subplot(2,1,2)
+    pl.plot(d2.time(), d2['ikr.IKr', k], color=cmap(norm(k)))
+pl.show()
+

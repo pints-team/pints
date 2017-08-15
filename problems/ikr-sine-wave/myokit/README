@@ -1,0 +1,36 @@
+Myokit
+======
+
+Myokit is a free piece of software that facilitates modeling and simulation in
+cardiac cellular electrophysiology.
+
+For details and downloads, see http://myokit.org
+
+For the latests documentation, see http://docs.myokit.org
+
+Quick-start guide
+-----------------
+
+To quickly test if myokit is running, open a terminal or command window,
+navigate to the myokit directory and type
+
+    python myo run example
+    
+To open an IDE window, type
+
+    python myo
+    
+To see what else the "myo" script can do, type
+
+    python myo -h
+
+Adding icons etc.
+-----------------
+If you're a Gnome or KDE user, you may wish to install a Myokit icon to your
+menu, add the mime-type information for myokit mmt files or add syntax
+highlighting for gtksourceview (gedit). Scripts to do this are located in
+    
+    ./install/gnome-kde
+
+Windows users can install icons using the Myokit installer, available on
+ http://myokit.org
