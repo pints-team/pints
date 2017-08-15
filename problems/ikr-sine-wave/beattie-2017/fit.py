@@ -183,7 +183,7 @@ print(obtained_score)
 #
 # Show result
 #
-if sys.argv > 1 and sys.argv[1] == 'show':    
+if len(sys.argv) > 1 and sys.argv[1] == 'show':    
 
     # Simulate
     simulated = model.simulate(obtained_parameters, times)
