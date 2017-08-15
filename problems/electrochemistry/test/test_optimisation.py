@@ -25,7 +25,7 @@ DEFAULT = {
 
 class TestModel(unittest.TestCase):
 
-    def test_unwrapped(self):
+    def test_simulation(self):
         """
         Runs a simple simulation
         """
@@ -33,16 +33,17 @@ class TestModel(unittest.TestCase):
         # Create model
         model = electrochemistry.ECModel(DEFAULT)
         # Run simulation
-        values, times = model.simulate()
+        I,t = model.simulate()
         # Run simulation on specific time points
-        values2, times2 = model.simulate(use_times=times)
+        I2, t2 = model.simulate(use_times=t)
         
-        self.assertEqual(len(values), len(values2))
-        self.assertTrue(np.all(np.array(values) == np.array(values2)))
+        with open('./out.txt', 'w') as f:
+            for time in t:
+                f.write(str(time) + '\n')
 
-    def test_wrapper(self):
+    def fit(self, method):
         """
-        Wraps a `pints.ForwardModel` around a model.
+        Refits a model to its own data using the given method.
         """
         import pints
         import electrochemistry
@@ -74,4 +75,43 @@ class TestModel(unittest.TestCase):
         values2 = model.simulate(real, times)
         self.assertEqual(len(values), len(values2))
         self.assertTrue(np.all(np.array(values) == np.array(values2)))
+
+        # Set up problem
+        problem = pints.SingleSeriesProblem(model, times, values)
+        score = pints.SumOfSquaresError(problem)
+        boundaries = pints.Boundaries(real*0.95, real*1.05)
+        hint = real*0.99
         
+        # Run optimisation
+        x, f = method(score, boundaries, x0=hint)
+        
+        # Check result
+        self.assertLess(f, 1e-9)
+
+    def test_fit(self):
+        """
+        Runs an optimisation.
+        """
+        import pints
+        #self.fit(pints.cmaes)
+        #self.fit(pints.snes)
+        self.fit(pints.xnes)
+        #self.fit(pints.pso)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
