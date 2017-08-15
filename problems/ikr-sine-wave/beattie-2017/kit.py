@@ -165,7 +165,7 @@ for i in xrange(repeats):
         break
     elif method == 'show':
         # Get file to show
-        solution = 'last-solution.txt'
+        solution = 'last-solution-kit.txt'
         if len(sys.argv) > 2:
             solution = sys.argv[2]
         # Read last solution
@@ -237,7 +237,7 @@ for k, v in enumerate(x):
     print(myokit.strfloat(v))
 
 # Store solution
-with open('last-solution.txt', 'w') as f:
+with open('last-solution-kit.txt', 'w') as f:
     for k, v in enumerate(x):
         f.write(myokit.strfloat(v) + '\n')
 
