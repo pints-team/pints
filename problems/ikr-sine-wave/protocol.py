@@ -1,9 +1,14 @@
 #!/usr/bin/env python2
 from __future__ import division
 from __future__ import print_function
-import matplotlib.pyplot as pl
+import os
+import sys
 import numpy as np
+import matplotlib.pyplot as pl
+sys.path.append(os.path.abspath('myokit'))
 import myokit
+
+data_file = os.path.realpath(os.path.join('sine-wave-data', 'sine-wave.csv'))
 
 #
 # Uses Myokit/NumPy to recreate the protocol used in Kylie's paper
@@ -11,7 +16,7 @@ import myokit
 
 # Load real data
 # As created by output file...
-d = myokit.DataLog.load_csv('real-data.csv').npview()
+d = myokit.DataLog.load_csv(data_file).npview()
 t = d['time']
 vreal = d['voltage']
 del(d)
@@ -22,7 +27,6 @@ pl.subplot(3,1,1)
 pl.plot(t, vreal, label='real')
 
 # Create step data
-m = myokit.load_model('aslanidi-2009-ikr.mmt')
 p = myokit.Protocol()
 p.add_step(-80, 250)
 p.add_step(-120, 50)
