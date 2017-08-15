@@ -13,7 +13,7 @@ from myokit.lib import fit
 model_file = os.path.realpath(os.path.join('..', 'models', 
     'beattie-2017-ikr.mmt'))
 data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
-    'sine-wave.csv'))
+    'cell-5.csv'))
 
 #
 # Fit Kylie's model to real data
