@@ -150,11 +150,11 @@ for i in xrange(repeats):
             x, f = fit.snes(score, bounds, parallel=True, target=target,
                 hint=hint, verbose=20)
     elif method == 'hybrid':
-        nbest = 20
+        nbest = 3
         with np.errstate(all='ignore'):
             print('Running shallow PSO to get ' + str(nbest) + ' best')
             xs2, fs2 = fit.pso(score, bounds, n=96, parallel=True,
-                target=150, hints=hints, max_iter=500, verbose=20,
+                target=100, hints=hints, max_iter=500, verbose=20,
                 return_all=True)
             for i in xrange(nbest):
                 print('Running CMA-ES from pso point ' + str(1 + i))
