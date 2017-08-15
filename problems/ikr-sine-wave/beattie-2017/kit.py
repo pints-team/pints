@@ -132,8 +132,8 @@ for i in xrange(repeats):
     if method == 'pso':
         print('Running PSO')
         with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-            x, f = fit.pso(score, bounds, n=4, parallel=True,
-                hints=hints, max_iter=100, verbose=20)
+            x, f = fit.pso(score, bounds, n=96, parallel=True,
+                hints=hints, max_iter=1000, verbose=20)
     elif method == 'xnes':
         print('Running xNES')
         with np.errstate(all='ignore'):
@@ -150,11 +150,11 @@ for i in xrange(repeats):
             x, f = fit.snes(score, bounds, parallel=True, target=target,
                 hint=hint, verbose=20)
     elif method == 'hybrid':
-        nbest = 5
+        nbest = 20
         with np.errstate(all='ignore'):
             print('Running shallow PSO to get ' + str(nbest) + ' best')
             xs2, fs2 = fit.pso(score, bounds, n=96, parallel=True,
-                target=target, hints=hints, max_iter=500, verbose=20,
+                target=150, hints=hints, max_iter=500, verbose=20,
                 return_all=True)
             for i in xrange(nbest):
                 print('Running CMA-ES from pso point ' + str(1 + i))
