@@ -1,0 +1,91 @@
+[[model]]
+name: Aslanidi2009IKr
+author: Michael Clerx
+# Initial values
+ikr.xr = 0.07
+
+#
+# Simulation engine variables
+#
+[engine]
+time = 0 bind time
+pace = 0 bind pace
+
+#
+# Membrane potential
+#
+[membrane]
+V = engine.pace
+    desc: membane potential
+    in [mV]
+
+[nernst]
+EK = -85
+
+[ikr]
+use membrane.V
+g = p8
+IKr = g * xr * rr * (V - nernst.EK)
+    in [uA/uF]
+rr = 1 / (1 + exp((V + p6) / p7))
+dot(xr) = (inf - xr) / tau
+    tau = p1 / (1 + exp(V / p2)) + p3
+    inf = 1 / (1 + exp(-(V + p4) / p5))
+p1 = 900.0 [ms]
+p2 = 5.0 [mV]
+p3 = 100.0 [ms]
+p4 = 0.085 [mV]
+p5 = 12.25 [mV]
+p6 = -5.4 [mV]
+p7 = 20.4 [mV]
+p8 = 0.04 [mS/uF]
+
+[[script]]
+import myokit
+import myokit.pacing as pacing
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as pl
+
+#
+# Simple IKr test script
+#
+
+# Get model
+m = get_model()
+
+# Create pacing protocol
+v = np.arange(-100, 50 + 10, 10)
+p = pacing.steptrain(
+        vsteps=v,
+        vhold=-80,
+        tpre=2000,
+        tstep=5000,
+        tpost=3000)
+
+d = [
+    'engine.time',
+    'membrane.V',
+    'ikr.IKr',
+    ]
+
+# Run simulation
+s = myokit.Simulation(m, p)
+d = s.run(p.characteristic_time(), log=d)
+
+# Create colormap for plotting
+cmap = matplotlib.cm.get_cmap('viridis')
+norm = matplotlib.colors.Normalize(0, len(v))
+
+# Plot data as overlapping steps
+d2 = d.npview()
+d2 = d2.regularize(0.5)
+d2 = d2.fold(10000)
+pl.figure()
+for k in xrange(len(v)):
+    pl.subplot(2,1,1)
+    pl.plot(d2.time(), d2['membrane.V', k], color=cmap(norm(k)))
+    pl.subplot(2,1,2)
+    pl.plot(d2.time(), d2['ikr.IKr', k], color=cmap(norm(k)))
+pl.show()
+
