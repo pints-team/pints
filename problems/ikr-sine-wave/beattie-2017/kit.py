@@ -20,7 +20,7 @@ data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
 # 
 
 # Get optimization method from arguments
-methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid', '2part']
+methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid', 'show']
 method = ''
 if len(sys.argv) == 2:
     method = sys.argv[1]
@@ -163,6 +163,57 @@ for i in xrange(repeats):
                 xs.append(x)
                 fs.append(f)
         break
+    elif method == 'show':
+        # Get file to show
+        solution = 'last-solution.txt'
+        if len(sys.argv) > 2:
+            solution = sys.argv[2]
+        # Read last solution
+        with open(solution, 'r') as f:
+            print('Showing solution from: ' + solution)
+            lines = f.readlines()
+            if len(lines) < len(parameters):
+                print('Unable to read last solution, expected ' + str(len(parameters))
+                    + ' lines, only found ' + str(len(lines)))
+                sys.exit(1)
+            try:
+                solution = [float(x.strip()) for x in lines[:len(parameters)]]
+            except ValueError:
+                print('Unable to read last solution')
+                raise
+        # Show parameters    
+        print('Parameters:')
+        for k, v in enumerate(solution):
+            print(myokit.strfloat(v))
+        # Show score
+        print('Score: ' + str(score(solution)))
+        # Simulate
+        for i, name in enumerate(parameters):
+            simulation_pre.set_constant(name, solution[i])
+            simulation.set_constant(name, solution[i])
+        simulation_pre.reset()
+        simulation.reset()
+        simulation_pre.pre(10000)        
+        simulation.set_state(simulation_pre.state())        
+        d = ['engine.time', 'ikr.IKr', 'membrane.V']
+        d = simulation.run(duration, log=d, log_interval=0.1)
+        # Show plots
+        import matplotlib.pyplot as pl
+        pl.figure()
+        pl.subplot(2,1,1)
+        pl.xlabel('Time [ms]')
+        pl.ylabel('V [mV]')
+        pl.plot(real['time'], real['voltage'], label='real')
+        pl.plot(d.time(), d['membrane.V'], label='sim')
+        pl.legend(loc='lower right')
+        pl.subplot(2,1,2)
+        pl.xlabel('Time [ms]')
+        pl.plot(real['time'], real['current'], lw=1, label='real')
+        pl.plot(real['time'], d['ikr.IKr'], lw=1, label=model.name())
+        pl.plot(real['time'], fcap, label='filter')
+        pl.legend(loc='lower right')
+        pl.show()
+        sys.exit(0)        
     else:
         print('Unknown method: "' + str(method) + '"')
         sys.exit(1)
