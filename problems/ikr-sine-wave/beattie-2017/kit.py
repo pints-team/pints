@@ -154,7 +154,7 @@ for i in xrange(repeats):
         with np.errstate(all='ignore'):
             print('Running shallow PSO to get ' + str(nbest) + ' best')
             xs2, fs2 = fit.pso(score, bounds, n=96, parallel=True,
-                target=100, hints=hints, max_iter=500, verbose=20,
+                target=100, hints=hints, max_iter=1000, verbose=20,
                 return_all=True)
             for i in xrange(nbest):
                 print('Running CMA-ES from pso point ' + str(1 + i))
