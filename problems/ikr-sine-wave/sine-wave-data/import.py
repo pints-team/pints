@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import myokit
-import myokit.formats.axon
+import os
+import sys
 import numpy as np
 import scipy
 import scipy.io
 import matplotlib.pyplot as pl
+sys.path.append(os.path.join('..', 'myokit'))
+import myokit
+import myokit.formats.axon
 
 show_debug = True
 
@@ -41,6 +44,10 @@ del(mat)
 
 # Create times array, using dt=0.1ms
 time = np.arange(len(current)) * 0.1
+
+# Correct tiny shift in stored data (doubling final point)
+vm[:-1] = vm[1:]
+current[:-1] = current[1:]
 
 # Show data with capacitance artefacts
 if show_debug:
@@ -84,7 +91,7 @@ d = myokit.DataLog()
 d['time'] = time
 d['voltage'] = vm
 d['current'] = current
-d.save_csv('real-data.csv')
+d.save_csv('sine-wave.csv')
 
 
 # Show debug data
