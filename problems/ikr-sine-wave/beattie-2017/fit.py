@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import sys
 import numpy as np
-sys.path.append(os.path.abspath('../myokit/'))
+sys.path.append(os.path.abspath(os.path.join('..', 'myokit')))
 import myokit
 import myokit.pacing as pacing
 from myokit.lib import fit
@@ -19,7 +19,7 @@ data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
 # 
 
 # Get optimization method from arguments
-methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid']
+methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid', '2part']
 method = ''
 if len(sys.argv) == 2:
     method = sys.argv[1]
@@ -150,10 +150,10 @@ for i in xrange(repeats):
                 hint=hint, verbose=20)
     elif method == 'hybrid':
         nbest = 5
-        print('Running PSO to get ' + str(nbest) + ' best')
-        with np.errstate(all='ignore'): # Tell numpy not to issue warnings
+        with np.errstate(all='ignore'):
+            print('Running shallow PSO to get ' + str(nbest) + ' best')
             xs2, fs2 = fit.pso(score, bounds, n=96, parallel=True,
-                target=target, hints=hints, max_iter=2000, verbose=20,
+                target=target, hints=hints, max_iter=500, verbose=20,
                 return_all=True)
             for i in xrange(nbest):
                 print('Running CMA-ES from pso point ' + str(1 + i))
