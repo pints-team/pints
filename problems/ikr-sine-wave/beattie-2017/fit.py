@@ -23,7 +23,9 @@ data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
 #
 log = myokit.DataLog.load_csv(data_file).npview()
 times = log.time()
-values = log['current']
+current = log['current']
+voltage = log['voltage']
+del(log)
 
 #
 # Protocol info
@@ -45,7 +47,7 @@ steps = [
 # Create capacitance filter based on protocol
 #
 cap_duration = 1.5
-fcap = np.ones(len(values), dtype=int)
+fcap = np.ones(len(current), dtype=int)
 offset = 0
 for f, t in steps[:-1]:
     offset += t
@@ -56,7 +58,7 @@ for f, t in steps[:-1]:
 #
 # Apply capacitance filter to data
 #
-values = values * fcap
+current = current * fcap
 
 #
 # Create ForwardModel
@@ -123,7 +125,7 @@ model = Model()
 #
 # Define problem
 #
-problem = pints.SingleSeriesProblem(model, times, values)
+problem = pints.SingleSeriesProblem(model, times, current)
 
 #
 # Select a score function
@@ -138,16 +140,64 @@ upper = [1e-1] * 8 + [1e3]
 boundaries = pints.Boundaries(lower, upper)
 
 #
-# Run an optimisation
+# Run, or load earlier result
 #
-with np.errstate(all='ignore'): # Tell numpy not to issue warnings
-    obtained_parameters, obtained_score = pints.cmaes(
-        score,
-        boundaries,
-        )
+if len(sys.argv) > 1 and sys.argv[1] == 'show':
+    
+    #
+    # Load earlier result
+    #
+    filename = 'last-solution.txt'
+    if len(sys.argv) > 2:
+        filename = sys.argv[2]
+    with open(filename, 'r') as f:
+        obtained_parameters = [float(x) for x in f.readlines()]
+    obtained_score = score(obtained_parameters)
 
-print('Obtained parameters:' )
+else:
+    #
+    # Run an optimisation
+    #
+    with np.errstate(all='ignore'): # Tell numpy not to issue warnings
+        obtained_parameters, obtained_score = pints.cmaes(
+            score,
+            boundaries,
+            )
+
+    #
+    # Store result
+    #
+    with open('last-solution.txt', 'w') as f:
+        for x in obtained_parameters:
+            f.write(pints.strfloat(x) + '\n')
+
+#
+# Show obtained parameters and score
+#
+print('Obtained parameters:')
 for x in obtained_parameters:
     print(pints.strfloat(x))
+print('Final score:')
+print(obtained_score)
 
+#
+# Show result
+#
+if sys.argv > 1 and sys.argv[1] == 'show':    
+
+    # Simulate
+    simulated = model.simulate(obtained_parameters, times)
+
+    # Plot
+    import matplotlib.pyplot as pl
+    pl.figure()
+    pl.subplot(2,1,1)
+    pl.plot(times, voltage)
+    pl.subplot(2,1,2)
+    pl.plot(times, current, label='real')
+    pl.plot(times, simulated, label='fit')
+    pl.legend(loc='lower right')
+    pl.show()
+    
+    
 
