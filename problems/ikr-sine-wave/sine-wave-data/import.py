@@ -12,7 +12,7 @@ import myokit.formats.axon
 
 show_debug = True
 
-cell = 'cell-1'
+cell = 'cell-5'
 
 cells = {
     'cell-1': '16713003',
@@ -91,7 +91,7 @@ d = myokit.DataLog()
 d['time'] = time
 d['voltage'] = vm
 d['current'] = current
-d.save_csv('sine-wave.csv')
+d.save_csv(cell + '.csv')
 
 
 # Show debug data

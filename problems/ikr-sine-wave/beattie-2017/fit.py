@@ -15,8 +15,8 @@ import myokit.pacing as pacing
 
 model_file = os.path.realpath(os.path.join('..', 'models', 
     'beattie-2017-ikr.mmt'))
-data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
-    'sine-wave.csv'))
+data_file = os.path.realpath(os.path.join('..', 'sine-wave-data', 
+    'cell-5.csv'))
 
 #
 # Load data
