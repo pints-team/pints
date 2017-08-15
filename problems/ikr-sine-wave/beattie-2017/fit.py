@@ -19,7 +19,7 @@ data_file = os.path.realpath(os.path.join('..', 'sine-wave-data',
 # 
 
 # Get optimization method from arguments
-methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid', '2part']
+methods = ['cmaes', 'pso', 'snes', 'xnes', 'hybrid']
 method = ''
 if len(sys.argv) == 2:
     method = sys.argv[1]
@@ -149,11 +149,11 @@ for i in xrange(repeats):
             x, f = fit.snes(score, bounds, parallel=True, target=target,
                 hint=hint, verbose=20)
     elif method == 'hybrid':
-        nbest = 5
+        nbest = 3
         with np.errstate(all='ignore'):
             print('Running shallow PSO to get ' + str(nbest) + ' best')
             xs2, fs2 = fit.pso(score, bounds, n=96, parallel=True,
-                target=target, hints=hints, max_iter=500, verbose=20,
+                target=100, hints=hints, max_iter=500, verbose=20,
                 return_all=True)
             for i in xrange(nbest):
                 print('Running CMA-ES from pso point ' + str(1 + i))
