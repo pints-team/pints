@@ -86,7 +86,7 @@ class SNES(pints.Optimiser):
         us -= 1/n
 
         # Center of distribution
-        mu = self._x0
+        mu = np.array(self._x0, copy=True)
 
         # Initial square root of covariance matrix
         sigmas = np.array(self._sigma0, copy=True)
