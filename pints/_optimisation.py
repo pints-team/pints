@@ -45,7 +45,7 @@ class Optimiser(object):
         # Extract bounds
         self._boundaries = boundaries
         if self._boundaries is not None:
-            if self._boundaries._dimension != self._dimension:
+            if self._boundaries.dimension() != self._dimension:
                 raise ValueError('Boundaries must have same dimension as'
                     ' function.')
         
@@ -55,11 +55,12 @@ class Optimiser(object):
             if self._boundaries is None:
                 self._x0 = np.zeros(self._dimension)
             else:
-                self._x0 = 0.5 * (self._boundaries._lower
-                    + self._boundaries._upper)
+                self._x0 = 0.5 * (self._boundaries.lower()
+                    + self._boundaries.upper())
+            self._x0.setflags(write=False)
         else:
             # Check given value
-            self._x0 = pints.as_vector(x0)
+            self._x0 = pints.vector(x0)
             if len(self._x0) != self._dimension:
                 raise ValueError('Initial position must have same dimension as'
                     ' function.')
@@ -72,13 +73,13 @@ class Optimiser(object):
         if sigma0 is None:
             if self._boundaries:
                 # Use boundaries to guess 
-                self._sigma0 = (1 / 6.0) * (
-                    self._boundaries._upper - self._boundaries._lower)
+                self._sigma0 = (1 / 6.0) * self._boundaries.range()
             else:
                 # Use initial position to guess at parameter scaling
                 self._sigma0 = (1 / 3.0) * np.abs(self._x0)
                 # But add 1 for any initial value that's zero
                 self._sigma0 += (self._sigma0 == 0)
+            self._sigma0.setflags(write=False)
         
         elif np.isscalar(sigma0):
             # Single number given, convert to vector
@@ -87,10 +88,11 @@ class Optimiser(object):
                 raise ValueError('Initial standard deviation must be greater'
                     ' than zero.')
             self._sigma0 = np.ones(self._dimension) * sigma0
+            self._sigma0.setflags(write=False)
         
         else:
             # Vector given
-            self._sigma0 = pints.as_vector(sigma0)
+            self._sigma0 = pints.vector(sigma0)
             if len(self._sigma0) != self._dimension:
                 raise ValueError('Initial standard deviation must be None,'
                     ' scalar, or have same dimension as function.')
@@ -142,8 +144,8 @@ class TriangleWaveTransform(object):
     should be used for such problems.
     """
     def __init__(self, boundaries):
-        self._lower = boundaries._lower
-        self._upper = boundaries._upper
+        self._lower = boundaries.lower()
+        self._upper = boundaries.upper()
         self._range = self._upper - self._lower
         self._range2 = 2 * self._range
 
@@ -166,8 +168,8 @@ class InfBoundaryTransform(object):
     """
     def __init__(self, function, boundaries):
         self._function = function
-        self._lower = boundaries._lower
-        self._upper = boundaries._upper
+        self._lower = boundaries.lower()
+        self._upper = boundaries.upper()
 
     def __call__(self, x, *args):
         if np.any(x < self._lower) or np.any(x > self._upper):

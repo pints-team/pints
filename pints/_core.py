@@ -26,8 +26,8 @@ class Boundaries(object):
     def __init__(self, lower, upper):
     
         # Convert to shape (n,) vectors, copy to ensure they remain unchanged
-        self._lower = pints.as_vector(lower)
-        self._upper = pints.as_vector(upper)
+        self._lower = pints.vector(lower)
+        self._upper = pints.vector(upper)
 
         # Get and check dimension    
         self._dimension = len(self._lower)
@@ -44,6 +44,32 @@ class Boundaries(object):
         if np.any(parameters > self._upper):
             return False
         return True
+    
+    def dimension(self):
+        """
+        Returns the dimension of this set of boundaries.
+        """
+        return self._dimension
+        
+    def lower(self):
+        """
+        Returns the lower boundaries for all parameters (as a read-only NumPy
+        array).
+        """
+        return self._lower
+
+    def upper(self):
+        """
+        Returns the upper boundary for all parameters (as a read-only NumPy
+        array).
+        """
+        return self._upper
+    
+    def range(self):
+        """
+        Returns the size of the parameter space (i.e. `upper - lower`).
+        """
+        return self._upper - self._lower
 
 class ForwardModel(object):
     """
@@ -52,8 +78,6 @@ class ForwardModel(object):
     Classes extending `ForwardModel` can implement the required methods
     directly in Python or interface with other languages (for example via
     Python wrappers around C code).
-    
-    
     """
     
     def __init__(self):
@@ -107,17 +131,24 @@ class SingleSeriesProblem(object):
         self._model = model
         self._dimension = model.dimension()
 
-        # Check times, copy so that they can no longer be changed
-        self._times = pints.as_vector(times)
+        # Check times, copy so that they can no longer be changed and set them
+        # to read-only
+        self._times = pints.vector(times)
         if np.any(self._times < 0):
             raise ValueError('Times cannot be negative.')
         if np.any(self._times[:-1] > self._times[1:]):
             raise ValueError('Times must be non-decreasing.')
 
         # Check values, copy so that they can no longer be changed
-        self._values = pints.as_vector(values)
+        self._values = pints.vector(values)
         if len(self._times) != len(self._values):
             raise ValueError('Times and values arrays must have same length.')
+    
+    def dimension(self):
+        """
+        Returns the dimensions of this problem.
+        """
+        return self._dimension
     
     def evaluate(self, parameters):
         """
@@ -125,13 +156,27 @@ class SingleSeriesProblem(object):
         values.
         """
         return self._model.simulate(parameters, self._times)
+    
+    def times(self):
+        """
+        Returns this problem's times (as a read-only NumPy array).
+        """
+        return self._times
+    
+    def values(self):
+        """
+        Returns this problem's values (as a read-only NumPy array).
+        """
+        return self._values
         
-def as_vector(x, copy=True):
+def vector(x):
     """
-    Returns ``x`` as a 1d numpy array of floats with shape `(n,)`.
+    Copies ``x`` and returns a 1d read-only numpy array of floats with shape
+    `(n,)`.
     Raises a `ValueError` if `x` has an incompatible shape.
     """
-    x = np.array(x, copy=copy, dtype=float)
+    x = np.array(x, copy=True, dtype=float)
+    x.setflags(write=False)
     if x.ndim != 1:
         n = np.max(x.shape)
         if np.prod(x.shape) != n:
