@@ -19,7 +19,7 @@ FLOAT_FORMAT = '{:< 1.17e}'
 # Core classes and methods
 #
 from _core import ForwardModel, Boundaries, SingleSeriesProblem
-from _core import as_vector
+from _core import vector
 
 #
 # Utility classes and methods
@@ -55,8 +55,8 @@ from _optimisers._xnes import XNES, xnes
 #
 #TODO
 #
-from _mcmc import mcmc_with_adaptive_covariance
-from _mcmc import hierarchical_gibbs_sampler
-from _plot import scatter_grid,plot_trace,scatter_diagonal
-from _prior import Prior,Uniform,Normal
+#from _mcmc import mcmc_with_adaptive_covariance
+#from _mcmc import hierarchical_gibbs_sampler
+#from _plot import scatter_grid,plot_trace,scatter_diagonal
+#from _prior import Prior,Uniform,Normal
 

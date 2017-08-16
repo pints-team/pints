@@ -18,7 +18,7 @@ class MeasureOfFit():
     """
     def __init__(self, problem):
         self._problem = problem
-        self._dimension = problem._dimension
+        self._dimension = problem.dimension()
         
     def __call__(self, x):
         raise NotImplementedError
