@@ -92,7 +92,7 @@ acceptance_target = 0.25
 mu = np.copy(theta)
 
 n1 = 1000 * (1 + model.dimension())
-n2 = 10000 * (1 + model.dimension())
+n2 = 1000git st0 * (1 + model.dimension())
 
 for t in xrange(n1 + n2):
     # Guess new point
