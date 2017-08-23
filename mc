@@ -5,6 +5,8 @@ import pints.toy as toy
 import numpy as np
 import matplotlib.pyplot as pl
 
+np.random.seed(1)
+
 # Load a forward model
 model = toy.LogisticModel()
 
@@ -27,6 +29,9 @@ if False:
 # Create an object with links to the model and time series
 problem = pints.SingleSeriesProblem(model, times, values)
 
+# Create a log-likelihood function (adds an extra parameter!)
+log_likelihood = pints.GaussianLogLikelihood(problem)
+
 # Select some boundaries
 boundaries = pints.Boundaries([
     # Lower
@@ -41,130 +46,77 @@ boundaries = pints.Boundaries([
     ])
 
 # Create a prior
-cprior = 1.0 / np.product(boundaries.range())
-def prior(x):
-    return boundaries.check(x) * cprior
+prior = pints.UniformPrior(boundaries)
 
-# Create a log-likelihood function
-def log_likelihood(x):
-    error = values - model.simulate(x[:-1], times)
-    return -len(values) * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
-    
-if False:
-    pl.figure()
-    ip = 0
-    x = np.linspace(boundaries.lower()[ip], boundaries.upper()[ip], 100)
-    y = []
-    for xx in x:
-        p = np.copy(real_parameters)
-        p[ip] = xx
-        #y.append(np.exp(log_likelihood(p)))
-        y.append(log_likelihood(p))
-
-    pl.plot(x, y)
-    pl.show()
-
-
-# Run a simple adaptive mcmc 
+# Run a simple adaptive mcmc routine
 
 # Initial guess
+mu = real_parameters * 1.0  #TODO
+sigma = np.diag(mu * 0.01)
 
-theta = real_parameters * 1.0
-sigma = np.diag(boundaries.range() / 100)
+# Target acceptance rate
+acceptance_target = 0.25
 
-sigma = np.diag(np.abs(theta * 0.01))
+# Total number of iterations
+iterations = 2000 * prior.dimension()
 
-loga = 0
-t = 0
+# Number of iterations to use adaptation in
+adaptation = int(iterations / 2)
 
-current = theta
+# Number of iterations to discard as burn-in
+burn_in = int(iterations / 2)
+
+# Thinning: Store only one sample per X
+thinning = 1
+
+# First point
+current = mu
 current_likelihood = log_likelihood(current)
 
-# Empty chain
+# Chain of stored samples
 chain = []
 
 # Initial acceptance rate (value doesn't matter)
+loga = 0
 acceptance = 0
 
-# Acceptance target
-acceptance_target = 0.25
-
-mu = np.copy(theta)
-
-t_total = 2000 * (1 + model.dimension())
-t_adapt = t_total / 2 - 1
-
-for t in xrange(t_total):
+# Go!
+for i in xrange(iterations):
     # Propose new point
     proposed = np.random.multivariate_normal(current, np.exp(loga) * sigma)
     
     # Check if the point can be accepted
     accepted = 0.0
     if prior(proposed) > 0:
-        if np.all(proposed == current):
-            # Optimisation: Don't evaluate when proposal is same as current
-            # (this happens a lot!)
-            print('Equal points!')
+        # Accept based on likelihood estimate
+        proposed_likelihood = log_likelihood(proposed)
+        u = np.log(np.random.rand())
+        if u < proposed_likelihood - current_likelihood:
             accepted = 1.0
-        else:
-            # Accept based on likelihood estimate
-            proposed_likelihood = log_likelihood(proposed)
-            u = np.log(np.random.rand())
-            if u < proposed_likelihood - current_likelihood:
-                # Accept proposal
-                accepted = 1.0
-                current = proposed
-                current_likelihood = proposed_likelihood
+            current = proposed
+            current_likelihood = proposed_likelihood
     
     # Adapt covariance matrix
-    if t > t_adapt:
-        gamma = 1 / (t - t_adapt + 1) ** 0.6
+    if i > adaptation:
+        gamma = 1 / (i - adaptation + 1) ** 0.6
         dsigm = np.reshape(current - mu, (len(current), 1))
         sigma = (1 - gamma) * sigma + gamma * np.dot(dsigm, dsigm.T)
         mu = (1 - gamma) * mu + gamma * current
         loga += gamma * (accepted - acceptance_target)
 
     # Update acceptance rate
-    acceptance = (t * acceptance + accepted) / (t + 1)
+    acceptance = (i * acceptance + accepted) / (i + 1)
     
-    # Add point to chain (#TODO thinning)
-    chain.append(current)
+    # Add point to chain
+    if i > burn_in and i % thinning == 0:
+        chain.append(current)
 
-    if accepted:
-        print('Acceptance: ' + str(acceptance))
-        #print(theta)
-        #print(np.exp(loga))
-        #print(sigma)
+chain = np.array(chain)
 
-burn = 1000 * (1 + model.dimension())
-
-chain = np.array(chain[burn:])
-
-
+pl.figure()
 for i, real in enumerate(real_parameters):
-    pl.figure()
+    pl.subplot(len(real_parameters), 1, 1+i)
     pl.hist(chain[:,i], label='p' + str(i + 1), bins=40)
-    break
 pl.show()
 
-'''
-# Select a score function
-score = pints.SumOfSquaresError(problem)
 
-# Perform an optimization with boundaries and hints
-x0 = 0.015, 500
-sigma0 = [0.0001, 0.01]
-found_parameters, found_solution = pints.cmaes(
-    score,
-    boundaries,
-    x0,
-    sigma0,
-    )
-
-print('Score at true solution: ')
-print(score(real_parameters))
-
-print('Found solution:          True parameters:' )
-for k, x in enumerate(found_parameters):
-    print(pints.strfloat(x) + '    ' + pints.strfloat(real_parameters[k]))
-'''

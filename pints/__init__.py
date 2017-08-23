@@ -27,10 +27,18 @@ from _core import vector
 from _util import strfloat
 
 #
+# Prior distributions
+#
+from _prior import Prior, ComposedPrior
+from _prior import UniformPrior
+
+#
 # Scoring functions and likelihoods
 #
-from _score import MeasureOfFit
+from _score import ErrorMeasure
 from _score import SumOfSquaresError, RMSError
+from _score import LogLikelihood, LogLikelihoodBasedError
+from _score import GaussianLogLikelihood
 
 #
 # Parallel function evaluation
@@ -41,16 +49,13 @@ from _evaluation import evaluate
 #
 # Optimisation
 #
-from _optimisation import Optimiser
-from _optimisation import TriangleWaveTransform, InfBoundaryTransform
+from _optimisers import Optimiser
+from _optimisers import TriangleWaveTransform, InfBoundaryTransform
 from _optimisers._cmaes import CMAES, cmaes
 from _optimisers._pso import PSO, pso
 from _optimisers._snes import SNES, snes
 from _optimisers._xnes import XNES, xnes
 
-# MCMC
-# Parameter space exploration
-# Visualisation
 
 #
 #TODO
