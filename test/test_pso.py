@@ -52,6 +52,7 @@ class TestPSO(unittest.TestCase):
 
     def test_unbounded_no_hint(self):
         
+        np.random.seed(1)
         opt = pints.PSO(self.score)
         opt.set_verbose(debug)
         found_parameters, found_solution = opt.run()
@@ -59,6 +60,7 @@ class TestPSO(unittest.TestCase):
         
     def test_bounded_no_hint(self):
     
+        np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):        
@@ -69,6 +71,7 @@ class TestPSO(unittest.TestCase):
         
     def test_unbounded_with_hint(self):
     
+        np.random.seed(1)
         opt = pints.PSO(self.score, x0=self.x0)
         opt.set_verbose(debug)
         found_parameters, found_solution = opt.run()
@@ -76,6 +79,7 @@ class TestPSO(unittest.TestCase):
         
     def test_bounded_with_hint(self):
     
+        np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):        
@@ -86,6 +90,7 @@ class TestPSO(unittest.TestCase):
 
     def test_bounded_with_hint_and_sigma(self):
     
+        np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):        

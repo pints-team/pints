@@ -1,34 +1,30 @@
 #
-# Shared classes and methods for optimisers
+# Sub-module containing several MCMC inference routines
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-# Some code in this file was adapted from Myokit (see http://myokit.org)
-#
 from __future__ import division
 import pints
 import numpy as np
 
-class Optimiser(object):
+class MCMC(object):
     """
-    Takes a model and recorded data as input and attempts to find the model
-    parameters that best reproduce the recordings.
+    Takes a :class:`LogLikelihood` function and returns a large, representative
+    sample.
     
     Arguments:
     
     ``function``
-        A :class:`MeasureOfFit` function that evaluates points in the parameter
-        space.
-    ``boundaries=None``
-        An optional set of boundaries on the parameter space.
+        A :class:`LogLikelihood` function that evaluates points in the
+        parameter space.
     ``x0=None``
-        An optional starting point for searches in the parameter space. This
-        value may be used directly (for example as the initial position of a
-        particle in :class:`PSO`) or indirectly (for example as the center of
-        a distribution in :class:`XNES`).
+        An optional starting point for searches in the parameter space.
+        
+    #TODO
+        
     ``sigma0=None``
         An optional initial standard deviation around ``x0``. Can be specified
         either as a scalar value (one standard deviation for all coordinates)
@@ -37,10 +33,14 @@ class Optimiser(object):
     
     """
     def __init__(self, function, boundaries=None, x0=None, sigma0=None):
-        
+
         # Store function
-        self._function = function
-        self._dimension = function._dimension
+        # Likelihood function given? Then wrap an inverter around it
+        if isinstance(function, pints.LogLikelihood):
+            self._function = pints.LogLikelihoodBasedError(function)
+        else:
+            self._function = function
+        self._dimension = function.dimension()
         
         # Extract bounds
         self._boundaries = boundaries
@@ -175,5 +175,5 @@ class InfBoundaryTransform(object):
         if np.any(x < self._lower) or np.any(x > self._upper):
             return float('inf')
         return self._function(x, *args)
-        
+
 
