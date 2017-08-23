@@ -72,76 +72,79 @@ if False:
 theta = real_parameters * 1.0
 sigma = np.diag(boundaries.range() / 100)
 
-sigma = np.diag(np.abs(theta * 0.001))
+sigma = np.diag(np.abs(theta * 0.01))
 
 loga = 0
 t = 0
 
-last = theta
-ll_last = log_likelihood(last)
+current = theta
+current_likelihood = log_likelihood(current)
 
 # Empty chain
 chain = []
 
 # Initial acceptance rate (value doesn't matter)
-acceptance = 1
+acceptance = 0
 
 # Acceptance target
 acceptance_target = 0.25
 
 mu = np.copy(theta)
 
-n1 = 1000 * (1 + model.dimension())
-n2 = 1000git st0 * (1 + model.dimension())
+t_total = 2000 * (1 + model.dimension())
+t_adapt = t_total / 2 - 1
 
-for t in xrange(n1 + n2):
-    # Guess new point
-    next = np.random.multivariate_normal(theta, np.exp(loga) * sigma)
-    # Optimisation: Don't evaluate when prior is zero
+for t in xrange(t_total):
+    # Propose new point
+    proposed = np.random.multivariate_normal(current, np.exp(loga) * sigma)
+    
+    # Check if the point can be accepted
     accepted = 0.0
-    if prior(next) > 0:
-        # Optimisation: Don't evaluate when proposal is last point
-        # (this happens a lot!)
-        if np.all(next == last):
+    if prior(proposed) > 0:
+        if np.all(proposed == current):
+            # Optimisation: Don't evaluate when proposal is same as current
+            # (this happens a lot!)
+            print('Equal points!')
             accepted = 1.0
         else:
             # Accept based on likelihood estimate
-            ll_next = log_likelihood(next)
-            u = np.log(np.random.uniform())
-            if u < ll_next - ll_last:
+            proposed_likelihood = log_likelihood(proposed)
+            u = np.log(np.random.rand())
+            if u < proposed_likelihood - current_likelihood:
+                # Accept proposal
                 accepted = 1.0
-                # Move to new proposal
-                last = next
-                ll_last = ll_next
-    else:
-        next = last
+                current = proposed
+                current_likelihood = proposed_likelihood
+    
     # Adapt covariance matrix
-    if t > n1:
-        gamma = (t - n1 + 1) ** -0.6
-
-        dsigm = np.reshape(next - mu, (len(next), 1))
+    if t > t_adapt:
+        gamma = 1 / (t - t_adapt + 1) ** 0.6
+        dsigm = np.reshape(current - mu, (len(current), 1))
         sigma = (1 - gamma) * sigma + gamma * np.dot(dsigm, dsigm.T)
-        
-        mu = (1 - gamma) * mu + gamma * next
-        
+        mu = (1 - gamma) * mu + gamma * current
         loga += gamma * (accepted - acceptance_target)
-                
+
     # Update acceptance rate
     acceptance = (t * acceptance + accepted) / (t + 1)
+    
     # Add point to chain (#TODO thinning)
-    chain.append(next)
+    chain.append(current)
 
     if accepted:
         print('Acceptance: ' + str(acceptance))
+        #print(theta)
+        #print(np.exp(loga))
+        #print(sigma)
 
-burn = n1
+burn = 1000 * (1 + model.dimension())
 
 chain = np.array(chain[burn:])
 
 
 for i, real in enumerate(real_parameters):
     pl.figure()
-    pl.hist(chain[:,i], label='p' + str(i + 1), bins=60)
+    pl.hist(chain[:,i], label='p' + str(i + 1), bins=40)
+    break
 pl.show()
 
 '''
