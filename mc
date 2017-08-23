@@ -5,7 +5,7 @@ import pints.toy as toy
 import numpy as np
 import matplotlib.pyplot as pl
 
-np.random.seed(1)
+#np.random.seed(1)
 
 # Load a forward model
 model = toy.LogisticModel()
@@ -35,13 +35,13 @@ log_likelihood = pints.GaussianLogLikelihood(problem)
 # Select some boundaries
 boundaries = pints.Boundaries([
     # Lower
-    0.014,
-    490,
+    0.01,
+    400,
     noise*0.1,
     ], [
     # Upper
-    0.016,
-    510,
+    0.02,
+    600,
     noise*100,
     ])
 
@@ -51,14 +51,14 @@ prior = pints.UniformPrior(boundaries)
 # Run a simple adaptive mcmc routine
 
 # Initial guess
-mu = real_parameters * 1.0  #TODO
-sigma = np.diag(mu * 0.01)
+mu = np.array([0.013, 550, 70])
+sigma = np.diag(mu * 0.1)
 
 # Target acceptance rate
 acceptance_target = 0.25
 
 # Total number of iterations
-iterations = 2000 * prior.dimension()
+iterations = 2000 * prior.dimension() * 10
 
 # Number of iterations to use adaptation in
 adaptation = int(iterations / 2)
@@ -67,14 +67,15 @@ adaptation = int(iterations / 2)
 burn_in = int(iterations / 2)
 
 # Thinning: Store only one sample per X
-thinning = 1
+thinning = 10
 
 # First point
 current = mu
 current_likelihood = log_likelihood(current)
 
 # Chain of stored samples
-chain = []
+stored = int((iterations - burn_in) / thinning)
+chain = np.zeros((stored, prior.dimension()))
 
 # Initial acceptance rate (value doesn't matter)
 loga = 0
@@ -108,10 +109,9 @@ for i in xrange(iterations):
     acceptance = (i * acceptance + accepted) / (i + 1)
     
     # Add point to chain
-    if i > burn_in and i % thinning == 0:
-        chain.append(current)
-
-chain = np.array(chain)
+    ilog = i - burn_in
+    if ilog >= 0 and ilog % thinning == 0:
+        chain[ilog // thinning, :] = current
 
 pl.figure()
 for i, real in enumerate(real_parameters):
