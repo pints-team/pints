@@ -32,20 +32,26 @@ class XNES(pints.Optimiser):
     def run(self):
 
         # Default search parameters
+        #TODO Allow changing before run() with method call
         parallel = True
         
         # Search is terminated after max_iter iterations
+        #TODO Allow changing before run() with method call
         max_iter = 10000
 
         # Or if the result doesn't change significantly for a while
+        #TODO Allow changing before run() with method call
         max_unchanged_iterations = 100
+        #TODO Allow changing before run() with method call
         min_significant_change = 1e-11
+        #TODO Allow changing before run() with method call
         unchanged_iterations = 0
 
         # Parameter space dimension
         d = self._dimension
 
         # Population size
+        #TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         n = 4 + int(3 * np.log(d))
         if parallel:            
@@ -75,7 +81,9 @@ class XNES(pints.Optimiser):
             evaluator = pints.SequentialEvaluator(self._function)
 
         # Learning rates
+        #TODO Allow changing before run() with method call
         eta_mu = 1
+        #TODO Allow changing before run() with method call
         eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
 
         # Pre-calculated utilities

@@ -45,6 +45,12 @@ class Boundaries(object):
             return False
         return True
     
+    def center(self):
+        """
+        Returns a point in the center of the boundaries.
+        """
+        return self._lower + 0.5 * (self._upper - self._lower)
+    
     def dimension(self):
         """
         Returns the dimension of this set of boundaries.
