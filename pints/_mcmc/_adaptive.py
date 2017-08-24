@@ -17,15 +17,12 @@ import multiprocessing
 class AdaptiveCovarianceMCMC(pints.MCMC):
     """
     Creates a chain of samples from a target distribution, using the adaptive
-    covariance machine described in [1, 2].
+    covariance routine described in [1].
         
-    [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
-    evolution strategies.
-    Proceedings of the 12th annual conference on Genetic and evolutionary
-    computation
-    
-    [2] PyBrain: The Python machine learning library (http://pybrain.org)
-    
+    [1] Uncertainty and variability in models of the cardiac action potential:
+    Can we build trustworthy models?
+    Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
+    Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
     def run(self):
 
