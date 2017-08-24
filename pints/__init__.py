@@ -11,14 +11,23 @@
 #
 # Constants
 #
-VERSION_INT = 1,25,2
+VERSION_INT = 0,0,1
 VERSION = '.'.join([str(x) for x in VERSION_INT]); del(x)
 FLOAT_FORMAT = '{:< 1.17e}'
 
 #
+# Expose pints version
+#
+def version(formatted=False):
+    if formatted:
+        return 'Pints ' + VERSION
+    else:
+        return VERSION_INT
+
+#
 # Core classes and methods
 #
-from _core import ForwardModel, Boundaries, SingleSeriesProblem
+from _core import ForwardModel, SingleSeriesProblem
 from _core import vector
 
 #
@@ -27,18 +36,23 @@ from _core import vector
 from _util import strfloat
 
 #
-# Prior distributions
+# Boundaries and prior distributions
 #
+from _boundaries import Boundaries
 from _prior import Prior, ComposedPrior
 from _prior import UniformPrior
 
 #
-# Scoring functions and likelihoods
+# Log-likelihoods
 #
-from _score import ErrorMeasure
+from _log_likelihood import LogLikelihood, BayesianLogLikelihood
+from _log_likelihood import GaussianLogLikelihood
+
+#
+# Scoring functions
+#
+from _score import ErrorMeasure, LogLikelihoodBasedError
 from _score import SumOfSquaresError, RMSError
-from _score import LogLikelihood, LogLikelihoodBasedError
-from _score import GaussianLogLikelihood
 
 #
 # Parallel function evaluation
@@ -56,12 +70,15 @@ from _optimisers._pso import PSO, pso
 from _optimisers._snes import SNES, snes
 from _optimisers._xnes import XNES, xnes
 
+#
+# MCMC
+#
+from _mcmc import MCMC
+from _mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 
 #
 #TODO
 #
-#from _mcmc import mcmc_with_adaptive_covariance
 #from _mcmc import hierarchical_gibbs_sampler
 #from _plot import scatter_grid,plot_trace,scatter_diagonal
-#from _prior import Prior,Uniform,Normal
 
