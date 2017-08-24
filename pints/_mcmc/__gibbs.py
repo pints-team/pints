@@ -1,5 +1,5 @@
 #
-# Implements different forms of MCMC
+# Early code for MCMC
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.

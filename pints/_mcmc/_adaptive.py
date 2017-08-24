@@ -14,12 +14,10 @@ import scipy
 import scipy.linalg
 import multiprocessing
 
-class XNES(pints.Optimiser):
+class AdaptiveCovarianceMCMC(pints.MCMC):
     """
-    Finds the best parameters using the xNES method described in [1, 2].
-    
-    xNES stands for Exponential Natural Evolution Strategy, and is
-    designed for non-linear derivative-free optimization problems [1].
+    Creates a chain of samples from a target distribution, using the adaptive
+    covariance machine described in [1, 2].
         
     [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
     evolution strategies.
@@ -31,147 +29,90 @@ class XNES(pints.Optimiser):
     """
     def run(self):
 
-        # Default search parameters
-        parallel = True
+        # Target acceptance rate
+        acceptance_target = 0.25
+
+        # Total number of iterations
+        #TODO Allow changing before run() with method call
+        iterations = 2000 * self._dimension
+
+        # Number of iterations to use adaptation in
+        #TODO Allow changing before run() with method call
+        adaptation = int(iterations / 2)
+
+        # Number of iterations to discard as burn-in
+        #TODO Allow changing before run() with method call
+        burn_in = int(iterations / 2)
+
+        # Thinning: Store only one sample per X
+        #TODO Allow changing before run() with method call
+        thinning = 10
+
+        # Initial starting parameters
+        mu = self._x0
+        sigma = self._sigma0
+        current = self._x0
+        current_log_likelihood = self._log_likelihood(current)
+        if not np.isfinite(current_log_likelihood):
+            raise ValueError('Suggested starting position has a non-finite'
+                ' log-likelihood')
         
-        # Search is terminated after max_iter iterations
-        max_iter = 10000
-
-        # Or if the result doesn't change significantly for a while
-        max_unchanged_iterations = 100
-        min_significant_change = 1e-11
-        unchanged_iterations = 0
-
-        # Parameter space dimension
+        # Problem dimension
         d = self._dimension
 
-        # Population size
-        # If parallel, round up to a multiple of the reported number of cores
-        n = 4 + int(3 * np.log(d))
-        if parallel:            
-            cpu_count = multiprocessing.cpu_count()
-            n = (((n - 1) // cpu_count) + 1) * cpu_count
+        # Chain of stored samples
+        stored = int((iterations - burn_in) / thinning)
+        chain = np.zeros((stored, self._dimension))
 
-        # Set up progress reporting in verbose mode
-        nextMessage = 0
-        if self._verbose:
-            if parallel:
-                print('Running in parallel mode with population size '
-                    + str(n))
-            else:
-                print('Running in sequential mode with population size '
-                    + str(n))
+        # Initial acceptance rate (value doesn't matter)
+        loga = 0
+        acceptance = 0
 
-        # Apply wrapper to implement boundaries
-        if self._boundaries is None:
-            xtransform = lambda x: x
-        else:
-            xtransform = pints.TriangleWaveTransform(self._boundaries)
-
-        # Create evaluator object
-        if parallel:
-            evaluator = pints.ParallelEvaluator(self._function)
-        else:
-            evaluator = pints.SequentialEvaluator(self._function)
-
-        # Learning rates
-        eta_mu = 1
-        eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
-
-        # Pre-calculated utilities
-        us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
-        us /= np.sum(us)
-        us -= 1/n
-
-        # Center of distribution
-        mu = np.array(self._x0, copy=True)
-
-        # Initial square root of covariance matrix
-        A = np.eye(d) * self._sigma0
-        
-        # Identity matrix for later use
-        I = np.eye(d)
-
-        # Best solution found
-        xbest = mu
-        fbest = float('inf')
-
-        # Start running
-        for iteration in xrange(1, 1 + max_iter):
-        
-            # Create new samples
-            zs = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
-            xs = np.array([mu + np.dot(A, zs[i]) for i in xrange(n)])
+        # Go!
+        for i in xrange(iterations):
+            # Propose new point
+            # Note: Normal distribution is symmetric
+            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
+            #  distribution term from the acceptance criterion
+            proposed = np.random.multivariate_normal(current,
+                np.exp(loga) * sigma)
             
-            # Evaluate at the samples
-            fxs = evaluator.evaluate(xtransform(xs))
+            # Check if the point can be accepted
+            accepted = 0
+            proposed_log_likelihood = self._log_likelihood(proposed)
+            if np.isfinite(proposed_log_likelihood):
+                u = np.log(np.random.rand())
+                if u < proposed_log_likelihood - current_log_likelihood:
+                    accepted = 1
+                    current = proposed
+                    current_log_likelihood = proposed_log_likelihood
             
-            # Order the normalized samples according to the scores
-            order = np.argsort(fxs)
-            zs = zs[order]
-            
-            # Update center
-            Gd = np.dot(us, zs)
-            mu += eta_mu * np.dot(A,  Gd)
-            
-            # Update best if needed
-            if fxs[order[0]] < fbest:
-                
-                # Check if this counts as a significant change
-                fnew = fxs[order[0]]
-                if np.sum(np.abs(fnew - fbest)) < min_significant_change:
-                    unchanged_iterations += 1
-                else:
-                    unchanged_iterations = 0
-            
-                # Update best
-                xbest = xs[order[0]]
-                fbest = fnew
-                
-            else:
-                unchanged_iterations += 1
-            
-            # Show progress in verbose mode:
-            if self._verbose and iteration >= nextMessage:
-                print(str(iteration) + ': ' + str(fbest))
-                if iteration < 3:
-                    nextMessage = iteration + 1
-                else:
-                    nextMessage = 20 * (1 + iteration // 20)
-            
-            # Stop if no change for too long
-            if unchanged_iterations >= max_unchanged_iterations:
-                if self._verbose:
-                    print('Halting: No significant change for '
-                        + str(unchanged_iterations) + ' iterations.')
-                break
-            
-            # Update root of covariance matrix
-            Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
-            A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
-            
-        # Show stopping criterion
-        if self._verbose and unchanged_iterations < max_unchanged_iterations:
-            print('Halting: Maximum iterations reached.')
-        
-        # Get final score at mu
-        fmu = self._function(xtransform(mu))
-        if fmu < fbest:
-            if self._verbose:
-                print('Final score at mu beats best sample')
-            xbest = mu
-            fbest = fmu
-        
-        # Show final value
-        if self._verbose:
-            print(str(iteration) + ': ' + str(fbest))
-        
-        # Return best solution
-        return xtransform(xbest), fbest
+            # Adapt covariance matrix
+            if i > adaptation:
+                gamma = (i - adaptation + 1) ** -0.6
+                dsigm = np.reshape(current - mu, (d, 1))
+                sigma = (1 - gamma) * sigma + gamma * np.dot(dsigm, dsigm.T)
+                mu = (1 - gamma) * mu + gamma * current
+                loga += gamma * (accepted - acceptance_target)
 
-def xnes(function, boundaries=None, x0=None, sigma0=None):
+            # Update acceptance rate
+            acceptance = (i * acceptance + accepted) / (i + 1)
+            
+            # Add point to chain
+            ilog = i - burn_in
+            if ilog >= 0 and ilog % thinning == 0:
+                chain[ilog // thinning, :] = current
+
+        # Check that chain fully filled
+        if ilog < len(chain):
+            raise Exception('Unexpected error: Chain not fully generated.')
+
+        # Return generated chain
+        return chain
+
+def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
     """
-    Runs an XNES optimisation with the default settings.
+    Runs an adaptive covariance MCMC routine with the default parameters.
     """
-    return XNES(function, boundaries, x0, sigma0).run() 
+    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0).run() 
 
