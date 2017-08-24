@@ -59,8 +59,7 @@ class Optimiser(object):
             if self._boundaries is None:
                 self._x0 = np.zeros(self._dimension)
             else:
-                self._x0 = 0.5 * (self._boundaries.lower()
-                    + self._boundaries.upper())
+                self._x0 = self._boundaries.center()
             self._x0.setflags(write=False)
         else:
             # Check given value
