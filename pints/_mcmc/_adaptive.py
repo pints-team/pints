@@ -36,7 +36,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         #TODO Allow changing before run() with method call
         iterations = 2000 * self._dimension
 
-        # Number of iterations to use adaptation in
+        # Number of iterations before adapation
         #TODO Allow changing before run() with method call
         adaptation = int(iterations / 2)
 
@@ -46,7 +46,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Thinning: Store only one sample per X
         #TODO Allow changing before run() with method call
-        thinning = 10
+        thinning = 4
 
         # Initial starting parameters
         mu = self._x0
@@ -62,7 +62,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Chain of stored samples
         stored = int((iterations - burn_in) / thinning)
-        chain = np.zeros((stored, self._dimension))
+        chain = np.zeros((stored, d))
 
         # Initial acceptance rate (value doesn't matter)
         loga = 0
@@ -88,7 +88,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                     current_log_likelihood = proposed_log_likelihood
             
             # Adapt covariance matrix
-            if i > adaptation:
+            if i >= adaptation:
                 gamma = (i - adaptation + 1) ** -0.6
                 dsigm = np.reshape(current - mu, (d, 1))
                 sigma = (1 - gamma) * sigma + gamma * np.dot(dsigm, dsigm.T)
@@ -96,15 +96,22 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                 loga += gamma * (accepted - acceptance_target)
 
             # Update acceptance rate
-            acceptance = (i * acceptance + accepted) / (i + 1)
+            acceptance = (i * acceptance + float(accepted)) / (i + 1)
             
             # Add point to chain
             ilog = i - burn_in
             if ilog >= 0 and ilog % thinning == 0:
                 chain[ilog // thinning, :] = current
+            
+            # Report
+            if self._verbose and i % 50 == 0:
+                print('Iteration ' + str(i))
+                print('  In burn-in: ' + str(i >= burn_in))
+                print('  Adapting: ' + str(i >= adaptation))
+                print('  Acceptance rate: ' + pints.strfloat(acceptance))
 
         # Check that chain fully filled
-        if ilog < len(chain):
+        if ilog // thinning != len(chain) - 1:
             raise Exception('Unexpected error: Chain not fully generated.')
 
         # Return generated chain

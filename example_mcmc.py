@@ -36,7 +36,8 @@ prior = pints.UniformPrior(
 log_likelihood = pints.BayesianLogLikelihood(prior, log_likelihood)
 
 # Run a simple adaptive mcmc routine
-x0 = np.array([0.014, 450, 70])
+#x0 = np.array([0.014, 450, 70])
+x0 = np.array([0.015, 500, 50])
 sigma0 = x0 * 1e-2
 chain = pints.adaptive_covariance_mcmc(log_likelihood, x0, sigma0)
 
