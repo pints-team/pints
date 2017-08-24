@@ -102,10 +102,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             
             # Report
             if self._verbose and i % 50 == 0:
-                print('Iteration ' + str(i))
+                print('Iteration ' + str(i) + ' of ' + str(iterations))
                 print('  In burn-in: ' + str(i >= burn_in))
                 print('  Adapting: ' + str(i >= adaptation))
-                print('  Acceptance rate: ' + pints.strfloat(acceptance))
+                print('  Acceptance rate: ' + str(acceptance))
 
         # Check that chain fully filled
         if ilog // thinning != len(chain) - 1:
