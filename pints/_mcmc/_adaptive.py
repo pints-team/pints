@@ -35,11 +35,11 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Number of iterations before adapation
         #TODO Allow changing before run() with method call
-        adaptation = int(iterations / 2)
+        adaptation = int(iterations * 0.25)
 
         # Number of iterations to discard as burn-in
         #TODO Allow changing before run() with method call
-        burn_in = int(iterations / 2)
+        burn_in = int(iterations * 0.75)
 
         # Thinning: Store only one sample per X
         #TODO Allow changing before run() with method call
