@@ -26,7 +26,7 @@ noise_sample_std = np.std(values - org_values)
 problem = pints.SingleSeriesProblem(model, times, values)
 
 # Create a log-likelihood function (adds an extra parameter!)
-log_likelihood = pints.GaussianLogLikelihood(problem)
+log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
 
 # Create a uniform prior over both the parameters and the new noise variable
 prior = pints.UniformPrior(

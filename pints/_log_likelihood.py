@@ -69,16 +69,14 @@ class BayesianLogLikelihood(LogLikelihood):
         # Take log and add conditional log-likelihood
         return np.log(prior) + self._log_likelihood(x)
 
-class GaussianLogLikelihood(LogLikelihood):
+class KnownNoiseLogLikelihood(LogLikelihood):
     """
-    Calculates a log-likelihood based on the assumption of independent
-    normally-distributed noise at each time point.
-    
-    Adds a noise parameter 'sigma' representing the variance of the stochastic
-    noise.
+    Calculates a log-likelihood assuming independent normally-distributed noise
+    at each time point, using a known value for the standard deviation (sigma)
+    of that noise.
     """
     def __init__(self, problem):
-        super(GaussianLogLikelihood, self).__init__(problem)
+        super(UnknownNoiseLogLikelihood, self).__init__(problem)
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
@@ -87,4 +85,20 @@ class GaussianLogLikelihood(LogLikelihood):
         error = self._values - self._problem.evaluate(x[:-1])
         return -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
 
+
+class UnknownNoiseLogLikelihood(LogLikelihood):
+    """
+    Calculates a log-likelihood assuming independent normally-distributed noise
+    at each time point, and adds a parameter representing the standard
+    deviation (sigma) of that noise.
+    """
+    def __init__(self, problem):
+        super(UnknownNoiseLogLikelihood, self).__init__(problem)
+        # Add sneaky parameter to end of list!
+        self._dimension = problem.dimension() + 1
+        self._size = len(self._times)
+        
+    def __call__(self, x):
+        error = self._values - self._problem.evaluate(x[:-1])
+        return -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
     
