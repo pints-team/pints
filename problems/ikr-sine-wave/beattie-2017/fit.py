@@ -13,10 +13,54 @@ sys.path.append(os.path.abspath(os.path.join('..', 'myokit')))
 import myokit
 import myokit.pacing as pacing
 
+cell = 5
 model_file = os.path.realpath(os.path.join('..', 'models', 
     'beattie-2017-ikr.mmt'))
 data_file = os.path.realpath(os.path.join('..', 'sine-wave-data', 
-    'cell-5.csv'))
+    'cell-' + str(cell) + '.csv'))
+
+#
+# Cell temperature
+#
+temperatures = {
+    5 : 21.4,   # 16713110
+    }
+#if strcmp(exp_ref,'16708016')==1    temperature = 21.8;
+#if strcmp(exp_ref,'16708060')==1    temperature = 21.7;
+#if strcmp(exp_ref,'16704047')==1    temperature = 21.6;
+#if strcmp(exp_ref,'16704007')==1    temperature = 21.2;
+#if strcmp(exp_ref,'16713003')==1    temperature = 21.3;
+#if strcmp(exp_ref,'16715049')==1    temperature = 21.4;
+#if strcmp(exp_ref,'16707014')==1    temperature = 21.4;
+#if strcmp(exp_ref,'16708118')==1    temperature = 21.7;
+temperature = temperatures[cell]
+#TODO: Use temperature?
+
+#
+# Guesses for lower conductance
+#
+lower_conductances = {
+    5: 0.0612,  # 16713110
+    }
+#if strcmp(exp_ref,'16708118')==1    lower_conductance = 0.0170;
+#if strcmp(exp_ref,'16704047')==1    lower_conductance = 0.0434;
+#if strcmp(exp_ref,'16704007')==1    lower_conductance = 0.0886;
+#if strcmp(exp_ref,'16707014')==1    lower_conductance = 0.0203;
+#if strcmp(exp_ref,'16708060')==1    lower_conductance = 0.0305;
+#if strcmp(exp_ref,'16708016')==1    lower_conductance = 0.0417;
+#if strcmp(exp_ref,'16713003')==1    lower_conductance = 0.0478;
+#if strcmp(exp_ref,'16715049')==1    lower_conductance = 0.0255;
+#if strcmp(exp_ref,'average')==1     lower_conductance = 0.0410;
+lower_conductance = lower_conductances[cell]
+upper_conductance = 10 * lower_conductance
+
+#
+# Guesses for alpha/beta parameter bounds
+#
+lower_alpha = 1e-7
+upper_alpha = 1e0      #1e3
+lower_beta  = 1e-7
+upper_beta  = 0.4
 
 #
 # Load data
@@ -26,6 +70,11 @@ times = log.time()
 current = log['current']
 voltage = log['voltage']
 del(log)
+
+#
+# Estimate noise from start of data
+#
+sigma_noise = np.std(current[:2000])
 
 #
 # Protocol info
@@ -117,7 +166,7 @@ class Model(pints.ForwardModel):
                 log = ['ikr.IKr'],
                 ).npview()
         except myokit.SimulationError:
-            return float('nan')
+            return float('inf')
         # Apply capacitance filter and return
         return d['ikr.IKr'] * fcap
 model = Model()
@@ -135,8 +184,28 @@ score = pints.SumOfSquaresError(problem)
 #
 # Set up boundaries
 #
-lower = [1e-7] * 8 + [1e-5]
-upper = [1e-1] * 8 + [1e3]
+lower = [
+    lower_alpha,
+    lower_beta,
+    lower_alpha,
+    lower_beta,
+    lower_alpha,
+    lower_beta,
+    lower_alpha,
+    lower_beta,
+    lower_conductance,
+    ]
+upper = [
+    upper_alpha,
+    upper_beta,    
+    upper_alpha,
+    upper_beta,    
+    upper_alpha,
+    upper_beta,    
+    upper_alpha,
+    upper_beta,    
+    upper_conductance,
+    ]
 boundaries = pints.Boundaries(lower, upper)
 
 #
@@ -179,6 +248,13 @@ for x in obtained_parameters:
     print(pints.strfloat(x))
 print('Final score:')
 print(obtained_score)
+
+#
+# Show equivalent log-likelihood with estimated std of noise
+#
+log_likelihood = pints.KnownNoiseLogLikelihood(problem, sigma_noise)
+print('Sigma noise: ' + str(sigma_noise))
+print('Log-likelihood: ' + pints.strfloat(log_likelihood(obtained_parameters)))
 
 #
 # Show result

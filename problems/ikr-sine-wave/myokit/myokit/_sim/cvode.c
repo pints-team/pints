@@ -395,7 +395,7 @@ double tnext;
 
 // Checking for repeated zero size steps
 int zero_step_count;
-int max_zero_step_count = 50;   // Bit generous maybe, but alright :-)
+int max_zero_step_count = 500;   // Increased this from 50
 
 // CVode objects
 void *cvode_mem;     // The memory used by the solver

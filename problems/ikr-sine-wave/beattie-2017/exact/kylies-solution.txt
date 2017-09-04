@@ -3,7 +3,7 @@ Kylie's solution (see email 2017-09-03)
 
 Problem:
 Sine-wave protocol
-On cell 5, aka 16713110 (#5 in ranking, see paper supplement, page 10)
+On cell 5, aka 16713110 (#5 in ranking, see paper, page 10)
 
 Likelihood:
 -1.5106e+006
