@@ -75,16 +75,19 @@ class KnownNoiseLogLikelihood(LogLikelihood):
     at each time point, using a known value for the standard deviation (sigma)
     of that noise.
     """
-    def __init__(self, problem):
+    def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
-        # Add sneaky parameter to end of list!
-        self._dimension = problem.dimension() + 1
-        self._size = len(self._times)
+        # Check sigma
+        self._sigma = float(sigma)
+        if self._sigma <= 0:
+            raise ValueError('Standard deviation must be greater than zero.')
+        # Calculate parts
+        self._offset = -len(self._times) * np.log(self._sigma)
+        self._multip = -1 / float(2 * self._sigma**2)
         
     def __call__(self, x):
-        error = self._values - self._problem.evaluate(x[:-1])
-        return -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
-
+        error = self._values - self._problem.evaluate(x)
+        return self._offset + self._multip * np.sum(error**2)
 
 class UnknownNoiseLogLikelihood(LogLikelihood):
     """
