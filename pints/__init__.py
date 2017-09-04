@@ -46,7 +46,7 @@ from _prior import UniformPrior
 # Log-likelihoods
 #
 from _log_likelihood import LogLikelihood, BayesianLogLikelihood
-from _log_likelihood import GaussianLogLikelihood
+from _log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
 
 #
 # Scoring functions
