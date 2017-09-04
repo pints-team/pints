@@ -76,7 +76,7 @@ class KnownNoiseLogLikelihood(LogLikelihood):
     of that noise.
     """
     def __init__(self, problem):
-        super(UnknownNoiseLogLikelihood, self).__init__(problem)
+        super(KnownNoiseLogLikelihood, self).__init__(problem)
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
