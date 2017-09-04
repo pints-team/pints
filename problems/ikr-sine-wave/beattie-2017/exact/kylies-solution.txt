@@ -1,0 +1,21 @@
+Kylie's solution (see email 2017-09-03)
+=======================================
+
+Problem:
+Sine-wave protocol
+On cell 5, aka 16713110 (#5 in ranking, see paper supplement, page 10)
+
+Likelihood:
+-1.5106e+006
+
+Parameters:
+
+2.2603e-004,
+6.9917e-002,
+3.4481e-005,
+5.4614e-002,
+8.7324e-002,
+8.9130e-003,
+5.1511e-003,
+3.1583e-002,
+1.5240e-001
