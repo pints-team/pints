@@ -10,7 +10,7 @@ model = toy.LogisticModel()
 
 # Create some toy data
 real_parameters = [0.015, 500]
-times = np.linspace(0, 1000, 1000)
+times = np.linspace(0, 1000, 100000)
 org_values = model.simulate(real_parameters, times)
 
 # Add noise
@@ -44,7 +44,7 @@ chain = pints.adaptive_covariance_mcmc(log_likelihood, x0)
 # Plot input
 pl.figure()
 pl.plot(times, values)
-pl.plot(times, org_values, color='tab:green')
+pl.plot(times, org_values, color='green')
 
 # Plot log-likelihood function (noise causes bias!)
 pl.figure()
@@ -57,7 +57,7 @@ for i, p in enumerate(real_parameters):
         # Noise plot: special case
         # First, add a line showing the sample standard deviation of the
         # generated noise
-        pl.axvline(noise_sample_std, color='tab:orange', label='Sample std.')
+        pl.axvline(noise_sample_std, color='orange', label='Sample std.')
         # Next, choose a wide range of parameters so we can see the peak of the
         # log-likelihood curve
         xmin = min([p*0.95, noise_sample_std*0.95])
@@ -73,8 +73,8 @@ for i, p in enumerate(real_parameters):
     y = [log_likelihood(list(real_parameters[:i]) + [j]
         + list(real_parameters[1+i:])) for j in x]
     # Plot
-    pl.plot(x, y, color='tab:green', label='Log-likelihood')
-    pl.axvline(p, color='tab:blue', label='True value')
+    pl.plot(x, y, color='green', label='Log-likelihood')
+    pl.axvline(p, color='blue', label='True value')
     pl.legend()
 pl.tight_layout()
 
@@ -87,13 +87,13 @@ for i, real in enumerate(real_parameters):
     # Show true value
     pl.axvline(real)
     # Show histogram of chain
-    pl.hist(chain[:,i], label='p' + str(i + 1), bins=40, color='tab:green',
+    pl.hist(chain[:,i], label='p' + str(i + 1), bins=40, color='green',
         alpha=0.5)
     # Center plot around mean of chain
     mu = np.mean(chain[:,i])
     sigma = np.std(chain[:,i])
     pl.xlim(mu - 3 * sigma, mu + 3 * sigma)
-pl.axvline(noise_sample_std, color='tab:orange')
+pl.axvline(noise_sample_std, color='orange')
 pl.tight_layout()
 pl.show()
 
