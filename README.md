@@ -13,13 +13,12 @@ methods:
 ```
 dimension() --> Returns the dimension of the parameter space.
         
-simulate(parameters, times) --> Returns a vector of model evaluations
-  at the given times, using the given parameters
+simulate(parameters, times) --> Returns a vector of model evaluations at
+                                the given times, using the given parameters
 ```
 
 If your model implements these methods - or you can write a wrapper
-class that does - you can start using Pints for optimisation or mcmc
-inference methods!
+class that does - you can start using Pints for optimisation or MCMC.
 
 Examples are given in the `example_x.py` files, in the root of the
 project.
