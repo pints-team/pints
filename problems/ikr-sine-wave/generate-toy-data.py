@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import matplotlib.pyplot as pl
-import myokit
-import myokit.pacing as pacing
 import numpy as np
 import os
+import sys
+sys.path.append(os.path.abspath('myokit'))
+import myokit
+import myokit.pacing as pacing
 
 model_dir = os.path.abspath('models')
 write_dir = os.path.abspath('toy-data')
