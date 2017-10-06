@@ -1,3 +1,5 @@
+[![TravisCI](https://travis-ci.org/martinjrobins/pints.svg?branch=master)](https://travis-ci.org/martinjrobins/pints)
+
 # What is Pints?
 
 We are working on problems in the area of inverse modelling and baysian 
