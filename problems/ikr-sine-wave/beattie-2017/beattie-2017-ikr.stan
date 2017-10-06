@@ -1,20 +1,5 @@
-<?
-#
-# cell.stan :: This will become the stan model definition file
-#
-# This file is part of Myokit
-#  Copyright 2011-2017 Maastricht University
-#  Licensed under the GNU General Public License v3.0
-#  See: http://myokit.org
-#
-# Authors:
-#  Ben Lambert
-#  Michael Clerx
-#
-import myokit
-
-?>/**
- * Automatically generated model from: <?=model.name()?>
+/**
+ * Automatically generated model from: Beattie-2017-IKr
  */
 functions{
 
@@ -102,58 +87,50 @@ functions{
     
     // Get current pacing value
     real pace = get_pacing_value(time, xr, xi);
-<?
-tab = '  '
+    
+    // Parameters
+    real p1 = parameters[1];
+    real p2 = parameters[2];
+    real p3 = parameters[3];
+    real p4 = parameters[4];
+    real p5 = parameters[5];
+    real p6 = parameters[6];
+    real p7 = parameters[7];
+    real p8 = parameters[8];
+    
+    // Constants
+    // Component: nernst
+    real EK = -85.0;
+    // Component: ikr
+    real p9 = 0.1524;
+    real g = p9;
+    
+    // States
+    real open = state[1];
+    real active = state[2];
+    
+    // Calculate states
+    // Component: membrane
+    // membane potential
+    real V = pace;
+    // Component: ikr
+    real IKr = g * open * active * (V - EK);
+    real k1 = p1 * exp(p2 * V);
+    real k2 = p3 * exp(-p4 * V);
+    real ikr_open_tau = 1.0 / (k1 + k2);
+    real ikr_open_inf = k1 * ikr_open_tau;
+    real d_open = (ikr_open_inf - open) / ikr_open_tau;
+    real k4 = p7 * exp(-p8 * V);
+    real k3 = p5 * exp(p6 * V);
+    real ikr_active_tau = 1.0 / (k3 + k4);
+    real ikr_active_inf = k4 * ikr_active_tau;
+    real d_active = (ikr_active_inf - active) / ikr_active_tau;
+    
+    // Derivatives
+    real derivatives[2];
+    derivatives[1] = d_open;
+    derivatives[2] = d_active;
 
-print(2*tab)
-print(2*tab + '// Parameters')
-for k, var in enumerate(parameters):
-    print(2*tab + 'real ' + v(var) + ' = parameters[' + str(k + 1) + '];')
-
-print(2*tab)
-print(2*tab + '// Constants')
-for label, eq_list in equations.iteritems():
-    eqs = []
-    for eq in eq_list.equations(const=True, bound=False):
-        if eq.lhs.var() not in parameters:
-            eqs.append(eq)
-    if eqs:
-        print(2*tab + '// Component: ' + label)
-        for eq in eqs:
-            var = eq.lhs.var()
-            if 'desc' in var.meta:
-                print(2*tab + '// ' + '// '.join(
-                    str(var.meta['desc']).splitlines()))
-            print(2*tab + 'real ' + e(eq) + ';')
-
-print(2*tab)
-print(2*tab + '// States')    
-for k, var in enumerate(model.states()):
-    print(2*tab + 'real ' + v(var) + ' = state[' + str(k + 1) + '];')
-
-print(2*tab)
-print(2*tab + '// Calculate states')
-for label, eq_list in equations.iteritems():
-    eqs = []
-    for eq in eq_list.equations(const=False, bound=False):
-        if eq.lhs.var() not in parameters:
-            eqs.append(eq)
-    if eqs:
-        print(2*tab + '// Component: ' + label)
-        for eq in eqs:
-            var = eq.lhs.var()
-            if 'desc' in var.meta:
-                print(2*tab + '// ' + '// '.join(
-                    str(var.meta['desc']).splitlines()))
-            print(2*tab + 'real ' + e(eq) + ';')
-
-print(2*tab)
-print(2*tab + '// Derivatives')
-print(2*tab + 'real derivatives[' + str(model.count_states()) + '];')
-for k, var in enumerate(model.states()):
-    print(2*tab + 'derivatives[' + str(k + 1) + '] = ' + v(var.lhs()) + ';')
-
-?>
     return derivatives;
   }
   
@@ -181,24 +158,29 @@ transformed data {
 
 
 parameters{
-  //TODO: Add boundaries!
-<?
-for var in parameters:
-    unit = var.unit()
-    if unit is None:
-        unit = var.rhs().unit()
-    print(tab + 'real ' + v(var) + '; // ' + str(unit))
-?>
+  real<lower=1e-7,upper=1> p1; // [1/ms]
+  real<lower=1e-7,upper=1> p2; // [1/mV]
+  real<lower=1e-7,upper=1> p3; // [1/ms]
+  real<lower=1e-7,upper=1> p4; // [1/mV]
+  real<lower=1e-7,upper=1> p5; // [1/ms]
+  real<lower=1e-7,upper=1> p6; // [1/mV]
+  real<lower=1e-7,upper=1> p7; // [1/ms]
+  real<lower=1e-7,upper=1> p8; // [1/mV]
   real<lower=0,upper=1> X0;
   real<lower=0> sigma;
 }
 
 transformed parameters{
-  real theta[<?= len(parameters)?>];
-<?
-for k, var in enumerate(parameters):
-    print(tab + 'theta[' + str(k + 1) + '] = p' + str(k + 1) + ';')
-?>
+  real theta[8];
+  theta[1] = p1;
+  theta[2] = p2;
+  theta[3] = p3;
+  theta[4] = p4;
+  theta[5] = p5;
+  theta[6] = p6;
+  theta[7] = p7;
+  theta[8] = p8;
+
 }
 
 model{
