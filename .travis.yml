@@ -11,6 +11,9 @@ python:
 install:
   - pip install -r requirements.txt
 
+script:
+  - ./run-tests.sh
+
 notifications:
   email:
     recipients:
