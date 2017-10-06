@@ -1,10 +1,4 @@
 cma
-
-pystan
-
-seaborn 
-
 numpy
 matplotlib
 scipy
-
