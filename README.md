@@ -25,9 +25,14 @@ class that does - you can start using Pints for optimisation or MCMC.
 Examples are given in the `example_x.py` files, in the root of the
 project.
 
+## Requirements
+
+- Python 2.7
+- Python libraries: cma numpy matplotlib scipy
+
 ## Testing pints
 
-To run all tests, lone the repository, navigate to the pints directory
+To run all tests, clone the repository, navigate to the pints directory
 and type:
 
 ```
