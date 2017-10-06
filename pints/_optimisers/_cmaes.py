@@ -33,6 +33,12 @@ class CMAES(pints.Optimiser):
         # Only the first time this is called in a running program incurs
         # much overhead.
         import cma
+        
+        # Get BestSolution in cma 1.x and 2.x
+        try:
+            from cma import BestSolution
+        except ImportError:
+            from cma.optimization_tools import BestSolution
 
         # Default search parameters
         #TODO Allow changing before run() with method call
@@ -95,7 +101,7 @@ class CMAES(pints.Optimiser):
             options.set('verbose', -9)
 
         # Start one or multiple runs
-        best_solution = cma.optimization_tools.BestSolution()
+        best_solution = BestSolution()
         for i in xrange(1 + ipop):
 
             # Set population size, increase for ipop restarts
