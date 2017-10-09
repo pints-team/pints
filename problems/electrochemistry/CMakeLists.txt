@@ -11,9 +11,9 @@ find_package(Eigen3 REQUIRED)
 set(pints_LIBRARIES ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 set(pints_INCLUDE_DIRS ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
 
-
 set(BUILD_SHARED_LIBS ON)
 set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
+list(APPEND CMAKE_CXX_FLAGS "-Wno-deprecated -std=c++11")
 
 set(source_files 
     src/electrochemistry/e_implicit_exponential_mesh.cpp
