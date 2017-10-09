@@ -2,6 +2,7 @@
 # Tests the electrochemistry models (have to be compiled first!)
 #
 import unittest
+import math
 
 DEFAULT = {
     'reversed': True,
@@ -176,9 +177,7 @@ class TestModel(unittest.TestCase):
         x0 = [E0,E0,E1,E1,E2,E2] \
             + [0.5*(u-l) for l,u in zip(lower_bounds[6:14],upper_bounds[6:14])]
 
-        self.assertAlmostEqual(log_likelihood(x0), -268817043.639,places=3)
-        self.assertAlmostEqual(prior(x0), 6.77813615114e-28,places=28)
-        self.assertAlmostEqual(score(x0), -268817106.198,places=3)
+        self.assertAlmostEqual(log_likelihood(x0)+math.log(prior(x0)), score(x0))
 
 
 
