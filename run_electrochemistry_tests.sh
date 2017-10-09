@@ -20,6 +20,7 @@ export set PYTHONPATH=$PYTHONPATH:${pints_dir}
 cd $electrochemistry_dir
 cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE .
 make
-exit_code=`python -m unittest discover -v test`
+python -m unittest discover -v test
+exit_code=$?
 cd $pints_dir
 exit $exit_code
