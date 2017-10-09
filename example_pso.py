@@ -23,7 +23,7 @@ score = pints.SumOfSquaresError(problem)
 boundaries = pints.Boundaries([0, 200], [1, 1000])
 
 # Perform an optimization with boundaries and hints
-found_parameters, found_solution = pints.pso(
+found_parameters, found_value = pints.pso(
     score,
     boundaries,
     )
