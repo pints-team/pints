@@ -10,8 +10,10 @@ compiler:
 
 env:
     matrix:
-        - PINTS_BUILD_TYPE=Release
-        - PINTS_BUILD_TYPE=Debug 
+        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Release
+        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Debug 
+        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Release
+        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Debug 
 
 python:
   - "2.7"
@@ -32,8 +34,8 @@ install:
   - pip install -r requirements.txt
 
 before_script:
-- if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+- if [ "$PINTS_COMPILER" = "gcc" ]; then export CXX="g++-5" CC="gcc-5"; fi
+- if [ "$PINTS_COMPILER" = "clang" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
 - printenv
 - clang++ --version 2>&1 | grep clang
 - g++ --version 2>&1 | grep g++
