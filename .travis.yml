@@ -4,15 +4,43 @@ dist: trusty
 
 language: python
 
+compiler:
+    - gcc
+    - clang
+
+env:
+    matrix:
+        - PINTS_BUILD_TYPE=Release
+        - PINTS_BUILD_TYPE=Debug 
+
 python:
   - "2.7"
+
+addons:
+  apt:
+    sources:
+    - boost-latest
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-3.8
+    packages:
+    - gcc-5
+    - g++-5
+    - clang-3.8
   
 # command to install dependencies
 install:
   - pip install -r requirements.txt
 
+before_script:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+- printenv
+- clang++ --version 2>&1 | grep clang
+- g++ --version 2>&1 | grep g++
+
 script:
   - ./run-tests.sh
+  - ./run_electrochemistry_tests.sh
 
 notifications:
   email:

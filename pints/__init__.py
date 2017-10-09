@@ -40,12 +40,12 @@ from _util import strfloat
 #
 from _boundaries import Boundaries
 from _prior import Prior, ComposedPrior
-from _prior import UniformPrior
+from _prior import UniformPrior,NormalPrior,MultivariateNormalPrior
 
 #
 # Log-likelihoods
 #
-from _log_likelihood import LogLikelihood, BayesianLogLikelihood
+from _log_likelihood import LogLikelihood, BayesianLogLikelihood,ScaledLogLikelihood
 from _log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
 
 #
