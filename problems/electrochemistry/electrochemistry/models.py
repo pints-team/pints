@@ -1,6 +1,6 @@
 from math import sqrt,pi
 from pints_cpp import seq_electron_transfer3_explicit,e_implicit_exponential_mesh,pints_map,pints_vector
-import pystan
+import pints
 import numpy as np
 import copy
 
@@ -445,4 +445,16 @@ class POMModel:
 
         return E_0,T_0,L_0,I_0
 
+
+class PintsModelAdaptor(pints.ForwardModel):
+    def __init__(self,ec_model,names):
+        self.ec_model = ec_model
+        self.names = names
+        self.current = pints_vector()
+    def dimension(self):
+        return len(self.names)
+    def simulate(self, parameters, times):
+        self.ec_model.set_params_from_vector(parameters,self.names)
+        self.ec_model.simulate(use_times=times,use_current=self.current)
+        return self.current
 
