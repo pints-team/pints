@@ -14,22 +14,22 @@ import numpy as np
 class Boundaries(object):
     """
     Represents a set of lower and upper boundaries for model parameters.
-    
+
     Arguments:
-    
+
     ``lower``
         A 1d array of lower boundaries.
     ``upper``
         The corresponding upper boundaries
-    
+
     """
     def __init__(self, lower, upper):
-    
+
         # Convert to shape (n,) vectors, copy to ensure they remain unchanged
         self._lower = pints.vector(lower)
         self._upper = pints.vector(upper)
 
-        # Get and check dimension    
+        # Get and check dimension
         self._dimension = len(self._lower)
         if len(self._upper) != self._dimension:
             raise ValueError('Lower and upper bounds must have same length.')
@@ -44,19 +44,19 @@ class Boundaries(object):
         if np.any(parameters > self._upper):
             return False
         return True
-    
+
     def center(self):
         """
         Returns a point in the center of the boundaries.
         """
         return self._lower + 0.5 * (self._upper - self._lower)
-    
+
     def dimension(self):
         """
         Returns the dimension of this set of boundaries.
         """
         return self._dimension
-        
+
     def lower(self):
         """
         Returns the lower boundaries for all parameters (as a read-only NumPy
@@ -70,7 +70,7 @@ class Boundaries(object):
         array).
         """
         return self._upper
-    
+
     def range(self):
         """
         Returns the size of the parameter space (i.e. `upper - lower`).

@@ -22,7 +22,7 @@ class ErrorMeasure(object):
 
     def __call__(self, x):
         raise NotImplementedError
-        
+
     def dimension(self):
         """
         Returns the dimension of the space this measure is defined on.
@@ -34,20 +34,20 @@ class LogLikelihoodBasedError(ErrorMeasure):
     Inverts a log-likelihood to use it as an error.
     """
     def __init__(self, likelihood):
-        if not isinstance(likelihood, LogLikelihood):
+        if not isinstance(likelihood, pints.LogLikelihood):
             raise ValueError('Argument to LikelihoodBasedError must be'
                 ' instance of Likelihood')
-    
-        super(ErrorMeasure, self).__init__(likelihood._problem)
+
+        super(LogLikelihoodBasedError, self).__init__(likelihood._problem)
         self._likelihood = likelihood
-    
+
     def __call__(self, x):
         return -self._likelihood(x)
-   
+
 class SumOfSquaresError(ErrorMeasure):
     """
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
-    """        
+    """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)
 
@@ -59,10 +59,10 @@ class RMSError(ErrorMeasure):
     def __init__(self, problem):
         super(RMSError, self).__init__(self, problem)
         ninv = 1.0 / len(self._values)
-    
+
     def __call__(self, x):
         return np.sqrt(ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
 
-    
+
 

@@ -13,9 +13,9 @@ import numpy as np
 class LogLikelihood(object):
     """
     Represents a log-likelihood that can be used by stochastic methods.
-    
+
     Arguments:
-    
+
     ``problem``
         The time-series problem this log-likelihood is defined for.
 
@@ -29,7 +29,7 @@ class LogLikelihood(object):
 
     def __call__(self, x):
         raise NotImplementedError
-        
+
     def dimension(self):
         """
         Returns the dimension of the space this likelihood is defined on.
@@ -40,11 +40,11 @@ class BayesianLogLikelihood(LogLikelihood):
     """
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     and a class:`Prior`.
-    
+
     The returned value will be `log(prior(x)) + log_likelihood(x|problem)`.
     If `prior(x) == 0` the method always returns `-inf`, regardless of the
     value of the log-likelihood (which will not be evaluated).
-    
+
     """
     def __init__(self, prior, log_likelihood):
         # Check arguments
@@ -52,9 +52,11 @@ class BayesianLogLikelihood(LogLikelihood):
             raise ValueError('Prior must extend pints.Prior')
         if not isinstance(log_likelihood, pints.LogLikelihood):
             raise ValueError('Log-likelihood must extends pints.LogLikelihood')
+
         self._prior = prior
         self._log_likelihood = log_likelihood
-        
+        self._problem = log_likelihood._problem
+
         # Check dimension
         self._dimension = self._prior.dimension()
         if self._log_likelihood.dimension() != self._dimension:
@@ -84,7 +86,7 @@ class KnownNoiseLogLikelihood(LogLikelihood):
         # Calculate parts
         self._offset = -len(self._times) * np.log(self._sigma)
         self._multip = -1 / float(2 * self._sigma**2)
-        
+
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x)
         return self._offset + self._multip * np.sum(error**2)
@@ -100,8 +102,28 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
-        
+
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
         return -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
-    
+
+class ScaledLogLikelihood(LogLikelihood):
+    """
+    Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
+    divided by the number of time samples
+
+    The returned value will be `(1/n) * log_likelihood(x|problem)`, where
+    n is the number of time samples
+    """
+    def __init__(self, log_likelihood):
+        # Check arguments
+        if not isinstance(log_likelihood, pints.LogLikelihood):
+            raise ValueError('Log-likelihood must extends pints.LogLikelihood')
+        self._log_likelihood = log_likelihood
+        self._size = len(log_likelihood._times)
+        self._dimension = self._log_likelihood.dimension()
+        self._problem = log_likelihood._problem
+
+    def __call__(self, x):
+        return self._log_likelihood(x)/self._size
+
