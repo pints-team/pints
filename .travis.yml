@@ -28,6 +28,7 @@ addons:
     - gcc-5
     - g++-5
     - clang-3.8
+    - libboost1.55-all-dev
   
 # command to install dependencies
 install:
