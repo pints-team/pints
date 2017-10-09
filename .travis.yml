@@ -32,7 +32,7 @@ addons:
   
 # command to install dependencies
 install:
-  - wget http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz; tar -xvf 3.3.1.tar.gz;mv eigen*/Eigen problems/electrchemistry/;mv eigen*/unsupported problems/electrochemistry/
+  - wget http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz; tar -xvf 3.3.1.tar.gz;mv eigen*/Eigen problems/electrochemistry/;mv eigen*/unsupported problems/electrochemistry/
   - pip install -r requirements.txt
 
 before_script:
