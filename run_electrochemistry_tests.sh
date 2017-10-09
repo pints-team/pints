@@ -18,6 +18,7 @@ electrochemistry_dir=${pints_dir}/problems/electrochemistry
 
 export set PYTHONPATH=$PYTHONPATH:${pints_dir}
 cd $electrochemistry_dir
+ls
 cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE .
 make
 python -m unittest discover -v test
