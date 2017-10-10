@@ -136,14 +136,14 @@ class NormalPrior(Prior):
         self._mean = mean
 
         # Cache constants
-        self._inv2cov2 = 1.0/(2.0*cov**2)
-        self._scale = 1.0/math.sqrt(2.0*math.pi*cov**2)
+        self._inv2cov = 1.0/(2.0*cov)
+        self._scale = 1.0/math.sqrt(2.0*math.pi*cov)
 
     def dimension(self):
         return 1
 
     def __call__(self, x):
-        return self._scale*math.exp(-self._inv2cov2*(x[0]-self._mean)**2)
+        return self._scale*math.exp(-self._inv2cov*(x[0]-self._mean)**2)
 
 
 
