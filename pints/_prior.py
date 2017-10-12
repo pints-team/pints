@@ -8,7 +8,6 @@
 #
 import pints
 import numpy as np
-import math
 
 class Prior(object):
     """
@@ -23,6 +22,7 @@ class Prior(object):
         Returns the dimension of the space this prior is defined on.
         """
         raise NotImplementedError
+
     def __call__(self, x):
         """
         Returns the probability density for point `x`.
@@ -99,7 +99,8 @@ class MultivariateNormalPrior(Prior):
     def __init__(self, mean, cov):
         # Parse input arguments
         if not isinstance(mean, np.array):
-            raise ValueError('NormalPrior mean argument requires a numpy array')
+            raise ValueError('NormalPrior mean argument requires a numpy'
+                ' array')
 
         if not isinstance(cov, np.array):
             raise ValueError('NormalPrior cov argument requires a numpy array')
@@ -136,14 +137,14 @@ class NormalPrior(Prior):
         self._mean = mean
 
         # Cache constants
-        self._inv2cov = 1.0/(2.0*cov)
-        self._scale = 1.0/math.sqrt(2.0*math.pi*cov)
+        self._inv2cov = -1.0 / (2 * cov)
+        self._scale = 1 / np.sqrt(2 * np.pi * cov)
 
     def dimension(self):
         return 1
 
     def __call__(self, x):
-        return self._scale*math.exp(-self._inv2cov*(x[0]-self._mean)**2)
+        return self._scale * np.exp(self._inv2cov * (x[0] - self._mean)**2)
 
 
 

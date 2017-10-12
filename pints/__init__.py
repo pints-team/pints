@@ -45,8 +45,9 @@ from _prior import UniformPrior,NormalPrior,MultivariateNormalPrior
 #
 # Log-likelihoods
 #
-from _log_likelihood import LogLikelihood, BayesianLogLikelihood,ScaledLogLikelihood
+from _log_likelihood import LogLikelihood, BayesianLogLikelihood
 from _log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
+from _log_likelihood import ScaledLogLikelihood
 
 #
 # Scoring functions
