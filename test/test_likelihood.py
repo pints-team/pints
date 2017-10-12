@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests if pints can be loaded without issues.
+# Tests the log likelihood methods
 #
 import unittest
 class TestLogLikelihood(unittest.TestCase):
@@ -28,6 +28,6 @@ class TestLogLikelihood(unittest.TestCase):
 
         self.assertEqual(int(eval_not_scaled),-211495080219)
         self.assertAlmostEqual(eval_scaled*len(times),eval_not_scaled)
-
+    #TODO Add tests for the remaining likelihood classes and methods
 if __name__ == '__main__':
     unittest.main()
