@@ -16,12 +16,14 @@
 pints_dir=`pwd`
 electrochemistry_dir=${pints_dir}/problems/electrochemistry
 
-export set PYTHONPATH=$PYTHONPATH:${pints_dir}
+export set PYTHONPATH=$PYTHONPATH:${pints_dir}:${electrochemistry_dir}
 cd $electrochemistry_dir
 ls
-cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE .
+mkdir -p build
+cd build
+cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE ..
 make
-python -m unittest discover -v test
+python -m unittest discover -v ../test
 exit_code=$?
 cd $pints_dir
 exit $exit_code
