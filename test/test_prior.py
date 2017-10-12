@@ -4,7 +4,10 @@
 #
 import unittest
 class TestPrior(unittest.TestCase):
+
     def test_normal_prior(self):
+        return #TODO
+    
         import pints
         import numpy as np
 
@@ -42,13 +45,51 @@ class TestPrior(unittest.TestCase):
         
         p = pints.ComposedPrior(p1, p2)
         
+        # Test at center
         peak1 = p1([m1])
         peak2 = p2([m2])
         self.assertEqual(p([m1, m2]), peak1 * peak2)
-        #TODO Add more tests
+        
+        # Test at random points
+        np.random.seed(1)
+        for i in xrange(100):
+            x = np.random.normal(m1, c1)
+            y = np.random.normal(m2, c2)
+            self.assertAlmostEqual(p([x, y]), p1([x]) * p2([y]))
+        
+        # Test effect of increasing covariance
+        p = [pints.ComposedPrior(p1, pints.NormalPrior(m2, c))
+            for c in xrange(1, 10)]
+        p = [x([m1, m2]) for x in p]
+        self.assertTrue(np.all(p[:-1] > p[1:]))
 
+    def test_uniform_prior(self):
+        import pints
+        import numpy as np
+        
+        lower = np.array([1, 2])
+        upper = np.array([10, 20])
+        
+        p = pints.UniformPrior(lower, upper)
+        self.assertEqual(p([0, 0]), 0)
+        self.assertEqual(p([0, 5]), 0)
+        self.assertEqual(p([0, 20]), 0)
+        self.assertEqual(p([0, 21]), 0)
+        self.assertEqual(p([5, 0]), 0)
+        self.assertEqual(p([5, 21]), 0)
+        self.assertEqual(p([15, 0]), 0)
+        self.assertEqual(p([15, 5]), 0)
+        self.assertEqual(p([15, 20]), 0)
+        self.assertEqual(p([15, 21]), 0)
+        
+        w = 1.0 / np.product(upper - lower)
+        self.assertEqual(p([1, 2]), w)
+        self.assertEqual(p([1, 5]), w)
+        self.assertEqual(p([1, 20]), w)
+        self.assertEqual(p([5, 5]), w)
+        self.assertEqual(p([5, 20]), w)
+            
 #TODO Test MultiVariateNormalPrior
-#TODO Test UniformPrior
 
 if __name__ == '__main__':
     unittest.main()
