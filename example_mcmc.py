@@ -1,4 +1,8 @@
 #!/usr/bin/env python2
+#
+# This example shows you how to perform bayesian inference using on a time
+# series, using adaptive MCMC.
+#
 from __future__ import print_function
 import pints
 import pints.toy as toy

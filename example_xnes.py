@@ -1,4 +1,7 @@
 #!/usr/bin/env python2
+#
+# # This example shows you how to run a global optimisation using XNES.
+#
 from __future__ import print_function
 import pints
 import pints.toy as toy
