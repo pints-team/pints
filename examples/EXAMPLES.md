@@ -6,4 +6,10 @@ Each example was created as a _Jupyter notebook_ (http://jupyter.org/). These no
 
 ## Optimisation
 - [First example](./optimisation-first-example.ipynb)
+- [CMA-ES](./optimisation-cmaes.ipynb)
+- [PSO](./optimisation-pso.ipynb)
+- [SNES](./optimisation-snes.ipynb)
+- [XNES](./optimisation-xnes.ipynb)
+
+
 
