@@ -44,7 +44,7 @@ before_script:
 
 script:
   - ./run-tests.sh
-  - ./run-electrochemistry-tests.sh
+#  - ./run-electrochemistry-tests.sh
 
 notifications:
   email:
