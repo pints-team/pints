@@ -90,6 +90,9 @@ class CMAES(pints.Optimiser):
         options.set('maxiter', max_iter)
         options.set('tolfun', min_significant_change)
         #options.set('ftarget', target)
+        
+        # Tell CMA not to worry about growing step sizes too much
+        options.set('tolfacupx', 10000)
 
         # CMA-ES wants a single standard deviation as input, use the smallest
         # in the vector (if the user passed in a scalar, this will be the
