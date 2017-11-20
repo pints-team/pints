@@ -22,32 +22,36 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 If your model implements these methods - or you can write a wrapper
 class that does - you can start using Pints for optimisation or MCMC.
 
-## Examples
+### Examples
 
 Examples are given in the `example_x.py` files, in the root of the
 project.
 
-## Installing
+## How do you install Pints
 
 You'll need the following requirements:
 
 - Python 2.7
-- Python libraries: cma numpy matplotlib scipy
+- Python libraries: `cma` `numpy` `matplotlib` `scipy`
 
-Then, install using ```python setup.py install```
-
-Or, if you plan to make changes to pints: `python setup.py develop` (this will
- make Python find the local pints files when you use `import pints`).
-
-### Testing pints
-
-To run all tests, clone the repository, navigate to the pints directory
-and type:
+Then, install using 
 
 ```
-python -m unittest discover -v test
+python setup.py install
 ```
 
-Or use the bash script `run-tests.sh`
+### For developers:
+
+If you plan to make changes to pints, install with:
+
+```
+python setup.py develop
+```
+
+(this will make Python find the local pints files when you use `import pints`).
+
+### Testing:
+
+To run quick tests, use `run-tests.sh`.
 
 
