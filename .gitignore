@@ -5,3 +5,6 @@ __pycache__/
 
 # Setuptools files
 *.egg-info
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
