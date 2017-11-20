@@ -24,8 +24,7 @@ class that does - you can start using Pints for optimisation or MCMC.
 
 ### Examples
 
-Examples are given in the `example_x.py` files, in the root of the
-project.
+Pints comes with a number of [detailed examples](examples/EXAMPLES.md).
 
 ## How do you install Pints
 
