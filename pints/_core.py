@@ -15,7 +15,7 @@ class ForwardModel(object):
     """
     Defines an interface for user-supplied forward models.
     
-    Classes extending `ForwardModel` can implement the required methods
+    Classes extending ``ForwardModel`` can implement the required methods
     directly in Python or interface with other languages (for example via
     Python wrappers around C code).
     """
@@ -57,7 +57,7 @@ class SingleSeriesProblem(object):
     Arguments:
     
     ``model``
-        A model or model wrapper extending the `ForwardModel` class.
+        A model or model wrapper extending :class:`ForwardModel`.
     ``times``
         A sequence of points in time. See :meth:`model.simulate` for details.
     ``values``
@@ -108,18 +108,4 @@ class SingleSeriesProblem(object):
         Returns this problem's values (as a read-only NumPy array).
         """
         return self._values
-        
-def vector(x):
-    """
-    Copies ``x`` and returns a 1d read-only numpy array of floats with shape
-    `(n,)`.
-    Raises a `ValueError` if `x` has an incompatible shape.
-    """
-    x = np.array(x, copy=True, dtype=float)
-    x.setflags(write=False)
-    if x.ndim != 1:
-        n = np.max(x.shape)
-        if np.prod(x.shape) != n:
-            raise ValueError('Unable to convert to 1d vector of scalar values')
-        x = x.reshape((n,))
-    return x
+

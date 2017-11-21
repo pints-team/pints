@@ -15,13 +15,14 @@ import numpy as np
 
 class Optimiser(object):
     """
-    Takes an error measure as input and attempts to find the parameters that
-    minimise it.
+    Takes an :class:`pints.ErrorMeasure` as input and attempts to find the 
+    parameters that minimise it.
     
     Arguments:
     
     ``function``
-        An :class:`ErrorMeasure` that evaluates points in the parameter space.
+        An :class:`pints.ErrorMeasure` that evaluates points in the parameter 
+        space.
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
     ``x0=None``
@@ -121,7 +122,7 @@ class Optimiser(object):
     
     def verbose(self):
         """
-        Returns `True` if the optimiser is set to run in verbose mode.
+        Returns ``True`` if the optimiser is set to run in verbose mode.
         """
         return self._verbose
 
@@ -140,11 +141,11 @@ class TriangleWaveTransform(object):
     minima/maxima, each one maps to the same point in parameter space.
     
     It should work well for that maintain a single search position or a single
-    search distribution (e.g. CMA-ES, xNES, SNES), which will end up in one of
-    the many mirror images. However, for methods that use independent search
-    particles (e.g. PSO) it could lead to a scattered population, with
-    different particles exploring different mirror images. Other strategies
-    should be used for such problems.
+    search distribution (e.g. :class:`CMA-ES`, :class:`xNES`, :class:`SNES`),
+    which will end up in one of the many mirror images. However, for methods
+    that use independent search particles (e.g. :class:`PSO`) it could lead to
+    a scattered population, with different particles exploring different mirror
+    images. Other strategies should be used for such problems.
     """
     def __init__(self, boundaries):
         self._lower = boundaries.lower()
@@ -160,14 +161,14 @@ class TriangleWaveTransform(object):
 
 class InfBoundaryTransform(object):
     """
-    Wraps around score functions and returns `NaN` whenever an evaluation is
+    Wraps around score functions and returns ``inf`` whenever an evaluation is
     requested for a parameter set that's out of bounds.
     
     Note: The transform is applied _inside_ optimisation methods, there is no
     need to wrap this around your own problem or score function.
     
     This method should work well for optimisers that only require a ranking of
-    positions (x1 > x2 > x3 etc.), e.g. PSO.
+    positions (``x1 > x2 > x3`` etc.), e.g. :class:`PSO`.
     """
     def __init__(self, function, boundaries):
         self._function = function

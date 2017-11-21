@@ -13,9 +13,13 @@ Pints' core classes are:
 
 
 .. toctree::
+    :maxdepth: 3
    
-   Boundaries
-   ForwardModel
-   SingleSeriesProblem
-   vector
-
+    core_classes_and_methods
+    error_measures
+    function_evaluation
+    log_likelihoods
+    optimisers/index
+    priors_and_boundaries
+    utilities
+   
