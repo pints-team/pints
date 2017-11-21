@@ -14,6 +14,8 @@ import numpy as np
 
 class CMAES(pints.Optimiser):
     """
+    *Extends:* :class:`Optimiser`
+    
     Finds the best parameters using the CMA-ES method described in [1, 2] and
     implemented in the `cma` module.
 
@@ -28,6 +30,7 @@ class CMAES(pints.Optimiser):
 
     """
     def run(self):
+        """See: :meth:`pints.Optimiser.run()`."""
 
         # Import cma (may fail!)
         # Only the first time this is called in a running program incurs

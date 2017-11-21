@@ -5,8 +5,12 @@ Optimisers
 **********
 
 .. toctree::
-    :maxdepth: 10
    
     boundary_transformations
     Optimiser
+    cmaes
+    pso
+    snes
+    xnes
+    
    

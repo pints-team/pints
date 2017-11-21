@@ -2,7 +2,6 @@
 
 .. _GitHub: https://github.com/martinjrobins/pints
 .. _Detailed examples: https://github.com/martinjrobins/pints/blob/master/examples/EXAMPLES.md
-.. _API documentation: api
 
 Welcome to the Pints documentation
 ==================================
@@ -12,15 +11,24 @@ Welcome to the Pints documentation
 
 `Detailed examples`_ can also be found there.
 
-*This* page provides the `API documentation`_ for Pints.
+*This* page provides the *API*, or *developer documentation* for Pints.
+
+Pints API
+=========
+
+.. module:: pints
 
 .. toctree::
-   :hidden:
    
-   api/index
-
-
-
+    core_classes_and_methods
+    error_measures
+    function_evaluation
+    log_likelihoods
+    mcmc/index
+    optimisers/index
+    priors_and_boundaries
+    utilities
+   
 Indices and tables
 ==================
 

@@ -2,7 +2,7 @@
 Boundary transformations
 ************************
 
-.. module:: pints._optimisers
+.. module:: pints
 
 .. autoclass:: InfBoundaryTransform
 

@@ -141,7 +141,7 @@ class TriangleWaveTransform(object):
     minima/maxima, each one maps to the same point in parameter space.
     
     It should work well for that maintain a single search position or a single
-    search distribution (e.g. :class:`CMA-ES`, :class:`xNES`, :class:`SNES`),
+    search distribution (e.g. :class:`CMAES`, :class:`xNES`, :class:`SNES`),
     which will end up in one of the many mirror images. However, for methods
     that use independent search particles (e.g. :class:`PSO`) it could lead to
     a scattered population, with different particles exploring different mirror
