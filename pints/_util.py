@@ -7,6 +7,7 @@
 #  software package.
 #
 import pints
+import numpy as np
 
 def strfloat(x):
     """
