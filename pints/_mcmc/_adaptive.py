@@ -28,6 +28,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
+    def __init__(self, log_likelihood, x0, sigma0=None, verbose=True):
+        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0, verbose)
+        # Set default parameters
+        self.set_default()
 
     def set_default(self):
         """
@@ -123,18 +127,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         if self._thinning > self._iterations:
             raise Exception('Thinning larger than total number of iterations')
 
-    def set_thinning(self, thinning):
-        """
-        Set thinning - store only one sample per X
-        """
-        self._thinning = thinning
-        if self._thinning > self._adaptation:
-            print('WARNING: Thinning larger than adaptation')
-        if self._thinning > self._burn_in:
-            print('WARNING: Thinning larger than burn-in')
-        if self._thinning > self._iterations:
-            raise Exception('Thinning larger than total number of iterations')
-
     def set_adaptation_rate(self, rate):
         """
         Set the first fraction of the total number of iterations before 
@@ -173,6 +165,18 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         if self._adaptation > self._burn_in:
             print('WARNING: Adaptation use after burn-in')
 
+    def set_thinning(self, thinning):
+        """
+        Set thinning - store only one sample per X
+        """
+        self._thinning = thinning
+        if self._thinning > self._adaptation:
+            print('WARNING: Thinning larger than adaptation')
+        if self._thinning > self._burn_in:
+            print('WARNING: Thinning larger than burn-in')
+        if self._thinning > self._iterations:
+            raise Exception('Thinning larger than total number of iterations')
+
     def print_setup(self):
         """
         Print to console the current setup info of the adaptive convariance
@@ -187,9 +191,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
-
-        # Time it
-        start = time.time()
 
         # Problem dimension
         d = self._dimension
@@ -230,26 +231,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         loga = 0
         acceptance = 0
         
-        # Save to file
-        if self._save:
-            savedir = os.path.join(self._save_dir, 'adaptive-mcmc.txt')
-            with open(savedir, 'w') as outfile:
-                outfile.write('# Adaptive covariance matrix\n')
-                outfile.write('# Thinned by taking saving only every ' 
-                              + str(thinning) + '-th accepted state\n')
-                outfile.write('# 1-'+str(d)+'. parameters, '
-                              +str(1+d)+'. logLikelihood, '
-                              +str(2+d)+'. acceptance rate, '
-                              +str(3+d)+'. loga, '
-                              +str(4+1*d)+'-'+str(4+2*d-1)+'. mean estimate, '
-                              +str(4+2*d)+'. real time taken (s), '
-                              +str(5+2*d)+'. iteration\n')
-            H = [np.concatenate((np.copy(current), 
-                                [current_log_likelihood, acceptance, loga], 
-                                mu, 
-                                [time.time()-start,0]
-                                ))]
-
         # Go!
         for i in xrange(iterations):
             # Propose new point
@@ -284,14 +265,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             ilog = i - burn_in
             if ilog >= 0 and ilog % thinning == 0:
                 chain[ilog // thinning, :] = current
-                if self._save:
-                    # Only save after burn-in
-                    H.append(np.concatenate((
-                        np.copy(current), 
-                        [current_log_likelihood, acceptance, loga], 
-                        mu, 
-                        [time.time()-start,i]
-                        )))
             
             # Report
             if self._verbose and i % 50 == 0:
@@ -299,11 +272,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                 print('  In burn-in: ' + str(i < burn_in))
                 print('  Adapting: ' + str(i >= adaptation))
                 print('  Acceptance rate: ' + str(acceptance))
-            # Save
-            if self._save and i % 500 == 0:
-                with open(savedir, 'a') as outfile:
-                    np.savetxt(outfile, H) 
-                H = []
 
         # Check that chain fully filled
         if ilog // thinning != len(chain) - 1:
@@ -311,43 +279,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Return generated chain
         return chain
-
-
-    def load_chain(self, path_or_chain):
-        """
-        Load previously simulated chain for later anaylsis for
-        adpative MCMC method.
-
-        Arguments:
-
-        ``path_or_chain``
-            String: Path to saved chain.
-            Array-type: Load it as current chain
-
-        """
-        d = self._dimension
-        if isinstance(path_or_chain, str):
-            try:
-                iterations, final_loga, time_taken = np.loadtxt(path_or_chain, 
-                        usecols=[5+2*d-1, 3+d-1, 4+2*d-1])[-1,:]
-                iterations_2 = np.loadtxt(path_or_chain,
-                        usecols=[5+2*d-1])[-2]
-                iterations_burn_in = np.loadtxt(path_or_chain,
-                        usecols=[5+2*d-1])[1]
-                self.set_iterations(int(iterations))
-                self.set_thinning(int(iterations - iterations_2))
-                self.set_burn_in(int(iterations_burn_in))
-                self._chain = np.loadtxt(path_or_chain, 
-                        usecols=range(d))[1:,:]
-            except:
-                raise Exception('Cannot load file as chain ' 
-                                + path_or_chain)
-        elif isinstance(path_or_chain, (np.ndarray, list)):
-            try:
-                assert path_or_chain.shape[1] == d
-                self._chain = path_or_chain
-            except:
-                raise Exception('Array does not match expected chain dimension')
 
     def chain(self):
         """
