@@ -80,9 +80,3 @@ from _optimisers._xnes import XNES, xnes
 from _mcmc import MCMC
 from _mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 
-#
-#TODO
-#
-#from _mcmc import hierarchical_gibbs_sampler
-#from _plot import scatter_grid,plot_trace,scatter_diagonal
-
