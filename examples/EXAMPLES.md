@@ -20,4 +20,4 @@ of choice.
 
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
-- [Adaptive MCMC](./inference-adaptive-covariance-mcmc.ipynb)
+- [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
