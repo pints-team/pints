@@ -20,6 +20,17 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     
     Creates a chain of samples from a target distribution, using the adaptive
     covariance routine described in [1].
+    
+    The algorithm starts out as basic MCMC, but after a certain number of
+    iterations starts tuning the covariance matrix, so that the acceptance rate
+    of the MCMC steps converges to a user specified rate.
+    
+    By default, the method will run for ``2000 * d`` iterations, where ``d`` is
+    the dimension of the used :class:`LogLikelihood`. Of these, the first 25%
+    will run without adaptation, and the first 50% will be discarded as
+    burn-in. These numbers can be modified using the methods
+
+    #TODO
         
     [1] Uncertainty and variability in models of the cardiac action potential:
     Can we build trustworthy models?
@@ -29,174 +40,71 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     def __init__(self, log_likelihood, x0, sigma0=None):
         super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0)
 
-        # Set default parameters
-
         # Target acceptance rate
         self._acceptance_target = 0.25
+
         # Total number of iterations
         self._iterations = self._dimension * 2000
+
         # Number of iterations before adapation
-        self._adaptation_rate = 0.25
-        self._adaptation = int(self._iterations * self._adaptation_rate)
+        self._adaptation = int(0.25 * self._iterations)
+
         # Number of iterations to discard as burn-in
-        self._burn_in_rate = 0.5
-        self._burn_in = int(self._iterations * self._burn_in_rate)
+        self._burn_in = int(0.5 * self._iterations)
+
         # Thinning: Store only one sample per X
-        self._thinning = 4
+        self._thinning_rate = 4
     
     def acceptance_rate(self):
         """
-        Return target acceptance rate.
+        Returns the target acceptance rate that will be used in the next run.
         """
         return self._acceptance_target
 
-    def iterations(self):
-        """
-        Return the total number of iterations.
-        """
-        return self._iterations
-
-    def adaptation_rate(self):
-        """
-        Return the fraction of the total number of iterations before
-        using adaptation.
-        """
-        return self._adaptation_rate
-
-    def adaptation(self):
-        """
-        Return the number of iterations before adapation.
-        """
-        return self._adaptation
-
-    def burn_in_rate(self):
-        """
-        Return the fraction of the total number of iterations to discard as
-        burn-in.
-        """
-        return self._burn_in_rate
-
     def burn_in(self):
         """
-        Return the number of iterations to discard as burn-in.
+        Returns the number of iterations that will be discarded as burn-in in
+        the next run.
         """
         return self._burn_in
 
-    def thinning(self):
+    def iterations(self):
         """
-        Return thinning.
+        Returns the total number of iterations that will be performed in the 
+        next run, including the non-adaptive and burn-in iterations.
         """
-        return self._thinning
+        return self._iterations
 
-    def set_acceptance_rate(self, rate):
+    def non_adaptive_iterations(self):
         """
-        Set target acceptance rate. 
-        
-        Default: 0.25
+        Returns the number of initial, non-adaptive iterations that will be
+        performed in the next run.
         """
-        self._acceptance_target = rate
+        return self._adaptation
 
-    def set_iterations(self, iterations):
+    def thinning_rate(self):
         """
-        Set the total number of iterations.
-
-        Default: 2000 * dimension of the problem
+        Returns the thinning rate that will be used in the next run. A thinning
+        rate of *n* indicates that only every *n-th* sample will be stored.
         """
-        self._iterations = iterations
-        self._adaptation = int(self._iterations * self._adaptation_rate)
-        self._burn_in = int(self._iterations * self._burn_in_rate)
-
-    def set_adaptation_rate(self, rate):
-        """
-        Set the fraction of the total number of iterations before using
-        adaptation.
-
-        Default: 0.25
-        """
-        self._adaptation_rate = rate
-        self._adaptation = int(self._iterations * self._adaptation_rate)
-
-    def set_adaptation(self, adaptation):
-        """
-        Set the number of iterations before using adapation.
-
-        Default: 0.25 * number of iterations
-        """
-        self._adaptation = adaptation
-        self._adaptation_rate = self._adaptation/self._iterations
-
-    def set_burn_in_rate(self, rate):
-        """
-        Set the fraction of the total number of iterations to discard as 
-        burn-in.
-
-        Default: 0.5
-        """
-        self._burn_in_rate = rate
-        self._burn_in = int(self._iterations * self._burn_in_rate)
-
-    def set_burn_in(self, burn_in):
-        """
-        Set the number of iterations to discard as burn-in.
-
-        Default: 0.5 * number of iterations
-        """
-        self._burn_in = burn_in
-        self._burn_in_rate = self._burn_in/self._iterations
-
-    def set_thinning(self, thinning):
-        """
-        Set thinning - store only one sample per X
-
-        Default: 4
-        """
-        self._thinning = thinning
-
-    def check_current_setting(self):
-        """
-        Check the current setting is valid for the adaptive covariance MCMC 
-        routine.
-        """
-        if self._thinning > self._adaptation:
-            raise ValueError(' thinning larger than adaptation')
-        if self._adaptation > self._burn_in:
-            raise ValueError(' adaptation apply after burn-in')
-        if self._burn_in > self._iterations:
-            raise ValueError(' adaptation apply after burn-in')
-
+        return self._thinning_rate
 
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
         
-        # Check setting
-        self.check_current_setting()
-
-        # Print the current setting to console 
+        # Report the current settings
         if self._verbose:
-            print('\n## Adaptive convariance MCMC routine setup info')
+            print('Running adaptive covariance MCMC')
             print('Target acceptance rate: ' + str(self._acceptance_target))
             print('Total number of iterations: ' + str(self._iterations))
-            print('Number of iterations before adapation: ' + str(self._adaptation))
-            print('Number of iterations to discard as burn-in: ' + str(self._burn_in))
-            print('Thinning: Store only one sample per ' + str(self._thinning) + '\n')
+            print('Number of iterations before adapation: '
+                + str(self._adaptation))
+            print('Number of iterations to discard as burn-in: '
+                + str(self._burn_in))
+            print('Storing one sample per ' + str(self._thinning_rate))
 
         # Problem dimension
         d = self._dimension
-
-        # Target acceptance rate
-        acceptance_target = self._acceptance_target
-
-        # Total number of iterations
-        iterations = self._iterations
-
-        # Number of iterations before adapation
-        adaptation = self._adaptation
-
-        # Number of iterations to discard as burn-in
-        burn_in = self._burn_in
-
-        # Thinning: Store only one sample per X
-        thinning = self._thinning
 
         # Initial starting parameters
         mu = self._x0
@@ -208,7 +116,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                 ' log-likelihood')
 
         # Chain of stored samples
-        stored = int((iterations - burn_in) / thinning)
+        stored = int((self._iterations - self._burn_in) / self._thinning_rate)
         chain = np.zeros((stored, d))
 
         # Initial acceptance rate (value doesn't matter)
@@ -216,11 +124,12 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         acceptance = 0
         
         # Go!
-        for i in xrange(iterations):
+        for i in xrange(self._iterations):
             # Propose new point
             # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
+            #print(np.exp(loga))
             proposed = np.random.multivariate_normal(current,
                 np.exp(loga) * sigma)
             
@@ -235,35 +144,84 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                     current_log_likelihood = proposed_log_likelihood
             
             # Adapt covariance matrix
-            if i >= adaptation:
-                gamma = (i - adaptation + 1) ** -0.6
+            if i >= self._adaptation:
+                gamma = (i - self._adaptation + 2) ** -0.6
+                mu = (1 - gamma) * mu + gamma * current
+                loga += gamma * (accepted - self._acceptance_target)
                 dsigm = np.reshape(current - mu, (d, 1))
                 sigma = (1 - gamma) * sigma + gamma * np.dot(dsigm, dsigm.T)
-                mu = (1 - gamma) * mu + gamma * current
-                loga += gamma * (accepted - acceptance_target)
 
             # Update acceptance rate
             acceptance = (i * acceptance + float(accepted)) / (i + 1)
             
             # Add point to chain
-            ilog = i - burn_in
-            if ilog >= 0 and ilog % thinning == 0:
-                chain[ilog // thinning, :] = current
+            ilog = i - self._burn_in
+            if ilog >= 0 and ilog % self._thinning_rate == 0:
+                chain[ilog // self._thinning_rate, :] = current
             
             # Report
             if self._verbose and i % 50 == 0:
-                print('Iteration ' + str(i) + ' of ' + str(iterations))
-                print('  In burn-in: ' + str(i < burn_in))
-                print('  Adapting: ' + str(i >= adaptation))
+                print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                print('  In burn-in: ' + str(i < self._burn_in))
+                print('  Adapting: ' + str(i >= self._adaptation))
                 print('  Acceptance rate: ' + str(acceptance))
 
         # Check that chain fully filled
-        if ilog // thinning != len(chain) - 1:
+        if ilog // self._thinning_rate != len(chain) - 1:
             raise Exception('Unexpected error: Chain not fully generated.')
 
         # Return generated chain
         return chain
 
+    def set_acceptance_rate(self, rate):
+        """
+        Sets the target acceptance rate for the next run.
+        """
+        rate = float(rate)
+        if rate <= 0:
+            raise ValueError('Target acceptance rate must be greater than 0.')
+        elif rate > 1:
+            raise ValueError('Target acceptance rate cannot exceed 1.')
+        self._acceptance_target = rate
+
+    def set_burn_in(self, burn_in):
+        """
+        Sets the number of iterations to discard as burn-in in the next run.
+        """
+        burn_in = int(burn_in)
+        if burn_in < 0:
+            raise ValueError('Burn-in rate cannot be negative.')
+        self._burn_in = burn_in
+
+    def set_iterations(self, iterations):
+        """
+        Sets the total number of iterations to be performed in the next run
+        (including burn-in and non-adaptive iterations).
+        """
+        iterations = int(iterations)
+        if iterations < 0:
+            raise ValueError('Number of iterations cannot be negative.')
+        self._iterations = iterations
+
+    def set_non_adaptive_iterations(self, adaptation):
+        """
+        Sets the number of iterations to perform before using adapation in the
+        next run.
+        """
+        adaptation = int(adaptation)
+        if adaptation < 0:
+            raise ValueError('Adaptation cannot be negative.')
+        self._adaptation = adaptation
+
+    def set_thinning_rate(self, thinning):
+        """
+        Sets the thinning rate. With a thinning rate of *n*, only every *n-th*
+        sample will be stored.
+        """
+        thinning = int(thinning)
+        if thinning < 1:
+            raise ValueError('Thinning rate must be greater than zero.')
+        self._thinning_rate = thinning
 
 def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
     """
