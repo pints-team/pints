@@ -287,9 +287,9 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         return self._chain
 
 
-def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None, savetofile=False):
+def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
     """
     Runs an adaptive covariance MCMC routine with the default parameters.
     """
-    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0, savetofile=savetofile).run() 
+    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0).run() 
 
