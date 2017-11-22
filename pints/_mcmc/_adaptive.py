@@ -82,13 +82,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         """
         return self._adaptation
 
-    def thinning_rate(self):
-        """
-        Returns the thinning rate that will be used in the next run. A thinning
-        rate of *n* indicates that only every *n-th* sample will be stored.
-        """
-        return self._thinning_rate
-
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
         
@@ -222,6 +215,13 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         if thinning < 1:
             raise ValueError('Thinning rate must be greater than zero.')
         self._thinning_rate = thinning
+
+    def thinning_rate(self):
+        """
+        Returns the thinning rate that will be used in the next run. A thinning
+        rate of *n* indicates that only every *n-th* sample will be stored.
+        """
+        return self._thinning_rate
 
 def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
     """
