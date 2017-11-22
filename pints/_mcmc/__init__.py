@@ -7,7 +7,6 @@
 #  software package.
 #
 from __future__ import division
-import os
 import pints
 import numpy as np
 
@@ -28,7 +27,7 @@ class MCMC(object):
         covariance of the likelihood around ``x0``.
 
     """
-    def __init__(self, log_likelihood, x0, sigma0=None, verbose=True):
+    def __init__(self, log_likelihood, x0, sigma0=None):
 
         # Store function
         if not isinstance(log_likelihood, pints.LogLikelihood):
@@ -61,9 +60,6 @@ class MCMC(object):
         
         # Print info to console
         self._verbose = verbose
-
-        # Final output
-        self._chain = None
         
     def run(self):
         """
