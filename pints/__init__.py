@@ -29,22 +29,21 @@ def version(formatted=False):
 FLOAT_FORMAT = '{:< 1.17e}'
 
 #
-# Core classes and methods
+# Core classes
 #
 from _core import ForwardModel, SingleSeriesProblem
-from _core import vector
 
 #
 # Utility classes and methods
 #
-from _util import strfloat
+from _util import strfloat, vector
 
 #
 # Boundaries and prior distributions
 #
 from _boundaries import Boundaries
 from _prior import Prior, ComposedPrior
-from _prior import UniformPrior,NormalPrior,MultivariateNormalPrior
+from _prior import UniformPrior, NormalPrior, MultivariateNormalPrior
 
 #
 # Log-likelihoods

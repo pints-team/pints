@@ -31,38 +31,41 @@ class ErrorMeasure(object):
 
 class LogLikelihoodBasedError(ErrorMeasure):
     """
+    *Extends:* :class:`ErrorMeasure`
+    
     Inverts a log-likelihood to use it as an error.
     """
     def __init__(self, likelihood):
         if not isinstance(likelihood, pints.LogLikelihood):
             raise ValueError('Argument to LikelihoodBasedError must be'
                 ' instance of Likelihood')
-
         super(LogLikelihoodBasedError, self).__init__(likelihood._problem)
         self._likelihood = likelihood
 
     def __call__(self, x):
         return -self._likelihood(x)
 
-class SumOfSquaresError(ErrorMeasure):
-    """
-    Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
-    """
-    def __call__(self, x):
-        return np.sum((self._problem.evaluate(x) - self._values)**2)
-
 class RMSError(ErrorMeasure):
     """
+    *Extends:* :class:`ErrorMeasure`
+    
     Calculates the square root of a normalised sum-of-squares error:
     ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
     """
     def __init__(self, problem):
-        super(RMSError, self).__init__(self, problem)
+        super(RMSError, self).__init__(problem)
         ninv = 1.0 / len(self._values)
 
     def __call__(self, x):
         return np.sqrt(ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
 
-
+class SumOfSquaresError(ErrorMeasure):
+    """
+    *Extends:* :class:`ErrorMeasure`
+    
+    Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
+    """
+    def __call__(self, x):
+        return np.sum((self._problem.evaluate(x) - self._values)**2)
 

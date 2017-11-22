@@ -102,7 +102,7 @@ class ParallelEvaluator(Evaluator):
     By default, the number of processes ("workers") used to evaluate the
     function is set equal to the number of CPU cores reported by python's
     ``multiprocessing`` module. To override the number of workers used, set
-    ``nworkers`` to some integer greater than 0.
+    ``nworkers`` to some integer greater than ``0``.
     
     There are two important caveats for using multiprocessing to evaluate
     functions:

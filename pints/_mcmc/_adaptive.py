@@ -16,6 +16,8 @@ import multiprocessing
 
 class AdaptiveCovarianceMCMC(pints.MCMC):
     """
+    *Extends:* :class:`MCMC`
+    
     Creates a chain of samples from a target distribution, using the adaptive
     covariance routine described in [1].
         
@@ -25,6 +27,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
     def run(self):
+        """See: :meth:`pints.MCMC.run()`."""
 
         # Target acceptance rate
         acceptance_target = 0.25

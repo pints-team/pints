@@ -38,11 +38,13 @@ class LogLikelihood(object):
 
 class BayesianLogLikelihood(LogLikelihood):
     """
+    *Extends:* :class:`LogLikelihood`
+    
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     and a class:`Prior`.
 
-    The returned value will be `log(prior(x)) + log_likelihood(x|problem)`.
-    If `prior(x) == 0` the method always returns `-inf`, regardless of the
+    The returned value will be ``log(prior(x)) + log_likelihood(x|problem)``.
+    If ``prior(x) == 0`` the method always returns ``-inf``, regardless of the
     value of the log-likelihood (which will not be evaluated).
 
     """
@@ -73,6 +75,8 @@ class BayesianLogLikelihood(LogLikelihood):
 
 class KnownNoiseLogLikelihood(LogLikelihood):
     """
+    *Extends:* :class:`LogLikelihood`
+    
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
     of that noise.
@@ -93,6 +97,8 @@ class KnownNoiseLogLikelihood(LogLikelihood):
 
 class UnknownNoiseLogLikelihood(LogLikelihood):
     """
+    *Extends:* :class:`LogLikelihood`
+    
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
     deviation (sigma) of that noise.
@@ -109,11 +115,13 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
 
 class ScaledLogLikelihood(LogLikelihood):
     """
+    *Extends:* :class:`LogLikelihood`
+    
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     divided by the number of time samples
 
-    The returned value will be `(1/n) * log_likelihood(x|problem)`, where
-    n is the number of time samples
+    The returned value will be ``(1/n) * log_likelihood(x|problem)``, where
+    ``n`` is the number of time samples
     """
     def __init__(self, log_likelihood):
         # Check arguments
@@ -125,5 +133,5 @@ class ScaledLogLikelihood(LogLikelihood):
         self._problem = log_likelihood._problem
 
     def __call__(self, x):
-        return self._log_likelihood(x)/self._size
+        return self._log_likelihood(x) / self._size
 
