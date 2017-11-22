@@ -24,7 +24,7 @@ class MCMC(object):
         An starting point in the parameter space.
     ``sigma0=None``
         An optional initial covariance matrix, i.e., a guess of the the
-        covariance of the likelihood around x0.
+        covariance of the likelihood around ``x0``.
 
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
@@ -77,7 +77,7 @@ class MCMC(object):
     
     def verbose(self):
         """
-        Returns `True` if the MCMC routine is set to run in verbose mode.
+        Returns ``True`` if the MCMC routine is set to run in verbose mode.
         """
         return self._verbose
 

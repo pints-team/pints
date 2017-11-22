@@ -16,6 +16,8 @@ import multiprocessing
 
 class XNES(pints.Optimiser):
     """
+    *Extends:* :class:`Optimiser`
+    
     Finds the best parameters using the xNES method described in [1, 2].
     
     xNES stands for Exponential Natural Evolution Strategy, and is
@@ -30,6 +32,7 @@ class XNES(pints.Optimiser):
     
     """
     def run(self):
+        """See :meth:`Optimiser.run()`."""
 
         # Default search parameters
         #TODO Allow changing before run() with method call
