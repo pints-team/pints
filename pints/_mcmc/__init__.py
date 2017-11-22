@@ -67,7 +67,7 @@ class MCMC(object):
         distribution of the given log-likelihood function.
         """
         raise NotImplementedError
-    
+
     def set_verbose(self, value):
         """
         Enables or disables verbose mode for this MCMC routine. In verbose
@@ -80,4 +80,5 @@ class MCMC(object):
         Returns ``True`` if the MCMC routine is set to run in verbose mode.
         """
         return self._verbose
+
 
