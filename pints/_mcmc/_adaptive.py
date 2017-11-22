@@ -38,7 +38,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
-        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0)
+        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0,
+            sigma0)
 
         # Target acceptance rate
         self._acceptance_target = 0.25
