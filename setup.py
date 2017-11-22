@@ -25,5 +25,6 @@ setup(
         'numpy',
         'scipy',
         'cma',
+        'guzzle-sphinx-theme',
         ],
 )
