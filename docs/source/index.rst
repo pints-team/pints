@@ -3,7 +3,7 @@
 .. _GitHub: https://github.com/martinjrobins/pints
 .. _Detailed examples: https://github.com/martinjrobins/pints/blob/master/examples/EXAMPLES.md
 
-Welcome to the Pints documentation
+Welcome to the pints documentation
 ==================================
 
 **Pints** is hosted on GitHub_, where you can find **downloads** and 
@@ -11,10 +11,13 @@ Welcome to the Pints documentation
 
 `Detailed examples`_ can also be found there.
 
-*This* page provides the *API*, or *developer documentation* for Pints.
+*This* page provides the *API*, or *developer documentation* for ``pints``.
 
-Pints API
-=========
+* :ref:`genindex`
+* :ref:`search`
+
+Contents
+========
 
 .. module:: pints
 
@@ -28,10 +31,4 @@ Pints API
     optimisers/index
     priors_and_boundaries
     utilities
-   
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
