@@ -9,12 +9,10 @@
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 import pints
-import os
 import numpy as np
 import scipy
 import scipy.linalg
 import multiprocessing
-import time
 
 class AdaptiveCovarianceMCMC(pints.MCMC):
     """
@@ -30,26 +28,9 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     """
     def __init__(self, log_likelihood, x0, sigma0=None, verbose=True):
         super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0, verbose)
+
         # Set default parameters
-        self.set_default()
 
-    def set_default(self):
-        """
-        Set MCMC routine required variables as default.
-
-        # Target acceptance rate
-        acceptance_target = 0.25
-        # Total number of iterations
-        # Default set for small iteration (linear grow)
-        iterations = 2000 * dimension
-        # Number of iterations before using adapation
-        adaptation = 0.25 * iterations
-        # Number of iterations to discard as burn-in
-        # Only make sense for small iterations
-        burn_in = 0.5 * iterations
-        # Thinning: Store only one sample per X
-        thinning = 4
-        """
         # Target acceptance rate
         self._acceptance_target = 0.25
         # Total number of iterations
@@ -75,31 +56,31 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         """
         return self._iterations
 
+    def adaptation_rate(self):
+        """
+        Return the fraction of the total number of iterations before
+        using adaptation.
+        """
+        return self._adaptation_rate
+
     def adaptation(self):
         """
         Return the number of iterations before adapation.
         """
         return self._adaptation
 
-    def adaptation_rate(self):
+    def burn_in_rate(self):
         """
-        Return the first fraction of the total number of iterations before
-        using adaptation.
+        Return the fraction of the total number of iterations to discard as
+        burn-in.
         """
-        return self._adaptation_rate
+        return self._burn_in_rate
 
     def burn_in(self):
         """
         Return the number of iterations to discard as burn-in.
         """
         return self._burn_in
-
-    def burn_in_rate(self):
-        """
-        Return the first fraction of the total number of iterations to discard as
-        burn-in.
-        """
-        return self._burn_in_rate
 
     def thinning(self):
         """
@@ -109,88 +90,95 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
     def set_acceptance_rate(self, rate):
         """
-        Set target acceptance rate.
+        Set target acceptance rate. 
+        
+        Default: 0.25
         """
         self._acceptance_target = rate
 
     def set_iterations(self, iterations):
         """
         Set the total number of iterations.
+
+        Default: 2000 * dimension of the problem
         """
         self._iterations = iterations
         self._adaptation = int(self._iterations * self._adaptation_rate)
         self._burn_in = int(self._iterations * self._burn_in_rate)
-        if self._thinning > self._adaptation:
-            print('WARNING: Thinning larger than adaptation')
-        if self._thinning > self._burn_in:
-            print('WARNING: Thinning larger than burn-in')
-        if self._thinning > self._iterations:
-            raise Exception('Thinning larger than total number of iterations')
 
     def set_adaptation_rate(self, rate):
         """
-        Set the first fraction of the total number of iterations before 
-        using adaptation.
+        Set the fraction of the total number of iterations before using
+        adaptation.
+
+        Default: 0.25
         """
         self._adaptation_rate = rate
         self._adaptation = int(self._iterations * self._adaptation_rate)
-        if self._adaptation > self._burn_in:
-            print('WARNING: Adaptation use after burn-in')
 
     def set_adaptation(self, adaptation):
         """
         Set the number of iterations before using adapation.
+
+        Default: 0.25 * number of iterations
         """
         self._adaptation = adaptation
         self._adaptation_rate = self._adaptation/self._iterations
-        if self._adaptation > self._burn_in:
-            print('WARNING: Adaptation use after burn-in')
 
     def set_burn_in_rate(self, rate):
         """
-        Set the first fraction of the total number of iterations to discard as 
+        Set the fraction of the total number of iterations to discard as 
         burn-in.
+
+        Default: 0.5
         """
         self._burn_in_rate = rate
         self._burn_in = int(self._iterations * self._burn_in_rate)
-        if self._adaptation > self._burn_in:
-            print('WARNING: Adaptation use after burn-in')
 
     def set_burn_in(self, burn_in):
         """
         Set the number of iterations to discard as burn-in.
+
+        Default: 0.5 * number of iterations
         """
         self._burn_in = burn_in
         self._burn_in_rate = self._burn_in/self._iterations
-        if self._adaptation > self._burn_in:
-            print('WARNING: Adaptation use after burn-in')
 
     def set_thinning(self, thinning):
         """
         Set thinning - store only one sample per X
+
+        Default: 4
         """
         self._thinning = thinning
-        if self._thinning > self._adaptation:
-            print('WARNING: Thinning larger than adaptation')
-        if self._thinning > self._burn_in:
-            print('WARNING: Thinning larger than burn-in')
-        if self._thinning > self._iterations:
-            raise Exception('Thinning larger than total number of iterations')
 
-    def print_setup(self):
+    def check_current_setting(self):
         """
-        Print to console the current setup info of the adaptive convariance
-        MCMC routine.
+        Check the current setting is valid for the adaptive covariance MCMC 
+        routine.
         """
-        print('\n## Adaptive convariance MCMC routine setup info')
-        print('Target acceptance rate: ' + str(self._acceptance_target))
-        print('Total number of iterations: ' + str(self._iterations))
-        print('Number of iterations before adapation: ' + str(self._adaptation))
-        print('Number of iterations to discard as burn-in: ' + str(self._burn_in))
-        print('Thinning: Store only one sample per ' + str(self._thinning) + '\n')
+        if self._thinning > self._adaptation:
+            raise ValueError(' thinning larger than adaptation')
+        if self._adaptation > self._burn_in:
+            raise ValueError(' adaptation apply after burn-in')
+        if self._burn_in > self._iterations:
+            raise ValueError(' adaptation apply after burn-in')
+
 
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
+        
+        # Check setting
+        self.check_current_setting()
+
+        # Print the current setting to console 
+        if self._verbose
+            print('\n## Adaptive convariance MCMC routine setup info')
+            print('Target acceptance rate: ' + str(self._acceptance_target))
+            print('Total number of iterations: ' + str(self._iterations))
+            print('Number of iterations before adapation: ' + str(self._adaptation))
+            print('Number of iterations to discard as burn-in: ' + str(self._burn_in))
+            print('Thinning: Store only one sample per ' + str(self._thinning) + '\n')
 
         # Problem dimension
         d = self._dimension
@@ -224,8 +212,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Chain of stored samples
         stored = int((iterations - burn_in) / thinning)
-        self._chain = np.zeros((stored, d))
-        chain = self._chain
+        chain = np.zeros((stored, d))
 
         # Initial acceptance rate (value doesn't matter)
         loga = 0
@@ -279,12 +266,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Return generated chain
         return chain
-
-    def chain(self):
-        """
-        Return chain.
-        """
-        return self._chain
 
 
 def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
