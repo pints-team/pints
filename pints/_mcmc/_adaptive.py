@@ -26,8 +26,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
-    def __init__(self, log_likelihood, x0, sigma0=None, verbose=True):
-        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0, verbose)
+    def __init__(self, log_likelihood, x0, sigma0=None):
+        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0, sigma0)
 
         # Set default parameters
 
@@ -172,7 +172,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         self.check_current_setting()
 
         # Print the current setting to console 
-        if self._verbose
+        if self._verbose:
             print('\n## Adaptive convariance MCMC routine setup info')
             print('Target acceptance rate: ' + str(self._acceptance_target))
             print('Total number of iterations: ' + str(self._iterations))
@@ -197,9 +197,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Thinning: Store only one sample per X
         thinning = self._thinning
-
-        # Print out what we are using once
-        self.print_setup()
 
         # Initial starting parameters
         mu = self._x0

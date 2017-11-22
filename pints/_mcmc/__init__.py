@@ -59,7 +59,7 @@ class MCMC(object):
             self._sigma0.setflags(write=False)
         
         # Print info to console
-        self._verbose = verbose
+        self._verbose = True
         
     def run(self):
         """
