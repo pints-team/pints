@@ -20,4 +20,10 @@ setup(
     url='https://github.com/martinjrobins/pints',
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
+    # List of dependencies
+    install_requires=[
+        'numpy',
+        'scipy',
+        'cma',
+        ],
 )
