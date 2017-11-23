@@ -17,7 +17,7 @@ setup(
     license=license,
     #author='',
     #author_email='',
-    url='https://github.com/martinjrobins/pints',
+    url='https://github.com/pints-team/pints',
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
     # List of dependencies
