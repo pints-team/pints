@@ -73,7 +73,7 @@ class Boundaries(object):
 
     def range(self):
         """
-        Returns the size of the parameter space (i.e. `upper - lower`).
+        Returns the size of the parameter space (i.e. ``upper - lower``).
         """
         return self._upper - self._lower
 
