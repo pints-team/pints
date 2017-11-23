@@ -17,6 +17,8 @@ setup(
     license=license,
     #author='',
     #author_email='',
+    maintainer='Michael Clerx',
+    maintainer_email='michael.clerx@cs.ox.ac.uk',
     url='https://github.com/pints-team/pints',
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
