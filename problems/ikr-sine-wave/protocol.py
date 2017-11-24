@@ -5,7 +5,6 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as pl
-sys.path.append(os.path.abspath('myokit'))
 import myokit
 
 data_file = os.path.realpath(os.path.join('sine-wave-data', 'sine-wave.csv'))

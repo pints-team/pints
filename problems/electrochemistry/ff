@@ -8,11 +8,9 @@ import numpy as np
 
 # Add paths
 ROOT = os.path.abspath(os.path.dirname(__file__))
-PINTS = os.path.abspath(os.path.join(ROOT, '..', '..'))
 BUILD = os.path.join(ROOT, 'build')
-for path in [PINTS, BUILD]:
-    if path not in sys.path:
-        sys.path.append(path)
+if BUILD not in sys.path:
+    sys.path.append(BUILD)
 
 import pints
 import electrochemistry

@@ -6,7 +6,6 @@ import numpy as np
 import scipy
 import scipy.io
 import matplotlib.pyplot as pl
-sys.path.append(os.path.join('..', 'myokit'))
 import myokit
 import myokit.formats.axon
 

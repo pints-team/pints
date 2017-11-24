@@ -4,7 +4,6 @@
 #
 import os
 import sys
-sys.path.append(os.path.abspath('myokit'))
 import myokit
 import myokit.formats.stan
 

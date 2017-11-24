@@ -34,16 +34,10 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 # All tests
 TEST = os.path.join(ROOT, 'test')
 
-# Pints root
-PINTS = os.path.abspath(os.path.join(ROOT, '..', '..'))
-
 # Compiled electrochemistry modules
 BUILD = os.path.join(ROOT, 'build')
-
-# Tell Python where to find stuff
-for path in [PINTS, BUILD]:
-    if path not in sys.path:
-        sys.path.append(path)
+if BUILD not in sys.path:
+    sys.path.append(BUILD)
 
 # Load selected tests or discover all
 loader = unittest.TestLoader()

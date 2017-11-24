@@ -3,7 +3,6 @@ import matplotlib.pyplot as pl
 import numpy as np
 import os
 import sys
-sys.path.append(os.path.abspath('myokit'))
 import myokit
 import myokit.pacing as pacing
 

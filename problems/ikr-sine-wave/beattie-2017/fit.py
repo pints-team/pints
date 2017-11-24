@@ -7,9 +7,7 @@ from __future__ import print_function
 import os
 import sys
 import numpy as np
-sys.path.append(os.path.abspath(os.path.join('..', '..', '..')))
 import pints
-sys.path.append(os.path.abspath(os.path.join('..', 'myokit')))
 import myokit
 import myokit.pacing as pacing
 
