@@ -1,4 +1,4 @@
-[![TravisCI](https://travis-ci.org/martinjrobins/pints.svg?branch=master)](https://travis-ci.org/martinjrobins/pints)
+[![TravisCI](https://travis-ci.org/pints-team/pints.svg?branch=master)](https://travis-ci.org/pints-team/pints)
 
 # What is Pints?
 
