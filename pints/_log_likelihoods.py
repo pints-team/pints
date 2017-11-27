@@ -94,4 +94,3 @@ class ScaledLogLikelihood(pints.LogLikelihood):
 
     def __call__(self, x):
         return self._log_likelihood(x) / self._size
-
