@@ -11,7 +11,6 @@ import unittest
 import pints
 import pints.toy as toy
 import numpy as np
-import matplotlib.pyplot as pl
 
 debug = False
 
