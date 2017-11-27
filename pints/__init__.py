@@ -133,18 +133,23 @@ from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 #from ._mcmc._differential_evolution import DreamMCMC
 #from ._mcmc._result import McmcResultObject
+from ._mcmc._smc import SMC
+
 
 #
 # Nested samplers
 #
+<<<<<<< HEAD
 from ._nested import NestedSampler
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
+
 
 #
 # Noise adders
 #
 import pints.noise
+
 
 #
 # Remove any imported modules, so we don't expose them as part of pints
