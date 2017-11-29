@@ -44,8 +44,8 @@ class ForwardModel(object):
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
 
-        Note: For efficiency, neither ``parameters`` or ``times`` should be
-        copied when `simulate` is called.
+        Note: For efficiency, both ``parameters`` and ``times`` will be passed
+        in as read-only numpy arrays.
         """
         raise NotImplementedError
 
@@ -95,7 +95,12 @@ class SingleSeriesProblem(object):
         Runs a simulation using the given parameters, returning the simulated
         values.
         """
-        return self._model.simulate(parameters, self._times)
+        # Simulate
+        values = self._model.simulate(parameters, self._times)
+        # Make sure it's the correct shape for a single-series problem (without
+        # error checking, because this will be called a lot!)
+        #return np.array(values, copy=False).reshape(self._values.shape)
+        return values
     
     def times(self):
         """
