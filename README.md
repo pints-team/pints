@@ -1,6 +1,6 @@
 [![TravisCI](https://travis-ci.org/pints-team/pints.svg?branch=master)](https://travis-ci.org/pints-team/pints)
 
-# What is Pints?
+# What is Pints??
 
 We are working on problems in the area of inverse modelling and baysian 
 inference as applied to problems in electrochemistry and cardiac 
