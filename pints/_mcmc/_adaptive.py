@@ -123,7 +123,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
-            #print(np.exp(loga))
             proposed = np.random.multivariate_normal(current,
                 np.exp(loga) * sigma)
             
