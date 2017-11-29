@@ -1,0 +1,30 @@
+Kylie's solution (see email 2017-09-03)
+=======================================
+
+Problem:
+Sine-wave protocol
+On cell 5, aka 16713110 (#5 in ranking, see paper, page 10)
+
+Likelihood:
+-1.5106e+006
+
+Parameters:
+
+2.2603e-004,
+6.9917e-002,
+3.4481e-005,
+5.4614e-002,
+8.7324e-002,
+8.9130e-003,
+5.1511e-003,
+3.1583e-002,
+1.5240e-001
+
+The protocol has a shift in it!
+
+    /* This shift is needed for simulated protocol to match the protocol
+     * recorded in experiment, which is shifted by 0.1ms as compared to the
+     * original input protocol. Consequently, each step is held for 0.1ms 
+     * longer in this version of the protocol as compared to the input.
+     */
+    double shift = 0.1;
