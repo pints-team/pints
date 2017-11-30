@@ -21,8 +21,8 @@ def trace(chain):
     """
     n_sample, n_param = chain.shape
 
-    fig = plt.figure(figsize=(14, 9))
-    for i in xrange(n_sample):
+    fig = plt.figure(figsize=(12, 2*n_param))
+    for i in xrange(n_param):
         # Add histogram subplot
         plt.subplot(n_param, 2, 1 + 2 * i)
         plt.xlabel('Parameter ' + str(i + 1))
@@ -49,8 +49,8 @@ def autocorrelation(chain):
     """
     n_sample, n_param = chain.shape
 
-    fig, axes = plt.subplots(1, n_param, sharex=True, figsize=(6, 2*n_param))
-    for i in xrange(n_sample):
+    fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2*n_param))
+    for i in xrange(n_param):
         axes[i].acorr(chain[:,i] - np.mean(chain[:,i]), label='p'+str(i+1))
         axes[i].set_xlim(-0.5, 20.5)
     axes[i].set_xlabel('Lag')
@@ -86,7 +86,7 @@ def prediction(chain, problem):
     fig = plt.figure(figsize=(7.5, 3.75))
     plt.xlabel('Time')
     plt.ylabel('Value')
-    pl.plot(times, predicted_values[0], color='#1f77b4', label='inferred series')
+    plt.plot(times, predicted_values[0], color='#1f77b4', label='inferred series')
     for v in predicted_values[1:]:
         plt.plot(times, v, color='#1f77b4', alpha=0.05)
     plt.plot(times, mean_values, color='black', lw=2, label='mean inferred')
@@ -146,7 +146,7 @@ def kde2d(X, Y, ax):
     values = np.vstack([X, Y])
     kernel = stats.gaussian_kde(values)
     Z = np.reshape(kernel(positions).T, X1.shape)
-    ax.imshow(np.rot90(Z), cmap=pl.cm.Blues, extent=[Xmin, Xmax, Ymin, Ymax])
+    ax.imshow(np.rot90(Z), cmap=plt.cm.Blues, extent=[Xmin, Xmax, Ymin, Ymax])
     ax.plot(X, Y, 'k.', markersize=2)
     forceAspect(ax)
 
