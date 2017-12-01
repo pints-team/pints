@@ -177,8 +177,6 @@ class ModelWithProtocol(pints.ForwardModel):
         self.simulation = myokit.Simulation(model, protocol)
         # Set Kylie tolerances
         self.simulation.set_tolerance(1e-8, 1e-8)
-        # Test
-        self.simulation.set_max_step_size(0.1)
     def dimension(self):
         return len(self.parameters)
     def simulate(self, parameters, times):
@@ -191,8 +189,7 @@ class ModelWithProtocol(pints.ForwardModel):
         try:
             d = self.simulation.run(
                 np.max(times+0.5*dt),
-                #log_times = times,
-                log_interval=dt,
+                log_times = times,
                 log = ['engine.time', 'ikr.IKr', 'membrane.V'],
                 ).npview()
         except myokit.SimulationError:
