@@ -45,8 +45,8 @@ del(mat)
 time = np.arange(len(current)) * 0.1
 
 # Correct tiny shift in stored data (doubling final point)
-vm[:-1] = vm[1:]
-current[:-1] = current[1:]
+#vm[:-1] = vm[1:]
+#current[:-1] = current[1:]
 
 # Show data with capacitance artefacts
 if show_debug:
