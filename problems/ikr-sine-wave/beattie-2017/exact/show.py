@@ -138,8 +138,6 @@ def erev(temperature):
     k_o = 4.0
     return ((R*T)/F) * np.log(k_o/K_i)
 E = erev(temperature)
-#print('E = ' + pints.strfloat(E))
-E = -88.3574598824809e+000
 
 #
 # Create ForwardModel
