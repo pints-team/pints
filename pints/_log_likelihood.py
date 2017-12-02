@@ -112,7 +112,7 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
 
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
-        return -(self.size / 2.0) * np.log(2.0 * math.pi) -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
+        return -(self._size / 2.0) * np.log(2.0 * math.pi) -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
 
 class ScaledLogLikelihood(LogLikelihood):
     """
