@@ -80,6 +80,10 @@ from ._optimisers._pso import PSO, pso
 from ._optimisers._snes import SNES, snes
 from ._optimisers._xnes import XNES, xnes
 
+
+# diagnostics
+from ._diagnostics import EffectiveSampleSize
+
 #
 # MCMC
 #
