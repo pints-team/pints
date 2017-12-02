@@ -43,8 +43,8 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
             [0.02, 600, noise*100]
             )
 
-        # Create a Bayesian log-likelihood (prior * likelihood)
-        self.log_likelihood = pints.BayesianLogLikelihood(self.prior,
+        # Create an un-normalised log-posterior (prior * likelihood)
+        self.log_likelihood = pints.LogPosterior(self.prior,
             pints.UnknownNoiseLogLikelihood(self.problem))
 
         # Select initial point and covariance
