@@ -9,7 +9,6 @@
 from __future__ import division
 import pints
 import numpy as np
-import math
 
 class LogLikelihood(object):
     """
@@ -126,6 +125,7 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
         self._logn = 0.5 * self._size * np.log(2 * np.pi)
+
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
         return -(self._logn + self._size * np.log(x[-1])
