@@ -89,7 +89,8 @@ class KnownNoiseLogLikelihood(LogLikelihood):
         if self._sigma <= 0:
             raise ValueError('Standard deviation must be greater than zero.')
         # Calculate parts
-        self._offset = -len(self._times) * np.log(self._sigma)
+        self._offset  = -0.5 * len(self._times) * np.log(2 * np.pi)
+        self._offset += -len(self._times) * np.log(self._sigma)
         self._multip = -1 / float(2 * self._sigma**2)
 
     def __call__(self, x):
@@ -103,17 +104,33 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
     deviation (sigma) of that noise.
+    
+    For a noise level of ``sigma``, the likelihood becomes:
+
+    .. math::
+        L(\\theta, \sigma) = p(data | \\theta, \sigma) = 
+            \prod_{i=1}^N \\frac{1}{2\pi\sigma^2}\exp\left(
+            -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
+
+    leading to a log likelihood of
+    
+    .. math::
+        \log{L(\\theta, \sigma)} = 
+            -\\frac{N}{2}\log{2\pi}
+            -N\log{\sigma}
+            -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
     """
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
-
+        self._logn = 0.5 * self._size * np.log(2 * np.pi)
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
-        return -(self._size / 2.0) * np.log(2.0 * math.pi) -self._size * np.log(x[-1]) - np.sum(error**2) / (2 * x[-1]**2)
-
+        return -(self._logn + self._size * np.log(x[-1])
+            + np.sum(error**2) / (2 * x[-1]**2))
+        
 class ScaledLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
