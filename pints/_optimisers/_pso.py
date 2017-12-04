@@ -21,7 +21,7 @@ class PSO(pints.Optimiser):
     Particle Swarm Optimisation (PSO) is a global search method (so refinement
     with a local optimiser is advised!) that works well for problems in high
     dimensions and with many local minima. Because it treats each parameter
-    indpendently, it does not require preconditioning of the search space.
+    independently, it does not require preconditioning of the search space.
     
     Detailed description:
     

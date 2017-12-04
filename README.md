@@ -22,6 +22,9 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 If your model implements these methods - or you can write a wrapper
 class that does - you can start using Pints for optimisation or MCMC.
 
+Here is an [example](examples/writing-a-model.ipynb) showing how to implement 
+your own model with Pints.
+
 ### Examples
 
 Pints comes with a number of [detailed examples](examples/EXAMPLES.md).
