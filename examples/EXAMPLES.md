@@ -23,7 +23,8 @@ of choice.
 - [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
 
 ## Plotting inference results
-- [Trace plots](./plot-mcmc-trace-plots.ipynb)
-- [Matrix scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
-- [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
+- [Trace plots](./plot-mcmc-trace-plots.ipynb)
+- [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
+- [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
+- [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
