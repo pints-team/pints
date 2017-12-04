@@ -21,3 +21,9 @@ of choice.
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
 - [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
+
+## Plotting inference results
+- [Trace plots](./plot-mcmc-trace-plots.ipynb)
+- [Matrix scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
+- [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
+- [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
