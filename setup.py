@@ -24,9 +24,10 @@ setup(
     packages=find_packages(include=('pints', 'pints.*')),
     # List of dependencies
     install_requires=[
-        'numpy>=1.8',
-        'scipy>=0.13',
         'cma>=2',
         'guzzle-sphinx-theme',
+        'matplotlib>=1.5',
+        'numpy>=1.8',
+        'scipy>=0.13',
         ],
 )
