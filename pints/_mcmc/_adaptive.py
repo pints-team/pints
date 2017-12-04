@@ -54,7 +54,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         self._burn_in = int(0.5 * self._iterations)
 
         # Thinning: Store only one sample per X
-        self._thinning_rate = 4
+        self._thinning_rate = 1
     
     def acceptance_rate(self):
         """
