@@ -16,9 +16,16 @@ import myokit.pacing as pacing
 root = os.path.realpath(os.path.join('..', '..'))
 
 cell = 5
-model_file = os.path.join(root, 'models', 'beattie-2017-ikr.mmt')
+model_file = os.path.join(root, 'models', 'beattie-2017-ikr-markov.mmt')
 data_file = os.path.join(root, 'sine-wave-data',  
     'cell-' + str(cell) + '.csv')
+
+# Load Kylie's data
+kylie_sim = np.loadtxt('figure_4_model_fit_new_model_fit.txt')
+kylie_sim = kylie_sim[:,1]
+kylie_pro = np.loadtxt('figure_4_model_fit_protocol.txt')
+kylie_tim = kylie_pro[:,0] * 1000
+kylie_pro = kylie_pro[:,1]
 
 #
 # Cell temperature
@@ -35,7 +42,6 @@ temperatures = {
 #if strcmp(exp_ref,'16707014')==1    temperature = 21.4;
 #if strcmp(exp_ref,'16708118')==1    temperature = 21.7;
 temperature = temperatures[cell]
-#TODO: Use temperature?
 
 #
 # Guesses for lower conductance
@@ -72,7 +78,6 @@ current = log['current']
 voltage = log['voltage']
 del(log)
 
-
 #
 # Estimate noise from start of data
 #
@@ -83,7 +88,7 @@ sigma_noise = np.std(current[:2000])
 #
 dt = 0.1
 steps = [
-    [-80, 250],
+    [-80, 250.1],
     [-120, 50],
     [-80, 200],
     [40, 1000],
@@ -97,24 +102,47 @@ steps = [
 #
 # Create capacitance filter based on protocol
 #
-cap_duration = 1.5
+cap_duration = 5 # Same as Kylie (also, see for example step at 500ms)
 fcap = np.ones(len(current), dtype=int)
-offset = 0
-for f, t in steps[:-1]:
-    offset += t
-    i1 = int(offset / dt)
-    i2 = i1 + int(cap_duration / dt)
-    fcap[i1:i2] = 0
+if False:
+    # Skip this bit to show/use all data
+    offset = 0
+    for f, t in steps[:-1]:
+        offset += t
+        i1 = int(offset / dt)
+        i2 = i1 + int(cap_duration / dt)
+        fcap[i1:i2] = 0
+fcap = fcap > 0
 
 #
 # Apply capacitance filter to data
 #
-current = current * fcap
+times = times[fcap]
+voltage = voltage[fcap]
+current = current[fcap]
+kylie_tim = kylie_tim[fcap]
+kylie_sim = kylie_sim[fcap]
+kylie_pro = kylie_pro[fcap]
+
+print(times[:3])
+print(times[-3:])
+
+#
+# Calculate reversal potential like Kylie does
+#
+def erev(temperature):
+    T = 273.15 + temperature
+    F = 96485.0
+    R = 8314.0
+    K_i = 130.0
+    k_o = 4.0
+    return ((R*T)/F) * np.log(k_o/K_i)
+E = erev(temperature)
 
 #
 # Create ForwardModel
 #
-class Model(pints.ForwardModel):
+class ModelWithProtocol(pints.ForwardModel):
     parameters = [
         'ikr.p1',
         'ikr.p2',
@@ -129,49 +157,100 @@ class Model(pints.ForwardModel):
     def __init__(self):
         # Load model
         model = myokit.load_model(model_file)
-        # Create pre-pacing protocol
-        protocol = myokit.pacing.constant(-80)
-        # Create pre-pacing simulation
-        self.simulation1 = myokit.Simulation(model, protocol)
+        # Set reversal potential
+        model.get('nernst.EK').set_rhs(E)
         # Add sine-wave equation to model
         model.get('membrane.V').set_rhs(
-            'if(engine.time < 3000 or engine.time >= 6500,'
-            + ' engine.pace, '
+            'if(engine.time >= 3000.1 and engine.time < 6500.1,'
             + ' - 30'
-            + ' + 54 * sin(0.007 * (engine.time - 2500))'
-            + ' + 26 * sin(0.037 * (engine.time - 2500))'
-            + ' + 10 * sin(0.190 * (engine.time - 2500))'
-            + ')')
+            + ' + 54 * sin(0.007 * (engine.time - 2500.1))'
+            + ' + 26 * sin(0.037 * (engine.time - 2500.1))'
+            + ' + 10 * sin(0.190 * (engine.time - 2500.1))'
+            + ', engine.pace)')
         # Create step protocol
         protocol = myokit.Protocol()
         for f, t in steps:
             protocol.add_step(f, t)
-        # Create simulation for sine-wave protocol
-        self.simulation2 = myokit.Simulation(model, protocol)
-        #self.simulation2.set_tolerance(1e-8, 1e-8)
+        # Create simulation
+        self.simulation = myokit.Simulation(model, protocol)
+        # Set Kylie tolerances
+        self.simulation.set_tolerance(1e-8, 1e-8)
+    def dimension(self):
+        return len(self.parameters)
+    def simulate(self, parameters, times):
+        # Note: Kylie doesn't do pre-pacing!
+        # Update model parameters
+        for i, name in enumerate(self.parameters):
+            self.simulation.set_constant(name, parameters[i])
+        # Run
+        self.simulation.reset()
+        try:
+            d = self.simulation.run(
+                np.max(times+0.5*dt),
+                log_times = times,
+                log = ['engine.time', 'ikr.IKr', 'membrane.V'],
+                ).npview()
+        except myokit.SimulationError:
+            return times * float('inf')
+        # Store membrane potential for debugging
+        self.simulated_v = d['membrane.V']
+        print(d.time()[:3])
+        print(d.time()[-3:])
+        
+        # Apply capacitance filter and return
+        return d['ikr.IKr']
+
+class ModelDataClamp(pints.ForwardModel):
+    parameters = [
+        'ikr.p1',
+        'ikr.p2',
+        'ikr.p3',
+        'ikr.p4',
+        'ikr.p5',
+        'ikr.p6',
+        'ikr.p7',
+        'ikr.p8',
+        'ikr.p9',
+        ]
+    def __init__(self):
+        # Load model
+        model = myokit.load_model(model_file)
+        # Set reversal potential to Kylie value
+        model.get('nernst.EK').set_rhs(E)
+        # Create simulation
+        self.simulation = myokit.Simulation(model)
+        # Apply data-clamp
+        self.simulation.set_fixed_form_protocol(times, voltage)
+        # Set Kylie tolerances
+        self.simulation.set_tolerance(1e-8, 1e-8)
+        # Set Kylie max step size (also needed for data clamp)
+        self.simulation.set_max_step_size(0.1)
     def dimension(self):
         return len(self.parameters)
     def simulate(self, parameters, times):
         # Update model parameters
         for i, name in enumerate(self.parameters):
-            self.simulation1.set_constant(name, parameters[i])
-            self.simulation2.set_constant(name, parameters[i])
+            self.simulation.set_constant(name, parameters[i])
         # Run
-        self.simulation1.reset()
-        self.simulation2.reset()
+        self.simulation.reset()
         try:
-            self.simulation1.pre(10000)
-            self.simulation2.set_state(self.simulation1.state())
-            d = self.simulation2.run(
+            d = self.simulation.run(
                 np.max(times),
                 log_times = times,
-                log = ['ikr.IKr'],
+                log = ['ikr.IKr', 'membrane.V'],
                 ).npview()
         except myokit.SimulationError:
-            return float('inf')
+            return times * float('inf')
+        # Store membrane potential for debugging
+        self.simulated_v = d['membrane.V']
         # Apply capacitance filter and return
-        return d['ikr.IKr'] * fcap
-model = Model()
+        return d['ikr.IKr']
+
+#
+# Choose simulation implementation
+#
+model = ModelWithProtocol()
+#model = ModelDataClamp()
 
 #
 # Define problem
@@ -182,33 +261,6 @@ problem = pints.SingleSeriesProblem(model, times, current)
 # Select a score function
 #
 score = pints.SumOfSquaresError(problem)
-
-#
-# Set up boundaries
-#
-lower = [
-    lower_alpha,
-    lower_beta,
-    lower_alpha,
-    lower_beta,
-    lower_alpha,
-    lower_beta,
-    lower_alpha,
-    lower_beta,
-    lower_conductance,
-    ]
-upper = [
-    upper_alpha,
-    upper_beta,    
-    upper_alpha,
-    upper_beta,    
-    upper_alpha,
-    upper_beta,    
-    upper_alpha,
-    upper_beta,    
-    upper_conductance,
-    ]
-boundaries = pints.Boundaries(lower, upper)
 
 #
 # Load earlier result
@@ -241,26 +293,98 @@ print('Log-likelihood: ' + pints.strfloat(log_likelihood(obtained_parameters)))
 # Simulate
 simulated = model.simulate(obtained_parameters, times)
 
-# Load Kylie's data
-kylie_sim = np.loadtxt('figure_4_model_fit_new_model_fit.txt')
-kylie_sim[:,0] *= 1000
-kylie_pro = np.loadtxt('figure_4_model_fit_protocol.txt')
-kylie_pro[:,0] *= 1000
-
 # Plot
 import matplotlib.pyplot as pl
 pl.figure()
-pl.subplot(2,1,1)
-pl.plot(times, voltage)
-pl.plot(kylie_pro[:,0], kylie_pro[:,1], 'x-', label='kylie')
+pl.subplot(4,1,1)
+#pl.plot(times, voltage, 'd-', label='my data file')
+pl.plot(kylie_tim, kylie_pro, 'x-', lw=4, alpha=0.75, label='kylie')
+pl.plot(times, model.simulated_v, 'o-', alpha=0.75, label='michael')
 pl.legend(loc='upper right')
-pl.subplot(2,1,2)
-pl.plot(times, current, label='real')
-pl.plot(times, simulated, 'o-', label='fit')
-pl.plot(kylie_sim[:,0], kylie_sim[:,1], 'x-', label='kylie model')
+
+n = len(steps) + 1
+offset = 0
+for v, t in steps:
+    offset += t
+    pl.axvline(offset - 1, alpha=0.25)
+    pl.axvline(offset + 1, alpha=0.25)
+
+nlo, nhi = 2, 2
+n = len(steps) + 1
+pl.subplot(4,n,1+n)
+offset = 0
+lo, hi = 0, int(offset/dt) + nhi + 2
+#pl.plot(times[lo:hi], voltage[lo:hi], 'd-', label='my data file')
+pl.plot(kylie_tim[lo:hi], kylie_pro[lo:hi], 'x-', lw=4, alpha=0.75, label='kylie')
+pl.plot(times[lo:hi], model.simulated_v[lo:hi], 'o-', alpha=0.75, label='michael')
+pl.xlim(offset - nlo*dt, offset + nhi*dt)
+pl.tick_params(axis='x', labelsize=6)
+pl.grid(True)
+for k, step in enumerate(steps):
+    pl.subplot(4,n,2+n+k)
+    v, t = step
+    offset += t
+    lo, hi = int(offset/dt) - nlo - 2, min(int(offset/dt) + nhi + 2, len(times))
+    #pl.plot(times[lo:hi], voltage[lo:hi], 'd-', label='my data file')
+    pl.plot(kylie_tim[lo:hi], kylie_pro[lo:hi], 'x-', lw=4, alpha=0.75, label='kylie')
+    pl.plot(times[lo:hi], model.simulated_v[lo:hi], 'o-', alpha=0.75, label='michael')
+    pl.xlim(offset - nlo*dt, offset + nhi*dt)
+    pl.tick_params(axis='x', labelsize=6)
+    pl.grid(True)
+
+pl.subplot(4,1,3)
+pl.grid(True)
+pl.plot(kylie_tim, kylie_sim, 'x-', label='kylie')
+pl.plot(times, simulated, 'o-', label='michael')
+#pl.plot(times, current, label='real')
 pl.legend(loc='lower right')
-#pl.xlim(1499.7, 1500.3)
-#pl.ylim(0.19k, 0.25)
+
+n = len(steps) + 1
+offset = 0
+for v, t in steps:
+    offset += t
+    pl.axvline(offset, alpha=0.25)
+
+
+nlo, nhi = 3, 10
+n = len(steps) + 1
+pl.subplot(4,n,1+3*n)
+offset = 0
+lo, hi = 0, int(offset/dt) + nhi
+pl.plot(kylie_tim[lo:hi], kylie_sim[lo:hi], 'x-', label='kylie')
+pl.plot(times[lo:hi], simulated[lo:hi], 'o-', label='michael')
+pl.xlim(offset - dt*nlo, offset + dt*nhi)
+for k, step in enumerate(steps):
+    pl.subplot(4,n,2+3*n+k)
+    v, t = step
+    offset += t
+    lo, hi = int(offset/dt) - nlo, min(int(offset/dt) + nhi, len(times))
+    pl.plot(kylie_tim[lo:hi], kylie_sim[lo:hi], 'x-', label='kylie')
+    pl.plot(times[lo:hi], simulated[lo:hi], 'o-', label='michael')
+    pl.xlim(offset - dt*nlo, offset + dt*nhi)
+
+pl.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
+
+# Figure 2
+pl.figure()
+pl.plot(kylie_tim, kylie_sim, 'x-', lw=2, alpha=0.5, label='kylie')
+pl.plot(times, simulated, 'o-', alpha=0.5, label='michael')
+pl.plot(times, current, label='real')
+pl.legend(loc='lower right')
+n = len(steps) + 1
+offset = 0
+for v, t in steps:
+    offset += t
+    pl.axvline(offset, alpha=0.25)
+
+pl.figure()
+pl.grid(True)
+pl.plot(kylie_tim, kylie_sim - simulated)
+n = len(steps) + 1
+offset = 0
+for v, t in steps:
+    offset += t
+    pl.axvline(offset, color='tab:green', alpha=0.25)
+
 pl.show()
-    
 

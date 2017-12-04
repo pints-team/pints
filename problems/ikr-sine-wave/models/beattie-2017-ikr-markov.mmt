@@ -1,0 +1,94 @@
+[[model]]
+name: Beattie-2017-IKr
+author: Michael Clerx
+desc: Kylie's model as imported from the Mex file
+# Initial values
+ikr.y1 = 0
+ikr.y2 = 0
+ikr.y3 = 0
+
+#
+# Simulation engine variables
+#
+[engine]
+time = 0 bind time
+pace = 0 bind pace
+
+#
+# Membrane potential
+#
+[membrane]
+V = engine.pace
+    desc: membane potential
+    in [mV]
+
+[nernst]
+EK = -85 [mV]
+
+#
+# Model from Kylie's mex file (HH)
+#
+[ikr]
+use membrane.V
+IKr = p9 * y3 * (V - nernst.EK)
+y4 = 1 - y1 - y2 - y3
+k12 = p1 * exp( p2 * V)
+k21 = p3 * exp(-p4 * V)
+k41 = p5 * exp( p6 * V)
+k14 = p7 * exp(-p8 * V)
+dot(y1) = -k12 * y1 + k21 * y2 + k41 * y4 - k14 * y1
+dot(y2) = -k14 * y2 + k41 * y3 + k12 * y1 - k21 * y2
+dot(y3) = -k21 * y3 + k12 * y4 + k14 * y2 - k41 * y3
+p1 = 2.26e-4 [1/ms]
+p2 = 0.06990 [1/mV]
+p3 = 3.45e-5 [1/ms]
+p4 = 0.05462 [1/mV]
+p5 = 0.08730 [1/ms]
+p6 = 8.91e-3 [1/mV]
+p7 = 5.15e-3 [1/ms]
+p8 = 0.03158 [1/mV]
+p9 = 0.15240 [mS/uF]
+
+[[script]]
+import myokit
+import myokit.pacing as pacing
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as pl
+
+#
+# Simple IKr test script
+#
+
+# Get model
+m = get_model()
+
+# Create pacing protocol
+v = np.arange(-100, 50 + 10, 10)
+p = pacing.steptrain(
+        vsteps=v,
+        vhold=-80,
+        tpre=2000,
+        tstep=5000,
+        tpost=3000)
+
+# Run simulation
+s = myokit.Simulation(m, p)
+d = s.run(p.characteristic_time())
+
+# Create colormap for plotting
+cmap = matplotlib.cm.get_cmap('viridis')
+norm = matplotlib.colors.Normalize(0, len(v))
+
+# Plot data as overlapping steps
+d2 = d.npview()
+d2 = d2.regularize(0.5)
+d2 = d2.fold(10000)
+pl.figure()
+for k in xrange(len(v)):
+    pl.subplot(2,1,1)
+    pl.plot(d2.time(), d2['membrane.V', k], color=cmap(norm(k)))
+    pl.subplot(2,1,2)
+    pl.plot(d2.time(), d2['ikr.IKr', k], color=cmap(norm(k)))
+pl.show()
+
