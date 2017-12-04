@@ -6,7 +6,7 @@ Log-likelihoods
 
 .. autoclass:: LogLikelihood
 
-.. autoclass:: BayesianLogLikelihood
+.. autoclass:: LogPosterior
 
 .. autoclass:: KnownNoiseLogLikelihood
 
