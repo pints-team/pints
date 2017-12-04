@@ -30,5 +30,6 @@ Contents
     mcmc/index
     optimisers/index
     priors_and_boundaries
+    toy/index
     utilities
 
