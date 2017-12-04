@@ -168,8 +168,8 @@ class TestModel(unittest.TestCase):
         # Create a uniform prior over both the parameters and the new noise variable
         prior = pints.ComposedPrior(*priors)
 
-        # Create a Bayesian log-likelihood (prior * likelihood)
-        score = pints.BayesianLogLikelihood(prior, log_likelihood)
+        # Create an unnormalised (prior * likelihood)
+        score = pints.LogPosterior(prior, log_likelihood)
 
         # Select some boundaries
         boundaries = pints.Boundaries(lower_bounds,upper_bounds)
