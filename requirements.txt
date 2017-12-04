@@ -1,4 +1,5 @@
 cma
+guzzle-sphinx-theme
+matplotlib
 numpy
 scipy
-guzzle-sphinx-theme
