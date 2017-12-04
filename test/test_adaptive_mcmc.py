@@ -72,7 +72,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertEqual(mcmc.burn_in(), i)
 
         # Store only every 4th sample
-        r = int(mcmc.thinning_rate() * 0.5)
+        r = 4
         mcmc.set_thinning_rate(r)
         self.assertEqual(mcmc.thinning_rate(), r)
 
