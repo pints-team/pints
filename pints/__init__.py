@@ -90,6 +90,12 @@ from ._diagnostics import effective_sample_size
 from ._mcmc import MCMC
 from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 
+#
+# Nested samplers
+#
+from ._nested import NestedSampler
+from ._nested._nestedRejection import NestedRejectionSampler
+from ._nested._nestedEllipsoid import NestedEllipsoidSampler
 
 #
 # Remove any imported modules, so we don't expose them as part of pints
