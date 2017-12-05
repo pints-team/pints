@@ -26,7 +26,6 @@ setup(
     install_requires=[
         'cma>=2',
         'guzzle-sphinx-theme',
-        'matplotlib>=1.5',
         'numpy>=1.8',
         'scipy>=0.13',
         ],
