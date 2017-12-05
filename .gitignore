@@ -10,4 +10,4 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Apple stuff
-# .DS_Store
+.DS_Store
