@@ -8,3 +8,6 @@ __pycache__/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Apple stuff
+# .DS_Store
