@@ -24,6 +24,7 @@ Contents
 .. toctree::
    
     core_classes_and_methods
+    diagnostic_plots
     error_measures
     function_evaluation
     log_likelihoods
