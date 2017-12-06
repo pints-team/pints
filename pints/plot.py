@@ -1,80 +1,83 @@
 #
-# Quick diagnostic tools for inference results
+# Quick diagnostic plots.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+from __future__ import division
 import pints
 import numpy as np
 from scipy import stats
 try:
     import matplotlib.pyplot as plt
 except:
-    raise ImportError("The module pints.plot requires matplotlib.pyplot")
+    raise ImportError("The module pints.plot requires matplotlib")
 
 def trace(chain, *args):
     """
-    This method creates and returns a trace plot for the given MCMC chain(s).
-
+    Takes one or more markov chains as input and creates and returns a plot
+    showing histograms and traces for each chain.
+    
     Arguments:
 
     `chain`
-        MCMC routine returned chain.
-        More `chain`s can be input follow after the first chain.
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
+    `*args`
+        Additional chains can be added after the initial argument.
 
-    Return:
-
-    `fig`
-        A `matplotlib` figure object.
-
+    Returns a `matplotlib` figure object.
     """
+    bins = 40
+    alpha = 0.5
     n_sample, n_param = chain.shape
 
+    # Set up figure, plot first chain
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2*n_param))
     for i in xrange(n_param):
         # Add histogram subplot
-        axes[i,0].set_xlabel('Parameter ' + str(i + 1))
-        axes[i,0].set_ylabel('Frequency')
-        axes[i,0].hist(chain[:,i], label='p' + str(i + 1), bins=40, 
-                color='green', alpha=0.5)
+        axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+        axes[i, 0].set_ylabel('Frequency')
+        axes[i, 0].hist(chain[:,i], bins=bins, histtype='step',
+            label='Chain 1')
 
         # Add trace subplot
-        axes[i,1].set_xlabel('Iteration')
-        axes[i,1].set_ylabel('Parameter ' + str(i + 1))
-        axes[i,1].plot(chain[:,i], color='green', alpha=0.5)
+        axes[i, 1].set_xlabel('Iteration')
+        axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
+        axes[i, 1].plot(chain[:,i], alpha=alpha)
 
+    # Plot additional chains
     if args:
-        for more_chain in args:
-            n_sample, n_param = more_chain.shape
-            if n_param != chain.shape[1]:
-                raise Exception('Input chains must have the same number of'
-                        ' parameters')
+        for i_chain, chain in enumerate(args):
+            if chain.shape[1] != n_param:
+                raise ValueError('All chains must have the same number of'
+                    ' parameters.')
             for i in xrange(n_param):
-                axes[i,0].hist(more_chain[:,i], bins=40, alpha=0.5)
-                axes[i,1].plot(more_chain[:,i], alpha=0.5)            
+                axes[i, 0].hist(chain[:,i], bins=bins, histtype='step',
+                    label='Chain ' + str(2 + i_chain))
+                axes[i, 1].plot(chain[:,i], alpha=alpha)
+        axes[0, 0].legend()
 
     plt.tight_layout()
     return fig
 
-def autocorrelation(chain, max_lags=20):
+def autocorrelation(chain, max_lags=10):
     """
-    This method creates and returns an autocorrelation plot for the given MCMC
-    chain.
+    Creates and returns an autocorrelation plot for a given markov `chain`.
 
     Arguments:
 
     `chain`
-        MCMC routine returned chain.
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
     `max_lags`
-        (Optional) number of lags to show. Default max_lags=20.
+        (Optional) The maximum autocorrelation lag to plot.
 
-    Return:
-
-    `fig`
-        A `matplotlib` figure object.
-
+    Returns a `matplotlib` figure object.
     """
     n_sample, n_param = chain.shape
 
@@ -82,168 +85,157 @@ def autocorrelation(chain, max_lags=20):
     for i in xrange(n_param):
         axes[i].acorr(chain[:,i] - np.mean(chain[:,i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags+0.5)
+        axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
+    
+    # Add x-label to final plot only
     axes[i].set_xlabel('Lag')
+    
+    # Add vertical y-label to middle plot
     #fig.text(0.04, 0.5, 'Autocorrelation', va='center', rotation='vertical')
     axes[int(i/2)].set_ylabel('Autocorrelation')
 
     plt.tight_layout()
     return fig
 
-def prediction(chain, problem):
+def series(chain, problem, thinning=None):
     """
-    This method creates and returns a predicted time series plot based on the
-    MCMC reults.
+    Creates and returns a plot of predicted time series for a given markov
+    `chain` and a single-series `problem`.
+    
+    Because this method runs simulations, it can take a considerable time to
+    run.
 
     Arguments:
 
     `chain`
-        MCMC routine returned chain.
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
     `problem`
-        pints.SingleSeriesProblem object.
+        A :class:`pints.SingleSeriesProblem` of a dimension equal to or greater
+        than the `dimension` of the markov chain. Any extra parameters present
+        in the chain but not accepted by the SingleSeriesProblem (for example
+        parameters added by a noise model) will be ignored.
+    `thinning`
+        (Optional) An integer greater than zero. If specified, only every 
+        n-th sample (with `n = thinning`) in the chain will be used. If left at
+        the default value `None`, a value will be chosen so that 200 to 400
+        predictions are shown.
 
-    Return:
-    
-    `fig`
-        A `matplotlib` figure object.
-
+    Returns a `matplotlib` figure object.
     """
-    if not isinstance(problem, pints.SingleSeriesProblem):
-        raise TypeError('Second argument to prediction() must be'
-                ' pints.SingleSeriesProblem type')
-
     n_sample, n_param = chain.shape
-    # Aviod having too many lines/simulations
-    plot_n_sample = 1000 if n_sample>1000 else n_sample
+
+    # Get problem dimension
+    dimension = problem.dimension()
+    
+    # Get thinning rate
+    if thinning is None:
+        thinning = max(1, int(n_sample / 200))
+    else:
+        thinning = int(thinning)
+        if thinning < 1:
+            raise ValueError('Thinning rate must be `None` or an integer'
+                ' greater than zero.')
+
+    # Get times    
     times = problem.times()
 
-    # Evaluate the model for all inferred parameters
+    # Evaluate the model for all parameter sets in the chain
+    i = 0
     predicted_values = []
-    for params in chain[-plot_n_sample:,:]:
-        predicted_values.append(problem.evaluate(params[:-1]))
+    for params in chain[::thinning, :dimension]:
+        predicted_values.append(problem.evaluate(params))
+        i += 1
     predicted_values = np.array(predicted_values)
     mean_values = np.mean(predicted_values, axis=0)
+    
+    # Guess appropriate alpha (0.05 worked for 1000 plots)
+    alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
     # Plot prediction
-    fig = plt.figure(figsize=(7.5, 3.75))
+    fig = plt.figure(figsize=(6, 4))
     plt.xlabel('Time')
     plt.ylabel('Value')
-    plt.plot(times, predicted_values[0], color='#1f77b4', label='inferred series')
+    plt.plot(times, predicted_values[0], color='#1f77b4',
+        label='Inferred series')
     for v in predicted_values[1:]:
-        plt.plot(times, v, color='#1f77b4', alpha=0.05)
-    plt.plot(times, mean_values, color='black', lw=2, label='mean inferred')
-    plt.plot(times, problem.values(), 'o', color='#7f7f7f', ms=6.5, label='data points')
+        plt.plot(times, v, color='#1f77b4', alpha=alpha)
+    plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
+    plt.plot(times, problem.values(), 'o', color='#7f7f7f', ms=6.5,
+        label='Original data')
+    plt.legend()
 
     return fig
 
-def _force_equal_aspect_ratio(ax):
+def pairwise(chain, kde=False):
     """
-    Force aspect ratio to be equal.
-
-    see: https://stackoverflow.com/questions/7965743
-
-    `ax`
-        `matplotlib` axes handle.
-
-    """
-    im = ax.get_images()
-    ex = im[0].get_extent()
-    ax.set_aspect(abs((ex[1]-ex[0])/(ex[3]-ex[2])))
-
-
-def histogram(axes, X, kde=False):
-    """
-    This method plots 1D histogram of the given variable to the given 
-    `matplotlib` axes.
-
-    Arguments:
-
-    `axes`
-        `matplotlib` axes handle.
-    `X`
-        An array of the variable to plot.
-    `kde` (bool)
-        If True, use KDE to estimate the density distribution. Default False.
-
-    """
-    Xmin = np.min(X)
-    Xmax = np.max(X)
-    x_hist = np.linspace(Xmin, Xmax, 50)
-    axes.hist(X, bins=x_hist, normed=True)
-    if kde:
-        x_kde = np.linspace(Xmin, Xmax, 100)
-        kernel = stats.gaussian_kde(X)
-        Z = kernel(x_kde)
-        axes.plot(x_kde, Z)
-    #_force_equal_aspect_ratio(ax)
-
-
-def scatter(axes, X, Y, kde=False):
-    """
-    This method plots 2D pairwise plot of the two given variables to the given
-    `matplotlib` axes.
-
-    Arguments:
-
-    `axes`
-        `matplotlib` axes handle.
-    `X`
-        An array of the first variable to plot.
-    `Y`
-        An array of the second variable to plt.
-    `kde` (bool)
-        If True, use KDE to estimate the density distribution. Default False.
-
-    """
-    Xmin, Xmax = np.min(X), np.max(X)
-    Ymin, Ymax = np.min(Y), np.max(Y)
-    if not kde:
-        x_hist = np.linspace(Xmin, Xmax, 25)
-        y_hist = np.linspace(Ymin, Ymax, 25)
-        axes.hist2d(X, Y, bins=[x_hist,y_hist], normed=True, cmap=plt.cm.Blues)
-    else:
-        X_kde, Y_kde = np.mgrid[Xmin:Xmax:100j, Ymin:Ymax:100j]
-        positions = np.vstack([X_kde.ravel(), Y_kde.ravel()])
-        values = np.vstack([X, Y])
-        kernel = stats.gaussian_kde(values)
-        Z = np.reshape(kernel(positions).T, X_kde.shape)
-        axes.imshow(np.rot90(Z), cmap=plt.cm.Blues, extent=[Xmin, Xmax, Ymin, Ymax])
-        axes.plot(X, Y, 'k.', markersize=2)
-    _force_equal_aspect_ratio(axes)
-
-
-
-def pairwise_scatter(chain, kde=False):
-    """
-    This method creates and returns a pairwise scatterplot matrix for the 
-    given MCMC chain.
+    Takes a markov chain and creates a set of pairwise scatterplots for all
+    parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
+    
+    The returned plot is in a 'matrix' form, with histograms of each individual
+    parameter on the diagonal, and scatter plots of parameters `i` and `j` on
+    each entry `(i, j)` below the diagonal.
 
     Arguments:
 
     `chain`
-        MCMC routine returned chain.
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
     `kde` (bool)
-        if True, use KDE to estimate the density distribution. Default False.
+        Set to `True` to use kernel-density estimation for the histograms and
+        scatter plots.
 
-    Return:
-
-    `fig`
-        A `matplotlib` figure object.
-
+    Returns a `matplotlib` figure object.
     """
     n_sample, n_param = chain.shape
     fig_size = (3*n_param, 3*n_param)
 
+    bins = 25
     fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
     for i in range(n_param):
         for j in range(n_param):
             if i == j:
-                # Plot the diagonal
-                histogram(axes[i,j], chain[:,i], kde=kde)
+                # Diagonal: Plot a histogram
+                xmin, xmax = np.min(chain[:,i]), np.max(chain[:,i])
+                xbins = np.linspace(xmin, xmax, bins)
+                axes[i,j].hist(chain[:,i], bins=xbins, normed=True)
+                if kde:
+                    x = np.linspace(xmin, xmax, 100)
+                    axes[i,j].plot(x, stats.gaussian_kde(chain[:,i])(x))
             elif i < j:
+                # Top-right: no plot
                 axes[i,j].axis('off')
             else:
-                # Plot the samples as density map
-                scatter(axes[i,j], chain[:,j], chain[:,i], kde=kde)
+                # Lower-left: Plot the samples as density map
+                xmin, xmax = np.min(chain[:,j]), np.max(chain[:,j])
+                ymin, ymax = np.min(chain[:,i]), np.max(chain[:,i])
+                if not kde:
+                    # Create an ordinary histogram
+                    xbins = np.linspace(xmin, xmax, bins)
+                    ybins = np.linspace(ymin, ymax, bins)
+                    axes[i,j].hist2d(chain[:,j], chain[:,i],
+                        bins=[xbins,ybins], normed=True, cmap=plt.cm.Blues)
+                else:
+                    # Create a kernel-density estimate plot
+                    x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+                    values = np.vstack([chain[:,j], chain[:,i]])
+                    values = stats.gaussian_kde(values)
+                    values = values(np.vstack([x.ravel(), y.ravel()]))
+                    values = np.reshape(values.T, x.shape)
+                    axes[i,j].imshow(np.rot90(values), cmap=plt.cm.Blues,
+                        extent=[xmin, xmax, ymin, ymax])
+                    axes[i,j].plot(chain[:,j], chain[:,i], 'k.', markersize=2,
+                        alpha=0.5)
+                
+                    # Force equal aspect ratio
+                    # See: https://stackoverflow.com/questions/7965743
+                    im = axes[i,j].get_images()
+                    ex = im[0].get_extent()
+                    axes[i,j].set_aspect(
+                        abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
+                
             if i < n_param-1:
                 # Only show x tick labels for the last row
                 axes[i,j].set_xticklabels([])
@@ -256,10 +248,10 @@ def pairwise_scatter(chain, kde=False):
                 axes[i,j].set_yticklabels([])
         if i > 0:
             # The first one is not a parameter
-            axes[i,0].set_ylabel('parameter %d'%(i+1))
+            axes[i,0].set_ylabel('Parameter %d'%(i+1))
         else:
-            axes[i,0].set_ylabel('probability density')
-        axes[-1,i].set_xlabel('parameter %d'%(i+1))
+            axes[i,0].set_ylabel('Frequency')
+        axes[-1,i].set_xlabel('Parameter %d'%(i+1))
 
     return fig
 
