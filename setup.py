@@ -25,8 +25,14 @@ setup(
     # List of dependencies
     install_requires=[
         'cma>=2',
-        'guzzle-sphinx-theme',
         'numpy>=1.8',
         'scipy>=0.13',
         ],
+    extras_require={
+        'docs' : [
+            'guzzle-sphinx-theme',
+            'matplotlib>=1.5',      # For plot documentation
+            'sphinx>=1.5',            
+            ],
+        },
 )
