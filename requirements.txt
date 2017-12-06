@@ -1,4 +1,0 @@
-cma
-guzzle-sphinx-theme
-numpy
-scipy
