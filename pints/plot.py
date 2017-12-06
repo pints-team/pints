@@ -29,7 +29,7 @@ def trace(chain, *args):
     `*args`
         Additional chains can be added after the initial argument.
 
-    Returns a `matplotlib` figure object.
+    Returns a `matplotlib` figure object and axes handle.
     """
     bins = 40
     alpha = 0.5
@@ -62,7 +62,7 @@ def trace(chain, *args):
         axes[0, 0].legend()
 
     plt.tight_layout()
-    return fig
+    return fig, axes
 
 def autocorrelation(chain, max_lags=10):
     """
@@ -77,7 +77,7 @@ def autocorrelation(chain, max_lags=10):
     `max_lags`
         (Optional) The maximum autocorrelation lag to plot.
 
-    Returns a `matplotlib` figure object.
+    Returns a `matplotlib` figure object and axes handle.
     """
     n_sample, n_param = chain.shape
 
@@ -95,7 +95,7 @@ def autocorrelation(chain, max_lags=10):
     axes[int(i/2)].set_ylabel('Autocorrelation')
 
     plt.tight_layout()
-    return fig
+    return fig, axes
 
 def series(chain, problem, thinning=None):
     """
@@ -122,7 +122,7 @@ def series(chain, problem, thinning=None):
         the default value `None`, a value will be chosen so that 200 to 400
         predictions are shown.
 
-    Returns a `matplotlib` figure object.
+    Returns a `matplotlib` figure object and axes handle.
     """
     n_sample, n_param = chain.shape
 
@@ -154,7 +154,7 @@ def series(chain, problem, thinning=None):
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
     # Plot prediction
-    fig = plt.figure(figsize=(6, 4))
+    fig, axes = plt.subplots(1, 1, figsize=(6, 4))
     plt.xlabel('Time')
     plt.ylabel('Value')
     plt.plot(times, problem.values(), 'x', color='#7f7f7f', ms=6.5, alpha=0.5,
@@ -166,7 +166,7 @@ def series(chain, problem, thinning=None):
     plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
     plt.legend()
 
-    return fig
+    return fig, axes
 
 def pairwise(chain, kde=False):
     """
@@ -187,7 +187,7 @@ def pairwise(chain, kde=False):
         Set to `True` to use kernel-density estimation for the histograms and
         scatter plots.
 
-    Returns a `matplotlib` figure object.
+    Returns a `matplotlib` figure object and axes handle.
     """
     n_sample, n_param = chain.shape
     fig_size = (3*n_param, 3*n_param)
@@ -253,5 +253,5 @@ def pairwise(chain, kde=False):
             axes[i,0].set_ylabel('Frequency')
         axes[-1,i].set_xlabel('Parameter %d'%(i+1))
 
-    return fig
+    return fig, axes
 
