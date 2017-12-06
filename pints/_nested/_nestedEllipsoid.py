@@ -117,10 +117,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 print 'Starting ellipsoidal sampling (finished rejection)...'
                 A, centroid = mvee(mActive[:,:d])
             if i > self._rejectionSamples:
-                if (i+1) % self._ellipsoidUpdateGap == 0:
+                if (i + 1 -self._rejectionSamples) % self._ellipsoidUpdateGap == 0:
                     print str(i+1 - self._rejectionSamples) + ' ellipsoidal samples completed (updating ellipsoid)...'
                     A, centroid = mvee(mActive[:,:d])
-
             if i < self._rejectionSamples:
                 mActive[aMinIndex,:] = rejectSamplePrior(aRunningLogLikelihood,self._log_likelihood,self._prior)
             else:
@@ -237,8 +236,8 @@ def rejectEllipsoidSample_faster(aThreshold,aLogLikelihood,mSamplesPrevious,enla
 
 
 def drawFromEllipsoid( covmat, cent, npts):
-    """ draws random uniform points within ellipsoid as per:
-        http://www.astro.gla.ac.uk/~matthew/blog/?p=368"""
+    """ draw npts random uniform points from within an ellipsoid
+        with a covariance matrix covmat and a centroid cent, as per: http://www.astro.gla.ac.uk/~matthew/blog/?p=368"""
     try:
         ndims = covmat.shape[0]
     except IndexError:
@@ -249,7 +248,7 @@ def drawFromEllipsoid( covmat, cent, npts):
     idx = (-eigenValues).argsort()[::-1][:ndims]
     e = eigenValues[idx]
     v = eigenVectors[:,idx]
-    e = np.diag(eigenValues)
+    e = np.diag(e)
 
     # generate radii of hyperspheres
     rs = np.random.uniform(0,1,npts)
