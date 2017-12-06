@@ -157,13 +157,13 @@ def series(chain, problem, thinning=None):
     fig = plt.figure(figsize=(6, 4))
     plt.xlabel('Time')
     plt.ylabel('Value')
+    plt.plot(times, problem.values(), 'o', color='#7f7f7f', ms=6.5,
+        label='Original data')
     plt.plot(times, predicted_values[0], color='#1f77b4',
         label='Inferred series')
     for v in predicted_values[1:]:
         plt.plot(times, v, color='#1f77b4', alpha=alpha)
     plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
-    plt.plot(times, problem.values(), 'o', color='#7f7f7f', ms=6.5,
-        label='Original data')
     plt.legend()
 
     return fig
