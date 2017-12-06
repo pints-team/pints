@@ -33,6 +33,12 @@ class Prior(object):
         """
         raise NotImplementedError
 
+    def random_sample(self,numSamples):
+        """
+        Returns a random sample from the prior.
+        """
+        raise NotImplementedError
+
 
 class ComposedPrior(Prior):
     """
@@ -106,6 +112,16 @@ class UniformPrior(Prior):
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else 0
 
+    def random_sample(self, samples=1):
+        """See :methd:`Prior.randomSample()`,"""
+        m_samples = np.zeros((num_samples, self._dimension))
+        lower = self._boundaries.lower()
+        upper = self._boundaries.upper()
+        for i in range(0,self._dimension):
+            m_samples[:,i] = np.random.uniform(low=lower[i], high=upper[i],
+                size=samples)
+        return m_samples
+
 
 class MultivariateNormalPrior(Prior):
     """
@@ -160,13 +176,15 @@ class NormalPrior(Prior):
     For example: ``p = NormalPrior(0,1)`` for a mean of ``0`` and variance
     of ``1``.
     """
-    def __init__(self, mean, cov):
+    def __init__(self, mean, sigma):
         # Parse input arguments
         self._mean = mean
+        self._sigma = sigma
+        self._dimension = 1
 
         # Cache constants
-        self._inv2cov = -1.0 / (2 * cov)
-        self._scale = 1 / np.sqrt(2 * np.pi * cov)
+        self._inv2cov = -1.0 / (2 * sigma ** 2)
+        self._scale = 1 / np.sqrt(2 * np.pi * sigma ** 2)
 
     def dimension(self):
         """See :meth:`Prior.dimension()`."""
@@ -174,4 +192,14 @@ class NormalPrior(Prior):
 
     def __call__(self, x):
         return self._scale * np.exp(self._inv2cov * (x[0] - self._mean)**2)
+
+    def random_sample(self, samples=1):
+        """See :meth:`Prior.random_sample()`."""
+        m_samples = np.zeros((samples, self._dimension))
+        mu = self._mean
+        sigma = self._sigma
+        for i in range(0,self._dimension):
+            m_samples[:, i] = np.random.normal(loc=mu, scale=sigma,
+                size=samples)
+        return m_samples
 
