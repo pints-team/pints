@@ -72,27 +72,37 @@ class PSO(pints.Optimiser):
     IEEE International Conference on Neural Networks
    
     """
+    def __init__(self, function, boundaries=None, x0=None, sigma0=None):
+        super(PSO, self).__init__(function, boundaries, x0, sigma0)
+        
+        # Run parallelised version
+        self._parallel = None
+        self.set_parallel()
+        
+        # Maximum iterations stopping criterion
+        self._max_iterations = None
+        self.set_max_iterations()
+        
+        # Maximum unchanged iterations stopping criterion
+        self._max_unchanged_iterations = None
+        self.set_max_unchanged_iterations()
+        self._min_significant_change = None
+        self.set_min_significant_change()
+    
     def run(self):
         """See :meth:`Optimiser.run()`."""
 
-        # Default search parameters
-        #TODO Allow changing before run() with method call
-        parallel = True
-        
         # Global/local search balance
         #TODO Allow changing before run() with method call
         r = 0.5
         
-        # Search is terminated after max_iter iterations
-        #TODO Allow changing before run() with method call
-        max_iter = 10000
+        # Check at least one stopping criterion is set
+        if (self._max_iterations == 0 and
+                self._max_unchanged_iterations == 0):
+            raise ValueError('At least one stopping criterion must be set.')
 
-        # Or if the result doesn't change significantly for a while
-        #TODO Allow changing before run() with method call
-        max_unchanged_iterations = 200
-        #TODO Allow changing before run() with method call
-        min_significant_change = 1e-11
-        #TODO Allow changing before run() with method call
+        # Unchanged iterations count (used for stopping or just for
+        # information)
         unchanged_iterations = 0
 
         # Parameter space dimension
@@ -102,14 +112,14 @@ class PSO(pints.Optimiser):
         #TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         n = 4 + int(3 * np.log(d))
-        if parallel:            
+        if self._parallel:            
             cpu_count = multiprocessing.cpu_count()
             n = min(3, (((n - 1) // cpu_count) + 1)) * cpu_count
 
         # Set up progress reporting in verbose mode
         nextMessage = 0
         if self._verbose:
-            if parallel:
+            if self._parallel:
                 print('Running in parallel mode with population size '
                     + str(n))
             else:
@@ -160,14 +170,15 @@ class PSO(pints.Optimiser):
             function = pints.InfBoundaryTransform(function, self._boundaries)
 
         # Create evaluator object
-        if parallel:
+        if self._parallel:
             evaluator = pints.ParallelEvaluator(self._function)
         else:
             evaluator = pints.SequentialEvaluator(self._function)
         
         # Start searching
-        for iteration in xrange(1, 1 + max_iter):
-            
+        running = True
+        iteration = 0
+        while running:
             # Calculate scores
             fs = evaluator.evaluate(xs)
             
@@ -199,7 +210,7 @@ class PSO(pints.Optimiser):
             if fl[i] < fg:
                 # Check if this counts as a significant change
                 fnew = fl[i]
-                if np.sum(np.abs(fnew - fg)) < min_significant_change:
+                if np.sum(np.abs(fnew - fg)) < self._min_significant_change:
                     unchanged_iterations += 1
                 else:
                     unchanged_iterations = 0
@@ -209,7 +220,7 @@ class PSO(pints.Optimiser):
                 pg = np.array(pl[i], copy=True)
             else:
                 unchanged_iterations += 1
-
+            
             # Show progress in verbose mode:
             if self._verbose and iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fg))
@@ -217,17 +228,25 @@ class PSO(pints.Optimiser):
                     nextMessage = iteration + 1
                 else:
                     nextMessage = 20 * (1 + iteration // 20)
+
+            # Update iteration count
+            iteration += 1
             
-            # Stop if no change for too long
-            if unchanged_iterations >= max_unchanged_iterations:
+            # Check stopping criteria
+            # Maximum number of iterations
+            if self._max_iterations and iteration >= self._max_iterations:
+                running = False
+                if self._verbose:
+                    print('Halting: Maximum number of iterations ('
+                        + str(iteration) + ' reached.')
+            
+            # Maximum number of iterations without significant change
+            if (self._max_unchanged_iterations and 
+                    unchanged_iterations >= self._max_unchanged_iterations):
+                running = False
                 if self._verbose:
                     print('Halting: No significant change for '
                         + str(unchanged_iterations) + ' iterations.')
-                break
-
-        # Show stopping criterion
-        if self._verbose and unchanged_iterations < max_unchanged_iterations:
-            print('Halting: Maximum iterations reached.')
 
         # Show final value
         if self._verbose:
@@ -235,6 +254,51 @@ class PSO(pints.Optimiser):
 
         # Return best position and score
         return pg, fg
+
+    def set_max_iterations(self, iterations=10000):
+        """
+        Sets a maximum number of `iterations` for this routine, or disables
+        this stopping criterion when `iterations is None`.
+        """
+        if iterations is None:
+            iterations = 0
+        else:
+            iterations = int(iterations)
+            if iterations < 0:
+                raise ValueError('Maximum number of iterations cannot be'
+                    ' negative.')
+        self._max_iterations = iterations
+        
+    def set_max_unchanged_iterations(self, iterations=200):
+        """
+        Sets a maximum number of unchanged `iterations` for this routine, or
+        disables this stopping criterion when `iterations is None`.
+        """
+        if iterations is None:
+            iterations = 0
+        else:
+            iterations = int(iterations)
+            if iterations < 0:
+                raise ValueError('Maximum number of iterations cannot be'
+                    ' negative.')
+        self._max_unchanged_iterations = iterations
+        
+    def set_min_significant_change(self, e=1e-11):
+        """
+        Sets the absolute difference between successive scores that is counted
+        as 'significantly different' when using the `max_unchanged_iterations`
+        stopping criterion.
+        """
+        e = float(e)
+        if e < 0:
+            raise ValueError('Minimum significant change cannot be negative.')
+        self._min_significant_change = e
+
+    def set_parallel(self, parallel=True):
+        """
+        Enables/disables parallel mode.
+        """
+        self._parallel = bool(parallel)
 
 def pso(function, boundaries=None, x0=None, sigma0=None):
     """

@@ -7,10 +7,10 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+import numpy as np
 import pints
 import pints.toy as toy
 import unittest
-import numpy as np
 
 debug = False
 
@@ -97,6 +97,34 @@ class TestPSO(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
+        
+    def test_stopping_max_iter(self):
+    
+        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+        opt.set_verbose(True)
+        opt.set_max_iterations(10)
+        opt.set_max_unchanged_iterations(None)
+        with pints._StdOutCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of iterations', c.text())
+
+    def test_stopping_max_unchanged(self):
+    
+        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+        opt.set_verbose(True)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(2)
+        with pints._StdOutCapture() as c:
+            opt.run()
+            self.assertIn('Halting: No significant change', c.text())
+    
+    def test_stopping_no_criterion(self):
+    
+        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+        opt.set_verbose(debug)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(None)
+        self.assertRaises(ValueError, opt.run)
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
