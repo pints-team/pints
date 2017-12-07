@@ -39,8 +39,7 @@ def trace(chain, *args):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(chain[:,i], bins=bins, histtype='step',
-            label='Chain 1')
+        axes[i, 0].hist(chain[:,i], bins=bins, alpha=0.5, label='Chain 1')
 
         # Add trace subplot
         axes[i, 1].set_xlabel('Iteration')
@@ -54,8 +53,8 @@ def trace(chain, *args):
                 raise ValueError('All chains must have the same number of'
                     ' parameters.')
             for i in xrange(n_param):
-                axes[i, 0].hist(chain[:,i], bins=bins, histtype='step',
-                    label='Chain ' + str(2 + i_chain))
+                axes[i, 0].hist(chain[:,i], bins=bins, alpha=0.5, 
+                                label='Chain ' + str(2 + i_chain))
                 axes[i, 1].plot(chain[:,i], alpha=alpha)
         axes[0, 0].legend()
 
@@ -63,7 +62,7 @@ def trace(chain, *args):
     return fig, axes
 
 
-def autocorrelation(chain, max_lags=10):
+def autocorrelation(chain, max_lags=100):
     """
     Creates and returns an autocorrelation plot for a given markov `chain`.
 
