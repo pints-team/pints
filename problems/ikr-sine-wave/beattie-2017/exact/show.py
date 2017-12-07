@@ -21,7 +21,7 @@ data_file = os.path.join(root, 'sine-wave-data',
     'cell-' + str(cell) + '.csv')
 
 # Load Kylie's data
-kylie_sim = np.loadtxt('figure_4_model_fit_new_model_fit.txt')
+kylie_sim = np.loadtxt('figure_4_model_fit_new_model_fit_tol10.txt')
 kylie_sim = kylie_sim[:,1]
 kylie_pro = np.loadtxt('figure_4_model_fit_protocol.txt')
 kylie_tim = kylie_pro[:,0] * 1000
@@ -174,7 +174,8 @@ class ModelWithProtocol(pints.ForwardModel):
         # Create simulation
         self.simulation = myokit.Simulation(model, protocol)
         # Set Kylie tolerances
-        self.simulation.set_tolerance(1e-8, 1e-8)
+        #self.simulation.set_tolerance(1e-8, 1e-8)
+        self.simulation.set_tolerance(1e-10, 1e-10)
     def dimension(self):
         return len(self.parameters)
     def simulate(self, parameters, times):
@@ -295,6 +296,11 @@ simulated = model.simulate(obtained_parameters, times)
 
 # Plot
 import matplotlib.pyplot as pl
+
+#
+# Full comparison: protocol, transitions, current, current at transitions
+# This plot works best with the capacitance filter switched off
+#
 pl.figure()
 pl.subplot(4,1,1)
 #pl.plot(times, voltage, 'd-', label='my data file')
@@ -345,7 +351,6 @@ for v, t in steps:
     offset += t
     pl.axvline(offset, alpha=0.25)
 
-
 nlo, nhi = 3, 10
 n = len(steps) + 1
 pl.subplot(4,n,1+3*n)
@@ -365,11 +370,13 @@ for k, step in enumerate(steps):
 
 pl.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 
-# Figure 2
+#
+# Big plot of my current versus kylie's
+#
 pl.figure()
 pl.plot(kylie_tim, kylie_sim, 'x-', lw=2, alpha=0.5, label='kylie')
 pl.plot(times, simulated, 'o-', alpha=0.5, label='michael')
-pl.plot(times, current, label='real')
+#pl.plot(times, current, label='real')
 pl.legend(loc='lower right')
 n = len(steps) + 1
 offset = 0
@@ -377,6 +384,9 @@ for v, t in steps:
     offset += t
     pl.axvline(offset, alpha=0.25)
 
+#
+# Big plot of the error between my current and Kylie's
+#
 pl.figure()
 pl.grid(True)
 pl.plot(kylie_tim, kylie_sim - simulated)
@@ -385,6 +395,19 @@ offset = 0
 for v, t in steps:
     offset += t
     pl.axvline(offset, color='tab:green', alpha=0.25)
+
+#
+# Big plot of the error between my protocol and Kylie's
+#
+pl.figure()
+pl.grid(True)
+pl.plot(kylie_tim, kylie_pro - model.simulated_v)
+n = len(steps) + 1
+offset = 0
+for v, t in steps:
+    offset += t
+    pl.axvline(offset, color='tab:green', alpha=0.25)
+
 
 pl.show()
 
