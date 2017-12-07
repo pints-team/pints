@@ -80,6 +80,7 @@ del(log)
 
 #
 # Estimate noise from start of data
+# Kylie uses the first 200ms, where I = 0 + noise
 #
 sigma_noise = np.std(current[:2000])
 
@@ -104,7 +105,7 @@ steps = [
 #
 cap_duration = 5 # Same as Kylie (also, see for example step at 500ms)
 fcap = np.ones(len(current), dtype=int)
-if False:
+if True:
     # Skip this bit to show/use all data
     offset = 0
     for f, t in steps[:-1]:
@@ -123,9 +124,6 @@ current = current[fcap]
 kylie_tim = kylie_tim[fcap]
 kylie_sim = kylie_sim[fcap]
 kylie_pro = kylie_pro[fcap]
-
-print(times[:3])
-print(times[-3:])
 
 #
 # Calculate reversal potential like Kylie does
@@ -195,8 +193,6 @@ class ModelWithProtocol(pints.ForwardModel):
             return times * float('inf')
         # Store membrane potential for debugging
         self.simulated_v = d['membrane.V']
-        print(d.time()[:3])
-        print(d.time()[-3:])
         
         # Apply capacitance filter and return
         return d['ikr.IKr']
@@ -264,7 +260,7 @@ problem = pints.SingleSeriesProblem(model, times, current)
 score = pints.SumOfSquaresError(problem)
 
 #
-# Load earlier result
+# Load kylie's result
 #
 filename = 'kylies-solution.txt'
 with open(filename, 'r') as f:
@@ -272,142 +268,35 @@ with open(filename, 'r') as f:
 obtained_score = score(obtained_parameters)
 
 #
-# Show obtained parameters and score
-#
-print('Obtained parameters:')
-for x in obtained_parameters:
-    print(pints.strfloat(x))
-print('Final score:')
-print(obtained_score)
-
-#
 # Show equivalent log-likelihood with estimated std of noise
 #
 log_likelihood = pints.KnownNoiseLogLikelihood(problem, sigma_noise)
-print('Sigma noise: ' + str(sigma_noise))
-print('Log-likelihood: ' + pints.strfloat(log_likelihood(obtained_parameters)))
+
+print('Myokit/Pints version:')
+print('  Log-likelihood: '
+    + pints.strfloat(log_likelihood(obtained_parameters)))
 
 #
-# Show result
-#
+# Look at log-likelihood for my signal, compare with that for kylie's signal
+# 
 
-# Simulate
+def loglikelihood(x, y, sigma):
+    """ Calculate the log-likelihood of two signals matching """
+    x, y = np.asarray(x), np.asarray(y)
+    n = len(x)
+    return (
+        -0.5 * n * np.log(2 * np.pi)
+        -n * np.log(sigma)
+        -np.sum((x - y)**2) / (2 * sigma**2)
+        )
+
 simulated = model.simulate(obtained_parameters, times)
+print('Myokit signal comparison:')
+print('  Log-likelihood: '
+    + pints.strfloat(loglikelihood(simulated, current, sigma_noise)))
+    
+print('Matlab signal comparison:')
+print('  Log-likelihood: '
+    + pints.strfloat(loglikelihood(kylie_sim, current, sigma_noise)))
 
-# Plot
-import matplotlib.pyplot as pl
-
-#
-# Full comparison: protocol, transitions, current, current at transitions
-# This plot works best with the capacitance filter switched off
-#
-pl.figure()
-pl.subplot(4,1,1)
-#pl.plot(times, voltage, 'd-', label='my data file')
-pl.plot(kylie_tim, kylie_pro, 'x-', lw=4, alpha=0.75, label='kylie')
-pl.plot(times, model.simulated_v, 'o-', alpha=0.75, label='michael')
-pl.legend(loc='upper right')
-
-n = len(steps) + 1
-offset = 0
-for v, t in steps:
-    offset += t
-    pl.axvline(offset - 1, alpha=0.25)
-    pl.axvline(offset + 1, alpha=0.25)
-
-nlo, nhi = 2, 2
-n = len(steps) + 1
-pl.subplot(4,n,1+n)
-offset = 0
-lo, hi = 0, int(offset/dt) + nhi + 2
-#pl.plot(times[lo:hi], voltage[lo:hi], 'd-', label='my data file')
-pl.plot(kylie_tim[lo:hi], kylie_pro[lo:hi], 'x-', lw=4, alpha=0.75, label='kylie')
-pl.plot(times[lo:hi], model.simulated_v[lo:hi], 'o-', alpha=0.75, label='michael')
-pl.xlim(offset - nlo*dt, offset + nhi*dt)
-pl.tick_params(axis='x', labelsize=6)
-pl.grid(True)
-for k, step in enumerate(steps):
-    pl.subplot(4,n,2+n+k)
-    v, t = step
-    offset += t
-    lo, hi = int(offset/dt) - nlo - 2, min(int(offset/dt) + nhi + 2, len(times))
-    #pl.plot(times[lo:hi], voltage[lo:hi], 'd-', label='my data file')
-    pl.plot(kylie_tim[lo:hi], kylie_pro[lo:hi], 'x-', lw=4, alpha=0.75, label='kylie')
-    pl.plot(times[lo:hi], model.simulated_v[lo:hi], 'o-', alpha=0.75, label='michael')
-    pl.xlim(offset - nlo*dt, offset + nhi*dt)
-    pl.tick_params(axis='x', labelsize=6)
-    pl.grid(True)
-
-pl.subplot(4,1,3)
-pl.grid(True)
-pl.plot(kylie_tim, kylie_sim, 'x-', label='kylie')
-pl.plot(times, simulated, 'o-', label='michael')
-#pl.plot(times, current, label='real')
-pl.legend(loc='lower right')
-
-n = len(steps) + 1
-offset = 0
-for v, t in steps:
-    offset += t
-    pl.axvline(offset, alpha=0.25)
-
-nlo, nhi = 3, 10
-n = len(steps) + 1
-pl.subplot(4,n,1+3*n)
-offset = 0
-lo, hi = 0, int(offset/dt) + nhi
-pl.plot(kylie_tim[lo:hi], kylie_sim[lo:hi], 'x-', label='kylie')
-pl.plot(times[lo:hi], simulated[lo:hi], 'o-', label='michael')
-pl.xlim(offset - dt*nlo, offset + dt*nhi)
-for k, step in enumerate(steps):
-    pl.subplot(4,n,2+3*n+k)
-    v, t = step
-    offset += t
-    lo, hi = int(offset/dt) - nlo, min(int(offset/dt) + nhi, len(times))
-    pl.plot(kylie_tim[lo:hi], kylie_sim[lo:hi], 'x-', label='kylie')
-    pl.plot(times[lo:hi], simulated[lo:hi], 'o-', label='michael')
-    pl.xlim(offset - dt*nlo, offset + dt*nhi)
-
-pl.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
-
-#
-# Big plot of my current versus kylie's
-#
-pl.figure()
-pl.plot(kylie_tim, kylie_sim, 'x-', lw=2, alpha=0.5, label='kylie')
-pl.plot(times, simulated, 'o-', alpha=0.5, label='michael')
-#pl.plot(times, current, label='real')
-pl.legend(loc='lower right')
-n = len(steps) + 1
-offset = 0
-for v, t in steps:
-    offset += t
-    pl.axvline(offset, alpha=0.25)
-
-#
-# Big plot of the error between my current and Kylie's
-#
-pl.figure()
-pl.grid(True)
-pl.plot(kylie_tim, kylie_sim - simulated)
-n = len(steps) + 1
-offset = 0
-for v, t in steps:
-    offset += t
-    pl.axvline(offset, color='tab:green', alpha=0.25)
-
-#
-# Big plot of the error between my protocol and Kylie's
-#
-pl.figure()
-pl.grid(True)
-pl.plot(kylie_tim, kylie_pro - model.simulated_v)
-n = len(steps) + 1
-offset = 0
-for v, t in steps:
-    offset += t
-    pl.axvline(offset, color='tab:green', alpha=0.25)
-
-
-pl.show()
 
