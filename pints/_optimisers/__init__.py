@@ -54,6 +54,36 @@ class Optimiser(object):
                 raise ValueError('Boundaries must have same dimension as'
                     ' function.')
         
+        # Set initial position
+        self.set_initial_position(x0, sigma0)
+        
+        # Print info to console
+        self._verbose = True
+
+    def run(self):
+        """
+        Runs an optimisation and returns the best found value.
+        """
+        raise NotImplementedError
+
+    def set_initial_position(self, x0=None, sigma0=None):
+        """
+        Updates the initial position and standard deviation used by this
+        optimiser.
+        
+        Arguments:
+        
+        ``x0=None``
+            An optional starting point for searches in the parameter space. 
+            This value may be used directly (for example as the initial
+            position of a particle in :class:`PSO`) or indirectly (for example
+            as the center of a distribution in :class:`XNES`).
+        ``sigma0=None``
+            An optional initial standard deviation around ``x0``. Can be
+            specified either as a scalar value (one standard deviation for all
+            coordinates) or as an array with one entry per dimension. Not all
+            methods will use this information.
+        """
         # Check initial solution
         if x0 is None:
             # Use value in middle of search space
@@ -103,15 +133,6 @@ class Optimiser(object):
             if np.any(self._sigma0 <= 0):
                 raise ValueError('Initial standard deviations must be greater'
                     ' than zero.')
-        
-        # Print info to console
-        self._verbose = True
-        
-    def run(self):
-        """
-        Runs an optimisation and returns the best found value.
-        """
-        raise NotImplementedError
     
     def set_verbose(self, value):
         """
