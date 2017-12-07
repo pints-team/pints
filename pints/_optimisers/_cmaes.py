@@ -47,10 +47,6 @@ class CMAES(pints.Optimiser):
         #TODO Allow changing before run() with method call
         parallel = True
 
-        # Number of IPOP repeats (0=no repeats, 1=repeat once=2 runs, etc.)
-        #TODO Allow changing before run() with method call
-        ipop = 0
-
         # Parameter space dimension
         d = self._dimension
 
@@ -105,38 +101,26 @@ class CMAES(pints.Optimiser):
         # Tell cma-es to be quiet
         if not self._verbose:
             options.set('verbose', -9)
+        # Set population size
+        options.set('popsize', n)
+        if self._verbose:
+            print('Population size ' + str(n))
 
-        # Start one or multiple runs
-        best_solution = BestSolution()
-        for i in xrange(1 + ipop):
-
-            # Set population size, increase for ipop restarts
-            options.set('popsize', n)
+        # Search
+        es = cma.CMAEvolutionStrategy(self._x0, sigma0, options)
+        while not es.stop():
+            candidates = es.ask()
+            es.tell(candidates, evaluator.evaluate(candidates))
             if self._verbose:
-                print('Run ' + str(1+i) + ': population size ' + str(n))
-            n *= 2
+                es.disp()
 
-            # Run repeats from random points
-            #if i > 0:
-            #    x0 = lower + brange * np.random.uniform(0, 1, d)
+        # Show result
+        if self._verbose:
+            es.result_pretty()
 
-            # Search
-            es = cma.CMAEvolutionStrategy(self._x0, sigma0, options)
-            while not es.stop():
-                candidates = es.ask()
-                es.tell(candidates, evaluator.evaluate(candidates))
-                if self._verbose:
-                    es.disp()
-
-            # Show result
-            if self._verbose:
-                es.result_pretty()
-
-            # Update best solution
-            best_solution.update(es.best)
-
-        # Get best solution from all runs
-        x, fx, evals = best_solution.get()
+        # Get solution
+        x = es.result.xbest
+        fx = es.result.fbest
 
         # No result found? Then return hint and score of hint
         if x is None:
