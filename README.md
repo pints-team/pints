@@ -21,9 +21,9 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 
 If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [MCMC](examples/inference-first-example.ipynb).
 
-### Examples
+### Examples and documentation
 
-Pints comes with a number of [detailed examples](examples/EXAMPLES.md).
+Pints comes with a number of [detailed examples](examples/EXAMPLES.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
 
 ## How can I install Pints?
 
