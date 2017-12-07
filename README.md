@@ -35,7 +35,7 @@ You'll need the following requirements:
 Then, install using 
 
 ```
-python setup.py install
+$ python setup.py install
 ```
 
 ## How can I contribute to Pints?
@@ -47,7 +47,7 @@ If you'd like to contribute to Pints, please create an [issue](https://guides.gi
 If you plan to make changes to Pints, install with:
 
 ```
-python setup.py develop
+$ python setup.py develop
 ```
 
 (this will make Python find the local pints files when you use `import pints`).
