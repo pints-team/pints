@@ -7,13 +7,6 @@
 #  software package.
 #
 from __future__ import division
-import pints
-import numpy as np
-from scipy import stats
-try:
-    import matplotlib.pyplot as plt
-except:
-    raise ImportError("The module pints.plot requires matplotlib")
 
 def trace(chain, *args):
     """
@@ -31,6 +24,11 @@ def trace(chain, *args):
 
     Returns a `matplotlib` figure object and axes handle.
     """
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.trace requires matplotlib")
+    
     bins = 40
     alpha = 0.5
     n_sample, n_param = chain.shape
@@ -64,6 +62,7 @@ def trace(chain, *args):
     plt.tight_layout()
     return fig, axes
 
+
 def autocorrelation(chain, max_lags=10):
     """
     Creates and returns an autocorrelation plot for a given markov `chain`.
@@ -79,6 +78,12 @@ def autocorrelation(chain, max_lags=10):
 
     Returns a `matplotlib` figure object and axes handle.
     """
+    import numpy as np
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.autocorrelation requires matplotlib")
+    
     n_sample, n_param = chain.shape
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2*n_param))
@@ -96,6 +101,7 @@ def autocorrelation(chain, max_lags=10):
 
     plt.tight_layout()
     return fig, axes
+
 
 def series(chain, problem, thinning=None):
     """
@@ -124,6 +130,12 @@ def series(chain, problem, thinning=None):
 
     Returns a `matplotlib` figure object and axes handle.
     """
+    import numpy as np
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.series requires matplotlib")
+    
     n_sample, n_param = chain.shape
 
     # Get problem dimension
@@ -168,6 +180,7 @@ def series(chain, problem, thinning=None):
 
     return fig, axes
 
+
 def pairwise(chain, kde=False):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
@@ -189,6 +202,13 @@ def pairwise(chain, kde=False):
 
     Returns a `matplotlib` figure object and axes handle.
     """
+    import numpy as np
+    from scipy import stats
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.pairwise requires matplotlib")
+    
     n_sample, n_param = chain.shape
     fig_size = (3*n_param, 3*n_param)
 
@@ -254,4 +274,3 @@ def pairwise(chain, kde=False):
         axes[-1,i].set_xlabel('Parameter %d'%(i+1))
 
     return fig, axes
-
