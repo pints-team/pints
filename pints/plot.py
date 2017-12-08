@@ -12,6 +12,77 @@ import warnings
 import numpy as np
 import scipy.stats as stats
 
+def log_likelihood_1d(log_likelihood, parameters, boundaries=None, chain=None, n_eva=20):
+    """
+    Takes a set of parameters as input and creates and returns a plot showing 
+    the log-likelihood function of each parameter with all the other 
+    parameters held at the given set of parameters.
+    
+    Arguments:
+
+    `log_likelihood`
+        A class extends from :class:`pints.LogLikelihood` of the problem of 
+        interest.
+    `parameters`
+        A set of parameters, which the `log_likelihood` will be evaluated at, 
+        with the same dimension as the `log_likelihood` will accept.
+    `boundaries_or_chain`
+        The boundaries of each parameters. Or the markov chain, which will be 
+        used to define to boundaries.
+    `n_eva`
+        The number of evaluation of each parameter.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import numpy as np
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.trace requires matplotlib")
+
+    n_param = len(parameters)
+    if n_param != log_likelihood.dimension():
+        raise ValueError('Input parameters dimension must match the dimension'
+                        ' of the log_likelihood accept')
+    if chain==None and boundaries!=None:
+        def_bound = False
+    elif chain!=None and boundaries==None:
+        def_bound = True
+    else:
+        raise TypeError('One of the input chain or boundaries (and only one)'
+                        ' is expected')
+
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2*n_param))
+    for i, p in enumerate(parameters):
+        axes[i].set_xlabel('Parameter ' + str(1 + i))
+
+        # Generate some x-values near the given parameters
+        if def_bound:
+            mu = np.mean(chain[:,i])
+            sigma = np.std(chain[:,i])
+            xmin = mu - 3*simga
+            xmax = mu + 3*sigma
+        else:
+            xmin, xmax = boundaries[:,i]
+
+        x = np.linspace(xmin, xmax, n_eva)
+
+        # Calculate log-likelihood with other parameters fixed
+        y = [log_likelihood(list(parameters[:i]) + [j]
+            + list(parameters[1+i:])) for j in x]
+
+        # Plot
+        axes[i].plot(x, y, c='green', label='Log-likelihood')
+        axes[i].axvline(p, c='blue', label='Input value')
+        axes[i].legend()
+
+    # Add vertical y-label to middle plot
+    #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
+    axes[int(i/2)].set_ylabel('log Likelihood')
+
+    plt.tight_layout()
+    return fig, axes
+
 
 def trace(chain, *args):
     """
@@ -340,3 +411,5 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
             axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
     return fig, axes
+
+
