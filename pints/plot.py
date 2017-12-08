@@ -12,28 +12,34 @@ import warnings
 import numpy as np
 import scipy.stats as stats
 
-def log_likelihood_1d(log_likelihood, parameters, boundaries=None, chain=None, n_eva=20):
+def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, chain=None):
     """
-    Takes a set of parameters as input and creates and returns a plot showing 
-    the log-likelihood function of each parameter with all the other 
+    Takes a set of parameters as input and creates and returns a plot showing
+    the log-likelihood function of each parameter with all the other
     parameters held at the given set of parameters.
-    
+
     Arguments:
 
     `log_likelihood`
-        A class extends from :class:`pints.LogLikelihood` of the problem of 
-        interest.
+        A class (or that extends from) :class:`pints.LogLikelihood` of the
+        problem of interest.
     `parameters`
-        A set of parameters, which the `log_likelihood` will be evaluated at, 
+        A set of parameters, which the `log_likelihood` will be evaluated at,
         with the same dimension as the `log_likelihood` will accept.
-    `boundaries_or_chain`
-        The boundaries of each parameters. Or the markov chain, which will be 
-        used to define to boundaries.
+    `boundaries`
+        A class (or that extends from) :class:`pints.Boundaries` which defines
+        the boundaries of each parameters.
     `n_eva`
-        The number of evaluation of each parameter.
+        (Optional) The number of evaluation of each parameter.
+    `chain`
+        (Optional) A markov chain of shape `(samples, dimension)`, where
+        `samples` is the number of samples in the chain and `dimension` is the
+        number of parameters. This will be used to define the boundaries. Only
+        provide either `chain` or `boundaries`, but not both.
 
     Returns a `matplotlib` figure object and axes handle.
     """
+    import pints
     import numpy as np
     try:
         import matplotlib.pyplot as plt
@@ -41,12 +47,17 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, chain=None, n
         raise ImportError("The method pints.plot.trace requires matplotlib")
 
     n_param = len(parameters)
+    # Check dimension
     if n_param != log_likelihood.dimension():
         raise ValueError('Input parameters dimension must match the dimension'
                         ' of the log_likelihood accept')
-    if chain==None and boundaries!=None:
+    # Check input
+    if not isinstance(boundaries, pints.Boundaries) and boundaries is not None:
+        raise TypeError('The argument boundaries must be a type of or extended'
+                ' from pints.Boundaries')
+    if chain is None and boundaries is not None:
         def_bound = False
-    elif chain!=None and boundaries==None:
+    elif chain is not None and boundaries is None:
         def_bound = True
     else:
         raise TypeError('One of the input chain or boundaries (and only one)'
@@ -60,10 +71,11 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, chain=None, n
         if def_bound:
             mu = np.mean(chain[:,i])
             sigma = np.std(chain[:,i])
-            xmin = mu - 3*simga
+            xmin = mu - 3*sigma
             xmax = mu + 3*sigma
         else:
-            xmin, xmax = boundaries[:,i]
+            xmin = boundaries.lower()[i]
+            xmax = boundaries.upper()[i]
 
         x = np.linspace(xmin, xmax, n_eva)
 
@@ -79,6 +91,117 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, chain=None, n
     # Add vertical y-label to middle plot
     #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
     axes[int(i/2)].set_ylabel('log Likelihood')
+
+    plt.tight_layout()
+    return fig, axes
+
+
+def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
+    """
+    Creates and returns a plot showing the log-likelihood function of between
+    two points in the parameter space.
+
+    Arguments:
+
+    `log_likelihood`
+        A class (or that extends from) :class:`pints.LogLikelihood` of the
+        problem of interest.
+    `p1`, `p2`
+        A set of parameters, which the `log_likelihood` will be evaluated at,
+        with the same dimension as the `log_likelihood` will accept.
+    `n_eva`
+        (Optional) The number of evaluation of each parameter.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import pints
+    import numpy as np
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.trace requires matplotlib")
+
+    n_param = len(p1)
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+
+    # Check dimension
+    if n_param != log_likelihood.dimension() or n_param != len(p2):
+        raise ValueError('Input parameters dimension must match the dimension'
+                        ' of the log_likelihood accept')
+
+    # Figure setting
+    fig, axes = plt.subplots(1, 1, figsize=(6, 4))
+    axes.set_xlabel('point 1 to point 2')
+    axes.set_ylabel('log Likelihood')
+
+    # Generate some x-values near the given parameters
+    xmin = -0.25
+    xmax = 1.25
+    s = np.linspace(xmin, xmax, n_eva)
+
+    # Direction
+    r = p2 - p1
+
+    # Calculate log-likelihood with other parameters fixed
+    y = [log_likelihood(p1 + sj*r) for sj in s]
+
+    # Plot
+    axes.plot(s, y, color='green')
+    axes.axvline(0, color='#1f77b4', label='point 1')
+    axes.axvline(1, color='#7f7f7f', label='point 2')
+    axes.legend()
+
+    # Add vertical y-label to middle plot
+    #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
+
+    plt.tight_layout()
+    return fig, axes
+
+
+def histogram(chain, *args):
+    """
+    Takes one or more markov chains as input and creates and returns a plot
+    showing histograms for each chain.
+
+    Arguments:
+
+    `chain`
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
+    `*args`
+        Additional chains can be added after the initial argument.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        raise ImportError("The method pints.plot.trace requires matplotlib")
+
+    bins = 40
+    alpha = 0.5
+    n_sample, n_param = chain.shape
+
+    # Set up figure, plot first chain
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2*n_param))
+    for i in xrange(n_param):
+        # Add histogram subplot
+        axes[i].set_xlabel('Parameter ' + str(i + 1))
+        axes[i].set_ylabel('Frequency')
+        axes[i].hist(chain[:,i], bins=bins, alpha=alpha, label='Chain 1')
+
+    # Plot additional chains
+    if args:
+        for i_chain, chain in enumerate(args):
+            if chain.shape[1] != n_param:
+                raise ValueError('All chains must have the same number of'
+                    ' parameters.')
+            for i in xrange(n_param):
+                axes[i].hist(chain[:,i], bins=bins, alpha=alpha,
+                                label='Chain ' + str(2 + i_chain))
+        axes[0, 0].legend()
 
     plt.tight_layout()
     return fig, axes
@@ -112,7 +235,7 @@ def trace(chain, *args):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5, label='Chain 1')
+        axes[i, 0].hist(chain[:,i], bins=bins, alpha=alpha, label='Chain 1')
 
         # Add trace subplot
         axes[i, 1].set_xlabel('Iteration')
@@ -126,7 +249,7 @@ def trace(chain, *args):
                 raise ValueError(
                     'All chains must have the same number of parameters.')
             for i in range(n_param):
-                axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5,
+                axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha,
                                 label='Chain ' + str(2 + i_chain))
                 axes[i, 1].plot(chain[:, i], alpha=alpha)
         axes[0, 0].legend()
@@ -411,5 +534,4 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
             axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
     return fig, axes
-
 
