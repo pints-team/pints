@@ -22,7 +22,7 @@ class NestedSampler(object):
         parameter space.
 
     """
-    def __init__(self, log_likelihood, aPrior):
+    def __init__(self, log_likelihood, prior):
 
         # Store function
         if not isinstance(log_likelihood, pints.LogLikelihood):
@@ -30,9 +30,9 @@ class NestedSampler(object):
         self._log_likelihood = log_likelihood
 
         # Store function
-        if not isinstance(aPrior, pints.Prior):
+        if not isinstance(prior, pints.Prior):
             raise ValueError('Given function must extend pints.Prior')
-        self._prior = aPrior
+        self._prior = prior
 
         # Get dimension
         self._dimension = self._log_likelihood.dimension()
