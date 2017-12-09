@@ -98,8 +98,8 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, cha
 
 def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
     """
-    Creates and returns a plot showing the log-likelihood function of between
-    two points in the parameter space.
+    Creates and returns a plot showing the log-likelihood function between two
+    points in the parameter space.
 
     Arguments:
 
@@ -110,7 +110,7 @@ def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
         A set of parameters, which the `log_likelihood` will be evaluated at,
         with the same dimension as the `log_likelihood` will accept.
     `n_eva`
-        (Optional) The number of evaluation of each parameter.
+        (Optional) The number of evaluation along the line in parameter space.
 
     Returns a `matplotlib` figure object and axes handle.
     """
