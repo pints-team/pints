@@ -11,6 +11,12 @@ The current methods focus exclusively on inspecting returned Markov chains.
 
 .. autofunction:: autocorrelation
 
+.. autofunction:: histogram
+
+.. autofunction:: log_likelihood_1d
+
+.. autofunction:: log_likelihood_two_points
+
 .. autofunction:: pairwise
 
 .. autofunction:: series
