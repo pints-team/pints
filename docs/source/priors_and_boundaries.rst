@@ -13,8 +13,6 @@ Priors
 ******
 
 .. autoclass:: Prior
-   
-    .. automethod:: __call__
   
 .. autoclass:: ComposedPrior
 
