@@ -36,7 +36,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
     """
-    def __init__(self, log_likelihood, aPrior):
+    def __init__(self, log_likelihood, prior):
         super(NestedRejectionSampler, self).__init__(log_likelihood, prior)
 
         # Target acceptance rate

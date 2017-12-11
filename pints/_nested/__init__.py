@@ -1,5 +1,5 @@
 #
-# Sub-module containing MCMC inference routines
+# Sub-module containing Nested samplers
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
