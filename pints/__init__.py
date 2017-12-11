@@ -94,8 +94,13 @@ from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 # Nested samplers
 #
 from ._nested import NestedSampler
-from ._nested._nestedRejection import NestedRejectionSampler
-from ._nested._nestedEllipsoid import NestedEllipsoidSampler
+from ._nested._rejection import NestedRejectionSampler
+from ._nested._ellipsoid import NestedEllipsoidSampler
+
+#
+# Noise adders
+#
+import pints.noise
 
 #
 # Remove any imported modules, so we don't expose them as part of pints

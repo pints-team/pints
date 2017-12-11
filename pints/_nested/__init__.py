@@ -42,21 +42,29 @@ class NestedSampler(object):
 
     def run(self):
         """
-        Runs the nested sampling routine and returns a markov chain representing the
-        distribution of the given log-likelihood function.
+        Runs the nested sampling routine and returns a markov chain
+        representing the distribution of the given log-likelihood function.
         """
         raise NotImplementedError
 
     def set_verbose(self, value):
         """
-        Enables or disables verbose mode for this nested sampling routine. In verbose
-        mode, lots of output is generated during a run.
+        Enables or disables verbose mode for this nested sampling routine. In
+        verbose mode, lots of output is generated during a run.
         """
         self._verbose = bool(value)
 
     def verbose(self):
         """
-        Returns ``True`` if the nested sampling routine is set to run in verbose mode.
+        Returns ``True`` if the nested sampling routine is set to run in
+        verbose mode.
         """
         return self._verbose
 
+## independently samples params from the prior until
+## logLikelihood(params) > aThreshold
+def reject_sample_prior(aThreshold,aLogLikelihood,aPrior):
+    v_proposed = aPrior.random_sample()[0]
+    while aLogLikelihood(v_proposed) < aThreshold:
+        v_proposed = aPrior.random_sample()[0]
+    return np.concatenate((v_proposed,np.array([aLogLikelihood(v_proposed)])))
