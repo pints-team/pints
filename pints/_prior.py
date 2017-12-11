@@ -9,6 +9,7 @@
 import pints
 import numpy as np
 
+
 class Prior(object):
     """
     Represents a prior distribution on a vector of variables.
@@ -28,6 +29,7 @@ class Prior(object):
         Returns the probability density for point ``x``.
         """
         raise NotImplementedError
+
 
 class ComposedPrior(Prior):
     """
@@ -67,6 +69,7 @@ class ComposedPrior(Prior):
             output *= prior(x[lo:hi])
         return output
 
+
 class UniformPrior(Prior):
     """
     *Extends:* :class:`Prior`
@@ -98,6 +101,7 @@ class UniformPrior(Prior):
 
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else 0
+
 
 class MultivariateNormalPrior(Prior):
     """
@@ -141,6 +145,7 @@ class MultivariateNormalPrior(Prior):
 
     def __call__(self, x):
         return self._scipy_normal.pdf(x,mean=self._mean,cov=self._cov)
+
 
 class NormalPrior(Prior):
     """

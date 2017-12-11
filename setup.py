@@ -15,8 +15,8 @@ setup(
     description='Probabilistic Inference in Noisy Time-Series',
     long_description=readme,
     license=license,
-    #author='',
-    #author_email='',
+    # author='',
+    # author_email='',
     maintainer='Michael Clerx',
     maintainer_email='michael.clerx@cs.ox.ac.uk',
     url='https://github.com/pints-team/pints',
@@ -27,15 +27,15 @@ setup(
         'cma>=2',
         'numpy>=1.8',
         'scipy>=0.13',
-        ],
+    ],
     extras_require={
         'docs': [
-            'guzzle-sphinx-theme',
+            'guzzle-sphinx-theme',  # Nice theme for docs
             'matplotlib>=1.5',      # For plot documentation
-            'sphinx>=1.5',            
-            ],
+            'sphinx>=1.5',          # For doc generation
+        ],
         'dev': [
-            'flake8>=3'
-            ],
-        },
+            'flake8>=3'             # For code style checking
+        ],
+    },
 )

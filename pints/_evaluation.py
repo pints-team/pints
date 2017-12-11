@@ -275,6 +275,7 @@ multiprocessing.html#all-platforms>`_ for details).
         Forcibly halts the workers
         """
         time.sleep(0.1)
+
         # Terminate workers
         for w in self._workers:
             if w.exitcode is None:
@@ -283,8 +284,10 @@ multiprocessing.html#all-platforms>`_ for details).
             if w.is_alive():
                 w.join()
         self._workers = []
+
         # Free memory
         gc.collect()
+
         # Clear queues
         def clear(queue):
             items = []
@@ -294,14 +297,17 @@ multiprocessing.html#all-platforms>`_ for details).
             except (Queue.Empty, IOError, EOFError):
                 pass
             return items
+        
         clear(self._tasks)
         clear(self._results)
         errors = clear(self._errors)
+        
         # Create new queues & error event
         self._tasks = multiprocessing.Queue()
         self._results = multiprocessing.Queue()
         self._errors = multiprocessing.Queue()
         self._error = multiprocessing.Event()
+
         # Return errors
         return errors
 

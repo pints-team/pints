@@ -9,6 +9,7 @@
 import pints
 import numpy as np
 
+
 class ErrorMeasure(object):
     """
     Calculates some scalar measure of goodness-of-fit for a model and a data
@@ -29,6 +30,7 @@ class ErrorMeasure(object):
         """
         return self._dimension
 
+
 class LogLikelihoodBasedError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
@@ -45,6 +47,7 @@ class LogLikelihoodBasedError(ErrorMeasure):
     def __call__(self, x):
         return -self._likelihood(x)
 
+
 class RMSError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
@@ -59,6 +62,7 @@ class RMSError(ErrorMeasure):
     def __call__(self, x):
         return np.sqrt(ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
+
 
 class SumOfSquaresError(ErrorMeasure):
     """

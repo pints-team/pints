@@ -12,6 +12,7 @@ import numpy as np
 import pints
 import pints.toy
 
+
 class TestLogistic(unittest.TestCase):
     """
     Tests if the logistic (toy) model works.
@@ -21,7 +22,7 @@ class TestLogistic(unittest.TestCase):
         # Test the special case where the initial size is zero
         model = pints.toy.LogisticModel(0)
         times = [0, 1, 2, 10000]
-        parameters = [1, 5]        
+        parameters = [1, 5]
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
         for v in values:
@@ -31,7 +32,7 @@ class TestLogistic(unittest.TestCase):
         # Run small simulation
         model = pints.toy.LogisticModel(2)
         times = [0, 1, 2, 10000]
-        parameters = [1, 5]        
+        parameters = [1, 5]
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
         self.assertEqual(values[0], 2)
@@ -43,7 +44,6 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(values[0], 2)
         self.assertEqual(values[-1], parameters[-1])
         self.assertTrue(np.all(values[1:] >= values[:-1]))
-        
         
 
 if __name__ == '__main__':

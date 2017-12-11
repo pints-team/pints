@@ -11,6 +11,7 @@ from __future__ import division
 import pints
 import numpy as np
 
+
 class Boundaries(object):
     """
     Represents a set of lower and upper boundaries for model parameters.

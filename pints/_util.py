@@ -11,11 +11,13 @@ import pints
 import numpy as np
 import sys
 
+
 def strfloat(x):
     """
     Converts a float to a string, with maximum precision.
     """
     return pints.FLOAT_FORMAT.format(float(x))
+
 
 def vector(x):
     """
@@ -31,6 +33,7 @@ def vector(x):
             raise ValueError('Unable to convert to 1d vector of scalar values')
         x = x.reshape((n,))
     return x
+
 
 class _StdOutCapture(object):
     """
