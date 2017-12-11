@@ -28,8 +28,8 @@ def AR1(rho, sigma, T):
     """
     vX = np.zeros(T)
     for t in range(1, T):
-        vX[t] = rho * vX[t-1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
+        vX[t] = rho * vX[t - 1] + np.random.normal(0,
+            sigma * np.sqrt(1 - rho**2))
     return vX
 
 
@@ -52,8 +52,8 @@ def AR1_unity(rho, sigma, T):
     vX = np.zeros(T)
     vX[0] = 1
     for t in range(1, T):
-        vX[t] = (1 - rho) + rho * vX[t-1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
+        vX[t] = (1 - rho) + rho * vX[t - 1] + np.random.normal(0,
+            sigma * np.sqrt(1 - rho**2))
     return vX
 
 

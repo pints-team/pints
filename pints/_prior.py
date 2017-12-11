@@ -112,13 +112,13 @@ class UniformPrior(Prior):
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else 0
 
-    def random_sample(self,num_samples=1):
+    def random_sample(self, num_samples=1):
         """See :methd:`Prior.random_sample()`,"""
         m_samples = np.zeros((num_samples, self._dimension))
         lower = self._boundaries.lower()
         upper = self._boundaries.upper()
-        for i in range(0,self._dimension):
-            m_samples[:,i] = np.random.uniform(low=lower[i], high=upper[i],
+        for i in range(0, self._dimension):
+            m_samples[:, i] = np.random.uniform(low=lower[i], high=upper[i],
                 size=num_samples)
         return m_samples
 
@@ -143,16 +143,17 @@ class MultivariateNormalPrior(Prior):
                 'NormalPrior mean argument requires a NumPy array')
 
         if not isinstance(cov, np.array):
-            raise ValueError('NormalPrior cov argument requires a NumPy array')
+            raise ValueError('NormalPrior cov argument requires a NumPy'
+                ' array.')
 
         if mean.ndim != 1:
-            raise ValueError('NormalPrior mean must be one dimensional')
+            raise ValueError('NormalPrior mean must be one dimensional.')
 
         if cov.ndim != 2:
-            raise ValueError('NormalPrior cov must be a matrix')
+            raise ValueError('NormalPrior cov must be a matrix.')
 
         if mean.shape[0] != cov.shape[0] or mean.shape[0] != cov.shape[1]:
-            raise ValueError('mean and cov sizes do not match')
+            raise ValueError('mean and cov sizes do not match.')
 
         self._mean = mean
         self._cov = cov
@@ -183,7 +184,7 @@ class NormalPrior(Prior):
         self._dimension = 1
 
         # Cache constants
-        self._inv2cov = -1.0 / (2 * sigma ** 2)
+        self._inv2cov = -1 / (2 * sigma ** 2)
         self._scale = 1 / np.sqrt(2 * np.pi * sigma ** 2)
 
     def dimension(self):
@@ -193,12 +194,13 @@ class NormalPrior(Prior):
     def __call__(self, x):
         return self._scale * np.exp(self._inv2cov * (x[0] - self._mean)**2)
 
-    def random_sample(self,num_samples=1):
-        """See :methd:`Prior.random_sample()`,"""
+    def random_sample(self, num_samples=1):
+        """See :methd:`Prior.random_sample()`."""
         m_samples = np.zeros((num_samples, self._dimension))
         mu = self._mean
         sigma = self._sigma
-        for i in range(0,self._dimension):
-            m_samples[:,i] = np.random.normal(loc = mu,scale = sigma,size = num_samples)
+        for i in range(0, self._dimension):
+            m_samples[:, i] = np.random.normal(loc=mu, scale=sigma,
+                size=num_samples)
         return m_samples
 
