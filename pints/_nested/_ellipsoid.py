@@ -66,7 +66,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        next run.
         """
         return self._iterations
 
@@ -166,8 +166,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def set_iterations(self, iterations):
         """
-        Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
+        Sets the total number of iterations to be performed in the next run.
         """
         iterations = int(iterations)
         if iterations < 0:
@@ -182,7 +181,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         if posterior_samples > np.round(0.25 * (self._iterations
                 + self._active_points)):
             raise ValueError('Number of posterior samples must be fewer than'
-                ' 25% the total number of preminary points')
+                ' 25% the total number of preminary points.')
         self._posterior_samples = posterior_samples
 
     def set_enlargement_factor(self, enlargement_factor):
@@ -193,7 +192,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         means that rejection sampling is more efficient.
         """
         if enlargement_factor < 1:
-            raise ValueError('Enlargement factor must exceed 1')
+            raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
     def set_rejection_samples(self, rejection_samples):
@@ -202,10 +201,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         weights and ultimately produce a set of posterior samples.
         """
         if rejection_samples < 0:
-            raise ValueError('Must have non-negative rejection samples')
+            raise ValueError('Must have non-negative rejection samples.')
         if rejection_samples > self._iterations:
             raise ValueError('Must have fewer rejection samples than total'
-                ' samples')
+                ' samples.')
         self._rejection_samples = rejection_samples
 
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap):
@@ -217,9 +216,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         it is often desirable to compute this every n iterates.
         """
         if ellipsoid_update_gap < 1:
-            raise ValueError('Ellipsoid update gap must exceed 1')
-        if isinstance(ellipsoid_update_gap,int) == False:
-            raise ValueError('Ellipsoid update gap must be an integer')
+            raise ValueError('Ellipsoid update gap must exceed 1.')
+        if not isinstance(ellipsoid_update_gap, int):
+            raise ValueError('Ellipsoid update gap must be an integer.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
 
@@ -236,14 +235,14 @@ def reject_draw_from_ellipsoid(A, centroid, log_likelihood, threshold):
     return np.concatenate((v_proposed, np.array([temp_log_likelihood])))
 
 
-def reject_uniform_draw(a_min,a_max,aLogLikelihood,threshold):
+def reject_uniform_draw(a_min, a_max, log_likelihood, threshold):
     """
     Equivalent to reject_draw_from_ellipsoid but in 1D.
     """
     a_proposed = np.random.uniform(a_min, a_max, 1)
-    while aLogLikelihood(a_proposed) < threshold:
+    while log_likelihood(a_proposed) < threshold:
         a_proposed = np.random.uniform(a_min, a_max, 1)
-    return np.concatenate((a_proposed,np.array([aLogLikelihood(a_proposed)])))
+    return np.concatenate((a_proposed, np.array([log_likelihood(a_proposed)])))
 
 
 def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
@@ -255,8 +254,8 @@ def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
     aDim = len(m_samples_previous.shape)
     if aDim > 1:
         A, centroid = minimum_volume_ellipsoid(m_samples_previous)
-        A = (1.0 / enlargement_factor) * A
-        v_sample = reject_draw_from_ellipsoid(la.inv(A),centroid,
+        A = (1 / enlargement_factor) * A
+        v_sample = reject_draw_from_ellipsoid(la.inv(A), centroid,
             log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
@@ -266,6 +265,7 @@ def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
         a_diff = a_diff * enlargement_factor
         a_min = a_middle - (a_diff / 2)
         a_max = a_middle + (a_diff / 2)
+        # TODO Define these variables!
         v_sample = reject_uniform_draw(a_min, a_max, a_likelihood, aX, aN)
     return v_sample
 
@@ -279,7 +279,7 @@ def reject_ellipsoid_sample_faster(threshold, log_likelihood,
     """
     aDim = len(m_samples_previous.shape)
     if aDim > 1:
-        A = (1.0 / enlargement_factor) * A
+        A = (1 / enlargement_factor) * A
         v_sample = reject_draw_from_ellipsoid(la.inv(A), centroid,
             log_likelihood, threshold)
     else:
@@ -290,11 +290,12 @@ def reject_ellipsoid_sample_faster(threshold, log_likelihood,
         a_diff = a_diff * enlargement_factor
         a_min = a_middle - (a_diff / 2)
         a_max = a_middle + (a_diff / 2)
+        # TODO Define these variables!
         v_sample = reject_uniform_draw(a_min, a_max, a_likelihood, aX, aN)
     return v_sample
 
 
-def draw_from_ellipsoid( covmat, cent, npts):
+def draw_from_ellipsoid(covmat, cent, npts):
     """
     Draw `npts` random uniform points from within an ellipsoid with a
     covariance matrix covmat and a centroid cent, as per:
@@ -309,14 +310,14 @@ def draw_from_ellipsoid( covmat, cent, npts):
     eigen_values, eigen_vectors = la.eig(covmat)
     idx = (-eigen_values).argsort()[::-1][:ndims]
     e = eigen_values[idx]
-    v = eigen_vectors[:,idx]
+    v = eigen_vectors[:, idx]
     e = np.diag(e)
 
     # generate radii of hyperspheres
     rs = np.random.uniform(0, 1, npts)
 
     # generate points
-    pt = np.random.normal(0, 1, [npts, ndims]);
+    pt = np.random.normal(0, 1, [npts, ndims])
 
     # get scalings for each point onto the surface of a unit hypersphere
     fac = np.sum(pt**2, axis=1)
@@ -324,8 +325,7 @@ def draw_from_ellipsoid( covmat, cent, npts):
     # calculate scaling for each point to be within the unit hypersphere
     # with radii rs
     fac = (rs**(1 / ndims)) / np.sqrt(fac)
-
-    pnts = np.zeros((npts,ndims));
+    pnts = np.zeros((npts, ndims))
 
     # scale points to the ellipsoid using the eigen_values and rotate with
     # the eigen_vectors and add centroid
@@ -334,14 +334,14 @@ def draw_from_ellipsoid( covmat, cent, npts):
 
     for i in range(0, npts):
         # scale points to a uniform distribution within unit hypersphere
-        pnts[i,:] = fac[i] * pt[i, :]
-        pnts[i,:] = np.dot(np.multiply(pnts[i, :], np.transpose(d)),
+        pnts[i, :] = fac[i] * pt[i, :]
+        pnts[i, :] = np.dot(np.multiply(pnts[i, :], np.transpose(d)),
             np.transpose(v)) + cent
 
     return pnts
 
 
-def minimum_volume_ellipsoid(points, tol = 0.001):
+def minimum_volume_ellipsoid(points, tol=0.001):
     """
     Finds the ellipse equation in "center form": `(x-c).T * A * (x-c) = 1`.
     """
@@ -352,8 +352,8 @@ def minimum_volume_ellipsoid(points, tol = 0.001):
         d = 1
 
     Q = np.column_stack((points, np.ones(N))).T
-    err = tol+1.0
-    u = np.ones(N)/N
+    err = tol + 1
+    u = np.ones(N) / N
     while err > tol:
         # assert u.sum() == 1 # invariant
         X = np.dot(np.dot(Q, np.diag(u)), Q.T)
@@ -364,10 +364,10 @@ def minimum_volume_ellipsoid(points, tol = 0.001):
         new_u[jdx] += step_size
         err = la.norm(new_u - u)
         u = new_u
-    c = np.dot(u,points)
+    c = np.dot(u, points)
     if d > 1:
         A = la.inv(np.dot(np.dot(points.T, np.diag(u)), points)
-                   - np.multiply.outer(c, c))/d
+                   - np.multiply.outer(c, c)) / d
     else:
         A = 1 / (np.dot(np.dot(points.T, np.diag(u)), points)
              - np.multiply.outer(c, c))
