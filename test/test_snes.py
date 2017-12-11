@@ -14,6 +14,7 @@ import numpy as np
 
 debug = False
 
+
 class TestSNES(unittest.TestCase):
     """
     Tests the basic methods of the SNES optimiser.
@@ -53,7 +54,7 @@ class TestSNES(unittest.TestCase):
         
         opt = pints.SNES(self.score)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -63,7 +64,7 @@ class TestSNES(unittest.TestCase):
     
         opt = pints.SNES(self.score, self.boundaries)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -73,7 +74,7 @@ class TestSNES(unittest.TestCase):
     
         opt = pints.SNES(self.score, x0=self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -83,7 +84,7 @@ class TestSNES(unittest.TestCase):
     
         opt = pints.SNES(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -93,11 +94,12 @@ class TestSNES(unittest.TestCase):
     
         opt = pints.SNES(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

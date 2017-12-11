@@ -3,10 +3,12 @@
 # Tests Prior functions in Pints
 #
 import unittest
+
+
 class TestPrior(unittest.TestCase):
 
     def test_normal_prior(self):
-        return #TODO
+        return # TODO
     
         import pints
         import numpy as np
@@ -60,7 +62,7 @@ class TestPrior(unittest.TestCase):
         # Test effect of increasing covariance
         p = [pints.ComposedPrior(p1, pints.NormalPrior(m2, c))
             for c in xrange(1, 10)]
-        p = [x([m1, m2]) for x in p]
+        p = [f([m1, m2]) for f in p]
         self.assertTrue(np.all(p[:-1] > p[1:]))
 
     def test_uniform_prior(self):
@@ -89,7 +91,8 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20]), w)
             
-#TODO Test MultiVariateNormalPrior
+# TODO Test MultiVariateNormalPrior
+
 
 if __name__ == '__main__':
     unittest.main()

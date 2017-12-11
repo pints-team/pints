@@ -4,9 +4,18 @@ exclude=
     problems,
     __init__.py,
 ignore=
+    # Continuation line under indented for visual indent
+    E128,
+    
+    # At least two spaces before inline comment
+    E261,       
+    
     # Blank line contains whitespace
     W293,
+    
     # Blank line at end of file
     W391,
-    # Binary operator on new line (now advised in pep8!)
+    
+    # Binary operator on new line: now advised in pep8
     W503,
+

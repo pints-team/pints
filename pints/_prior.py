@@ -8,6 +8,7 @@
 #
 import pints
 import numpy as np
+import scipy
 
 
 class Prior(object):
@@ -116,7 +117,7 @@ class MultivariateNormalPrior(Prior):
                         np.array([[1, 0],[0, 1]]))`
 
     """
-    def __init__(self, mean, cov):       
+    def __init__(self, mean, cov):
         # Parse input arguments
         if not isinstance(mean, np.array):
             raise ValueError('NormalPrior mean argument requires a NumPy'
@@ -137,14 +138,14 @@ class MultivariateNormalPrior(Prior):
         self._mean = mean
         self._cov = cov
         self._dimension = mean.shape[0]
-        self._scipy_normal = scipy.stats.multivariate_normal
 
     def dimension(self):
         """See :meth:`Prior.dimension()`."""
         return self._dimension
 
     def __call__(self, x):
-        return self._scipy_normal.pdf(x,mean=self._mean,cov=self._cov)
+        return scipy.stats.multivariate_normal.pdf(x,
+            mean=self._mean, cov=self._cov)
 
 
 class NormalPrior(Prior):

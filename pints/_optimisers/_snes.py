@@ -12,54 +12,55 @@ import pints
 import numpy as np
 import multiprocessing
 
+
 class SNES(pints.Optimiser):
     """
-    *Extends:* :class:`Optimiser`    
-    
+    *Extends:* :class:`Optimiser`
+
     Finds the best parameters using the SNES method described in [1, 2].
-    
+
     SNES stands for Seperable Natural Evolution Strategy, and is designed for
     non-linear derivative-free optimization problems in high dimensions and
     with many local minima [1].
-    
+
     It treats each dimension separately, making it suitable for higher
     dimensions.
-         
+
     [1] Schaul, Glasmachers, Schmidhuber (2011) High dimensions and heavy tails
     for natural evolution strategies.
     Proceedings of the 13th annual conference on Genetic and evolutionary
     computation. ACM, 2011.
-    
+
     [2] PyBrain: The Python machine learning library (http://pybrain.org)
-   
+
     """
     def run(self):
         """See :meth:`Optimiser.run()`."""
 
         # Default search parameters
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         parallel = True
         
         # Search is terminated after max_iter iterations
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         max_iter = 10000
 
         # Or if the result doesn't change significantly for a while
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         max_unchanged_iterations = 100
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         min_significant_change = 1e-11
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         unchanged_iterations = 0
 
         # Parameter space dimension
         d = self._dimension
 
         # Population size
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         n = 4 + int(3 * np.log(d))
-        if parallel:            
+        if parallel:
             cpu_count = multiprocessing.cpu_count()
             n = (((n - 1) // cpu_count) + 1) * cpu_count
 
@@ -75,7 +76,8 @@ class SNES(pints.Optimiser):
 
         # Apply wrapper to implement boundaries
         if self._boundaries is None:
-            xtransform = lambda x: x
+            def xtransform(x):
+                return x
         else:
             xtransform = pints.TriangleWaveTransform(self._boundaries)
 
@@ -86,15 +88,15 @@ class SNES(pints.Optimiser):
             evaluator = pints.SequentialEvaluator(self._function)
 
         # Learning rates
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         eta_mu = 1
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         eta_sigmas = 0.2 * (3 + np.log(d)) * d ** -0.5
 
         # Pre-calculated utilities
         us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
         us /= np.sum(us)
-        us -= 1/n
+        us -= 1 / n
 
         # Center of distribution
         mu = np.array(self._x0, copy=True)
@@ -177,9 +179,10 @@ class SNES(pints.Optimiser):
         # Return best solution
         return xtransform(xbest), fbest
 
+
 def snes(function, boundaries=None, x0=None, sigma0=None):
     """
     Runs a SNES optimisation with the default settings.
     """
-    return SNES(function, boundaries, x0, sigma0).run() 
+    return SNES(function, boundaries, x0, sigma0).run()
 

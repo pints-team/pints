@@ -10,9 +10,7 @@
 #
 import pints
 import numpy as np
-import scipy
-import scipy.linalg
-import multiprocessing
+
 
 class AdaptiveCovarianceMCMC(pints.MCMC):
     """
@@ -71,7 +69,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
     def iterations(self):
         """
-        Returns the total number of iterations that will be performed in the 
+        Returns the total number of iterations that will be performed in the
         next run, including the non-adaptive and burn-in iterations.
         """
         return self._iterations
@@ -223,9 +221,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         """
         return self._thinning_rate
 
+
 def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
     """
     Runs an adaptive covariance MCMC routine with the default parameters.
     """
-    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0).run() 
+    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0).run()
 

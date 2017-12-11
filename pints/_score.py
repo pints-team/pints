@@ -57,10 +57,10 @@ class RMSError(ErrorMeasure):
     """
     def __init__(self, problem):
         super(RMSError, self).__init__(problem)
-        ninv = 1.0 / len(self._values)
+        self._ninv = 1.0 / len(self._values)
 
     def __call__(self, x):
-        return np.sqrt(ninv * np.sum(
+        return np.sqrt(self._ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
 
 

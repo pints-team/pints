@@ -12,6 +12,7 @@ import pints
 import numpy as np
 import multiprocessing
 
+
 class PSO(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
@@ -93,7 +94,7 @@ class PSO(pints.Optimiser):
         """See :meth:`Optimiser.run()`."""
 
         # Global/local search balance
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         r = 0.5
         
         # Check at least one stopping criterion is set
@@ -109,10 +110,10 @@ class PSO(pints.Optimiser):
         d = self._dimension
 
         # Population size
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         n = 4 + int(3 * np.log(d))
-        if self._parallel:            
+        if self._parallel:
             cpu_count = multiprocessing.cpu_count()
             n = min(3, (((n - 1) // cpu_count) + 1)) * cpu_count
 
@@ -152,7 +153,7 @@ class PSO(pints.Optimiser):
 
         # Set initial velocities
         for i in xrange(n):
-            vs.append(self._sigma0 * np.random.uniform(0, 1, d))    
+            vs.append(self._sigma0 * np.random.uniform(0, 1, d))
         
         # Set initial scores and local best
         for i in xrange(n):
@@ -191,7 +192,7 @@ class PSO(pints.Optimiser):
 
                 # Calculate "velocity"
                 al = np.random.uniform(0, almax, d)
-                ag = np.random.uniform(0, agmax, d)            
+                ag = np.random.uniform(0, agmax, d)
                 vs[i] += al * (pl[i] - xs[i]) + ag * (pg - xs[i])
 
                 # Update position
@@ -241,7 +242,7 @@ class PSO(pints.Optimiser):
                         + str(iteration) + ' reached.')
             
             # Maximum number of iterations without significant change
-            if (self._max_unchanged_iterations and 
+            if (self._max_unchanged_iterations and
                     unchanged_iterations >= self._max_unchanged_iterations):
                 running = False
                 if self._verbose:
@@ -300,12 +301,11 @@ class PSO(pints.Optimiser):
         """
         self._parallel = bool(parallel)
 
+
 def pso(function, boundaries=None, x0=None, sigma0=None):
     """
     Runs a PSO optimisation with the default settings.
     """
-    return PSO(function, boundaries, x0, sigma0).run() 
-
-
+    return PSO(function, boundaries, x0, sigma0).run()
 
 

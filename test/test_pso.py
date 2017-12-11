@@ -14,6 +14,7 @@ import unittest
 
 debug = False
 
+
 class TestPSO(unittest.TestCase):
     """
     Tests the basic methods of the PSO optimiser.
@@ -44,7 +45,7 @@ class TestPSO(unittest.TestCase):
         self.sigma0 = [0.001, 1]
         
         # Minimum score function value to obtain
-        self.cutoff = 1e3 # Global method!
+        self.cutoff = 1e3   # Global method!
         
         # Maximum tries before it counts as failed
         self.max_tries = 3
@@ -55,14 +56,14 @@ class TestPSO(unittest.TestCase):
         opt = pints.PSO(self.score)
         opt.set_verbose(debug)
         found_parameters, found_solution = opt.run()
-        # Will be terrible, don't check        
+        # Will be terrible, don't check
         
     def test_bounded_no_hint(self):
     
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -74,14 +75,14 @@ class TestPSO(unittest.TestCase):
         opt = pints.PSO(self.score, x0=self.x0)
         opt.set_verbose(debug)
         found_parameters, found_solution = opt.run()
-        # Will be terrible, don't check        
+        # Will be terrible, don't check
         
     def test_bounded_with_hint(self):
     
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -92,7 +93,7 @@ class TestPSO(unittest.TestCase):
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):        
+        for i in xrange(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -125,6 +126,7 @@ class TestPSO(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

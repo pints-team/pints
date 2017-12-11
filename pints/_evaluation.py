@@ -19,6 +19,7 @@ import Queue
 import traceback
 import multiprocessing
 
+
 def evaluate(f, x, parallel=False, args=None):
     """
     Evaluates the function ``f`` on every value present in ``x`` and returns
@@ -35,6 +36,7 @@ def evaluate(f, x, parallel=False, args=None):
     else:
         evaluator = SequentialEvaluator(f, args)
     return evaluator.evaluate(x)
+
 
 class Evaluator(object):
     """
@@ -75,7 +77,7 @@ class Evaluator(object):
         Returns a list with the returned evaluations.
         """
         try:
-            m = len(positions)
+            len(positions)
         except TypeError:
             raise ValueError('The argument `positions` must be a sequence of'
                 ' input values to the evaluator\'s function.')
@@ -86,6 +88,7 @@ class Evaluator(object):
         Internal version of :meth:`evaluate()`.
         """
         raise NotImplementedError
+
 
 class ParallelEvaluator(Evaluator):
     """
@@ -139,7 +142,7 @@ multiprocessing.html#all-platforms>`_ for details).
     
     Note that while this class uses multiprocessing, it is not thread/process
     safe itself: It should not be used by more than a single thread/process at
-    a time.        
+    a time.
     """
     def __init__(self, function, nworkers=None, max_tasks_per_worker=500,
             args=None):
@@ -180,7 +183,7 @@ multiprocessing.html#all-platforms>`_ for details).
         Cleans up any dead workers & return the number of workers tidied up.
         """
         cleaned = 0
-        for k in xrange(len(self._workers) - 1 , -1, -1):
+        for k in xrange(len(self._workers) - 1, -1, -1):
             w = self._workers[k]
             if w.exitcode is not None:
                 w.join()
@@ -203,7 +206,7 @@ multiprocessing.html#all-platforms>`_ for details).
                 self._max_tasks,
                 self._errors,
                 self._error,
-                )
+            )
             self._workers.append(w)
             w.start()
 
@@ -213,7 +216,7 @@ multiprocessing.html#all-platforms>`_ for details).
         """
         # Ensure task and result queues are empty
         # For some reason these lines block when running on windows
-        #if not (self._tasks.empty() and self._results.empty()):
+        # if not (self._tasks.empty() and self._results.empty()):
         #    raise Exception('Unhandled tasks/results left in queues.')
         # Clean up any dead workers
         self._clean()
@@ -250,7 +253,7 @@ multiprocessing.html#all-platforms>`_ for details).
             if not self._error.is_set():
                 self._stop()
                 raise
-            #TODO: Maybe this should be something like while(error is not set)
+            # TODO: Maybe this should be something like while(error is not set)
             # wait for it to be set, then let the subprocess handle it...
         except (Exception, SystemExit, KeyboardInterrupt):
             # All other exceptions, including Ctrl-C and user triggered exits
@@ -268,7 +271,7 @@ multiprocessing.html#all-platforms>`_ for details).
             else:
                 raise Exception('Unknown exception in subprocess.')
         # Return results
-        return results         
+        return results
 
     def _stop(self):
         """
@@ -311,6 +314,7 @@ multiprocessing.html#all-platforms>`_ for details).
         # Return errors
         return errors
 
+
 class SequentialEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
@@ -338,6 +342,7 @@ class SequentialEvaluator(Evaluator):
         for k, x in enumerate(positions):
             scores[k] = self._function(x, *self._args)
         return scores
+
 
 #
 # Note: For Windows multiprocessing to work, the _Worker can never be a nested
@@ -396,7 +401,7 @@ class _Worker(multiprocessing.Process):
         # This can lead to unsafe situations if they have been redicted to
         # a GUI task such as writing to the IDE console.
         sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w') 
+        sys.stderr = open(os.devnull, 'w')
         try:
             for k in xrange(self._max_tasks):
                 i, x = self._tasks.get()
@@ -405,7 +410,7 @@ class _Worker(multiprocessing.Process):
                 # Check for errors in other workers
                 if self._error.is_set():
                     return
-        except (Exception, KeyboardInterrupt, SystemExit) as e:
+        except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
 

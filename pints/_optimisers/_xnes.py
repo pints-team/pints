@@ -14,6 +14,7 @@ import scipy
 import scipy.linalg
 import multiprocessing
 
+
 class XNES(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
@@ -35,29 +36,29 @@ class XNES(pints.Optimiser):
         """See :meth:`Optimiser.run()`."""
 
         # Default search parameters
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         parallel = True
         
         # Search is terminated after max_iter iterations
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         max_iter = 10000
 
         # Or if the result doesn't change significantly for a while
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         max_unchanged_iterations = 100
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         min_significant_change = 1e-11
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         unchanged_iterations = 0
 
         # Parameter space dimension
         d = self._dimension
 
         # Population size
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         n = 4 + int(3 * np.log(d))
-        if parallel:            
+        if parallel:
             cpu_count = multiprocessing.cpu_count()
             n = (((n - 1) // cpu_count) + 1) * cpu_count
 
@@ -73,7 +74,8 @@ class XNES(pints.Optimiser):
 
         # Apply wrapper to implement boundaries
         if self._boundaries is None:
-            xtransform = lambda x: x
+            def xtransform(x):
+                return x
         else:
             xtransform = pints.TriangleWaveTransform(self._boundaries)
 
@@ -84,15 +86,15 @@ class XNES(pints.Optimiser):
             evaluator = pints.SequentialEvaluator(self._function)
 
         # Learning rates
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         eta_mu = 1
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
 
         # Pre-calculated utilities
         us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
         us /= np.sum(us)
-        us -= 1/n
+        us -= 1 / n
 
         # Center of distribution
         mu = np.array(self._x0, copy=True)
@@ -123,7 +125,7 @@ class XNES(pints.Optimiser):
             
             # Update center
             Gd = np.dot(us, zs)
-            mu += eta_mu * np.dot(A,  Gd)
+            mu += eta_mu * np.dot(A, Gd)
             
             # Update best if needed
             if fxs[order[0]] < fbest:
@@ -180,9 +182,10 @@ class XNES(pints.Optimiser):
         # Return best solution
         return xtransform(xbest), fbest
 
+
 def xnes(function, boundaries=None, x0=None, sigma0=None):
     """
     Runs an XNES optimisation with the default settings.
     """
-    return XNES(function, boundaries, x0, sigma0).run() 
+    return XNES(function, boundaries, x0, sigma0).run()
 

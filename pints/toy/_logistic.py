@@ -10,6 +10,7 @@
 import numpy as np
 import pints
 
+
 class LogisticModel(pints.ForwardModel):
     """
     Logistic model.

@@ -10,6 +10,7 @@ from __future__ import division
 import pints
 import numpy as np
 
+
 class LogLikelihood(object):
     """
     Represents a log-likelihood that can be used by stochastic methods.
@@ -35,6 +36,7 @@ class LogLikelihood(object):
         Returns the dimension of the space this likelihood is defined on.
         """
         return self._dimension
+
 
 class LogPosterior(LogLikelihood):
     """
@@ -73,6 +75,7 @@ class LogPosterior(LogLikelihood):
         # Take log and add conditional log-likelihood
         return np.log(prior) + self._log_likelihood(x)
 
+
 class KnownNoiseLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
@@ -88,13 +91,14 @@ class KnownNoiseLogLikelihood(LogLikelihood):
         if self._sigma <= 0:
             raise ValueError('Standard deviation must be greater than zero.')
         # Calculate parts
-        self._offset  = -0.5 * len(self._times) * np.log(2 * np.pi)
+        self._offset = -0.5 * len(self._times) * np.log(2 * np.pi)
         self._offset += -len(self._times) * np.log(self._sigma)
         self._multip = -1 / float(2 * self._sigma**2)
 
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x)
         return self._offset + self._multip * np.sum(error**2)
+
 
 class UnknownNoiseLogLikelihood(LogLikelihood):
     """
@@ -107,14 +111,14 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
     For a noise level of ``sigma``, the likelihood becomes:
 
     .. math::
-        L(\\theta, \sigma) = p(data | \\theta, \sigma) = 
+        L(\\theta, \sigma) = p(data | \\theta, \sigma) =
             \prod_{i=1}^N \\frac{1}{2\pi\sigma^2}\exp\left(
             -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of
     
     .. math::
-        \log{L(\\theta, \sigma)} = 
+        \log{L(\\theta, \sigma)} =
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
@@ -130,7 +134,8 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
         error = self._values - self._problem.evaluate(x[:-1])
         return -(self._logn + self._size * np.log(x[-1])
             + np.sum(error**2) / (2 * x[-1]**2))
-        
+
+
 class ScaledLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
@@ -144,7 +149,7 @@ class ScaledLogLikelihood(LogLikelihood):
     def __init__(self, log_likelihood):
         # Check arguments
         if not isinstance(log_likelihood, pints.LogLikelihood):
-            raise ValueError('Log-likelihood must extends pints.LogLikelihood')
+            raise ValueError('Log_likelihood must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
         self._size = len(log_likelihood._times)
         self._dimension = self._log_likelihood.dimension()

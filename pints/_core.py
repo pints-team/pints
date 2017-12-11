@@ -11,6 +11,7 @@ from __future__ import division
 import pints
 import numpy as np
 
+
 class ForwardModel(object):
     """
     Defines an interface for user-supplied forward models.
@@ -48,6 +49,7 @@ class ForwardModel(object):
         in as read-only numpy arrays.
         """
         raise NotImplementedError
+
 
 class SingleSeriesProblem(object):
     """
@@ -99,7 +101,7 @@ class SingleSeriesProblem(object):
         values = self._model.simulate(parameters, self._times)
         # Make sure it's the correct shape for a single-series problem (without
         # error checking, because this will be called a lot!)
-        #return np.array(values, copy=False).reshape(self._values.shape)
+        # return np.array(values, copy=False).reshape(self._values.shape)
         return values
     
     def times(self):

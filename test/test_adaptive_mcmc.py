@@ -14,6 +14,7 @@ import numpy as np
 
 debug = False
 
+
 class TestAdaptiveCovarianceMCMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
@@ -39,9 +40,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Create a uniform prior over both the parameters and the new noise
         # variable
         self.prior = pints.UniformPrior(
-            [0.01, 400, noise*0.1],
-            [0.02, 600, noise*100]
-            )
+            [0.01, 400, noise * 0.1],
+            [0.02, 600, noise * 100]
+        )
 
         # Create an un-normalised log-posterior (prior * likelihood)
         self.log_likelihood = pints.LogPosterior(self.prior,
@@ -49,7 +50,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Select initial point and covariance
         self.x0 = np.array(self.real_parameters) * 1.1
-        self.sigma0 = [0.005, 100, 0.5*noise]
+        self.sigma0 = [0.005, 100, 0.5 * noise]
 
     def test_settings(self):
         
@@ -59,15 +60,15 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         mcmc.set_acceptance_rate(r)
         self.assertEqual(mcmc.acceptance_rate(), r)
 
-        i = int(mcmc.iterations() * 0.5)        
+        i = int(mcmc.iterations() * 0.5)
         mcmc.set_iterations(i)
         self.assertEqual(mcmc.iterations(), i)
 
-        i = int(mcmc.non_adaptive_iterations() * 0.5)        
+        i = int(mcmc.non_adaptive_iterations() * 0.5)
         mcmc.set_non_adaptive_iterations(i)
         self.assertEqual(mcmc.non_adaptive_iterations(), i)
 
-        i = int(mcmc.burn_in() * 0.5)        
+        i = int(mcmc.burn_in() * 0.5)
         mcmc.set_burn_in(i)
         self.assertEqual(mcmc.burn_in(), i)
 
@@ -89,9 +90,8 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         chain = mcmc.run()
         mean = np.mean(chain, axis=0)
         self.assertTrue(np.linalg.norm(mean - self.real_parameters) < 1.5)
-        
-        
-        
+
+
 if __name__ == '__main__':
     print('Add -v for more debug output')
     import sys

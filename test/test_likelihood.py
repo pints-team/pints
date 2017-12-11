@@ -2,7 +2,10 @@
 #
 # Tests the log likelihood methods
 #
+# TODO Add tests for the remaining likelihood classes and methods
 import unittest
+
+
 class TestLogLikelihood(unittest.TestCase):
     def test_scaled_log_likelihood(self):
         import pints
@@ -47,7 +50,7 @@ class TestLogLikelihood(unittest.TestCase):
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertAlmostEqual(l1(parameters), l2(parameters + [sigma]))
-        
-    #TODO Add tests for the remaining likelihood classes and methods
+
+
 if __name__ == '__main__':
     unittest.main()

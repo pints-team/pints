@@ -39,10 +39,10 @@ class CMAES(pints.Optimiser):
         import cma
         
         # Get BestSolution in cma 1.x and 2.x
-        try:
-            from cma import BestSolution
-        except ImportError:
-            from cma.optimization_tools import BestSolution
+        # try:
+        #    from cma import BestSolution
+        # except ImportError:
+        #    from cma.optimization_tools import BestSolution
 
         # Default search parameters
         # TODO Allow changing before run() with method call
@@ -66,7 +66,7 @@ class CMAES(pints.Optimiser):
         # CMA-ES default: 100 + 50 * (d + 3)**2 // n**0.5
 
         # Or if successive iterations do not produce a significant change
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         # max_unchanged_iterations = 100
         min_significant_change = 1e-11
         # unchanged_iterations = 0
@@ -89,7 +89,7 @@ class CMAES(pints.Optimiser):
         # Set stopping criteria
         options.set('maxiter', max_iter)
         options.set('tolfun', min_significant_change)
-        #options.set('ftarget', target)
+        # options.set('ftarget', target)
         
         # Tell CMA not to worry about growing step sizes too much
         options.set('tolfacupx', 10000)
