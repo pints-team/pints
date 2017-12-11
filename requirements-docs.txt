@@ -1,5 +1,2 @@
-cma
 guzzle-sphinx-theme
 matplotlib>=1.5
-numpy
-scipy

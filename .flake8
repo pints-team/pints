@@ -1,0 +1,12 @@
+[flake8]
+exclude=
+    .git,
+    problems,
+    __init__.py,
+ignore=
+    # Blank line contains whitespace
+    W293,
+    # Blank line at end of file
+    W391,
+    # Binary operator on new line (now advised in pep8!)
+    W503,

@@ -29,10 +29,13 @@ setup(
         'scipy>=0.13',
         ],
     extras_require={
-        'docs' : [
+        'docs': [
             'guzzle-sphinx-theme',
             'matplotlib>=1.5',      # For plot documentation
             'sphinx>=1.5',            
+            ],
+        'dev': [
+            'flake8>=3'
             ],
         },
 )
