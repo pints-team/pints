@@ -7,8 +7,6 @@
 #  software package.
 #
 from __future__ import division
-import numpy as np
-from scipy import stats
 
 
 def trace(chain, *args):
@@ -78,6 +76,7 @@ def autocorrelation(chain, max_lags=100):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
     
     n_sample, n_param = chain.shape
 
@@ -126,6 +125,7 @@ def series(chain, problem, thinning=None):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
     
     n_sample, n_param = chain.shape
 
@@ -194,6 +194,8 @@ def pairwise(chain, kde=False):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
+    from scipy import stats
     
     n_sample, n_param = chain.shape
     fig_size = (3 * n_param, 3 * n_param)
