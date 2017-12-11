@@ -47,13 +47,26 @@ If you'd like to contribute to Pints, please create an [issue](https://guides.gi
 If you plan to make changes to Pints, install with:
 
 ```
-$ python setup.py develop
+$ pip install -e .[dev,docs]
 ```
 
-(this will make Python find the local pints files when you use `import pints`).
+This will
+
+1. Install all the dependencies for Pints, including the ones for documentation (docs) and development (dev).
+2. Tell Python to use your local pints files when you use `import pints` anywhere on your system.
 
 ### Testing:
 
-To run quick tests, use `run-tests.sh`.
+To test your coding style, use
+
+```
+$ flake8
+```
+
+To run quick tests, use
+
+```
+$ run-tests.sh`.
+```
 
 
