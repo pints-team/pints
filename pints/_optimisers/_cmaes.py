@@ -12,6 +12,7 @@ import pints
 import multiprocessing
 import numpy as np
 
+
 class CMAES(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
@@ -44,14 +45,14 @@ class CMAES(pints.Optimiser):
             from cma.optimization_tools import BestSolution
 
         # Default search parameters
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         parallel = True
 
         # Parameter space dimension
         d = self._dimension
 
         # Population size
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         # If parallel, round up to a multiple of the reported number of cores
         # In IPOP-CMAES, this will be used as the _initial_ population size
         n = 4 + int(3 * np.log(d))
@@ -60,15 +61,15 @@ class CMAES(pints.Optimiser):
             n = (((n - 1) // cpu_count) + 1) * cpu_count
 
         # Search is terminated after max_iter iterations
-        #TODO Allow changing before run() with method call
+        # TODO Allow changing before run() with method call
         max_iter = 10000
         # CMA-ES default: 100 + 50 * (d + 3)**2 // n**0.5
 
         # Or if successive iterations do not produce a significant change
         #TODO Allow changing before run() with method call
-        #max_unchanged_iterations = 100
+        # max_unchanged_iterations = 100
         min_significant_change = 1e-11
-        #unchanged_iterations = 0
+        # unchanged_iterations = 0
         # CMA-ES max_unchanged_iterations fixed value: 10 + 30 * d / n
 
         # Create evaluator object
@@ -124,10 +125,11 @@ class CMAES(pints.Optimiser):
 
         # No result found? Then return hint and score of hint
         if x is None:
-            return self._x0, self._function(hint)
+            return self._x0, self._function(self._x0)
 
         # Return proper result
         return x, fx
+
 
 def cmaes(function, boundaries=None, x0=None, sigma0=None):
     """
