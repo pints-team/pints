@@ -6,4 +6,6 @@ Utilities
 
 .. autofunction:: strfloat
 
+.. autoclass:: Timer
+
 .. autofunction:: vector
