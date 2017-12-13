@@ -37,7 +37,6 @@ from _core import ForwardModel, SingleSeriesProblem
 # Utility classes and methods
 #
 from _util import strfloat, vector
-from _util import _StdOutCapture
 
 #
 # Boundaries and prior distributions

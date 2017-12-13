@@ -27,6 +27,7 @@ Contents
     diagnostic_plots
     error_measures
     function_evaluation
+    io
     log_likelihoods
     mcmc/index
     optimisers/index

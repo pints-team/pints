@@ -9,6 +9,7 @@
 #
 import numpy as np
 import pints
+import pints.io as io
 import pints.toy as toy
 import unittest
 
@@ -105,7 +106,7 @@ class TestPSO(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(10)
         opt.set_max_unchanged_iterations(None)
-        with pints._StdOutCapture() as c:
+        with pints.io.StdOutCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -115,7 +116,7 @@ class TestPSO(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints._StdOutCapture() as c:
+        with pints.io.StdOutCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
     
