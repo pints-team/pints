@@ -15,12 +15,12 @@ import numpy as np
 class ForwardModel(object):
     """
     Defines an interface for user-supplied forward models.
-    
+
     Classes extending ``ForwardModel`` can implement the required methods
     directly in Python or interface with other languages (for example via
     Python wrappers around C code).
     """
-    
+
     def __init__(self):
         super(ForwardModel, self).__init__()
 
@@ -29,14 +29,14 @@ class ForwardModel(object):
         Returns the dimension of the parameter space.
         """
         raise NotImplementedError
-        
+
     def simulate(self, parameters, times):
         """
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``.
-        
+
         Arguments:
-        
+
         ``parameters``
             An ordered list of parameter values.
         ``times``
@@ -55,9 +55,9 @@ class SingleSeriesProblem(object):
     """
     Represents an inference problem where a model is fit to a single time
     series.
-    
+
     Arguments:
-    
+
     ``model``
         A model or model wrapper extending :class:`ForwardModel`.
     ``times``
@@ -65,7 +65,7 @@ class SingleSeriesProblem(object):
     ``values``
         A sequence of measured (scalar) output values the model should match at
         the given ``times``.
-    
+
     """
     def __init__(self, model, times, values):
 
@@ -85,13 +85,13 @@ class SingleSeriesProblem(object):
         self._values = pints.vector(values)
         if len(self._times) != len(self._values):
             raise ValueError('Times and values arrays must have same length.')
-    
+
     def dimension(self):
         """
         Returns the dimensions of this problem.
         """
         return self._dimension
-    
+
     def evaluate(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
@@ -103,13 +103,13 @@ class SingleSeriesProblem(object):
         # error checking, because this will be called a lot!)
         # return np.array(values, copy=False).reshape(self._values.shape)
         return values
-    
+
     def times(self):
         """
         Returns this problem's times (as a read-only NumPy array).
         """
         return self._times
-    
+
     def values(self):
         """
         Returns this problem's values (as a read-only NumPy array).

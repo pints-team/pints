@@ -15,13 +15,13 @@ import numpy as np
 
 class Optimiser(object):
     """
-    Takes an :class:`pints.ErrorMeasure` as input and attempts to find the 
+    Takes an :class:`pints.ErrorMeasure` as input and attempts to find the
     parameters that minimise it.
-    
+
     Arguments:
-    
+
     ``function``
-        An :class:`pints.ErrorMeasure` that evaluates points in the parameter 
+        An :class:`pints.ErrorMeasure` that evaluates points in the parameter
         space.
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
@@ -35,7 +35,7 @@ class Optimiser(object):
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
         this information.
-    
+
     """
     def __init__(self, function, boundaries=None, x0=None, sigma0=None):
 
@@ -46,17 +46,17 @@ class Optimiser(object):
         else:
             self._function = function
         self._dimension = function.dimension()
-        
+
         # Extract bounds
         self._boundaries = boundaries
         if self._boundaries is not None:
             if self._boundaries.dimension() != self._dimension:
                 raise ValueError('Boundaries must have same dimension as'
                     ' function.')
-        
+
         # Set initial position
         self.set_initial_position(x0, sigma0)
-        
+
         # Print info to console
         self._verbose = True
 
@@ -70,11 +70,11 @@ class Optimiser(object):
         """
         Updates the initial position and standard deviation used by this
         optimiser.
-        
+
         Arguments:
-        
+
         ``x0=None``
-            An optional starting point for searches in the parameter space. 
+            An optional starting point for searches in the parameter space.
             This value may be used directly (for example as the initial
             position of a particle in :class:`PSO`) or indirectly (for example
             as the center of a distribution in :class:`XNES`).
@@ -102,11 +102,11 @@ class Optimiser(object):
                 if not self._boundaries.check(self._x0):
                     raise ValueError('Initial position must lie within given'
                         ' boundaries.')
-        
+
         # Check initial standard deviation
         if sigma0 is None:
             if self._boundaries:
-                # Use boundaries to guess 
+                # Use boundaries to guess
                 self._sigma0 = (1 / 6.0) * self._boundaries.range()
             else:
                 # Use initial position to guess at parameter scaling
@@ -114,7 +114,7 @@ class Optimiser(object):
                 # But add 1 for any initial value that's zero
                 self._sigma0 += (self._sigma0 == 0)
             self._sigma0.setflags(write=False)
-        
+
         elif np.isscalar(sigma0):
             # Single number given, convert to vector
             sigma0 = float(sigma0)
@@ -123,7 +123,7 @@ class Optimiser(object):
                     ' than zero.')
             self._sigma0 = np.ones(self._dimension) * sigma0
             self._sigma0.setflags(write=False)
-        
+
         else:
             # Vector given
             self._sigma0 = pints.vector(sigma0)
@@ -133,14 +133,14 @@ class Optimiser(object):
             if np.any(self._sigma0 <= 0):
                 raise ValueError('Initial standard deviations must be greater'
                     ' than zero.')
-    
+
     def set_verbose(self, value):
         """
         Enables or disables verbose mode for this optimiser. In verbose mode,
         lots of output is generated during an optimisation.
         """
         self._verbose = bool(value)
-    
+
     def verbose(self):
         """
         Returns ``True`` if the optimiser is set to run in verbose mode.
@@ -151,7 +151,7 @@ class TriangleWaveTransform(object):
     """
     Transforms from unbounded to bounded parameter space using a periodic
     triangle-wave transform.
-    
+
     Note: The transform is applied _inside_ optimisation methods, there is no
     need to wrap this around your own problem or score function.
 
@@ -160,7 +160,7 @@ class TriangleWaveTransform(object):
     search space at every boundary, leading to a continuous (but non-smooth)
     periodic landscape. While this effectively creates an infinite number of
     minima/maxima, each one maps to the same point in parameter space.
-    
+
     It should work well for that maintain a single search position or a single
     search distribution (e.g. :class:`CMAES`, :class:`xNES`, :class:`SNES`),
     which will end up in one of the many mirror images. However, for methods
@@ -184,10 +184,10 @@ class InfBoundaryTransform(object):
     """
     Wraps around score functions and returns ``inf`` whenever an evaluation is
     requested for a parameter set that's out of bounds.
-    
+
     Note: The transform is applied _inside_ optimisation methods, there is no
     need to wrap this around your own problem or score function.
-    
+
     This method should work well for optimisers that only require a ranking of
     positions (``x1 > x2 > x3`` etc.), e.g. :class:`PSO`.
     """
@@ -200,5 +200,4 @@ class InfBoundaryTransform(object):
         if np.any(x < self._lower) or np.any(x > self._upper):
             return float('inf')
         return self._function(x, *args)
-
 

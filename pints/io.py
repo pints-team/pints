@@ -44,7 +44,7 @@ class StdOutCapture(object):
             self._dupout = StringIO()
             sys.stdout = self._dupout
             self._capturing = True
-    
+
     def _stop_capturing(self):
         """ Stops capturing output. """
         if self._capturing:

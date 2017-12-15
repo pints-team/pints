@@ -17,7 +17,7 @@ class TestTimer(unittest.TestCase):
     """
     def __init__(self, name):
         super(TestTimer, self).__init__(name)
-    
+
     def test_timing(self):
         """ Test the time() and reset() methods. """
         t = pints.Timer()
@@ -42,9 +42,11 @@ class TestTimer(unittest.TestCase):
         self.assertEqual(t.format(60.2), '1 minute, 0 seconds')
         self.assertEqual(t.format(61), '1 minute, 1 second')
         self.assertEqual(t.format(121), '2 minutes, 1 second')
-        self.assertEqual(t.format(604800),
+        self.assertEqual(
+            t.format(604800),
             '1 week, 0 days, 0 hours, 0 minutes, 0 seconds')
-        self.assertEqual(t.format(2*604800+3*3600+60+4),
+        self.assertEqual(
+            t.format(2 * 604800 + 3 * 3600 + 60 + 4),
             '2 weeks, 0 days, 3 hours, 1 minute, 4 seconds')
 
 

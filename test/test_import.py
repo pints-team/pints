@@ -8,4 +8,4 @@ import unittest
 class TestBasics(unittest.TestCase):
     def test_import(self):
         import pints
-        pints.version() # Avoid 'unused import' warnings
+        del(pints)

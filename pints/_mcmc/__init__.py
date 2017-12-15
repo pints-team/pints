@@ -14,9 +14,9 @@ class MCMC(object):
     """
     Takes a :class:`LogLikelihood` function and returns a markov chain
     representative of its distribution.
-    
+
     Arguments:
-    
+
     ``function``
         A :class:`LogLikelihood` function that evaluates points in the
         parameter space.
@@ -33,16 +33,16 @@ class MCMC(object):
         if not isinstance(log_likelihood, pints.LogLikelihood):
             raise ValueError('Given function must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
-        
+
         # Get dimension
         self._dimension = self._log_likelihood.dimension()
-        
+
         # Check initial position
         self._x0 = pints.vector(x0)
         if len(self._x0) != self._dimension:
             raise ValueError('Initial position must have same dimension as'
                 ' loglikelihood function.')
-        
+
         # Check initial standard deviation
         if sigma0 is None:
             self._sigma0 = np.diag(0.01 * self._x0)
@@ -57,10 +57,10 @@ class MCMC(object):
                 self._sigma0 = self._sigma0.reshape((self._dimension,
                     self._dimension))
             self._sigma0.setflags(write=False)
-        
+
         # Print info to console
         self._verbose = True
-        
+
     def run(self):
         """
         Runs the MCMC routine and returns a markov chain representing the
@@ -74,11 +74,10 @@ class MCMC(object):
         mode, lots of output is generated during a run.
         """
         self._verbose = bool(value)
-    
+
     def verbose(self):
         """
         Returns ``True`` if the MCMC routine is set to run in verbose mode.
         """
         return self._verbose
-
 

@@ -16,33 +16,33 @@ import multiprocessing
 class PSO(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
-    
+
     Finds the best parameters using the PSO method described in [1].
-    
+
     Particle Swarm Optimisation (PSO) is a global search method (so refinement
     with a local optimiser is advised!) that works well for problems in high
     dimensions and with many local minima. Because it treats each parameter
     independently, it does not require preconditioning of the search space.
-    
+
     Detailed description:
-    
+
     In a particle swarm optimization, the parameter space is explored by ``n``
     independent particles. The particles perform a pseudo-random walk through
     the parameter space, guided by their own personal best score and the global
     optimum found so far.
-        
+
     The method starts by creating a swarm of ``n`` particles and assigning each
     an initial position and initial velocity (see the explanation of the
     arguments ``hints`` and ``v`` for details). Each particle's score is
     calculated and set as the particle's current best local score ``pl``. The
     best score of all the particles is set as the best global score ``pg``.
-    
+
     Next, an iterative procedure is run that updates each particle's velocity
     ``v`` and position ``x`` using::
-    
+
         v[k] = v[k-1] + al * (pl - x[k-1]) + ag * (pg - x[k-1])
         x[k] = v[k]
-        
+
     Here, ``x[t]`` is the particle's current position and ``v[t]`` its current
     velocity. The values ``al`` and ``ag`` are scalars randomly sampled from a
     uniform distribution, with values bound by ``r * 4.1`` and
@@ -51,9 +51,9 @@ class PSO(pints.Optimiser):
     The de facto standard is ``r = 0.5``. The random sampling is done each time
     ``al`` and ``ag`` are used: at each time step every particle performs ``m``
     samplings, where ``m`` is the dimensionality of the search space.
-    
+
     Pseudo-code algorithm::
-    
+
         almax = r * 4.1
         agmax = 4.1 - almax
         while stopping criterion not met:
@@ -66,37 +66,37 @@ class PSO(pints.Optimiser):
                     ag = uniform(0, agmax)
                     v[i,j] += al * (p[i,j] - x[i,j]) + ag * (pg[i,j]  - x[i,j])
                     x[i,j] += v[i,j]
-    
+
     References:
-    
+
     [1] Kennedy, Eberhart (1995) Particle Swarm Optimization.
     IEEE International Conference on Neural Networks
-   
+
     """
     def __init__(self, function, boundaries=None, x0=None, sigma0=None):
         super(PSO, self).__init__(function, boundaries, x0, sigma0)
-        
+
         # Run parallelised version
         self._parallel = None
         self.set_parallel()
-        
+
         # Maximum iterations stopping criterion
         self._max_iterations = None
         self.set_max_iterations()
-        
+
         # Maximum unchanged iterations stopping criterion
         self._max_unchanged_iterations = None
         self.set_max_unchanged_iterations()
         self._min_significant_change = None
         self.set_min_significant_change()
-    
+
     def run(self):
         """See :meth:`Optimiser.run()`."""
 
         # Global/local search balance
         # TODO Allow changing before run() with method call
         r = 0.5
-        
+
         # Check at least one stopping criterion is set
         if (self._max_iterations == 0 and
                 self._max_unchanged_iterations == 0):
@@ -121,26 +121,27 @@ class PSO(pints.Optimiser):
         nextMessage = 0
         if self._verbose:
             if self._parallel:
-                print('Running in parallel mode with population size '
-                    + str(n))
+                print(
+                    'Running in parallel mode with population size ' + str(n))
             else:
-                print('Running in sequential mode with population size '
+                print(
+                    'Running in sequential mode with population size '
                     + str(n))
 
         # Set parameters based on global/local balance r
         amax = 4.1
         almax = r * amax
         agmax = amax - almax
-        
+
         # Initialize swarm
-        xs = [] # Particle coordinate vectors
-        vs = [] # Particle velocity vectors
-        fs = [] # Particle scores
-        fl = [] # Best local score
-        pl = [] # Best local position
-        fg = 0  # Best global score
-        pg = 0  # Best global position
-        
+        xs = []     # Particle coordinate vectors
+        vs = []     # Particle velocity vectors
+        fs = []     # Particle scores
+        fl = []     # Best local score
+        pl = []     # Best local position
+        fg = 0      # Best global score
+        pg = 0      # Best global position
+
         # Set initial positions
         xs.append(np.array(self._x0, copy=True))
         if self._boundaries is None:
@@ -148,13 +149,14 @@ class PSO(pints.Optimiser):
                 xs.append(np.random.normal(self._x0, self._sigma0))
         else:
             for i in xrange(1, n):
-                xs.append(self._boundaries._lower + np.random.uniform(0, 1, d)
+                xs.append(
+                    self._boundaries._lower + np.random.uniform(0, 1, d)
                     * (self._boundaries._upper - self._boundaries._lower))
 
         # Set initial velocities
         for i in xrange(n):
             vs.append(self._sigma0 * np.random.uniform(0, 1, d))
-        
+
         # Set initial scores and local best
         for i in xrange(n):
             fs.append(float('inf'))
@@ -175,14 +177,14 @@ class PSO(pints.Optimiser):
             evaluator = pints.ParallelEvaluator(self._function)
         else:
             evaluator = pints.SequentialEvaluator(self._function)
-        
+
         # Start searching
         running = True
         iteration = 0
         while running:
             # Calculate scores
             fs = evaluator.evaluate(xs)
-            
+
             # Update particles
             for i in xrange(n):
                 # Update best local position and score
@@ -215,13 +217,13 @@ class PSO(pints.Optimiser):
                     unchanged_iterations += 1
                 else:
                     unchanged_iterations = 0
-            
+
                 # Update best
                 fg = fnew
                 pg = np.array(pl[i], copy=True)
             else:
                 unchanged_iterations += 1
-            
+
             # Show progress in verbose mode:
             if self._verbose and iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fg))
@@ -232,21 +234,23 @@ class PSO(pints.Optimiser):
 
             # Update iteration count
             iteration += 1
-            
+
             # Check stopping criteria
             # Maximum number of iterations
             if self._max_iterations and iteration >= self._max_iterations:
                 running = False
                 if self._verbose:
-                    print('Halting: Maximum number of iterations ('
+                    print(
+                        'Halting: Maximum number of iterations ('
                         + str(iteration) + ' reached.')
-            
+
             # Maximum number of iterations without significant change
             if (self._max_unchanged_iterations and
                     unchanged_iterations >= self._max_unchanged_iterations):
                 running = False
                 if self._verbose:
-                    print('Halting: No significant change for '
+                    print(
+                        'Halting: No significant change for '
                         + str(unchanged_iterations) + ' iterations.')
 
         # Show final value
@@ -266,10 +270,10 @@ class PSO(pints.Optimiser):
         else:
             iterations = int(iterations)
             if iterations < 0:
-                raise ValueError('Maximum number of iterations cannot be'
-                    ' negative.')
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
-        
+
     def set_max_unchanged_iterations(self, iterations=200):
         """
         Sets a maximum number of unchanged `iterations` for this routine, or
@@ -280,10 +284,10 @@ class PSO(pints.Optimiser):
         else:
             iterations = int(iterations)
             if iterations < 0:
-                raise ValueError('Maximum number of iterations cannot be'
-                    ' negative.')
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
         self._max_unchanged_iterations = iterations
-        
+
     def set_min_significant_change(self, e=1e-11):
         """
         Sets the absolute difference between successive scores that is counted
@@ -307,5 +311,4 @@ def pso(function, boundaries=None, x0=None, sigma0=None):
     Runs a PSO optimisation with the default settings.
     """
     return PSO(function, boundaries, x0, sigma0).run()
-
 

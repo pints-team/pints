@@ -34,13 +34,14 @@ class ErrorMeasure(object):
 class LogLikelihoodBasedError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
-    
+
     Inverts a log-likelihood to use it as an error.
     """
     def __init__(self, likelihood):
         if not isinstance(likelihood, pints.LogLikelihood):
-            raise ValueError('Argument to LikelihoodBasedError must be'
-                ' instance of Likelihood')
+            raise ValueError(
+                'Argument to LikelihoodBasedError must be instance of'
+                ' Likelihood')
         super(LogLikelihoodBasedError, self).__init__(likelihood._problem)
         self._likelihood = likelihood
 
@@ -51,7 +52,7 @@ class LogLikelihoodBasedError(ErrorMeasure):
 class RMSError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
-    
+
     Calculates the square root of a normalised sum-of-squares error:
     ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
     """
@@ -67,7 +68,7 @@ class RMSError(ErrorMeasure):
 class SumOfSquaresError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
-    
+
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
     """
     def __call__(self, x):

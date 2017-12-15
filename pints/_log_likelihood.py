@@ -41,7 +41,7 @@ class LogLikelihood(object):
 class LogPosterior(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
-    
+
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     and a class:`Prior`.
 
@@ -64,8 +64,8 @@ class LogPosterior(LogLikelihood):
         # Check dimension
         self._dimension = self._prior.dimension()
         if self._log_likelihood.dimension() != self._dimension:
-            raise ValueError('Given prior and log-likelihood must have same'
-                ' dimension')
+            raise ValueError(
+                'Given prior and log-likelihood must have same dimension')
 
     def __call__(self, x):
         # Evaluate prior first, assuming this is very cheap
@@ -79,7 +79,7 @@ class LogPosterior(LogLikelihood):
 class KnownNoiseLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
-    
+
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
     of that noise.
@@ -103,11 +103,11 @@ class KnownNoiseLogLikelihood(LogLikelihood):
 class UnknownNoiseLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
-    
+
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
     deviation (sigma) of that noise.
-    
+
     For a noise level of ``sigma``, the likelihood becomes:
 
     .. math::
@@ -116,7 +116,7 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
             -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of
-    
+
     .. math::
         \log{L(\\theta, \sigma)} =
             -\\frac{N}{2}\log{2\pi}
@@ -132,14 +132,15 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
 
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
-        return -(self._logn + self._size * np.log(x[-1])
+        return -(
+            self._logn + self._size * np.log(x[-1])
             + np.sum(error**2) / (2 * x[-1]**2))
 
 
 class ScaledLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
-    
+
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     divided by the number of time samples
 

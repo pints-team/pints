@@ -40,7 +40,7 @@ class SNES(pints.Optimiser):
         # Default search parameters
         # TODO Allow changing before run() with method call
         parallel = True
-        
+
         # Search is terminated after max_iter iterations
         # TODO Allow changing before run() with method call
         max_iter = 10000
@@ -68,10 +68,11 @@ class SNES(pints.Optimiser):
         nextMessage = 0
         if self._verbose:
             if parallel:
-                print('Running in parallel mode with population size '
-                    + str(n))
+                print(
+                    'Running in parallel mode with population size ' + str(n))
             else:
-                print('Running in sequential mode with population size '
+                print(
+                    'Running in sequential mode with population size '
                     + str(n))
 
         # Apply wrapper to implement boundaries
@@ -103,48 +104,48 @@ class SNES(pints.Optimiser):
 
         # Initial square root of covariance matrix
         sigmas = np.array(self._sigma0, copy=True)
-        
+
         # Best solution found
         xbest = mu
         fbest = float('inf')
 
         # Start running
         for iteration in xrange(1, 1 + max_iter):
-        
+
             # Create new samples
             ss = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
             xs = mu + sigmas * ss
-            
+
             # Evaluate at the samples
             fxs = evaluator.evaluate(xtransform(xs))
-            
+
             # Order the normalized samples according to the scores
             order = np.argsort(fxs)
             ss = ss[order]
-            
+
             # Update center
             mu += eta_mu * sigmas * np.dot(us, ss)
 
             # Update variances
             sigmas *= np.exp(0.5 * eta_sigmas * np.dot(us, ss**2 - 1))
-            
+
             # Update best if needed
             if fxs[order[0]] < fbest:
-                
+
                 # Check if this counts as a significant change
                 fnew = fxs[order[0]]
                 if np.sum(np.abs(fnew - fbest)) < min_significant_change:
                     unchanged_iterations += 1
                 else:
                     unchanged_iterations = 0
-            
+
                 # Update best
                 xbest = xs[order[0]]
                 fbest = fnew
-                
+
             else:
                 unchanged_iterations += 1
-            
+
             # Show progress in verbose mode:
             if self._verbose and iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fbest))
@@ -152,18 +153,19 @@ class SNES(pints.Optimiser):
                     nextMessage = iteration + 1
                 else:
                     nextMessage = 20 * (1 + iteration // 20)
-            
+
             # Stop if no change for too long
             if unchanged_iterations >= max_unchanged_iterations:
                 if self._verbose:
-                    print('Halting: No significant change for '
+                    print(
+                        'Halting: No significant change for '
                         + str(unchanged_iterations) + ' iterations.')
                 break
-            
+
         # Show stopping criterion
         if self._verbose and unchanged_iterations < max_unchanged_iterations:
             print('Halting: Maximum iterations reached.')
-        
+
         # Get final score at mu
         fmu = self._function(xtransform(mu))
         if fmu < fbest:
@@ -171,11 +173,11 @@ class SNES(pints.Optimiser):
                 print('Final score at mu beats best sample')
             xbest = mu
             fbest = fmu
-        
+
         # Show final value
         if self._verbose:
             print(str(iteration) + ': ' + str(fbest))
-        
+
         # Return best solution
         return xtransform(xbest), fbest
 

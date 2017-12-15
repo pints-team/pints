@@ -21,9 +21,9 @@ def strfloat(x):
 class Timer(object):
     """
     Provides accurate timing.
-    
+
     Example::
-    
+
         timer = pints.Timer()
         print(timer.format(timer.time()))
 
@@ -31,6 +31,7 @@ class Timer(object):
     def __init__(self, output=None):
         self._start = timeit.default_timer()
         self._methods = {}
+
     def format(self, time):
         """
         Formats a (non-integer) number of seconds, returns a string like
@@ -53,11 +54,13 @@ class Timer(object):
             time -= f * k
         output.append('1 second' if time == 1 else str(time) + ' seconds')
         return ', '.join(output)
+
     def reset(self):
         """
         Resets this timer's start time.
         """
         self._start = timeit.default_timer()
+
     def time(self):
         """
         Returns the time (in seconds) since this timer was created, or since

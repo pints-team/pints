@@ -17,7 +17,7 @@ class TestLogistic(unittest.TestCase):
     """
     Tests if the logistic (toy) model works.
     """
-    
+
     def test_start_with_zero(self):
         # Test the special case where the initial size is zero
         model = pints.toy.LogisticModel(0)
@@ -44,7 +44,7 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(values[0], 2)
         self.assertEqual(values[-1], parameters[-1])
         self.assertTrue(np.all(values[1:] >= values[:-1]))
-        
+
 
 if __name__ == '__main__':
     unittest.main()

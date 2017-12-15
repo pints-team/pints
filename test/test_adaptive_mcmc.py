@@ -21,13 +21,13 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
     """
     def __init__(self, name):
         super(TestAdaptiveCovarianceMCMC, self).__init__(name)
-    
+
         # Create toy model
         self.model = toy.LogisticModel()
         self.real_parameters = [0.015, 500]
         self.times = np.linspace(0, 1000, 1000)
         self.values = self.model.simulate(self.real_parameters, self.times)
-        
+
         # Add noise
         noise = 10
         self.values += np.random.normal(0, noise, self.values.shape)
@@ -45,17 +45,17 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         )
 
         # Create an un-normalised log-posterior (prior * likelihood)
-        self.log_likelihood = pints.LogPosterior(self.prior,
-            pints.UnknownNoiseLogLikelihood(self.problem))
+        self.log_likelihood = pints.LogPosterior(
+            self.prior, pints.UnknownNoiseLogLikelihood(self.problem))
 
         # Select initial point and covariance
         self.x0 = np.array(self.real_parameters) * 1.1
         self.sigma0 = [0.005, 100, 0.5 * noise]
 
     def test_settings(self):
-        
+
         mcmc = pints.AdaptiveCovarianceMCMC(self.log_likelihood, self.x0)
-        
+
         r = mcmc.acceptance_rate() * 0.5
         mcmc.set_acceptance_rate(r)
         self.assertEqual(mcmc.acceptance_rate(), r)
@@ -83,9 +83,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertEqual(mcmc.verbose(), v)
 
     def test_with_hint_and_sigma(self):
-    
-        mcmc = pints.AdaptiveCovarianceMCMC(self.log_likelihood, self.x0,
-            self.sigma0)
+
+        mcmc = pints.AdaptiveCovarianceMCMC(
+            self.log_likelihood, self.x0, self.sigma0)
         mcmc.set_verbose(debug)
         chain = mcmc.run()
         mean = np.mean(chain, axis=0)

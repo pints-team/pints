@@ -15,29 +15,29 @@ import numpy as np
 class AdaptiveCovarianceMCMC(pints.MCMC):
     """
     *Extends:* :class:`MCMC`
-    
+
     Creates a chain of samples from a target distribution, using the adaptive
     covariance routine described in [1].
-    
+
     The algorithm starts out as basic MCMC, but after a certain number of
     iterations starts tuning the covariance matrix, so that the acceptance rate
     of the MCMC steps converges to a user specified rate.
-    
+
     By default, the method will run for ``2000 * d`` iterations, where ``d`` is
     the dimension of the used :class:`LogLikelihood`. Of these, the first 25%
     will run without adaptation, and the first 50% will be discarded as
     burn-in. These numbers can be modified using the methods
 
     #TODO
-        
+
     [1] Uncertainty and variability in models of the cardiac action potential:
     Can we build trustworthy models?
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
-        super(AdaptiveCovarianceMCMC, self).__init__(log_likelihood, x0,
-            sigma0)
+        super(AdaptiveCovarianceMCMC, self).__init__(
+            log_likelihood, x0, sigma0)
 
         # Target acceptance rate
         self._acceptance_target = 0.25
@@ -53,7 +53,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
-    
+
     def acceptance_rate(self):
         """
         Returns the target acceptance rate that will be used in the next run.
@@ -83,15 +83,17 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
-        
+
         # Report the current settings
         if self._verbose:
             print('Running adaptive covariance MCMC')
             print('Target acceptance rate: ' + str(self._acceptance_target))
             print('Total number of iterations: ' + str(self._iterations))
-            print('Number of iterations before adapation: '
+            print(
+                'Number of iterations before adapation: '
                 + str(self._adaptation))
-            print('Number of iterations to discard as burn-in: '
+            print(
+                'Number of iterations to discard as burn-in: '
                 + str(self._burn_in))
             print('Storing one sample per ' + str(self._thinning_rate))
 
@@ -104,8 +106,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         current = self._x0
         current_log_likelihood = self._log_likelihood(current)
         if not np.isfinite(current_log_likelihood):
-            raise ValueError('Suggested starting position has a non-finite'
-                ' log-likelihood')
+            raise ValueError(
+                'Suggested starting position has a non-finite log-likelihood.')
 
         # Chain of stored samples
         stored = int((self._iterations - self._burn_in) / self._thinning_rate)
@@ -114,16 +116,16 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         # Initial acceptance rate (value doesn't matter)
         loga = 0
         acceptance = 0
-        
+
         # Go!
         for i in xrange(self._iterations):
             # Propose new point
             # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
-            proposed = np.random.multivariate_normal(current,
-                np.exp(loga) * sigma)
-            
+            proposed = np.random.multivariate_normal(
+                current, np.exp(loga) * sigma)
+
             # Check if the point can be accepted
             accepted = 0
             proposed_log_likelihood = self._log_likelihood(proposed)
@@ -133,7 +135,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                     accepted = 1
                     current = proposed
                     current_log_likelihood = proposed_log_likelihood
-            
+
             # Adapt covariance matrix
             if i >= self._adaptation:
                 gamma = (i - self._adaptation + 2) ** -0.6
@@ -144,12 +146,12 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
             # Update acceptance rate
             acceptance = (i * acceptance + float(accepted)) / (i + 1)
-            
+
             # Add point to chain
             ilog = i - self._burn_in
             if ilog >= 0 and ilog % self._thinning_rate == 0:
                 chain[ilog // self._thinning_rate, :] = current
-            
+
             # Report
             if self._verbose and i % 50 == 0:
                 print('Iteration ' + str(i) + ' of ' + str(self._iterations))

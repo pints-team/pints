@@ -8,7 +8,7 @@
 #  software package.
 #
 import pints
-import pints.toy as toy
+import pints.toy
 import unittest
 import numpy as np
 
@@ -21,9 +21,9 @@ class TestXNES(unittest.TestCase):
     """
     def __init__(self, name):
         super(TestXNES, self).__init__(name)
-    
+
         # Create toy model
-        self.model = toy.LogisticModel()
+        self.model = pints.toy.LogisticModel()
         self.real_parameters = [0.015, 500]
         self.times = np.linspace(0, 1000, 1000)
         self.values = self.model.simulate(self.real_parameters, self.times)
@@ -37,21 +37,20 @@ class TestXNES(unittest.TestCase):
 
         # Select some boundaries
         self.boundaries = pints.Boundaries([0, 400], [0.03, 600])
-        
+
         # Set an initial position
         self.x0 = 0.014, 499
-        
+
         # Set an initial guess of the standard deviation in each parameter
         self.sigma0 = [0.001, 1]
-        
+
         # Minimum score function value to obtain
         self.cutoff = 1e-9
-        
+
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
     def test_unbounded_no_hint(self):
-        
         opt = pints.XNES(self.score)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -59,9 +58,8 @@ class TestXNES(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
-        
+
     def test_bounded_no_hint(self):
-    
         opt = pints.XNES(self.score, self.boundaries)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -69,9 +67,8 @@ class TestXNES(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
-        
+
     def test_unbounded_with_hint(self):
-    
         opt = pints.XNES(self.score, x0=self.x0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -79,9 +76,8 @@ class TestXNES(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
-        
+
     def test_bounded_with_hint(self):
-    
         opt = pints.XNES(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -91,7 +87,6 @@ class TestXNES(unittest.TestCase):
         self.assertTrue(found_solution < self.cutoff)
 
     def test_bounded_with_hint_and_sigma(self):
-    
         opt = pints.XNES(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):

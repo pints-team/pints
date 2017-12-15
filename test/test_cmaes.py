@@ -21,7 +21,7 @@ class TestCMAES(unittest.TestCase):
     """
     def __init__(self, name):
         super(TestCMAES, self).__init__(name)
-    
+
         # Create toy model
         self.model = toy.LogisticModel()
         self.real_parameters = [0.015, 500]
@@ -37,22 +37,22 @@ class TestCMAES(unittest.TestCase):
 
         # Select some boundaries
         self.boundaries = pints.Boundaries([0, 400], [0.03, 600])
-        
+
         # Set an initial position
         self.x0 = 0.014, 499
-        
+
         # Set a guess for the standard deviation around the initial position
         # (in both directions)
         self.sigma0 = 0.01
-        
+
         # Minimum score function value to obtain
         self.cutoff = 1e-9
-        
+
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
     def test_unbounded_no_hint(self):
-        
+
         opt = pints.CMAES(self.score)
         opt.set_verbose(debug)
         # for i in xrange(self.max_tries):
@@ -62,9 +62,9 @@ class TestCMAES(unittest.TestCase):
         # self.assertTrue(found_solution < self.cutoff)
         # This won't find a solution, because the default guess made for sigma0
         # is too large!
-        
+
     def test_bounded_no_hint(self):
-    
+
         opt = pints.CMAES(self.score, self.boundaries)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -72,9 +72,9 @@ class TestCMAES(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
-        
+
     def test_unbounded_with_hint(self):
-    
+
         opt = pints.CMAES(self.score, x0=self.x0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -82,9 +82,9 @@ class TestCMAES(unittest.TestCase):
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
-        
+
     def test_bounded_with_hint(self):
-    
+
         opt = pints.CMAES(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):
@@ -94,7 +94,7 @@ class TestCMAES(unittest.TestCase):
         self.assertTrue(found_solution < self.cutoff)
 
     def test_bounded_with_hint_and_sigma(self):
-    
+
         opt = pints.CMAES(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
         for i in xrange(self.max_tries):

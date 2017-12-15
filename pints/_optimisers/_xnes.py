@@ -18,19 +18,19 @@ import multiprocessing
 class XNES(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
-    
+
     Finds the best parameters using the xNES method described in [1, 2].
-    
+
     xNES stands for Exponential Natural Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems [1].
-        
+
     [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
     evolution strategies.
     Proceedings of the 12th annual conference on Genetic and evolutionary
     computation
-    
+
     [2] PyBrain: The Python machine learning library (http://pybrain.org)
-    
+
     """
     def run(self):
         """See :meth:`Optimiser.run()`."""
@@ -38,7 +38,7 @@ class XNES(pints.Optimiser):
         # Default search parameters
         # TODO Allow changing before run() with method call
         parallel = True
-        
+
         # Search is terminated after max_iter iterations
         # TODO Allow changing before run() with method call
         max_iter = 10000
@@ -66,10 +66,11 @@ class XNES(pints.Optimiser):
         nextMessage = 0
         if self._verbose:
             if parallel:
-                print('Running in parallel mode with population size '
-                    + str(n))
+                print(
+                    'Running in parallel mode with population size ' + str(n))
             else:
-                print('Running in sequential mode with population size '
+                print(
+                    'Running in sequential mode with population size '
                     + str(n))
 
         # Apply wrapper to implement boundaries
@@ -101,7 +102,7 @@ class XNES(pints.Optimiser):
 
         # Initial square root of covariance matrix
         A = np.eye(d) * self._sigma0
-        
+
         # Identity matrix for later use
         I = np.eye(d)
 
@@ -111,39 +112,39 @@ class XNES(pints.Optimiser):
 
         # Start running
         for iteration in xrange(1, 1 + max_iter):
-        
+
             # Create new samples
             zs = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
             xs = np.array([mu + np.dot(A, zs[i]) for i in xrange(n)])
-            
+
             # Evaluate at the samples
             fxs = evaluator.evaluate(xtransform(xs))
-            
+
             # Order the normalized samples according to the scores
             order = np.argsort(fxs)
             zs = zs[order]
-            
+
             # Update center
             Gd = np.dot(us, zs)
             mu += eta_mu * np.dot(A, Gd)
-            
+
             # Update best if needed
             if fxs[order[0]] < fbest:
-                
+
                 # Check if this counts as a significant change
                 fnew = fxs[order[0]]
                 if np.sum(np.abs(fnew - fbest)) < min_significant_change:
                     unchanged_iterations += 1
                 else:
                     unchanged_iterations = 0
-            
+
                 # Update best
                 xbest = xs[order[0]]
                 fbest = fnew
-                
+
             else:
                 unchanged_iterations += 1
-            
+
             # Show progress in verbose mode:
             if self._verbose and iteration >= nextMessage:
                 print(str(iteration) + ': ' + str(fbest))
@@ -151,22 +152,23 @@ class XNES(pints.Optimiser):
                     nextMessage = iteration + 1
                 else:
                     nextMessage = 20 * (1 + iteration // 20)
-            
+
             # Stop if no change for too long
             if unchanged_iterations >= max_unchanged_iterations:
                 if self._verbose:
-                    print('Halting: No significant change for '
+                    print(
+                        'Halting: No significant change for '
                         + str(unchanged_iterations) + ' iterations.')
                 break
-            
+
             # Update root of covariance matrix
             Gm = np.dot(np.array([np.outer(z, z).T - I for z in zs]).T, us)
             A *= scipy.linalg.expm(np.dot(0.5 * eta_A, Gm))
-            
+
         # Show stopping criterion
         if self._verbose and unchanged_iterations < max_unchanged_iterations:
             print('Halting: Maximum iterations reached.')
-        
+
         # Get final score at mu
         fmu = self._function(xtransform(mu))
         if fmu < fbest:
@@ -174,11 +176,11 @@ class XNES(pints.Optimiser):
                 print('Final score at mu beats best sample')
             xbest = mu
             fbest = fmu
-        
+
         # Show final value
         if self._verbose:
             print(str(iteration) + ': ' + str(fbest))
-        
+
         # Return best solution
         return xtransform(xbest), fbest
 

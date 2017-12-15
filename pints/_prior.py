@@ -35,7 +35,7 @@ class Prior(object):
 class ComposedPrior(Prior):
     """
     *Extends:* :class:`Prior`
-    
+
     Prior composed of one or more sub-priors.
     The evaluation of the composed prior assumes the input priors are all
     independent from each other
@@ -46,14 +46,14 @@ class ComposedPrior(Prior):
         # Check if sub-priors given
         if len(priors) < 1:
             raise ValueError('Must have at least one sub-prior')
-        
+
         # Check if proper priors, count dimension
         self._dimension = 0
         for prior in priors:
             if not isinstance(prior, Prior):
                 raise ValueError('All sub-priors must extend Prior')
             self._dimension += prior.dimension()
-        
+
         # Store
         self._priors = priors
 
@@ -74,7 +74,7 @@ class ComposedPrior(Prior):
 class UniformPrior(Prior):
     """
     *Extends:* :class:`Prior`
-    
+
     Defines a uniform prior over a given range.
 
     For example: ``p = UniformPrior([1,1,1], [10, 10, 100])``, or
@@ -84,15 +84,16 @@ class UniformPrior(Prior):
         # Parse input arguments
         if upper is None:
             if not isinstance(lower_or_boundaries, pints.Boundaries):
-                raise ValueError('UniformPrior requires a lower and an upper'
-                    ' bound, or a single Boundaries object.')
+                raise ValueError(
+                    'UniformPrior requires a lower and an upper bound, or a'
+                    ' single Boundaries object.')
             self._boundaries = lower_or_boundaries
         else:
             self._boundaries = pints.Boundaries(lower_or_boundaries, upper)
-        
+
         # Cache dimension
         self._dimension = self._boundaries.dimension()
-        
+
         # Cache output value
         self._value = 1.0 / np.product(self._boundaries.range())
 
@@ -107,12 +108,12 @@ class UniformPrior(Prior):
 class MultivariateNormalPrior(Prior):
     """
     *Extends:* :class:`Prior`
-    
+
     Defines a multivariate normal prior with a given mean and covariance
     matrix.
 
     For example::
-    
+
         p = NormalPrior(np.array([0,0]),
                         np.array([[1, 0],[0, 1]]))`
 
@@ -120,8 +121,8 @@ class MultivariateNormalPrior(Prior):
     def __init__(self, mean, cov):
         # Parse input arguments
         if not isinstance(mean, np.array):
-            raise ValueError('NormalPrior mean argument requires a NumPy'
-                ' array')
+            raise ValueError(
+                'NormalPrior mean argument requires a NumPy array')
 
         if not isinstance(cov, np.array):
             raise ValueError('NormalPrior cov argument requires a NumPy array')
@@ -144,14 +145,14 @@ class MultivariateNormalPrior(Prior):
         return self._dimension
 
     def __call__(self, x):
-        return scipy.stats.multivariate_normal.pdf(x,
-            mean=self._mean, cov=self._cov)
+        return scipy.stats.multivariate_normal.pdf(
+            x, mean=self._mean, cov=self._cov)
 
 
 class NormalPrior(Prior):
     """
     *Extends:* :class:`Prior`
-    
+
     Defines a 1-d normal prior with a given mean and variance
 
     For example: ``p = NormalPrior(0,1)`` for a mean of ``0`` and variance
@@ -171,5 +172,4 @@ class NormalPrior(Prior):
 
     def __call__(self, x):
         return self._scale * np.exp(self._inv2cov * (x[0] - self._mean)**2)
-
 

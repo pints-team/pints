@@ -16,7 +16,7 @@ import numpy as np
 class CMAES(pints.Optimiser):
     """
     *Extends:* :class:`Optimiser`
-    
+
     Finds the best parameters using the CMA-ES method described in [1, 2] and
     implemented in the `cma` module.
 
@@ -37,7 +37,7 @@ class CMAES(pints.Optimiser):
         # Only the first time this is called in a running program incurs
         # much overhead.
         import cma
-        
+
         # Get BestSolution in cma 1.x and 2.x
         # try:
         #    from cma import BestSolution
@@ -83,14 +83,16 @@ class CMAES(pints.Optimiser):
 
         # Set boundaries
         if self._boundaries is not None:
-            options.set('bounds',
-                [list(self._boundaries._lower), list(self._boundaries._upper)])
+            options.set(
+                'bounds',
+                [list(self._boundaries._lower), list(self._boundaries._upper)]
+            )
 
         # Set stopping criteria
         options.set('maxiter', max_iter)
         options.set('tolfun', min_significant_change)
         # options.set('ftarget', target)
-        
+
         # Tell CMA not to worry about growing step sizes too much
         options.set('tolfacupx', 10000)
 

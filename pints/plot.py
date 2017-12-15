@@ -13,7 +13,7 @@ def trace(chain, *args):
     """
     Takes one or more markov chains as input and creates and returns a plot
     showing histograms and traces for each chain.
-    
+
     Arguments:
 
     `chain`
@@ -26,7 +26,7 @@ def trace(chain, *args):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
-    
+
     bins = 40
     alpha = 0.5
     n_sample, n_param = chain.shape
@@ -48,8 +48,8 @@ def trace(chain, *args):
     if args:
         for i_chain, chain in enumerate(args):
             if chain.shape[1] != n_param:
-                raise ValueError('All chains must have the same number of'
-                    ' parameters.')
+                raise ValueError(
+                    'All chains must have the same number of parameters.')
             for i in xrange(n_param):
                 axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5,
                                 label='Chain ' + str(2 + i_chain))
@@ -77,7 +77,7 @@ def autocorrelation(chain, max_lags=100):
     """
     import matplotlib.pyplot as plt
     import numpy as np
-    
+
     n_sample, n_param = chain.shape
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
@@ -85,10 +85,10 @@ def autocorrelation(chain, max_lags=100):
         axes[i].acorr(chain[:, i] - np.mean(chain[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
         axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
-    
+
     # Add x-label to final plot only
     axes[i].set_xlabel('Lag')
-    
+
     # Add vertical y-label to middle plot
     # fig.text(0.04, 0.5, 'Autocorrelation', va='center', rotation='vertical')
     axes[int(i / 2)].set_ylabel('Autocorrelation')
@@ -126,20 +126,21 @@ def series(chain, problem, thinning=None):
     """
     import matplotlib.pyplot as plt
     import numpy as np
-    
+
     n_sample, n_param = chain.shape
 
     # Get problem dimension
     dimension = problem.dimension()
-    
+
     # Get thinning rate
     if thinning is None:
         thinning = max(1, int(n_sample / 200))
     else:
         thinning = int(thinning)
         if thinning < 1:
-            raise ValueError('Thinning rate must be `None` or an integer'
-                ' greater than zero.')
+            raise ValueError(
+                'Thinning rate must be `None` or an integer greater than'
+                ' zero.')
 
     # Get times
     times = problem.times()
@@ -152,7 +153,7 @@ def series(chain, problem, thinning=None):
         i += 1
     predicted_values = np.array(predicted_values)
     mean_values = np.mean(predicted_values, axis=0)
-    
+
     # Guess appropriate alpha (0.05 worked for 1000 plots)
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
@@ -160,10 +161,11 @@ def series(chain, problem, thinning=None):
     fig, axes = plt.subplots(1, 1, figsize=(6, 4))
     plt.xlabel('Time')
     plt.ylabel('Value')
-    plt.plot(times, problem.values(), 'x', color='#7f7f7f', ms=6.5, alpha=0.5,
+    plt.plot(
+        times, problem.values(), 'x', color='#7f7f7f', ms=6.5, alpha=0.5,
         label='Original data')
-    plt.plot(times, predicted_values[0], color='#1f77b4',
-        label='Inferred series')
+    plt.plot(
+        times, predicted_values[0], color='#1f77b4', label='Inferred series')
     for v in predicted_values[1:]:
         plt.plot(times, v, color='#1f77b4', alpha=alpha)
     plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
@@ -176,7 +178,7 @@ def pairwise(chain, kde=False):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
     parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
-    
+
     The returned plot is in a 'matrix' form, with histograms of each individual
     parameter on the diagonal, and scatter plots of parameters `i` and `j` on
     each entry `(i, j)` below the diagonal.
@@ -196,7 +198,7 @@ def pairwise(chain, kde=False):
     import matplotlib.pyplot as plt
     import numpy as np
     from scipy import stats
-    
+
     n_sample, n_param = chain.shape
     fig_size = (3 * n_param, 3 * n_param)
 
@@ -223,8 +225,9 @@ def pairwise(chain, kde=False):
                     # Create an ordinary histogram
                     xbins = np.linspace(xmin, xmax, bins)
                     ybins = np.linspace(ymin, ymax, bins)
-                    axes[i, j].hist2d(chain[:, j], chain[:, i],
-                        bins=[xbins, ybins], normed=True, cmap=plt.cm.Blues)
+                    axes[i, j].hist2d(
+                        chain[:, j], chain[:, i], bins=[xbins, ybins],
+                        normed=True, cmap=plt.cm.Blues)
                 else:
                     # Create a kernel-density estimate plot
                     x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
@@ -232,18 +235,20 @@ def pairwise(chain, kde=False):
                     values = stats.gaussian_kde(values)
                     values = values(np.vstack([x.ravel(), y.ravel()]))
                     values = np.reshape(values.T, x.shape)
-                    axes[i, j].imshow(np.rot90(values), cmap=plt.cm.Blues,
+                    axes[i, j].imshow(
+                        np.rot90(values), cmap=plt.cm.Blues,
                         extent=[xmin, xmax, ymin, ymax])
-                    axes[i, j].plot(chain[:, j], chain[:, i], 'k.',
-                        markersize=2, alpha=0.5)
-                
+                    axes[i, j].plot(
+                        chain[:, j], chain[:, i], 'k.', markersize=2,
+                        alpha=0.5)
+
                     # Force equal aspect ratio
                     # See: https://stackoverflow.com/questions/7965743
                     im = axes[i, j].get_images()
                     ex = im[0].get_extent()
                     axes[i, j].set_aspect(
                         abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
-                
+
             if i < n_param - 1:
                 # Only show x tick labels for the last row
                 axes[i, j].set_xticklabels([])

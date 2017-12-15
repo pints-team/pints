@@ -23,8 +23,8 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleSeriesProblem(model, times, values)
 
         # Create a scaled and not scaled log_likelihood
-        log_likelihood_not_scaled = pints.KnownNoiseLogLikelihood(problem,
-            sigma)
+        log_likelihood_not_scaled = pints.KnownNoiseLogLikelihood(
+            problem, sigma)
         log_likelihood_scaled = pints.ScaledLogLikelihood(
             log_likelihood_not_scaled)
 

@@ -27,7 +27,7 @@ def evaluate(f, x, parallel=False, args=None):
 
     To run the evaluations on all available cores, set ``parallel=True``. For
     details see :class:`ParallelEvaluator`.
-    
+
     Extra arguments to pass to ``f`` can be given in the optional tuple
     ``args``. If used, ``f`` will be called as ``f(x[i], *args)``.
     """
@@ -41,22 +41,22 @@ def evaluate(f, x, parallel=False, args=None):
 class Evaluator(object):
     """
     *Abstract class*
-    
+
     Interface for classes that take a function (or callable object)
     ``f(x)`` and evaluate it for list of input values ``x``. This interface is
     shared by a parallel and a sequential implementation, allowing easy
     switching between parallel or sequential implementations of the same
     algorithm.
-        
+
     Arguments:
-    
+
     ``function``
         A function or other callable object ``f`` that takes a value ``x`` and
         returns an evaluation ``f(x)``.
     ``args``
         An optional tuple containing extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
-        
+
     """
     def __init__(self, function, args=None):
         if not callable(function):
@@ -65,22 +65,23 @@ class Evaluator(object):
         if args is None:
             self._args = ()
         elif type(args) != tuple:
-            raise ValueError('The argument `args` must be either None or a'
-                ' tuple.')
+            raise ValueError(
+                'The argument `args` must be either None or a tuple.')
         else:
             self._args = args
 
     def evaluate(self, positions):
         """
         Evaluate the function for every value in the sequence ``positions``.
-        
+
         Returns a list with the returned evaluations.
         """
         try:
             len(positions)
         except TypeError:
-            raise ValueError('The argument `positions` must be a sequence of'
-                ' input values to the evaluator\'s function.')
+            raise ValueError(
+                'The argument `positions` must be a sequence of input values'
+                ' to the evaluator\'s function.')
         return self._evaluate(positions)
 
     def _evaluate(self, positions):
@@ -93,23 +94,23 @@ class Evaluator(object):
 class ParallelEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
-    
+
     Evaluates a single-valued function object for any set of input values
     given, using all available cores.
-    
+
     Shares an interface with the :class:`SequentialEvaluator`, allowing
     parallelism to be switched on and off with minimal hassle. Parallelism
     takes a little time to be set up, so as a general rule of thumb it's only
     useful for if the total run-time is at least ten seconds (anno 2015).
-     
+
     By default, the number of processes ("workers") used to evaluate the
     function is set equal to the number of CPU cores reported by python's
     ``multiprocessing`` module. To override the number of workers used, set
     ``nworkers`` to some integer greater than ``0``.
-    
+
     There are two important caveats for using multiprocessing to evaluate
     functions:
-        
+
       1. Processes don't share memory. This means the function to be
          evaluated will be duplicated (via pickling) for each process (see
          `Avoid shared state <http://docs.python.org/2/library/\
@@ -118,9 +119,9 @@ multiprocessing.html#all-platforms>`_ for details).
          ``if __name__ == '__main__':`` block (see `Windows
          <https://docs.python.org/2/library/multiprocessing.html#windows>`_
          for details).
-        
+
     Arguments:
-    
+
     ``function``
         The function to evaluate
     ``nworkers``
@@ -136,15 +137,16 @@ multiprocessing.html#all-platforms>`_ for details).
         best performance on a given task / system.
     ``args``
         An optional tuple containing extra arguments to the objective function.
-    
+
     The evaluator will keep it's subprocesses alive and running until it is
     tidied up by garbage collection.
-    
+
     Note that while this class uses multiprocessing, it is not thread/process
     safe itself: It should not be used by more than a single thread/process at
     a time.
     """
-    def __init__(self, function, nworkers=None, max_tasks_per_worker=500,
+    def __init__(
+            self, function, nworkers=None, max_tasks_per_worker=500,
             args=None):
         super(ParallelEvaluator, self).__init__(function, args)
         # Determine number of workers
@@ -153,15 +155,17 @@ multiprocessing.html#all-platforms>`_ for details).
         else:
             self._nworkers = int(nworkers)
             if self._nworkers < 1:
-                raise ValueError('Number of workers must be an integer greater'
-                    ' than 0 or `None` to use the default value.')
+                raise ValueError(
+                    'Number of workers must be an integer greater than 0 or'
+                    ' `None` to use the default value.')
         # Create empty set of workers
         self._workers = []
         # Maximum tasks per worker (for some reason, this saves memory)
         self._max_tasks = int(max_tasks_per_worker)
         if self._max_tasks < 1:
-            raise ValueError('Maximum tasks per worker should be at least 1'
-                ' but probably much greater.')
+            raise ValueError(
+                'Maximum tasks per worker should be at least 1 (but probably'
+                ' much greater).')
         # Queue with tasks
         self._tasks = multiprocessing.Queue()
         # Queue with results
@@ -232,7 +236,7 @@ multiprocessing.html#all-platforms>`_ for details).
             m = 0
             results = [0] * n
             while m < n and not self._error.is_set():
-                time.sleep(0.001) # This is really necessary
+                time.sleep(0.001)   # This is really necessary
                 # Retrieve all results
                 try:
                     while True:
@@ -300,11 +304,11 @@ multiprocessing.html#all-platforms>`_ for details).
             except (Queue.Empty, IOError, EOFError):
                 pass
             return items
-        
+
         clear(self._tasks)
         clear(self._results)
         errors = clear(self._errors)
-        
+
         # Create new queues & error event
         self._tasks = multiprocessing.Queue()
         self._results = multiprocessing.Queue()
@@ -318,25 +322,25 @@ multiprocessing.html#all-platforms>`_ for details).
 class SequentialEvaluator(Evaluator):
     """
     *Extends:* :class:`Evaluator`
-    
+
     Evaluates a function (or callable object) for a list of input values.
-    
+
     Runs sequentially, but shares an interface with the
     :class:`ParallelEvaluator`, allowing parallelism to be switched on/off.
-    
+
     Arguments:
-    
+
     ``function``
         The function to evaluate.
     ``args``
         An optional tuple containing extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
-    
+
     Returns a list containing the calculated function evaluations.
     """
     def __init__(self, function, args=None):
         super(SequentialEvaluator, self).__init__(function, args)
-        
+
     def _evaluate(self, positions):
         scores = [0] * len(positions)
         for k, x in enumerate(positions):
@@ -351,16 +355,16 @@ class SequentialEvaluator(Evaluator):
 class _Worker(multiprocessing.Process):
     """
     *Extends:* ``multiprocessing.Process``
-    
+
     Worker class for use with :class:`ParallelEvaluator`.
-    
+
     Evaluates a single-valued function for every point in a ``tasks`` queue
     and places the results on a ``results`` queue.
-    
+
     Keeps running until it's given the string "stop" as a task.
 
     Arguments:
-    
+
     ``function``
         The function to optimize.
     ``args``
@@ -382,10 +386,10 @@ class _Worker(multiprocessing.Process):
     ``error``
         This flag will be set by the worker whenever it encounters an
         error.
-    
+
     """
-    def __init__(self, function, args, tasks, results, max_tasks, errors,
-            error):
+    def __init__(
+            self, function, args, tasks, results, max_tasks, errors, error):
         super(_Worker, self).__init__()
         self.daemon = True
         self._function = function
@@ -395,7 +399,7 @@ class _Worker(multiprocessing.Process):
         self._max_tasks = max_tasks
         self._errors = errors
         self._error = error
-        
+
     def run(self):
         # Worker processes should never write to stdout or stderr.
         # This can lead to unsafe situations if they have been redicted to
