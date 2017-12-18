@@ -29,7 +29,7 @@ Pints comes with a number of [detailed examples](examples/EXAMPLES.md), hosted h
 
 You'll need the following requirements:
 
-- Python 2.7
+- Python 2.7 or Python 3.4+
 - Python libraries: `cma` `numpy` `matplotlib` `scipy`
 
 These will be installed automatically if you go to the directory you downloaded pints to, and run
