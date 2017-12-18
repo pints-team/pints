@@ -13,17 +13,23 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-pints_dir=`pwd`
-electrochemistry_dir=${pints_dir}/problems/electrochemistry
+pyv="$(python -c 'import sys; print(sys.version_info[0])' 2>&1)"
+if [ $pyv -eq 2 ]
+then
+    pints_dir=`pwd`
+    electrochemistry_dir=${pints_dir}/problems/electrochemistry
 
-export set PYTHONPATH=$PYTHONPATH:${pints_dir}:${electrochemistry_dir}
-cd $electrochemistry_dir
-ls
-mkdir -p build
-cd build
-cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE ..
-make
-python -m unittest discover -v ../test
-exit_code=$?
-cd $pints_dir
-exit $exit_code
+    export set PYTHONPATH=$PYTHONPATH:${pints_dir}:${electrochemistry_dir}
+    cd $electrochemistry_dir
+    ls
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=$PINTS_BUILD_TYPE ..
+    make
+    python2 -m unittest discover -v ../test
+    exit_code=$?
+    cd $pints_dir
+    exit $exit_code
+else
+    echo "Electrochemistry tests require Python 2"
+fi
