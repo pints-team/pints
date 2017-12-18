@@ -4,51 +4,22 @@ dist: trusty
 
 language: python
 
-compiler:
-    - gcc
-    - clang
-
-env:
-    matrix:
-        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Release
-        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Debug
-        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Release
-        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Debug
-
 python:
   - "2.7"
   - "3.4"
 
-addons:
-  apt:
-    sources:
-    - boost-latest
-    - ubuntu-toolchain-r-test
-    - llvm-toolchain-precise-3.8
-    packages:
-    - gcc-5
-    - g++-5
-    - clang-3.8
-    - libboost1.55-all-dev
-
 # command to install dependencies
 install:
-  - wget http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz; tar -xvf 3.3.1.tar.gz;mv eigen-eigen-* problems/electrochemistry/eigen3
   - pip install .
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
 
 before_script:
-- if [ "$PINTS_COMPILER" = "gcc" ]; then export CXX="g++-5" CC="gcc-5"; fi
-- if [ "$PINTS_COMPILER" = "clang" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
-- printenv
-- clang++ --version 2>&1 | grep clang
-- g++ --version 2>&1 | grep g++
+- python --version
 
 script:
   - python -m flake8
   - ./run-tests.sh
-  - ./run-tests-electrochemistry.sh
 
 notifications:
   email:
