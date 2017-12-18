@@ -11,9 +11,9 @@ compiler:
 env:
     matrix:
         - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Release
-        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Debug 
+        - PINTS_COMPILER=gcc PINTS_BUILD_TYPE=Debug
         - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Release
-        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Debug 
+        - PINTS_COMPILER=clang PINTS_BUILD_TYPE=Debug
 
 python:
   - "2.7"
@@ -29,11 +29,12 @@ addons:
     - g++-5
     - clang-3.8
     - libboost1.55-all-dev
-  
+
 # command to install dependencies
 install:
   - wget http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz; tar -xvf 3.3.1.tar.gz;mv eigen-eigen-* problems/electrochemistry/eigen3
   - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
 
 before_script:
 - if [ "$PINTS_COMPILER" = "gcc" ]; then export CXX="g++-5" CC="gcc-5"; fi
@@ -43,6 +44,7 @@ before_script:
 - g++ --version 2>&1 | grep g++
 
 script:
+  - flake8
   - ./run-tests.sh
   - ./run-electrochemistry-tests.sh
 
@@ -50,4 +52,4 @@ notifications:
   email:
     recipients:
     - martinjrobins@gmail.com
-    - michael.clerx@cs.ox.ac.uk 
+    - michael.clerx@cs.ox.ac.uk
