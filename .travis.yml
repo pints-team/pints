@@ -34,10 +34,9 @@ addons:
 # command to install dependencies
 install:
   - wget http://bitbucket.org/eigen/eigen/get/3.3.1.tar.gz; tar -xvf 3.3.1.tar.gz;mv eigen-eigen-* problems/electrochemistry/eigen3
+  - pip install .
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
-  - pip3 install -r requirements.txt
-  - pip3 install -r requirements-dev.txt
 
 before_script:
 - if [ "$PINTS_COMPILER" = "gcc" ]; then export CXX="g++-5" CC="gcc-5"; fi
@@ -49,7 +48,7 @@ before_script:
 script:
   - python -m flake8
   - ./run-tests.sh
-  - ./run-electrochemistry-tests.sh
+  - ./run-tests-electrochemistry.sh
 
 notifications:
   email:

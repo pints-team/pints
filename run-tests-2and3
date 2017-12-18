@@ -13,4 +13,5 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-python -m unittest discover -v test
+python2 -m unittest discover -v test
+python3 -m unittest discover -v test
