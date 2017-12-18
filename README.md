@@ -32,10 +32,16 @@ You'll need the following requirements:
 - Python 2.7
 - Python libraries: `cma` `numpy` `matplotlib` `scipy`
 
-Then, install using 
+These will be installed automatically if you go to the directory you downloaded pints to, and run
 
 ```
-$ python setup.py install
+$ pip install .
+```
+
+To uninstall again, type
+
+```
+$ pip uninstall pints
 ```
 
 ## How can I contribute to Pints?
@@ -57,7 +63,7 @@ This will
 
 ### Testing:
 
-To test your coding style, use
+To check your coding style, use
 
 ```
 $ flake8
@@ -66,7 +72,7 @@ $ flake8
 To run quick tests, use
 
 ```
-$ run-tests.sh`.
+$ ./run-tests.sh
 ```
 
 
