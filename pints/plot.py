@@ -8,11 +8,14 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import pints
 import warnings
 import numpy as np
 import scipy.stats as stats
 
-def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, chain=None):
+
+def log_likelihood_1d(
+        log_likelihood, parameters, boundaries=None, n_eva=20, chain=None):
     """
     Takes a set of parameters as input and creates and returns a plot showing
     the log-likelihood function of each parameter with all the other
@@ -39,40 +42,37 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, cha
 
     Returns a `matplotlib` figure object and axes handle.
     """
-    import pints
-    import numpy as np
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        raise ImportError("The method pints.plot.trace requires matplotlib")
+    import matplotlib.pyplot as plt
 
     n_param = len(parameters)
     # Check dimension
     if n_param != log_likelihood.dimension():
-        raise ValueError('Input parameters dimension must match the dimension'
-                        ' of the log_likelihood accept')
+        raise ValueError(
+            'Input parameters dimension must match the dimension of the'
+            ' log_likelihood accept')
     # Check input
     if not isinstance(boundaries, pints.Boundaries) and boundaries is not None:
-        raise TypeError('The argument boundaries must be a type of or extended'
-                ' from pints.Boundaries')
+        raise TypeError(
+            'The argument boundaries must be a type of or extended from'
+            ' pints.Boundaries')
     if chain is None and boundaries is not None:
         def_bound = False
     elif chain is not None and boundaries is None:
         def_bound = True
     else:
-        raise TypeError('One of the input chain or boundaries (and only one)'
-                        ' is expected')
+        raise TypeError(
+            'One of the input chain or boundaries (and only one) is expected')
 
-    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2*n_param))
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
     for i, p in enumerate(parameters):
         axes[i].set_xlabel('Parameter ' + str(1 + i))
 
         # Generate some x-values near the given parameters
         if def_bound:
-            mu = np.mean(chain[:,i])
-            sigma = np.std(chain[:,i])
-            xmin = mu - 3*sigma
-            xmax = mu + 3*sigma
+            mu = np.mean(chain[:, i])
+            sigma = np.std(chain[:, i])
+            xmin = mu - 3 * sigma
+            xmax = mu + 3 * sigma
         else:
             xmin = boundaries.lower()[i]
             xmax = boundaries.upper()[i]
@@ -80,8 +80,10 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, cha
         x = np.linspace(xmin, xmax, n_eva)
 
         # Calculate log-likelihood with other parameters fixed
-        y = [log_likelihood(list(parameters[:i]) + [j]
-            + list(parameters[1+i:])) for j in x]
+        y = [
+            log_likelihood(
+                list(parameters[:i]) + [j] + list(parameters[1 + i:])
+            ) for j in x]
 
         # Plot
         axes[i].plot(x, y, c='green', label='Log-likelihood')
@@ -89,8 +91,8 @@ def log_likelihood_1d(log_likelihood, parameters, boundaries=None, n_eva=20, cha
         axes[i].legend()
 
     # Add vertical y-label to middle plot
-    #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
-    axes[int(i/2)].set_ylabel('log Likelihood')
+    # fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
+    axes[int(i / 2)].set_ylabel('log Likelihood')
 
     plt.tight_layout()
     return fig, axes
@@ -114,12 +116,7 @@ def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
 
     Returns a `matplotlib` figure object and axes handle.
     """
-    import pints
-    import numpy as np
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        raise ImportError("The method pints.plot.trace requires matplotlib")
+    import matplotlib.pyplot as plt
 
     n_param = len(p1)
     p1 = np.array(p1)
@@ -127,8 +124,9 @@ def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
 
     # Check dimension
     if n_param != log_likelihood.dimension() or n_param != len(p2):
-        raise ValueError('Input parameters dimension must match the dimension'
-                        ' of the log_likelihood accept')
+        raise ValueError(
+            'Input parameters dimension must match the dimension of the'
+            ' log_likelihood accept')
 
     # Figure setting
     fig, axes = plt.subplots(1, 1, figsize=(6, 4))
@@ -144,7 +142,7 @@ def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
     r = p2 - p1
 
     # Calculate log-likelihood with other parameters fixed
-    y = [log_likelihood(p1 + sj*r) for sj in s]
+    y = [log_likelihood(p1 + sj * r) for sj in s]
 
     # Plot
     axes.plot(s, y, color='green')
@@ -175,32 +173,30 @@ def histogram(chain, *args):
 
     Returns a `matplotlib` figure object and axes handle.
     """
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        raise ImportError("The method pints.plot.trace requires matplotlib")
+    import matplotlib.pyplot as plt
 
     bins = 40
     alpha = 0.5
     n_sample, n_param = chain.shape
 
     # Set up figure, plot first chain
-    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2*n_param))
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
     for i in xrange(n_param):
         # Add histogram subplot
         axes[i].set_xlabel('Parameter ' + str(i + 1))
         axes[i].set_ylabel('Frequency')
-        axes[i].hist(chain[:,i], bins=bins, alpha=alpha, label='Chain 1')
+        axes[i].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
 
     # Plot additional chains
     if args:
         for i_chain, chain in enumerate(args):
             if chain.shape[1] != n_param:
-                raise ValueError('All chains must have the same number of'
-                    ' parameters.')
+                raise ValueError(
+                    'All chains must have the same number of parameters.')
             for i in xrange(n_param):
-                axes[i].hist(chain[:,i], bins=bins, alpha=alpha,
-                                label='Chain ' + str(2 + i_chain))
+                axes[i].hist(
+                    chain[:, i], bins=bins, alpha=alpha,
+                    label='Chain ' + str(2 + i_chain))
         axes[0, 0].legend()
 
     plt.tight_layout()
@@ -235,7 +231,7 @@ def trace(chain, *args):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(chain[:,i], bins=bins, alpha=alpha, label='Chain 1')
+        axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
 
         # Add trace subplot
         axes[i, 1].set_xlabel('Iteration')
