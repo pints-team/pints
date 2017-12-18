@@ -8,6 +8,8 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import multiprocessing
@@ -110,10 +112,10 @@ class SNES(pints.Optimiser):
         fbest = float('inf')
 
         # Start running
-        for iteration in xrange(1, 1 + max_iter):
+        for iteration in range(1, 1 + max_iter):
 
             # Create new samples
-            ss = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
+            ss = np.array([np.random.normal(0, 1, d) for i in range(n)])
             xs = mu + sigmas * ss
 
             # Evaluate at the samples

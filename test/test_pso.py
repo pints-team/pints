@@ -62,7 +62,7 @@ class TestPSO(unittest.TestCase):
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -79,7 +79,7 @@ class TestPSO(unittest.TestCase):
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -89,7 +89,7 @@ class TestPSO(unittest.TestCase):
         np.random.seed(1)
         opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break

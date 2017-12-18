@@ -9,15 +9,19 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import gc
 import os
 import sys
 import time
-import Queue
 import traceback
 import multiprocessing
+try:
+    # Python 3
+    import queue
+except ImportError:
+    import Queue as queue
 
 
 def evaluate(f, x, parallel=False, args=None):
@@ -187,7 +191,7 @@ multiprocessing.html#all-platforms>`_ for details).
         Cleans up any dead workers & return the number of workers tidied up.
         """
         cleaned = 0
-        for k in xrange(len(self._workers) - 1, -1, -1):
+        for k in range(len(self._workers) - 1, -1, -1):
             w = self._workers[k]
             if w.exitcode is not None:
                 w.join()
@@ -201,7 +205,7 @@ multiprocessing.html#all-platforms>`_ for details).
         """
         Populates (but usually repopulates) the worker pool.
         """
-        for k in xrange(self._nworkers - len(self._workers)):
+        for k in range(self._nworkers - len(self._workers)):
             w = _Worker(
                 self._function,
                 self._args,
@@ -243,7 +247,7 @@ multiprocessing.html#all-platforms>`_ for details).
                         i, f = self._results.get(block=False)
                         results[i] = f
                         m += 1
-                except Queue.Empty:
+                except queue.Empty:
                     pass
                 # Clean dead workers
                 if self._clean():
@@ -296,12 +300,12 @@ multiprocessing.html#all-platforms>`_ for details).
         gc.collect()
 
         # Clear queues
-        def clear(queue):
+        def clear(q):
             items = []
             try:
                 while True:
-                    items.append(queue.get(timeout=0.1))
-            except (Queue.Empty, IOError, EOFError):
+                    items.append(q.get(timeout=0.1))
+            except (queue.Empty, IOError, EOFError):
                 pass
             return items
 
@@ -407,7 +411,7 @@ class _Worker(multiprocessing.Process):
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
         try:
-            for k in xrange(self._max_tasks):
+            for k in range(self._max_tasks):
                 i, x = self._tasks.get()
                 f = self._function(x, *self._args)
                 self._results.put((i, f))

@@ -6,8 +6,15 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-from cStringIO import StringIO
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import sys
+try:
+    # Python 3
+    from io import StringIO
+except ImportError:
+    # Python2
+    from cStringIO import StringIO
 
 
 class StdOutCapture(object):

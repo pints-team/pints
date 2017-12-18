@@ -8,6 +8,8 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy
@@ -111,11 +113,11 @@ class XNES(pints.Optimiser):
         fbest = float('inf')
 
         # Start running
-        for iteration in xrange(1, 1 + max_iter):
+        for iteration in range(1, 1 + max_iter):
 
             # Create new samples
-            zs = np.array([np.random.normal(0, 1, d) for i in xrange(n)])
-            xs = np.array([mu + np.dot(A, zs[i]) for i in xrange(n)])
+            zs = np.array([np.random.normal(0, 1, d) for i in range(n)])
+            xs = np.array([mu + np.dot(A, zs[i]) for i in range(n)])
 
             # Evaluate at the samples
             fxs = evaluator.evaluate(xtransform(xs))

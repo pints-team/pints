@@ -7,12 +7,17 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
+import sys
 
 #
 # Version info: Remember to keep this in sync with setup.py!
 #
-VERSION_INT = 0,0,1
-VERSION = '.'.join([str(x) for x in VERSION_INT]); del(x)
+VERSION_INT = 0, 0, 1
+VERSION = '.'.join([str(x) for x in VERSION_INT])
+if sys.version_info[0] < 3:
+    del(x)  # Before Python3, list comprehension iterators leaked
 
 #
 # Expose pints version
@@ -31,53 +36,58 @@ FLOAT_FORMAT = '{:< 1.17e}'
 #
 # Core classes
 #
-from _core import ForwardModel, SingleSeriesProblem
+from ._core import ForwardModel, SingleSeriesProblem
 
 #
 # Utility classes and methods
 #
-from _util import strfloat, vector
-from _util import Timer
+from ._util import strfloat, vector
+from ._util import Timer
 
 #
 # Boundaries and prior distributions
 #
-from _boundaries import Boundaries
-from _prior import Prior, ComposedPrior
-from _prior import UniformPrior, NormalPrior, MultivariateNormalPrior
+from ._boundaries import Boundaries
+from ._prior import Prior, ComposedPrior
+from ._prior import UniformPrior, NormalPrior, MultivariateNormalPrior
 
 #
 # Log-likelihoods
 #
-from _log_likelihood import LogLikelihood, LogPosterior
-from _log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
-from _log_likelihood import ScaledLogLikelihood
+from ._log_likelihood import LogLikelihood, LogPosterior
+from ._log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
+from ._log_likelihood import ScaledLogLikelihood
 
 #
 # Scoring functions
 #
-from _score import ErrorMeasure, LogLikelihoodBasedError
-from _score import SumOfSquaresError, RMSError
+from ._score import ErrorMeasure, LogLikelihoodBasedError
+from ._score import SumOfSquaresError, RMSError
 
 #
 # Parallel function evaluation
 #
-from _evaluation import Evaluator, SequentialEvaluator, ParallelEvaluator
-from _evaluation import evaluate
+from ._evaluation import Evaluator, SequentialEvaluator, ParallelEvaluator
+from ._evaluation import evaluate
 
 #
 # Optimisation
 #
-from _optimisers import Optimiser
-from _optimisers import TriangleWaveTransform, InfBoundaryTransform
-from _optimisers._cmaes import CMAES, cmaes
-from _optimisers._pso import PSO, pso
-from _optimisers._snes import SNES, snes
-from _optimisers._xnes import XNES, xnes
+from ._optimisers import Optimiser
+from ._optimisers import TriangleWaveTransform, InfBoundaryTransform
+from ._optimisers._cmaes import CMAES, cmaes
+from ._optimisers._pso import PSO, pso
+from ._optimisers._snes import SNES, snes
+from ._optimisers._xnes import XNES, xnes
 
 #
 # MCMC
 #
-from _mcmc import MCMC
-from _mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
+from ._mcmc import MCMC
+from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 
+
+#
+# Remove any imported modules, so we don't expose them as part of pints
+#
+del(sys)

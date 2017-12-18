@@ -8,6 +8,8 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
@@ -118,7 +120,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         acceptance = 0
 
         # Go!
-        for i in xrange(self._iterations):
+        for i in range(self._iterations):
             # Propose new point
             # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal

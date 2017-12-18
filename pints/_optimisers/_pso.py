@@ -8,6 +8,8 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import multiprocessing
@@ -145,20 +147,20 @@ class PSO(pints.Optimiser):
         # Set initial positions
         xs.append(np.array(self._x0, copy=True))
         if self._boundaries is None:
-            for i in xrange(1, n):
+            for i in range(1, n):
                 xs.append(np.random.normal(self._x0, self._sigma0))
         else:
-            for i in xrange(1, n):
+            for i in range(1, n):
                 xs.append(
                     self._boundaries._lower + np.random.uniform(0, 1, d)
                     * (self._boundaries._upper - self._boundaries._lower))
 
         # Set initial velocities
-        for i in xrange(n):
+        for i in range(n):
             vs.append(self._sigma0 * np.random.uniform(0, 1, d))
 
         # Set initial scores and local best
-        for i in xrange(n):
+        for i in range(n):
             fs.append(float('inf'))
             fl.append(float('inf'))
             pl.append(xs[i])
@@ -186,7 +188,7 @@ class PSO(pints.Optimiser):
             fs = evaluator.evaluate(xs)
 
             # Update particles
-            for i in xrange(n):
+            for i in range(n):
                 # Update best local position and score
                 if fs[i] < fl[i]:
                     fl[i] = fs[i]

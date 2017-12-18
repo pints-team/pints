@@ -55,14 +55,14 @@ class TestPrior(unittest.TestCase):
 
         # Test at random points
         np.random.seed(1)
-        for i in xrange(100):
+        for i in range(100):
             x = np.random.normal(m1, c1)
             y = np.random.normal(m2, c2)
             self.assertAlmostEqual(p([x, y]), p1([x]) * p2([y]))
 
         # Test effect of increasing covariance
         p = [pints.ComposedPrior(
-            p1, pints.NormalPrior(m2, c)) for c in xrange(1, 10)]
+            p1, pints.NormalPrior(m2, c)) for c in range(1, 10)]
         p = [f([m1, m2]) for f in p]
         self.assertTrue(np.all(p[:-1] > p[1:]))
 

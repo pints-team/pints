@@ -6,7 +6,8 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-from __future__ import division
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 
 
 def trace(chain, *args):
@@ -33,7 +34,7 @@ def trace(chain, *args):
 
     # Set up figure, plot first chain
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
-    for i in xrange(n_param):
+    for i in range(n_param):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
@@ -50,7 +51,7 @@ def trace(chain, *args):
             if chain.shape[1] != n_param:
                 raise ValueError(
                     'All chains must have the same number of parameters.')
-            for i in xrange(n_param):
+            for i in range(n_param):
                 axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5,
                                 label='Chain ' + str(2 + i_chain))
                 axes[i, 1].plot(chain[:, i], alpha=alpha)
@@ -81,7 +82,7 @@ def autocorrelation(chain, max_lags=100):
     n_sample, n_param = chain.shape
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
-    for i in xrange(n_param):
+    for i in range(n_param):
         axes[i].acorr(chain[:, i] - np.mean(chain[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
         axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')

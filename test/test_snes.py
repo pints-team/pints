@@ -8,7 +8,7 @@
 #  software package.
 #
 import pints
-import pints.toy as toy
+import pints.toy
 import unittest
 import numpy as np
 
@@ -23,7 +23,7 @@ class TestSNES(unittest.TestCase):
         super(TestSNES, self).__init__(name)
 
         # Create toy model
-        self.model = toy.LogisticModel()
+        self.model = pints.toy.LogisticModel()
         self.real_parameters = [0.015, 500]
         self.times = np.linspace(0, 1000, 1000)
         self.values = self.model.simulate(self.real_parameters, self.times)
@@ -54,7 +54,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.SNES(self.score)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -64,7 +64,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.SNES(self.score, self.boundaries)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -74,7 +74,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.SNES(self.score, x0=self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -84,7 +84,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.SNES(self.score, self.boundaries, self.x0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
@@ -94,7 +94,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.SNES(self.score, self.boundaries, self.x0, self.sigma0)
         opt.set_verbose(debug)
-        for i in xrange(self.max_tries):
+        for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
