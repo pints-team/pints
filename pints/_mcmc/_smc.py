@@ -200,7 +200,7 @@ class SMC(pints.MCMC):
             start = [
                 {'prior': np.random.normal(x0[:-1], x0[:-1] * sigma_x0),
                  'sigma': np.random.normal(x0[-1], x0[-1] * sigma_x0)}
-                for _ in xrange(n_chains)]
+                for _ in range(n_chains)]
 
             # run!
             pm_chain = pm.step_methods.smc.sample_smc(
@@ -245,10 +245,10 @@ class SMC(pints.MCMC):
 def _tt_evaluate_single_series(x):
     sol = evaluate(x)
     try:
-        if sol == np.inf:
+        if not np.isfinite(sol):
             # If the function return some weird things
             return np.array([[1e10] * len(times)]).T
-    except:
+    except Exception:
         return np.array([sol]).T
 
 
