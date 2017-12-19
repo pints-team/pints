@@ -118,8 +118,8 @@ class UniformPrior(Prior):
         lower = self._boundaries.lower()
         upper = self._boundaries.upper()
         for i in range(0, self._dimension):
-            m_samples[:, i] = np.random.uniform(low=lower[i], high=upper[i],
-                size=num_samples)
+            m_samples[:, i] = np.random.uniform(
+                low=lower[i], high=upper[i], size=num_samples)
         return m_samples
 
 
@@ -143,17 +143,16 @@ class MultivariateNormalPrior(Prior):
                 'NormalPrior mean argument requires a NumPy array')
 
         if not isinstance(cov, np.array):
-            raise ValueError('NormalPrior cov argument requires a NumPy'
-                ' array.')
+            raise ValueError('NormalPrior cov argument requires a NumPy array')
 
         if mean.ndim != 1:
-            raise ValueError('NormalPrior mean must be one dimensional.')
+            raise ValueError('NormalPrior mean must be one dimensional')
 
         if cov.ndim != 2:
-            raise ValueError('NormalPrior cov must be a matrix.')
+            raise ValueError('NormalPrior cov must be a matrix')
 
         if mean.shape[0] != cov.shape[0] or mean.shape[0] != cov.shape[1]:
-            raise ValueError('mean and cov sizes do not match.')
+            raise ValueError('mean and cov sizes do not match')
 
         self._mean = mean
         self._cov = cov
@@ -200,7 +199,7 @@ class NormalPrior(Prior):
         mu = self._mean
         sigma = self._sigma
         for i in range(0, self._dimension):
-            m_samples[:, i] = np.random.normal(loc=mu, scale=sigma,
-                size=num_samples)
+            m_samples[:, i] = np.random.normal(
+                loc=mu, scale=sigma, size=num_samples)
         return m_samples
 

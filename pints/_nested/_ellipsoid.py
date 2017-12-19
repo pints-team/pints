@@ -178,10 +178,11 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Sets the number of posterior samples to generate from points proposed
         from nested sampling algorithm.
         """
-        if posterior_samples > np.round(0.25 * (self._iterations
-                + self._active_points)):
-            raise ValueError('Number of posterior samples must be fewer than'
-                ' 25% the total number of preminary points.')
+        if posterior_samples > np.round(
+                0.25 * (self._iterations + self._active_points)):
+            raise ValueError(
+                'Number of posterior samples must be fewer than 25% the total'
+                ' number of preminary points.')
         self._posterior_samples = posterior_samples
 
     def set_enlargement_factor(self, enlargement_factor):
@@ -203,8 +204,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         if rejection_samples < 0:
             raise ValueError('Must have non-negative rejection samples.')
         if rejection_samples > self._iterations:
-            raise ValueError('Must have fewer rejection samples than total'
-                ' samples.')
+            raise ValueError(
+                'Must have fewer rejection samples than total samples.')
         self._rejection_samples = rejection_samples
 
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap):
@@ -245,8 +246,8 @@ def reject_uniform_draw(a_min, a_max, log_likelihood, threshold):
     return np.concatenate((a_proposed, np.array([log_likelihood(a_proposed)])))
 
 
-def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
-        enlargement_factor):
+def reject_ellipsoid_sample(
+        threshold, log_likelihood, m_samples_previous, enlargement_factor):
     """
     Independently samples params from the prior until
     `logLikelihood(params) > threshold`.
@@ -255,8 +256,8 @@ def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
     if aDim > 1:
         A, centroid = minimum_volume_ellipsoid(m_samples_previous)
         A = (1 / enlargement_factor) * A
-        v_sample = reject_draw_from_ellipsoid(la.inv(A), centroid,
-            log_likelihood, threshold)
+        v_sample = reject_draw_from_ellipsoid(
+            la.inv(A), centroid, log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
         a_max = np.max(m_samples_previous)
@@ -270,8 +271,9 @@ def reject_ellipsoid_sample(threshold, log_likelihood, m_samples_previous,
     return v_sample
 
 
-def reject_ellipsoid_sample_faster(threshold, log_likelihood,
-        m_samples_previous, enlargement_factor, A, centroid):
+def reject_ellipsoid_sample_faster(
+        threshold, log_likelihood, m_samples_previous, enlargement_factor, A,
+        centroid):
     """
     Independently samples params from the prior until
     `logLikelihood(params) > threshold`. Accepts A as input (which is only
@@ -280,8 +282,8 @@ def reject_ellipsoid_sample_faster(threshold, log_likelihood,
     aDim = len(m_samples_previous.shape)
     if aDim > 1:
         A = (1 / enlargement_factor) * A
-        v_sample = reject_draw_from_ellipsoid(la.inv(A), centroid,
-            log_likelihood, threshold)
+        v_sample = reject_draw_from_ellipsoid(
+            la.inv(A), centroid, log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
         a_max = np.max(m_samples_previous)
@@ -335,8 +337,8 @@ def draw_from_ellipsoid(covmat, cent, npts):
     for i in range(0, npts):
         # scale points to a uniform distribution within unit hypersphere
         pnts[i, :] = fac[i] * pt[i, :]
-        pnts[i, :] = np.dot(np.multiply(pnts[i, :], np.transpose(d)),
-            np.transpose(v)) + cent
+        pnts[i, :] = np.dot(
+            np.multiply(pnts[i, :], np.transpose(d)), np.transpose(v)) + cent
 
     return pnts
 
@@ -370,6 +372,6 @@ def minimum_volume_ellipsoid(points, tol=0.001):
                    - np.multiply.outer(c, c)) / d
     else:
         A = 1 / (np.dot(np.dot(points.T, np.diag(u)), points)
-             - np.multiply.outer(c, c))
+                 - np.multiply.outer(c, c))
     return A, c
 
