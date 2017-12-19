@@ -181,7 +181,7 @@ def histogram(chain, *args):
 
     # Set up figure, plot first chain
     fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
-    for i in xrange(n_param):
+    for i in range(n_param):
         # Add histogram subplot
         axes[i].set_xlabel('Parameter ' + str(i + 1))
         axes[i].set_ylabel('Frequency')
@@ -193,7 +193,7 @@ def histogram(chain, *args):
             if chain.shape[1] != n_param:
                 raise ValueError(
                     'All chains must have the same number of parameters.')
-            for i in xrange(n_param):
+            for i in range(n_param):
                 axes[i].hist(
                     chain[:, i], bins=bins, alpha=alpha,
                     label='Chain ' + str(2 + i_chain))
