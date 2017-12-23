@@ -42,8 +42,8 @@ class NestedSampler(object):
 
     def run(self):
         """
-        Runs the nested sampling routine and returns a markov chain
-        representing the distribution of the given log-likelihood function.
+        Runs the nested sampling routine and returns a returns a tuple of the posterior samples
+        and an estimate of the marginal likelihood.
         """
         raise NotImplementedError
 

@@ -121,7 +121,7 @@ class NestedRejectionSampler(pints.NestedSampler):
             range(0, self._iterations + self._active_points),
             self._posterior_samples, p=vP)
         m_posterior_samples = m_theta[vIndex, :]
-        return [m_posterior_samples, log_Z]
+        return m_posterior_samples, log_Z
 
     def set_active_points_rate(self, active_points):
         """

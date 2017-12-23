@@ -153,7 +153,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             range(0, self._iterations + self._active_points),
             self._posterior_samples, p=vP)
         m_posterior_samples = mTheta[vIndex, :]
-        return [m_posterior_samples, logZ]
+        return m_posterior_samples, logZ
 
     def set_active_points_rate(self, active_points):
         """
