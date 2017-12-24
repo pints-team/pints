@@ -57,7 +57,8 @@ class EmceeHammerMCMC(pints.MCMC):
         # Report the current settings
         if self._verbose:
             print('Running emcee hammer MCMC')
-            print('Total number of iterations: ' + str(self._iterations))
+            print('Total number of iterations per walker: ' + str(self._iterations))
+            print('Number of walkers: ' + str(self._walkers))
             print(
                 'Number of iterations to discard as burn-in: '
                 + str(self._burn_in))
@@ -86,10 +87,14 @@ class EmceeHammerMCMC(pints.MCMC):
         sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood)
         pos, prob, state = sampler.run_mcmc(p0, self._iterations)
         
-        chain = sampler.chain
+        # Remove burn-in
+        samples = sampler.chain[:, self._burn_in:, :]
+        
+        # Thin samples
+        samples = samples[:,::self._thinning_rate,:]
 
         # Return generated chain
-        return chain
+        return samples
 
     def set_burn_in(self, burn_in):
         """
