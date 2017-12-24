@@ -79,10 +79,10 @@ class EmceeHammerMCMC(pints.MCMC):
         stored = int((self._iterations - self._burn_in) / self._thinning_rate)
         chain = np.zeros((stored, d))
 
-        # Run!
-        p0 = [[mu[0]+ 1e-4*np.random.randn(1)[0],mu[1] + np.random.randn(1)[0],mu[2] + np.random.randn(1)[0]] for i in range(self._walkers)]
-        print(mu, sigma)
+        # Set initial values
+        p0 = [np.random.normal(loc=mu,scale=mu/100.0,size=len(mu)) for i in range(self._walkers)]
         
+        # Run
         sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood)
         pos, prob, state = sampler.run_mcmc(p0, self._iterations)
         
