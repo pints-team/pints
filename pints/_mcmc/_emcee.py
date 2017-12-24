@@ -15,15 +15,15 @@ import emcee
 
 class EmceeHammerMCMC(pints.MCMC):
     """
-    Creates chains of samples from a target distribution, using the routine described in 
-    [1].
-    
-    [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg, Dustin Lang, Jonathan Goodman, https://arxiv.org/abs/1202.3665.
+    Creates chains of samples from a target distribution, 
+    using the routine described in [1].
+
+    [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg, 
+    Dustin Lang, Jonathan Goodman, https://arxiv.org/abs/1202.3665.
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
         super(EmceeHammerMCMC, self).__init__(
             log_likelihood, x0, sigma0)
-
 
         # Total number of iterations
         self._iterations = self._dimension * 2000
@@ -33,7 +33,7 @@ class EmceeHammerMCMC(pints.MCMC):
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
-    
+
         # Number of walkers to evolve
         self._walkers = 100
 
@@ -81,15 +81,16 @@ class EmceeHammerMCMC(pints.MCMC):
         chain = np.zeros((stored, d))
 
         # Set initial values
-        p0 = [np.random.normal(loc=mu,scale=mu/100.0,size=len(mu)) for i in range(self._walkers)]
-        
+        p0 = [np.random.normal(loc = mu,scale = mu / 100.0,size = len(mu))
+              for i in range(self._walkers)]
+
         # Run
         sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood)
         pos, prob, state = sampler.run_mcmc(p0, self._iterations)
-        
+
         # Remove burn-in
         samples = sampler.chain[:, self._burn_in:, :]
-        
+
         # Thin samples
         samples = samples[:,::self._thinning_rate,:]
 
