@@ -58,3 +58,31 @@ def effective_sample_size(sample):
         ess[i] = ess_single_param(sample[:, i])
     return ess
 
+
+def within(samples):
+    """ 
+    calculates within chain variance
+    """
+    mu = map(lambda x: np.var(x), samples)
+    W = np.mean(mu)
+    return W
+
+def between(samples):
+    """
+    calculates between chain variance
+    """
+    mu = map(lambda x: np.mean(x), samples)
+    mu_overall = np.mean(mu)
+    m = len(samples)
+    t = len(samples[0])
+    return (t / (m - 1.0)) * np.sum((mu - mu_overall) ** 2)
+
+def rhat(samples):
+    """
+    calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per
+    "Bayesian data analysis", 3rd edition, Gelman et al., 2014
+    """
+    W = within(samples)
+    B = between(samples)
+    t = len(samples[0])
+    return np.sqrt((W + (1.0 / t) * (B - W)) / W)
