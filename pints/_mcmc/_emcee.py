@@ -36,6 +36,9 @@ class EmceeHammerMCMC(pints.MCMC):
 
         # Number of walkers to evolve
         self._walkers = 100
+    
+        # Number of threads to evolve in parallel
+        self._threads = 1
 
     def burn_in(self):
         """
@@ -85,7 +88,11 @@ class EmceeHammerMCMC(pints.MCMC):
               for i in range(self._walkers)]
 
         # Run
-        sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood)
+        if self._threads < 2:
+            sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood)
+        else:
+            sampler = emcee.EnsembleSampler(self._walkers, self._dimension, self._log_likelihood,
+                                            threads = self._threads)
         pos, prob, state = sampler.run_mcmc(p0, self._iterations)
 
         # Remove burn-in
