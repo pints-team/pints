@@ -22,7 +22,7 @@ def autocorrelation(x):
 
 def autocorrelate_negative(autocorrelation):
     """
-    ## finds last positive autocorrelation, T
+    Finds last positive autocorrelation, T
     """
     T = 1
     for a in autocorrelation:
@@ -34,7 +34,7 @@ def autocorrelate_negative(autocorrelation):
 
 def ess_single_param(x):
     """
-    ## calculates ESS for a single parameter
+    Calculates ESS for a single parameter
     """
     rho = autocorrelation(x)
     T = autocorrelate_negative(rho)
@@ -45,7 +45,7 @@ def ess_single_param(x):
 
 def effective_sample_size(sample):
     """
-    ## calculates ESS for a matrix of samples
+    Calculates ESS for a matrix of samples
     """
     try:
         n_sample, n_params = sample.shape
@@ -61,17 +61,17 @@ def effective_sample_size(sample):
 
 def within(samples):
     """ 
-    calculates within chain variance
+    Calculates within chain variance
     """
-    mu = map(lambda x: np.var(x), samples)
+    mu = list(map(lambda x: np.var(x), samples))
     W = np.mean(mu)
     return W
 
 def between(samples):
     """
-    calculates between chain variance
+    Calculates between chain variance
     """
-    mu = map(lambda x: np.mean(x), samples)
+    mu = list(map(lambda x: np.mean(x), samples))
     mu_overall = np.mean(mu)
     m = len(samples)
     t = len(samples[0])
@@ -79,10 +79,36 @@ def between(samples):
 
 def rhat(samples):
     """
-    calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per
+    Calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per
     "Bayesian data analysis", 3rd edition, Gelman et al., 2014
     """
     W = within(samples)
     B = between(samples)
     t = len(samples[0])
     return np.sqrt((W + (1.0 / t) * (B - W)) / W)
+
+def reorder(param_number,chains):
+    """
+    Reorders chains for a given parameter into a more useful format for calculating rhat
+    """
+    num_chains = len(chains)
+    samples = [chains[i][:,param_number] for i in range(0,num_chains)]
+    return samples
+    
+def reorder_all_params(chains):
+    """
+    Reorders chains for all parameters into a more useful format for calculating rhat
+    """
+    num_chains = len(chains)
+    num_params = chains[0].shape[1]
+    samples_all = [reorder(i,chains) for i in range(0,num_params)]
+    return samples_all
+    
+def rhat_all_params(chains):
+    """
+    Calculates rhat for all parameters in chains
+    """
+    samples_all = reorder_all_params(chains)
+    rhat_all = list(map(lambda x: rhat(x), samples_all))
+    return rhat_all
+
