@@ -92,7 +92,7 @@ def rhat(samples):
 
 def reorder(param_number, chains):
     """
-    Reorders chains for a given parameter into a more useful 
+    Reorders chains for a given parameter into a more useful
     format for calculating rhat
     """
     num_chains = len(chains)
@@ -102,10 +102,9 @@ def reorder(param_number, chains):
 
 def reorder_all_params(chains):
     """
-    Reorders chains for all parameters into a more useful 
+    Reorders chains for all parameters into a more useful
     format for calculating rhat
     """
-    num_chains = len(chains)
     num_params = chains[0].shape[1]
     samples_all = [reorder(i, chains) for i in range(0, num_params)]
     return samples_all
