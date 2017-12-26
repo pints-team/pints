@@ -60,12 +60,13 @@ def effective_sample_size(sample):
 
 
 def within(samples):
-    """ 
+    """
     Calculates within chain variance
     """
     mu = list(map(lambda x: np.var(x), samples))
     W = np.mean(mu)
     return W
+
 
 def between(samples):
     """
@@ -77,6 +78,7 @@ def between(samples):
     t = len(samples[0])
     return (t / (m - 1.0)) * np.sum((mu - mu_overall) ** 2)
 
+
 def rhat(samples):
     """
     Calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per
@@ -87,23 +89,28 @@ def rhat(samples):
     t = len(samples[0])
     return np.sqrt((W + (1.0 / t) * (B - W)) / W)
 
-def reorder(param_number,chains):
+
+def reorder(param_number, chains):
     """
-    Reorders chains for a given parameter into a more useful format for calculating rhat
+    Reorders chains for a given parameter into a more useful 
+    format for calculating rhat
     """
     num_chains = len(chains)
-    samples = [chains[i][:,param_number] for i in range(0,num_chains)]
+    samples = [chains[i][:, param_number] for i in range(0, num_chains)]
     return samples
-    
+
+
 def reorder_all_params(chains):
     """
-    Reorders chains for all parameters into a more useful format for calculating rhat
+    Reorders chains for all parameters into a more useful 
+    format for calculating rhat
     """
     num_chains = len(chains)
     num_params = chains[0].shape[1]
-    samples_all = [reorder(i,chains) for i in range(0,num_params)]
+    samples_all = [reorder(i, chains) for i in range(0, num_params)]
     return samples_all
-    
+
+
 def rhat_all_params(chains):
     """
     Calculates rhat for all parameters in chains
