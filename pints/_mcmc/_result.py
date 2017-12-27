@@ -23,66 +23,66 @@ class McmcResultObject(object):
     console, including the posterior mean, standard deviation,
     quantiles, rhat and effective sample size
     """
-    
+
     def __init__(self, chains):
         self._stacked = np.vstack(chains)
         self._mean = np.mean(self._stacked, axis=0)
         self._std = np.std(self._stacked, axis=0)
-        self._quantiles = np.percentile(self._stacked,[2.5, 25, 50,
+        self._quantiles = np.percentile(self._stacked, [2.5, 25, 50,
                                                         75, 97.5], axis=0)
         self._ess = diagnostics.effective_sample_size(self._stacked)
         self._num_params = self._stacked.shape[1]
         self._num_chains = len(chains)
-        
+
         # If there is more than 1 chain calculate rhat
         # otherwise return NA
         if self._num_chains > 1:
             self._rhat = diagnostics.rhat_all_params(chains)
         else:
             self._rhat = np.repeat("NA", self._num_params)
-        
+
         self._summary_list = None
         self.make_summary()
-    
+
     def stacked(self):
         """
         Return the posterior samples from all chains
         vertically stacked
         """
         return self._stacked
-    
+
     def mean(self):
         """
         Return the posterior means of all parameters
         """
         return self._mean
-    
+
     def std(self):
         """
         Return the posterior standard deviation of all parameters
         """
         return self._std
-    
+
     def quantiles(self):
         """
         Return the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles
         """
         return self._quantiles
-    
+
     def rhat(self):
         """
         Return Gelman and Rubin's [1] rhat value where values rhat > 1.1
         indicate lack of posterior convergence
-        
+
         [1] "Inference from iterative simulation using multiple
         sequences", 1992, Gelman and Rubin, Statistical Science.
         """
         return self._rhat
-    
+
     def ess(self):
         """
         Return the effective sample size [1] for each parameter
-        
+
         [1] "Bayesian data analysis", 3rd edition, 2014, Gelman et al.,
         CRC Press.
         """
@@ -95,10 +95,11 @@ class McmcResultObject(object):
         """
         self._summary_list = []
         for i in range(0, self._num_params):
-            self._summary_list.append(["param " + str(i+1), self._mean[i], self._std[i],
-                                      self._quantiles[0, i], self._quantiles[1, i],
-                                      self._quantiles[2, i], self._quantiles[3, i],
-                                      self._quantiles[4, i], self._rhat[i], self._ess[i]])
+            self._summary_list.append(["param " + str(i + 1), self._mean[i],
+                                       self._std[i], self._quantiles[0, i],
+                                       self._quantiles[1, i], self._quantiles[2, i],
+                                       self._quantiles[3, i], self._quantiles[4, i],
+                                       self._rhat[i], self._ess[i]])
 
     def summary(self):
         """
@@ -115,8 +116,10 @@ class McmcResultObject(object):
         2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat and effective
         sample size
         """
-        print(tabulate(self._summary_list, headers = ["param", "mean", "std.",
-                "2.5%","25%", "50%", "75%", "97.5%", "rhat", "ess"],
+        print(tabulate(self._summary_list, headers=["param", "mean", "std.",
+                                                    "2.5%", "25%", "50%",
+                                                    "75%", "97.5%", "rhat",
+                                                    "ess"],
                 numalign="left", floatfmt=".2f"))
 
     def extract(self, param_number):
