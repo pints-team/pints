@@ -114,9 +114,9 @@ class DifferentialEvolutionMCMC(pints.MCMC):
             for j in range(self._num_chains):
                 r1, r2 = R_draw(j, self._num_chains)
                 proposed = chains[i - 1, j, :] \
-                         + self._gamma * (chains[i - 1, r1, :]
+                           + self._gamma * (chains[i - 1, r1, :]  # NOQA
                                           - chains[i - 1, r2, :]) \
-                         + np.random.normal(loc=0, scale=self._b * mu,
+                           + np.random.normal(loc=0, scale=self._b * mu,  # NOQA
                                               size=len(mu))
                 u = np.log(np.random.rand())
                 proposed_log_likelihood = self._log_likelihood(proposed)
@@ -355,9 +355,10 @@ class DreamMCMC(pints.MCMC):
                 e = np.random.uniform(low=-self._b_star * mu, high=self._b_star * mu)
                 for k in range(0, delta):
                     r1, r2 = R_draw(j, self._num_chains)
-                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] - chains[i - 1, r2, :])
-                proposed = chains[i - 1, j, :] + dX + np.random.normal(loc=0, scale=self._b * mu,
-                                                                       size=len(mu))
+                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] - 
+                                             chains[i - 1, r2, :])
+                proposed = chains[i - 1, j, :] + dX \
+                           + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))
 
                 # Step 2. Randomly set elements of proposal to original
                 for d in range(0, self._dimension):
