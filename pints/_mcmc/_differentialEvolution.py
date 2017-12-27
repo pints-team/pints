@@ -20,20 +20,20 @@ class DifferentialEvolutionMCMC(pints.MCMC):
 
     Uses differential evolution MCMC as described in [1]
     to do posterior sampling from the posterior.
-    
+
     In each step of the algorithm N chains are evolved
     using the evolution equation,
-    
+
     x_proposed = x[i,r] + gamma * (X[i,r1] - x[i,r2]) + e
-    
+
     where r1 and r2 are random chain indices chosen (without
     replacement) from the N available chains, and i indicates
     the current time step. e ~ N(0,b) in d dimensions (where
     d is the dimensionality of the parameter vector).
-    
-    If x_proposed / x[i,r] > u ~ U(0,1), then 
+
+    If x_proposed / x[i,r] > u ~ U(0,1), then
     x[i+1,r] = x_proposed; otherwise, x[i+1,r] = x[i].
-    
+
     [1] "A Markov Chain Monte Carlo version of the genetic
     algorithm Differential Evolution: easy Bayesian computing
     for real parameter spaces", 2006, Cajo J. F. Ter Braak,
@@ -48,10 +48,10 @@ class DifferentialEvolutionMCMC(pints.MCMC):
 
         # Gamma
         self._gamma = 2.38 / np.sqrt(2 * self._dimension)
-        
+
         # Normal proposal std.
         self._b = 0.01
-        
+
         # Number of chains to evolve
         self._num_chains = 100
 
@@ -89,12 +89,8 @@ class DifferentialEvolutionMCMC(pints.MCMC):
                 + str(self._burn_in))
             print('Storing one sample per ' + str(self._thinning_rate))
 
-        # Problem dimension
-        d = self._dimension
-
         # Initial starting parameters
         mu = self._x0
-        sigma = self._sigma0
         current = self._x0
         current_log_likelihood = self._log_likelihood(current)
         if not np.isfinite(current_log_likelihood):
@@ -102,42 +98,49 @@ class DifferentialEvolutionMCMC(pints.MCMC):
                 'Suggested starting position has a non-finite log-likelihood.')
 
         # chains of stored samples
-        chains = np.zeros((self._iterations, self._num_chains, self._dimension))
+        chains = np.zeros((self._iterations, self._num_chains,
+                           self._dimension))
         current_log_likelihood = np.zeros(self._num_chains)
 
         # Set initial values
         for j in range(self._num_chains):
-          chains[0, j, :] = np.random.normal(loc = mu, scale = mu / 100.0, size = len(mu))
-          current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
+            chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
+                                               size=len(mu))
+            current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
 
         # Go!
         for i in range(1, self._iterations):
-          r1 = np.random.choice(self._num_chains, self._num_chains, replace = False)
-          r2 = np.random.choice(self._num_chains, self._num_chains, replace = False)
-          
-          for j in range(self._num_chains):
-            proposed = chains[i - 1, j, :] + self._gamma * (chains[i - 1, r1[j], :] - chains[i - 1, r2[j], :]) + np.random.normal(loc = 0, scale = self._b * mu, size = len(mu))
-            u = np.log(np.random.rand())
-            proposed_log_likelihood = self._log_likelihood(proposed)
-            
-            if u < proposed_log_likelihood - current_log_likelihood[j]:
-              chains[i, j, :] = proposed
-              current_log_likelihood[j] = proposed_log_likelihood
-            else:
-              chains[i, j, :] = chains[i - 1, j, :]
+            r1 = np.random.choice(self._num_chains, self._num_chains,
+                                  replace = False)
+            r2 = np.random.choice(self._num_chains, self._num_chains,
+                                  replace = False)
 
-          # Report
-          if self._verbose and i % 50 == 0:
-              print('Iteration ' + str(i) + ' of ' + str(self._iterations))
-              print('  In burn-in: ' + str(i < self._burn_in))
-        
+            for j in range(self._num_chains):
+                proposed = chains[i - 1, j, :] + self._gamma * (chains[i - 1, r1[j], :] 
+                            - chains[i - 1, r2[j], :]) \
+                            + np.random.normal(loc=0, scale=self._b * mu, 
+                                               size=len(mu))
+                u = np.log(np.random.rand())
+                proposed_log_likelihood = self._log_likelihood(proposed)
+      
+                if u < proposed_log_likelihood - current_log_likelihood[j]:
+                    chains[i, j, :] = proposed
+                    current_log_likelihood[j] = proposed_log_likelihood
+                else:
+                    chains[i, j, :] = chains[i - 1, j, :]
+
+            # Report
+            if self._verbose and i % 50 == 0:
+                print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                print('  In burn-in: ' + str(i < self._burn_in))
+
         non_burn_in = self._iterations - self._burn_in
         chains = chains[non_burn_in:, :, :]
         chains = chains[::self._thinning_rate, :, :]
-        
+
         # Convert 3d array to list of lists
-        samples = [chains[:, i, :] for i in range(0,self._num_chains)]
-        
+        samples = [chains[:, i, :] for i in range(0, self._num_chains)]
+
         # Return generated chain
         return samples
 
@@ -176,32 +179,33 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         rate of *n* indicates that only every *n-th* sample will be stored.
         """
         return self._thinning_rate
-        
+
     def set_gamma(self, gamma):
         """
         Sets the gamma coefficient used in updating the position of each
         chain.
         """
         if gamma < 0:
-          raise ValueError('Gamma must be non-negative.')
+            raise ValueError('Gamma must be non-negative.')
         self._gamma = gamma
-    
+
     def set_b(self, b):
         """
         Sets the normal scale coefficient used in updating the position of each
         chain.
         """
         if b < 0:
-          raise ValueError('normal scale coefficient must be non-negative.')
+            raise ValueError('normal scale coefficient must be non-negative.')
         self._b = b
-    
+
     def set_num_chains(self, num_chains):
-      """
-      Sets the number of chains to evolve
-      """
-      if num_chains < 10:
-        raise ValueError('This method works best with many chains (>>10, typically).')
-      self._num_chains = num_chains
+        """
+        Sets the number of chains to evolve
+        """
+        if num_chains < 10:
+          raise ValueError('This method works best with many chains (>>10,
+                            typically).')
+        self._num_chains = num_chains
 
 
 def differential_evolution_mcmc(log_likelihood, x0, sigma0=None):
