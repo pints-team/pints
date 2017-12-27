@@ -352,13 +352,14 @@ class DreamMCMC(pints.MCMC):
                     gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
                 else:
                     gamma = 1.0
-                e = np.random.uniform(low=-self._b_star * mu, high=self._b_star * mu)
+                e = np.random.uniform(low=-self._b_star * mu,
+                                      high=self._b_star * mu)
                 for k in range(0, delta):
                     r1, r2 = R_draw(j, self._num_chains)
-                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] - 
+                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
                                              chains[i - 1, r2, :])
                 proposed = chains[i - 1, j, :] + dX \
-                           + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))
+                           + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
 
                 # Step 2. Randomly set elements of proposal to original
                 for d in range(0, self._dimension):
