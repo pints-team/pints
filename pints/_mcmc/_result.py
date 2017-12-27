@@ -10,7 +10,6 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import pints._diagnostics as diagnostics
 import numpy as np
 from tabulate import tabulate
@@ -97,8 +96,10 @@ class McmcResultObject(object):
         for i in range(0, self._num_params):
             self._summary_list.append(["param " + str(i + 1), self._mean[i],
                                        self._std[i], self._quantiles[0, i],
-                                       self._quantiles[1, i], self._quantiles[2, i],
-                                       self._quantiles[3, i], self._quantiles[4, i],
+                                       self._quantiles[1, i],
+                                       self._quantiles[2, i],
+                                       self._quantiles[3, i],
+                                       self._quantiles[4, i],
                                        self._rhat[i], self._ess[i]])
 
     def summary(self):
@@ -120,7 +121,7 @@ class McmcResultObject(object):
                                                     "2.5%", "25%", "50%",
                                                     "75%", "97.5%", "rhat",
                                                     "ess"],
-                numalign="left", floatfmt=".2f"))
+                       numalign="left", floatfmt=".2f"))
 
     def extract(self, param_number):
         """
