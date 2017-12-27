@@ -114,9 +114,9 @@ class DifferentialEvolutionMCMC(pints.MCMC):
             for j in range(self._num_chains):
                 r1, r2 = R_draw(j, self._num_chains)
                 proposed = chains[i - 1, j, :] \
-                           + self._gamma * (chains[i - 1, r1, :]
-                                            - chains[i - 1, r2, :]) \
-                           + np.random.normal(loc=0, scale=self._b * mu,
+                         + self._gamma * (chains[i - 1, r1, :]
+                                          - chains[i - 1, r2, :]) \
+                         + np.random.normal(loc=0, scale=self._b * mu,
                                               size=len(mu))
                 u = np.log(np.random.rand())
                 proposed_log_likelihood = self._log_likelihood(proposed)
@@ -223,32 +223,32 @@ class DreamMCMC(pints.MCMC):
 
     In each step of the algorithm N chains are evolved
     using the following steps:
-    
+
     1. Select proposal:
 
-    x_proposed = x[i,r] + (1 + e) * gamma(delta, d, p_g) * 
+    x_proposed = x[i,r] + (1 + e) * gamma(delta, d, p_g) *
                   sum_j=1^delta (X[i,r1[j]] - x[i,r2[j]])
                   + epsilon
 
     where [r1[j], r2[j]] are random chain indices chosen (without
     replacement) from the N available chains, which must not
     equal each other or i, where i indicates
-    the current time step; 
+    the current time step;
     delta ~ uniform_discrete(1,D) determines
     the number of terms to include in the summation;
     e ~ U(-b*, b*) in d dimensions;
     gamma(delta, d, p_g) =:
       if p_g < u1 ~ U(0,1):
-        2.38 / sqrt(2 * delta * d) 
+        2.38 / sqrt(2 * delta * d)
       else:
         1
 
     epsilon ~ N(0,b) in d dimensions (where
     d is the dimensionality of the parameter vector).
-    
+
     2. Modify random subsets of the proposal according to
     a crossover probability CR:
-    
+
     for j in 1:N:
       if 1 - CR > u2 ~ U(0,1):
         x_proposed[j] = x[j],
@@ -272,16 +272,16 @@ class DreamMCMC(pints.MCMC):
 
         # Normal proposal std.
         self._b = 0.01
-        
+
         # b* distribution for e ~ U(-b*, b*)
         self._b_star = 0.01
-        
+
         # Probability of longer gamma versus regular
         self._p_g = 0.2
-        
+
         # Determines maximum delta to choose in sums
         self._D = 3
-        
+
         # Crossover probability
         self._CR = 0.5
 
@@ -356,8 +356,9 @@ class DreamMCMC(pints.MCMC):
                 for k in range(0, delta):
                     r1, r2 = R_draw(j, self._num_chains)
                     dX += (1 + e) * gamma * (chains[i - 1, r1, :] - chains[i - 1, r2, :])
-                proposed = chains[i - 1, j, :] + dX + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))
-                
+                proposed = chains[i - 1, j, :] + dX + np.random.normal(loc=0, scale=self._b * mu,
+                                                                       size=len(mu))
+
                 # Step 2. Randomly set elements of proposal to original
                 for d in range(0, self._dimension):
                     u2 = np.random.rand()
@@ -451,7 +452,8 @@ class DreamMCMC(pints.MCMC):
             raise ValueError('This method works best with many chains (>>10,'
                              + 'typically).')
         self._num_chains = num_chains
-        
+
+
 def R_draw(i, num_chains):
     r_both = np.random.choice(num_chains, 2, replace=False)
     r1 = r_both[0]
