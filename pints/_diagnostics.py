@@ -17,7 +17,7 @@ def autocorrelation(x):
     f = np.fft.fft(xp)
     p = np.array([np.real(v)**2 + np.imag(v)**2 for v in f])
     pi = np.fft.ifft(p)
-    return np.real(pi)[:x.size / 2] / np.sum(xp**2)
+    return np.real(pi)[:int(x.size / 2)] / np.sum(xp**2)
 
 
 def autocorrelate_negative(autocorrelation):

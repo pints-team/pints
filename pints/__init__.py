@@ -90,7 +90,7 @@ from ._diagnostics import rhat
 #
 from ._mcmc import MCMC
 from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
-
+from ._mcmc._differentialEvolution import DifferentialEvolutionMCMC, differential_evolution_mcmc
 #
 # Nested samplers
 #
