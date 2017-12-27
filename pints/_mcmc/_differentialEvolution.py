@@ -111,18 +111,19 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         # Go!
         for i in range(1, self._iterations):
             r1 = np.random.choice(self._num_chains, self._num_chains,
-                                  replace = False)
+                                  replace=False)
             r2 = np.random.choice(self._num_chains, self._num_chains,
-                                  replace = False)
+                                  replace=False)
 
             for j in range(self._num_chains):
-                proposed = chains[i - 1, j, :] + self._gamma * (chains[i - 1, r1[j], :] 
-                            - chains[i - 1, r2[j], :]) \
-                            + np.random.normal(loc=0, scale=self._b * mu, 
+                proposed = chains[i - 1, j, :] \
+                            + self._gamma * (chains[i - 1, r1[j], :] \
+                                           - chains[i - 1, r2[j], :]) \
+                           + np.random.normal(loc=0, scale=self._b * mu,
                                                size=len(mu))
                 u = np.log(np.random.rand())
                 proposed_log_likelihood = self._log_likelihood(proposed)
-      
+
                 if u < proposed_log_likelihood - current_log_likelihood[j]:
                     chains[i, j, :] = proposed
                     current_log_likelihood[j] = proposed_log_likelihood
@@ -203,8 +204,8 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         Sets the number of chains to evolve
         """
         if num_chains < 10:
-          raise ValueError('This method works best with many chains (>>10,
-                            typically).')
+            raise ValueError('This method works best with many chains (>>10,' \
+                              + 'typically).')
         self._num_chains = num_chains
 
 
