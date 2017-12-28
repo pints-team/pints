@@ -134,7 +134,7 @@ from ._mcmc import (
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._result import McmcResultObject
-from ._mcmc._emcee import EmceeHammerMCMC, emcee_hammer_MCMC
+from ._mcmc._emcee import EmceeHammerMCMC, emcee_hammer_MCMC, EmceePTMCMC
 
 
 #
