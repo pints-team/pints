@@ -98,8 +98,9 @@ class ScaledLogLikelihood(pints.LogLikelihood):
 
 class UnknownLogNoiseLogLikelihood(LogLikelihood):
     """
-        Similar to UnknownNoiseLogLikelihood, except works off log sigma, rather than sigma.
-        This is beneficial when want to work in unconstrained parameter space.
+        Similar to UnknownNoiseLogLikelihood, except works off
+        log sigma, rather than sigma. This is beneficial when
+        wanting to work in unconstrained parameter space.
         """
     def __init__(self, problem):
         super(UnknownLogNoiseLogLikelihood, self).__init__(problem)
@@ -107,10 +108,9 @@ class UnknownLogNoiseLogLikelihood(LogLikelihood):
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
         self._logn = 0.5 * self._size * np.log(2 * np.pi)
-    
+
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x[:-1])
-        return -(
-                 self._logn + self._size * x[-1]
+        return -(self._logn + self._size * x[-1]
                  + np.sum(error**2) / (2 * np.exp(x[-1])**2))
 
