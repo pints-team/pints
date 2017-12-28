@@ -487,7 +487,7 @@ class DreamMCMC(pints.MCMC):
                     current_log_likelihood[j] = proposed_log_likelihood
                 else:
                     chains[i, j, :] = chains[i - 1, j, :]
-                
+
                 # Report
                 if self._verbose and i % 50 == 0:
                     print('Iteration ' + str(i) + ' of ' + str(self._iterations))  # NOQA
