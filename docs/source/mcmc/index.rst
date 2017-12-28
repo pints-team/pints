@@ -11,6 +11,6 @@ parameters that maximise a :class:`LogLikelihood<pints.LogLikelihood>`.
 .. toctree::
    
     adaptive_covariance_mcmc
+    differential_evolution_mcmc
     mcmc
     
-   
