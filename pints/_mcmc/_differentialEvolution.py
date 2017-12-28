@@ -281,8 +281,14 @@ class DreamMCMC(pints.MCMC):
 
         # Determines maximum delta to choose in sums
         self._D = 3
-
-        # Crossover probability
+        
+        # Constant crossover probability boolean
+        self._constant_crossover = False
+        
+        # Crossover probability for variable CR case
+        self._nCR = 3
+        
+        # Constant CR probability for constant CR probability
         self._CR = 0.5
 
         # Number of chains to evolve
@@ -342,45 +348,149 @@ class DreamMCMC(pints.MCMC):
             current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
 
         # Go!
-        for i in range(1, self._iterations):
-            for j in range(self._num_chains):
-                # Step 1. Select (initial) proposal
-                delta = int(np.random.choice(self._D, 1)[0] + 1)
-                dX = 0
-                u1 = np.random.rand()
-                if self._p_g < u1:
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+        p = np.repeat(1.0 / self._nCR, self._nCR)
+        L = np.zeros(self._nCR)
+        Delta = np.zeros(self._nCR)
+        after_burn_in_indicator = 0
+        if self._constant_crossover == False:
+            for i in range(1, self._iterations):
+                # Burn-in
+                if i < self._burn_in:
+                    for j in range(self._num_chains):
+                        # Step 1. Select (initial) proposal
+                        delta = int(np.random.choice(self._D, 1)[0] + 1)
+                        dX = 0
+                        u1 = np.random.rand()
+                        if self._p_g < u1:
+                            gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                        else:
+                            gamma = 1.0
+                        e = np.random.uniform(low=-self._b_star * mu,
+                                              high=self._b_star * mu)
+                        for k in range(0, delta):
+                            r1, r2 = R_draw(j, self._num_chains)
+                            dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
+                                                     chains[i - 1, r2, :])
+                        proposed = chains[i - 1, j, :] + dX \
+                                   + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+                        
+                        # Select CR from multinomial distribution
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
+                        CR = float(m + 1) / float(self._nCR)
+                        L[m] += 1
+        
+                        # Step 2. Randomly set elements of proposal to original
+                        for d in range(0, self._dimension):
+                            u2 = np.random.rand()
+                            if 1.0 - CR > u2:
+                                proposed[d] = chains[i - 1, j, d]
+        
+                        # Accept/reject
+                        u = np.log(np.random.rand())
+                        proposed_log_likelihood = self._log_likelihood(proposed)
+        
+                        if u < proposed_log_likelihood - current_log_likelihood[j]:
+                            chains[i, j, :] = proposed
+                            current_log_likelihood[j] = proposed_log_likelihood
+                        else:
+                            chains[i, j, :] = chains[i - 1, j, :]
+                        
+                        # Update CR distribution
+                        for d in range(0, self._dimension):
+                            Delta[m] += (chains[i, j, d] - chains[i - 1, j, d])**2 / np.var(chains[:, j, d])
+                    for k in range(0, self._nCR):
+                        p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)
+                    p = p / np.sum(p)
+                
+                # After burn-in
                 else:
-                    gamma = 1.0
-                e = np.random.uniform(low=-self._b_star * mu,
-                                      high=self._b_star * mu)
-                for k in range(0, delta):
-                    r1, r2 = R_draw(j, self._num_chains)
-                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
-                                             chains[i - 1, r2, :])
-                proposed = chains[i - 1, j, :] + dX \
-                           + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
-
-                # Step 2. Randomly set elements of proposal to original
-                for d in range(0, self._dimension):
-                    u2 = np.random.rand()
-                    if 1.0 - self._CR > u2:
-                        proposed[d] = chains[i - 1, j, d]
-
-                # Accept/reject
-                u = np.log(np.random.rand())
-                proposed_log_likelihood = self._log_likelihood(proposed)
-
-                if u < proposed_log_likelihood - current_log_likelihood[j]:
-                    chains[i, j, :] = proposed
-                    current_log_likelihood[j] = proposed_log_likelihood
-                else:
-                    chains[i, j, :] = chains[i - 1, j, :]
-
-            # Report
-            if self._verbose and i % 50 == 0:
-                print('Iteration ' + str(i) + ' of ' + str(self._iterations))
-                print('  In burn-in: ' + str(i < self._burn_in))
+                    if after_burn_in_indicator == 0:
+                        if self._verbose:
+                            print('Finished warm-up...starting sampling')
+                            print('Crossover probabilities = ' + str(p))
+                        after_burn_in_indicator = 1
+                    for j in range(self._num_chains):
+                        # Step 1. Select (initial) proposal
+                        delta = int(np.random.choice(self._D, 1)[0] + 1)
+                        dX = 0
+                        u1 = np.random.rand()
+                        if self._p_g < u1:
+                            gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                        else:
+                            gamma = 1.0
+                        e = np.random.uniform(low=-self._b_star * mu,
+                                              high=self._b_star * mu)
+                        for k in range(0, delta):
+                            r1, r2 = R_draw(j, self._num_chains)
+                            dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
+                                                     chains[i - 1, r2, :])
+                        proposed = chains[i - 1, j, :] + dX \
+                                   + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+        
+                        # Step 2. Randomly set elements of proposal to original
+                        # Select CR from multinomial distribution using tuned p
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
+                        CR = float(m + 1) / float(self._nCR)
+                        for d in range(0, self._dimension):
+                            u2 = np.random.rand()
+                            if 1.0 - CR > u2:
+                                proposed[d] = chains[i - 1, j, d]
+        
+                        # Accept/reject
+                        u = np.log(np.random.rand())
+                        proposed_log_likelihood = self._log_likelihood(proposed)
+        
+                        if u < proposed_log_likelihood - current_log_likelihood[j]:
+                            chains[i, j, :] = proposed
+                            current_log_likelihood[j] = proposed_log_likelihood
+                        else:
+                            chains[i, j, :] = chains[i - 1, j, :]
+                    # Report
+                    if self._verbose and i % 50 == 0:
+                        print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                        print('  In burn-in: ' + str(i < self._burn_in))
+        
+        # Constant crossover probability
+        else:
+          CR = self._CR
+          for j in range(self._num_chains):
+              # Step 1. Select (initial) proposal
+              delta = int(np.random.choice(self._D, 1)[0] + 1)
+              dX = 0
+              u1 = np.random.rand()
+              if self._p_g < u1:
+                  gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+              else:
+                  gamma = 1.0
+              e = np.random.uniform(low=-self._b_star * mu,
+                                    high=self._b_star * mu)
+              for k in range(0, delta):
+                  r1, r2 = R_draw(j, self._num_chains)
+                  dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
+                                           chains[i - 1, r2, :])
+              proposed = chains[i - 1, j, :] + dX \
+                         + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+    
+              # Step 2. Randomly set elements of proposal to original
+              for d in range(0, self._dimension):
+                  u2 = np.random.rand()
+                  if 1.0 - CR > u2:
+                      proposed[d] = chains[i - 1, j, d]
+    
+              # Accept/reject
+              u = np.log(np.random.rand())
+              proposed_log_likelihood = self._log_likelihood(proposed)
+    
+              if u < proposed_log_likelihood - current_log_likelihood[j]:
+                  chains[i, j, :] = proposed
+                  current_log_likelihood[j] = proposed_log_likelihood
+              else:
+                  chains[i, j, :] = chains[i - 1, j, :]
+                    # Report
+                    
+              if self._verbose and i % 50 == 0:
+                  print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                  print('  In burn-in: ' + str(i < self._burn_in))
 
         non_burn_in = self._iterations - self._burn_in
         chains = chains[non_burn_in:, :, :]
