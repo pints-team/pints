@@ -65,3 +65,72 @@ class TwistedGaussianLogPDF(LogPDF):
                        x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]])
         log_pdf = multivariate_normal.logpdf(x, mean=mu, cov=cov)
         return log_pdf
+
+
+
+class MultivariateGaussianLogPDF(LogPDF):
+    """
+    *Extends:* :class:`LogPDF`
+    
+    Multivariate Gaussian pdf. Default is a covariance
+    matrix with cor(i,j) = 0.5, and var(i) = i.
+    """
+    def __init__(self, dimensions, mu, cov=None):
+      
+        if dimensions < 1:
+            raise ValueError('Dimensions must equal or exceed 1.')
+        if len(mu)!= dimensions:
+            raise ValueError('Length of mean must equal specified dimensions.')
+        
+        
+        super(MultivariateGaussianLogPDF, self).__init__(dimensions)
+
+    def __call__(self, x):
+        cov = np.diag(np.repeat(1, 10))
+        cov[0,0] = 100
+        mu = np.array([x[0], x[1] + self._b * x[0]**2 - 100 * self._b,
+                       x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]])
+        log_pdf = multivariate_normal.logpdf(x, mean=mu, cov=cov)
+        return log_pdf
+
+
+class BimodalGaussianLogPDF(LogPDF):
+    """
+    *Extends:* :class:`LogPDF`
+    
+    Multivariate Gaussian pdf. Default is a covariance
+    matrix with cor(i,j) = 0.5, and var(i) = i.
+    """
+    def __init__(self, mu1, mu2, cov1=None, cov2=None):
+      
+        if len(mu1)!= 2:
+            raise ValueError('Length of mean must equal 2.')
+        if len(mu2)!= 2:
+            raise ValueError('Length of mean must equal 2.')
+
+        super(BimodalGaussianLogPDF, self).__init__(2)
+
+    def __call__(self, x):
+        cov = np.diag(np.repeat(1, 10))
+        cov[0,0] = 100
+        mu = np.array([x[0], x[1] + self._b * x[0]**2 - 100 * self._b,
+                       x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9]])
+        log_pdf = multivariate_normal.logpdf(x, mean=mu, cov=cov)
+        return log_pdf
+
+
+class RosenbrockLogPDF(LogPDF):
+    """
+    *Extends:* :class:`LogPDF`
+    
+    Rosenbrock function (see: https://en.wikipedia.org/wiki/Rosenbrock_function):
+    
+    f(x,y) = (a - x)^2 + b(y - x^2)^2
+    """
+    def __init__(self, a, b):
+        self._a = a
+        self._b = b
+        super(RosenbrockLogPDF, self).__init__(2)
+
+    def __call__(self, x):
+        return np.log((self._a - x[0])**2 + self._b * (x[1] - x[0]**2)**2)

@@ -13,4 +13,4 @@ from __future__ import print_function, unicode_literals
 from ._logistic import LogisticModel            # noqa
 from ._hh_ik import HodgkinHuxleyIKModel        # noqa
 from ._logpdfs import TwistedGaussianLogPDF     # noqa
-
+from ._logpdfs import RosenbrockLogPDF          # noqa
