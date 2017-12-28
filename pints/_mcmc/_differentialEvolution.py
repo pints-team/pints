@@ -281,13 +281,13 @@ class DreamMCMC(pints.MCMC):
 
         # Determines maximum delta to choose in sums
         self._D = 3
-        
+
         # Constant crossover probability boolean
         self._constant_crossover = False
-        
+
         # Crossover probability for variable CR case
         self._nCR = 3
-        
+
         # Constant CR probability for constant CR probability
         self._CR = 0.5
 
@@ -352,7 +352,7 @@ class DreamMCMC(pints.MCMC):
         L = np.zeros(self._nCR)
         Delta = np.zeros(self._nCR)
         after_burn_in_indicator = 0
-        if self._constant_crossover == False:
+        if self._constant_crossover is False:
             for i in range(1, self._iterations):
                 # Burn-in
                 if i < self._burn_in:
@@ -373,35 +373,35 @@ class DreamMCMC(pints.MCMC):
                                                      chains[i - 1, r2, :])
                         proposed = chains[i - 1, j, :] + dX \
                                    + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
-                        
+
                         # Select CR from multinomial distribution
-                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]  # NOQA
                         CR = float(m + 1) / float(self._nCR)
                         L[m] += 1
-        
+
                         # Step 2. Randomly set elements of proposal to original
                         for d in range(0, self._dimension):
                             u2 = np.random.rand()
                             if 1.0 - CR > u2:
                                 proposed[d] = chains[i - 1, j, d]
-        
+
                         # Accept/reject
                         u = np.log(np.random.rand())
-                        proposed_log_likelihood = self._log_likelihood(proposed)
-        
-                        if u < proposed_log_likelihood - current_log_likelihood[j]:
+                        proposed_log_likelihood = self._log_likelihood(proposed)  # NOQA
+
+                        if u < proposed_log_likelihood - current_log_likelihood[j]:  # NOQA
                             chains[i, j, :] = proposed
                             current_log_likelihood[j] = proposed_log_likelihood
                         else:
                             chains[i, j, :] = chains[i - 1, j, :]
-                        
+
                         # Update CR distribution
                         for d in range(0, self._dimension):
-                            Delta[m] += (chains[i, j, d] - chains[i - 1, j, d])**2 / np.var(chains[:, j, d])
+                            Delta[m] += (chains[i, j, d] - chains[i - 1, j, d])**2 / np.var(chains[:, j, d])  # NOQA
                     for k in range(0, self._nCR):
-                        p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)
+                        p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)  # NOQA
                     p = p / np.sum(p)
-                
+
                 # After burn-in
                 else:
                     if after_burn_in_indicator == 0:
@@ -426,71 +426,72 @@ class DreamMCMC(pints.MCMC):
                                                      chains[i - 1, r2, :])
                         proposed = chains[i - 1, j, :] + dX \
                                    + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
-        
+
                         # Step 2. Randomly set elements of proposal to original
                         # Select CR from multinomial distribution using tuned p
-                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0] # NOQA
                         CR = float(m + 1) / float(self._nCR)
                         for d in range(0, self._dimension):
                             u2 = np.random.rand()
                             if 1.0 - CR > u2:
                                 proposed[d] = chains[i - 1, j, d]
-        
+
                         # Accept/reject
                         u = np.log(np.random.rand())
-                        proposed_log_likelihood = self._log_likelihood(proposed)
-        
-                        if u < proposed_log_likelihood - current_log_likelihood[j]:
+                        proposed_log_likelihood = self._log_likelihood(proposed)  # NOQA
+
+                        if u < proposed_log_likelihood - current_log_likelihood[j]: # NOQA
                             chains[i, j, :] = proposed
                             current_log_likelihood[j] = proposed_log_likelihood
                         else:
                             chains[i, j, :] = chains[i - 1, j, :]
                     # Report
                     if self._verbose and i % 50 == 0:
-                        print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                        print('Iteration ' + str(i) + ' of '
+                              + str(self._iterations))
                         print('  In burn-in: ' + str(i < self._burn_in))
-        
+
         # Constant crossover probability
         else:
-          CR = self._CR
-          for j in range(self._num_chains):
-              # Step 1. Select (initial) proposal
-              delta = int(np.random.choice(self._D, 1)[0] + 1)
-              dX = 0
-              u1 = np.random.rand()
-              if self._p_g < u1:
-                  gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
-              else:
-                  gamma = 1.0
-              e = np.random.uniform(low=-self._b_star * mu,
-                                    high=self._b_star * mu)
-              for k in range(0, delta):
-                  r1, r2 = R_draw(j, self._num_chains)
-                  dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
-                                           chains[i - 1, r2, :])
-              proposed = chains[i - 1, j, :] + dX \
-                         + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
-    
-              # Step 2. Randomly set elements of proposal to original
-              for d in range(0, self._dimension):
-                  u2 = np.random.rand()
-                  if 1.0 - CR > u2:
-                      proposed[d] = chains[i - 1, j, d]
-    
-              # Accept/reject
-              u = np.log(np.random.rand())
-              proposed_log_likelihood = self._log_likelihood(proposed)
-    
-              if u < proposed_log_likelihood - current_log_likelihood[j]:
-                  chains[i, j, :] = proposed
-                  current_log_likelihood[j] = proposed_log_likelihood
-              else:
-                  chains[i, j, :] = chains[i - 1, j, :]
-                    # Report
-                    
-              if self._verbose and i % 50 == 0:
-                  print('Iteration ' + str(i) + ' of ' + str(self._iterations))
-                  print('  In burn-in: ' + str(i < self._burn_in))
+            CR = self._CR
+            for j in range(self._num_chains):
+                # Step 1. Select (initial) proposal
+                delta = int(np.random.choice(self._D, 1)[0] + 1)
+                dX = 0
+                u1 = np.random.rand()
+                if self._p_g < u1:
+                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                else:
+                    gamma = 1.0
+                e = np.random.uniform(low=-self._b_star * mu,
+                                      high=self._b_star * mu)
+                for k in range(0, delta):
+                    r1, r2 = R_draw(j, self._num_chains)
+                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
+                                             chains[i - 1, r2, :])
+                proposed = chains[i - 1, j, :] + dX \
+                           + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+
+                # Step 2. Randomly set elements of proposal to original
+                for d in range(0, self._dimension):
+                    u2 = np.random.rand()
+                    if 1.0 - CR > u2:
+                        proposed[d] = chains[i - 1, j, d]
+
+                # Accept/reject
+                u = np.log(np.random.rand())
+                proposed_log_likelihood = self._log_likelihood(proposed)
+
+                if u < proposed_log_likelihood - current_log_likelihood[j]:
+                    chains[i, j, :] = proposed
+                    current_log_likelihood[j] = proposed_log_likelihood
+                else:
+                    chains[i, j, :] = chains[i - 1, j, :]
+                      # Report
+
+                if self._verbose and i % 50 == 0:
+                    print('Iteration ' + str(i) + ' of ' + str(self._iterations))
+                    print('  In burn-in: ' + str(i < self._burn_in))
 
         non_burn_in = self._iterations - self._burn_in
         chains = chains[non_burn_in:, :, :]
