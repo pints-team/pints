@@ -69,9 +69,6 @@ class EmceeHammerMCMC(pints.MCMC):
             print('Storing 1 sample per ' + str(self._thinning_rate)
                   + ' iteration')
 
-        # Problem dimension
-        d = self._dimension
-
         # Initial starting parameters
         mu = self._x0
         current = self._x0
@@ -93,7 +90,7 @@ class EmceeHammerMCMC(pints.MCMC):
             sampler = emcee.EnsembleSampler(self._walkers,
                                             self._dimension,
                                             self._log_likelihood,
-                                            threads = self._threads)
+                                            threads=self._threads)
         pos, prob, state = sampler.run_mcmc(p0, self._iterations,
                                             thin=self._thinning_rate)
 
@@ -216,9 +213,6 @@ class EmceePTMCMC(pints.MCMC):
             print('Storing 1 sample per ' + str(self._thinning_rate)
                   + ' iteration')
 
-        # Problem dimension
-        d = self._dimension
-
         # Initial starting parameters
         mu = self._x0
         current = self._x0
@@ -235,7 +229,7 @@ class EmceePTMCMC(pints.MCMC):
         if self._threads < 2:
             sampler = emcee.PTSampler(ntemps=self._num_temps,
                                       nwalkers=self._walkers,
-                                      dim=self._dimension, 
+                                      dim=self._dimension,
                                       logl=self._log_likelihood,
                                       logp=self._log_prior)
         else:
@@ -243,8 +237,9 @@ class EmceePTMCMC(pints.MCMC):
                                       nwalkers=self._walkers,
                                       dim=self._dimension,
                                       logl=self._log_likelihood,
-                                      logp=self._log_prior, threads=self._threads)
-        pos, prob, state = sampler.run_mcmc(pos0=p0, N=self._iterations, 
+                                      logp=self._log_prior,
+                                      threads=self._threads)
+        pos, prob, state = sampler.run_mcmc(pos0=p0, N=self._iterations,
                                             thin=self._thinning_rate)
 
         # Remove burn-in
