@@ -83,7 +83,7 @@ class MultivariateGaussianLogPDF(LogPDF):
         if mu is not None:
             if len(mu) != dimensions:
                 raise ValueError('Length of mean must equal ' +
-                                'specified dimensions.')
+                                 'specified dimensions.')
         if cov is not None:
             dim1, dim2 = cov.shape
             if dim1 != dim2:
@@ -126,10 +126,10 @@ class BimodalMultivariateGaussianLogPDF(LogPDF):
                  cov1=None, cov2=None):
         super(BimodalMultivariateGaussianLogPDF, self).__init__(dimensions)
         if len(mu1) != dimensions:
-            raise ValueError('Length of mean must equal '+
+            raise ValueError('Length of mean must equal ' +
                              'pdf dimensions (default is 2).')
         if len(mu2) != dimensions:
-            raise ValueError('Length of mean must equal '+
+            raise ValueError('Length of mean must equal ' +
                              'pdf dimensions (default is 2).')
         if cov1 is None:
             cov1 = np.diag(np.repeat(1, dimensions))
@@ -172,7 +172,7 @@ class RosenbrockLogPDF(LogPDF):
     """
     *Extends:* :class:`LogPDF`
 
-    Rosenbrock function 
+    Rosenbrock function
     (see: https://en.wikipedia.org/wiki/Rosenbrock_function):
 
     f(x,y) = -((a - x)^2 + b(y - x^2)^2)
