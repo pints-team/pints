@@ -176,7 +176,7 @@ def series(chain, problem, thinning=None):
     return fig, axes
 
 
-def pairwise(chain, kde=False):
+def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
     parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
@@ -199,10 +199,17 @@ def pairwise(chain, kde=False):
     """
     import matplotlib.pyplot as plt
     import numpy as np
-    from scipy import stats
+    import scipy.stats as st
+
+    if thinning is not None:
+        chain = chain[::thinning, :]
 
     n_sample, n_param = chain.shape
     fig_size = (3 * n_param, 3 * n_param)
+
+    if true_values is not None:
+        if len(true_values) != n_param:
+            raise ValueError('Length of true values must be same as number of parameters')
 
     bins = 25
     fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
@@ -215,7 +222,10 @@ def pairwise(chain, kde=False):
                 axes[i, j].hist(chain[:, i], bins=xbins, normed=True)
                 if kde:
                     x = np.linspace(xmin, xmax, 100)
-                    axes[i, j].plot(x, stats.gaussian_kde(chain[:, i])(x))
+                    axes[i, j].plot(x, st.gaussian_kde(chain[:, i])(x))
+                if true_values is not None:
+                    ymin_tv, ymax_tv = axes[i, j].get_ylim()
+                    axes[i, j].plot([true_values[i], true_values[i]], [0.0, ymax_tv], '--', c='k')
             elif i < j:
                 # Top-right: no plot
                 axes[i, j].axis('off')
@@ -227,22 +237,36 @@ def pairwise(chain, kde=False):
                     # Create an ordinary histogram
                     xbins = np.linspace(xmin, xmax, bins)
                     ybins = np.linspace(ymin, ymax, bins)
-                    axes[i, j].hist2d(
-                        chain[:, j], chain[:, i], bins=[xbins, ybins],
-                        normed=True, cmap=plt.cm.Blues)
+                    num_points = len(chain[:, i])
+                    if opacity is None:
+                        if num_points < 10:
+                            opacity = 1.0
+                        else:
+                            opacity = 1.0 / np.log10(num_points)
+                    axes[i, j].scatter(
+                        chain[:, j], chain[:, i], alpha=opacity, s=0.1)
+                    if true_values is not None:
+                        axes[i, j].plot([true_values[j], true_values[j]], [ymin, ymax], '--', c='k')
+                        axes[i, j].plot([xmin, xmax], [true_values[i], true_values[i]], '--', c='k')
                 else:
-                    # Create a kernel-density estimate plot
-                    x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-                    values = np.vstack([chain[:, j], chain[:, i]])
-                    values = stats.gaussian_kde(values)
-                    values = values(np.vstack([x.ravel(), y.ravel()]))
-                    values = np.reshape(values.T, x.shape)
-                    axes[i, j].imshow(
-                        np.rot90(values), cmap=plt.cm.Blues,
-                        extent=[xmin, xmax, ymin, ymax])
-                    axes[i, j].plot(
-                        chain[:, j], chain[:, i], 'k.', markersize=2,
-                        alpha=0.5)
+                    x = chain[:, j]
+                    y = chain[:, i]
+
+                    # Peform the kernel density estimate
+                    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+                    positions = np.vstack([xx.ravel(), yy.ravel()])
+                    values = np.vstack([x, y])
+                    kernel = st.gaussian_kde(values)
+                    f = np.reshape(kernel(positions).T, xx.shape)
+                    axes[i, j].imshow(np.rot90(values), cmap=plt.cm.Blues,
+                                            extent=[xmin, xmax, ymin, ymax])
+                    axes[i, j].set_xlim(xmin, xmax)
+                    axes[i, j].set_ylim(ymin, ymax)
+                    cfset = axes[i, j].contourf(xx, yy, f, cmap='Blues')
+                    cset = axes[i, j].contour(xx, yy, f, colors='k')
+                    if true_values is not None:
+                        axes[i, j].plot([true_values[j], true_values[j]], [ymin, ymax], '--', c='k')
+                        axes[i, j].plot([xmin, xmax], [true_values[i], true_values[i]], '--', c='k')
 
                     # Force equal aspect ratio
                     # See: https://stackoverflow.com/questions/7965743
