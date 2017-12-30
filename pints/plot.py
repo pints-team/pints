@@ -209,7 +209,8 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
 
     if true_values is not None:
         if len(true_values) != n_param:
-            raise ValueError('Length of true values must be same as number of parameters')
+            raise ValueError('Length of true values must be same as number of '
+                             'parameters')
 
     bins = 25
     fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
@@ -225,7 +226,8 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                     axes[i, j].plot(x, st.gaussian_kde(chain[:, i])(x))
                 if true_values is not None:
                     ymin_tv, ymax_tv = axes[i, j].get_ylim()
-                    axes[i, j].plot([true_values[i], true_values[i]], [0.0, ymax_tv], '--', c='k')
+                    axes[i, j].plot([true_values[i], true_values[i]],
+                                    [0.0, ymax_tv], '--', c='k')
             elif i < j:
                 # Top-right: no plot
                 axes[i, j].axis('off')
@@ -236,7 +238,6 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                 if not kde:
                     # Create an ordinary histogram
                     xbins = np.linspace(xmin, xmax, bins)
-                    ybins = np.linspace(ymin, ymax, bins)
                     num_points = len(chain[:, i])
                     if opacity is None:
                         if num_points < 10:
@@ -246,8 +247,12 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                     axes[i, j].scatter(
                         chain[:, j], chain[:, i], alpha=opacity, s=0.1)
                     if true_values is not None:
-                        axes[i, j].plot([true_values[j], true_values[j]], [ymin, ymax], '--', c='k')
-                        axes[i, j].plot([xmin, xmax], [true_values[i], true_values[i]], '--', c='k')
+                        axes[i, j].plot([true_values[j], true_values[j]],
+                                        [ymin, ymax],
+                                        '--', c='k')
+                        axes[i, j].plot([xmin, xmax],
+                                        [true_values[i], true_values[i]],
+                                        '--', c='k')
                 else:
                     x = chain[:, j]
                     y = chain[:, i]
@@ -259,14 +264,18 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                     kernel = st.gaussian_kde(values)
                     f = np.reshape(kernel(positions).T, xx.shape)
                     axes[i, j].imshow(np.rot90(values), cmap=plt.cm.Blues,
-                                            extent=[xmin, xmax, ymin, ymax])
+                                      extent=[xmin, xmax, ymin, ymax])
                     axes[i, j].set_xlim(xmin, xmax)
                     axes[i, j].set_ylim(ymin, ymax)
-                    cfset = axes[i, j].contourf(xx, yy, f, cmap='Blues')
-                    cset = axes[i, j].contour(xx, yy, f, colors='k')
+                    axes[i, j].contourf(xx, yy, f, cmap='Blues')
+                    axes[i, j].contour(xx, yy, f, colors='k')
                     if true_values is not None:
-                        axes[i, j].plot([true_values[j], true_values[j]], [ymin, ymax], '--', c='k')
-                        axes[i, j].plot([xmin, xmax], [true_values[i], true_values[i]], '--', c='k')
+                        axes[i, j].plot([true_values[j], true_values[j]],
+                                        [ymin, ymax],
+                                        '--', c='k')
+                        axes[i, j].plot([xmin, xmax],
+                                        [true_values[i], true_values[i]],
+                                        '--', c='k')
 
                     # Force equal aspect ratio
                     # See: https://stackoverflow.com/questions/7965743
