@@ -23,14 +23,17 @@ class McmcResultObject(object):
     quantiles, rhat and effective sample size
     """
 
-    def __init__(self, chains):
-        self._stacked = np.vstack(chains)
-        self._mean = np.mean(self._stacked, axis=0)
-        self._std = np.std(self._stacked, axis=0)
-        self._quantiles = np.percentile(self._stacked, [2.5, 25, 50,
+    def __init__(self, chains, time):
+        self._chains = chains
+        stacked = np.vstack(chains)
+        self._time = time
+        self._mean = np.mean(stacked, axis=0)
+        self._std = np.std(stacked, axis=0)
+        self._quantiles = np.percentile(stacked, [2.5, 25, 50,
                                                         75, 97.5], axis=0)
-        self._ess = diagnostics.effective_sample_size(self._stacked)
-        self._num_params = self._stacked.shape[1]
+        self._ess = diagnostics.effective_sample_size(stacked)
+        self._ess_per_second = self._ess / time
+        self._num_params = stacked.shape[1]
         self._num_chains = len(chains)
 
         # If there is more than 1 chain calculate rhat
@@ -42,13 +45,13 @@ class McmcResultObject(object):
 
         self._summary_list = None
         self.make_summary()
-
-    def stacked(self):
+        
+    def chains(self):
         """
-        Return the posterior samples from all chains
-        vertically stacked
+        Returns the posterior samples from all chains
+        separately
         """
-        return self._stacked
+        return self._chains
 
     def mean(self):
         """
@@ -87,6 +90,16 @@ class McmcResultObject(object):
         """
         return self._ess
 
+    def ess_per_second(self):
+        """
+        Return the effective sample size [1] per second of
+        run time for each parameter
+
+        [1] "Bayesian data analysis", 3rd edition, 2014, Gelman et al.,
+        CRC Press.
+        """
+        return self._ess_per_second
+
     def make_summary(self):
         """
         Calculates posterior summaries for all parameters and puts them in a
@@ -100,13 +113,14 @@ class McmcResultObject(object):
                                        self._quantiles[2, i],
                                        self._quantiles[3, i],
                                        self._quantiles[4, i],
-                                       self._rhat[i], self._ess[i]])
+                                       self._rhat[i], self._ess[i],
+                                       self._ess_per_second[i]])
 
     def summary(self):
         """
         Return a list of the parameter name, posterior mean, posterior std
         deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
-        rhat and effective sample size
+        rhat, effective sample size (ess) and ess per second of run time
         """
         return self._summary_list
 
@@ -114,17 +128,30 @@ class McmcResultObject(object):
         """
         Prints posterior summaries for all parameters to the console, including
         the parameter name, posterior mean, posterior std deviation, the
-        2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat and effective
-        sample size
+        2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
+        sample size (ess) and ess per second of run time
         """
         print(tabulate(self._summary_list, headers=["param", "mean", "std.",
                                                     "2.5%", "25%", "50%",
                                                     "75%", "97.5%", "rhat",
-                                                    "ess"],
+                                                    "ess", "ess per sec."],
                        numalign="left", floatfmt=".2f"))
 
     def extract(self, param_number):
         """
         Extracts posterior samples for a given parameter number
         """
-        return self._stacked[:, param_number]
+        stacked = np.vstack(self._chains)
+        return stacked[:, param_number]
+        
+    def extract_all(self):
+        """
+        Return the posterior samples for all parameters
+        """
+        return np.vstack(self._chains)
+    
+    def time(self):
+        """
+        Return the run time taken for sampling
+        """
+        return self._time
