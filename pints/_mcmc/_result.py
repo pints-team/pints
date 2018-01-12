@@ -27,7 +27,7 @@ class McmcResultObject(object):
         self._chains = chains
         self._time = time
         self._summary_list = []
-        
+
     def chains(self):
         """
         Returns the posterior samples from all chains
@@ -104,7 +104,6 @@ class McmcResultObject(object):
         else:
             self._rhat = np.repeat("NA", self._num_params)
 
-        
         for i in range(0, self._num_params):
             self._summary_list.append(["param " + str(i + 1), self._mean[i],
                                        self._std[i], self._quantiles[0, i],
@@ -146,13 +145,13 @@ class McmcResultObject(object):
         """
         stacked = np.vstack(self._chains)
         return stacked[:, param_number]
-        
+
     def extract_all(self):
         """
         Return the posterior samples for all parameters
         """
         return np.vstack(self._chains)
-    
+
     def time(self):
         """
         Return the run time taken for sampling
