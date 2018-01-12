@@ -25,26 +25,8 @@ class McmcResultObject(object):
 
     def __init__(self, chains, time):
         self._chains = chains
-        stacked = np.vstack(chains)
         self._time = time
-        self._mean = np.mean(stacked, axis=0)
-        self._std = np.std(stacked, axis=0)
-        self._quantiles = np.percentile(stacked, [2.5, 25, 50,
-                                                        75, 97.5], axis=0)
-        self._ess = diagnostics.effective_sample_size(stacked)
-        self._ess_per_second = self._ess / time
-        self._num_params = stacked.shape[1]
-        self._num_chains = len(chains)
-
-        # If there is more than 1 chain calculate rhat
-        # otherwise return NA
-        if self._num_chains > 1:
-            self._rhat = diagnostics.rhat_all_params(chains)
-        else:
-            self._rhat = np.repeat("NA", self._num_params)
-
-        self._summary_list = None
-        self.make_summary()
+        self._summary_list = []
         
     def chains(self):
         """
@@ -105,7 +87,24 @@ class McmcResultObject(object):
         Calculates posterior summaries for all parameters and puts them in a
         list
         """
-        self._summary_list = []
+        stacked = np.vstack(self._chains)
+        self._mean = np.mean(stacked, axis=0)
+        self._std = np.std(stacked, axis=0)
+        self._quantiles = np.percentile(stacked, [2.5, 25, 50,
+                                                  75, 97.5], axis=0)
+        self._ess = diagnostics.effective_sample_size(stacked)
+        self._ess_per_second = self._ess / self._time
+        self._num_params = stacked.shape[1]
+        self._num_chains = len(self._chains)
+
+        # If there is more than 1 chain calculate rhat
+        # otherwise return NA
+        if self._num_chains > 1:
+            self._rhat = diagnostics.rhat_all_params(self._chains)
+        else:
+            self._rhat = np.repeat("NA", self._num_params)
+
+        
         for i in range(0, self._num_params):
             self._summary_list.append(["param " + str(i + 1), self._mean[i],
                                        self._std[i], self._quantiles[0, i],
@@ -122,6 +121,8 @@ class McmcResultObject(object):
         deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
         rhat, effective sample size (ess) and ess per second of run time
         """
+        if self._summary_list == []:
+            self.make_summary()
         return self._summary_list
 
     def print_summary(self):
@@ -131,6 +132,8 @@ class McmcResultObject(object):
         2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
         sample size (ess) and ess per second of run time
         """
+        if self._summary_list == []:
+            self.make_summary()
         print(tabulate(self._summary_list, headers=["param", "mean", "std.",
                                                     "2.5%", "25%", "50%",
                                                     "75%", "97.5%", "rhat",
