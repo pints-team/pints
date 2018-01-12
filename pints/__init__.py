@@ -92,6 +92,8 @@ from ._mcmc import MCMC
 from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
 from ._mcmc._differentialEvolution import DifferentialEvolutionMCMC, differential_evolution_mcmc
 from ._mcmc._differentialEvolution import DreamMCMC
+from ._mcmc._result import McmcResultObject
+
 #
 # Nested samplers
 #
