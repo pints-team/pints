@@ -14,6 +14,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
+
 class Optimiser(object):
     """
     Takes an :class:`pints.ErrorMeasure` as input and attempts to find the
@@ -52,8 +53,8 @@ class Optimiser(object):
         self._boundaries = boundaries
         if self._boundaries is not None:
             if self._boundaries.dimension() != self._dimension:
-                raise ValueError('Boundaries must have same dimension as'
-                    ' function.')
+                raise ValueError(
+                    'Boundaries must have same dimension as function.')
 
         # Set initial position
         self.set_initial_position(x0, sigma0)
@@ -97,12 +98,12 @@ class Optimiser(object):
             # Check given value
             self._x0 = pints.vector(x0)
             if len(self._x0) != self._dimension:
-                raise ValueError('Initial position must have same dimension as'
-                    ' function.')
+                raise ValueError(
+                    'Initial position must have same dimension as function.')
             if self._boundaries is not None:
                 if not self._boundaries.check(self._x0):
-                    raise ValueError('Initial position must lie within given'
-                        ' boundaries.')
+                    raise ValueError(
+                        'Initial position must lie within given boundaries.')
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -120,8 +121,8 @@ class Optimiser(object):
             # Single number given, convert to vector
             sigma0 = float(sigma0)
             if sigma0 <= 0:
-                raise ValueError('Initial standard deviation must be greater'
-                    ' than zero.')
+                raise ValueError(
+                    'Initial standard deviation must be greater than zero.')
             self._sigma0 = np.ones(self._dimension) * sigma0
             self._sigma0.setflags(write=False)
 
@@ -129,11 +130,12 @@ class Optimiser(object):
             # Vector given
             self._sigma0 = pints.vector(sigma0)
             if len(self._sigma0) != self._dimension:
-                raise ValueError('Initial standard deviation must be None,'
-                    ' scalar, or have same dimension as function.')
+                raise ValueError(
+                    'Initial standard deviation must be None, scalar, or have'
+                    ' same dimension as function.')
             if np.any(self._sigma0 <= 0):
-                raise ValueError('Initial standard deviations must be greater'
-                    ' than zero.')
+                raise ValueError(
+                    'Initial standard deviations must be greater than zero.')
 
     def set_verbose(self, value):
         """
@@ -147,6 +149,7 @@ class Optimiser(object):
         Returns ``True`` if the optimiser is set to run in verbose mode.
         """
         return self._verbose
+
 
 class TriangleWaveTransform(object):
     """
@@ -179,7 +182,8 @@ class TriangleWaveTransform(object):
         y = np.remainder(x - self._lower, self._range2)
         z = np.remainder(y, self._range)
         return ((self._lower + z) * (y < self._range)
-            + (self._upper - z) * (y >= self._range))
+                + (self._upper - z) * (y >= self._range))
+
 
 class InfBoundaryTransform(object):
     """
