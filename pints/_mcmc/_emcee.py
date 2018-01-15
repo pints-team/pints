@@ -21,8 +21,7 @@ class EmceeHammerMCMC(pints.MCMC):
     Dustin Lang, Jonathan Goodman, https://arxiv.org/abs/1202.3665.
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
-        super(EmceeHammerMCMC, self).__init__(
-            log_likelihood, x0, sigma0)
+        super(EmceeHammerMCMC, self).__init__(log_likelihood, x0, sigma0)
 
         # Total number of iterations
         self._iterations = self._dimension * 2000
@@ -61,8 +60,8 @@ class EmceeHammerMCMC(pints.MCMC):
             import emcee
         except ImportError:
             raise ImportError(
-                'This method requires the `emcee` module to be installed (pip'
-                ' install emcee).')
+                'This method requires the `emcee` module to be installed'
+                ' (use `pip install emcee` or `pip3 install emcee`).')
 
         # Report the current settings
         if self._verbose:
