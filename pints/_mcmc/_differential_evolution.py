@@ -217,55 +217,53 @@ class DreamMCMC(pints.MCMC):
     """
     *Extends:* :class:`MCMC`
 
-    Uses differential evolution adaptive Metropolis (DREAM)
-    MCMC as described in [1] to do posterior sampling
-    from the posterior.
+    Uses differential evolution adaptive Metropolis (DREAM) MCMC as described
+    in [1] to do posterior sampling from the posterior.
 
-    In each step of the algorithm N chains are evolved
-    using the following steps:
+    In each step of the algorithm N chains are evolved using the following
+    steps:
 
-    1. Select proposal:
+    1. Select proposal::
 
-    x_proposed = x[i,r] + (1 + e) * gamma(delta, d, p_g) *
-                  sum_j=1^delta (X[i,r1[j]] - x[i,r2[j]])
-                  + epsilon
+        x_proposed = x[i,r] + (1 + e) * gamma(delta, d, p_g) *
+                     sum_j=1^delta (X[i,r1[j]] - x[i,r2[j]])
+                     + epsilon
 
-    where [r1[j], r2[j]] are random chain indices chosen (without
-    replacement) from the N available chains, which must not
-    equal each other or i, where i indicates
-    the current time step;
-    delta ~ uniform_discrete(1,D) determines
-    the number of terms to include in the summation;
-    e ~ U(-b*, b*) in d dimensions;
-    gamma(delta, d, p_g) =:
-      if p_g < u1 ~ U(0,1):
-        2.38 / sqrt(2 * delta * d)
-      else:
-        1
+    where [r1[j], r2[j]] are random chain indices chosen (without replacement)
+    from the ``N`` available chains, which must not equal each other or ``i``,
+    where ``i`` indicates the current time step;
+    ``delta ~ uniform_discrete(1,D)`` determines the number of terms to include
+    in the summation::
 
-    epsilon ~ N(0,b) in d dimensions (where
-    d is the dimensionality of the parameter vector).
+        e ~ U(-b*, b*) in d dimensions;
+        gamma(delta, d, p_g) =:
+          if p_g < u1 ~ U(0,1):
+            2.38 / sqrt(2 * delta * d)
+          else:
+            1
 
-    2. Modify random subsets of the proposal according to
-    a crossover probability CR:
+    ``epsilon ~ N(0,b)`` in ``d`` dimensions (where ``d`` is the dimensionality
+    of the parameter vector).
 
-    for j in 1:N:
-      if 1 - CR > u2 ~ U(0,1):
-        x_proposed[j] = x[j],
-      else:
-        x_proposed[j] = x_proposed[j] from 1.
+    2. Modify random subsets of the proposal according to a crossover
+    probability CR::
 
-    If x_proposed / x[i,r] > u ~ U(0,1), then
-    x[i+1,r] = x_proposed; otherwise, x[i+1,r] = x[i].
+        for j in 1:N:
+          if 1 - CR > u2 ~ U(0,1):
+            x_proposed[j] = x[j],
+          else:
+            x_proposed[j] = x_proposed[j] from 1.
 
-    [1] "Accelerating Markov Chain Monte Carlo Simulation by
-    Differential Evolution with Self-Adaptive Randomized Subspace
-    Sampling ", 2009, Vrugt et al., International Journal of
-    Nonlinear Sciences and Numerical Simulation.
+    If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
+    ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
+
+    [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
+    Evolution with Self-Adaptive Randomized Subspace Sampling ",
+    2009, Vrugt et al.,
+    International Journal of Nonlinear Sciences and Numerical Simulation.
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
-        super(DreamMCMC, self).__init__(
-            log_likelihood, x0, sigma0)
+        super(DreamMCMC, self).__init__(log_likelihood, x0, sigma0)
 
         # Total number of iterations
         self._iterations = self._dimension * 2000

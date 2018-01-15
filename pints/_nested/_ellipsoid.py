@@ -30,10 +30,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     particles, the efficiency of this algorithm should be better than simple
     rejection sampling.
 
-    [1] "A NESTED SAMPLING ALGORITHM FOR COSMOLOGICAL MODEL SELECTION", Pia
-        Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
-        arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
-
+    [1] "A nested sampling algorithm for cosmological model selection",
+    Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
+    arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
     """
     def __init__(self, log_likelihood, prior):
         super(NestedEllipsoidSampler, self).__init__(log_likelihood, prior)

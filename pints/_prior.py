@@ -113,7 +113,7 @@ class UniformPrior(Prior):
         return self._value if self._boundaries.check(x) else 0
 
     def random_sample(self, num_samples=1):
-        """See :methd:`Prior.random_sample()`,"""
+        """See :meth:`Prior.random_sample()`,"""
         m_samples = np.zeros((num_samples, self._dimension))
         lower = self._boundaries.lower()
         upper = self._boundaries.upper()
@@ -194,7 +194,7 @@ class NormalPrior(Prior):
         return self._scale * np.exp(self._inv2cov * (x[0] - self._mean)**2)
 
     def random_sample(self, num_samples=1):
-        """See :methd:`Prior.random_sample()`."""
+        """See :meth:`Prior.random_sample()`."""
         m_samples = np.zeros((num_samples, self._dimension))
         mu = self._mean
         sigma = self._sigma
