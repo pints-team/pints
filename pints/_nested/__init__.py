@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
+
 class NestedSampler(object):
     """
     Takes a :class:`LogLikelihood` function and returns a nested sampler.
@@ -42,8 +43,8 @@ class NestedSampler(object):
 
     def run(self):
         """
-        Runs the nested sampling routine and returns a returns a tuple of the posterior samples
-        and an estimate of the marginal likelihood.
+        Runs the nested sampling routine and returns a returns a tuple of the
+        posterior samples and an estimate of the marginal likelihood.
         """
         raise NotImplementedError
 
@@ -61,10 +62,13 @@ class NestedSampler(object):
         """
         return self._verbose
 
-## independently samples params from the prior until
-## logLikelihood(params) > aThreshold
-def reject_sample_prior(aThreshold,aLogLikelihood,aPrior):
+
+def reject_sample_prior(aThreshold, aLogLikelihood, aPrior):
+    """
+    independently samples params from the prior until
+    logLikelihood(params) > aThreshold
+    """
     v_proposed = aPrior.random_sample()[0]
     while aLogLikelihood(v_proposed) < aThreshold:
         v_proposed = aPrior.random_sample()[0]
-    return np.concatenate((v_proposed,np.array([aLogLikelihood(v_proposed)])))
+    return np.concatenate((v_proposed, np.array([aLogLikelihood(v_proposed)])))

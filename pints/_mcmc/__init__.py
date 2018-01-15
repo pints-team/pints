@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
+
 class MCMC(object):
     """
     Takes a :class:`LogLikelihood` function and returns a markov chain
@@ -41,8 +42,9 @@ class MCMC(object):
         # Check initial position
         self._x0 = pints.vector(x0)
         if len(self._x0) != self._dimension:
-            raise ValueError('Initial position must have same dimension as'
-                ' loglikelihood function.')
+            raise ValueError(
+                'Initial position must have same dimension as loglikelihood'
+                ' function.')
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -55,8 +57,8 @@ class MCMC(object):
                 self._sigma0 = np.diag(self._sigma0)
             else:
                 # Check if 2d matrix of correct size
-                self._sigma0 = self._sigma0.reshape((self._dimension,
-                    self._dimension))
+                self._sigma0 = self._sigma0.reshape(
+                    (self._dimension, self._dimension))
             self._sigma0.setflags(write=False)
 
         # Print info to console
