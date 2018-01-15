@@ -266,7 +266,6 @@ def reject_ellipsoid_sample(
         a_diff = a_diff * enlargement_factor
         a_min = a_middle - (a_diff / 2)
         a_max = a_middle + (a_diff / 2)
-        # TODO Define these variables!
         v_sample = reject_uniform_draw(a_min, a_max, log_likelihood, threshold)
     return v_sample
 
@@ -292,7 +291,6 @@ def reject_ellipsoid_sample_faster(
         a_diff = a_diff * enlargement_factor
         a_min = a_middle - (a_diff / 2)
         a_max = a_middle + (a_diff / 2)
-        # TODO Define these variables!
         v_sample = reject_uniform_draw(a_min, a_max, log_likelihood, threshold)
     return v_sample
 
