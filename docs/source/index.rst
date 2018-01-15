@@ -6,7 +6,7 @@
 Welcome to the pints documentation
 ==================================
 
-**Pints** is hosted on GitHub_, where you can find **downloads** and 
+**Pints** is hosted on GitHub_, where you can find **downloads** and
 **installation instructions**.
 
 `Detailed examples`_ can also be found there.
@@ -22,7 +22,7 @@ Contents
 .. module:: pints
 
 .. toctree::
-   
+
     core_classes_and_methods
     diagnostic_plots
     error_measures
@@ -32,6 +32,7 @@ Contents
     mcmc/index
     optimisers/index
     priors_and_boundaries
+    samplers/index
     toy/index
     utilities
 
