@@ -10,7 +10,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import emcee
 
 
 class EmceeHammerMCMC(pints.MCMC):
@@ -56,6 +55,14 @@ class EmceeHammerMCMC(pints.MCMC):
 
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
+
+        # Import emcee
+        try:
+            import emcee
+        except ImportError:
+            raise ImportError(
+                'This method requires the `emcee` module to be installed (pip'
+                ' install emcee).')
 
         # Report the current settings
         if self._verbose:
@@ -157,8 +164,7 @@ class EmceePTMCMC(pints.MCMC):
     http://dfm.io/emcee/current/user/pt/
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
-        super(EmceePTMCMC, self).__init__(
-            log_likelihood, x0, sigma0)
+        super(EmceePTMCMC, self).__init__(log_likelihood, x0, sigma0)
 
         # Total number of iterations
         self._iterations = self._dimension * 2000
@@ -200,6 +206,14 @@ class EmceePTMCMC(pints.MCMC):
     def run(self):
         """See: :meth:`pints.MCMC.run()`."""
 
+        # Import emcee
+        try:
+            import emcee
+        except ImportError:
+            raise ImportError(
+                'This method requires the `emcee` module to be installed (pip'
+                ' install emcee).')
+
         # Report the current settings
         if self._verbose:
             print('Running emcee hammer MCMC')
@@ -239,8 +253,8 @@ class EmceePTMCMC(pints.MCMC):
                                       logl=self._log_likelihood,
                                       logp=self._log_prior,
                                       threads=self._threads)
-        pos, prob, state = sampler.run_mcmc(pos0=p0, N=self._iterations,
-                                            thin=self._thinning_rate)
+        pos, prob, state = sampler.run_mcmc(
+            pos0=p0, N=self._iterations, thin=self._thinning_rate)
 
         # Remove burn-in
         samples = sampler.chain[:, :, self._burn_in:, :]
