@@ -24,6 +24,8 @@ of choice.
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
 - [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
+- [Differential Evolution DEMC](./inference-differential-evolution-mcmc.ipynb)
+- [DREAM](./inference-dream-mcmc.ipynb)
 
 ## Plotting inference results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
