@@ -83,7 +83,7 @@ from ._optimisers._xnes import XNES, xnes
 
 # diagnostics
 from ._diagnostics import effective_sample_size
-from ._diagnostics import rhat
+from ._diagnostics import rhat, rhat_all_params
 
 #
 # MCMC

@@ -10,6 +10,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import pints
 import numpy as np
 
 
@@ -98,7 +99,7 @@ class McmcResultObject(object):
         # If there is more than 1 chain calculate rhat
         # otherwise return NA
         if self._num_chains > 1:
-            self._rhat = diagnostics.rhat_all_params(self._chains)
+            self._rhat = pints.rhat_all_params(self._chains)
         else:
             self._rhat = np.repeat("NA", self._num_params)
 
