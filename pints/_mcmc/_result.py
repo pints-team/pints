@@ -10,9 +10,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints._diagnostics as diagnostics
 import numpy as np
-from tabulate import tabulate
 
 
 class McmcResultObject(object):
@@ -92,7 +90,7 @@ class McmcResultObject(object):
         self._std = np.std(stacked, axis=0)
         self._quantiles = np.percentile(stacked, [2.5, 25, 50,
                                                   75, 97.5], axis=0)
-        self._ess = diagnostics.effective_sample_size(stacked)
+        self._ess = pints.effective_sample_size(stacked)
         self._ess_per_second = self._ess / self._time
         self._num_params = stacked.shape[1]
         self._num_chains = len(self._chains)
@@ -131,6 +129,7 @@ class McmcResultObject(object):
         2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
         sample size (ess) and ess per second of run time
         """
+        from tabulate import tabulate
         if self._summary_list == []:
             self.make_summary()
         print(tabulate(self._summary_list, headers=["param", "mean", "std.",
