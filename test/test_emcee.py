@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the basic methods of the emcee MC Hammer routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -13,6 +13,11 @@ import unittest
 import numpy as np
 
 debug = False
+
+#
+# For a list of the self.assertX() methods, see:
+#  https://docs.python.org/2/library/unittest.html#assert-methods
+#
 
 
 class EmceeHammerMCMC(unittest.TestCase):
@@ -52,10 +57,9 @@ class EmceeHammerMCMC(unittest.TestCase):
         self.x0 = np.array(self.real_parameters) * 1.1
         self.sigma0 = [0.005, 100, 0.5 * noise]
 
-
     def test_settings(self):
 
-        mcmc = pints.AdaptiveCovarianceMCMC(self.log_likelihood, self.x0)
+        mcmc = pints.EmceeHammerMCMC(self.log_likelihood, self.x0)
 
         r = mcmc.acceptance_rate() * 0.5
         mcmc.set_acceptance_rate(r)
