@@ -147,6 +147,7 @@ from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 #from ._mcmc._differential_evolution import DreamMCMC
 #from ._mcmc._result import McmcResultObject
+from ._mcmc._population import PopulationMCMC
 
 #
 # Nested samplers
