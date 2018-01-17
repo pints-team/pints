@@ -56,23 +56,16 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         # Number of chains to evolve
         self._num_chains = 100
 
-        # Number of iterations to discard as burn-in
-        self._burn_in = int(0.5 * self._iterations)
+        # Number of iterations to discard as warm-up
+        self._warm_up = int(0.5 * self._iterations)
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
 
-    def burn_in(self):
-        """
-        Returns the number of iterations that will be discarded as burn-in in
-        the next run.
-        """
-        return self._burn_in
-
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        next run, including the non-adaptive and warm-up iterations.
         """
         return self._iterations
 
@@ -86,8 +79,8 @@ class DifferentialEvolutionMCMC(pints.MCMC):
             print('normal proposal std. = ' + str(self._b))
             print('Total number of iterations: ' + str(self._iterations))
             print(
-                'Number of iterations to discard as burn-in: '
-                + str(self._burn_in))
+                'Number of iterations to discard as warm-up: '
+                + str(self._warm_up))
             print('Storing one sample per ' + str(self._thinning_rate))
 
         # Initial starting parameters
@@ -130,10 +123,10 @@ class DifferentialEvolutionMCMC(pints.MCMC):
             # Report
             if self._verbose and i % 50 == 0:
                 print('Iteration ' + str(i) + ' of ' + str(self._iterations))
-                print('  In burn-in: ' + str(i < self._burn_in))
+                print('  In warm-up: ' + str(i < self._warm_up))
 
-        non_burn_in = self._iterations - self._burn_in
-        chains = chains[non_burn_in:, :, :]
+        non_warm_up = self._iterations - self._warm_up
+        chains = chains[non_warm_up:, :, :]
         chains = chains[::self._thinning_rate, :, :]
 
         # Convert 3d array to list of lists
@@ -142,24 +135,42 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         # Return generated chain
         return samples
 
-    def set_burn_in(self, burn_in):
+    def set_b(self, b):
         """
-        Sets the number of iterations to discard as burn-in in the next run.
+        Sets the normal scale coefficient used in updating the position of each
+        chain.
         """
-        burn_in = int(burn_in)
-        if burn_in < 0:
-            raise ValueError('Burn-in rate cannot be negative.')
-        self._burn_in = burn_in
+        if b < 0:
+            raise ValueError('normal scale coefficient must be non-negative.')
+        self._b = b
+
+    def set_gamma(self, gamma):
+        """
+        Sets the gamma coefficient used in updating the position of each
+        chain.
+        """
+        if gamma < 0:
+            raise ValueError('Gamma must be non-negative.')
+        self._gamma = gamma
 
     def set_iterations(self, iterations):
         """
         Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
+        (including warm-up and non-adaptive iterations).
         """
         iterations = int(iterations)
         if iterations < 0:
             raise ValueError('Number of iterations cannot be negative.')
         self._iterations = iterations
+
+    def set_num_chains(self, num_chains):
+        """
+        Sets the number of chains to evolve
+        """
+        if num_chains < 10:
+            raise ValueError('This method works best with many chains (>>10,'
+                             + 'typically).')
+        self._num_chains = num_chains
 
     def set_thinning_rate(self, thinning):
         """
@@ -171,6 +182,16 @@ class DifferentialEvolutionMCMC(pints.MCMC):
             raise ValueError('Thinning rate must be greater than zero.')
         self._thinning_rate = thinning
 
+    def set_warm_up(self, warm_up):
+        """
+        Sets the number of iterations to discard as warm-up (burn-in) in the
+        next run.
+        """
+        warm_up = int(warm_up)
+        if warm_up < 0:
+            raise ValueError('Warm-up cannot be negative.')
+        self._warm_up = warm_up
+
     def thinning_rate(self):
         """
         Returns the thinning rate that will be used in the next run. A thinning
@@ -178,32 +199,12 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         """
         return self._thinning_rate
 
-    def set_gamma(self, gamma):
+    def warm_up(self):
         """
-        Sets the gamma coefficient used in updating the position of each
-        chain.
+        Returns the number of iterations that will be discarded as warm-up
+        (burn-in) in the next run.
         """
-        if gamma < 0:
-            raise ValueError('Gamma must be non-negative.')
-        self._gamma = gamma
-
-    def set_b(self, b):
-        """
-        Sets the normal scale coefficient used in updating the position of each
-        chain.
-        """
-        if b < 0:
-            raise ValueError('normal scale coefficient must be non-negative.')
-        self._b = b
-
-    def set_num_chains(self, num_chains):
-        """
-        Sets the number of chains to evolve
-        """
-        if num_chains < 10:
-            raise ValueError('This method works best with many chains (>>10,'
-                             + 'typically).')
-        self._num_chains = num_chains
+        return self._warm_up
 
 
 def differential_evolution_mcmc(log_likelihood, x0, sigma0=None):
@@ -292,23 +293,16 @@ class DreamMCMC(pints.MCMC):
         # Number of chains to evolve
         self._num_chains = 100
 
-        # Number of iterations to discard as burn-in
-        self._burn_in = int(0.5 * self._iterations)
+        # Number of iterations to discard as warm-up
+        self._warm_up = int(0.5 * self._iterations)
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
 
-    def burn_in(self):
-        """
-        Returns the number of iterations that will be discarded as burn-in in
-        the next run.
-        """
-        return self._burn_in
-
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        next run, including the non-adaptive and warm-up iterations.
         """
         return self._iterations
 
@@ -322,8 +316,8 @@ class DreamMCMC(pints.MCMC):
             print('normal proposal std. = ' + str(self._b))
             print('Total number of iterations: ' + str(self._iterations))
             print(
-                'Number of iterations to discard as burn-in: '
-                + str(self._burn_in))
+                'Number of iterations to discard as warm-up: '
+                + str(self._warm_up))
             print('Storing one sample per ' + str(self._thinning_rate))
 
         # Initial starting parameters
@@ -349,11 +343,11 @@ class DreamMCMC(pints.MCMC):
         p = np.repeat(1.0 / self._nCR, self._nCR)
         L = np.zeros(self._nCR)
         Delta = np.zeros(self._nCR)
-        after_burn_in_indicator = 0
+        after_warm_up_indicator = 0
         if self._constant_crossover is False:
             for i in range(1, self._iterations):
-                # Burn-in
-                if i < self._burn_in:
+                # Warm-up
+                if i < self._warm_up:
                     for j in range(self._num_chains):
                         # Step 1. Select (initial) proposal
                         delta = int(np.random.choice(self._D, 1)[0] + 1)
@@ -400,13 +394,13 @@ class DreamMCMC(pints.MCMC):
                         p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)  # NOQA
                     p = p / np.sum(p)
 
-                # After burn-in
+                # After warm-up
                 else:
-                    if after_burn_in_indicator == 0:
+                    if after_warm_up_indicator == 0:
                         if self._verbose:
                             print('Finished warm-up...starting sampling')
                             print('Crossover probabilities = ' + str(p))
-                        after_burn_in_indicator = 1
+                        after_warm_up_indicator = 1
                     for j in range(self._num_chains):
                         # Step 1. Select (initial) proposal
                         delta = int(np.random.choice(self._D, 1)[0] + 1)
@@ -447,7 +441,7 @@ class DreamMCMC(pints.MCMC):
                     if self._verbose and i % 50 == 0:
                         print('Iteration ' + str(i) + ' of '
                               + str(self._iterations))
-                        print('  In burn-in: ' + str(i < self._burn_in))
+                        print('  In warm-up: ' + str(i < self._warm_up))
 
         # Constant crossover probability
         else:
@@ -489,10 +483,10 @@ class DreamMCMC(pints.MCMC):
                 # Report
                 if self._verbose and i % 50 == 0:
                     print('Iteration ' + str(i) + ' of ' + str(self._iterations))  # NOQA
-                    print('  In burn-in: ' + str(i < self._burn_in))
+                    print('  In warm-up: ' + str(i < self._warm_up))
 
-        non_burn_in = self._iterations - self._burn_in
-        chains = chains[non_burn_in:, :, :]
+        non_warm_up = self._iterations - self._warm_up
+        chains = chains[non_warm_up:, :, :]
         chains = chains[::self._thinning_rate, :, :]
 
         # Convert 3d array to list of lists
@@ -501,24 +495,42 @@ class DreamMCMC(pints.MCMC):
         # Return generated chain
         return samples
 
-    def set_burn_in(self, burn_in):
+    def set_b(self, b):
         """
-        Sets the number of iterations to discard as burn-in in the next run.
+        Sets the normal scale coefficient used in updating the position of each
+        chain.
         """
-        burn_in = int(burn_in)
-        if burn_in < 0:
-            raise ValueError('Burn-in rate cannot be negative.')
-        self._burn_in = burn_in
+        if b < 0:
+            raise ValueError('normal scale coefficient must be non-negative.')
+        self._b = b
+
+    def set_gamma(self, gamma):
+        """
+        Sets the gamma coefficient used in updating the position of each
+        chain.
+        """
+        if gamma < 0:
+            raise ValueError('Gamma must be non-negative.')
+        self._gamma = gamma
 
     def set_iterations(self, iterations):
         """
         Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
+        (including warm-up and non-adaptive iterations).
         """
         iterations = int(iterations)
         if iterations < 0:
             raise ValueError('Number of iterations cannot be negative.')
         self._iterations = iterations
+
+    def set_num_chains(self, num_chains):
+        """
+        Sets the number of chains to evolve
+        """
+        if num_chains < 10:
+            raise ValueError('This method works best with many chains (>>10,'
+                             + 'typically).')
+        self._num_chains = num_chains
 
     def set_thinning_rate(self, thinning):
         """
@@ -530,6 +542,15 @@ class DreamMCMC(pints.MCMC):
             raise ValueError('Thinning rate must be greater than zero.')
         self._thinning_rate = thinning
 
+    def set_warm_up(self, warm_up):
+        """
+        Sets the number of iterations to discard as warm-up in the next run.
+        """
+        warm_up = int(warm_up)
+        if warm_up < 0:
+            raise ValueError('Warm-up cannot be negative.')
+        self._warm_up = warm_up
+
     def thinning_rate(self):
         """
         Returns the thinning rate that will be used in the next run. A thinning
@@ -537,32 +558,12 @@ class DreamMCMC(pints.MCMC):
         """
         return self._thinning_rate
 
-    def set_gamma(self, gamma):
+    def warm_up(self):
         """
-        Sets the gamma coefficient used in updating the position of each
-        chain.
+        Returns the number of iterations that will be discarded as warm-up in
+        the next run.
         """
-        if gamma < 0:
-            raise ValueError('Gamma must be non-negative.')
-        self._gamma = gamma
-
-    def set_b(self, b):
-        """
-        Sets the normal scale coefficient used in updating the position of each
-        chain.
-        """
-        if b < 0:
-            raise ValueError('normal scale coefficient must be non-negative.')
-        self._b = b
-
-    def set_num_chains(self, num_chains):
-        """
-        Sets the number of chains to evolve
-        """
-        if num_chains < 10:
-            raise ValueError('This method works best with many chains (>>10,'
-                             + 'typically).')
-        self._num_chains = num_chains
+        return self._warm_up
 
 
 def R_draw(i, num_chains):
