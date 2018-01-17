@@ -25,13 +25,6 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     iterations starts tuning the covariance matrix, so that the acceptance rate
     of the MCMC steps converges to a user specified rate.
 
-    By default, the method will run for ``2000 * d`` iterations, where ``d`` is
-    the dimension of the used :class:`LogLikelihood`. Of these, the first 25%
-    will run without adaptation, and the first 50% will be discarded as
-    burn-in. These numbers can be modified using the methods
-
-    #TODO
-
     [1] Uncertainty and variability in models of the cardiac action potential:
     Can we build trustworthy models?
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
@@ -50,8 +43,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         # Number of iterations before adapation
         self._adaptation = int(0.25 * self._iterations)
 
-        # Number of iterations to discard as burn-in
-        self._burn_in = int(0.5 * self._iterations)
+        # Number of iterations to discard as warm-up
+        self._warm_up = int(0.5 * self._iterations)
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
@@ -62,17 +55,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         """
         return self._acceptance_target
 
-    def burn_in(self):
-        """
-        Returns the number of iterations that will be discarded as burn-in in
-        the next run.
-        """
-        return self._burn_in
-
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        next run, including the non-adaptive and warm-up iterations.
         """
         return self._iterations
 
@@ -95,8 +81,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                 'Number of iterations before adapation: '
                 + str(self._adaptation))
             print(
-                'Number of iterations to discard as burn-in: '
-                + str(self._burn_in))
+                'Number of iterations to discard as warm-up: '
+                + str(self._warm_up))
             print('Storing one sample per ' + str(self._thinning_rate))
 
         # Problem dimension
@@ -112,7 +98,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
                 'Suggested starting position has a non-finite log-likelihood.')
 
         # Chain of stored samples
-        stored = int((self._iterations - self._burn_in) / self._thinning_rate)
+        stored = int((self._iterations - self._warm_up) / self._thinning_rate)
         chain = np.zeros((stored, d))
 
         # Initial acceptance rate (value doesn't matter)
@@ -150,14 +136,14 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             acceptance = (i * acceptance + float(accepted)) / (i + 1)
 
             # Add point to chain
-            ilog = i - self._burn_in
+            ilog = i - self._warm_up
             if ilog >= 0 and ilog % self._thinning_rate == 0:
                 chain[ilog // self._thinning_rate, :] = current
 
             # Report
             if self._verbose and i % 50 == 0:
                 print('Iteration ' + str(i) + ' of ' + str(self._iterations))
-                print('  In burn-in: ' + str(i < self._burn_in))
+                print('  In warm-up: ' + str(i < self._warm_up))
                 print('  Adapting: ' + str(i >= self._adaptation))
                 print('  Acceptance rate: ' + str(acceptance))
 
@@ -179,19 +165,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             raise ValueError('Target acceptance rate cannot exceed 1.')
         self._acceptance_target = rate
 
-    def set_burn_in(self, burn_in):
-        """
-        Sets the number of iterations to discard as burn-in in the next run.
-        """
-        burn_in = int(burn_in)
-        if burn_in < 0:
-            raise ValueError('Burn-in rate cannot be negative.')
-        self._burn_in = burn_in
-
     def set_iterations(self, iterations):
         """
         Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
+        (including warm-up and non-adaptive iterations).
         """
         iterations = int(iterations)
         if iterations < 0:
@@ -218,12 +195,29 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
             raise ValueError('Thinning rate must be greater than zero.')
         self._thinning_rate = thinning
 
+    def set_warm_up(self, warm_up):
+        """
+        Sets the number of iterations to discard as warm-up (burn-in) in the
+        next run.
+        """
+        warm_up = int(warm_up)
+        if warm_up < 0:
+            raise ValueError('Warm-up rate cannot be negative.')
+        self._warm_up = warm_up
+
     def thinning_rate(self):
         """
         Returns the thinning rate that will be used in the next run. A thinning
         rate of *n* indicates that only every *n-th* sample will be stored.
         """
         return self._thinning_rate
+
+    def warm_up(self):
+        """
+        Returns the number of iterations that will be discarded as warm-up
+        (burn-in) in the next run.
+        """
+        return self._warm_up
 
 
 def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):

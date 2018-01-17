@@ -57,7 +57,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        next run.
         """
         return self._iterations
 
@@ -134,8 +134,7 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def set_iterations(self, iterations):
         """
-        Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
+        Sets the total number of iterations to be performed in the next run.
         """
         iterations = int(iterations)
         if iterations < 0:

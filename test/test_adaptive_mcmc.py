@@ -68,9 +68,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         mcmc.set_non_adaptive_iterations(i)
         self.assertEqual(mcmc.non_adaptive_iterations(), i)
 
-        i = int(mcmc.burn_in() * 0.5)
-        mcmc.set_burn_in(i)
-        self.assertEqual(mcmc.burn_in(), i)
+        i = int(mcmc.warm_up() * 0.5)
+        mcmc.set_warm_up(i)
+        self.assertEqual(mcmc.warm_up(), i)
 
         # Store only every 4th sample
         r = 4
