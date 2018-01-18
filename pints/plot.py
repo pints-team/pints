@@ -8,6 +8,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import warnings
 
 
 def trace(chain, *args):
@@ -247,8 +248,13 @@ def pairwise(chain, kde=False):
                     # See: https://stackoverflow.com/questions/7965743
                     im = axes[i, j].get_images()
                     ex = im[0].get_extent()
-                    axes[i, j].set_aspect(
-                        abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
+                    # Matplotlib raises a warning here (on 2.7 at least)
+                    # We can't do anything about it, so no other option than
+                    # to suppress it at this stage...
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', UnicodeWarning)
+                        axes[i, j].set_aspect(
+                            abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
 
             if i < n_param - 1:
                 # Only show x tick labels for the last row
