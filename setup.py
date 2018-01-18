@@ -27,11 +27,15 @@ setup(
         'cma>=2',
         'numpy>=1.8',
         'scipy>=0.13',
+        # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
+        # on systems without an attached display, it should never be imported
+        # outside of plot() methods.
+        # Should not be imported
+        'matplotlib>=1.5',
     ],
     extras_require={
         'docs': [
             'guzzle-sphinx-theme',  # Nice theme for docs
-            'matplotlib>=1.5',      # For plot documentation
             'sphinx>=1.5',          # For doc generation
         ],
         'dev': [
