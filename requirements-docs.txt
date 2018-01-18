@@ -1,6 +1,4 @@
-cma>=2
-numpy>=1.8
-scipy>=0.13
+-r requirements.txt
 guzzle-sphinx-theme
 matplotlib>=1.5
 sphinx>=1.5
