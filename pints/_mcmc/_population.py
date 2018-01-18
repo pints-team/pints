@@ -143,7 +143,7 @@ class PopulationMCMC(pints.MCMC):
         vector 'schedule'.
         """
         if schedule is None:
-            self._temperature_schedule = np.linspace(0, 0.8, self._num_temperatures)
+            self._temperature_schedule = np.linspace(0, 0.95, self._num_temperatures)
         else:
             self.set_num_temperatures(len(schedule))
             
@@ -200,6 +200,15 @@ class PopulationMCMC(pints.MCMC):
             current[i, :] = np.random.normal(loc=mu, scale=mu / 20.0, size=len(mu))
             current_log_likelihood[i] = (1.0 - temperatures[i]) * self._log_likelihood(current[i, :])
             chains[0, i, :] = current[i, :]
+            
+        # Initial acceptance rate (value doesn't matter)
+        loga = np.zeros(T)
+        acceptance = np.zeros(T)
+        counts = np.zeros(T)
+        sigma = []
+        # print(self._sigma0)
+        for i in range(T):
+            sigma.append(self._sigma0)
 
         # Go!
         for t in range(self._iterations):
@@ -208,45 +217,59 @@ class PopulationMCMC(pints.MCMC):
             i, j = np.random.choice(T, 2, replace=False)
 
             # Update using Markov kernel for chain i
-            proposed = np.random.multivariate_normal(current[i, :], sigma)
+            accepted = 0
+            proposed = np.random.multivariate_normal(current[i, :], np.exp(loga[i]) * sigma[i])
 
              # Check if the point can be accepted
             proposed_log_likelihood = (1.0 - temperatures[i]) * self._log_likelihood(proposed)
             if np.isfinite(proposed_log_likelihood):
-                print(proposed_log_likelihood - current_log_likelihood[i])
                 u = np.log(np.random.rand())
                 if u < proposed_log_likelihood - current_log_likelihood[i]:
                     current_log_likelihood[i] = proposed_log_likelihood
                     current[i, :] = proposed
-                    
+                    accepted = 1
+            
+            counts[i] += 1
+            # Adapt covariance matrix
+            # if counts[i] >= 50:
+            #     gamma = (counts[i] - 50 + 2) ** - 0.6
+            #     mu = (1 - gamma) * mu + gamma * current[i, :]
+            #     loga[i] += gamma * (accepted - 0.25)
+            #     dsigm = np.reshape(current[i, :] - mu, (d, 1))
+            #     sigma[i] = (1 - gamma) * sigma[i] + gamma * np.dot(dsigm, dsigm.T)
+            #     
+            # print(sigma[i])
+
             # # Determine whether to do an exchange or crossover step
-            # u1 = np.random.rand()
-            # 
-            # # Propose exchange step
-            # if self._prob_exchange > u1:
-            #     proposed_i = current[j, :]
-            #     proposed_j = current[i, :]
-            # 
-            # # Propose crossover step
-            # else:
-            #     # Select random element of parameter vector to swap
-            #     k = np.random.randint(d)
-            #     proposed_i = current[i, :]
-            #     proposed_i[k] = current[j, k]
-            #     proposed_j = current[j, :]
-            #     proposed_j[k] = current[i, k]
-            # 
-            # # Calculate proposed log likelihoods
-            # proposed_log_likelihood_ij = (1.0 - temperatures[i]) * self._log_likelihood(proposed_i)
-            # proposed_log_likelihood_ji = (1.0 - temperatures[j]) * self._log_likelihood(proposed_j)
-            # 
-            # # Accept/reject chosen step
-            # log_A = proposed_log_likelihood_ij + proposed_log_likelihood_ji - (current_log_likelihood[i]
-            #                                                                        + current_log_likelihood[j])
-            # u2 = np.log(np.random.rand())
-            # if u2 < log_A:
-            #     current[i, :] = proposed_i
-            #     current[j, :] = proposed_j
+            u1 = np.random.rand()
+
+            # Propose exchange step
+            if self._prob_exchange > u1:
+                proposed_i = current[j, :]
+                proposed_j = current[i, :]
+
+            # Propose crossover step
+            else:
+                # Select random element of parameter vector to swap
+                k = np.random.randint(d)
+                proposed_i = current[i, :]
+                proposed_i[k] = current[j, k]
+                proposed_j = current[j, :]
+                proposed_j[k] = current[i, k]
+
+            # Calculate proposed log likelihoods
+            proposed_log_likelihood_ij = (1.0 - temperatures[i]) * self._log_likelihood(proposed_i)
+            proposed_log_likelihood_ji = (1.0 - temperatures[j]) * self._log_likelihood(proposed_j)
+
+            # Accept/reject chosen step
+            log_A = proposed_log_likelihood_ij + proposed_log_likelihood_ji - (current_log_likelihood[i]
+                                                                                   + current_log_likelihood[j])
+            u2 = np.log(np.random.rand())
+            if u2 < log_A:
+                current[i, :] = proposed_i
+                current[j, :] = proposed_j
+                current_log_likelihood[i] = proposed_log_likelihood_ij
+                current_log_likelihood[j] = proposed_log_likelihood_ji
             
             # Update all chains
             chains[t, :, :] = current
@@ -258,10 +281,10 @@ class PopulationMCMC(pints.MCMC):
         
         # Keep chains whose target distribution is desired
         keep_index = []
-        for i in range(self._num_temperatures):
-            if self._temperature_schedule[i] == 0:
-                keep_index.append(i)
-        chains = chains[:, keep_index, :]
+        # for i in range(self._num_temperatures):
+        #     if self._temperature_schedule[i] == 0:
+        #         keep_index.append(i)
+        # chains = chains[:, keep_index, :]
         
         # Thin chains
         non_burn_in = self._iterations - self._burn_in
