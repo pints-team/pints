@@ -19,7 +19,7 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     *Extends:* :class:`MCMC`
 
     Creates a chain of samples from a target distribution, using the adaptive
-    covariance routine described in [1].
+    covariance routine described in [1, 2].
 
     The algorithm starts out as basic MCMC, but after a certain number of
     iterations starts tuning the covariance matrix, so that the acceptance rate
@@ -29,6 +29,9 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     Can we build trustworthy models?
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
+
+    [2] An adaptive Metropolis algorithm
+    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
     """
     def __init__(self, log_likelihood, x0, sigma0=None):
         super(AdaptiveCovarianceMCMC, self).__init__(
