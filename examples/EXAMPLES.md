@@ -7,7 +7,7 @@ These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code!
 
 The examples have been ordered in categories.
-Each categoy starts off with a detailed first example, followed by a number of
+Each category starts off with a detailed first example, followed by a number of
 "recipe" examples that can be copy/pasted to quickly use Pints on your problem
 of choice.
 
@@ -20,6 +20,7 @@ of choice.
 - [PSO](./optimisation-pso.ipynb)
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
+- [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
