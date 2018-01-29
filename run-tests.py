@@ -54,7 +54,7 @@ def scan_for_notebooks(root, recursive=True):
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            scan(path, recursive)
+            scan_for_notebooks(path, recursive)
 
         # Test notebooks
         if os.path.splitext(path)[1] == '.ipynb':
@@ -106,8 +106,8 @@ if __name__ == '__main__':
     # Set up argument parsing
     parser = argparse.ArgumentParser(
         description='Run unit tests for Pints.',
-        epilog=
-        'To run individual unit tests, use e.g. $ test/test_logistic_model.py',
+        epilog='To run individual unit tests, use e.g.'
+               ' $ test/test_logistic_model.py',
     )
     parser.add_argument(
         '--unit',
