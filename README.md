@@ -71,7 +71,7 @@ $ flake8
 To run quick tests, use
 
 ```
-$ ./run-tests.sh
+$ ./run-tests.py
 ```
 
 
