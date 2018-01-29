@@ -18,7 +18,7 @@ import subprocess
 
 def run_unit_tests(executable='python'):
     """
-    Runs unti tests in subprocess, exits if they don't finish.
+    Runs unit tests in subprocess, exits if they don't finish.
     """
     print('Running with executable `' + executable + '`')
     cmd = [executable] + [
@@ -43,6 +43,7 @@ def scan_for_notebooks(root, recursive=True):
     """
     Scans for, and tests, all notebooks in a directory.
     """
+    ok = True
     debug = False
 
     # Scan path
@@ -54,14 +55,17 @@ def scan_for_notebooks(root, recursive=True):
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            scan_for_notebooks(path, recursive)
+            ok &= scan_for_notebooks(path, recursive)
 
         # Test notebooks
         if os.path.splitext(path)[1] == '.ipynb':
             if debug:
                 print(path)
             else:
-                test_notebook(path)
+                ok &= test_notebook(path)
+
+    # Return True if every notebook is ok
+    return ok
 
 
 def test_notebook(path):
@@ -98,8 +102,8 @@ def test_notebook(path):
     if ret == 0:
         print('ok')
     if ret != 0:
-        print('\nErrors in notebook: ' + path)
-        sys.exit(ret)
+        print('FAILED')
+    return ret == 0
 
 
 if __name__ == '__main__':
