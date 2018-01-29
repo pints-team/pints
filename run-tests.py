@@ -7,25 +7,19 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
+import os
 import sys
 import argparse
+import tempfile
 import subprocess
 
-# Parse input arguments
-parser = argparse.ArgumentParser(
-    description='Run tests for Pints.',
-    epilog='To run individual tests, use e.g. $ test/test_logistic_model.py',
-)
-parser.add_argument(
-    '--dual',
-    action='store_true',
-    help='Run tests in both python2 and python3.',
-)
-args = parser.parse_args()
 
-
-# Call tests as subprocess(es)
-def test(executable='python'):
+def run_unit_tests(executable='python'):
+    """
+    Runs unti tests in subprocess, exits if they don't finish.
+    """
     print('Running with executable `' + executable + '`')
     cmd = [executable] + [
         '-m',
@@ -45,11 +39,111 @@ def test(executable='python'):
         sys.exit(1)
 
 
-if args.dual:
-    # Run both versions
-    test('python3')
-    test('python2')
-else:
-    # Run single, without default interpreter
-    test('python')
+def scan_for_notebooks(root, recursive=True):
+    """
+    Scans for, and tests, all notebooks in a directory.
+    """
+    debug = False
 
+    # Scan path
+    for filename in os.listdir(root):
+        path = os.path.join(root, filename)
+
+        # Recurse into subdirectories
+        if recursive and os.path.isdir(path):
+            # Ignore hidden directories
+            if filename[:1] == '.':
+                continue
+            scan(path, recursive)
+
+        # Test notebooks
+        if os.path.splitext(path)[1] == '.ipynb':
+            if debug:
+                print(path)
+            else:
+                test_notebook(path)
+
+
+def test_notebook(path):
+    """
+    Tests a single notebook, exists if it doesn't finish.
+    """
+    print('Testing ' + path, end='')
+    with tempfile.NamedTemporaryFile() as output_file:
+        cmd = [
+            'jupyter',
+            'nbconvert',
+            '--to',
+            'notebook',
+            '--execute',
+            '--ExecutePreprocessor.timeout=60',
+            '--output',
+            output_file.name,
+            path
+        ]
+        with open(os.devnull, 'w') as stdout:
+            with open(os.devnull, 'w') as stderr:
+                p = subprocess.Popen(
+                    cmd,
+                    stdout=stdout,
+                    stderr=stderr,
+                )
+                print(' ... ', end='')
+                sys.stdout.flush()
+                try:
+                    ret = p.wait()
+                except KeyboardInterrupt:
+                    print('\nNotebook test aborted')
+                    sys.exit(1)
+    if ret == 0:
+        print('ok')
+    if ret != 0:
+        print('\nErrors in notebook: ' + path)
+        sys.exit(ret)
+
+
+if __name__ == '__main__':
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(
+        description='Run unit tests for Pints.',
+        epilog=
+        'To run individual unit tests, use e.g. $ test/test_logistic_model.py',
+    )
+    parser.add_argument(
+        '--unit',
+        action='store_true',
+        help='Run all unit tests using the default Python interpreter.',
+    )
+    parser.add_argument(
+        '--unit2',
+        action='store_true',
+        help='Run all unit tests using the `python2` interpreter.',
+    )
+    parser.add_argument(
+        '--unit3',
+        action='store_true',
+        help='Run all unit tests using the `python3` interpreter.',
+    )
+    parser.add_argument(
+        '--books',
+        action='store_true',
+        help='Test Jupyter notebooks (using the default jupyter interpreter).',
+    )
+    args = parser.parse_args()
+
+    # Run tests
+    has_run = False
+    if args.unit:
+        has_run = True
+        run_unit_tests('python')
+    if args.unit2:
+        has_run = True
+        run_unit_tests('python2')
+    if args.unit3:
+        has_run = True
+        run_unit_tests('python3')
+    if args.books:
+        has_run = True
+        scan_for_notebooks('examples')
+    if not has_run:
+        parser.print_help()
