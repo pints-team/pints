@@ -80,7 +80,7 @@ def test_notebook(path):
             '--to',
             'notebook',
             '--execute',
-            '--ExecutePreprocessor.timeout=60',
+            '--ExecutePreprocessor.timeout=3600',
             '--output',
             output_file.name,
             path
