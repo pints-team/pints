@@ -39,7 +39,8 @@ setup(
             'sphinx>=1.5',          # For doc generation
         ],
         'dev': [
-            'flake8>=3'             # For code style checking
+            'flake8>=3',            # For code style checking
+            'jupyter',              # For documentation and testing
         ],
     },
 )
