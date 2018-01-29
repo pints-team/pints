@@ -13,16 +13,16 @@ import subprocess
 
 # Parse input arguments
 parser = argparse.ArgumentParser(
-    description = 'Run tests for Pints.',
-    epilog =
-        'To run individual tests, use e.g. $ test/test_logistic_model.py',
-    )
+    description='Run tests for Pints.',
+    epilog='To run individual tests, use e.g. $ test/test_logistic_model.py',
+)
 parser.add_argument(
     '--dual',
-    action = 'store_true',
-    help = 'Run tests in both python2 and python3.',
-    )
+    action='store_true',
+    help='Run tests in both python2 and python3.',
+)
 args = parser.parse_args()
+
 
 # Call tests as subprocess(es)
 def test(executable='python'):
@@ -33,7 +33,7 @@ def test(executable='python'):
         'discover',
         '-v',
         'test',
-        ]
+    ]
     try:
         p = subprocess.Popen(cmd)
         ret = p.wait()
@@ -43,6 +43,7 @@ def test(executable='python'):
         p.terminate()
         print('')
         sys.exit(1)
+
 
 if args.dual:
     # Run both versions
