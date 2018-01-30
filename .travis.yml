@@ -19,9 +19,11 @@ install:
 before_script:
 - python --version
 
+# Note that default timeout is 10 minutes (change with travis_wait)
 script:
   - python -m flake8
-  - python run-tests.py --unit --books
+  - python run-tests.py --unit
+  - travis_wait 60 python run-tests.py --books
 
 notifications:
   email:
