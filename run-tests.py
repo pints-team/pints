@@ -43,9 +43,8 @@ def run_notebook_tests():
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    ret = scan_for_notebooks('examples')
-    if ret != 0:
-        sys.exit(ret)
+    if not scan_for_notebooks('examples'):
+        sys.exit(1)
 
 
 def scan_for_notebooks(root, recursive=True):
