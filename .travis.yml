@@ -26,8 +26,7 @@ before_script:
 script:
   - python -m flake8
   - python run-tests.py --unit
-  - python run-tests.py --books
-#  - travis_wait 60 python run-tests.py --books
+  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 60 python run-tests.py --books; fi;
 
 notifications:
   email:
