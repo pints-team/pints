@@ -363,11 +363,16 @@ class DreamMCMC(pints.MCMC):
                             r1, r2 = R_draw(j, self._num_chains)
                             dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
                                                      chains[i - 1, r2, :])
-                        proposed = chains[i - 1, j, :] + dX \
-                                   + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+                        proposed = (
+                            chains[i - 1, j, :]
+                            + dX
+                            + np.random.normal(
+                                loc=0, scale=self._b * mu, size=len(mu))
+                        )
 
                         # Select CR from multinomial distribution
-                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]  # NOQA
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))
+                        m = m[0][0]
                         CR = float(m + 1) / float(self._nCR)
                         L[m] += 1
 
@@ -379,7 +384,8 @@ class DreamMCMC(pints.MCMC):
 
                         # Accept/reject
                         u = np.log(np.random.rand())
-                        proposed_log_likelihood = self._log_likelihood(proposed)  # NOQA
+                        proposed_log_likelihood = \
+                            self._log_likelihood(proposed)
 
                         if u < proposed_log_likelihood - current_log_likelihood[j]:  # NOQA
                             chains[i, j, :] = proposed
