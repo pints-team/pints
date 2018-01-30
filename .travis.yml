@@ -19,11 +19,15 @@ install:
 before_script:
 - python --version
 
-# Note that default timeout is 10 minutes (change with travis_wait)
+# Note that default timeout is 10 minutes
+# This can be changed with travis_wait, but that leads to
+# issues with debug output:
+# https://github.com/travis-ci/travis-ci/issues/5716
 script:
   - python -m flake8
   - python run-tests.py --unit
-  - travis_wait 60 python run-tests.py --books
+  - python run-tests.py --books
+#  - travis_wait 60 python run-tests.py --books
 
 notifications:
   email:
