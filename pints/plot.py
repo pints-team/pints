@@ -226,6 +226,7 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                 # Diagonal: Plot a histogram
                 xmin, xmax = np.min(chain[:, i]), np.max(chain[:, i])
                 xbins = np.linspace(xmin, xmax, bins)
+                axes[i, j].set_xlim(xmin, xmax)
                 axes[i, j].hist(chain[:, i], bins=xbins, normed=True)
 
                 # Add kde plot
@@ -249,6 +250,8 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                 # Lower-left: Plot the samples as density map
                 xmin, xmax = np.min(chain[:, j]), np.max(chain[:, j])
                 ymin, ymax = np.min(chain[:, i]), np.max(chain[:, i])
+                axes[i, j].set_xlim(xmin, xmax)
+                axes[i, j].set_ylim(ymin, ymax)
 
                 if not kde:
                     # Create scatter plot
@@ -278,8 +281,6 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
 
                     # Plot values
                     values = np.vstack([chain[:, j], chain[:, i]])
-                    axes[i, j].set_xlim(xmin, xmax)
-                    axes[i, j].set_ylim(ymin, ymax)
                     axes[i, j].imshow(
                         np.rot90(values), cmap=plt.cm.Blues,
                         extent=[xmin, xmax, ymin, ymax])
