@@ -12,7 +12,7 @@ from __future__ import print_function, unicode_literals
 import os
 import sys
 import argparse
-import tempfile
+import nbconvert
 import subprocess
 
 
@@ -37,6 +37,15 @@ def run_unit_tests(executable='python'):
         p.terminate()
         print('')
         sys.exit(1)
+
+
+def run_notebook_tests():
+    """
+    Runs Jupyter notebook tests. Exits if they fail.
+    """
+    ret = scan_for_notebooks('examples')
+    if ret != 0:
+        sys.exit(ret)
 
 
 def scan_for_notebooks(root, recursive=True):
@@ -68,42 +77,52 @@ def scan_for_notebooks(root, recursive=True):
     return ok
 
 
-def test_notebook(path):
+def test_notebook(path, executable='python'):
     """
     Tests a single notebook, exists if it doesn't finish.
     """
-    print('Testing ' + path, end='')
-    with tempfile.NamedTemporaryFile() as output_file:
-        cmd = [
-            'jupyter',
-            'nbconvert',
-            '--to',
-            'notebook',
-            '--execute',
-            '--ExecutePreprocessor.timeout=3600',
-            '--output',
-            output_file.name,
-            path
-        ]
-        with open(os.devnull, 'w') as stdout:
-            with open(os.devnull, 'w') as stderr:
-                p = subprocess.Popen(
-                    cmd,
-                    stdout=stdout,
-                    stderr=stderr,
-                )
-                print(' ... ', end='')
-                sys.stdout.flush()
-                try:
-                    ret = p.wait()
-                except KeyboardInterrupt:
-                    print('\nNotebook test aborted')
-                    sys.exit(1)
-    if ret == 0:
-        print('ok')
-    if ret != 0:
-        print('FAILED')
-    return ret == 0
+    print('Testing ' + path + ' ... ', end='')
+    sys.stdout.flush()
+
+    # Load notebook, convert to python
+    e = nbconvert.exporters.PythonExporter()
+    code, __ = e.from_filename(path)
+
+    # Remove coding statement, if present
+    code = '\n'.join([x for x in code.splitlines() if x[:9] != '# coding'])
+
+    # Tell matplotlib not to produce any figures
+    env = dict(os.environ)
+    env['MPLBACKEND'] = 'Template'
+
+    # Run in subprocess
+    cmd = [executable] + ['-c', code]
+    try:
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        stdout, stderr = p.communicate()
+        # TODO: Use p.communicate(timeout=3600) if Python3 only
+        if p.returncode != 0:
+            # Show failing code, output and errors before returning
+            print('FAILED')
+            print('-- script ' + '-' * (79 - 10))
+            for i, line in enumerate(code.splitlines()):
+                j = str(1 + i)
+                print(j + ' ' * (5 - len(j)) + line)
+            print('-- stdout ' + '-' * (79 - 10))
+            print(stdout)
+            print('-- stderr ' + '-' * (79 - 10))
+            print(stderr)
+            print('-' * 79)
+            return False
+    except KeyboardInterrupt:
+        p.terminate()
+        print('ABORTED')
+        sys.exit(1)
+
+    # Sucessfully run
+    print('ok')
+    return True
 
 
 if __name__ == '__main__':
@@ -148,6 +167,6 @@ if __name__ == '__main__':
         run_unit_tests('python3')
     if args.books:
         has_run = True
-        scan_for_notebooks('examples')
+        run_notebook_tests()
     if not has_run:
         parser.print_help()
