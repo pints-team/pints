@@ -195,8 +195,8 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
         Set to `True` to use kernel-density estimation for the histograms and
         scatter plots.
     `opacity`
-        When `kde=False`, this value can be used to manually tune the opacity
-        for single points in the histogram.
+        When `kde=False`, this value can be used to manually set the opacity of
+        the points in the scatter plots.
     `true_values`
         If true values of parameters are known, they can be passed in for
         plotting.
@@ -251,16 +251,21 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                 ymin, ymax = np.min(chain[:, i]), np.max(chain[:, i])
 
                 if not kde:
-                    # Create an ordinary histogram
-                    xbins = np.linspace(xmin, xmax, bins)
+                    # Create scatter plot
+
+                    # Determine point opacity
                     num_points = len(chain[:, i])
                     if opacity is None:
                         if num_points < 10:
                             opacity = 1.0
                         else:
                             opacity = 1.0 / np.log10(num_points)
+
+                    # Scatter points
                     axes[i, j].scatter(
                         chain[:, j], chain[:, i], alpha=opacity, s=0.1)
+
+                    # Add true values if given
                     if true_values is not None:
                         axes[i, j].plot(
                             [true_values[j], true_values[j]], [ymin, ymax],
@@ -270,20 +275,26 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                             '--', c='k')
                 else:
                     # Create a KDE-based plot
-                    x = chain[:, j]
-                    y = chain[:, i]
 
-                    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-                    positions = np.vstack([xx.ravel(), yy.ravel()])
-                    values = np.vstack([x, y])
-                    kernel = stats.gaussian_kde(values)
-                    f = np.reshape(kernel(positions).T, xx.shape)
-                    axes[i, j].imshow(np.rot90(values), cmap=plt.cm.Blues,
-                                      extent=[xmin, xmax, ymin, ymax])
+                    # Plot values
+                    values = np.vstack([chain[:, j], chain[:, i]])
                     axes[i, j].set_xlim(xmin, xmax)
                     axes[i, j].set_ylim(ymin, ymax)
+                    axes[i, j].imshow(
+                        np.rot90(values), cmap=plt.cm.Blues,
+                        extent=[xmin, xmax, ymin, ymax])
+
+                    # Create grid
+                    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+                    positions = np.vstack([xx.ravel(), yy.ravel()])
+
+                    # Get kernel density estimate and plot contours
+                    kernel = stats.gaussian_kde(values)
+                    f = np.reshape(kernel(positions).T, xx.shape)
                     axes[i, j].contourf(xx, yy, f, cmap='Blues')
                     axes[i, j].contour(xx, yy, f, colors='k')
+
+                    # Add true values if given
                     if true_values is not None:
                         axes[i, j].plot(
                             [true_values[j], true_values[j]],
