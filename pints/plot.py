@@ -9,6 +9,8 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import warnings
+import numpy as np
+import scipy.stats as stats
 
 
 def trace(chain, *args):
@@ -78,7 +80,6 @@ def autocorrelation(chain, max_lags=100):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
-    import numpy as np
 
     n_sample, n_param = chain.shape
 
@@ -127,7 +128,6 @@ def series(chain, problem, thinning=None):
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
-    import numpy as np
 
     n_sample, n_param = chain.shape
 
@@ -176,7 +176,7 @@ def series(chain, problem, thinning=None):
     return fig, axes
 
 
-def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
+def pairwise(chain, kde=False, opacity=None, true_values=None):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
     parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
@@ -191,50 +191,65 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
-    `kde` (bool)
+    `kde`
         Set to `True` to use kernel-density estimation for the histograms and
         scatter plots.
+    `opacity`
+        When `kde=False`, this value can be used to manually tune the opacity
+        for single points in the histogram.
+    `true_values`
+        If true values of parameters are known, they can be passed in for
+        plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
-    import numpy as np
-    import scipy.stats as st
 
-    if thinning is not None:
-        chain = chain[::thinning, :]
-
+    # Check chain size
     n_sample, n_param = chain.shape
-    fig_size = (3 * n_param, 3 * n_param)
 
+    # Check true values
     if true_values is not None:
         if len(true_values) != n_param:
-            raise ValueError('Length of true values must be same as number of '
-                             'parameters')
+            raise ValueError(
+                'Length of `true_values` must be same as number of parameters')
+
+    # Create figure
+    fig_size = (3 * n_param, 3 * n_param)
+    fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
 
     bins = 25
-    fig, axes = plt.subplots(n_param, n_param, figsize=fig_size)
     for i in range(n_param):
         for j in range(n_param):
             if i == j:
+
                 # Diagonal: Plot a histogram
                 xmin, xmax = np.min(chain[:, i]), np.max(chain[:, i])
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].hist(chain[:, i], bins=xbins, normed=True)
+
+                # Add kde plot
                 if kde:
                     x = np.linspace(xmin, xmax, 100)
-                    axes[i, j].plot(x, st.gaussian_kde(chain[:, i])(x))
+                    axes[i, j].plot(x, stats.gaussian_kde(chain[:, i])(x))
+
+                # Add true values
                 if true_values is not None:
                     ymin_tv, ymax_tv = axes[i, j].get_ylim()
-                    axes[i, j].plot([true_values[i], true_values[i]],
-                                    [0.0, ymax_tv], '--', c='k')
+                    axes[i, j].plot(
+                        [true_values[i], true_values[i]],
+                        [0.0, ymax_tv],
+                        '--', c='k')
+
             elif i < j:
                 # Top-right: no plot
                 axes[i, j].axis('off')
+
             else:
                 # Lower-left: Plot the samples as density map
                 xmin, xmax = np.min(chain[:, j]), np.max(chain[:, j])
                 ymin, ymax = np.min(chain[:, i]), np.max(chain[:, i])
+
                 if not kde:
                     # Create an ordinary histogram
                     xbins = np.linspace(xmin, xmax, bins)
@@ -247,21 +262,21 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                     axes[i, j].scatter(
                         chain[:, j], chain[:, i], alpha=opacity, s=0.1)
                     if true_values is not None:
-                        axes[i, j].plot([true_values[j], true_values[j]],
-                                        [ymin, ymax],
-                                        '--', c='k')
-                        axes[i, j].plot([xmin, xmax],
-                                        [true_values[i], true_values[i]],
-                                        '--', c='k')
+                        axes[i, j].plot(
+                            [true_values[j], true_values[j]], [ymin, ymax],
+                            '--', c='k')
+                        axes[i, j].plot(
+                            [xmin, xmax], [true_values[i], true_values[i]],
+                            '--', c='k')
                 else:
+                    # Create a KDE-based plot
                     x = chain[:, j]
                     y = chain[:, i]
 
-                    # Peform the kernel density estimate
                     xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
                     positions = np.vstack([xx.ravel(), yy.ravel()])
                     values = np.vstack([x, y])
-                    kernel = st.gaussian_kde(values)
+                    kernel = stats.gaussian_kde(values)
                     f = np.reshape(kernel(positions).T, xx.shape)
                     axes[i, j].imshow(np.rot90(values), cmap=plt.cm.Blues,
                                       extent=[xmin, xmax, ymin, ymax])
@@ -270,12 +285,14 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                     axes[i, j].contourf(xx, yy, f, cmap='Blues')
                     axes[i, j].contour(xx, yy, f, colors='k')
                     if true_values is not None:
-                        axes[i, j].plot([true_values[j], true_values[j]],
-                                        [ymin, ymax],
-                                        '--', c='k')
-                        axes[i, j].plot([xmin, xmax],
-                                        [true_values[i], true_values[i]],
-                                        '--', c='k')
+                        axes[i, j].plot(
+                            [true_values[j], true_values[j]],
+                            [ymin, ymax],
+                            '--', c='k')
+                        axes[i, j].plot(
+                            [xmin, xmax],
+                            [true_values[i], true_values[i]],
+                            '--', c='k')
 
                     # Force equal aspect ratio
                     # See: https://stackoverflow.com/questions/7965743
@@ -289,6 +306,7 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                         axes[i, j].set_aspect(
                             abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
 
+            # Set tick labels
             if i < n_param - 1:
                 # Only show x tick labels for the last row
                 axes[i, j].set_xticklabels([])
@@ -296,14 +314,17 @@ def pairwise(chain, kde=False, opacity=None, thinning=None, true_values=None):
                 # Rotate the x tick labels to fit in the plot
                 for tl in axes[i, j].get_xticklabels():
                     tl.set_rotation(45)
+
             if j > 0:
                 # Only show y tick labels for the first column
                 axes[i, j].set_yticklabels([])
-        if i > 0:
-            # The first one is not a parameter
-            axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
-        else:
-            axes[i, 0].set_ylabel('Frequency')
+
+        # Set axis labels
         axes[-1, i].set_xlabel('Parameter %d' % (i + 1))
+        if i == 0:
+            # The first one is not a parameter
+            axes[i, 0].set_ylabel('Frequency')
+        else:
+            axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
     return fig, axes
