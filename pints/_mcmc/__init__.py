@@ -14,37 +14,36 @@ import numpy as np
 
 class MCMC(object):
     """
-    Takes a :class:`LogLikelihood` function and returns a markov chain
-    representative of its distribution.
+    Takes a :class:`LogPDF` function and returns a markov chain representative
+    of its distribution.
 
     Arguments:
 
-    ``function``
-        A :class:`LogLikelihood` function that evaluates points in the
-        parameter space.
+    ``log_pdf``
+        A :class:`LogPDF` function that evaluates points in the parameter
+        space.
     ``x0``
         An starting point in the parameter space.
     ``sigma0=None``
         An optional initial covariance matrix, i.e., a guess of the the
-        covariance of the likelihood around ``x0``.
+        covariance of the ``log_pdf`` around ``x0``.
 
     """
-    def __init__(self, log_likelihood, x0, sigma0=None):
+    def __init__(self, log_pdf, x0, sigma0=None):
 
         # Store function
-        if not isinstance(log_likelihood, pints.LogLikelihood):
-            raise ValueError('Given function must extend pints.LogLikelihood')
-        self._log_likelihood = log_likelihood
+        if not isinstance(log_pdf, pints.LogPDF):
+            raise ValueError('Given function must extend pints.LogPDF')
+        self._log_pdf = log_pdf
 
         # Get dimension
-        self._dimension = self._log_likelihood.dimension()
+        self._dimension = self._log_pdf.dimension()
 
         # Check initial position
         self._x0 = pints.vector(x0)
         if len(self._x0) != self._dimension:
             raise ValueError(
-                'Initial position must have same dimension as loglikelihood'
-                ' function.')
+                'Given initial position must have same dimension as function.')
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -67,7 +66,7 @@ class MCMC(object):
     def run(self):
         """
         Runs the MCMC routine and returns a markov chain representing the
-        distribution of the given log-likelihood function.
+        distribution of the given log-pdf.
         """
         raise NotImplementedError
 

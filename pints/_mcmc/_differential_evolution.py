@@ -40,9 +40,8 @@ class DifferentialEvolutionMCMC(pints.MCMC):
     for real parameter spaces", 2006, Cajo J. F. Ter Braak,
     Statistical Computing.
     """
-    def __init__(self, log_likelihood, x0, sigma0=None):
-        super(DifferentialEvolutionMCMC, self).__init__(
-            log_likelihood, x0, sigma0)
+    def __init__(self, log_pdf, x0, sigma0=None):
+        super(DifferentialEvolutionMCMC, self).__init__(log_pdf, x0, sigma0)
 
         # Total number of iterations
         self._iterations = self._dimension * 2000
@@ -86,37 +85,38 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         # Initial starting parameters
         mu = self._x0
         current = self._x0
-        current_log_likelihood = self._log_likelihood(current)
-        if not np.isfinite(current_log_likelihood):
+        current_log_pdf = self._log_pdf(current)
+        if not np.isfinite(current_log_pdf):
             raise ValueError(
-                'Suggested starting position has a non-finite log-likelihood.')
+                'Suggested starting position has a non-finite log-pdf.')
 
         # chains of stored samples
-        chains = np.zeros((self._iterations, self._num_chains,
-                           self._dimension))
-        current_log_likelihood = np.zeros(self._num_chains)
+        chains = np.zeros(
+            (self._iterations, self._num_chains, self._dimension))
+        current_log_pdf = np.zeros(self._num_chains)
 
         # Set initial values
         for j in range(self._num_chains):
-            chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
-                                               size=len(mu))
-            current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
+            chains[0, j, :] = np.random.normal(
+                loc=mu, scale=mu / 100, size=len(mu))
+            current_log_pdf[j] = self._log_pdf(chains[0, j, :])
 
         # Go!
         for i in range(1, self._iterations):
             for j in range(self._num_chains):
                 r1, r2 = R_draw(j, self._num_chains)
-                proposed = chains[i - 1, j, :] \
-                           + self._gamma * (chains[i - 1, r1, :]  # NOQA
-                                          - chains[i - 1, r2, :]) \
-                           + np.random.normal(loc=0, scale=self._b * mu,  # NOQA
-                                              size=len(mu))
+                proposed = (
+                    chains[i - 1, j, :]
+                    + self._gamma * (
+                        chains[i - 1, r1, :] - chains[i - 1, r2, :])
+                    + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))
+                )
                 u = np.log(np.random.rand())
-                proposed_log_likelihood = self._log_likelihood(proposed)
+                proposed_log_pdf = self._log_pdf(proposed)
 
-                if u < proposed_log_likelihood - current_log_likelihood[j]:
+                if u < proposed_log_pdf - current_log_pdf[j]:
                     chains[i, j, :] = proposed
-                    current_log_likelihood[j] = proposed_log_likelihood
+                    current_log_pdf[j] = proposed_log_pdf
                 else:
                     chains[i, j, :] = chains[i - 1, j, :]
 
@@ -207,11 +207,11 @@ class DifferentialEvolutionMCMC(pints.MCMC):
         return self._warm_up
 
 
-def differential_evolution_mcmc(log_likelihood, x0, sigma0=None):
+def differential_evolution_mcmc(log_pdf, x0, sigma0=None):
     """
     Runs an differential evolution MCMC routine with the default parameters.
     """
-    return DifferentialEvolutionMCMC(log_likelihood, x0, sigma0).run()
+    return DifferentialEvolutionMCMC(log_pdf, x0, sigma0).run()
 
 
 class DreamMCMC(pints.MCMC):
@@ -263,8 +263,8 @@ class DreamMCMC(pints.MCMC):
     2009, Vrugt et al.,
     International Journal of Nonlinear Sciences and Numerical Simulation.
     """
-    def __init__(self, log_likelihood, x0, sigma0=None):
-        super(DreamMCMC, self).__init__(log_likelihood, x0, sigma0)
+    def __init__(self, log_pdf, x0, sigma0=None):
+        super(DreamMCMC, self).__init__(log_pdf, x0, sigma0)
 
         # Total number of iterations
         self._iterations = self._dimension * 2000
@@ -323,24 +323,24 @@ class DreamMCMC(pints.MCMC):
         # Initial starting parameters
         mu = self._x0
         current = self._x0
-        current_log_likelihood = self._log_likelihood(current)
-        if not np.isfinite(current_log_likelihood):
+        current_log_pdf = self._log_pdf(current)
+        if not np.isfinite(current_log_pdf):
             raise ValueError(
-                'Suggested starting position has a non-finite log-likelihood.')
+                'Suggested starting position has a non-finite log-pdf.')
 
         # chains of stored samples
-        chains = np.zeros((self._iterations, self._num_chains,
-                           self._dimension))
-        current_log_likelihood = np.zeros(self._num_chains)
+        chains = np.zeros(
+            (self._iterations, self._num_chains, self._dimension))
+        current_log_pdf = np.zeros(self._num_chains)
 
         # Set initial values
         for j in range(self._num_chains):
-            chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
-                                               size=len(mu))
-            current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
+            chains[0, j, :] = np.random.normal(
+                loc=mu, scale=mu / 100, size=len(mu))
+            current_log_pdf[j] = self._log_pdf(chains[0, j, :])
 
         # Go!
-        p = np.repeat(1.0 / self._nCR, self._nCR)
+        p = np.repeat(1 / self._nCR, self._nCR)
         L = np.zeros(self._nCR)
         Delta = np.zeros(self._nCR)
         after_warm_up_indicator = 0
@@ -361,8 +361,8 @@ class DreamMCMC(pints.MCMC):
                                               high=self._b_star * mu)
                         for k in range(0, delta):
                             r1, r2 = R_draw(j, self._num_chains)
-                            dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
-                                                     chains[i - 1, r2, :])
+                            dX += (1 + e) * gamma * (
+                                chains[i - 1, r1, :] - chains[i - 1, r2, :])
                         proposed = (
                             chains[i - 1, j, :]
                             + dX
@@ -384,20 +384,24 @@ class DreamMCMC(pints.MCMC):
 
                         # Accept/reject
                         u = np.log(np.random.rand())
-                        proposed_log_likelihood = \
-                            self._log_likelihood(proposed)
+                        proposed_log_pdf = self._log_pdf(proposed)
 
-                        if u < proposed_log_likelihood - current_log_likelihood[j]:  # NOQA
+                        if u < proposed_log_pdf - current_log_pdf[j]:
                             chains[i, j, :] = proposed
-                            current_log_likelihood[j] = proposed_log_likelihood
+                            current_log_pdf[j] = proposed_log_pdf
                         else:
                             chains[i, j, :] = chains[i - 1, j, :]
 
                         # Update CR distribution
                         for d in range(0, self._dimension):
-                            Delta[m] += (chains[i, j, d] - chains[i - 1, j, d])**2 / np.var(chains[:, j, d])  # NOQA
+                            Delta[m] += (
+                                (chains[i, j, d] - chains[i - 1, j, d])**2
+                                / np.var(chains[:, j, d])
+                            )
                     for k in range(0, self._nCR):
-                        p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)  # NOQA
+                        p[k] = (
+                            i * self._num_chains * (Delta[k] / float(L[k]))
+                            / np.sum(Delta))
                     p = p / np.sum(p)
 
                 # After warm-up
@@ -422,12 +426,17 @@ class DreamMCMC(pints.MCMC):
                             r1, r2 = R_draw(j, self._num_chains)
                             dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
                                                      chains[i - 1, r2, :])
-                        proposed = chains[i - 1, j, :] + dX \
-                                   + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))  # NOQA
+                        proposed = (
+                            chains[i - 1, j, :]
+                            + dX
+                            + np.random.normal(
+                                loc=0, scale=self._b * mu, size=len(mu))
+                        )
 
                         # Step 2. Randomly set elements of proposal to original
                         # Select CR from multinomial distribution using tuned p
-                        m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0] # NOQA
+                        m = np.nonzero(np.random.multinomial(self._nCR, p))
+                        m = m[0][0]
                         CR = float(m + 1) / float(self._nCR)
                         for d in range(0, self._dimension):
                             u2 = np.random.rand()
@@ -436,11 +445,11 @@ class DreamMCMC(pints.MCMC):
 
                         # Accept/reject
                         u = np.log(np.random.rand())
-                        proposed_log_likelihood = self._log_likelihood(proposed)  # NOQA
+                        proposed_log_pdf = self._log_pdf(proposed)
 
-                        if u < proposed_log_likelihood - current_log_likelihood[j]: # NOQA
+                        if u < proposed_log_pdf - current_log_pdf[j]:
                             chains[i, j, :] = proposed
-                            current_log_likelihood[j] = proposed_log_likelihood
+                            current_log_pdf[j] = proposed_log_pdf
                         else:
                             chains[i, j, :] = chains[i - 1, j, :]
                     # Report
@@ -478,11 +487,11 @@ class DreamMCMC(pints.MCMC):
 
                 # Accept/reject
                 u = np.log(np.random.rand())
-                proposed_log_likelihood = self._log_likelihood(proposed)
+                proposed_log_pdf = self._log_pdf(proposed)
 
-                if u < proposed_log_likelihood - current_log_likelihood[j]:
+                if u < proposed_log_pdf - current_log_pdf[j]:
                     chains[i, j, :] = proposed
-                    current_log_likelihood[j] = proposed_log_likelihood
+                    current_log_pdf[j] = proposed_log_pdf
                 else:
                     chains[i, j, :] = chains[i - 1, j, :]
 

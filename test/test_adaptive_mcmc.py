@@ -39,14 +39,14 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.prior = pints.UniformPrior(
+        self.log_prior = pints.UniformLogPrior(
             [0.01, 400, noise * 0.1],
             [0.02, 600, noise * 100]
         )
 
-        # Create an un-normalised log-posterior (prior * likelihood)
-        self.log_likelihood = pints.LogPosterior(
-            self.prior, pints.UnknownNoiseLogLikelihood(self.problem))
+        # Create an un-normalised log-posterior (log-prior + log-likelihood)
+        self.log_posterior = pints.LogPosterior(
+            self.log_prior, pints.UnknownNoiseLogLikelihood(self.problem))
 
         # Select initial point and covariance
         self.x0 = np.array(self.real_parameters) * 1.1
@@ -54,7 +54,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
     def test_settings(self):
 
-        mcmc = pints.AdaptiveCovarianceMCMC(self.log_likelihood, self.x0)
+        mcmc = pints.AdaptiveCovarianceMCMC(self.log_posterior, self.x0)
 
         r = mcmc.acceptance_rate() * 0.5
         mcmc.set_acceptance_rate(r)
@@ -85,7 +85,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
     def test_with_hint_and_sigma(self):
 
         mcmc = pints.AdaptiveCovarianceMCMC(
-            self.log_likelihood, self.x0, self.sigma0)
+            self.log_posterior, self.x0, self.sigma0)
         mcmc.set_verbose(debug)
         chain = mcmc.run()
         mean = np.mean(chain, axis=0)

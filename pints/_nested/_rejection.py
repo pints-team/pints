@@ -36,8 +36,9 @@ class NestedRejectionSampler(pints.NestedSampler):
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
     """
-    def __init__(self, log_likelihood, prior):
-        super(NestedRejectionSampler, self).__init__(log_likelihood, prior)
+    def __init__(self, log_likelihood, log_prior):
+        super(NestedRejectionSampler, self).__init__(
+            log_likelihood, log_prior)
 
         # Target acceptance rate
         self._active_points = 1000
@@ -78,7 +79,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         # go!
         # generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
-        m_initial = self._prior.random_sample(self._active_points)
+        m_initial = self._log_prior.sample(self._active_points)
 
         for i in range(0, self._active_points):
             m_active[i, d] = self._log_likelihood(m_initial[i, :])
@@ -107,7 +108,9 @@ class NestedRejectionSampler(pints.NestedSampler):
             v_log_Z[i] = a_running_log_likelihood
             m_inactive[i, :] = m_active[a_min_index, :]
             m_active[a_min_index, :] = reject_sample_prior(
-                a_running_log_likelihood, self._log_likelihood, self._prior)
+                a_running_log_likelihood,
+                self._log_likelihood,
+                self._log_prior)
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(

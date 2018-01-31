@@ -23,15 +23,17 @@ Contents
 
 .. toctree::
 
+    boundaries
     core_classes_and_methods
     diagnostic_plots
     error_measures
     function_evaluation
     io
     log_likelihoods
+    log_pdfs
+    log_priors
     mcmc/index
     optimisers/index
-    priors_and_boundaries
     samplers/index
     toy/index
     utilities

@@ -1,5 +1,5 @@
 #
-# Exponential natural evolution strategy optimizer: xNES
+# Adaptive covariance MCMC method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -33,9 +33,8 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
     [2] An adaptive Metropolis algorithm
     Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
     """
-    def __init__(self, log_likelihood, x0, sigma0=None):
-        super(AdaptiveCovarianceMCMC, self).__init__(
-            log_likelihood, x0, sigma0)
+    def __init__(self, log_pdf, x0, sigma0=None):
+        super(AdaptiveCovarianceMCMC, self).__init__(log_pdf, x0, sigma0)
 
         # Target acceptance rate
         self._acceptance_target = 0.25
@@ -95,10 +94,10 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         mu = self._x0
         sigma = self._sigma0
         current = self._x0
-        current_log_likelihood = self._log_likelihood(current)
-        if not np.isfinite(current_log_likelihood):
+        current_log_pdf = self._log_pdf(current)
+        if not np.isfinite(current_log_pdf):
             raise ValueError(
-                'Suggested starting position has a non-finite log-likelihood.')
+                'Suggested starting position has a non-finite log-pdf.')
 
         # Chain of stored samples
         stored = int((self._iterations - self._warm_up) / self._thinning_rate)
@@ -119,13 +118,13 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
 
             # Check if the point can be accepted
             accepted = 0
-            proposed_log_likelihood = self._log_likelihood(proposed)
-            if np.isfinite(proposed_log_likelihood):
+            proposed_log_pdf = self._log_pdf(proposed)
+            if np.isfinite(proposed_log_pdf):
                 u = np.log(np.random.rand())
-                if u < proposed_log_likelihood - current_log_likelihood:
+                if u < proposed_log_pdf - current_log_pdf:
                     accepted = 1
                     current = proposed
-                    current_log_likelihood = proposed_log_likelihood
+                    current_log_pdf = proposed_log_pdf
 
             # Adapt covariance matrix
             if i >= self._adaptation:
@@ -223,9 +222,9 @@ class AdaptiveCovarianceMCMC(pints.MCMC):
         return self._warm_up
 
 
-def adaptive_covariance_mcmc(log_likelihood, x0, sigma0=None):
+def adaptive_covariance_mcmc(log_pdf, x0, sigma0=None):
     """
     Runs an adaptive covariance MCMC routine with the default parameters.
     """
-    return AdaptiveCovarianceMCMC(log_likelihood, x0, sigma0).run()
+    return AdaptiveCovarianceMCMC(log_pdf, x0, sigma0).run()
 
