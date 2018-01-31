@@ -103,7 +103,7 @@ def test_notebook(path, executable='python'):
         # TODO: Use p.communicate(timeout=3600) if Python3 only
         if p.returncode != 0:
             # Show failing code, output and errors before returning
-            print('FAILED')
+            print('ERROR')
             print('-- script ' + '-' * (79 - 10))
             for i, line in enumerate(code.splitlines()):
                 j = str(1 + i)

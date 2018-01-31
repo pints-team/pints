@@ -45,36 +45,63 @@ from ._util import strfloat, vector
 from ._util import Timer
 
 #
-# Boundaries and prior distributions
+# Logs of probability density functions (not necessarily normalised)
 #
-from ._boundaries import Boundaries
-from ._prior import Prior, ComposedPrior
-from ._prior import UniformPrior, NormalPrior, MultivariateNormalPrior
+from ._log_pdfs import LogPDF, LogPrior, LogLikelihood, LogPosterior
+
+#
+# Log-priors
+#
+from ._log_priors import (
+    ComposedLogPrior,
+    MultivariateNormalLogPrior,
+    NormalLogPrior,
+    UniformLogPrior,
+)
 
 #
 # Log-likelihoods
 #
-from ._log_likelihood import LogLikelihood, LogPosterior
-from ._log_likelihood import KnownNoiseLogLikelihood, UnknownNoiseLogLikelihood
-from ._log_likelihood import ScaledLogLikelihood
+from ._log_likelihoods import (
+    KnownNoiseLogLikelihood,
+    ScaledLogLikelihood,
+    UnknownNoiseLogLikelihood,
+)
 
 #
-# Scoring functions
+# Boundaries
 #
-from ._score import ErrorMeasure, LogLikelihoodBasedError
-from ._score import SumOfSquaresError, RMSError
+from ._boundaries import Boundaries
+
+#
+# Error measures
+#
+from ._error_measures import (
+    ErrorMeasure,
+    ProbabilityBasedError,
+    RMSError,
+    SumOfSquaresError,
+)
 
 #
 # Parallel function evaluation
 #
-from ._evaluation import Evaluator, SequentialEvaluator, ParallelEvaluator
-from ._evaluation import evaluate
+from ._evaluation import (
+    evaluate,
+    Evaluator,
+    ParallelEvaluator,
+    SequentialEvaluator,
+)
+
 
 #
 # Optimisation
 #
-from ._optimisers import Optimiser
-from ._optimisers import TriangleWaveTransform, InfBoundaryTransform
+from ._optimisers import (
+    Optimiser,
+    TriangleWaveTransform,
+    InfBoundaryTransform,
+)
 from ._optimisers._cmaes import CMAES, cmaes
 from ._optimisers._pso import PSO, pso
 from ._optimisers._snes import SNES, snes
@@ -82,19 +109,26 @@ from ._optimisers._xnes import XNES, xnes
 
 
 # diagnostics
-from ._diagnostics import effective_sample_size
-from ._diagnostics import rhat, rhat_all_params
+from ._diagnostics import (
+    effective_sample_size,
+    rhat,
+    rhat_all_params,
+)
+
 
 #
 # MCMC
 #
 from ._mcmc import MCMC
-from ._mcmc._adaptive import AdaptiveCovarianceMCMC, adaptive_covariance_mcmc
+from ._mcmc._adaptive import (
+    AdaptiveCovarianceMCMC,
+    adaptive_covariance_mcmc,
+)
 from ._mcmc._differential_evolution import (
     DifferentialEvolutionMCMC,
     differential_evolution_mcmc,
     DreamMCMC
-    )
+)
 from ._mcmc._result import McmcResultObject
 
 #

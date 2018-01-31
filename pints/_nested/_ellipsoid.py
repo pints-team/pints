@@ -34,8 +34,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
     arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
     """
-    def __init__(self, log_likelihood, prior):
-        super(NestedEllipsoidSampler, self).__init__(log_likelihood, prior)
+    def __init__(self, log_likelihood, log_prior):
+        super(NestedEllipsoidSampler, self).__init__(log_likelihood, log_prior)
 
         # Target acceptance rate
         self._active_points = 1000
@@ -87,7 +87,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # go!
         # generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
-        m_initial = self._prior.random_sample(self._active_points)
+        m_initial = self._log_prior.sample(self._active_points)
         for i in range(0, self._active_points):
             m_active[i, d] = self._log_likelihood(m_initial[i, :])
         m_active[:, :-1] = m_initial
@@ -133,8 +133,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
             if i < self._rejection_samples:
                 m_active[a_min_index, :] = reject_sample_prior(
-                    a_running_log_likelihood, self._log_likelihood,
-                    self._prior)
+                    a_running_log_likelihood,
+                    self._log_likelihood,
+                    self._log_prior)
             else:
                 m_active[a_min_index, :] = reject_ellipsoid_sample_faster(
                     a_running_log_likelihood, self._log_likelihood,
