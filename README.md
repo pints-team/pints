@@ -71,7 +71,7 @@ $ flake8
 To run quick tests, use
 
 ```
-$ ./run-tests.py
+$ python run-tests.py --unit
 ```
 
 
