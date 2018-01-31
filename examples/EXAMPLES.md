@@ -27,6 +27,7 @@ of choice.
 - [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
 - [Differential Evolution DEMC](./inference-differential-evolution-mcmc.ipynb)
 - [DREAM](./inference-dream-mcmc.ipynb)
+- [Nested sampling](./inference-nested-sampling.ipynb)
 
 ## Plotting inference results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
