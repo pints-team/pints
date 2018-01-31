@@ -107,8 +107,8 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     Arguments:
 
     ``f``
-        A class (or that extends from) :class:`pints.LogLikelihood` of the
-        problem of interest.
+        A class (or that extends from) :class:`pints.LogPDF` or 
+        :class:`pints.ErrorMeasure` of the problem of interest.
     ``point_1``, ``point_2``
         Two points in parameter space. The method will find a line from `point_1`
         to `point_2` and make a plot of several points along it.
