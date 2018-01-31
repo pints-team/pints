@@ -5,11 +5,10 @@ Error measures
 .. module:: pints
 
 .. autoclass:: ErrorMeasure
-    
-.. autoclass:: LogLikelihoodBasedError
+
+.. autoclass:: ProbabilityBasedError
 
 .. autoclass:: RMSError
 
 .. autoclass:: SumOfSquaresError
-
 
