@@ -4,13 +4,13 @@
 #
 # TODO Add tests for the remaining likelihood classes and methods
 import unittest
+import pints
+import pints.toy as toy
+import numpy as np
 
 
 class TestLogLikelihood(unittest.TestCase):
     def test_scaled_log_likelihood(self):
-        import pints
-        import pints.toy as toy
-        import numpy as np
 
         model = toy.LogisticModel()
         real_parameters = [0.015, 500]
@@ -35,9 +35,6 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(eval_scaled * len(times), eval_not_scaled)
 
     def test_known_unknown_log_likelihood(self):
-        import pints
-        import pints.toy as toy
-        import numpy as np
 
         model = toy.LogisticModel()
         parameters = [0.015, 500]

@@ -41,13 +41,13 @@ class Optimiser(object):
     """
     def __init__(self, function, boundaries=None, x0=None, sigma0=None):
 
-        # Store function
         # Likelihood function given? Then wrap an inverter around it
-        if isinstance(function, pints.LogLikelihood):
-            self._function = pints.LogLikelihoodBasedError(function)
-        else:
-            self._function = function
-        self._dimension = function.dimension()
+        if isinstance(function, pints.LogPDF):
+            function = pints.ProbabilityBasedError(function)
+
+        # Store function & dimension
+        self._function = function
+        self._dimension = self._function.dimension()
 
         # Extract bounds
         self._boundaries = boundaries

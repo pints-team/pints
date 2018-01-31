@@ -12,72 +12,7 @@ import pints
 import numpy as np
 
 
-class LogLikelihood(object):
-    """
-    Represents a log-likelihood that can be used by stochastic methods.
-
-    Arguments:
-
-    ``problem``
-        The time-series problem this log-likelihood is defined for.
-
-    """
-    def __init__(self, problem, prior=None):
-        self._problem = problem
-        # Cache some problem variables
-        self._values = problem.values()
-        self._times = problem.times()
-        self._dimension = problem.dimension()
-
-    def __call__(self, x):
-        raise NotImplementedError
-
-    def dimension(self):
-        """
-        Returns the dimension of the space this likelihood is defined on.
-        """
-        return self._dimension
-
-
-class LogPosterior(LogLikelihood):
-    """
-    *Extends:* :class:`LogLikelihood`
-
-    Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
-    and a class:`Prior`.
-
-    The returned value will be ``log(prior(x)) + log_likelihood(x|problem)``.
-    If ``prior(x) == 0`` the method always returns ``-inf``, regardless of the
-    value of the log-likelihood (which will not be evaluated).
-
-    """
-    def __init__(self, prior, log_likelihood):
-        # Check arguments
-        if not isinstance(prior, pints.Prior):
-            raise ValueError('Prior must extend pints.Prior')
-        if not isinstance(log_likelihood, pints.LogLikelihood):
-            raise ValueError('Log-likelihood must extends pints.LogLikelihood')
-
-        self._prior = prior
-        self._log_likelihood = log_likelihood
-        self._problem = log_likelihood._problem
-
-        # Check dimension
-        self._dimension = self._prior.dimension()
-        if self._log_likelihood.dimension() != self._dimension:
-            raise ValueError(
-                'Given prior and log-likelihood must have same dimension')
-
-    def __call__(self, x):
-        # Evaluate prior first, assuming this is very cheap
-        prior = self._prior(x)
-        if prior == 0:
-            return float('-inf')
-        # Take log and add conditional log-likelihood
-        return np.log(prior) + self._log_likelihood(x)
-
-
-class KnownNoiseLogLikelihood(LogLikelihood):
+class KnownNoiseLogLikelihood(pints.LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 
@@ -101,7 +36,7 @@ class KnownNoiseLogLikelihood(LogLikelihood):
         return self._offset + self._multip * np.sum(error**2)
 
 
-class UnknownNoiseLogLikelihood(LogLikelihood):
+class UnknownNoiseLogLikelihood(pints.LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 
@@ -138,7 +73,7 @@ class UnknownNoiseLogLikelihood(LogLikelihood):
             + np.sum(error**2) / (2 * x[-1]**2))
 
 
-class ScaledLogLikelihood(LogLikelihood):
+class ScaledLogLikelihood(pints.LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 

@@ -18,22 +18,24 @@ class NestedSampler(object):
 
     Arguments:
 
-    ``function``
+    ``log_likelihood``
         A :class:`LogLikelihood` function that evaluates points in the
         parameter space.
+    ``log_posterior``
+        A :class:`LogPrior` function on the same parameter space.
 
     """
-    def __init__(self, log_likelihood, prior):
+    def __init__(self, log_likelihood, log_prior):
 
-        # Store function
+        # Store log_likelihood and log_prior
         if not isinstance(log_likelihood, pints.LogLikelihood):
             raise ValueError('Given function must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
 
         # Store function
-        if not isinstance(prior, pints.Prior):
-            raise ValueError('Given function must extend pints.Prior')
-        self._prior = prior
+        if not isinstance(log_prior, pints.LogPrior):
+            raise ValueError('Given function must extend pints.LogPrior')
+        self._log_prior = log_prior
 
         # Get dimension
         self._dimension = self._log_likelihood.dimension()
@@ -63,12 +65,12 @@ class NestedSampler(object):
         return self._verbose
 
 
-def reject_sample_prior(aThreshold, aLogLikelihood, aPrior):
+def reject_sample_prior(threshold, log_likelihood, log_prior):
     """
-    independently samples params from the prior until
-    logLikelihood(params) > aThreshold
+    Independently samples params from the prior until
+    ``log_likelihood(params) > threshold``.
     """
-    v_proposed = aPrior.random_sample()[0]
-    while aLogLikelihood(v_proposed) < aThreshold:
-        v_proposed = aPrior.random_sample()[0]
-    return np.concatenate((v_proposed, np.array([aLogLikelihood(v_proposed)])))
+    proposed = log_prior.sample()[0]
+    while log_likelihood(proposed) < threshold:
+        proposed = log_prior.sample()[0]
+    return np.concatenate((proposed, np.array([log_likelihood(proposed)])))
