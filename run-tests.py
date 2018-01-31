@@ -157,7 +157,6 @@ def export_notebook(ipath, opath):
     with open(opath, 'w') as f:
         f.write('#!/usr/bin/env python')
         f.write(code)
-    import os, stat
     os.chmod(opath, 0775)
 
 

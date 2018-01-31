@@ -14,146 +14,160 @@ import numpy as np
 import scipy.stats as stats
 
 
-def log_likelihood_1d(
-        log_likelihood, parameters, boundaries=None, n_eva=20, chain=None):
+def function(f, x, lower=None, upper=None, evaluations=20):
     """
-    Takes a set of parameters as input and creates and returns a plot showing
-    the log-likelihood function of each parameter with all the other
-    parameters held at the given set of parameters.
+    Creates 1d plots of a :class:`LogPDF` or a :class:`ErrorMeasure` around a
+    point `x` (i.e. a 1-dimensional plot in each direction).
 
     Arguments:
 
-    `log_likelihood`
-        A class (or that extends from) :class:`pints.LogLikelihood` of the
-        problem of interest.
-    `parameters`
-        A set of parameters, which the `log_likelihood` will be evaluated at,
-        with the same dimension as the `log_likelihood` will accept.
-    `boundaries`
-        A class (or that extends from) :class:`pints.Boundaries` which defines
-        the boundaries of each parameters.
-    `n_eva`
-        (Optional) The number of evaluation of each parameter.
-    `chain`
-        (Optional) A markov chain of shape `(samples, dimension)`, where
-        `samples` is the number of samples in the chain and `dimension` is the
-        number of parameters. This will be used to define the boundaries. Only
-        provide either `chain` or `boundaries`, but not both.
+    ``f``
+        A :class:`pints.LogPDF` or :class:`pints.ErrorMeasure` to plot.
+    ``x``
+        A point in the function's input space.
+    ``lower``
+        (Optional) Lower bounds for each parameter, used to specify the lower
+        bounds of the plot.
+    ``upper``
+        (Optional) Upper bounds for each parameter, used to specify the upper
+        bounds of the plot.
+    ``evaluations``
+        (Optional) The number of evaluations to use in each plot.
 
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
-    n_param = len(parameters)
-    # Check dimension
-    if n_param != log_likelihood.dimension():
+    # Check function get dimension
+    if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
-            'Input parameters dimension must match the dimension of the'
-            ' log_likelihood accept')
-    # Check input
-    if not isinstance(boundaries, pints.Boundaries) and boundaries is not None:
-        raise TypeError(
-            'The argument boundaries must be a type of or extended from'
-            ' pints.Boundaries')
-    if chain is None and boundaries is not None:
-        def_bound = False
-    elif chain is not None and boundaries is None:
-        def_bound = True
+            'Given function must be pints.LogPDF or pints.ErrorMeasure.')
+    dimension = f.dimension()
+
+    # Check point
+    x = pints.vector(x)
+    if len(x) != dimension:
+        raise ValueError(
+            'Given point `x` must have same dimension as function.')
+
+    # Check boundaries
+    if lower is None:
+        # Guess boundaries based on point x
+        lower = x * 0.95
+        lower[lower == 0] = -1
     else:
-        raise TypeError(
-            'One of the input chain or boundaries (and only one) is expected')
+        lower = pints.vector(lower)
+        if len(lower) != dimension:
+            raise ValueError(
+                'Lower bounds must have same dimension as function.')
+    if upper is None:
+        # Guess boundaries based on point x
+        upper = x * 1.05
+        upper[upper == 0] = 1
+    else:
+        upper = pints.vector(upper)
+        if len(upper) != dimension:
+            raise ValueError(
+                'Upper bounds must have same dimension as function.')
 
-    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
-    for i, p in enumerate(parameters):
-        axes[i].set_xlabel('Parameter ' + str(1 + i))
+    # Check number of evaluations
+    evaluations = int(evaluations)
+    if evaluations < 1:
+        raise ValueError('Number of evaluations must be greater than zero.')
 
-        # Generate some x-values near the given parameters
-        if def_bound:
-            mu = np.mean(chain[:, i])
-            sigma = np.std(chain[:, i])
-            xmin = mu - 3 * sigma
-            xmax = mu + 3 * sigma
-        else:
-            xmin = boundaries.lower()[i]
-            xmax = boundaries.upper()[i]
+    # Create points to plot
+    xs = np.tile(x, (dimension * evaluations, 1))
+    for j in range(dimension):
+        i1 = j * evaluations
+        i2 = i1 + evaluations
+        xs[i1:i2, j] = np.linspace(lower[j], upper[j], evaluations)
 
-        x = np.linspace(xmin, xmax, n_eva)
+    # Evaluate points
+    fs = pints.evaluate(f, xs, parallel=False)
 
-        # Calculate log-likelihood with other parameters fixed
-        y = [
-            log_likelihood(
-                list(parameters[:i]) + [j] + list(parameters[1 + i:])
-            ) for j in x]
-
-        # Plot
-        axes[i].plot(x, y, c='green', label='Log-likelihood')
-        axes[i].axvline(p, c='blue', label='Input value')
-        axes[i].legend()
-
-    # Add vertical y-label to middle plot
-    # fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
-    axes[int(i / 2)].set_ylabel('log Likelihood')
+    # Create figure
+    fig, axes = plt.subplots(dimension, 1, figsize=(6, 2 * dimension))
+    for j, p in enumerate(x):
+        i1 = j * evaluations
+        i2 = i1 + evaluations
+        axes[j].plot(xs[i1:i2, j], fs[i1:i2], c='green', label='Function')
+        axes[j].axvline(p, c='blue', label='Value')
+        axes[j].set_xlabel('Parameter ' + str(1 + j))
+        axes[j].legend()
 
     plt.tight_layout()
     return fig, axes
 
 
-def log_likelihood_two_points(log_likelihood, p1, p2, n_eva=20):
+def function_between_points(f, x1, x2, padding=0.25, evaluations=20):
     """
-    Creates and returns a plot showing the log-likelihood function between two
-    points in the parameter space.
+    Creates and returns a plot of a function between two points in parameter
+    space.
 
     Arguments:
 
-    `log_likelihood`
+    ``f``
         A class (or that extends from) :class:`pints.LogLikelihood` of the
         problem of interest.
-    `p1`, `p2`
-        A set of parameters, which the `log_likelihood` will be evaluated at,
-        with the same dimension as the `log_likelihood` will accept.
-    `n_eva`
+    ``x1``, ``x2``
+        Two points in parameter space. The method will find a line from `x1`
+        to `x2` and make a plot of several points along it.
+    ``padding``
+        Specifies the amount of padding around the line segment ``[x1, x2]``
+        that will be shown in the plot.
+    ``evaluations``
         (Optional) The number of evaluation along the line in parameter space.
 
     Returns a `matplotlib` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
-    n_param = len(p1)
-    p1 = np.array(p1)
-    p2 = np.array(p2)
-
-    # Check dimension
-    if n_param != log_likelihood.dimension() or n_param != len(p2):
+    # Check function get dimension
+    if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
-            'Input parameters dimension must match the dimension of the'
-            ' log_likelihood accept')
+            'Given function must be pints.LogPDF or pints.ErrorMeasure.')
+    dimension = f.dimension()
+
+    # Check points
+    x1 = pints.vector(x1)
+    x2 = pints.vector(x2)
+    if not (len(x1) == len(x2) == dimension):
+        raise ValueError(
+            'Both points must have the same dimension as the given function.')
+
+    # Check padding
+    padding = float(padding)
+    if padding < 0:
+        raise ValueError('Padding cannot be negative.')
+
+    # Check evaluation
+    evaluations = int(evaluations)
+    if evaluations < 3:
+        raise ValueError('The number of evaluations must be 3 or greater.')
 
     # Figure setting
     fig, axes = plt.subplots(1, 1, figsize=(6, 4))
-    axes.set_xlabel('point 1 to point 2')
-    axes.set_ylabel('log Likelihood')
+    axes.set_xlabel('Point 1 to point 2')
+    axes.set_ylabel('Function')
 
     # Generate some x-values near the given parameters
-    xmin = -0.25
-    xmax = 1.25
-    s = np.linspace(xmin, xmax, n_eva)
+    s = np.linspace(-padding, 1 + padding, evaluations)
 
     # Direction
-    r = p2 - p1
+    r = x2 - x1
 
-    # Calculate log-likelihood with other parameters fixed
-    y = [log_likelihood(p1 + sj * r) for sj in s]
+    # Calculate function with other parameters fixed
+    y = [f(x1 + sj * r) for sj in s]
 
     # Plot
     axes.plot(s, y, color='green')
-    axes.axvline(0, color='#1f77b4', label='point 1')
-    axes.axvline(1, color='#7f7f7f', label='point 2')
+    axes.axvline(0, color='#1f77b4', label='Point 1')
+    axes.axvline(1, color='#7f7f7f', label='Point 2')
     axes.legend()
 
     # Add vertical y-label to middle plot
     #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
 
-    plt.tight_layout()
     return fig, axes
 
 
@@ -221,6 +235,8 @@ def trace(chain, *args):
     """
     import matplotlib.pyplot as plt
 
+    # If we switch to Python3 exclusively, bins and alpha can be keyword-only
+    # arguments
     bins = 40
     alpha = 0.5
     n_sample, n_param = chain.shape
