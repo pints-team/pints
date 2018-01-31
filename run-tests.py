@@ -157,7 +157,7 @@ def export_notebook(ipath, opath):
     with open(opath, 'w') as f:
         f.write('#!/usr/bin/env python')
         f.write(code)
-    os.chmod(opath, 0775)
+    os.chmod(opath, 0o775)
 
 
 if __name__ == '__main__':
