@@ -99,7 +99,7 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     return fig, axes
 
 
-def function_between_points(f, x1, x2, padding=0.25, evaluations=20):
+def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     """
     Creates and returns a plot of a function between two points in parameter
     space.
@@ -109,11 +109,11 @@ def function_between_points(f, x1, x2, padding=0.25, evaluations=20):
     ``f``
         A class (or that extends from) :class:`pints.LogLikelihood` of the
         problem of interest.
-    ``x1``, ``x2``
-        Two points in parameter space. The method will find a line from `x1`
-        to `x2` and make a plot of several points along it.
+    ``point_1``, ``point_2``
+        Two points in parameter space. The method will find a line from `point_1`
+        to `point_2` and make a plot of several points along it.
     ``padding``
-        Specifies the amount of padding around the line segment ``[x1, x2]``
+        Specifies the amount of padding around the line segment ``[point_1, point_2]``
         that will be shown in the plot.
     ``evaluations``
         (Optional) The number of evaluation along the line in parameter space.
@@ -129,9 +129,9 @@ def function_between_points(f, x1, x2, padding=0.25, evaluations=20):
     dimension = f.dimension()
 
     # Check points
-    x1 = pints.vector(x1)
-    x2 = pints.vector(x2)
-    if not (len(x1) == len(x2) == dimension):
+    point_1 = pints.vector(point_1)
+    point_2 = pints.vector(point_2)
+    if not (len(point_1) == len(point_2) == dimension):
         raise ValueError(
             'Both points must have the same dimension as the given function.')
 
@@ -154,10 +154,10 @@ def function_between_points(f, x1, x2, padding=0.25, evaluations=20):
     s = np.linspace(-padding, 1 + padding, evaluations)
 
     # Direction
-    r = x2 - x1
+    r = point_2 - point_1
 
     # Calculate function with other parameters fixed
-    y = [f(x1 + sj * r) for sj in s]
+    y = [f(point_1 + sj * r) for sj in s]
 
     # Plot
     axes.plot(s, y, color='green')
