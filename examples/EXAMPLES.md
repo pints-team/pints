@@ -40,5 +40,7 @@ of choice.
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
 
 ## Toy problems
-
+- Logistic model
 - [Hodgkin-Huxley Potassium current](./toy-hodgkin-huxley-ik.ipynb)
+- [Distributions](./toy-distributions.ipynb)
+
