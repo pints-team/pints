@@ -18,8 +18,8 @@ matrix:
     include:
         # Coverage
         - python: "3.6"
-          env: 
-            - PINTS_COVERAGE=true  
+          env:
+            - PINTS_COVERAGE=true
             - PINTS_RUN_TESTS=false
 
 
@@ -42,7 +42,7 @@ script:
   - python -m flake8
   - if [[ $PINTS_RUN_TESTS == true ]]; then python run-tests.py --unit; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
-  - if [[ $PINTS_COVERAGE == true ]]; then coverage run run-tests.py --coverage; fi;
+  - if [[ $PINTS_COVERAGE == true ]]; then coverage run run-tests.py --unit; fi;
 
 after_success:
   - if [[ $PINTS_COVERAGE == true ]]; then codecov; fi;

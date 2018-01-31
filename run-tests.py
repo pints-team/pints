@@ -9,54 +9,58 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import re
 import os
 import sys
 import argparse
+import unittest
 import nbconvert
 import subprocess
-import unittest
+from traitlets.config import Config
 
 
-def run_coverage_tests():
+def run_unit_tests(executable=None):
     """
-    Runs unit tests using unittest framework, exits if they don't finish.
+    Runs unit tests, exits if they don't finish.
+
+    If an ``executable`` is given, tests are run in subprocesses using the
+    given executable (e.g. ``python2`` or ``python3``).
     """
-    suite = unittest.defaultTestLoader.discover('test', pattern='test*.py')
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    if executable is None:
+        suite = unittest.defaultTestLoader.discover('test', pattern='test*.py')
+        unittest.TextTestRunner(verbosity=2).run(suite)
+    else:
+        print('Running unit tests with executable `' + executable + '`')
+        cmd = [executable] + [
+            '-m',
+            'unittest',
+            'discover',
+            '-v',
+            'test',
+        ]
+        try:
+            p = subprocess.Popen(cmd)
+            ret = p.wait()
+            if ret != 0:
+                sys.exit(ret)
+        except KeyboardInterrupt:
+            p.terminate()
+            print('')
+            sys.exit(1)
 
 
-def run_unit_tests(executable='python'):
-    """
-    Runs unit tests in subprocess, exits if they don't finish.
-    """
-    print('Running with executable `' + executable + '`')
-    cmd = [executable] + [
-        '-m',
-        'unittest',
-        'discover',
-        '-v',
-        'test',
-    ]
-    try:
-        p = subprocess.Popen(cmd)
-        ret = p.wait()
-        if ret != 0:
-            sys.exit(ret)
-    except KeyboardInterrupt:
-        p.terminate()
-        print('')
-        sys.exit(1)
-
-
-def run_notebook_tests():
+def run_notebook_tests(executable='python'):
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    if not scan_for_notebooks('examples'):
+    print('Testing notebooks with executable `' + str(executable) + '`')
+    if not scan_for_notebooks('examples', executable):
+        print('\nErrors encountered in notebooks')
         sys.exit(1)
+    print('\nOK')
 
 
-def scan_for_notebooks(root, recursive=True):
+def scan_for_notebooks(root, recursive=True, executable='python'):
     """
     Scans for, and tests, all notebooks in a directory.
     """
@@ -72,14 +76,14 @@ def scan_for_notebooks(root, recursive=True):
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            ok &= scan_for_notebooks(path, recursive)
+            ok &= scan_for_notebooks(path, recursive, executable)
 
         # Test notebooks
         if os.path.splitext(path)[1] == '.ipynb':
             if debug:
                 print(path)
             else:
-                ok &= test_notebook(path)
+                ok &= test_notebook(path, executable)
 
     # Return True if every notebook is ok
     return ok
@@ -89,7 +93,7 @@ def test_notebook(path, executable='python'):
     """
     Tests a single notebook, exists if it doesn't finish.
     """
-    print('Testing ' + path + ' ... ', end='')
+    print('Test ' + path + ' ... ', end='')
     sys.stdout.flush()
 
     # Load notebook, convert to python
@@ -133,6 +137,30 @@ def test_notebook(path, executable='python'):
     return True
 
 
+def export_notebook(ipath, opath):
+    """
+    Exports the notebook at `ipath` to a python file at `opath`.
+    """
+    # Create nbconvert configuration to ignore text cells
+    c = Config()
+    c.TemplateExporter.exclude_markdown = True
+
+    # Load notebook, convert to python
+    e = nbconvert.exporters.PythonExporter(config=c)
+    code, __ = e.from_filename(ipath)
+
+    # Remove "In [1]:" comments
+    r = re.compile(r'(\s*)# In\[([^]]*)\]:(\s)*')
+    code = r.sub('\n\n', code)
+
+    # Store as executable script file
+    with open(opath, 'w') as f:
+        f.write('#!/usr/bin/env python')
+        f.write(code)
+    import os, stat
+    os.chmod(opath, 0775)
+
+
 if __name__ == '__main__':
     # Set up argument parsing
     parser = argparse.ArgumentParser(
@@ -143,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--unit',
         action='store_true',
-        help='Run all unit tests using the default Python interpreter.',
+        help='Run all unit tests.',
     )
     parser.add_argument(
         '--unit2',
@@ -161,10 +189,10 @@ if __name__ == '__main__':
         help='Test Jupyter notebooks (using the default jupyter interpreter).',
     )
     parser.add_argument(
-        '--coverage',
-        action='store_true',
-        help='''Run all unit tests using the default Python interpreter while \
-                collecting coverage.''',
+        '-debook',
+        nargs=2,
+        metavar=('in', 'out'),
+        help='Export a Jupyter notebook to a Python file for manual testing.',
     )
     args = parser.parse_args()
 
@@ -172,7 +200,7 @@ if __name__ == '__main__':
     has_run = False
     if args.unit:
         has_run = True
-        run_unit_tests('python')
+        run_unit_tests()
     if args.unit2:
         has_run = True
         run_unit_tests('python2')
@@ -182,8 +210,8 @@ if __name__ == '__main__':
     if args.books:
         has_run = True
         run_notebook_tests()
-    if args.coverage:
+    if args.debook:
         has_run = True
-        run_coverage_tests()
+        export_notebook(*args.debook)
     if not has_run:
         parser.print_help()
