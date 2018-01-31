@@ -112,8 +112,8 @@ class BimodalMultivariateGaussianLogPDF(pints.LogPDF):
     Bimodal multivariate (un-normalised) Gaussian. Default is 2D with modes
     at ``(0, 0)`` and ``(10, 10)`` with independent unit covariance matrices.
     """
-    def __init__(self,
-            dimension=2, mu1=[0, 0], mu2=[10, 10], cov1=None, cov2=None):
+    def __init__(self, dimension=2, mu1=[0, 0], mu2=[10, 10],
+                 cov1=None, cov2=None):
         self._dimension = int(dimension)
         if len(mu1) != self._dimension:
             raise ValueError(
