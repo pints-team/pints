@@ -22,10 +22,12 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
+
         # Check sigma
         self._sigma = float(sigma)
         if self._sigma <= 0:
             raise ValueError('Standard deviation must be greater than zero.')
+
         # Calculate parts
         self._offset = -0.5 * len(self._times) * np.log(2 * np.pi)
         self._offset += -len(self._times) * np.log(self._sigma)
@@ -61,6 +63,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
+
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
         self._size = len(self._times)
