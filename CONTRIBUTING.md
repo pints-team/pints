@@ -91,7 +91,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 ```
 
-These are ignored by Python 3, but tell Python 2 to mimmick some of its features. Notably, the ``division`` package changes the result of ``3 / 2`` from ``1`` to ``1.5`` (this means you can write ``1 / x`` instead of ``1.0 / x``).
+These [future imports](https://docs.python.org/2/library/__future__.html) are ignored by Python 3, but tell Python 2 to mimmick some of its features. Notably, the ``division`` package changes the result of ``3 / 2`` from ``1`` to ``1.5`` (this means you can write ``1 / x`` instead of ``1.0 / x``).
 
 
 
@@ -172,20 +172,81 @@ All example notebooks should be listed in [examples/EXAMPLES.md]. Please follow 
 
 ## Infrastructure
 
-### Installation tools
+### Setuptools
 
-setup.py (setuptools)
-requirements.txt (pip)
-requirements-dev.txt (pip)
+Installation of Pints _and dependencies_ is handled via [setuptools](http://setuptools.readthedocs.io/)
 
-### Testing (continuous integration)
+Configuration files:
 
-Testing: travis
+```
+setup.py
+```
 
-Test coverage:
+Note that this file must be kept in sync with
 
-### Documentation tools
+- The version number in `pints/__init__.py`
+- The dependencies and dependency structure of the [pip requirements files](#pip).
 
-readthedocs
+### PIP
 
-binder
+Installation of Pints dependencies can also be handled by [PIP](http://pip.readthedocs.io/). This is needed for certain other tools too.
+
+Configuration files ([format](https://pip.readthedocs.io/en/1.1/requirements.html)):
+
+```
+requirements.txt
+requirements-dev.txt
+requirements-docs.txt
+```
+
+Note that these files must be kept in sync with
+
+- The dependencies and dependency structure of setuptools `setup.py`.
+
+The requirements files link to each other, so that calling `$ pip install -r requirements-dev.txt` will install everything listed in `requirements.txt` and `requirements-docs.txt` as well.
+
+### Travis CI
+
+All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on [https://travis-ci.org/pints-team/pints].
+
+Configuration files:
+
+```
+.travis.yaml
+```
+
+Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks.
+
+### Codecov
+
+Code coverage (how much of our code is actually seen by the unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on [https://codecov.io/gh/pints-team/pints].
+
+Configuration files:
+
+```
+.coveragerc
+```
+
+### Read the Docs
+
+Documentation is built using [https://readthedocs.org/] and published on [http://pints.readthedocs.io/].
+
+### Binder
+
+Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at [https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples].
+
+Configuration files:
+
+```
+postBuild
+```
+
+### Flake8
+
+[Style checking](#coding-style-guidelines) is performed using [flake8](http://flake8.pycqa.org/en/latest/).
+
+Configuration files:
+
+```
+.flake8
+```
