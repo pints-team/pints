@@ -2,9 +2,7 @@
 
 If you'd like to contribute to Pints (thanks!), please have a look at the [guidelines below](#workflow).
 
-If you're already familiar with our workflow, maybe have a quick look at the [pre-commit checks](#pre-commit-checks):
-
-
+If you're already familiar with our workflow, maybe have a quick look at the [pre-commit checks](#pre-commit-checks) directly below.
 
 ## Pre-commit checks
 
@@ -77,6 +75,12 @@ $ flake8
 
 When you commit your changes they will be checked against flake8 automatically (see [infrastructure](#infrastructure).
 
+### Naming
+
+Naming is hard. In general, we aim for descriptive class, method, and argument names. Avoid abbreviations when possible without making names overly long, so `mean` is better than `mu`, but a class name like `AdaptiveMCMC` is fine.
+
+Class names are CamelCase, and start with an upper case letter, for example `SuperDuperMCMC`. Method and variable names are lower case, and use underscores for word separation, for example `x` or `iteration_count`.
+
 ### Python 2 and 3
 
 Python is currently in a long, long transition phase from Python 2 to Python 3. Pints supports both Python 2 (version 2.7 and upwards) and Python 3 (version 3.4 and upwards).
@@ -109,6 +113,25 @@ Every new feature should have its own test. To create ones, have a look at the `
 
 Next, add some simple (and speedy!) tests of your main features. If these run without exceptions that's a good start! Next, check the output of your methods using any of these [assert methods](https://docs.python.org/3.3/library/unittest.html#assert-methods).
 
+### Running more tests
+
+If you want to check your tests on Python 2 and 3, use
+
+```
+$ python run-tests.py --unit2 --unit3
+```
+
+To test all example notebooks, use
+
+```
+$ python run-tests.py --books
+```
+
+If notebooks fail because of changes to pints, it can be a bit of a hassle to debug. In these cases, you can create a temporary export of a notebook's Python content using
+
+```
+$ python run-tests.py --debook examples/notebook-name.ipynb script.py
+```
 
 
 ## Documentation
@@ -125,31 +148,42 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 ### Building the documentation
 
-TODO
+To test and debug the documentation, it's best to build it locally. To do this, make sure you have the relevant dependencies installed (see [installation](#installation)), navigate to your pints directory in a console, and then type:
+
+```
+cd docs
+make clean
+make html
+```
+
+Next, open a browser, and navigate to your local pints directory (by typing the path, or part of the path into your location bar). Then have a look at `<your pints path>/docs/build/html/index.html`.
 
 
 ### Example notebooks
 
-Jupyter notebooks
+Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) stored in the `examples` directory. Which features are "major" is of course wholy subjective, so please discuss on GitHub first!
 
-TODO
-
-
-
+All example notebooks should be listed in `examples/EXAMPLES.md`. Please follow the (naming and writing) style of existing notebooks where possible.
 
 
 
 
 ## Infrastructure
 
-Installation
+### Installation tools
 
 setup.py (setuptools)
 requirements.txt (pip)
 requirements-dev.txt (pip)
 
+### Testing (continuous integration)
+
 Testing: travis
 
-coverage:
+Test coverage:
+
+### Documentation tools
+
+readthedocs
 
 binder
