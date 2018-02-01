@@ -14,6 +14,7 @@ import sys
 import argparse
 import nbconvert
 import subprocess
+import unittest
 
 def run_coverage_tests():
     """
