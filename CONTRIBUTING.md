@@ -133,7 +133,7 @@ This allows people to (1) use Pints without ever importing Matplotlib and (2) co
 
 ## Testing
 
-All code requires testing. We use the [unittest](https://docs.python.org/3.3/library/unittest.html) package for our tests.
+All code requires testing. We use the [unittest](https://docs.python.org/3.3/library/unittest.html) package for our tests. (These tests typically just check that the code runs without error, and so, are more _debugging_ than _testing_ in a strict sense. Nevertheless, they are very useful to have!)
 
 To run quick tests, use
 
