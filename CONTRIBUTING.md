@@ -101,18 +101,18 @@ These [future imports](https://docs.python.org/2/library/__future__.html) are ig
 While it's a bad idea for developers to "reinvent the wheel", it's important for users to get a _reasonably sized download and an easy install_. In addition, external libraries can sometimes cease to be supported, and when they contain bugs it might take a while before fixes become available as automatic downloads to Pints users.
 For these reasons, all dependencies in Pints should be thought about carefully, and discussed on GitHub.
 
-Direct inclusion of code from other packages is possible, as long as their license permits it and is compatible with ours, but again should be considered carefully and discussed in the group. Snippets from blogs and stackoverflow can often be included without attribution, but if they solve a particularly nasty problem (or are very hard to read) it's often a good idea to attribute them via a link in our source code.
+Direct inclusion of code from other packages is possible, as long as their license permits it and is compatible with ours, but again should be considered carefully and discussed in the group. Snippets from blogs and stackoverflow can often be included without attribution, but if they solve a particularly nasty problem (or are very hard to read) it's often a good idea to attribute (and document) them, by making a comment with a link in the source code.
 
 ### Separating dependencies
 
-On the other hand... We _do_ want to compare several tools, to generate documentation, and to speed up development. For this reason, the dependency structure should be split into 4 parts:
+On the other hand... We _do_ want to compare several tools, to generate documentation, and to speed up development. For this reason, the dependency structure is split into 4 parts:
 
 1. Core Pints: A minimal set, including things like NumPy, SciPy, etc. All infrastructure should run against this set of dependencies, as well as any numerical methods we implement ourselves.
 2. Extras: Other inference packages and their dependencies. Methods we don't want to implement ourselves, but do want to provide an interface to can have their dependencies added here.
 3. Documentation generating code: Everything you need to generate and work on the docs.
 4. Development code: Everything you need to do Pints development (so all of the above packages, plus flake8 and other testing tools).
 
-Only 'core pints' is installed by default. The others have to be explicitly added to the installation command.
+Only 'core pints' is installed by default. The others have to be specified explicitly when running the installation command.
 
 ### Matplotlib
 
@@ -128,7 +128,7 @@ def plot_great_things(self, x, y, z):
     ...
 ```
 
-This allows people to (1) use Pints without ever importing Matplotlib and (2) configure Matplotlib's back-end in their scripts, which _must_ be done before e.g. `pyplot` is first imported/
+This allows people to (1) use Pints without ever importing Matplotlib and (2) configure Matplotlib's back-end in their scripts, which _must_ be done before e.g. `pyplot` is first imported.
 
 
 ## Testing
