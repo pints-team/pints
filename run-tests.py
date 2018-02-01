@@ -38,15 +38,69 @@ def run_unit_tests(executable=None):
             '-v',
             'test',
         ]
+        p = subprocess.Popen(cmd)
         try:
-            p = subprocess.Popen(cmd)
             ret = p.wait()
-            if ret != 0:
-                sys.exit(ret)
         except KeyboardInterrupt:
-            p.terminate()
+            try:
+                p.terminate()
+            except OSError:
+                pass
+            p.wait()
             print('')
             sys.exit(1)
+        if ret != 0:
+            sys.exit(ret)
+
+
+def run_flake8():
+    """
+    Runs flake8 in a subprocess, exits if it doesn't finish.
+    """
+    print('Running flake8 ... ')
+    sys.stdout.flush()
+    p = subprocess.Popen(['flake8'], stderr=subprocess.PIPE)
+    try:
+        ret = p.wait()
+    except KeyboardInterrupt:
+        try:
+            p.terminate()
+        except OSError:
+            pass
+        p.wait()
+        print('')
+        sys.exit(1)
+    if ret == 0:
+        print('ok')
+    else:
+        print('FAILED')
+        sys.exit(ret)
+
+
+def check_docs():
+    """
+    Checks if the documentation can be built.
+    """
+    print('Checking if docs can be built.')
+    p = subprocess.Popen([
+        'sphinx-build',
+        'docs/source',
+        'docs/build/html',
+        '-W',
+    ])
+    try:
+        ret = p.wait()
+    except KeyboardInterrupt:
+        try:
+            p.terminate()
+        except OSError:
+            pass
+        p.wait()
+        print('')
+        sys.exit(1)
+    if ret != 0:
+        print('FAILED')
+        sys.exit(ret)
 
 
 def run_notebook_tests(executable='python'):
@@ -168,6 +222,11 @@ if __name__ == '__main__':
                ' $ test/test_logistic_model.py',
     )
     parser.add_argument(
+        '--quick',
+        action='store_true',
+        help='Run quick checks (unit tests, flake8, docs)',
+    )
+    parser.add_argument(
         '--unit',
         action='store_true',
         help='Run all unit tests using the `python` interpreter.',
@@ -202,6 +261,11 @@ if __name__ == '__main__':
 
     # Run tests
     has_run = False
+    if args.quick:
+        has_run = True
+        run_flake8()
+        run_unit_tests('python')
+        check_docs()
     if args.unit:
         has_run = True
         run_unit_tests('python')
