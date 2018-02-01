@@ -14,3 +14,7 @@ __pycache__/
 
 # R files
 .Rhistory
+.coverage
+
+# vscode
+.vscode

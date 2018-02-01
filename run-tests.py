@@ -15,6 +15,12 @@ import argparse
 import nbconvert
 import subprocess
 
+def run_coverage_tests():
+    """
+    Runs unit tests using unittest framework, exits if they don't finish.
+    """
+    suite = unittest.defaultTestLoader.discover('test',pattern='test*.py')
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 def run_unit_tests(executable='python'):
     """
@@ -151,6 +157,12 @@ if __name__ == '__main__':
         action='store_true',
         help='Test Jupyter notebooks (using the default jupyter interpreter).',
     )
+    parser.add_argument(
+        '--coverage',
+        action='store_true',
+        help='''Run all unit tests using the default Python interpreter while \
+                collecting coverage.''',
+    )
     args = parser.parse_args()
 
     # Run tests
@@ -167,5 +179,8 @@ if __name__ == '__main__':
     if args.books:
         has_run = True
         run_notebook_tests()
+    if args.coverage:
+        has_run = True
+        run_coverage_tests()
     if not has_run:
         parser.print_help()
