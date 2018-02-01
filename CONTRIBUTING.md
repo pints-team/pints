@@ -260,3 +260,11 @@ Configuration files:
 ```
 .flake8
 ```
+
+### GitHub
+
+GitHub does some magic with particular filesnames. In particular:
+
+- The first page people see when they go to [our GitHub page](https://github.com/pints-team/pints) displays the contents of [README.md], which is written in the [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) format.
+- The license for using Pints is stored in [LICENSE], and automatically linked to by GitHub.
+- This file, [CONTRIBUTING.md] is recognised as the contribution guidelines and a link is automatically displayed when new issues or pull requests are created.
