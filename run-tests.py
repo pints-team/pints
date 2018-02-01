@@ -12,7 +12,6 @@ from __future__ import print_function, unicode_literals
 import re
 import os
 import sys
-import signal
 import argparse
 import unittest
 import nbconvert
