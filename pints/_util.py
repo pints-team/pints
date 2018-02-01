@@ -77,7 +77,10 @@ def vector(x):
     ``(n,)``.
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
     """
-    x = np.array(x, copy=True, dtype=float)
+    if np.isscalar(x):
+        x = np.array([float(x)])
+    else:
+        x = np.array(x, copy=True, dtype=float)
     x.setflags(write=False)
     if x.ndim != 1:
         n = np.max(x.shape)
