@@ -8,9 +8,210 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import pints
 import warnings
 import numpy as np
 import scipy.stats as stats
+
+
+def function(f, x, lower=None, upper=None, evaluations=20):
+    """
+    Creates 1d plots of a :class:`LogPDF` or a :class:`ErrorMeasure` around a
+    point `x` (i.e. a 1-dimensional plot in each direction).
+
+    Arguments:
+
+    ``f``
+        A :class:`pints.LogPDF` or :class:`pints.ErrorMeasure` to plot.
+    ``x``
+        A point in the function's input space.
+    ``lower``
+        (Optional) Lower bounds for each parameter, used to specify the lower
+        bounds of the plot.
+    ``upper``
+        (Optional) Upper bounds for each parameter, used to specify the upper
+        bounds of the plot.
+    ``evaluations``
+        (Optional) The number of evaluations to use in each plot.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import matplotlib.pyplot as plt
+
+    # Check function get dimension
+    if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
+        raise ValueError(
+            'Given function must be pints.LogPDF or pints.ErrorMeasure.')
+    dimension = f.dimension()
+
+    # Check point
+    x = pints.vector(x)
+    if len(x) != dimension:
+        raise ValueError(
+            'Given point `x` must have same dimension as function.')
+
+    # Check boundaries
+    if lower is None:
+        # Guess boundaries based on point x
+        lower = x * 0.95
+        lower[lower == 0] = -1
+    else:
+        lower = pints.vector(lower)
+        if len(lower) != dimension:
+            raise ValueError(
+                'Lower bounds must have same dimension as function.')
+    if upper is None:
+        # Guess boundaries based on point x
+        upper = x * 1.05
+        upper[upper == 0] = 1
+    else:
+        upper = pints.vector(upper)
+        if len(upper) != dimension:
+            raise ValueError(
+                'Upper bounds must have same dimension as function.')
+
+    # Check number of evaluations
+    evaluations = int(evaluations)
+    if evaluations < 1:
+        raise ValueError('Number of evaluations must be greater than zero.')
+
+    # Create points to plot
+    xs = np.tile(x, (dimension * evaluations, 1))
+    for j in range(dimension):
+        i1 = j * evaluations
+        i2 = i1 + evaluations
+        xs[i1:i2, j] = np.linspace(lower[j], upper[j], evaluations)
+
+    # Evaluate points
+    fs = pints.evaluate(f, xs, parallel=False)
+
+    # Create figure
+    fig, axes = plt.subplots(dimension, 1, figsize=(6, 2 * dimension))
+    for j, p in enumerate(x):
+        i1 = j * evaluations
+        i2 = i1 + evaluations
+        axes[j].plot(xs[i1:i2, j], fs[i1:i2], c='green', label='Function')
+        axes[j].axvline(p, c='blue', label='Value')
+        axes[j].set_xlabel('Parameter ' + str(1 + j))
+        axes[j].legend()
+
+    plt.tight_layout()
+    return fig, axes
+
+
+def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
+    """
+    Creates and returns a plot of a function between two points in parameter
+    space.
+
+    Arguments:
+
+    ``f``
+        A :class:`pints.LogPDF` or :class:`pints.ErrorMeasure` to plot.
+    ``point_1``, ``point_2``
+        Two points in parameter space. The method will find a line from
+        ``point_1`` to ``point_2`` and plot ``f`` at several points along it.
+    ``padding``
+        Specifies the amount of padding around the line segment
+        ``[point_1, point_2]`` that will be shown in the plot.
+    ``evaluations``
+        (Optional) The number of evaluation along the line in parameter space.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import matplotlib.pyplot as plt
+
+    # Check function get dimension
+    if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
+        raise ValueError(
+            'Given function must be pints.LogPDF or pints.ErrorMeasure.')
+    dimension = f.dimension()
+
+    # Check points
+    point_1 = pints.vector(point_1)
+    point_2 = pints.vector(point_2)
+    if not (len(point_1) == len(point_2) == dimension):
+        raise ValueError(
+            'Both points must have the same dimension as the given function.')
+
+    # Check padding
+    padding = float(padding)
+    if padding < 0:
+        raise ValueError('Padding cannot be negative.')
+
+    # Check evaluation
+    evaluations = int(evaluations)
+    if evaluations < 3:
+        raise ValueError('The number of evaluations must be 3 or greater.')
+
+    # Figure setting
+    fig, axes = plt.subplots(1, 1, figsize=(6, 4))
+    axes.set_xlabel('Point 1 to point 2')
+    axes.set_ylabel('Function')
+
+    # Generate some x-values near the given parameters
+    s = np.linspace(-padding, 1 + padding, evaluations)
+
+    # Direction
+    r = point_2 - point_1
+
+    # Calculate function with other parameters fixed
+    x = [point_1 + sj * r for sj in s]
+    y = pints.evaluate(f, x, parallel=False)
+
+    # Plot
+    axes.plot(s, y, color='green')
+    axes.axvline(0, color='#1f77b4', label='Point 1')
+    axes.axvline(1, color='#7f7f7f', label='Point 2')
+    axes.legend()
+
+    return fig, axes
+
+
+def histogram(chain, *args):
+    """
+    Takes one or more markov chains as input and creates and returns a plot
+    showing histograms for each chain.
+
+    Arguments:
+
+    `chain`
+        A markov chain of shape `(samples, dimension)`, where `samples` is the
+        number of samples in the chain and `dimension` is the number of
+        parameters.
+    `*args`
+        Additional chains can be added after the initial argument.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import matplotlib.pyplot as plt
+
+    bins = 40
+    alpha = 0.5
+    n_sample, n_param = chain.shape
+
+    # Set up figure, plot first chain
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
+    for i in range(n_param):
+        # Add histogram subplot
+        axes[i].set_xlabel('Parameter ' + str(i + 1))
+        axes[i].set_ylabel('Frequency')
+        axes[i].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
+
+    # Plot additional chains
+    if args:
+        for i_chain, chain in enumerate(args):
+            if chain.shape[1] != n_param:
+                raise ValueError(
+                    'All chains must have the same number of parameters.')
+            for i in range(n_param):
+                axes[i].hist(
+                    chain[:, i], bins=bins, alpha=alpha,
+                    label='Chain ' + str(2 + i_chain))
+        axes[0, 0].legend()
+
+    plt.tight_layout()
+    return fig, axes
 
 
 def trace(chain, *args):
@@ -31,6 +232,8 @@ def trace(chain, *args):
     """
     import matplotlib.pyplot as plt
 
+    # If we switch to Python3 exclusively, bins and alpha can be keyword-only
+    # arguments
     bins = 40
     alpha = 0.5
     n_sample, n_param = chain.shape
@@ -41,7 +244,7 @@ def trace(chain, *args):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5, label='Chain 1')
+        axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
 
         # Add trace subplot
         axes[i, 1].set_xlabel('Iteration')
@@ -55,7 +258,7 @@ def trace(chain, *args):
                 raise ValueError(
                     'All chains must have the same number of parameters.')
             for i in range(n_param):
-                axes[i, 0].hist(chain[:, i], bins=bins, alpha=0.5,
+                axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha,
                                 label='Chain ' + str(2 + i_chain))
                 axes[i, 1].plot(chain[:, i], alpha=alpha)
         axes[0, 0].legend()
@@ -340,3 +543,4 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
             axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
     return fig, axes
+
