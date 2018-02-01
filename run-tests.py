@@ -12,6 +12,7 @@ from __future__ import print_function, unicode_literals
 import re
 import os
 import sys
+import signal
 import argparse
 import unittest
 import nbconvert
@@ -170,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--unit',
         action='store_true',
-        help='Run all unit tests.',
+        help='Run all unit tests using the `python` interpreter.',
     )
     parser.add_argument(
         '--unit2',
@@ -181,6 +182,11 @@ if __name__ == '__main__':
         '--unit3',
         action='store_true',
         help='Run all unit tests using the `python3` interpreter.',
+    )
+    parser.add_argument(
+        '--nosub',
+        action='store_true',
+        help='Run all unit tests without starting a subprocess.',
     )
     parser.add_argument(
         '--books',
@@ -199,13 +205,16 @@ if __name__ == '__main__':
     has_run = False
     if args.unit:
         has_run = True
-        run_unit_tests()
+        run_unit_tests('python')
     if args.unit2:
         has_run = True
         run_unit_tests('python2')
     if args.unit3:
         has_run = True
         run_unit_tests('python3')
+    if args.nosub:
+        has_run = True
+        run_unit_tests()
     if args.books:
         has_run = True
         run_notebook_tests()
