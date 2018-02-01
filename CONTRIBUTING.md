@@ -38,9 +38,9 @@ You now have everything you need to start making changes!
 
 ### C. Merging your changes with Pints
 
-9. Pints has online documentation at http://pints.readthedocs.io/. To make sure any new methods or classes you added show up there, please read the [documentation](#documentation) section.
-10. If you added a major new feature, perhaps it should be showcased in an [example notebook](#example-notebooks).
-11. [Test your code!](#testing)
+9. [Test your code!](#testing)
+10. Pints has online documentation at http://pints.readthedocs.io/. To make sure any new methods or classes you added show up there, please read the [documentation](#documentation) section.
+11. If you added a major new feature, perhaps it should be showcased in an [example notebook](#example-notebooks).
 12. When you feel your code is finished, or at least warrants serious discussion, run the [pre-commit checks](#pre-commit-checks) and then create a [pull request](https://help.github.com/articles/about-pull-requests/) (PR) on [Pints' GitHub page](https://github.com/pints-team/pints).
 13. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into Pints master repository.
 
