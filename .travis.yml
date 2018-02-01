@@ -10,11 +10,26 @@ python:
   - "3.5"
   - "3.6"
 
+env:
+  matrix:
+    - PINTS_RUN_TESTS=true
+
+matrix:
+    include:
+        # Coverage
+        - python: "3.6"
+          env: 
+            - PINTS_COVERAGE=true  
+            - PINTS_RUN_TESTS=false
+
+
 # command to install dependencies
 install:
   - pip install .
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
+  - pip install coverage
+  - pip install codecov
 
 before_script:
 - python --version
@@ -25,8 +40,12 @@ before_script:
 # https://github.com/travis-ci/travis-ci/issues/5716
 script:
   - python -m flake8
-  - python run-tests.py --unit
+  - if [[ $PINTS_RUN_TESTS == true ]]; then python run-tests.py --unit; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
+  - if [[ $PINTS_COVERAGE == true ]]; then coverage run run-tests.py --coverage; fi;
+
+after_success:
+  - if [[ $PINTS_COVERAGE == true ]]; then codecov; fi;
 
 notifications:
   email:
