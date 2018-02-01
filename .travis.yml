@@ -12,8 +12,16 @@ python:
 
 env:
   matrix:
-    - PINTS_COVERAGE=true
     - PINTS_RUN_TESTS=true
+
+matrix:
+    include:
+        # Coverage
+        - python: "3.6"
+          env: 
+            - PINTS_COVERAGE=true  
+            - PINTS_RUN_TESTS=false
+
 
 # command to install dependencies
 install:
