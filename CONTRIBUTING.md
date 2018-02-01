@@ -8,7 +8,7 @@ If you're already familiar with our workflow, maybe have a quick look at the [pr
 
 Before you commit any code, please perform the following checks:
 
-- [No style issues](#coding-style-guideliens): `$ flake8`
+- [No style issues](#coding-style-guidelines): `$ flake8`
 - [All tests pass](#testing): `$ python run-tests.py --unit2 --unit3`
 - [The documentation builds](#building-the-documentation): `$ cd docs` and then `$ make clean; make html`
 
@@ -18,7 +18,7 @@ Before you commit any code, please perform the following checks:
 
 We use [GIT](https://en.wikipedia.org/wiki/Git) and [GitHub](https://en.wikipedia.org/wiki/GitHub) to coordinate our work. When making any kind of update, we try to follow the procedure below.
 
-### Before you begin
+### A. Before you begin
 
 1. Create an [issue](https://guides.github.com/features/issues/) where new proposals can be discusssed before any coding is done.
 2. Create a [branch](https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/) of this repo (ideally on your own [fork](https://help.github.com/articles/fork-a-repo/)), where all changes will be made
@@ -28,23 +28,21 @@ We use [GIT](https://en.wikipedia.org/wiki/Git) and [GitHub](https://en.wikipedi
 
 You now have everything you need to start making changes!
 
-### When coding
+### B. Writing your code
 
 5. Pints is developed in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)), and makes heavy use of [NumPy](https://en.wikipedia.org/wiki/NumPy) (see also [NumPy for MatLab users](https://docs.scipy.org/doc/numpy-dev/user/numpy-for-matlab-users.html) and [Python for R users](http://blog.hackerearth.com/how-can-r-users-learn-python-for-data-science)).
 6. Make sure to follow our [coding style guidelines](#coding-style-guidelines).
 7. Commit your changes to your branch with useful, descriptive commit messages: Remember these are publically visible and should still make sense a few months ahead in time. While developing, you can keep using the github issue you're working on as a place for discussion. [Refer to your commits](https://stackoverflow.com/questions/8910271/how-can-i-reference-a-commit-in-an-issue-comment-on-github) when discussing specific lines of code.
 
-### Merging your changes with Pints
+### C. Merging your changes with Pints
 
 8. Pints has online documentation at http://pints.readthedocs.io/. To make sure any new methods or classes you added show up there, please read the [documentation](#documentation) section.
 9. If you added a major new feature, perhaps it should be showcased in an [example notebook](#example-notebooks).
 10. [Test your code!](#testing)
-11. When you feel your code is finished, or at least warrants serious discussion
-    - [Run these pre-commit checks](#pre-commit-checks)
-    - Create a [pull request](https://help.github.com/articles/about-pull-requests/) (PR) on [Pints' GitHub page](https://github.com/pints-team/pints).
+11. When you feel your code is finished, or at least warrants serious discussion, run the [pre-commit checks](#pre-commit-checks) and then create a [pull request](https://help.github.com/articles/about-pull-requests/) (PR) on [Pints' GitHub page](https://github.com/pints-team/pints).
 12. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into Pints master repository.
 
-Finally, if you really, really, _really_, love developing Pints, have a look at the current [project infrastructure](#infrastructure).
+Finally, if you really, really, _really_ love developing Pints, have a look at the current [project infrastructure](#infrastructure).
 
 
 
@@ -73,7 +71,7 @@ We use [flake8](http://flake8.pycqa.org/en/latest/) to check our PEP8 adherence.
 $ flake8
 ```
 
-When you commit your changes they will be checked against flake8 automatically (see [infrastructure](#infrastructure).
+When you commit your changes they will be checked against flake8 automatically (see [infrastructure](#infrastructure)).
 
 ### Naming
 
@@ -121,6 +119,10 @@ If you want to check your tests on Python 2 and 3, use
 $ python run-tests.py --unit2 --unit3
 ```
 
+When you commit anything to Pints, these checks will also be run automatically (see [infrastructure](#infrastructure)).
+
+### Testing notebooks
+
 To test all example notebooks, use
 
 ```
@@ -161,9 +163,9 @@ Next, open a browser, and navigate to your local pints directory (by typing the 
 
 ### Example notebooks
 
-Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) stored in the `examples` directory. Which features are "major" is of course wholy subjective, so please discuss on GitHub first!
+Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) stored in the [examples] directory. Which features are "major" is of course wholy subjective, so please discuss on GitHub first!
 
-All example notebooks should be listed in `examples/EXAMPLES.md`. Please follow the (naming and writing) style of existing notebooks where possible.
+All example notebooks should be listed in [examples/EXAMPLES.md]. Please follow the (naming and writing) style of existing notebooks where possible.
 
 
 
