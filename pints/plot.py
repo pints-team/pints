@@ -107,14 +107,13 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     Arguments:
 
     ``f``
-        A class (or that extends from) :class:`pints.LogPDF` or 
-        :class:`pints.ErrorMeasure` of the problem of interest.
+        A :class:`pints.LogPDF` or :class:`pints.ErrorMeasure` to plot.
     ``point_1``, ``point_2``
-        Two points in parameter space. The method will find a line from `point_1`
-        to `point_2` and make a plot of several points along it.
+        Two points in parameter space. The method will find a line from
+        ``point_1`` to ``point_2`` and plot ``f`` at several points along it.
     ``padding``
-        Specifies the amount of padding around the line segment ``[point_1, point_2]``
-        that will be shown in the plot.
+        Specifies the amount of padding around the line segment
+        ``[point_1, point_2]`` that will be shown in the plot.
     ``evaluations``
         (Optional) The number of evaluation along the line in parameter space.
 
@@ -157,16 +156,14 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     r = point_2 - point_1
 
     # Calculate function with other parameters fixed
-    y = [f(point_1 + sj * r) for sj in s]
+    x = [point_1 + sj * r for sj in s]
+    y = pints.evaluate(f, x, parallel=False)
 
     # Plot
     axes.plot(s, y, color='green')
     axes.axvline(0, color='#1f77b4', label='Point 1')
     axes.axvline(1, color='#7f7f7f', label='Point 2')
     axes.legend()
-
-    # Add vertical y-label to middle plot
-    #fig.text(0.04, 0.5, 'log Likelihood', va='center', rotation='vertical')
 
     return fig, axes
 
