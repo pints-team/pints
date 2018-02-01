@@ -16,12 +16,14 @@ import nbconvert
 import subprocess
 import unittest
 
+
 def run_coverage_tests():
     """
     Runs unit tests using unittest framework, exits if they don't finish.
     """
-    suite = unittest.defaultTestLoader.discover('test',pattern='test*.py')
+    suite = unittest.defaultTestLoader.discover('test', pattern='test*.py')
     unittest.TextTestRunner(verbosity=2).run(suite)
+
 
 def run_unit_tests(executable='python'):
     """
