@@ -9,9 +9,10 @@ If you're already familiar with our workflow, maybe have a quick look at the [pr
 Before you commit any code, please perform the following checks:
 
 - [No style issues](#coding-style-guidelines): `$ flake8`
-- [All tests pass](#testing): `$ python run-tests.py --unit2 --unit3`
+- [All tests pass](#testing): `$ python run-tests.py --unit`
 - [The documentation builds](#building-the-documentation): `$ cd docs` and then `$ make clean; make html`
 
+You can even run all three at once, using `$ python run-tests.py --quick`.
 
 
 ## Workflow
