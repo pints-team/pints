@@ -220,7 +220,7 @@ setup.py
 
 Note that this file must be kept in sync with
 
-- The version number in `pints/__init__.py`
+- The version number in [pints/__init__.py](pints/__init__.py).
 - The dependencies and dependency structure of the [pip requirements files](#pip).
 
 ### PIP
@@ -243,7 +243,7 @@ The requirements files link to each other, so that calling `$ pip install -r req
 
 ### Travis CI
 
-All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on [https://travis-ci.org/pints-team/pints].
+All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on https://travis-ci.org/pints-team/pints.
 
 Configuration files:
 
@@ -255,7 +255,7 @@ Unit tests and flake8 testing is done for every commit. A nightly cronjob also t
 
 ### Codecov
 
-Code coverage (how much of our code is actually seen by the unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on [https://codecov.io/gh/pints-team/pints].
+Code coverage (how much of our code is actually seen by the unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on https://codecov.io/gh/pints-team/pints.
 
 Configuration files:
 
@@ -265,11 +265,11 @@ Configuration files:
 
 ### Read the Docs
 
-Documentation is built using [https://readthedocs.org/] and published on [http://pints.readthedocs.io/].
+Documentation is built using https://readthedocs.org/ and published on http://pints.readthedocs.io/.
 
 ### Binder
 
-Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at [https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples].
+Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples.
 
 Configuration files:
 
@@ -291,6 +291,6 @@ Configuration files:
 
 GitHub does some magic with particular filesnames. In particular:
 
-- The first page people see when they go to [our GitHub page](https://github.com/pints-team/pints) displays the contents of [README.md], which is written in the [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) format. Some guidelines can be found [here](https://help.github.com/articles/about-readmes/).
-- The license for using Pints is stored in [LICENSE], and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
-- This file, [CONTRIBUTING.md] is recognised as the contribution guidelines and a link is [automatically](https://github.com/blog/1184-contributing-guidelines) displayed when new issues or pull requests are created.
+- The first page people see when they go to [our GitHub page](https://github.com/pints-team/pints) displays the contents of [README.md](README.md), which is written in the [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) format. Some guidelines can be found [here](https://help.github.com/articles/about-readmes/).
+- The license for using Pints is stored in [LICENSE](LICENSE), and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
+- This file, [CONTRIBUTING.md](CONTRIBUTING.md) is recognised as the contribution guidelines and a link is [automatically](https://github.com/blog/1184-contributing-guidelines) displayed when new issues or pull requests are created.
