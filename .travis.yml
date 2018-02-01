@@ -45,7 +45,7 @@ script:
   - if [[ $PINTS_COVERAGE == true ]]; then coverage run run-tests.py --coverage; fi;
 
 after_success:
-  - if [[ $PINTS_COVERAGE ]]; then codecov; fi;
+  - if [[ $PINTS_COVERAGE == true ]]; then codecov; fi;
 
 notifications:
   email:
