@@ -45,33 +45,7 @@ $ pip uninstall pints
 
 ## How can I contribute to Pints?
 
-If you'd like to contribute to Pints, please create an [issue](https://guides.github.com/features/issues/) where new proposals can be discusssed. Then, make any changes on a [fork](https://help.github.com/articles/fork-a-repo/) of this repo on github, and send us your modifications via a [pull request](https://help.github.com/articles/about-pull-requests/).
+If you'd like to help us develop Pints by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](CONTRIBUTING.md) first.
 
-### Installation
-
-If you plan to make changes to Pints, install with:
-
-```
-$ pip install -e .[dev,docs]
-```
-
-This will
-
-1. Install all the dependencies for Pints, including the ones for documentation (docs) and development (dev).
-2. Tell Python to use your local pints files when you use `import pints` anywhere on your system.
-
-### Testing:
-
-To check your coding style, use
-
-```
-$ flake8
-```
-
-To run quick tests, use
-
-```
-$ python run-tests.py --unit
-```
 
 
