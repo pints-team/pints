@@ -31,6 +31,9 @@ class TestHodgkinHuxleyIKProblem(unittest.TestCase):
         # Test protocol out of bounds
         self.assertEqual(problem._protocol(-1), -75)
         self.assertEqual(problem._protocol(9999), -75)
+        # Test initial condition out of bounds
+        self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKProblem, 0)
+        self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKProblem, 1)
 
 
 if __name__ == '__main__':
