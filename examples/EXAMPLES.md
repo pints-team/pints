@@ -35,3 +35,7 @@ of choice.
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
+
+## Toy problems
+
+- [Hodgkin-Huxley Potassium current](./toy-hodgkin-huxley-ik.ipynb)
