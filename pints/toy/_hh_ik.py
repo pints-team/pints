@@ -43,6 +43,11 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
             plt.plot(t, v)
         plt.show()
 
+    References:
+
+    [1] A quantitative description of membrane currents and its application to
+    conduction and excitation in nerve
+    Hodgkin, Huxley (1952d) Journal of Physiology
     """
     def __init__(self, initial_condition=0.3):
         #super(HodgkinHuxleyIKProblem, self).__init__()
