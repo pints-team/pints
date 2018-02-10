@@ -73,17 +73,10 @@ class CMAES(pints.PopulationBasedOptimiser):
         if self._running:
             raise Exception('Already initialised.')
 
-        #TODO
         # Import cma (may fail!)
         # Only the first time this is called in a running program incurs
         # much overhead.
         import cma
-
-        # Get BestSolution in cma 1.x and 2.x
-        # try:
-        #    from cma import BestSolution
-        # except ImportError:
-        #    from cma.optimization_tools import BestSolution
 
         # Set up simulation
         options = cma.CMAOptions()
