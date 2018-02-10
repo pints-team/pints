@@ -127,6 +127,7 @@ from ._mcmc import (
     SingleChainAdaptiveMCMC,
     MultiChainMCMC,
     MCMCSampling,
+    mcmc_sample,
     )
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC

@@ -8,7 +8,6 @@
 #  software package.
 #
 import pints
-import pints.toy as toy
 import unittest
 import numpy as np
 
@@ -43,7 +42,6 @@ class TestEvaluators(unittest.TestCase):
         # Test evaluate function
         self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=True)))
         self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=False)))
-
 
 
 if __name__ == '__main__':

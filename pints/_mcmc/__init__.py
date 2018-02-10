@@ -205,12 +205,7 @@ class MCMCSampling(object):
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
     ``method``
-        The class of ``
-
-        #TODO
-
-
-        If no method is specified,
+        The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`AdaptiveCovarianceMCMC` is used.
 
     """
@@ -466,3 +461,32 @@ class MCMCSampling(object):
         """
         return self._verbose
 
+
+def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
+    """
+    Sample from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
+    (MCMC) method.
+
+    Arguments:
+
+    ``log_pdf``
+        A :class:`LogPDF` function that evaluates points in the parameter
+        space.
+    ``chains``
+        The number of MCMC chains to generate.
+    ``x0``
+        A sequence of starting points. Can be a list of lists, a 2-dimensional
+        array, or any other structure such that ``x0[i]`` is the starting point
+        for chain ``i``.
+    ``sigma0=None``
+        An optional initial covariance matrix, i.e., a guess of the covariance
+        in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
+        for each point in ``x0``).
+        Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
+        of the parameterspace) or as a ``(d, )`` vector, in which case
+        ``diag(sigma0)`` will be used.
+    ``method``
+        The class of :class:`MCMCSampler` to use. If no method is specified,
+        :class:`AdaptiveCovarianceMCMC` is used.
+    """
+    return MCMCSampling(log_pdf, chains, x0, sigma0, method).run()
