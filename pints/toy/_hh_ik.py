@@ -92,6 +92,9 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
         # Voltage over time
         self._voltage = np.array([self._protocol(t) for t in self._times])
 
+        # Values
+        self._values = self.evaluate(self.suggested_parameters())
+
     def _protocol(self, time):
         """
         Returns the voltage at the given time, according to the embedded
