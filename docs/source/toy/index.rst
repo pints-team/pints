@@ -1,14 +1,14 @@
 .. _toy:
 
-**********
-Toy models
-**********
+************
+Toy problems
+************
 
-The toy model module provides toy model implementations that can be used for
-tests and in examples.
+The `toy` module provides toy model implementations, problems, and
+ distributions that can be used for tests and in examples.
 
 .. toctree::
-   
+
     logistic
-    
-   
+    hh_ik
+
