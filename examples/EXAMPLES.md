@@ -21,6 +21,7 @@ of choice.
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
+- [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
