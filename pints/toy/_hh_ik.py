@@ -15,22 +15,24 @@ import pints
 from scipy.integrate import odeint
 
 
-class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
+class HodgkinHuxleyIKModel(pints.ForwardModel):
     """
-    Toy problem based on the Potassium current model from the 1952 model of the
-    giant squid axon's action potential, by Hodgkin and Huxley.
+    Toy model based on the potassium current experiments used for Hodgkin and
+    Huxley's 1952 model of the action potential of a squid's giant axon.
 
-    A voltage-step protocol is created and applied to the model, on the
-    interval ``t = [0, 1200]``. The problem output is the elicited potassium
-    current.
+    A voltage-step protocol is created and applied to an axon, and the elicited
+    potassium current is given as model output.
+
+    The protocol is applied in the interval ``t = [0, 1200]``, so sampling
+    outside this interval will not provide much new information.
 
     Example usage::
 
-        problem = HodgkinHuxleyIKProblem()
-        p0 = problem.suggested_parameters()
+        model = HodgkinHuxleyIKModel()
 
-        times = problem.times()
-        values = problem.evaluate(p0)
+        p0 = model.suggested_parameters()
+        times = model.suggested_times()
+        values = model.simulate(p0, times)
 
         import matplotlib.pyplot as plt
         plt.figure()
@@ -39,7 +41,7 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
     Alternatively, the data can be displayed using the :meth:`fold` method::
 
         plt.figure()
-        for t, v in problem.fold(times, values):
+        for t, v in model.fold(times, values):
             plt.plot(t, v)
         plt.show()
 
@@ -50,9 +52,9 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
     Hodgkin, Huxley (1952d) Journal of Physiology
     """
     def __init__(self, initial_condition=0.3):
-        #super(HodgkinHuxleyIKProblem, self).__init__()
+        super(HodgkinHuxleyIKModel, self).__init__()
 
-        # Initial gate
+        # Initial conditions
         self._n0 = float(initial_condition)
         if self._n0 <= 0 or self._n0 >= 1:
             raise ValueError('Initial condition must be > 0 and < 1.')
@@ -84,13 +86,8 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
         ])
         self._n_steps = len(self._v_step)
 
-        # Times
+        # Protocol duration
         self._duration = len(self._v_step) * (self._t_hold + self._t_step)
-        self._fs = 10
-        self._times = np.arange(self._duration * self._fs) / self._fs
-
-        # Voltage over time
-        self._voltage = np.array([self._protocol(t) for t in self._times])
 
     def _protocol(self, time):
         """
@@ -108,8 +105,8 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
         """ See: :meth:`pints.ForwardModel.dimension()`. """
         return 5
 
-    def evaluate(self, parameters):
-        """ See: :meth:`pints.SingleSeriesProblem.evaluate()`. """
+    def simulate(self, parameters, times):
+        """ See: :meth:`pints.ForwardModel.simulate()`. """
 
         # Unpack parameters
         p1, p2, p3, p4, p5 = parameters
@@ -122,10 +119,13 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
             return a * (1 - n) - b * n
 
         # Integrate
-        ns = odeint(dndt, self._n0, self._times).reshape(self._times.shape)
+        ns = odeint(dndt, self._n0, times).reshape(times.shape)
+
+        # Voltage over time
+        voltage = np.array([self._protocol(t) for t in times])
 
         # Calculate and return current
-        return self._g_max * ns**4 * (self._voltage - self._E_k)
+        return self._g_max * ns**4 * (voltage - self._E_k)
 
     def fold(self, times, values):
         """
@@ -136,13 +136,32 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
         Returns a list of tuples ``(times, values)`` for each different voltage
         step.
         """
-        times = times[self._t_hold * self._fs:self._t_both * self._fs]
+        # Get modulus of times
+        times = np.mod(times, self._t_both)
+        # Remove all points during t_hold
+        selection = times >= self._t_hold
+        times = times[selection]
+        values = values[selection]
+        # Use the start of the step as t=0
+        times -= self._t_hold
+        # Find points to split arrays
+        split = 1 + np.argwhere(times[1:] < times[:-1])
+        split = split.reshape((len(split),))
+        # Split arrays
         traces = []
-        for i in range(self._n_steps):
-            i1 = (i * self._t_both + self._t_hold) * self._fs
-            i2 = i1 + self._t_step * self._fs
-            traces.append((times, values[i1:i2]))
+        i = 0
+        for j in split:
+            traces.append((times[i:j], values[i:j]))
+            i = j
+        traces.append((times[i:], values[i:]))
         return traces
+
+    def suggested_duration(self):
+        """
+        Returns the duration of the experimental protocol modeled in this toy
+        model.
+        """
+        return self._duration
 
     def suggested_parameters(self):
         """
@@ -156,7 +175,10 @@ class HodgkinHuxleyIKProblem(pints.SingleSeriesProblem):
         p5 = 80
         return p1, p2, p3, p4, p5
 
-    def times(self):
-        """ See: :meth:`pints.SingleSeriesProblem.times()`. """
-        return self._times
+    def suggested_times(self):
+        """
+        Returns a suggested set of sampling times.
+        """
+        fs = 10
+        return np.arange(self._duration * fs) / fs
 

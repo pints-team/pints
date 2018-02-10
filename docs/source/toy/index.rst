@@ -4,8 +4,10 @@
 Toy problems
 ************
 
-The `toy` module provides toy model implementations, problems, and
- distributions that can be used for tests and in examples.
+The `toy` module provides toy :class:`models<pints.ForwardModel>` and
+:class:`distributions<pints.LogPDF>` that can be used for tests and in
+examples.
+
 
 .. toctree::
 

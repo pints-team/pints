@@ -1,8 +1,8 @@
-*************************
-Hodgkin-Huxley IK Problem
-*************************
+**********************************
+Hodgkin-Huxley IK Experiment Model
+**********************************
 
 .. module:: pints.toy
 
-.. autoclass:: HodgkinHuxleyIKProblem
+.. autoclass:: HodgkinHuxleyIKModel
 
