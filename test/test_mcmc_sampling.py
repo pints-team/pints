@@ -163,6 +163,11 @@ class TestMCMCSampling(unittest.TestCase):
             chains = mcmc.run()
         self.assertNotEqual(capture.text(), '')
 
+        # Test without stopping criteria
+        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc.set_max_iterations(None)
+        self.assertRaises(ValueError, mcmc.run)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
