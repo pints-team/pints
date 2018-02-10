@@ -11,11 +11,10 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
-import multiprocessing
 import numpy as np
 
 
-class CMAES(pints.Optimiser):
+class CMAES(pints.PopulationBasedOptimiser):
     """
     *Extends:* :class:`Optimiser`
 
@@ -32,9 +31,49 @@ class CMAES(pints.Optimiser):
     (CMA-ES).
 
     """
-    def run(self):
-        """See: :meth:`pints.Optimiser.run()`."""
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super(CMAES, self).__init__(x0, sigma0, boundaries)
 
+        # Set initial state
+        self._running = False
+        self._ready_for_tell = False
+
+        # Set default settings
+        self.set_population_size()
+
+        # Best solution found
+        self._xbest = pints.vector(x0)
+        self._fbest = float('inf')
+
+    def ask(self):
+        """See :meth:`Optimiser.ask()`."""
+        # Initialise on first call
+        if not self._running:
+            self._initialise()
+
+        # Ready for tell now
+        self._ready_for_tell = True
+
+        # Create new samples
+        self._xs = np.array(self._es.ask())
+
+        # Set as read-only and return
+        self._xs.setflags(write=False)
+        return self._xs
+
+    def fbest(self):
+        """ See :meth:`Optimiser.fbest()`. """
+        f = self._es.result.fbest
+        return float('inf') if f is None else f
+
+    def _initialise(self):
+        """
+        Initialises the optimiser for the first iteration.
+        """
+        if self._running:
+            raise Exception('Already initialised.')
+
+        #TODO
         # Import cma (may fail!)
         # Only the first time this is called in a running program incurs
         # much overhead.
@@ -45,40 +84,6 @@ class CMAES(pints.Optimiser):
         #    from cma import BestSolution
         # except ImportError:
         #    from cma.optimization_tools import BestSolution
-
-        # Default search parameters
-        # TODO Allow changing before run() with method call
-        parallel = True
-
-        # Parameter space dimension
-        d = self._dimension
-
-        # Population size
-        # TODO Allow changing before run() with method call
-        # If parallel, round up to a multiple of the reported number of cores
-        # In IPOP-CMAES, this will be used as the _initial_ population size
-        n = 4 + int(3 * np.log(d))
-        if parallel:
-            cpu_count = multiprocessing.cpu_count()
-            n = (((n - 1) // cpu_count) + 1) * cpu_count
-
-        # Search is terminated after max_iter iterations
-        # TODO Allow changing before run() with method call
-        max_iter = 10000
-        # CMA-ES default: 100 + 50 * (d + 3)**2 // n**0.5
-
-        # Or if successive iterations do not produce a significant change
-        # TODO Allow changing before run() with method call
-        # max_unchanged_iterations = 100
-        min_significant_change = 1e-11
-        # unchanged_iterations = 0
-        # CMA-ES max_unchanged_iterations fixed value: 10 + 30 * d / n
-
-        # Create evaluator object
-        if parallel:
-            evaluator = pints.ParallelEvaluator(self._function)
-        else:
-            evaluator = pints.SequentialEvaluator(self._function)
 
         # Set up simulation
         options = cma.CMAOptions()
@@ -91,53 +96,72 @@ class CMAES(pints.Optimiser):
             )
 
         # Set stopping criteria
-        options.set('maxiter', max_iter)
-        options.set('tolfun', min_significant_change)
+        #options.set('maxiter', max_iter)
+        #options.set('tolfun', min_significant_change)
         # options.set('ftarget', target)
 
         # Tell CMA not to worry about growing step sizes too much
-        options.set('tolfacupx', 10000)
+        #options.set('tolfacupx', 10000)
 
         # CMA-ES wants a single standard deviation as input, use the smallest
         # in the vector (if the user passed in a scalar, this will be the
         # value used).
-        sigma0 = np.min(self._sigma0)
+        self._sigma0 = np.min(self._sigma0)
 
         # Tell cma-es to be quiet
-        if not self._verbose:
-            options.set('verbose', -9)
+        options.set('verbose', -9)
+
         # Set population size
-        options.set('popsize', n)
-        if self._verbose:
-            print('Population size ' + str(n))
+        options.set('popsize', self._population_size)
 
         # Search
-        es = cma.CMAEvolutionStrategy(self._x0, sigma0, options)
-        while not es.stop():
-            candidates = es.ask()
-            es.tell(candidates, evaluator.evaluate(candidates))
-            if self._verbose:
-                es.disp()
+        self._es = cma.CMAEvolutionStrategy(self._x0, self._sigma0, options)
 
-        # Show result
-        if self._verbose:
-            es.result_pretty()
+        # Update optimiser state
+        self._running = True
 
-        # Get solution
-        x = es.result.xbest
-        fx = es.result.fbest
+    def name(self):
+        """See: :meth:`Optimiser.name()`."""
+        return 'Exponential Natural Evolution Strategy (xNES)'
 
-        # No result found? Then return hint and score of hint
-        if x is None:
-            return self._x0, self._function(self._x0)
+    def population_size(self):
+        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        return self._population_size
 
-        # Return proper result
-        return x, fx
+    def set_population_size(self, population_size=None, parallel=False):
+        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        if self._running:
+            raise Exception('Cannot change settings during run.')
 
+        # Check population size or set using heuristic
+        if population_size is None:
+            population_size = 4 + int(3 * np.log(self._dimension))
+        else:
+            population_size = int(population_size)
+            if population_size < 1:
+                raise ValueError('Population size must be at least 1.')
 
-def cmaes(function, boundaries=None, x0=None, sigma0=None):
-    """
-    Runs a CMA-ES optimisation with the default settings.
-    """
-    return CMAES(function, boundaries, x0, sigma0).run()
+        # Round up to number of CPU cores
+        if parallel:
+            import multiprocessing
+            cpu_count = multiprocessing.cpu_count()
+            population_size = cpu_count * (
+                ((population_size - 1) // cpu_count) + 1)
+
+        # Store
+        self._population_size = population_size
+
+    def tell(self, fx):
+        """See: :meth:`Optimiser.tell()`."""
+        if not self._ready_for_tell:
+            raise Exception('ask() not called before tell()')
+        self._ready_for_tell = False
+
+        # Tell CMA-ES
+        self._es.tell(self._xs, fx)
+
+    def xbest(self):
+        """ See :meth:`Optimiser.xbest`. """
+        x = self._es.result.xbest
+        return self._x0 if x is None else x
 

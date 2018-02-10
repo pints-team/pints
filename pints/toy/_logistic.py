@@ -35,4 +35,6 @@ class LogisticModel(pints.ForwardModel):
             raise ValueError('Negative times are not allowed.')
         if self._p0 == 0:
             return np.zeros(times.shape)
+        if k < 0:
+            return np.zeros(times.shape)
         return k / (1 + (k / self._p0 - 1) * np.exp(-r * times))

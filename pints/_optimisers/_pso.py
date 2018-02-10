@@ -12,12 +12,11 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import multiprocessing
 
 
-class PSO(pints.Optimiser):
+class PSO(pints.PopulationBasedOptimiser):
     """
-    *Extends:* :class:`Optimiser`
+    *Extends:* :class:`PopulationBasedOptimiser`
 
     Finds the best parameters using the PSO method described in [1].
 
@@ -75,242 +74,184 @@ class PSO(pints.Optimiser):
     IEEE International Conference on Neural Networks
 
     """
-    def __init__(self, function, boundaries=None, x0=None, sigma0=None):
-        super(PSO, self).__init__(function, boundaries, x0, sigma0)
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super(PSO, self).__init__(x0, sigma0, boundaries)
 
-        # Run parallelised version
-        self._parallel = None
-        self.set_parallel()
+        # Set initial state
+        self._running = False
+        self._ready_for_tell = False
 
-        # Maximum iterations stopping criterion
-        self._max_iterations = None
-        self.set_max_iterations()
+        # Set default settings
+        self.set_local_global_balance()
+        self.set_population_size()
 
-        # Maximum unchanged iterations stopping criterion
-        self._max_unchanged_iterations = None
-        self.set_max_unchanged_iterations()
-        self._min_significant_change = None
-        self.set_min_significant_change()
+    def ask(self):
+        """ See :meth:`Optimiser.ask()`. """
+        # Initialise on first call
+        if not self._running:
+            self._initialise()
 
-    def run(self):
-        """See :meth:`Optimiser.run()`."""
+        # Ready for tell now
+        self._ready_for_tell = True
 
-        # Global/local search balance
-        # TODO Allow changing before run() with method call
-        r = 0.5
+        # Return points
+        return self._user_xs
 
-        # Check at least one stopping criterion is set
-        if (self._max_iterations == 0 and
-                self._max_unchanged_iterations == 0):
-            raise ValueError('At least one stopping criterion must be set.')
+    def fbest(self):
+        """ See :meth:`Optimiser.fbest()`. """
+        return self._fg
 
-        # Unchanged iterations count (used for stopping or just for
-        # information)
-        unchanged_iterations = 0
-
-        # Parameter space dimension
-        d = self._dimension
-
-        # Population size
-        # TODO Allow changing before run() with method call
-        # If parallel, round up to a multiple of the reported number of cores
-        n = 4 + int(3 * np.log(d))
-        if self._parallel:
-            cpu_count = multiprocessing.cpu_count()
-            n = min(3, (((n - 1) // cpu_count) + 1)) * cpu_count
-
-        # Set up progress reporting in verbose mode
-        nextMessage = 0
-        if self._verbose:
-            if self._parallel:
-                print(
-                    'Running in parallel mode with population size ' + str(n))
-            else:
-                print(
-                    'Running in sequential mode with population size '
-                    + str(n))
-
-        # Set parameters based on global/local balance r
-        amax = 4.1
-        almax = r * amax
-        agmax = amax - almax
+    def _initialise(self):
+        """
+        Initialises the optimiser for the first iteration.
+        """
+        if self._running:
+            raise Exception('Already initialised.')
 
         # Initialize swarm
-        xs = []     # Particle coordinate vectors
-        vs = []     # Particle velocity vectors
-        fs = []     # Particle scores
-        fl = []     # Best local score
-        pl = []     # Best local position
-        fg = 0      # Best global score
-        pg = 0      # Best global position
+        self._xs = []     # Particle coordinate vectors
+        self._vs = []     # Particle velocity vectors
+        self._fl = []     # Best local score
+        self._pl = []     # Best local position
 
         # Set initial positions
-        xs.append(np.array(self._x0, copy=True))
+        self._xs.append(np.array(self._x0, copy=True))
         if self._boundaries is None:
-            for i in range(1, n):
-                xs.append(np.random.normal(self._x0, self._sigma0))
+            for i in range(1, self._population_size):
+                self._xs.append(np.random.normal(self._x0, self._sigma0))
         else:
-            for i in range(1, n):
-                xs.append(
-                    self._boundaries._lower + np.random.uniform(0, 1, d)
+            for i in range(1, self._population_size):
+                self._xs.append(
+                    self._boundaries._lower
+                    + np.random.uniform(0, 1, self._dimension)
                     * (self._boundaries._upper - self._boundaries._lower))
+        self._xs = np.array(self._xs, copy=True)
 
         # Set initial velocities
-        for i in range(n):
-            vs.append(self._sigma0 * np.random.uniform(0, 1, d))
+        for i in range(self._population_size):
+            self._vs.append(
+                1e-1 * self._sigma0 * np.random.uniform(0, 1, self._dimension))
 
         # Set initial scores and local best
-        for i in range(n):
-            fs.append(float('inf'))
-            fl.append(float('inf'))
-            pl.append(xs[i])
+        for i in range(self._population_size):
+            self._fl.append(float('inf'))
+            self._pl.append(self._xs[i])
 
         # Set global best position and score
-        fg = float('inf')
-        pg = xs[0]
+        self._fg = float('inf')
+        self._pg = self._xs[0]
 
-        # Apply wrapper to score function to implement boundaries
-        function = self._function
+        # Create boundary transform
+        self._boundary_transform = None
         if self._boundaries is not None:
-            function = pints.InfBoundaryTransform(function, self._boundaries)
+            self._boundary_transform = pints.TriangleWaveTransform(
+                self._boundaries)
 
-        # Create evaluator object
-        if self._parallel:
-            evaluator = pints.ParallelEvaluator(self._function)
+        # Create safe xs to pass to user
+        self._user_xs = np.array(self._xs, copy=True)
+
+        # Set local/global exploration balance
+        self.set_local_global_balance()
+
+        # Update optimiser state
+        self._running = True
+
+    def population_size(self):
+        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        return self._population_size
+
+    def set_local_global_balance(self, r=0.5):
+        """
+        Set the balance between local and global exploration for each particle,
+        using a parameter `r` such that `r = 1` is a fully local search and
+        `r = 0` is a fully global search.
+        """
+        if self._running:
+            raise Exception('Cannot change settings during run.')
+
+        # Check r
+        r = float(r)
+        if r < 0 or r > 1:
+            raise ValueError('Parameter r must be in the range 0-1.')
+
+        # Set almax and agmax based on r
+        _amax = 4.1
+        self._almax = r * _amax
+        self._agmax = _amax - self._almax
+
+    def set_population_size(self, population_size=None, parallel=False):
+        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        if self._running:
+            raise Exception('Cannot change settings during run.')
+
+        # Check population size or set using heuristic
+        if population_size is None:
+            population_size = 4 + int(3 * np.log(self._dimension))
         else:
-            evaluator = pints.SequentialEvaluator(self._function)
+            population_size = int(population_size)
+            if population_size < 1:
+                raise ValueError('Population size must be at least 1.')
 
-        # Start searching
-        running = True
-        iteration = 0
-        while running:
-            # Calculate scores
-            fs = evaluator.evaluate(xs)
+        # Round up to number of CPU cores
+        # (With a minimum of 3 times the CPU count)
+        if parallel:
+            import multiprocessing
+            cpu_count = multiprocessing.cpu_count()
+            population_size = cpu_count * max(
+                3, (((population_size - 1) // cpu_count) + 1))
 
-            # Update particles
-            for i in range(n):
-                # Update best local position and score
-                if fs[i] < fl[i]:
-                    fl[i] = fs[i]
-                    pl[i] = np.array(xs[i], copy=True)
+        # Store
+        self._population_size = population_size
 
-                # Calculate "velocity"
-                al = np.random.uniform(0, almax, d)
-                ag = np.random.uniform(0, agmax, d)
-                vs[i] += al * (pl[i] - xs[i]) + ag * (pg - xs[i])
+    def name(self):
+        """See: :meth:`Optimiser.name()`."""
+        return 'Particle Swarm Optimisation (PSO)'
 
-                # Update position
-                e = xs[i] + vs[i]
-                if self._boundaries is not None:
-                    # To reduce the amount of time spent outside the bounds of
-                    # the search space, the velocity of any particle outside
-                    # the bounds is reduced by a factor
-                    #  (1 / (1 + number of boundary violations)).
-                    if not self._boundaries.check(e):
-                        vs[i] *= 1 / (1 + np.sum(e))
-                xs[i] += vs[i]
+    def tell(self, fx):
+        """See: :meth:`Optimiser.tell()`."""
+        if not self._ready_for_tell:
+            raise Exception('ask() not called before tell()')
+        self._ready_for_tell = False
 
-            # Update global best
-            i = np.argmin(fl)
-            if fl[i] < fg:
-                # Check if this counts as a significant change
-                fnew = fl[i]
-                if np.sum(np.abs(fnew - fg)) < self._min_significant_change:
-                    unchanged_iterations += 1
-                else:
-                    unchanged_iterations = 0
+        # Update particles
+        for i in range(self._population_size):
 
-                # Update best
-                fg = fnew
-                pg = np.array(pl[i], copy=True)
-            else:
-                unchanged_iterations += 1
+            # Update best local position and score
+            if fx[i] < self._fl[i]:
+                self._fl[i] = fx[i]
+                self._pl[i] = np.array(self._xs[i], copy=True)
 
-            # Show progress in verbose mode:
-            if self._verbose and iteration >= nextMessage:
-                print(str(iteration) + ': ' + str(fg))
-                if iteration < 3:
-                    nextMessage = iteration + 1
-                else:
-                    nextMessage = 20 * (1 + iteration // 20)
+            # Calculate "velocity"
+            al = np.random.uniform(0, self._almax, self._dimension)
+            ag = np.random.uniform(0, self._agmax, self._dimension)
+            self._vs[i] += (
+                al * (self._pl[i] - self._xs[i]) +
+                ag * (self._pg - self._xs[i]))
 
-            # Update iteration count
-            iteration += 1
+            # Reduce speed if going too fast, as indicated by going out of
+            # bounds.
+            # This is not in the original algorithm but seems to work well
+            if self._boundaries is not None:
+                if not self._boundaries.check(self._xs[i] + self._vs[i]):
+                    self._vs[i] *= 0.5
 
-            # Check stopping criteria
-            # Maximum number of iterations
-            if self._max_iterations and iteration >= self._max_iterations:
-                running = False
-                if self._verbose:
-                    print(
-                        'Halting: Maximum number of iterations ('
-                        + str(iteration) + ' reached.')
+            # Update position
+            self._xs[i] += self._vs[i]
 
-            # Maximum number of iterations without significant change
-            if (self._max_unchanged_iterations and
-                    unchanged_iterations >= self._max_unchanged_iterations):
-                running = False
-                if self._verbose:
-                    print(
-                        'Halting: No significant change for '
-                        + str(unchanged_iterations) + ' iterations.')
+        # Map points outside of the search space back into it
+        if self._boundary_transform is not None:
+            self._xs = self._boundary_transform(self._xs)
 
-        # Show final value
-        if self._verbose:
-            print(str(iteration) + ': ' + str(fg))
+        # Update global best
+        i = np.argmin(self._fl)
+        if self._fl[i] < self._fg:
+            self._fg = self._fl[i]
+            self._pg = np.array(self._pl[i], copy=True)
 
-        # Return best position and score
-        return pg, fg
+        # Create safe xs to pass to user
+        self._user_xs = np.array(self._xs, copy=True)
 
-    def set_max_iterations(self, iterations=10000):
-        """
-        Sets a maximum number of `iterations` for this routine, or disables
-        this stopping criterion when `iterations is None`.
-        """
-        if iterations is None:
-            iterations = 0
-        else:
-            iterations = int(iterations)
-            if iterations < 0:
-                raise ValueError(
-                    'Maximum number of iterations cannot be negative.')
-        self._max_iterations = iterations
-
-    def set_max_unchanged_iterations(self, iterations=200):
-        """
-        Sets a maximum number of unchanged `iterations` for this routine, or
-        disables this stopping criterion when `iterations is None`.
-        """
-        if iterations is None:
-            iterations = 0
-        else:
-            iterations = int(iterations)
-            if iterations < 0:
-                raise ValueError(
-                    'Maximum number of iterations cannot be negative.')
-        self._max_unchanged_iterations = iterations
-
-    def set_min_significant_change(self, e=1e-11):
-        """
-        Sets the absolute difference between successive scores that is counted
-        as 'significantly different' when using the `max_unchanged_iterations`
-        stopping criterion.
-        """
-        e = float(e)
-        if e < 0:
-            raise ValueError('Minimum significant change cannot be negative.')
-        self._min_significant_change = e
-
-    def set_parallel(self, parallel=True):
-        """
-        Enables/disables parallel mode.
-        """
-        self._parallel = bool(parallel)
-
-
-def pso(function, boundaries=None, x0=None, sigma0=None):
-    """
-    Runs a PSO optimisation with the default settings.
-    """
-    return PSO(function, boundaries, x0, sigma0).run()
+    def xbest(self):
+        """ See :meth:`Optimiser.xbest()`. """
+        return np.array(self._pg, copy=True)
 

@@ -7,19 +7,19 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
+import pints.io
 import pints.toy
 import unittest
 import numpy as np
 
 debug = False
+method = pints.XNES
 
 
 class TestXNES(unittest.TestCase):
     """
-    Tests the basic methods of the xNES optimiser.
+    Tests the basic methods of the XNES optimiser.
     """
     def __init__(self, name):
         super(TestXNES, self).__init__(name)
@@ -52,8 +52,9 @@ class TestXNES(unittest.TestCase):
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
-    def test_unbounded_no_hint(self):
-        opt = pints.XNES(self.score)
+    def test_unbounded(self):
+
+        opt = pints.Optimisation(self.score, self.x0, method=method)
         opt.set_verbose(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
@@ -61,10 +62,10 @@ class TestXNES(unittest.TestCase):
                 break
         self.assertTrue(found_solution < self.cutoff)
 
-    ''''
+    def test_bounded(self):
 
-    def test_bounded_no_hint(self):
-        opt = pints.XNES(self.score, self.boundaries)
+        opt = pints.Optimisation(self.score, self.x0,
+                                 boundaries=self.boundaries, method=method)
         opt.set_verbose(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
@@ -72,8 +73,10 @@ class TestXNES(unittest.TestCase):
                 break
         self.assertTrue(found_solution < self.cutoff)
 
-    def test_unbounded_with_hint(self):
-        opt = pints.XNES(self.score, x0=self.x0)
+    def test_bounded_and_sigma(self):
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
@@ -81,24 +84,49 @@ class TestXNES(unittest.TestCase):
                 break
         self.assertTrue(found_solution < self.cutoff)
 
-    def test_bounded_with_hint(self):
-        opt = pints.XNES(self.score, self.boundaries, self.x0)
-        opt.set_verbose(debug)
-        for i in range(self.max_tries):
-            found_parameters, found_solution = opt.run()
-            if found_solution < self.cutoff:
-                break
-        self.assertTrue(found_solution < self.cutoff)
+    def test_stopping_max_iter(self):
 
-    def test_bounded_with_hint_and_sigma(self):
-        opt = pints.XNES(self.score, self.boundaries, self.x0, self.sigma0)
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
+        opt.set_verbose(True)
+        opt.set_max_iterations(2)
+        opt.set_max_unchanged_iterations(None)
+        with pints.io.StdOutCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of iterations', c.text())
+
+    def test_stopping_max_unchanged(self):
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
+        opt.set_verbose(True)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(2)
+        with pints.io.StdOutCapture() as c:
+            opt.run()
+            self.assertIn('Halting: No significant change', c.text())
+
+    def test_stopping_threshold(self):
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
+        opt.set_verbose(True)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_threshold(1e4 * self.cutoff)
+        with pints.io.StdOutCapture() as c:
+            opt.run()
+            self.assertIn(
+                'Halting: Objective function crossed threshold', c.text())
+
+    def test_stopping_no_criterion(self):
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(debug)
-        for i in range(self.max_tries):
-            found_parameters, found_solution = opt.run()
-            if found_solution < self.cutoff:
-                break
-        self.assertTrue(found_solution < self.cutoff)
-    '''
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(None)
+        self.assertRaises(ValueError, opt.run)
 
 
 if __name__ == '__main__':

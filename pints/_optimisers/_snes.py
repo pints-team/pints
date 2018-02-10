@@ -12,7 +12,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import multiprocessing
 
 
 class SNES(pints.Optimiser):
@@ -36,157 +35,149 @@ class SNES(pints.Optimiser):
     [2] PyBrain: The Python machine learning library (http://pybrain.org)
 
     """
-    def run(self):
-        """See :meth:`Optimiser.run()`."""
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super(SNES, self).__init__(x0, sigma0, boundaries)
 
-        # Default search parameters
-        # TODO Allow changing before run() with method call
-        parallel = True
+        # Set initial state
+        self._running = False
+        self._ready_for_tell = False
 
-        # Search is terminated after max_iter iterations
-        # TODO Allow changing before run() with method call
-        max_iter = 10000
+        # Set default settings
+        self.set_population_size()
 
-        # Or if the result doesn't change significantly for a while
-        # TODO Allow changing before run() with method call
-        max_unchanged_iterations = 100
-        # TODO Allow changing before run() with method call
-        min_significant_change = 1e-11
-        # TODO Allow changing before run() with method call
-        unchanged_iterations = 0
+        # Best solution found
+        self._xbest = pints.vector(x0)
+        self._fbest = float('inf')
 
-        # Parameter space dimension
-        d = self._dimension
+    def ask(self):
+        """See :meth:`Optimiser.ask()`."""
+        # Initialise on first call
+        if not self._running:
+            self._initialise()
 
-        # Population size
-        # TODO Allow changing before run() with method call
-        # If parallel, round up to a multiple of the reported number of cores
-        n = 4 + int(3 * np.log(d))
-        if parallel:
-            cpu_count = multiprocessing.cpu_count()
-            n = (((n - 1) // cpu_count) + 1) * cpu_count
+        # Ready for tell now
+        self._ready_for_tell = True
 
-        # Set up progress reporting in verbose mode
-        nextMessage = 0
-        if self._verbose:
-            if parallel:
-                print(
-                    'Running in parallel mode with population size ' + str(n))
-            else:
-                print(
-                    'Running in sequential mode with population size '
-                    + str(n))
+        # Create new samples
+        self._ss = np.array([np.random.normal(0, 1, self._dimension)
+                            for i in range(self._population_size)])
+        self._xs = self._mu + self._sigmas * self._ss
+
+        # Perform boundary transform
+        if self._boundaries:
+            self._xs = self._xtransform(self._xs)
+
+        # Set as read-only and return
+        self._xs.setflags(write=False)
+        return self._xs
+
+    def fbest(self):
+        """ See :meth:`Optimiser.fbest()`. """
+        return self._fbest
+
+    def _initialise(self):
+        """
+        Initialises the optimiser for the first iteration.
+        """
+        if self._running:
+            raise Exception('Already initialised.')
 
         # Apply wrapper to implement boundaries
-        if self._boundaries is None:
-            def xtransform(x):
-                return x
-        else:
-            xtransform = pints.TriangleWaveTransform(self._boundaries)
+        if self._boundaries is not None:
+            self._xtransform = pints.TriangleWaveTransform(self._boundaries)
 
-        # Create evaluator object
-        if parallel:
-            evaluator = pints.ParallelEvaluator(self._function)
-        else:
-            evaluator = pints.SequentialEvaluator(self._function)
+        # Shorthands
+        d = self._dimension
+        n = self._population_size
 
         # Learning rates
         # TODO Allow changing before run() with method call
-        eta_mu = 1
+        self._eta_mu = 1
         # TODO Allow changing before run() with method call
-        eta_sigmas = 0.2 * (3 + np.log(d)) * d ** -0.5
+        self._eta_sigmas = 0.2 * (3 + np.log(d)) * d ** -0.5
 
         # Pre-calculated utilities
-        us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
-        us /= np.sum(us)
-        us -= 1 / n
+        self._us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
+        self._us /= np.sum(self._us)
+        self._us -= 1 / n
 
         # Center of distribution
-        mu = np.array(self._x0, copy=True)
+        self._mu = np.array(self._x0, copy=True)
 
         # Initial square root of covariance matrix
-        sigmas = np.array(self._sigma0, copy=True)
+        self._sigmas = np.array(self._sigma0, copy=True)
 
-        # Best solution found
-        xbest = mu
-        fbest = float('inf')
+        # Update optimiser state
+        self._running = True
 
-        # Start running
-        for iteration in range(1, 1 + max_iter):
+    def mu(self):
+        """
+        Returns `mu`, the current estimate of the distribution's minimum.
+        """
+        if self._boundaries:
+            return self._xtransform(self._mu)
+        else:
+            return np.array(self._mu, copy=True)
 
-            # Create new samples
-            ss = np.array([np.random.normal(0, 1, d) for i in range(n)])
-            xs = mu + sigmas * ss
+    def name(self):
+        """See: :meth:`Optimiser.name()`."""
+        return 'Seperable Natural Evolution Strategy (SNES)'
 
-            # Evaluate at the samples
-            fxs = evaluator.evaluate(xtransform(xs))
+    def population_size(self):
+        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        return self._population_size
 
-            # Order the normalized samples according to the scores
-            order = np.argsort(fxs)
-            ss = ss[order]
+    def set_population_size(self, population_size=None, parallel=False):
+        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        if self._running:
+            raise Exception('Cannot change settings during run.')
 
-            # Update center
-            mu += eta_mu * sigmas * np.dot(us, ss)
+        # Check population size or set using heuristic
+        if population_size is None:
+            population_size = 4 + int(3 * np.log(self._dimension))
+        else:
+            population_size = int(population_size)
+            if population_size < 1:
+                raise ValueError('Population size must be at least 1.')
 
-            # Update variances
-            sigmas *= np.exp(0.5 * eta_sigmas * np.dot(us, ss**2 - 1))
+        # Round up to number of CPU cores
+        if parallel:
+            import multiprocessing
+            cpu_count = multiprocessing.cpu_count()
+            population_size = cpu_count * (
+                ((population_size - 1) // cpu_count) + 1)
 
-            # Update best if needed
-            if fxs[order[0]] < fbest:
+        # Store
+        self._population_size = population_size
 
-                # Check if this counts as a significant change
-                fnew = fxs[order[0]]
-                if np.sum(np.abs(fnew - fbest)) < min_significant_change:
-                    unchanged_iterations += 1
-                else:
-                    unchanged_iterations = 0
+    def tell(self, fx):
+        """See: :meth:`Optimiser.tell()`."""
+        if not self._ready_for_tell:
+            raise Exception('ask() not called before tell()')
+        self._ready_for_tell = False
 
-                # Update best
-                xbest = xs[order[0]]
-                fbest = fnew
+        # Order the normalized samples according to the scores
+        order = np.argsort(fx)
+        self._ss = self._ss[order]
 
-            else:
-                unchanged_iterations += 1
+        # Update center
+        self._mu += self._eta_mu * self._sigmas * np.dot(self._us, self._ss)
 
-            # Show progress in verbose mode:
-            if self._verbose and iteration >= nextMessage:
-                print(str(iteration) + ': ' + str(fbest))
-                if iteration < 3:
-                    nextMessage = iteration + 1
-                else:
-                    nextMessage = 20 * (1 + iteration // 20)
+        # Update variances
+        self._sigmas *= np.exp(
+            0.5 * self._eta_sigmas * np.dot(self._us, self._ss**2 - 1))
 
-            # Stop if no change for too long
-            if unchanged_iterations >= max_unchanged_iterations:
-                if self._verbose:
-                    print(
-                        'Halting: No significant change for '
-                        + str(unchanged_iterations) + ' iterations.')
-                break
+        # Update xbest and fbest
+        # Note: The stored values are based on particles, not on the mean of
+        # all particles! This has the advantage that we don't require an extra
+        # evaluation at mu to get a pair (mu, f(mu)). The downside is that
+        # xbest isn't the very best point. However, xbest and mu seem to
+        # converge quite quickly, so that this difference disappears.
+        if fx[order[0]] < self._fbest:
+            self._xbest = self._xs[order[0]]
+            self._fbest = fx[order[0]]
 
-        # Show stopping criterion
-        if self._verbose and unchanged_iterations < max_unchanged_iterations:
-            print('Halting: Maximum iterations reached.')
-
-        # Get final score at mu
-        fmu = self._function(xtransform(mu))
-        if fmu < fbest:
-            if self._verbose:
-                print('Final score at mu beats best sample')
-            xbest = mu
-            fbest = fmu
-
-        # Show final value
-        if self._verbose:
-            print(str(iteration) + ': ' + str(fbest))
-
-        # Return best solution
-        return xtransform(xbest), fbest
-
-
-def snes(function, boundaries=None, x0=None, sigma0=None):
-    """
-    Runs a SNES optimisation with the default settings.
-    """
-    return SNES(function, boundaries, x0, sigma0).run()
+    def xbest(self):
+        """ See :meth:`Optimiser.xbest`. """
+        return self._xbest
 

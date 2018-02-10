@@ -7,13 +7,14 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import numpy as np
 import pints
 import pints.io
 import pints.toy
 import unittest
+import numpy as np
 
 debug = False
+method = pints.PSO
 
 
 class TestPSO(unittest.TestCase):
@@ -37,7 +38,7 @@ class TestPSO(unittest.TestCase):
         self.score = pints.SumOfSquaresError(self.problem)
 
         # Select some boundaries
-        self.boundaries = pints.Boundaries([0, 200], [1, 1000])
+        self.boundaries = pints.Boundaries([0, 400], [0.03, 600])
 
         # Set an initial position
         self.x0 = 0.014, 499
@@ -51,44 +52,36 @@ class TestPSO(unittest.TestCase):
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
-    def test_unbounded_no_hint(self):
-        np.random.seed(1)
-        opt = pints.PSO(self.score)
-        opt.set_verbose(debug)
-        found_parameters, found_solution = opt.run()
-        # Will be terrible, don't check
+    #def test_unbounded(self):
 
-    def test_bounded_no_hint(self):
-        np.random.seed(1)
-        opt = pints.PSO(self.score, self.boundaries)
+    #    opt = pints.Optimisation(self.score, self.x0, method=method)
+    #    opt.set_verbose(debug)
+    #    opt.set_max_unchanged_iterations(500)
+    #    with np.errstate(over='ignore'):
+    #        for i in range(self.max_tries):
+    #            found_parameters, found_solution = opt.run()
+    #            if found_solution < self.cutoff:
+    #                break
+    #    self.assertTrue(found_solution < self.cutoff)
+
+    def test_bounded(self):
+
+        opt = pints.Optimisation(self.score, self.x0,
+                                 boundaries=self.boundaries, method=method)
         opt.set_verbose(debug)
+        opt.set_max_unchanged_iterations(500)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
                 break
         self.assertTrue(found_solution < self.cutoff)
 
-    def test_unbounded_with_hint(self):
-        np.random.seed(1)
-        opt = pints.PSO(self.score, x0=self.x0)
-        opt.set_verbose(debug)
-        found_parameters, found_solution = opt.run()
-        # Will be terrible, don't check
+    def test_bounded_and_sigma(self):
 
-    def test_bounded_with_hint(self):
-        np.random.seed(1)
-        opt = pints.PSO(self.score, self.boundaries, self.x0)
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(debug)
-        for i in range(self.max_tries):
-            found_parameters, found_solution = opt.run()
-            if found_solution < self.cutoff:
-                break
-        self.assertTrue(found_solution < self.cutoff)
-
-    def test_bounded_with_hint_and_sigma(self):
-        np.random.seed(1)
-        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
-        opt.set_verbose(debug)
+        opt.set_max_unchanged_iterations(500)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
@@ -96,16 +89,20 @@ class TestPSO(unittest.TestCase):
         self.assertTrue(found_solution < self.cutoff)
 
     def test_stopping_max_iter(self):
-        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(True)
-        opt.set_max_iterations(10)
+        opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
         with pints.io.StdOutCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
     def test_stopping_max_unchanged(self):
-        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
@@ -113,8 +110,23 @@ class TestPSO(unittest.TestCase):
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
+    def test_stopping_threshold(self):
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
+        opt.set_verbose(True)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_threshold(1e4 * self.cutoff)
+        with pints.io.StdOutCapture() as c:
+            opt.run()
+            self.assertIn(
+                'Halting: Objective function crossed threshold', c.text())
+
     def test_stopping_no_criterion(self):
-        opt = pints.PSO(self.score, self.boundaries, self.x0, self.sigma0)
+
+        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
+                                 self.boundaries, method)
         opt.set_verbose(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)

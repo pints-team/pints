@@ -29,9 +29,10 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.values = self.model.simulate(self.real_parameters, self.times)
 
         # Add noise
-        noise = 10
-        self.values += np.random.normal(0, noise, self.values.shape)
-        self.real_parameters.append(noise)
+        self.noise = 10
+        self.values += np.random.normal(0, self.noise, self.values.shape)
+        self.real_parameters.append(self.noise)
+        self.real_parameters = np.array(self.real_parameters)
 
         # Create an object with links to the model and time series
         self.problem = pints.SingleSeriesProblem(
@@ -40,56 +41,41 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Create a uniform prior over both the parameters and the new noise
         # variable
         self.log_prior = pints.UniformLogPrior(
-            [0.01, 400, noise * 0.1],
-            [0.02, 600, noise * 100]
+            [0.01, 400, self.noise * 0.1],
+            [0.02, 600, self.noise * 100]
         )
+
+        # Create a log likelihood
+        self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
 
         # Create an un-normalised log-posterior (log-prior + log-likelihood)
         self.log_posterior = pints.LogPosterior(
-            self.log_prior, pints.UnknownNoiseLogLikelihood(self.problem))
+            self.log_prior, self.log_likelihood)
 
-        # Select initial point and covariance
-        self.x0 = np.array(self.real_parameters) * 1.1
-        self.sigma0 = [0.005, 100, 0.5 * noise]
+    def test_method(self):
 
-    def test_settings(self):
+        # Create mcmc
+        x0 = self.real_parameters * 1.1
+        mcmc = pints.AdaptiveCovarianceMCMC(x0)
 
-        mcmc = pints.AdaptiveCovarianceMCMC(self.log_posterior, self.x0)
+        # Configure
+        mcmc.set_target_acceptance_rate(0.3)
+        mcmc.set_adaptation(False)
 
-        r = mcmc.acceptance_rate() * 0.5
-        mcmc.set_acceptance_rate(r)
-        self.assertEqual(mcmc.acceptance_rate(), r)
-
-        i = int(mcmc.iterations() * 0.5)
-        mcmc.set_iterations(i)
-        self.assertEqual(mcmc.iterations(), i)
-
-        i = int(mcmc.non_adaptive_iterations() * 0.5)
-        mcmc.set_non_adaptive_iterations(i)
-        self.assertEqual(mcmc.non_adaptive_iterations(), i)
-
-        i = int(mcmc.warm_up() * 0.5)
-        mcmc.set_warm_up(i)
-        self.assertEqual(mcmc.warm_up(), i)
-
-        # Store only every 4th sample
-        r = 4
-        mcmc.set_thinning_rate(r)
-        self.assertEqual(mcmc.thinning_rate(), r)
-
-        # Disable verbose mode
-        v = not mcmc.verbose()
-        mcmc.set_verbose(v)
-        self.assertEqual(mcmc.verbose(), v)
-
-    def test_with_hint_and_sigma(self):
-
-        mcmc = pints.AdaptiveCovarianceMCMC(
-            self.log_posterior, self.x0, self.sigma0)
-        mcmc.set_verbose(debug)
-        chain = mcmc.run()
-        mean = np.mean(chain, axis=0)
-        self.assertTrue(np.linalg.norm(mean - self.real_parameters) < 1.5)
+        # Perform short run
+        rate = []
+        chain = []
+        for i in range(100):
+            x = mcmc.ask()
+            fx = self.log_posterior(x)
+            sample = mcmc.tell(fx)
+            if i == 20:
+                mcmc.set_adaptation(True)
+            if i >= 50:
+                chain.append(sample)
+            rate.append(mcmc.acceptance_rate())
+        chain = np.array(chain)
+        rate = np.array(rate)
 
 
 if __name__ == '__main__':
