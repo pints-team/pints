@@ -20,13 +20,17 @@ Diagnosing MCMC results:
 - :func:`series`
 - :func:`trace`
 
-Full API documentation:
-
-.. autofunction:: autocorrelation
+Functions
+---------
 
 .. autofunction:: function
 
 .. autofunction:: function_between_points
+
+MCMC Diagnostics
+----------------
+
+.. autofunction:: autocorrelation
 
 .. autofunction:: histogram
 
