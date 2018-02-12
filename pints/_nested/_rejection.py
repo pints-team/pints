@@ -24,7 +24,6 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     This is the simplest form of nested sampler and involves using
     rejection sampling from the prior as described in the algorithm on page 839
-
     in [1] to estimate the marginal likelihood and generate weights,
     preliminary samples (with their respective likelihoods), required to
     generate posterior samples.

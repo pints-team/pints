@@ -17,102 +17,57 @@ import numpy as np
 
 class Optimiser(object):
     """
-    Takes an :class:`pints.ErrorMeasure` as input and attempts to find the
-    parameters that minimise it.
+    Base class for optimisers implementing an ask-and-tell interface.
 
-    Arguments:
+    Optimisers are initialised using the arguments:
 
-    ``function``
-        An :class:`pints.ErrorMeasure` that evaluates points in the parameter
-        space.
-    ``boundaries=None``
-        An optional set of boundaries on the parameter space.
-    ``x0=None``
-        An optional starting point for searches in the parameter space. This
-        value may be used directly (for example as the initial position of a
-        particle in :class:`PSO`) or indirectly (for example as the center of
-        a distribution in :class:`XNES`).
+    ``x0``
+        A starting point for searches in the parameter space. This value may be
+        used directly (for example as the initial position of a particle in
+        :class:`PSO`) or indirectly (for example as the center of a
+        distribution in :class:`XNES`).
     ``sigma0=None``
         An optional initial standard deviation around ``x0``. Can be specified
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
         this information.
+    ``boundaries=None``
+        An optional set of boundaries on the parameter space.
 
     """
-    def __init__(self, function, boundaries=None, x0=None, sigma0=None):
-
-        # Likelihood function given? Then wrap an inverter around it
-        if isinstance(function, pints.LogPDF):
-            function = pints.ProbabilityBasedError(function)
-
-        # Store function & dimension
-        self._function = function
-        self._dimension = self._function.dimension()
-
-        # Extract bounds
-        self._boundaries = boundaries
-        if self._boundaries is not None:
-            if self._boundaries.dimension() != self._dimension:
-                raise ValueError(
-                    'Boundaries must have same dimension as function.')
-
-        # Set initial position
-        self.set_initial_position(x0, sigma0)
+    def __init__(self, x0, sigma0=None, boundaries=None):
 
         # Print info to console
         self._verbose = True
 
-    def run(self):
-        """
-        Runs an optimisation and returns the best found value.
-        """
-        raise NotImplementedError
+        # Get dimension
+        self._dimension = len(x0)
+        if self._dimension < 1:
+            raise ValueError('Problem dimension must be greater than zero.')
 
-    def set_initial_position(self, x0=None, sigma0=None):
-        """
-        Updates the initial position and standard deviation used by this
-        optimiser.
-
-        Arguments:
-
-        ``x0=None``
-            An optional starting point for searches in the parameter space.
-            This value may be used directly (for example as the initial
-            position of a particle in :class:`PSO`) or indirectly (for example
-            as the center of a distribution in :class:`XNES`).
-        ``sigma0=None``
-            An optional initial standard deviation around ``x0``. Can be
-            specified either as a scalar value (one standard deviation for all
-            coordinates) or as an array with one entry per dimension. Not all
-            methods will use this information.
-        """
-        # Check initial solution
-        if x0 is None:
-            # Use value in middle of search space
-            if self._boundaries is None:
-                self._x0 = np.zeros(self._dimension)
-            else:
-                self._x0 = self._boundaries.center()
-            self._x0.setflags(write=False)
-        else:
-            # Check given value
-            self._x0 = pints.vector(x0)
-            if len(self._x0) != self._dimension:
+        # Store boundaries
+        self._boundaries = boundaries
+        if self._boundaries:
+            if self._boundaries.dimension() != self._dimension:
                 raise ValueError(
-                    'Initial position must have same dimension as function.')
-            if self._boundaries is not None:
-                if not self._boundaries.check(self._x0):
-                    raise ValueError(
-                        'Initial position must lie within given boundaries.')
+                    'Boundaries must have same dimension as starting point.')
+
+        # Store initial position
+        self._x0 = pints.vector(x0)
+        if self._boundaries:
+            if not self._boundaries.check(self._x0):
+                raise ValueError(
+                    'Initial position must lie within given boundaries.')
 
         # Check initial standard deviation
         if sigma0 is None:
+            # Set a standard deviation
             if self._boundaries:
                 # Use boundaries to guess
-                self._sigma0 = (1 / 6.0) * self._boundaries.range()
+                self._sigma0 = (1 / 6) * self._boundaries.range()
             else:
                 # Use initial position to guess at parameter scaling
-                self._sigma0 = (1 / 3.0) * np.abs(self._x0)
+                self._sigma0 = (1 / 3) * np.abs(self._x0)
                 # But add 1 for any initial value that's zero
                 self._sigma0 += (self._sigma0 == 0)
             self._sigma0.setflags(write=False)
@@ -132,10 +87,353 @@ class Optimiser(object):
             if len(self._sigma0) != self._dimension:
                 raise ValueError(
                     'Initial standard deviation must be None, scalar, or have'
-                    ' same dimension as function.')
+                    ' dimension ' + str(self._dimension) + '.')
             if np.any(self._sigma0 <= 0):
                 raise ValueError(
                     'Initial standard deviations must be greater than zero.')
+
+    def ask(self):
+        """
+        Returns a list of positions in the search space to evaluate.
+        """
+        raise NotImplementedError
+
+    def fbest(self):
+        """
+        Returns the objective function evaluated at the current best position.
+        """
+        raise NotImplementedError
+
+    def name(self):
+        """
+        Returns this method's full name.
+        """
+        raise NotImplementedError
+
+    def tell(self, fx):
+        """
+        Performs an iteration of the optimiser algorithm, using the evaluations
+        ``fx`` of the points ``x`` previously specified by ``ask``.
+        """
+        raise NotImplementedError
+
+    def xbest(self):
+        """
+        Returns the current best position.
+        """
+        raise NotImplementedError
+
+
+class PopulationBasedOptimiser(Optimiser):
+    """
+    *Extends:* :class:`PopulationBasedOptimiser`
+
+    Base class for optimisers that work by moving multiple points through the
+    search space.
+    """
+    def population_size(self):
+        """
+        Returns this optimiser's population size.
+        """
+        raise NotImplementedError
+
+    def set_population_size(self, population_size=None, parallel=False):
+        """
+        Sets a population size to use in this optimisation.
+
+        If `population_size` is set to `None` a default value will be set using
+        a heuristic (e.g. based on the dimension of the search space).
+
+        If `parallel` is set to `True`, the population size will be adjusted to
+        a value suitable for parallel computations (e.g. by rounding up to a
+        multiple of the number of reported CPU cores).
+        """
+        raise NotImplementedError
+
+
+class Optimisation(object):
+    """
+    Minimises a :class:`pints.ErrorMeasure` or maximises a
+    :class:`pints.LogLikelihood`.
+
+    ``function``
+        An :class:`pints.ErrorMeasure` or a :class:`pints.LogLikelihood`
+        function that evaluates points in the parameter space.
+    ``x0``
+        The starting point for searches in the parameter space. This value may
+        be used directly (for example as the initial position of a particle in
+        :class:`PSO`) or indirectly (for example as the center of a
+        distribution in :class:`XNES`).
+    ``sigma0=None``
+        An optional initial standard deviation around ``x0``. Can be specified
+        either as a scalar value (one standard deviation for all coordinates)
+        or as an array with one entry per dimension. Not all methods will use
+        this information.
+    ``boundaries=None``
+        An optional set of boundaries on the parameter space.
+    ``method=None``
+        The class of :class:`pints.Optimiser` to use for the optimisation.
+        If no method is specified, :class:`CMAES` is used.
+
+    """
+    def __init__(
+            self, function, x0, sigma0=None, boundaries=None, method=None):
+
+        # Check dimension of x0 against function
+        if function.dimension() != len(x0):
+            raise ValueError(
+                'Starting point must have same dimension as function to'
+                ' optimise.')
+
+        # Store function
+        if isinstance(function, pints.LogLikelihood):
+            # Likelihood function given? Then wrap an inverter around it
+            self._function = pints.LogLikelihoodBasedError(function)
+            # TODO: Do this internally, so that we can return the correct
+            # (inverted) value!?
+        else:
+            self._function = function
+        del(function)
+
+        # Create optimiser
+        if method is None:
+            method = pints.CMAES
+        elif not issubclass(method, pints.Optimiser):
+            raise ValueError('Method must be subclass of pints.Optimiser.')
+        self._optimiser = method(x0, sigma0, boundaries)
+
+        # Print info to console
+        self._verbose = True
+
+        # Run parallelised version
+        self._parallel = None
+        self.set_parallel()
+
+        #
+        # Stopping criteria
+        #
+
+        # Maximum iterations
+        self._max_iterations = None
+        self.set_max_iterations()
+
+        # Maximum unchanged iterations
+        self._max_unchanged_iterations = None
+        self._min_significant_change = 1
+        self.set_max_unchanged_iterations()
+
+        # Threshold value
+        self._threshold = None
+
+    def max_iterations(self):
+        """
+        Returns the maximum iterations if this stopping criterion is set, or
+        ``None`` if it is not. See :meth:`set_max_iterations`.
+        """
+        return self._max_iterations
+
+    def max_unchanged_iterations(self):
+        """
+        Returns a tuple ``(iterations, threshold)`` specifying a maximum
+        unchanged iterations stopping criterion, or ``(None, None)`` if no such
+        criterion is set. See :meth:`set_max_unchanged_iterations`.
+        """
+        if self._max_unchanged_iterations is None:
+            return (None, None)
+        return (self._max_unchanged_iterations, self._min_significant_change)
+
+    def optimiser(self):
+        """
+        Returns the underlying optimiser object, allowing detailed
+        configuration.
+        """
+        return self._optimiser
+
+    def parallel(self):
+        """
+        Returns ``True`` if this optimisation runs in parallel.
+        """
+        return self._parallel
+
+    def run(self):
+        """
+        Runs the optimisation, returns a tuple `(xbest, fbest)`.
+        """
+        # Check stopping criteria
+        has_stopping_criterion = False
+        has_stopping_criterion |= (self._max_iterations is not None)
+        has_stopping_criterion |= (self._max_unchanged_iterations is not None)
+        has_stopping_criterion |= (self._threshold is not None)
+        if not has_stopping_criterion:
+            raise ValueError('At least one stopping criterion must be set.')
+
+        # Iterations
+        iteration = 0
+
+        # Unchanged iterations count (used for stopping or just for
+        # information)
+        unchanged_iterations = 0
+
+        # Create evaluator object
+        if self._parallel:
+            evaluator = pints.ParallelEvaluator(self._function)
+        else:
+            evaluator = pints.SequentialEvaluator(self._function)
+
+        # Keep track of best position and score
+        fbest = float('inf')
+
+        # Set up progress reporting
+        next_message = 0
+
+        # Print configuration
+        if self._verbose:
+            print('Using ' + str(self._optimiser.name()))
+
+            if self._parallel:
+                print('Running in parallel mode.')
+            else:
+                print('Running in sequential mode.')
+
+            if isinstance(self._optimiser, PopulationBasedOptimiser):
+                print('Population size: '
+                      + str(self._optimiser.population_size()))
+
+        # Start searching
+        running = True
+        while running:
+            # Get points
+            xs = self._optimiser.ask()
+
+            # Calculate scores
+            fs = evaluator.evaluate(xs)
+
+            # Perform iteration
+            self._optimiser.tell(fs)
+
+            # Check if new best found
+            fnew = self._optimiser.fbest()
+            if fnew < fbest:
+                # Check if this counts as a significant change
+                if np.abs(fnew - fbest) < self._min_significant_change:
+                    unchanged_iterations += 1
+                else:
+                    unchanged_iterations = 0
+
+                # Update best
+                fbest = fnew
+            else:
+                unchanged_iterations += 1
+
+            # Show progress in verbose mode:
+            if self._verbose and iteration >= next_message:
+                print(str(iteration) + ': ' + str(fnew))
+                if iteration < 3:
+                    next_message = iteration + 1
+                else:
+                    next_message = 20 * (1 + iteration // 20)
+
+            # Update iteration count
+            iteration += 1
+
+            #
+            # Check stopping criteria
+            #
+
+            # Maximum number of iterations
+            if (self._max_iterations is not None and
+                    iteration >= self._max_iterations):
+                running = False
+                if self._verbose:
+                    print('Halting: Maximum number of iterations ('
+                          + str(iteration) + ') reached.')
+
+            # Maximum number of iterations without significant change
+            if (self._max_unchanged_iterations is not None and
+                    unchanged_iterations >= self._max_unchanged_iterations):
+                running = False
+                if self._verbose:
+                    print('Halting: No significant change for '
+                          + str(unchanged_iterations) + ' iterations.')
+
+            # Threshold value
+            if self._threshold is not None and fbest < self._threshold:
+                running = False
+                if self._verbose:
+                    print('Halting: Objective function crossed threshold: '
+                          + str(self._threshold) + '.')
+
+        # Show final value
+        if self._verbose:
+            print(str(iteration) + ': ' + str(fbest))
+
+        # Return best position and score
+        return self._optimiser.xbest(), fbest
+
+    def set_max_iterations(self, iterations=10000):
+        """
+        Adds a stopping criterion, allowing the routine to halt after the
+        given number of `iterations`.
+
+        This criterion is enabled by default. To disable it, use
+        `set_max_iterations(None)`.
+        """
+        if iterations is not None:
+            iterations = int(iterations)
+            if iterations < 0:
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
+        self._max_iterations = iterations
+
+    def set_max_unchanged_iterations(self, iterations=200, threshold=1e-11):
+        """
+        Adds a stopping criterion, allowing the routine to halt if the
+        objective function doesn't change by more than `threshold` for the
+        given number of `iterations`.
+
+        This criterion is enabled by default. To disable it, use
+        `set_max_unchanged_iterations(None)`.
+        """
+        if iterations is not None:
+            iterations = int(iterations)
+            if iterations < 0:
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
+
+        threshold = float(threshold)
+        if threshold < 0:
+            raise ValueError('Minimum significant change cannot be negative.')
+
+        self._max_unchanged_iterations = iterations
+        self._min_significant_change = threshold
+
+    def set_parallel(self, parallel=False, update_population_size=True):
+        """
+        Enables/disables parallel function evaluation.
+
+        If a :class:`PopulationBasedOptimiser` method is used, this method will
+        also update the used population size. To disable this behaviour, use
+        `update_population_size=False`.
+        """
+        self._parallel = bool(parallel)
+
+        if update_population_size:
+            if isinstance(self._optimiser, PopulationBasedOptimiser):
+                self._optimiser.set_population_size(parallel=parallel)
+
+    def set_threshold(self, threshold):
+        """
+        Adds a stopping criterion, allowing the routine to halt once the
+        objective function goes below a set `threshold`.
+
+        This criterion is disabled by default, but can be enabled by calling
+        this method with a valid `threshold`. To disable it, use
+        `set_treshold(None)`.
+        """
+        if threshold is None:
+            self._threshold = None
+        else:
+            self._threshold = float(threshold)
 
     def set_verbose(self, value):
         """
@@ -144,11 +442,45 @@ class Optimiser(object):
         """
         self._verbose = bool(value)
 
+    def threshold(self):
+        """
+        Returns the threshold stopping criterion, or ``None`` if no threshold
+        stopping criterion is set. See :meth:`set_threshold`.
+        """
+        return self._threshold
+
     def verbose(self):
         """
         Returns ``True`` if the optimiser is set to run in verbose mode.
         """
         return self._verbose
+
+
+def optimise(function, x0, sigma0=None, boundaries=None, method=None):
+    """
+    Minimises an :class:`ErrorMeasure` or maximises a :class:`LogLikelihood`.
+
+    Arguments:
+
+    ``x0``
+        The starting point for searches in the parameter space. This value may
+        be used directly (for example as the initial position of a particle in
+        :class:`PSO`) or indirectly (for example as the center of a
+        distribution in :class:`XNES`).
+    ``sigma0=None``
+        An optional initial standard deviation around ``x0``. Can be specified
+        either as a scalar value (one standard deviation for all coordinates)
+        or as an array with one entry per dimension. Not all methods will use
+        this information.
+    ``boundaries=None``
+        An optional set of boundaries on the parameter space.
+    ``method=None``
+        The class of :class:`pints.Optimiser` to use for the optimisation.
+        If no method is specified, CMA-ES is used.
+
+    Returns a tuple `(xbest, fbest)`.
+    """
+    return Optimisation(function, x0, sigma0, boundaries, method).run()
 
 
 class TriangleWaveTransform(object):
@@ -183,26 +515,3 @@ class TriangleWaveTransform(object):
         z = np.remainder(y, self._range)
         return ((self._lower + z) * (y < self._range)
                 + (self._upper - z) * (y >= self._range))
-
-
-class InfBoundaryTransform(object):
-    """
-    Wraps around score functions and returns ``inf`` whenever an evaluation is
-    requested for a parameter set that's out of bounds.
-
-    Note: The transform is applied _inside_ optimisation methods, there is no
-    need to wrap this around your own problem or score function.
-
-    This method should work well for optimisers that only require a ranking of
-    positions (``x1 > x2 > x3`` etc.), e.g. :class:`PSO`.
-    """
-    def __init__(self, function, boundaries):
-        self._function = function
-        self._lower = boundaries.lower()
-        self._upper = boundaries.upper()
-
-    def __call__(self, x, *args):
-        if np.any(x < self._lower) or np.any(x > self._upper):
-            return float('inf')
-        return self._function(x, *args)
-
