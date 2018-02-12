@@ -14,7 +14,7 @@ import numpy as np
 
 class MCMCSampler(object):
     """
-    Base class for (single or multi-chain) MCMC methods.
+    Abstract base class for (single or multi-chain) MCMC methods.
     """
     def name(self):
         """
@@ -25,8 +25,10 @@ class MCMCSampler(object):
 
 class SingleChainMCMC(MCMCSampler):
     """
-    Base class for MCMC methods that generate a single markov chain, via an
-    ask-and-tell interface.
+    *Extends:* :class:`MCMCSampler`
+
+    Abstract base class for MCMC methods that generate a single markov chain,
+    via an ask-and-tell interface.
 
     Arguments:
 
@@ -82,7 +84,7 @@ class SingleChainAdaptiveMCMC(SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
-    Base class for adaptive MCMC methods.
+    Abstract base class for adaptive single chain MCMC methods.
 
     ``x0``
         An starting point in the parameter space.
@@ -120,8 +122,10 @@ class SingleChainAdaptiveMCMC(SingleChainMCMC):
 
 class MultiChainMCMC(MCMCSampler):
     """
-    Base class for MCMC methods that generate multiple markov chains, via an
-    ask-and-tell interface.
+    *Extends:* :class:`MCMCSampler`
+
+    Abstract base class for MCMC methods that generate multiple markov chains,
+    via an ask-and-tell interface.
 
     Arguments:
 
