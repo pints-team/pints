@@ -199,7 +199,6 @@ class MultiChainMCMC(MCMCSampler):
         raise NotImplementedError
 
 
-
 class MCMCSampling(object):
     """
     Samples from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
