@@ -180,6 +180,21 @@ class MultiChainMCMC(MCMCSampler):
                 self._sigma0 = self._sigma0.reshape(
                     (self._dimension, self._dimension))
 
+    def ask(self):
+        """
+        Returns a sequence of positions in the search space to evaluate.
+        """
+        raise NotImplementedError
+
+    def tell(self, fxs):
+        """
+        Performs an iteration of the MCMC algorithm, using the evaluations
+        ``fxs`` of the points previously specified by ``ask``. Returns the next
+        samples in the chains.
+        """
+        raise NotImplementedError
+
+
 
 class MCMCSampling(object):
     """
