@@ -115,7 +115,7 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     def name(self):
         """See: :meth:`Optimiser.name()`."""
-        return 'Exponential Natural Evolution Strategy (xNES)'
+        return 'Covariance Matrix Adaptation Evolution Strategy (CMA-ES)'
 
     def population_size(self):
         """ See :meth:`PopulationBasedOptimiser.population_size`. """
