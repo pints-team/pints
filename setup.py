@@ -34,13 +34,20 @@ setup(
         'matplotlib>=1.5',
     ],
     extras_require={
+        # Packages needed to compile the docs
         'docs': [
             'guzzle-sphinx-theme',  # Nice theme for docs
             'sphinx>=1.5',          # For doc generation
         ],
+        # Packages needed for developers only
         'dev': [
             'flake8>=3',            # For code style checking
             'jupyter',              # For documentation and testing
+        ],
+        # External packages required by non-essential bits of Pints (e.g.
+        # plotting, optimisers/inference methods that we wrap).
+        'extras': [
+            'emcee>=2.2',           # For emcee: MCMC Hammer
         ],
     },
 )
