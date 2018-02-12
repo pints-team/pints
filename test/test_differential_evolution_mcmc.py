@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the basic methods of the differential evolution MCMC method.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -15,12 +15,12 @@ import numpy as np
 debug = False
 
 
-class TestAdaptiveCovarianceMCMC(unittest.TestCase):
+class TestDifferentialEvolutionMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the adaptive covariance MCMC routine.
+    Tests the basic methods of the differential evolution MCMC method.
     """
     def __init__(self, name):
-        super(TestAdaptiveCovarianceMCMC, self).__init__(name)
+        super(TestDifferentialEvolutionMCMC, self).__init__(name)
 
         # Create toy model
         self.model = toy.LogisticModel()
@@ -55,30 +55,26 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create mcmc
-        x0 = self.real_parameters * 1.1
-        mcmc = pints.AdaptiveCovarianceMCMC(x0)
-
-        # Configure
-        mcmc.set_target_acceptance_rate(0.3)
-        mcmc.set_adaptation(False)
+        xs = [
+            self.real_parameters * 1.1,
+            self.real_parameters * 1.05,
+            self.real_parameters * 0.9,
+            self.real_parameters * 0.95,
+        ]
+        mcmc = pints.DifferentialEvolutionMCMC(4, xs)
 
         # Perform short run
-        rate = []
-        chain = []
+        chains = []
         for i in range(100):
-            x = mcmc.ask()
-            fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
-            if i == 20:
-                mcmc.set_adaptation(True)
+            xs = mcmc.ask()
+            fxs = [self.log_posterior(x) for x in xs]
+            samples = mcmc.tell(fxs)
             if i >= 50:
-                chain.append(sample)
-            rate.append(mcmc.acceptance_rate())
-        chain = np.array(chain)
-        rate = np.array(rate)
-        self.assertEqual(chain.shape[0], 50)
-        self.assertEqual(chain.shape[1], len(x0))
-        self.assertEqual(rate.shape[0], 100)
+                chains.append(samples)
+        chains = np.array(chains)
+        self.assertEqual(chains.shape[0], 50)
+        self.assertEqual(chains.shape[1], len(xs))
+        self.assertEqual(chains.shape[2], len(xs[0]))
 
 
 if __name__ == '__main__':

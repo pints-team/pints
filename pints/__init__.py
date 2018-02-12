@@ -99,13 +99,15 @@ from ._evaluation import (
 #
 from ._optimisers import (
     Optimiser,
+    PopulationBasedOptimiser,
     TriangleWaveTransform,
-    InfBoundaryTransform,
+    Optimisation,
+    optimise,
 )
-from ._optimisers._cmaes import CMAES, cmaes
-from ._optimisers._pso import PSO, pso
-from ._optimisers._snes import SNES, snes
-from ._optimisers._xnes import XNES, xnes
+from ._optimisers._cmaes import CMAES
+from ._optimisers._pso import PSO
+from ._optimisers._snes import SNES
+from ._optimisers._xnes import XNES
 
 
 # diagnostics
@@ -117,19 +119,20 @@ from ._diagnostics import (
 
 
 #
-# MCMC
+#  MCMC
 #
-from ._mcmc import MCMC
-from ._mcmc._adaptive import (
-    AdaptiveCovarianceMCMC,
-    adaptive_covariance_mcmc,
-)
-from ._mcmc._differential_evolution import (
-    DifferentialEvolutionMCMC,
-    differential_evolution_mcmc,
-    DreamMCMC
-)
-from ._mcmc._result import McmcResultObject
+from ._mcmc import (
+    MCMCSampler,
+    SingleChainMCMC,
+    SingleChainAdaptiveMCMC,
+    MultiChainMCMC,
+    MCMCSampling,
+    mcmc_sample,
+    )
+from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
+from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
+#from ._mcmc._differential_evolution import DreamMCMC
+#from ._mcmc._result import McmcResultObject
 
 #
 # Nested samplers
