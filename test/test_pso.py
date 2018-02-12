@@ -69,7 +69,7 @@ class TestPSO(unittest.TestCase):
         opt = pints.Optimisation(self.score, self.x0,
                                  boundaries=self.boundaries, method=method)
         opt.set_verbose(debug)
-        opt.set_max_unchanged_iterations(500)
+        opt.set_max_unchanged_iterations(1000)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
@@ -81,7 +81,7 @@ class TestPSO(unittest.TestCase):
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
         opt.set_verbose(debug)
-        opt.set_max_unchanged_iterations(500)
+        opt.set_max_unchanged_iterations(1000)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
