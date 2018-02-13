@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy
+import scipy.stats
 
 
 class ComposedLogPrior(pints.LogPrior):
@@ -38,10 +39,6 @@ class ComposedLogPrior(pints.LogPrior):
         # Store
         self._priors = priors
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
-        return self._dimension
-
     def __call__(self, x):
         output = 0
         lo = hi = 0
@@ -49,6 +46,20 @@ class ComposedLogPrior(pints.LogPrior):
             lo = hi
             hi += prior.dimension()
             output += prior(x[lo:hi])
+        return output
+
+    def dimension(self):
+        """ See :meth:`LogPrior.dimension()`. """
+        return self._dimension
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        output = np.zeros((n, self._dimension))
+        lo = hi = 0
+        for prior in self._priors:
+            lo = hi
+            hi += prior.dimension()
+            output[:, lo:hi] = prior.sample(n)
         return output
 
 
@@ -81,14 +92,20 @@ class MultivariateNormalLogPrior(pints.LogPrior):
         self._covariance = covariance
         self._dimension = mean.shape[0]
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
-        return self._dimension
-
     def __call__(self, x):
         return np.log(
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._covariance))
+
+    def dimension(self):
+        """ See :meth:`LogPrior.dimension()`. """
+        return self._dimension
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.call()`. """
+        # Note: size=n returns shape (n, d)
+        return np.random.multivariate_normal(
+            self._mean, self._covariance, size=n)
 
 
 class NormalLogPrior(pints.LogPrior):
@@ -104,22 +121,21 @@ class NormalLogPrior(pints.LogPrior):
         # Parse input arguments
         self._mean = float(mean)
         self._sigma = float(variance)
-        self._dimension = 1
 
         # Cache constants
         self._offset = 1 / np.sqrt(2 * np.pi * self._sigma ** 2)
         self._factor = 1 / (2 * self._sigma ** 2)
 
+    def __call__(self, x):
+        return self._offset - self._factor * (x[0] - self._mean)**2
+
     def dimension(self):
         """ See :meth:`LogPrior.dimension()`. """
         return 1
 
-    def __call__(self, x):
-        return self._offset - self._factor * (x[0] - self._mean)**2
-
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return np.random.normal(loc=self._mean, scale=self._sigma, size=n)
+        return np.random.normal(self._mean, self._sigma, size=(n, 1))
 
 
 class UniformLogPrior(pints.LogPrior):
@@ -152,12 +168,12 @@ class UniformLogPrior(pints.LogPrior):
         self._minf = -float('inf')
         self._value = -np.log(np.product(self._boundaries.range()))
 
+    def __call__(self, x):
+        return self._value if self._boundaries.check(x) else self._minf
+
     def dimension(self):
         """ See :meth:`LogPrior.dimension()`. """
         return self._dimension
-
-    def __call__(self, x):
-        return self._value if self._boundaries.check(x) else self._minf
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """

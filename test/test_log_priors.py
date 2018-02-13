@@ -33,6 +33,15 @@ class TestPrior(unittest.TestCase):
         py = [p([i]) for i in y]
         self.assertTrue(np.all(py[1:] <= py[:-1]))
 
+        # Test sampling
+        d = 1
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
     def test_composed_prior(self):
         import pints
         import numpy as np
@@ -65,6 +74,30 @@ class TestPrior(unittest.TestCase):
         p = [f([m1, m2]) for f in p]
         self.assertTrue(np.all(p[:-1] > p[1:]))
 
+        # Test sampling
+        p = pints.ComposedLogPrior(p1, p2)
+        d = 2
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        p = pints.ComposedLogPrior(
+            p1,
+            pints.MultivariateNormalLogPrior([0, 1, 2], np.diag([2, 4, 6])),
+            p2,
+            p2,
+        )
+        d = p.dimension()
+        self.assertEqual(d, 6)
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
     def test_uniform_prior(self):
         lower = np.array([1, 2])
         upper = np.array([10, 20])
@@ -91,7 +124,68 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
 
-# TODO Test MultiVariateNormalPrior
+        # Test sampling
+        d = 2
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
+        p = pints.UniformLogPrior([0], [1])
+        d = 1
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
+    def test_multivariate_normal_prior(self):
+        # 1d test
+        d = 1
+        mean = 0
+        covariance = 1
+
+        # Input must be a matrix
+        self.assertRaises(
+            ValueError, pints.MultivariateNormalLogPrior, mean, covariance)
+        covariance = [1]
+        self.assertRaises(
+            ValueError, pints.MultivariateNormalLogPrior, mean, covariance)
+
+        # Basic test
+        covariance = [[1]]
+        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p([0])
+        p([-1])
+        p([11])
+
+        # Test sampling
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
+        # 5d tests
+        d = 5
+        mean = [1, 2, 3, 4, 5]
+        covariance = np.diag(mean)
+        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        self.assertRaises(ValueError, p, [1, 2, 3])
+        p([1, 2, 3, 4, 5])
+        p([-1, 2, -3, 4, -5])
+
+        # Test sampling in 5-d
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
 
 
 if __name__ == '__main__':
