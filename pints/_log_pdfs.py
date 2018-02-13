@@ -37,18 +37,22 @@ class LogPrior(LogPDF):
     Represents the natural logarithm ``log(f(theta))`` of a known probability
     density function ``f(theta)``.
 
-    Priors are normalised: The integral ``f(theta)`` over all points ``theta``
-    in parameter space sums to 1.
+    Priors are *usually* normalised (i.e. the integral ``f(theta)`` over all
+    points ``theta`` in parameter space sums to 1), but this is not a strict
+    requirement.
     """
     def sample(self, n=1):
         """
         Returns ``n`` random samples from the underlying prior distribution.
+
+        The returned value is a numpy array with shape ``(n, d)`` where ``n``
+        is the requested number of samples, and ``d`` is the dimension of the
+        prior.
+
+        Note: This method is optional, in the sense that only a subsets of
+        inference methods require it.
         """
         raise NotImplementedError
-        #TODO Decide if `n` is needed
-        #TODO For n=1, decide whether to return (n, dim) array or (dim, ) array
-        #TODO Make this clear in the docstring!
-        #TODO Add test to ensure this is present for all priors.
 
 
 class LogLikelihood(LogPDF):
