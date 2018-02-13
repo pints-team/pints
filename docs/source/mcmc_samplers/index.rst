@@ -1,11 +1,8 @@
-.. _mcmc:
+*************
+MCMC Samplers
+*************
 
 .. module:: pints
-
-
-****
-MCMC
-****
 
 Pints provides a number of MCMC methods, all implementing the :class:`MCMC`
 interface, that can be used to sample from an unknown
@@ -14,7 +11,8 @@ interface, that can be used to sample from an unknown
 
 .. toctree::
 
-    mcmc
+    running
+    base_classes
     adaptive_covariance_mcmc
     differential_evolution_mcmc
 

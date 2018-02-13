@@ -1,8 +1,6 @@
-.. _samplers:
-
-********
-Samplers
-********
+***************
+Nested samplers
+***************
 
 .. toctree::
 

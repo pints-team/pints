@@ -1,20 +1,23 @@
-.. _api/_optimisers:
-
 **********
 Optimisers
 **********
 
-Pints provides a number of optimisers, all implementing the 
-:class:`Optimiser<pints.Optimiser>` interface, that can be used to find the
-parameters that minimise an :class:`ErrorMeasure<pints.ErrorMeasure>`.
+.. module:: pints
+
+Pints provides a number of optimisers, all implementing the :class:`Optimiser`
+interface, that can be used to find the parameters that minimise an
+:class:`ErrorMeasure` or maximise a :class:`LogPDF`.
+
+The easiest way to run an optimisation is by using the :func:`optimise` method
+or the :class:`Optimisation` class.
 
 .. toctree::
-   
+
+    running
+    base_classes
     boundary_transformations
-    Optimiser
     cmaes
     pso
     snes
     xnes
-    
-   
+
