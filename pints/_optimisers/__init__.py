@@ -186,9 +186,9 @@ class Optimisation(object):
                 ' optimise.')
 
         # Store function
-        if isinstance(function, pints.LogLikelihood):
+        if isinstance(function, pints.LogPDF):
             # Likelihood function given? Then wrap an inverter around it
-            self._function = pints.LogLikelihoodBasedError(function)
+            self._function = pints.ProbabilityBasedError(function)
             # TODO: Do this internally, so that we can return the correct
             # (inverted) value!?
         else:
