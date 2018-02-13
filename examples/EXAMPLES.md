@@ -13,6 +13,7 @@ of choice.
 
 ## Getting started
 - [Writing a model](./writing-a-model.ipynb)
+- [Writing a custom LogPDF](./writing-a-logpdf.ipynb)
 
 ## Optimisation
 - [First example](./optimisation-first-example.ipynb)
