@@ -29,6 +29,7 @@ of choice.
 - [Differential Evolution DEMC](./inference-differential-evolution-mcmc.ipynb)
 - [DREAM](./inference-dream-mcmc.ipynb)
 - [Nested sampling](./inference-nested-sampling.ipynb)
+- [Writing a custom prior](./writing-a-prior.ipynb)
 
 ## Plotting inference results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
