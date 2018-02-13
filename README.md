@@ -38,6 +38,12 @@ These will be installed automatically if you go to the directory you downloaded 
 $ pip install .
 ```
 
+Or, if you want to install Pints as a [developer](CONTRIBUTING.md), use
+
+```
+$ pip install -e .[dev,docs]
+```
+
 To uninstall again, type
 
 ```
