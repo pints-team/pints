@@ -2,6 +2,11 @@
 #
 # Tests Prior functions in Pints
 #
+# This file is part of PINTS.
+#  Copyright (c) 2017-2018, University of Oxford.
+#  For licensing information, see the LICENSE file distributed with the PINTS
+#  software package.
+#
 from __future__ import division
 import unittest
 import pints

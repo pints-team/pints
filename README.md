@@ -54,5 +54,7 @@ $ pip uninstall pints
 
 If you'd like to help us develop Pints by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](CONTRIBUTING.md) first.
 
+## Licensing
 
+Pints is fully open source. For more information about its license, see [LICENSE].
 

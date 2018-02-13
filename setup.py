@@ -1,3 +1,11 @@
+#
+# Pints setuptools script
+#
+# This file is part of PINTS.
+#  Copyright (c) 2017-2018, University of Oxford.
+#  For licensing information, see the LICENSE file distributed with the PINTS
+#  software package.
+#
 from setuptools import setup, find_packages
 
 # Load text for description and license
