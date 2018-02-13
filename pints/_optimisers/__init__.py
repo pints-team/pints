@@ -153,12 +153,14 @@ class PopulationBasedOptimiser(Optimiser):
 
 class Optimisation(object):
     """
-    Minimises a :class:`pints.ErrorMeasure` or maximises a
-    :class:`pints.LogLikelihood`.
+    Finds the parameter values that minimise an :class:`ErrorMeasure` or
+    maximise a :class:`LogPDF`.
+
+    Arguments:
 
     ``function``
-        An :class:`pints.ErrorMeasure` or a :class:`pints.LogLikelihood`
-        function that evaluates points in the parameter space.
+        An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
+        evaluates points in the parameter space.
     ``x0``
         The starting point for searches in the parameter space. This value may
         be used directly (for example as the initial position of a particle in
@@ -257,7 +259,7 @@ class Optimisation(object):
 
     def run(self):
         """
-        Runs the optimisation, returns a tuple `(xbest, fbest)`.
+        Runs the optimisation, returns a tuple ``(xbest, fbest)``.
         """
         # Check stopping criteria
         has_stopping_criterion = False
@@ -288,13 +290,22 @@ class Optimisation(object):
 
         # Print configuration
         if self._verbose:
-            print('Using ' + str(self._optimiser.name()))
+            # Show direction
+            if isinstance(self._function, pints.LogPDF):
+                print('Maximising LogPDF')
+            else:
+                print('Minimising error measure')
 
+            # Show method
+            print('using ' + str(self._optimiser.name()))
+
+            # Show parallelisation
             if self._parallel:
                 print('Running in parallel mode.')
             else:
                 print('Running in sequential mode.')
 
+            # Show population size
             if isinstance(self._optimiser, PopulationBasedOptimiser):
                 print('Population size: '
                       + str(self._optimiser.population_size()))
@@ -458,10 +469,14 @@ class Optimisation(object):
 
 def optimise(function, x0, sigma0=None, boundaries=None, method=None):
     """
-    Minimises an :class:`ErrorMeasure` or maximises a :class:`LogLikelihood`.
+    Finds the parameter values that minimise an :class:`ErrorMeasure` or
+    maximise a :class:`LogPDF`.
 
     Arguments:
 
+    ``function``
+        An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
+        evaluates points in the parameter space.
     ``x0``
         The starting point for searches in the parameter space. This value may
         be used directly (for example as the initial position of a particle in
@@ -476,9 +491,9 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
         An optional set of boundaries on the parameter space.
     ``method=None``
         The class of :class:`pints.Optimiser` to use for the optimisation.
-        If no method is specified, CMA-ES is used.
+        If no method is specified, :class:`CMAES` is used.
 
-    Returns a tuple `(xbest, fbest)`.
+    Returns a tuple ``(xbest, fbest)``.
     """
     return Optimisation(function, x0, sigma0, boundaries, method).run()
 

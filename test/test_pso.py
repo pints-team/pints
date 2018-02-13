@@ -135,12 +135,14 @@ class TestPSO(unittest.TestCase):
     def test_logpdf(self):
 
         #TODO: Replace this with toy problem!
+        #TODO: And add to general test of Optimisation, not PSO specifically
         class Rosenbrock(pints.LogPDF):
             def __call__(self, x):
                 a = 1
                 b = 100
-                f = (1 - x[0])**2 + b * (x[1] - x[0]**2)**2
+                f = (a - x[0])**2 + b * (x[1] - x[0]**2)**2
                 return float('inf') if f == 0 else -np.log(f)
+
             def dimension(self):
                 return 2
 
