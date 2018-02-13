@@ -56,5 +56,5 @@ If you'd like to help us develop Pints by adding new methods, writing documentat
 
 ## Licensing
 
-Pints is fully open source. For more information about its license, see [LICENSE].
+Pints is fully open source. For more information about its license, see [LICENSE](./LICENSE).
 
