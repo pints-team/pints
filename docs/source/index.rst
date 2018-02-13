@@ -32,9 +32,9 @@ Contents
     log_likelihoods
     log_pdfs
     log_priors
-    mcmc/index
+    mcmc_samplers/index
+    nested_samplers/index
     optimisers/index
-    samplers/index
     toy/index
     utilities
 
