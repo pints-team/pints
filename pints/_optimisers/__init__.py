@@ -187,14 +187,14 @@ class Optimisation(object):
                 'Starting point must have same dimension as function to'
                 ' optimise.')
 
+        # Check if minimising or maximising
+        self._minimising = not isinstance(function, pints.LogPDF)
+
         # Store function
-        if isinstance(function, pints.LogPDF):
-            # Likelihood function given? Then wrap an inverter around it
-            self._function = pints.ProbabilityBasedError(function)
-            # TODO: Do this internally, so that we can return the correct
-            # (inverted) value!?
-        else:
+        if self._minimising:
             self._function = function
+        else:
+            self._function = pints.ProbabilityBasedError(function)
         del(function)
 
         # Create optimiser
@@ -285,16 +285,19 @@ class Optimisation(object):
         # Keep track of best position and score
         fbest = float('inf')
 
+        # Internally we always minimise! Keep a 2nd value to show the user
+        fbest_user = fbest if self._minimising else -fbest
+
         # Set up progress reporting
         next_message = 0
 
         # Print configuration
         if self._verbose:
             # Show direction
-            if isinstance(self._function, pints.LogPDF):
-                print('Maximising LogPDF')
-            else:
+            if self._minimising:
                 print('Minimising error measure')
+            else:
+                print('Maximising LogPDF')
 
             # Show method
             print('using ' + str(self._optimiser.name()))
@@ -333,12 +336,15 @@ class Optimisation(object):
 
                 # Update best
                 fbest = fnew
+
+                # Update user value of fbest
+                fbest_user = fbest if self._minimising else -fbest
             else:
                 unchanged_iterations += 1
 
             # Show progress in verbose mode:
             if self._verbose and iteration >= next_message:
-                print(str(iteration) + ': ' + str(fnew))
+                print(str(iteration) + ': ' + str(fbest_user))
                 if iteration < 3:
                     next_message = iteration + 1
                 else:
@@ -376,10 +382,10 @@ class Optimisation(object):
 
         # Show final value
         if self._verbose:
-            print(str(iteration) + ': ' + str(fbest))
+            print(str(iteration) + ': ' + str(fbest_user))
 
         # Return best position and score
-        return self._optimiser.xbest(), fbest
+        return self._optimiser.xbest(), fbest_user
 
     def set_max_iterations(self, iterations=10000):
         """
