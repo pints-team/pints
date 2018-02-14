@@ -42,7 +42,8 @@ class ProbabilityBasedError(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
 
-    Changes the sign of a :class:`LogPDF` to use it as an error.
+    Changes the sign of a :class:`LogPDF` to use it as an error. Minimising
+    this error will maximise the probability.
     """
     def __init__(self, log_pdf):
         if not isinstance(log_pdf, pints.LogPDF):
