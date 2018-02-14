@@ -13,7 +13,7 @@ import pints.toy
 import unittest
 import numpy as np
 
-debug = True
+debug = False
 method = pints.PSO
 
 
