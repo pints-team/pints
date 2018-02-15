@@ -15,9 +15,11 @@ Example::
 
 .. autoclass:: ErrorMeasure
 
+.. autoclass:: MeanSquaredError
+
 .. autoclass:: ProbabilityBasedError
 
-.. autoclass:: RMSError
+.. autoclass:: RootMeanSquaredError
 
 .. autoclass:: SumOfSquaresError
 
