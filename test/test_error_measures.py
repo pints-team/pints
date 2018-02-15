@@ -50,6 +50,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_mean_squared_error(self):
         p = MiniProblem()
         e = pints.MeanSquaredError(p)
+        self.assertEqual(e.dimension(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -63,11 +64,15 @@ class TestErrorMeasures(unittest.TestCase):
     def test_probability_based_error(self):
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
+        self.assertEqual(e.dimension(), 3)
         self.assertEqual(e([1, 2, 3]), -10)
+        p = MiniProblem()
+        self.assertRaises(ValueError, pints.ProbabilityBasedError, p)
 
     def test_root_mean_squared_error(self):
         p = MiniProblem()
         e = pints.RootMeanSquaredError(p)
+        self.assertEqual(e.dimension(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -81,6 +86,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_sum_of_squares_error(self):
         p = MiniProblem()
         e = pints.SumOfSquaresError(p)
+        self.assertEqual(e.dimension(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
