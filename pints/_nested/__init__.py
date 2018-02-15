@@ -1,5 +1,5 @@
 #
-# Sub-module containing Nested samplers
+# Sub-module containing nested samplers
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
