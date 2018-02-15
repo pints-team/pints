@@ -63,7 +63,7 @@ class TestPSO(unittest.TestCase):
     #            if found_solution < self.cutoff:
     #                break
     #    self.assertTrue(found_solution < self.cutoff)
-
+    '''
     def test_bounded(self):
 
         opt = pints.Optimisation(self.score, self.x0,
@@ -132,11 +132,42 @@ class TestPSO(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
 
+    '''
     def test_logpdf(self):
 
         #TODO: Replace this with toy problem!
+        #TODO: Make one as an error measure, one as a LogPDF
         #TODO: And add to general test of Optimisation, not PSO specifically
-        class Rosenbrock(pints.LogPDF):
+        class RosenbrockLogPDF(pints.LogPDF):
+            def __call__(self, x):
+                a = 1
+                b = 100
+                f = (a - x[0])**2 + b * (x[1] - x[0]**2)**2
+                return float('inf') if f == 0 else -np.log(f)
+
+            def dimension(self):
+                return 2
+
+        r = RosenbrockLogPDF()
+        x0 = np.array([1.1, 1.1])
+        f0 = r(x0)
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+        opt.set_max_iterations(100)
+        opt.set_max_unchanged_iterations(100)
+        opt.set_verbose(debug)
+
+        # PSO isn't very good at this function, unless we give it lots more
+        # iterations, check if it's moving in the right direction
+        np.random.seed(1)
+        x1, f1 = opt.run()
+        self.assertTrue(f1 > f0)
+
+    '''
+    test_rosenbrock(self):
+        """ Test running on the Rosenbrock function """
+        class Rosenbrock(pints.ErrorMeasure):
+
             def __call__(self, x):
                 a = 1
                 b = 100
@@ -147,12 +178,17 @@ class TestPSO(unittest.TestCase):
                 return 2
 
         r = Rosenbrock()
-        #r = pints.toy.RosenbrockLogPDF()
+        x0 = np.array([1.1, 1.1])
+        f0 = r(x0)
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, [1.1, 1.1], boundaries=b)
-        opt.set_max_iterations(10)
+        opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+        opt.set_max_iterations(100)
+        opt.set_max_unchanged_iterations(100)
         opt.set_verbose(debug)
-        opt.run()
+        np.random.seed(1)
+        x1, f1 = opt.run()
+        self.assertTrue(f1 < f0)
+    '''
 
 
 if __name__ == '__main__':
