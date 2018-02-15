@@ -79,7 +79,8 @@ from ._boundaries import Boundaries
 from ._error_measures import (
     ErrorMeasure,
     ProbabilityBasedError,
-    RMSError,
+    MeanSquaredError,
+    RootMeanSquaredError,
     SumOfSquaresError,
 )
 
