@@ -290,6 +290,8 @@ class Optimisation(object):
 
         # Set up progress reporting
         next_message = 0
+        message_warm_up = 3
+        message_interval = 20
 
         # Print configuration
         if self._verbose:
@@ -345,10 +347,11 @@ class Optimisation(object):
             # Show progress in verbose mode:
             if self._verbose and iteration >= next_message:
                 print(str(iteration) + ': ' + str(fbest_user))
-                if iteration < 3:
+                if iteration < message_warm_up:
                     next_message = iteration + 1
                 else:
-                    next_message = 20 * (1 + iteration // 20)
+                    next_message = message_interval * (
+                        1 + iteration // message_interval)
 
             # Update iteration count
             iteration += 1
