@@ -16,8 +16,8 @@ class Boundaries(object):
     """
     Represents a set of lower and upper boundaries for model parameters.
 
-    Boundaries are inclusive: Points on the lower or upper edge of the
-    boundaries count as _within_ the boundaries.
+    A point ``x`` is considered within the boundaries if (and only if)
+    ``lower <= x < upper``.
 
     Arguments:
 
@@ -48,12 +48,11 @@ class Boundaries(object):
 
     def check(self, parameters):
         """
-        Checks if the given parameter vector is within (or on) the boundaries.
-        Raises e
+        Checks if the given parameter vector is within the boundaries.
         """
         if np.any(parameters < self._lower):
             return False
-        if np.any(parameters > self._upper):
+        if np.any(parameters >= self._upper):
             return False
         return True
 
