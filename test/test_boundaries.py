@@ -39,10 +39,20 @@ class TestBoundaries(unittest.TestCase):
         self.assertTrue(np.all(b.range() == np.array(upper) - np.array(lower)))
 
         # Check checking
+        # Within bounds
         self.assertTrue(b.check([2, 3]))
-        self.assertTrue(b.check([1, 4]))
+        # On a lower bound
+        self.assertTrue(b.check([1, 3]))
+        # Below a lower bound
         self.assertFalse(b.check([1 - 1e16, 4]))
+        # On an upper bound
+        self.assertFalse(b.check([3, 0]))
+        # Above an upper bound
         self.assertFalse(b.check([2, 14]))
+        # Wrong in every way
+        self.assertFalse(b.check([-20, 20]))
+        self.assertFalse(b.check([20, -20]))
+        # Negative number
         self.assertFalse(b.check([2, -3]))
 
     def test_sampling(self):
