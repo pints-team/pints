@@ -10,6 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import multiprocessing
 
 
 class MCMCSampler(object):
@@ -332,7 +333,10 @@ class MCMCSampling(object):
 
         # Create evaluator object
         if self._parallel:
-            self._evaluator = pints.ParallelEvaluator(self._log_pdf)
+            # Guess good number of workers
+            nworkers = min(multiprocessing.cpu_count(), self._chains)
+            self._evaluator = pints.ParallelEvaluator(
+                self._log_pdf, nworkers=nworkers)
         else:
             self._evaluator = pints.SequentialEvaluator(self._log_pdf)
 
@@ -344,6 +348,7 @@ class MCMCSampling(object):
         # Print configuration
         if self._verbose:
             print('Using ' + str(self._samplers[0].name()))
+            print('Generating ' + str(self._chains) + ' chains.')
             if self._parallel:
                 print('Running in parallel mode.')
             else:
