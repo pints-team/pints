@@ -1,13 +1,10 @@
 #
-# Sub-module containing several optimisation routines
+# Logger class
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
-#
-#
-# Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -25,8 +22,13 @@ class Logger(object):
     """
     Logs numbers to screen and/or a file.
 
+    Example::
 
-
+        log = pints.Logger()
+        log.add_counter('id', width=2)
+        log.add_float('Length')
+        log.log(1, 1.23456)
+        log.log(2, 7.8901)
 
     """
     def __init__(self):
