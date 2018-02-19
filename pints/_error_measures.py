@@ -29,12 +29,13 @@ class ErrorMeasure(object):
         raise NotImplementedError
 
 
-class ProblemErrorMeasure(object):
+class ProblemErrorMeasure(ErrorMeasure):
     """
     Abstract base class for ErrorMeasures defined for
     :class:`Problems <pints.Problem>`.
     """
     def __init__(self, problem=None):
+        super(ProblemErrorMeasure, self).__init__()
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
