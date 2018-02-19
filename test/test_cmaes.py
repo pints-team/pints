@@ -91,7 +91,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -102,7 +102,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
@@ -114,7 +114,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn(
                 'Halting: Objective function crossed threshold', c.text())
