@@ -52,18 +52,6 @@ class TestPSO(unittest.TestCase):
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
-    #def test_unbounded(self):
-
-    #    opt = pints.Optimisation(self.score, self.x0, method=method)
-    #    opt.set_verbose(debug)
-    #    opt.set_max_unchanged_iterations(500)
-    #    with np.errstate(over='ignore'):
-    #        for i in range(self.max_tries):
-    #            found_parameters, found_solution = opt.run()
-    #            if found_solution < self.cutoff:
-    #                break
-    #    self.assertTrue(found_solution < self.cutoff)
-    '''
     def test_bounded(self):
 
         opt = pints.Optimisation(self.score, self.x0,
@@ -95,7 +83,7 @@ class TestPSO(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -106,7 +94,7 @@ class TestPSO(unittest.TestCase):
         opt.set_verbose(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
@@ -118,7 +106,7 @@ class TestPSO(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn(
                 'Halting: Objective function crossed threshold', c.text())
@@ -132,7 +120,6 @@ class TestPSO(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
 
-    '''
     def test_logpdf(self):
 
         #TODO: Replace this with toy problem!
@@ -163,8 +150,7 @@ class TestPSO(unittest.TestCase):
         x1, f1 = opt.run()
         self.assertTrue(f1 > f0)
 
-    '''
-    test_rosenbrock(self):
+    def test_rosenbrock(self):
         """ Test running on the Rosenbrock function """
         class Rosenbrock(pints.ErrorMeasure):
 
@@ -188,7 +174,6 @@ class TestPSO(unittest.TestCase):
         np.random.seed(1)
         x1, f1 = opt.run()
         self.assertTrue(f1 < f0)
-    '''
 
 
 if __name__ == '__main__':

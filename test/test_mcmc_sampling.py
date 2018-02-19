@@ -150,13 +150,13 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test verbose switch
-        with pints.io.StdOutCapture() as capture:
+        with pints.io.StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(niterations)
             mcmc.set_verbose(False)
             chains = mcmc.run()
         self.assertEqual(capture.text(), '')
-        with pints.io.StdOutCapture() as capture:
+        with pints.io.StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(niterations)
             mcmc.set_verbose(True)
