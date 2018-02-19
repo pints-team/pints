@@ -150,9 +150,12 @@ multiprocessing.html#all-platforms>`_ for details).
     a time.
     """
     def __init__(
-            self, function, nworkers=None, max_tasks_per_worker=500,
+            self, function,
+            nworkers=None,
+            max_tasks_per_worker=500,
             args=None):
         super(ParallelEvaluator, self).__init__(function, args)
+
         # Determine number of workers
         if nworkers is None:
             self._nworkers = max(1, multiprocessing.cpu_count())
@@ -162,20 +165,26 @@ multiprocessing.html#all-platforms>`_ for details).
                 raise ValueError(
                     'Number of workers must be an integer greater than 0 or'
                     ' `None` to use the default value.')
+
         # Create empty set of workers
         self._workers = []
+
         # Maximum tasks per worker (for some reason, this saves memory)
         self._max_tasks = int(max_tasks_per_worker)
         if self._max_tasks < 1:
             raise ValueError(
                 'Maximum tasks per worker should be at least 1 (but probably'
                 ' much greater).')
+
         # Queue with tasks
         self._tasks = multiprocessing.Queue()
+
         # Queue with results
         self._results = multiprocessing.Queue()
+
         # Queue used to add an exception object and context to
         self._errors = multiprocessing.Queue()
+
         # Flag set if an error is encountered
         self._error = multiprocessing.Event()
 
