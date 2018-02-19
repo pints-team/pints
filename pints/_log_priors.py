@@ -128,6 +128,9 @@ class UniformLogPrior(pints.LogPrior):
 
     Defines a uniform prior over a given range.
 
+    The range includes the lower, but not the upper boundaries, so that any
+    point ``x`` with a non-zero prior must have ``lower <= x < upper``.
+
     For example: ``p = UniformPrior([1,1,1], [10, 10, 100])``, or
     ``p = UniformPrior(Boundaries([1,1,1], [10, 10, 100]))``.
     """

@@ -16,6 +16,9 @@ class Boundaries(object):
     """
     Represents a set of lower and upper boundaries for model parameters.
 
+    A point ``x`` is considered within the boundaries if (and only if)
+    ``lower <= x < upper``.
+
     Arguments:
 
     ``lower``
@@ -35,22 +38,23 @@ class Boundaries(object):
         if len(self._upper) != self._dimension:
             raise ValueError('Lower and upper bounds must have same length.')
 
+        # Check dimension is at least 1
+        if self._dimension < 1:
+            raise ValueError('Boundaries must have dimension > 0')
+
+        # Check if upper > lower
+        if not np.all(self._upper > self._lower):
+            raise ValueError('Upper bounds must exceed lower bounds.')
+
     def check(self, parameters):
         """
-        Checks if the given parameter vector is within (or on) the boundaries.
-        Raises e
+        Checks if the given parameter vector is within the boundaries.
         """
         if np.any(parameters < self._lower):
             return False
-        if np.any(parameters > self._upper):
+        if np.any(parameters >= self._upper):
             return False
         return True
-
-    def center(self):
-        """
-        Returns a point in the center of the boundaries.
-        """
-        return self._lower + 0.5 * (self._upper - self._lower)
 
     def dimension(self):
         """
@@ -65,16 +69,27 @@ class Boundaries(object):
         """
         return self._lower
 
+    def range(self):
+        """
+        Returns the size of the parameter space (i.e. ``upper - lower``).
+        """
+        return self._upper - self._lower
+
+    def sample(self, n=1):
+        """
+        Returns ``n`` random samples from the underlying prior distribution.
+
+        The returned value is a numpy array with shape ``(n, d)`` where ``n``
+        is the requested number of samples, and ``d`` is the dimension of the
+        parameter space these boundaries are defined on.
+        """
+        return np.random.uniform(
+            self._lower, self._upper, size=(n, self._dimension))
+
     def upper(self):
         """
         Returns the upper boundary for all parameters (as a read-only NumPy
         array).
         """
         return self._upper
-
-    def range(self):
-        """
-        Returns the size of the parameter space (i.e. ``upper - lower``).
-        """
-        return self._upper - self._lower
 
