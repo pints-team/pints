@@ -89,23 +89,24 @@ class LogPosterior(LogPDF):
     """
     *Extends:* :class:`LogPDF`
 
-    Represents the sum of a :class:`LogPrior` and a :class:`LogLikelihood`
+    Represents the sum of a :class:`LogLikelihood` and a :class:`LogPrior`
     defined on the same parameter space.
 
     As an optimisation, if the :class:`LogPrior` evaluates as `-inf` for a
-    particular point in parameter space, the corresponding likelihood won't be
-    evaluated.
+    particular point in parameter space, the corresponding
+    :class:`LogLikelihood` won't be evaluated.
 
     Arguments:
 
+    ``log_likelihood``
+        A :class:`LogLikelihood`, defined on the same parameter space.
     ``log_prior``
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
-    ``log_likelihood``
-        A :class:`LogLikelihood`, defined on the same parameter space.
+
 
     """
-    def __init__(self, log_prior, log_likelihood):
+    def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__()
 
         # Check arguments
