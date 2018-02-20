@@ -21,5 +21,7 @@ Example::
 
 .. autoclass:: RootMeanSquaredError
 
+.. autoclass:: SumOfErrors
+
 .. autoclass:: SumOfSquaresError
 

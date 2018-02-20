@@ -32,6 +32,25 @@ class MiniProblem(pints.SingleSeriesProblem):
         return self._v
 
 
+class BigMiniProblem(MiniProblem):
+    def __init__(self):
+        super(BigMiniProblem, self).__init__()
+        self._t = pints.vector([1, 2, 3, 4, 5, 6])
+        self._v = pints.vector([-1, 2, 3, 4, 5, -6])
+
+    def dimension(self):
+        return 6
+
+
+class InfMiniProblem(MiniProblem):
+    def __init__(self):
+        super(InfMiniProblem, self).__init__()
+        self._v = pints.vector([-1, 2, float('inf')])
+
+    def dimension(self):
+        return 3
+
+
 class MiniLogPDF(pints.LogPDF):
     def dimension(self):
         return 3
@@ -96,6 +115,36 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 1, 1]
         y = 4 + 1 + 4
         self.assertEqual(e(x), y)
+
+    def test_sum_or_errors(self):
+        p1 = MiniProblem()
+        e1 = pints.SumOfSquaresError(p1)
+        p2 = MiniProblem()
+        e2 = pints.MeanSquaredError(p2)
+        p3 = BigMiniProblem()
+        e3 = pints.RootMeanSquaredError(p3)
+        p4 = InfMiniProblem()
+        e4 = pints.SumOfSquaresError(p4)
+
+        # Basic use
+        e = pints.SumOfErrors(e1, e2)
+        x = [0, 0, 0]
+        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e(x), e1(x) + e2(x))
+        e = pints.SumOfErrors(e1, e1, e1, e1, e1, e1)
+        x = [0, 0, 0]
+        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e(x), e1(x) * 6)
+        self.assertNotEqual(e(x), 0)
+
+        # Wrong number of arguments
+        self.assertRaises(ValueError, pints.SumOfErrors)
+        self.assertRaises(ValueError, pints.SumOfErrors, e1)
+        # Wrong argument types
+        self.assertRaises(ValueError, pints.SumOfErrors, p1, 1)
+        self.assertRaises(ValueError, pints.SumOfErrors, 'p', p1)
+        # Mismatching problem dimensions
+        self.assertRaises(ValueError, pints.SumOfErrors, e1, e3)
 
 
 if __name__ == '__main__':
