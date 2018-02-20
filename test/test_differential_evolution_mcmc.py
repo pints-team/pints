@@ -48,9 +48,9 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         # Create a log likelihood
         self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
 
-        # Create an un-normalised log-posterior (log-prior + log-likelihood)
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
-            self.log_prior, self.log_likelihood)
+            self.log_likelihood, self.log_prior)
 
     def test_method(self):
 
