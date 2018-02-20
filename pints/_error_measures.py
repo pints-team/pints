@@ -68,9 +68,52 @@ class ProbabilityBasedError(ErrorMeasure):
         return -self._log_pdf(x)
 
 
-class MeanSquaredError(ProblemErrorMeasure):
+class SumOfErrors(ErrorMeasure):
     """
     *Extends:* :class:`ErrorMeasure`
+
+    Calculates a sum of :class:`ErrorMeasure` objects, all defined on the same
+    parameter space.
+    """
+    def __init__(self, *error_measures):
+        super(SumOfErrors, self).__init__()
+
+        # Check input arguments
+        if len(error_measures) < 2:
+            raise ValueError('SumOfErrors requires at least 2 error measures.')
+        for i, e in enumerate(error_measures):
+            if not isinstance(e, pints.ErrorMeasure):
+                raise ValueError(
+                    'All objects passed to SumOfErrors must be instances of'
+                    ' pints.ErrorMeasure (failed on argument ' + str(i) + '.')
+        self._errors = error_measures
+
+        # Get and check dimension
+        i = iter(self._errors)
+        self._dimension = next(i).dimension()
+        for e in i:
+            if e.dimension() != self._dimension:
+                raise ValueError(
+                    'All errors passed to sum of errors must have same'
+                    ' dimension.')
+
+    def dimension(self):
+        """ See :meth:`ErrorMeasure.dimension`. """
+        return self._dimension
+
+    def __call__(self, x):
+        total = 0
+        for e in self._errors:
+            total += e(x)
+            if not np.isfinite(total):
+                return total
+        return total
+
+
+
+class MeanSquaredError(ProblemErrorMeasure):
+    """
+    *Extends:* :class:`ProblemErrorMeasure`
 
     Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``
     """
@@ -85,7 +128,7 @@ class MeanSquaredError(ProblemErrorMeasure):
 
 class RootMeanSquaredError(ProblemErrorMeasure):
     """
-    *Extends:* :class:`ErrorMeasure`
+    *Extends:* :class:`ProblemErrorMeasure`
 
     Calculates a root mean squared error (RMSE):
     ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
@@ -101,7 +144,7 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
 class SumOfSquaresError(ProblemErrorMeasure):
     """
-    *Extends:* :class:`ErrorMeasure`
+    *Extends:* :class:`ProblemErrorMeasure`
 
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
     """
