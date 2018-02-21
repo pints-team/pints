@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the evaluator methods and classes.
+# Tests the error measure classes.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
