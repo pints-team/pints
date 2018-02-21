@@ -47,7 +47,7 @@ hierarchy, as follows.
 Sampling
 --------
 
-#. MCMC without gradients
+#. :class:`MCMC without gradients<MCMCSampler>`
 
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
@@ -56,7 +56,7 @@ Sampling
    - MetropolisHastings
    - PopulationMCMC
 
-#. Nested sampling
+#. :class:`Nested sampling<NestedSampler>`
 
    - :class:`NestedEllipsoidSampler`, requires a :class:`LogLikelihood` and a
      :class:`LogPrior` that can be sampled from.
@@ -72,13 +72,13 @@ Sampling
    - ABC-MCMC
    - ABC-SMC
 
-#. 1st order sensitivity MCMC samplers (Need derivatives of LogPosterior)
+#. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPosterior`)
 
    - MALA
    - HMC
    - NUTS
 
-#. Differential geometric methods (Need Hessian of LogPosterior)
+#. Differential geometric methods (Need Hessian of :class:`LogPosterior`)
 
    - smMALA
    - RMHMC
