@@ -47,7 +47,13 @@ from ._util import Timer
 #
 # Logs of probability density functions (not necessarily normalised)
 #
-from ._log_pdfs import LogPDF, LogPrior, LogLikelihood, LogPosterior
+from ._log_pdfs import (
+    LogPDF,
+    LogPrior,
+    LogLikelihood,
+    LogPosterior,
+    ProblemLogLikelihood,
+    )
 
 #
 # Log-priors
@@ -66,6 +72,7 @@ from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
     ScaledLogLikelihood,
     UnknownNoiseLogLikelihood,
+    SumOfIndependentLogLikelihoods,
 )
 
 #
@@ -78,6 +85,7 @@ from ._boundaries import Boundaries
 #
 from ._error_measures import (
     ErrorMeasure,
+    ProblemErrorMeasure,
     ProbabilityBasedError,
     SumOfErrors,
     WeightedSumOfErrors,

@@ -40,13 +40,6 @@ class LogPrior(LogPDF):
     Priors are normalised: The integral ``f(theta)`` over all points ``theta``
     in parameter space sums to 1.
     """
-    def dimension(self):
-        """ See: :meth:`LogPDF.dimension`. """
-        raise NotImplementedError
-
-    def __call__(self, x):
-        raise NotImplementedError
-
     def sample(self, n=1):
         """
         Returns ``n`` random samples from the underlying prior distribution.
@@ -61,6 +54,14 @@ class LogPrior(LogPDF):
 class LogLikelihood(LogPDF):
     """
     *Extends:* :class:`LogPDF`
+
+    Represents a log-likelihood defined on a parameter space.
+    """
+
+
+class ProblemLogLikelihood(LogLikelihood):
+    """
+    *Extends:* :class:`LogLikelihood`
 
     Represents a log-likelihood on a problem's parameter space, used to
     indicate the likelihood of an observed (fixed) time-series given a
