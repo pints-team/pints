@@ -106,6 +106,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         # Update sampler state
         self._running = True
 
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init`. """
+        logger.add_float('Accept.')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write`. """
+        logger.log(self._acceptance)
+
     def name(self):
         """See: :meth:`pints.MCMCSampler.name()`."""
         return 'Adaptive covariance MCMC'

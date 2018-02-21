@@ -267,11 +267,9 @@ class Optimisation(object):
         if not has_stopping_criterion:
             raise ValueError('At least one stopping criterion must be set.')
 
-        # Iterations
+        # Iterations and function evaluations
         iteration = 0
-
-        # Function evaluations
-        evals = 0
+        evaluations = 0
 
         # Unchanged iterations count (used for stopping or just for
         # information)
@@ -312,14 +310,14 @@ class Optimisation(object):
                 print('Running in sequential mode.')
 
             # Show population size
-            evals_per_iteration = 1
+            pop_size = 1
             if isinstance(self._optimiser, PopulationBasedOptimiser):
-                evals_per_iteration = self._optimiser.population_size()
-                print('Population size: ' + str(evals_per_iteration))
+                pop_size = self._optimiser.population_size()
+                print('Population size: ' + str(pop_size))
 
             # Set up logger
             max_iter_guess = max(self._max_iterations or 0, 10000)
-            max_eval_guess = max_iter_guess * evals_per_iteration
+            max_eval_guess = max_iter_guess * pop_size
             logger = pints.Logger()
             logger.add_counter('Iter.', max_value=max_iter_guess)
             logger.add_counter('Eval.', max_value=max_eval_guess)
@@ -358,13 +356,16 @@ class Optimisation(object):
                 unchanged_iterations += 1
 
             # Update evaluation count
-            evals += len(fs)
+            evaluations += len(fs)
 
             # Show progress in verbose mode:
             if self._verbose and iteration >= next_message:
-                logger.log(iteration, evals, fbest_user)
+                # Log state
+                logger.log(iteration, evaluations, fbest_user)
                 self._optimiser._log_write(logger)
                 logger.log(timer.time())
+
+                # Choose next logging point
                 if iteration < message_warm_up:
                     next_message = iteration + 1
                 else:
@@ -400,7 +401,7 @@ class Optimisation(object):
 
         # Log final values and show halt message
         if self._verbose:
-            logger.log(iteration, evals, fbest_user)
+            logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
             logger.log(timer.time())
             print(halt_message)

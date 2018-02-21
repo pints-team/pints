@@ -330,8 +330,9 @@ class MCMCSampling(object):
         if not has_stopping_criterion:
             raise ValueError('At least one stopping criterion must be set.')
 
-        # Iterations
+        # Iterations and evaluations
         iteration = 0
+        evaluations = 0
 
         # Create evaluator object
         if self._parallel:
@@ -356,13 +357,24 @@ class MCMCSampling(object):
             else:
                 print('Running in sequential mode.')
 
+            # Set up logger
+            max_iter_guess = max(self._max_iterations or 0, 10000)
+            max_eval_guess = max_iter_guess * self._chains
+            logger = pints.Logger()
+            logger.add_counter('Iter.', max_value=max_iter_guess)
+            logger.add_counter('Eval.', max_value=max_eval_guess)
+            for sampler in self._samplers:
+                sampler._log_init(logger)
+            logger.add_time('Time m:s')
+
         # Create chains
         #TODO Pre-allocate?
         #TODO Thinning
         #TODO Advanced logging
         chains = []
 
-        # Start searching
+        # Start sampling
+        timer = pints.Timer()
         running = True
         while running:
             # Get points
@@ -382,10 +394,18 @@ class MCMCSampling(object):
                 samples = self._samplers[0].tell(fxs)
             chains.append(samples)
 
+            # Update evaluation count
+            evaluations += len(fxs)
+
             # Show progress in verbose mode:
             if self._verbose and iteration >= next_message:
-                # TODO: Add some sort of status printing here
-                print('' + str(iteration))
+                # Log state
+                logger.log(iteration, evaluations)
+                for sampler in self._samplers:
+                    sampler._log_write(logger)
+                logger.log(timer.time())
+
+                # Choose next logging point
                 if iteration < message_warm_up:
                     next_message = iteration + 1
                 else:
@@ -403,9 +423,8 @@ class MCMCSampling(object):
             if (self._max_iterations is not None and
                     iteration >= self._max_iterations):
                 running = False
-                if self._verbose:
-                    print('Halting: Maximum number of iterations ('
-                          + str(iteration) + ') reached.')
+                halt_message = ('Halting: Maximum number of iterations ('
+                                + str(iteration) + ') reached.')
 
             #TODO Add more stopping criteria
 
@@ -417,6 +436,14 @@ class MCMCSampling(object):
             if iteration == self._adaptation_free_iterations:
                 for sampler in self._samplers:
                     sampler.set_adaptation(True)
+
+        # Log final state and show halt message
+        if self._verbose:
+            logger.log(iteration, evaluations)
+            for sampler in self._samplers:
+                sampler._log_write(logger)
+            logger.log(timer.time())
+            print(halt_message)
 
         # Swap axes in chains, to get indices
         #  [chain, iteration, parameter]
