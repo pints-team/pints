@@ -74,6 +74,21 @@ class SumOfErrors(ErrorMeasure):
 
     Calculates a sum of :class:`ErrorMeasure` objects, all defined on the same
     parameter space.
+
+    Examples::
+
+        e = pints.SumOfErrors(
+            pints.MeanSquaredError(problem1),
+            pints.MeanSquaredError(problem2),
+            pints.MeanSquaredError(problem3),
+        )
+
+        errors = [
+            pints.MeanSquaredError(problem1),
+            pints.MeanSquaredError(problem2),
+        ]
+        e = pints.SumOfErrors(*errors)
+
     """
     def __init__(self, *error_measures):
         super(SumOfErrors, self).__init__()
@@ -94,7 +109,7 @@ class SumOfErrors(ErrorMeasure):
         for e in i:
             if e.dimension() != self._dimension:
                 raise ValueError(
-                    'All errors passed to sum of errors must have same'
+                    'All errors passed to SumOfErrors must have same'
                     ' dimension.')
 
     def dimension(self):
@@ -105,10 +120,79 @@ class SumOfErrors(ErrorMeasure):
         total = 0
         for e in self._errors:
             total += e(x)
-            if not np.isfinite(total):
-                return total
         return total
 
+
+class WeightedSumOfErrors(ErrorMeasure):
+    """
+    *Extends:* :class:`ErrorMeasure`
+
+    Calculates a weighted sum of :class:`ErrorMeasure` objects, all defined on
+    the same parameter space.
+
+    Arguments:
+
+    ``error_measures``
+        A sequence of error measures.
+    ``weights``
+        A sequence of (float) weights, exactly one per error measure.
+
+    Example::
+
+        errors = [
+            pints.MeanSquaredError(problem1),
+            pints.MeanSquaredError(problem2),
+        ]
+        weights = [
+            1.0,
+            2.7,
+        ]
+        e = pints.SumOfErrors(errors, weights)
+
+    """
+    def __init__(self, error_measures, weights):
+        super(WeightedSumOfErrors, self).__init__()
+
+        # Check input arguments
+        if len(error_measures) < 2:
+            raise ValueError(
+                'WeightedSumOfErrors requires at least 2 error measures.')
+        if len(error_measures) != len(weights):
+            raise ValueError(
+                'Number of weights must match number of errors passed to'
+                ' WeightedSumOfErrors.')
+
+        # Check error measures
+        for i, e in enumerate(error_measures):
+            if not isinstance(e, pints.ErrorMeasure):
+                raise ValueError(
+                    'All error_measures passed to WeightedSumOfErrors must be'
+                    ' instances of pints.ErrorMeasure (failed on argument '
+                    + str(i) + '.')
+        self._errors = error_measures
+
+        # Get and check dimension
+        i = iter(self._errors)
+        self._dimension = next(i).dimension()
+        for e in i:
+            if e.dimension() != self._dimension:
+                raise ValueError(
+                    'All errors passed to WeightedSumOfErrors must have same'
+                    ' dimension.')
+
+        # Check weights
+        self._weights = [float(w) for w in weights]
+
+    def dimension(self):
+        """ See :meth:`ErrorMeasure.dimension`. """
+        return self._dimension
+
+    def __call__(self, x):
+        i = iter(self._weights)
+        total = 0
+        for e in self._errors:
+            total += e(x) * next(i)
+        return total
 
 
 class MeanSquaredError(ProblemErrorMeasure):

@@ -80,6 +80,7 @@ from ._error_measures import (
     ErrorMeasure,
     ProbabilityBasedError,
     SumOfErrors,
+    WeightedSumOfErrors,
     MeanSquaredError,
     RootMeanSquaredError,
     SumOfSquaresError,
