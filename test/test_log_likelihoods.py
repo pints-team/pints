@@ -38,6 +38,9 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(int(eval_not_scaled), -20959169232)
         self.assertAlmostEqual(eval_scaled * len(times), eval_not_scaled)
 
+        # Test bad constructor
+        self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
+
     def test_known_and_unknown_noise_log_likelihood(self):
 
         model = toy.LogisticModel()
@@ -52,6 +55,12 @@ class TestLogLikelihood(unittest.TestCase):
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertAlmostEqual(l1(parameters), l2(parameters + [sigma]))
 
+        # Test invalid constructors
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
+
     def test_sum_of_independent_log_likelihoods(self):
         model = toy.LogisticModel()
         x = [0.015, 500]
@@ -63,6 +72,7 @@ class TestLogLikelihood(unittest.TestCase):
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         ll = pints.SumOfIndependentLogLikelihoods(l1, l1, l1)
+        self.assertEqual(l1.dimension(), ll.dimension())
         self.assertEqual(3 * l1(x), ll(x))
 
         # Test invalid constructors
