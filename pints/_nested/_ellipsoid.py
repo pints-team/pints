@@ -18,7 +18,7 @@ from pints._nested import reject_sample_prior
 
 class NestedEllipsoidSampler(pints.NestedSampler):
     """
-    *Extends:* :class:`nestedSampler`
+    *Extends:* :class:`NestedSampler`
 
     Creates a nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
