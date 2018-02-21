@@ -42,16 +42,19 @@ Hierarchy of methods
 ====================
 
 Pints contains different types of methods, that can be roughly arranged into a
-hierarhcy, as follows.
+hierarchy, as follows.
 
 Sampling
 --------
 
-#. MCMC
+#. MCMC without gradients
 
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
+   - emcee (MCMC Hammer)
+   - MetropolisHastings
+   - PopulationMCMC
 
 #. Nested sampling
 
@@ -62,7 +65,6 @@ Sampling
 
 #. Particle based samplers
 
-   - PopulationMCMC
    - SMC
 
 #. Likelihood free sampling (Need distance between data and states, e.g. least squares?)
@@ -70,7 +72,7 @@ Sampling
    - ABC-MCMC
    - ABC-SMC
 
-#. Score function based (Need derivatives of LogPosterior)
+#. 1st order sensitivity MCMC samplers (Need derivatives of LogPosterior)
 
    - MALA
    - HMC
@@ -80,7 +82,6 @@ Sampling
 
    - smMALA
    - RMHMC
-
 
 Optimisation
 ------------
@@ -97,4 +98,28 @@ All methods shown here are derivative-free methods that work on any
      - :class:`xNES`
 
    - :class:`PSO` (global method)
+
+
+
+Problems in Pints
+=================
+
+Pints defines :class:`Problem classes<SingleSeriesProblem>` that wrap around
+models and data, and over which :class:`error measures<ErrorMeasure>` or
+:class:`log-likelihoods<LogLikelihoods>` can be defined.
+
+To find the appropriate type of ``Problem`` to use, see the overview below:
+
+#. Systems with a single observable output
+
+   - Single data set: Use a :class:`SingleSeriesProblem` and any of the
+     appropriate error measures or log-likelihoods
+   - Multiple, independent data sets: Define multiple
+     :class:`SingleSeriesProblems<SingleSeriesProblem>` and an error measure
+     / log-likelihood on each, and then combine using e.g.
+     :class:`SumOfErrors` or :class:`SumOfIndependentLogLikelihoods`.
+
+#. Systems with multiple observable outputs
+
+   - Not implemented yet!
 
