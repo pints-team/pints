@@ -13,9 +13,11 @@ import numpy as np
 import multiprocessing
 
 
-class MCMCSampler(object):
+class MCMCSampler(pints.Loggable):
     """
     Abstract base class for (single or multi-chain) MCMC methods.
+
+    All MCMC samplers implement the :class:`pints.Loggable` interface.
     """
     def name(self):
         """

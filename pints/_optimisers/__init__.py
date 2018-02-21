@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class Optimiser(object):
+class Optimiser(pints.Loggable):
     """
     Base class for optimisers implementing an ask-and-tell interface.
 
@@ -31,6 +31,7 @@ class Optimiser(object):
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
 
+    All optimisers implement the :class:`pints.Loggable` interface.
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
 
@@ -269,6 +270,9 @@ class Optimisation(object):
         # Iterations
         iteration = 0
 
+        # Function evaluations
+        evals = 0
+
         # Unchanged iterations count (used for stopping or just for
         # information)
         unchanged_iterations = 0
@@ -308,11 +312,23 @@ class Optimisation(object):
                 print('Running in sequential mode.')
 
             # Show population size
+            evals_per_iteration = 1
             if isinstance(self._optimiser, PopulationBasedOptimiser):
-                print('Population size: '
-                      + str(self._optimiser.population_size()))
+                evals_per_iteration = self._optimiser.population_size()
+                print('Population size: ' + str(evals_per_iteration))
+
+            # Set up logger
+            max_iter_guess = max(self._max_iterations, 10000)
+            max_eval_guess = max_iter_guess * evals_per_iteration
+            logger = pints.Logger()
+            logger.add_counter('Iter.', max_value=max_iter_guess)
+            logger.add_counter('Eval.', max_value=max_eval_guess)
+            logger.add_float('Best')
+            self._optimiser._log_init(logger)
+            logger.add_time('Time m:s')
 
         # Start searching
+        timer = pints.Timer()
         running = True
         while running:
             # Get points
@@ -341,9 +357,14 @@ class Optimisation(object):
             else:
                 unchanged_iterations += 1
 
+            # Update evaluation count
+            evals += len(fs)
+
             # Show progress in verbose mode:
             if self._verbose and iteration >= next_message:
-                print(str(iteration) + ': ' + str(fbest_user))
+                logger.log(iteration, evals, fbest_user)
+                self._optimiser._log_write(logger)
+                logger.log(timer.time())
                 if iteration < message_warm_up:
                     next_message = iteration + 1
                 else:
@@ -361,28 +382,28 @@ class Optimisation(object):
             if (self._max_iterations is not None and
                     iteration >= self._max_iterations):
                 running = False
-                if self._verbose:
-                    print('Halting: Maximum number of iterations ('
-                          + str(iteration) + ') reached.')
+                halt_message = ('Halting: Maximum number of iterations ('
+                                + str(iteration) + ') reached.')
 
             # Maximum number of iterations without significant change
             if (self._max_unchanged_iterations is not None and
                     unchanged_iterations >= self._max_unchanged_iterations):
                 running = False
-                if self._verbose:
-                    print('Halting: No significant change for '
-                          + str(unchanged_iterations) + ' iterations.')
+                halt_message = ('Halting: No significant change for '
+                                + str(unchanged_iterations) + ' iterations.')
 
             # Threshold value
             if self._threshold is not None and fbest < self._threshold:
                 running = False
-                if self._verbose:
-                    print('Halting: Objective function crossed threshold: '
-                          + str(self._threshold) + '.')
+                halt_message = ('Halting: Objective function crossed'
+                                ' threshold: ' + str(self._threshold) + '.')
 
-        # Show final value
+        # Log final values and show halt message
         if self._verbose:
-            print(str(iteration) + ': ' + str(fbest_user))
+            logger.log(iteration, evals, fbest_user)
+            self._optimiser._log_write(logger)
+            logger.log(timer.time())
+            print(halt_message)
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user

@@ -156,6 +156,18 @@ class PSO(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init`. """
+        # Show best position of each particle
+        for i in range(self._population_size):
+            logger.add_float('f' + str(i), file_only=True)
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write`. """
+        # Show best position of each particle
+        for f in self._fl:
+            logger.log(f)
+
     def population_size(self):
         """ See :meth:`PopulationBasedOptimiser.population_size`. """
         return self._population_size
