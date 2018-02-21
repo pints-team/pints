@@ -35,9 +35,6 @@ class Optimiser(pints.Loggable):
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
 
-        # Print info to console
-        self._verbose = True
-
         # Get dimension
         self._dimension = len(x0)
         if self._dimension < 1:
@@ -202,8 +199,10 @@ class Optimisation(object):
             raise ValueError('Method must be subclass of pints.Optimiser.')
         self._optimiser = method(x0, sigma0, boundaries)
 
-        # Print info to console
-        self._verbose = True
+        # Logging
+        self._log_to_screen = True
+        self._log_filename = None
+        self._log_csv = False
 
         # Run parallelised version
         self._parallel = None
@@ -292,33 +291,42 @@ class Optimisation(object):
         message_warm_up = 3
         message_interval = 20
 
-        # Print configuration
-        if self._verbose:
-            # Show direction
-            if self._minimising:
-                print('Minimising error measure')
-            else:
-                print('Maximising LogPDF')
+        # Start logging
+        logging = self._log_to_screen or self._log_filename
+        if logging:
+            if self._log_to_screen:
+                # Show direction
+                if self._minimising:
+                    print('Minimising error measure')
+                else:
+                    print('Maximising LogPDF')
 
-            # Show method
-            print('using ' + str(self._optimiser.name()))
+                # Show method
+                print('using ' + str(self._optimiser.name()))
 
-            # Show parallelisation
-            if self._parallel:
-                print('Running in parallel mode.')
-            else:
-                print('Running in sequential mode.')
+                # Show parallelisation
+                if self._parallel:
+                    print('Running in parallel mode.')
+                else:
+                    print('Running in sequential mode.')
 
             # Show population size
             pop_size = 1
             if isinstance(self._optimiser, PopulationBasedOptimiser):
                 pop_size = self._optimiser.population_size()
-                print('Population size: ' + str(pop_size))
+                if self._log_to_screen:
+                    print('Population size: ' + str(pop_size))
 
             # Set up logger
+            logger = pints.Logger()
+            if not self._log_to_screen:
+                logger.set_stream(None)
+            if self._log_filename:
+                logger.set_filename(self._log_filename, csv=self._log_csv)
+
+            # Add fields to log
             max_iter_guess = max(self._max_iterations or 0, 10000)
             max_eval_guess = max_iter_guess * pop_size
-            logger = pints.Logger()
             logger.add_counter('Iter.', max_value=max_iter_guess)
             logger.add_counter('Eval.', max_value=max_eval_guess)
             logger.add_float('Best')
@@ -358,8 +366,8 @@ class Optimisation(object):
             # Update evaluation count
             evaluations += len(fs)
 
-            # Show progress in verbose mode:
-            if self._verbose and iteration >= next_message:
+            # Show progress
+            if logging and iteration >= next_message:
                 # Log state
                 logger.log(iteration, evaluations, fbest_user)
                 self._optimiser._log_write(logger)
@@ -400,14 +408,37 @@ class Optimisation(object):
                                 ' threshold: ' + str(self._threshold) + '.')
 
         # Log final values and show halt message
-        if self._verbose:
+        if logging:
             logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
             logger.log(timer.time())
-            print(halt_message)
+            if self._log_to_screen:
+                print(halt_message)
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
+
+    def set_log_to_file(self, filename=None, csv=False):
+        """
+        Enables logging to file when a filename is passed in, disables it if
+        ``filename`` is ``False`` or ``None``.
+
+        The argument ``csv`` can be set to ``True`` to write the file in comma
+        separated value (CSV) format. By default, the file contents will be
+        similar to the output on screen.
+        """
+        if filename:
+            self._log_filename = str(filename)
+            self._log_csv = True if csv else False
+        else:
+            self._log_filename = None
+            self._log_csv = False
+
+    def set_log_to_screen(self, enabled):
+        """
+        Enables or disables logging to screen.
+        """
+        self._log_to_screen = True if enabled else False
 
     def set_max_iterations(self, iterations=10000):
         """
@@ -474,25 +505,12 @@ class Optimisation(object):
         else:
             self._threshold = float(threshold)
 
-    def set_verbose(self, value):
-        """
-        Enables or disables verbose mode for this optimiser. In verbose mode,
-        lots of output is generated during an optimisation.
-        """
-        self._verbose = bool(value)
-
     def threshold(self):
         """
         Returns the threshold stopping criterion, or ``None`` if no threshold
         stopping criterion is set. See :meth:`set_threshold`.
         """
         return self._threshold
-
-    def verbose(self):
-        """
-        Returns ``True`` if the optimiser is set to run in verbose mode.
-        """
-        return self._verbose
 
 
 def optimise(function, x0, sigma0=None, boundaries=None, method=None):

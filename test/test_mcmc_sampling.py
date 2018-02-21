@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 #
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
@@ -15,6 +15,28 @@ import numpy as np
 
 debug = False
 
+LOG_SCREEN = (
+    'Using Adaptive covariance MCMC\n'
+    'Generating 3 chains.\n'
+    'Running in sequential mode.\n'
+    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s\n'
+    '0     3      0         0         0          0:00.0\n'
+    '1     6      0         0         0.5        0:00.0\n'
+    '2     9      0         0         0.333      0:00.0\n'
+    '3     12     0         0         0.5        0:00.0\n'
+    '10    30     0.1       0         0.2        0:00.0\n'
+    'Halting: Maximum number of iterations (10) reached.\n'
+)
+
+LOG_FILE = (
+    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s\n'
+    '0     3      0         0         0          0:00.0\n'
+    '1     6      0         0         0.5        0:00.0\n'
+    '2     9      0         0         0.333      0:00.0\n'
+    '3     12     0         0         0.5        0:00.0\n'
+    '10    30     0.1       0         0.2        0:00.0\n'
+)
+
 
 class TestMCMCSampling(unittest.TestCase):
     """
@@ -24,19 +46,19 @@ class TestMCMCSampling(unittest.TestCase):
         super(TestMCMCSampling, self).__init__(name)
 
         # Create toy model
-        self.model = pints.toy.LogisticModel()
+        model = pints.toy.LogisticModel()
         self.real_parameters = [0.015, 500]
-        self.times = np.linspace(0, 1000, 1000)
-        self.values = self.model.simulate(self.real_parameters, self.times)
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(self.real_parameters, times)
 
         # Add noise
+        np.random.seed(1)
         self.noise = 10
-        self.values += np.random.normal(0, self.noise, self.values.shape)
+        values += np.random.normal(0, self.noise, values.shape)
         self.real_parameters.append(self.noise)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleSeriesProblem(
-            self.model, self.times, self.values)
+        problem = pints.SingleSeriesProblem(model, times, values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
@@ -46,7 +68,7 @@ class TestMCMCSampling(unittest.TestCase):
         )
 
         # Create a log-likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
+        self.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
@@ -65,7 +87,7 @@ class TestMCMCSampling(unittest.TestCase):
         niterations = 10
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(niterations)
-        mcmc.set_verbose(False)
+        mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
@@ -114,7 +136,7 @@ class TestMCMCSampling(unittest.TestCase):
         niterations = 10
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(niterations)
-        mcmc.set_verbose(False)
+        mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
@@ -132,7 +154,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.log_posterior, nchains, xs,
             method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(niterations)
-        mcmc.set_verbose(False)
+        mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
@@ -143,30 +165,57 @@ class TestMCMCSampling(unittest.TestCase):
             self.log_posterior, nchains, xs,
             method=pints.DifferentialEvolutionMCMC)
         mcmc.set_max_iterations(niterations)
-        mcmc.set_verbose(False)
+        mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
 
-        # Test verbose switch
-        with pints.io.StreamCapture() as capture:
-            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
-            mcmc.set_max_iterations(niterations)
-            mcmc.set_verbose(False)
-            chains = mcmc.run()
-        self.assertEqual(capture.text(), '')
-        with pints.io.StreamCapture() as capture:
-            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
-            mcmc.set_max_iterations(niterations)
-            mcmc.set_verbose(True)
-            chains = mcmc.run()
-        self.assertNotEqual(capture.text(), '')
-
         # Test without stopping criteria
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(None)
         self.assertRaises(ValueError, mcmc.run)
+
+    def test_logging(self):
+
+        np.random.seed(1)
+        xs = []
+        for i in range(3):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(np.array(self.real_parameters) * f)
+        nchains = len(xs)
+
+        # No output
+        with pints.io.StreamCapture() as capture:
+            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc.set_max_iterations(10)
+            mcmc.set_log_to_screen(False)
+            mcmc.run()
+        self.assertEqual(capture.text(), '')
+
+        # With output to screen
+        np.random.seed(1)
+        with pints.io.StreamCapture() as capture:
+            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc.set_max_iterations(10)
+            mcmc.set_log_to_screen(True)
+            mcmc.run()
+        self.assertEqual(capture.text(), LOG_SCREEN)
+
+        # With output to file
+        np.random.seed(1)
+        with pints.io.StreamCapture() as capture:
+            with pints.io.TemporaryDirectory() as d:
+                filename = d.path('test.txt')
+                mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+                mcmc.set_max_iterations(10)
+                mcmc.set_log_to_screen(False)
+                mcmc.set_log_to_file(filename)
+                mcmc.run()
+                with open(filename, 'r') as f:
+                    self.assertEqual(f.read(), LOG_FILE)
+                    pass
+            self.assertEqual(capture.text(), '')
 
 
 if __name__ == '__main__':
