@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class KnownNoiseLogLikelihood(pints.LogLikelihood):
+class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 
@@ -36,7 +36,7 @@ class KnownNoiseLogLikelihood(pints.LogLikelihood):
         return self._offset + self._multip * np.sum(error**2)
 
 
-class UnknownNoiseLogLikelihood(pints.LogLikelihood):
+class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 
@@ -73,7 +73,7 @@ class UnknownNoiseLogLikelihood(pints.LogLikelihood):
             + np.sum(error**2) / (2 * x[-1]**2))
 
 
-class ScaledLogLikelihood(pints.LogLikelihood):
+class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
 
@@ -95,3 +95,62 @@ class ScaledLogLikelihood(pints.LogLikelihood):
     def __call__(self, x):
         return self._log_likelihood(x) / self._size
 
+
+class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
+    """
+    *Extends:* :class:`LogLikelihood`
+
+    Calculates a sum of :class:`LogLikelihood` objects, all defined on the same
+    parameter space.
+
+    This is useful for e.g. Bayesian inference using a single model evaluated
+    on two **independent** data sets ``D`` and ``E``. In this case,
+
+    .. math::
+        f(\\theta|D,E) &= \\frac{f(D, E|\\theta)f(\\theta)}{f(D, E)} \\\\
+                       &= \\frac{f(D|\\theta)f(E|\\theta)f(\\theta)}{f(D, E)}
+
+    Example::
+
+        log_likelihood = pints.SumOfIndependentLogLikelihoods(
+            pints.UnknownNoiseLogLikelihood(problem1),
+            pints.UnknownNoiseLogLikelihood(problem2),
+        )
+
+
+    """
+    def __init__(self, *log_likelihoods):
+        super(SumOfIndependentLogLikelihoods, self).__init__()
+
+        # Check input arguments
+        if len(log_likelihoods) < 2:
+            raise ValueError(
+                'SumOfIndependentLogLikelihoods requires at least 2 log'
+                ' likelihoods.')
+        for i, e in enumerate(log_likelihoods):
+            if not isinstance(e, pints.LogLikelihood):
+                raise ValueError(
+                    'All objects passed to SumOfIndependentLogLikelihoods must'
+                    ' be instances of pints.LogLikelihood (failed on argument '
+                    + str(i) + '.')
+        self._log_likelihoods = log_likelihoods
+
+        # Get and check dimension
+        i = iter(self._log_likelihoods)
+        self._dimension = next(i).dimension()
+        for e in i:
+            if e.dimension() != self._dimension:
+                raise ValueError(
+                    'All log-likelihoods passed to'
+                    ' SumOfIndependentLogLikelihoods must have same'
+                    ' dimension.')
+
+    def dimension(self):
+        """ See :meth:`LogPDF.dimension`. """
+        return self._dimension
+
+    def __call__(self, x):
+        total = 0
+        for e in self._log_likelihoods:
+            total += e(x)
+        return total

@@ -227,13 +227,18 @@ class TestErrorMeasures(unittest.TestCase):
             self.assertTrue(np.isnan(e(x)))
 
         # Wrong number of arguments
-        self.assertRaises(ValueError, pints.SumOfErrors)
-        self.assertRaises(ValueError, pints.SumOfErrors, e1)
+        self.assertRaises(ValueError, pints.WeightedSumOfErrors, [e1], [1])
         # Wrong argument types
-        self.assertRaises(ValueError, pints.SumOfErrors, [], 1)
-        self.assertRaises(ValueError, pints.SumOfErrors, 'p', {})
+        self.assertRaises(
+            TypeError, pints.WeightedSumOfErrors, [e1, e1], [e1, 1])
+        self.assertRaises(
+            ValueError, pints.WeightedSumOfErrors, [e1, 3], [2, 1])
+        # Mismatching sizes
+        self.assertRaises(
+            ValueError, pints.WeightedSumOfErrors, [e1, e1, e1], [1, 1])
         # Mismatching problem dimensions
-        self.assertRaises(ValueError, pints.SumOfErrors, e1, e3)
+        self.assertRaises(
+            ValueError, pints.WeightedSumOfErrors, [e1, e1, e3], [1, 2, 3])
 
 
 if __name__ == '__main__':

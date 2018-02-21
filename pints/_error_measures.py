@@ -169,7 +169,7 @@ class WeightedSumOfErrors(ErrorMeasure):
                     'All error_measures passed to WeightedSumOfErrors must be'
                     ' instances of pints.ErrorMeasure (failed on argument '
                     + str(i) + '.')
-        self._errors = error_measures
+        self._errors = list(error_measures)
 
         # Get and check dimension
         i = iter(self._errors)
