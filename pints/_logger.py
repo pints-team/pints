@@ -16,6 +16,7 @@ import collections
 _COUNTER = 0
 _FLOAT = 1
 _INT = 2
+_TIME = 3
 
 
 class Logger(object):
@@ -107,7 +108,7 @@ class Logger(object):
         # Return self to allow for chaining
         return self
 
-    def add_float(self, name, width=7, file_only=False):
+    def add_float(self, name, width=9, file_only=False):
         """
         Adds a field for floating point number.
 
@@ -241,6 +242,38 @@ class Logger(object):
         # Return self to allow for chaining
         return self
 
+    def add_time(self, name, file_only=False):
+        """
+        Adds a field showing a formatted time (given in seconds).
+
+        Arguments:
+
+        ``name``
+            This field's name. Will be displayed in the header.
+        ``file_only``
+            If set to ``True``, this field will not be shown on screen.
+
+        Returns this :class:`Logger` object.
+        """
+        if self._have_logged:
+            raise ValueError('Cannot add fields after logging has started.')
+
+        # Check name
+        name = str(name)
+
+        # Determine field width
+        width = max(len(name), 8)
+
+        # Add field
+        f1 = f2 = None
+        self._field_names.append(name)
+        self._field_formats.append((width, _TIME, f1, f2))
+        if not file_only:
+            self._stream_fields.append(len(self._field_names) - 1)
+
+        # Return self to allow for chaining
+        return self
+
     def log(self, *data):
         """
         Logs a new row of data.
@@ -284,7 +317,9 @@ class Logger(object):
                     i = iter(row)
                     for width, dtype, f1, f2 in self._field_formats:
                         if dtype == _FLOAT:
-                            x = '{:<.17e}'.format(next(i))
+                            x = '{:.17e}'.format(next(i))
+                        elif dtype == _TIME:
+                            x = str(next(i))
                         else:
                             x = str(int(next(i)))
                         line.append(x)
@@ -317,6 +352,8 @@ class Logger(object):
                     if len(x) > width:
                         x = f2.format(v)
                     x += ' ' * (width - len(x))
+                elif dtype == _TIME:
+                    x = self._format_time(next(column))
                 else:
                     x = f1.format(int(next(column)))
                 formatted_row.append(x)
@@ -366,4 +403,38 @@ class Logger(object):
             raise ValueError('Cannot configure after logging has started.')
 
         self._stream = stream
+
+    def _format_time(self, seconds):
+        """
+        Formats a time in seconds to the format "mmm:ss.s", i.e. a three-digit
+        minutes figure and a three-digit seconds figure.
+        """
+        # Split off minutes
+        minutes = int(seconds // 60)
+        seconds -= 60 * minutes
+
+        # Round seconds abve 59.95 so we never show 60.0 seconds
+        if seconds >= 59.95:
+            minutes += 1
+            seconds = 0
+
+        # Format and return
+        return '{:>3d}:{:0>4.1f}'.format(minutes, seconds)
+
+
+class Loggable(object):
+    """
+    Interface for classes that can log to a :class:`Logger`.
+    """
+    def _log_init(self, logger):
+        """
+        Adds this :class:`Loggable's<Loggable>` fields to a :class:`Logger`.
+        """
+        pass
+
+    def _log_write(self, logger):
+        """
+        Logs data for each of the fields specified in :meth:`_log_init`.
+        """
+        pass
 

@@ -45,7 +45,7 @@ from ._core import ForwardModel, SingleSeriesProblem
 #
 from ._util import strfloat, vector
 from ._util import Timer
-from ._logger import Logger
+from ._logger import Logger, Loggable
 
 #
 # Logs of probability density functions (not necessarily normalised)
