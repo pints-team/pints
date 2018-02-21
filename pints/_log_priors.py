@@ -72,7 +72,7 @@ class MultivariateNormalLogPrior(pints.LogPrior):
 
     For example::
 
-        p = MultivariateNormalPrior(
+        p = MultivariateNormalLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
     """
@@ -114,7 +114,7 @@ class NormalLogPrior(pints.LogPrior):
 
     Defines a 1-d normal (log) prior with a given `mean` and `variance`.
 
-    For example: ``p = NormalPrior(0, 1)`` for a mean of ``0`` and variance
+    For example: ``p = NormalLogPrior(0, 1)`` for a mean of ``0`` and variance
     of ``1``.
     """
     def __init__(self, mean, variance):
@@ -147,15 +147,16 @@ class UniformLogPrior(pints.LogPrior):
     The range includes the lower, but not the upper boundaries, so that any
     point ``x`` with a non-zero prior must have ``lower <= x < upper``.
 
-    For example: ``p = UniformPrior([1,1,1], [10, 10, 100])``, or
-    ``p = UniformPrior(Boundaries([1,1,1], [10, 10, 100]))``.
+    For example: ``p = UniformLogPrior([1, 1, 1], [10, 10, 100])``, or
+    ``p = UniformLogPrior(Boundaries([1, 1, 1], [10, 10, 100]))``.
+
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
         if upper is None:
             if not isinstance(lower_or_boundaries, pints.Boundaries):
                 raise ValueError(
-                    'UniformPrior requires a lower and an upper bound, or a'
+                    'UniformLogPrior requires a lower and an upper bound, or a'
                     ' single Boundaries object.')
             self._boundaries = lower_or_boundaries
         else:
