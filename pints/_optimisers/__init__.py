@@ -318,7 +318,7 @@ class Optimisation(object):
                 print('Population size: ' + str(evals_per_iteration))
 
             # Set up logger
-            max_iter_guess = max(self._max_iterations, 10000)
+            max_iter_guess = max(self._max_iterations or 0, 10000)
             max_eval_guess = max_iter_guess * evals_per_iteration
             logger = pints.Logger()
             logger.add_counter('Iter.', max_value=max_iter_guess)
