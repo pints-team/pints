@@ -20,3 +20,5 @@ Example::
 
 .. autoclass:: ScaledLogLikelihood
 
+.. autoclass:: SumOfIndependentLogLikelihoods
+

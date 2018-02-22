@@ -23,3 +23,5 @@ Example::
 
 .. autoclass:: LogPosterior
 
+.. autoclass:: ProblemLogLikelihood
+

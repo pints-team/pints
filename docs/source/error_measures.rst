@@ -19,7 +19,11 @@ Example::
 
 .. autoclass:: ProbabilityBasedError
 
+.. autoclass:: ProblemErrorMeasure
+
 .. autoclass:: RootMeanSquaredError
+
+.. autoclass:: SumOfErrors
 
 .. autoclass:: SumOfSquaresError
 
