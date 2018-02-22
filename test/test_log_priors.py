@@ -122,6 +122,7 @@ class TestPrior(unittest.TestCase):
         lower = np.array([1, 2])
         upper = np.array([10, 20])
 
+        # Test normal construction
         p = pints.UniformLogPrior(lower, upper)
         m = float('-inf')
         self.assertEqual(p([0, 0]), m)
@@ -143,6 +144,33 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([1, 20 - 1e-14]), w)
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
+
+        # Test from boundaries object
+        b = pints.Boundaries(lower, upper)
+        p = pints.UniformLogPrior(b)
+        m = float('-inf')
+        self.assertEqual(p([0, 0]), m)
+        self.assertEqual(p([0, 5]), m)
+        self.assertEqual(p([0, 19]), m)
+        self.assertEqual(p([0, 21]), m)
+        self.assertEqual(p([5, 0]), m)
+        self.assertEqual(p([5, 21]), m)
+        self.assertEqual(p([15, 0]), m)
+        self.assertEqual(p([15, 5]), m)
+        self.assertEqual(p([15, 19]), m)
+        self.assertEqual(p([15, 21]), m)
+        self.assertEqual(p([10, 10]), m)
+        self.assertEqual(p([5, 20]), m)
+
+        w = -np.log(np.product(upper - lower))
+        self.assertEqual(p([1, 2]), w)
+        self.assertEqual(p([1, 5]), w)
+        self.assertEqual(p([1, 20 - 1e-14]), w)
+        self.assertEqual(p([5, 5]), w)
+        self.assertEqual(p([5, 20 - 1e-14]), w)
+
+        # Test bad constructor
+        self.assertRaises(ValueError, pints.UniformLogPrior, lower)
 
     def test_uniform_prior_sampling(self):
         lower = np.array([1, 2])
