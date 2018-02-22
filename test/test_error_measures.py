@@ -135,110 +135,65 @@ class TestErrorMeasures(unittest.TestCase):
         e4 = pints.SumOfSquaresError(BadMiniProblem())
 
         # Basic use
-        e = pints.SumOfErrors(e1, e2)
+        e = pints.SumOfErrors([e1, e2])
         x = [0, 0, 0]
         self.assertEqual(e.dimension(), 3)
         self.assertEqual(e(x), e1(x) + e2(x))
-        e = pints.SumOfErrors(e1, e1, e1, e1, e1, e1)
-        self.assertEqual(e.dimension(), 3)
-        self.assertEqual(e(x), e1(x) * 6)
-        self.assertNotEqual(e(x), 0)
-        e = pints.SumOfErrors(e4, e1, e1, e1, e1, e1)
-        self.assertEqual(e.dimension(), 3)
-
-        with np.errstate(all='ignore'):
-            self.assertEqual(e(x), float('inf'))
-            e5 = pints.SumOfSquaresError(BadMiniProblem(float('inf')))
-            e = pints.SumOfErrors(*[e1, e5, e1])
-            self.assertTrue(np.isinf(e(x)))
-            e = pints.SumOfErrors(*[e4, e5, e1])
-            self.assertTrue(np.isinf(e(x)))
-            e = pints.SumOfErrors(
-                BadErrorMeasure(float('inf')), BadErrorMeasure(float('inf')))
-            self.assertEqual(e(x), float('inf'))
-            e = pints.SumOfErrors(
-                BadErrorMeasure(float('inf')), BadErrorMeasure(float('-inf')))
-            self.assertTrue(np.isnan(e(x)))
-            e = pints.SumOfErrors(
-                BadErrorMeasure(5), BadErrorMeasure(float('nan')))
-            self.assertTrue(np.isnan(e(x)))
-            e5 = pints.SumOfSquaresError(BadMiniProblem(float('nan')))
-            e = pints.SumOfErrors(*[e1, e5, e1])
-            self.assertTrue(np.isnan(e(x)))
-            e = pints.SumOfErrors(*[e4, e5, e1])
-            self.assertTrue(np.isnan(e(x)))
-
-        # Wrong number of arguments
-        self.assertRaises(ValueError, pints.SumOfErrors)
-        self.assertRaises(ValueError, pints.SumOfErrors, e1)
-        # Wrong argument types
-        self.assertRaises(ValueError, pints.SumOfErrors, [], 1)
-        self.assertRaises(ValueError, pints.SumOfErrors, 'p', {})
-        # Mismatching problem dimensions
-        self.assertRaises(ValueError, pints.SumOfErrors, e1, e3)
-
-    def test_weighted_sum_of_errors(self):
-        e1 = pints.SumOfSquaresError(MiniProblem())
-        e2 = pints.MeanSquaredError(MiniProblem())
-        e3 = pints.RootMeanSquaredError(BigMiniProblem())
-        e4 = pints.SumOfSquaresError(BadMiniProblem())
-
-        # Basic use
-        e = pints.WeightedSumOfErrors([e1, e2], [3.1, 4.5])
+        e = pints.SumOfErrors([e1, e2], [3.1, 4.5])
         x = [0, 0, 0]
         self.assertEqual(e.dimension(), 3)
         self.assertEqual(e(x), 3.1 * e1(x) + 4.5 * e2(x))
-        e = pints.WeightedSumOfErrors(
+        e = pints.SumOfErrors(
             [e1, e1, e1, e1, e1, e1], [1, 2, 3, 4, 5, 6])
         self.assertEqual(e.dimension(), 3)
         self.assertEqual(e(x), e1(x) * 21)
         self.assertNotEqual(e(x), 0)
 
         with np.errstate(all='ignore'):
-            e = pints.WeightedSumOfErrors(
+            e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [10, 1, 1, 1, 1, 1])
             self.assertEqual(e.dimension(), 3)
             self.assertEqual(e(x), float('inf'))
-            e = pints.WeightedSumOfErrors(
+            e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [0, 2, 0, 2, 0, 2])
             self.assertEqual(e.dimension(), 3)
             self.assertTrue(e(x), 6 * e1(x))
             e5 = pints.SumOfSquaresError(BadMiniProblem(float('-inf')))
-            e = pints.WeightedSumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])
+            e = pints.SumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isinf(e(x)))
-            e = pints.WeightedSumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
+            e = pints.SumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isinf(e(x)))
             e5 = pints.SumOfSquaresError(BadMiniProblem(float('nan')))
-            e = pints.WeightedSumOfErrors(
+            e = pints.SumOfErrors(
                 [BadErrorMeasure(float('inf')), BadErrorMeasure(float('inf'))],
                 [1, 1])
             self.assertEqual(e(x), float('inf'))
-            e = pints.WeightedSumOfErrors(
+            e = pints.SumOfErrors(
                 [BadErrorMeasure(float('inf')),
                  BadErrorMeasure(float('-inf'))],
                 [1, 1])
             self.assertTrue(np.isnan(e(x)))
-            e = pints.WeightedSumOfErrors(
+            e = pints.SumOfErrors(
                 [BadErrorMeasure(5), BadErrorMeasure(float('nan'))], [1, 1])
             self.assertTrue(np.isnan(e(x)))
-            e = pints.WeightedSumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])
+            e = pints.SumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isnan(e(x)))
-            e = pints.WeightedSumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
+            e = pints.SumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isnan(e(x)))
 
         # Wrong number of arguments
-        self.assertRaises(ValueError, pints.WeightedSumOfErrors, [e1], [1])
+        self.assertRaises(ValueError, pints.SumOfErrors, [e1], [1])
         # Wrong argument types
         self.assertRaises(
-            TypeError, pints.WeightedSumOfErrors, [e1, e1], [e1, 1])
+            TypeError, pints.SumOfErrors, [e1, e1], [e1, 1])
         self.assertRaises(
-            ValueError, pints.WeightedSumOfErrors, [e1, 3], [2, 1])
+            ValueError, pints.SumOfErrors, [e1, 3], [2, 1])
         # Mismatching sizes
         self.assertRaises(
-            ValueError, pints.WeightedSumOfErrors, [e1, e1, e1], [1, 1])
+            ValueError, pints.SumOfErrors, [e1, e1, e1], [1, 1])
         # Mismatching problem dimensions
         self.assertRaises(
-            ValueError, pints.WeightedSumOfErrors, [e1, e1, e3], [1, 2, 3])
+            ValueError, pints.SumOfErrors, [e1, e1, e3], [1, 2, 3])
 
 
 if __name__ == '__main__':

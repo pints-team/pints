@@ -88,7 +88,6 @@ from ._error_measures import (
     ProblemErrorMeasure,
     ProbabilityBasedError,
     SumOfErrors,
-    WeightedSumOfErrors,
     MeanSquaredError,
     RootMeanSquaredError,
     SumOfSquaresError,
