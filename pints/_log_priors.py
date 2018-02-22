@@ -67,8 +67,8 @@ class MultivariateNormalLogPrior(pints.LogPrior):
     """
     *Extends:* :class:`LogPrior`
 
-    Defines a multivariate normal (log)prior with a given `mean` and
-    `covariance` matrix.
+    Defines a multivariate normal (log)prior with a given ``mean`` and
+    ``covariance`` matrix.
 
     For example::
 
@@ -112,15 +112,16 @@ class NormalLogPrior(pints.LogPrior):
     """
     *Extends:* :class:`LogPrior`
 
-    Defines a 1-d normal (log) prior with a given `mean` and `variance`.
+    Defines a 1-d normal (log) prior with a given ``mean`` and
+    ``standard_deviation``.
 
-    For example: ``p = NormalLogPrior(0, 1)`` for a mean of ``0`` and variance
-    of ``1``.
+    For example: ``p = NormalLogPrior(0, 1)`` for a mean of ``0`` and standard
+    deviation of ``1``.
     """
-    def __init__(self, mean, variance):
+    def __init__(self, mean, standard_deviation):
         # Parse input arguments
         self._mean = float(mean)
-        self._sigma = float(variance)
+        self._sigma = float(standard_deviation)
 
         # Cache constants
         self._offset = 1 / np.sqrt(2 * np.pi * self._sigma ** 2)
