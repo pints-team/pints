@@ -27,5 +27,3 @@ Example::
 
 .. autoclass:: SumOfSquaresError
 
-.. autoclass:: WeightedSumOfErrors
-
