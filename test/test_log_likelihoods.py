@@ -71,22 +71,23 @@ class TestLogLikelihood(unittest.TestCase):
 
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
-        ll = pints.SumOfIndependentLogLikelihoods(l1, l1, l1)
+        ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
         self.assertEqual(l1.dimension(), ll.dimension())
         self.assertEqual(3 * l1(x), ll(x))
 
         # Test invalid constructors
         # Wrong number of arguments
-        self.assertRaises(ValueError, pints.SumOfIndependentLogLikelihoods)
-        self.assertRaises(ValueError, pints.SumOfIndependentLogLikelihoods, l1)
+        self.assertRaises(TypeError, pints.SumOfIndependentLogLikelihoods)
+        self.assertRaises(
+            ValueError, pints.SumOfIndependentLogLikelihoods, [l1])
         # Wrong types
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, l1, 1)
+            ValueError, pints.SumOfIndependentLogLikelihoods, [l1, 1])
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, problem, l1)
+            ValueError, pints.SumOfIndependentLogLikelihoods, [problem, l1])
         # Mismatching dimensions
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, l1, l2)
+            ValueError, pints.SumOfIndependentLogLikelihoods, [l1, l2])
 
 
 if __name__ == '__main__':

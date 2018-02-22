@@ -112,14 +112,14 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
 
     Example::
 
-        log_likelihood = pints.SumOfIndependentLogLikelihoods(
+        log_likelihood = pints.SumOfIndependentLogLikelihoods([
             pints.UnknownNoiseLogLikelihood(problem1),
             pints.UnknownNoiseLogLikelihood(problem2),
-        )
+        ])
 
 
     """
-    def __init__(self, *log_likelihoods):
+    def __init__(self, log_likelihoods):
         super(SumOfIndependentLogLikelihoods, self).__init__()
 
         # Check input arguments
@@ -132,8 +132,8 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
                 raise ValueError(
                     'All objects passed to SumOfIndependentLogLikelihoods must'
                     ' be instances of pints.LogLikelihood (failed on argument '
-                    + str(i) + '.')
-        self._log_likelihoods = log_likelihoods
+                    + str(i) + ').')
+        self._log_likelihoods = list(log_likelihoods)
 
         # Get and check dimension
         i = iter(self._log_likelihoods)
