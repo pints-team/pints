@@ -18,23 +18,23 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainAdaptiveMCMC`
 
-    Metropolis hasting MCMC, as described in [1].
+    Metropolis Hasting MCMC, as described in [1].
 
-    #TODO Add description.
+    # TODO Add description.
+    Standard Metropolis Hasting using multivariate Normal distribution as
+    proposal step, also known as Metropolis Random Walk MCMC.
 
-    [1] 
+    # TODO: Add citation.
+    [1]
     """
     def __init__(self, x0, sigma0=None):
-        super(MetropolisHastingeMCMC, self).__init__(x0, sigma0)
+        super(MetropolisHastingMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
         self._ready_for_tell = False
         self._need_first_point = True
-'''
-        # Default settings
-        self.set_target_acceptance_rate()
-'''
+
     def acceptance_rate(self):
         """
         Returns the current (measured) acceptance rate.
@@ -55,12 +55,12 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Propose new point
-'''
         # Note: Normal distribution is symmetric
         #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
         #  distribution term from the acceptance criterion
-'''
-        #TODO: delete comment: Updated using sigma0
+        # TODO: Maybe allow general proposal disbution which has sampling
+        #       method. This should be the "Metropolis-Hasting" rather than
+        #       "Metropolis Random Walk".
         self._proposed = np.random.multivariate_normal(
             self._current, self._sigma0)
 
@@ -74,25 +74,15 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
         """
         if self._running:
             raise Exception('Already initialised.')
-'''
-        # Set initial mu and sigma
-        self._mu = np.array(self._x0, copy=True)
-        self._sigma = np.array(self._sigma0, copy=True)  # TODO: check if this is redundent!
-'''
+
         # Set current sample
         self._current = self._x0
         self._current_log_pdf = float('inf')
 
         # Iteration counts (for acceptance rate)
         self._iterations = 0
-'''
-        self._adaptations = 2
-'''
 
         # Initial acceptance rate
-'''
-        self._loga = 0
-'''
         self._acceptance = 0
 
         # Update sampler state
@@ -134,25 +124,12 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
         accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
+            # TODO: Maybe allow temperature annealing
             if u < fx - self._current_log_pdf:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
 
-'''
-        # Adapt covariance matrix
-        if self._adaptation:
-            # Set gamma based on number of adaptive iterations
-            gamma = self._adaptations ** -0.6
-            self._adaptations += 1
-
-            # Update mu, log acceptance rate, and covariance matrix
-            self._mu = (1 - gamma) * self._mu + gamma * self._current
-            self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-            self._sigma = (
-                (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
-'''
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
                             (self._iterations + 1))
@@ -165,23 +142,3 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
 
         # Return new point for chain
         return self._current
-
-'''
-    def set_target_acceptance_rate(self, rate=0.3):
-        """
-        Sets the target acceptance rate.
-        """
-        rate = float(rate)
-        if rate <= 0:
-            raise ValueError('Target acceptance rate must be greater than 0.')
-        elif rate > 1:
-            raise ValueError('Target acceptance rate cannot exceed 1.')
-        self._target_acceptance = rate
-'''
-'''
-    def target_acceptance_rate(self):
-        """
-        Returns the target acceptance rate.
-        """
-        return self._target_acceptance_rate
-'''
