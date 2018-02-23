@@ -107,6 +107,14 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Set population size
         options.set('popsize', self._population_size)
 
+        # CMAES always seeds np.random, whether you ask it too or not, so to
+        # get consistent debugging output, we should always pass in a seed.
+        # Instead of using a fixed number (which would be bad), we can use a
+        # randomly generated number: This will ensure pseudo-randomness, but
+        # produce consistent results if np.random has been seeded before
+        # calling.
+        options.set('seed', np.random.randint(2**32))
+
         # Search
         self._es = cma.CMAEvolutionStrategy(self._x0, self._sigma0, options)
 
