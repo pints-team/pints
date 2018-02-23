@@ -50,7 +50,7 @@ class SNES(pints.Optimiser):
         self._fbest = float('inf')
 
     def ask(self):
-        """See :meth:`Optimiser.ask()`."""
+        """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
         if not self._running:
             self._initialise()
@@ -120,7 +120,7 @@ class SNES(pints.Optimiser):
             return np.array(self._mu, copy=True)
 
     def name(self):
-        """See: :meth:`Optimiser.name()`."""
+        """ See :meth:`Optimiser.name()`. """
         return 'Seperable Natural Evolution Strategy (SNES)'
 
     def population_size(self):
@@ -151,7 +151,7 @@ class SNES(pints.Optimiser):
         self._population_size = population_size
 
     def tell(self, fx):
-        """See: :meth:`Optimiser.tell()`."""
+        """ See :meth:`Optimiser.tell()`. """
         if not self._ready_for_tell:
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False

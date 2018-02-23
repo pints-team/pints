@@ -70,7 +70,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         return self._iterations
 
     def run(self):
-        """See: :meth:`pints.MCMC.run()`."""
+        """ See :meth:`pints.MCMC.run()`. """
 
         # Report the current settings
         if self._verbose:

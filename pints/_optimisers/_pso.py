@@ -216,11 +216,11 @@ class PSO(pints.PopulationBasedOptimiser):
         self._population_size = population_size
 
     def name(self):
-        """See: :meth:`Optimiser.name()`."""
+        """ See :meth:`Optimiser.name()`. """
         return 'Particle Swarm Optimisation (PSO)'
 
     def tell(self, fx):
-        """See: :meth:`Optimiser.tell()`."""
+        """ See :meth:`Optimiser.tell()`. """
         if not self._ready_for_tell:
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False

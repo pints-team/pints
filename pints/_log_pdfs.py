@@ -82,7 +82,7 @@ class ProblemLogLikelihood(LogLikelihood):
         self._dimension = problem.dimension()
 
     def dimension(self):
-        """ See: :meth:`LogPDF.dimension`. """
+        """ See :meth:`LogPDF.dimension`. """
         return self._dimension
 
 
@@ -139,6 +139,6 @@ class LogPosterior(LogPDF):
         return log_prior + self._log_likelihood(x)
 
     def dimension(self):
-        """ See: :meth:`LogPDF.dimension`. """
+        """ See :meth:`LogPDF.dimension`. """
         return self._dimension
 
