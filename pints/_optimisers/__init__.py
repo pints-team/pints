@@ -105,6 +105,14 @@ class Optimiser(pints.Loggable):
         """
         raise NotImplementedError
 
+    def stop(self):
+        """
+        Checks if this method has run into trouble and should terminate.
+        Returns ``False`` if everything's fine, or a short message (e.g.
+        "Ill-conditioned matrix.") if the method should terminate.
+        """
+        return False
+
     def tell(self, fx):
         """
         Performs an iteration of the optimiser algorithm, using the evaluations
@@ -406,6 +414,12 @@ class Optimisation(object):
                 running = False
                 halt_message = ('Halting: Objective function crossed'
                                 ' threshold: ' + str(self._threshold) + '.')
+
+            # Error in optimiser
+            error = self._optimiser.stop()
+            if error:
+                running = False
+                halt_message = ('Halting: ' + str(error))
 
         # Log final values and show halt message
         if logging:
