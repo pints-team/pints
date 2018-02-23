@@ -31,7 +31,9 @@ def version(formatted=False):
 #
 # Constants
 #
-FLOAT_FORMAT = '{:< 1.17e}'
+# Float format: a float can be converted to a 17 digit decimal and back without
+# loss of information
+FLOAT_FORMAT = '{: .17e}'
 
 #
 # Core classes
@@ -43,6 +45,7 @@ from ._core import ForwardModel, SingleSeriesProblem
 #
 from ._util import strfloat, vector
 from ._util import Timer
+from ._logger import Logger, Loggable
 
 #
 # Logs of probability density functions (not necessarily normalised)

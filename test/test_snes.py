@@ -55,7 +55,7 @@ class TestSNES(unittest.TestCase):
     def test_unbounded(self):
 
         opt = pints.Optimisation(self.score, self.x0, method=method)
-        opt.set_verbose(debug)
+        opt.set_log_to_screen(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
@@ -66,7 +66,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0,
                                  boundaries=self.boundaries, method=method)
-        opt.set_verbose(debug)
+        opt.set_log_to_screen(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
@@ -77,7 +77,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
-        opt.set_verbose(debug)
+        opt.set_log_to_screen(debug)
         for i in range(self.max_tries):
             found_parameters, found_solution = opt.run()
             if found_solution < self.cutoff:
@@ -88,10 +88,10 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
-        opt.set_verbose(True)
+        opt.set_log_to_screen(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -99,10 +99,10 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
-        opt.set_verbose(True)
+        opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
@@ -110,11 +110,11 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
-        opt.set_verbose(True)
+        opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StdOutCapture() as c:
+        with pints.io.StreamCapture() as c:
             opt.run()
             self.assertIn(
                 'Halting: Objective function crossed threshold', c.text())
@@ -123,7 +123,7 @@ class TestSNES(unittest.TestCase):
 
         opt = pints.Optimisation(self.score, self.x0, self.sigma0,
                                  self.boundaries, method)
-        opt.set_verbose(debug)
+        opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
