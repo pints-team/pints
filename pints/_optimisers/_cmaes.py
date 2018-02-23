@@ -152,6 +152,33 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Store
         self._population_size = population_size
 
+    def stop(self):
+        """ See :meth:`Optimiser.stop`. """
+        if not self._running:
+            return False
+
+        # CMAES Stopping conditions:
+        # tolconditioncov(1e14) ERROR CHECK: Condition of covariance matrix
+        # tolfacupx(1e3) ERROR CHECK: Massive increases in step-size
+        # timeout(inf) Limits real time
+        # tolupsigma(1e20) Creeping / slow improvement
+        # tolstagnation(has default) Threshold in unchanged iterations
+        # tolx(1e-11) Threshold on change in position
+        # ftarget(no default) Threshold on target function value
+        # tolfun(1e-11) Threshold on change in target value (one iteration)
+        # tolfunhist(1e-12) Threshold on long-term change in target value
+        # maxfevals(inf) Max function evaluations
+        # maxiter(has default) Max iterations
+        # noeffectcoord ?
+        # noeffectaxis ?
+        # flat fitness: CMAES thinks the landscape is flat
+        # "||xmean||^2<ftarget"
+        # callback: User callback triggered stop
+        stop = self._es.stop()
+        if 'tolconditioncov' in stop:
+            return 'Ill-conditioned covariance matrix.'
+        return False
+
     def tell(self, fx):
         """ See :meth:`Optimiser.tell()`. """
         if not self._ready_for_tell:
