@@ -13,9 +13,11 @@ import numpy as np
 import multiprocessing
 
 
-class MCMCSampler(object):
+class MCMCSampler(pints.Loggable):
     """
     Abstract base class for (single or multi-chain) MCMC methods.
+
+    All MCMC samplers implement the :class:`pints.Loggable` interface.
     """
     def name(self):
         """
@@ -275,8 +277,10 @@ class MCMCSampling(object):
             self._n_samplers = 1
             self._samplers = [method(self._chains, x0, sigma0)]
 
-        # Print info to console
-        self._verbose = True
+        # Logging
+        self._log_to_screen = True
+        self._log_filename = None
+        self._log_csv = False
 
         # Parallelisation
         self._parallel = None
@@ -328,31 +332,50 @@ class MCMCSampling(object):
         if not has_stopping_criterion:
             raise ValueError('At least one stopping criterion must be set.')
 
-        # Iterations
+        # Iterations and evaluations
         iteration = 0
+        evaluations = 0
 
         # Create evaluator object
         if self._parallel:
             # Guess good number of workers
             nworkers = min(multiprocessing.cpu_count(), self._chains)
-            self._evaluator = pints.ParallelEvaluator(
+            evaluator = pints.ParallelEvaluator(
                 self._log_pdf, nworkers=nworkers)
         else:
-            self._evaluator = pints.SequentialEvaluator(self._log_pdf)
+            evaluator = pints.SequentialEvaluator(self._log_pdf)
 
         # Set up progress reporting
         next_message = 0
         message_warm_up = 3
         message_interval = 20
 
-        # Print configuration
-        if self._verbose:
-            print('Using ' + str(self._samplers[0].name()))
-            print('Generating ' + str(self._chains) + ' chains.')
-            if self._parallel:
-                print('Running in parallel mode.')
-            else:
-                print('Running in sequential mode.')
+        # Start logging
+        logging = self._log_to_screen or self._log_filename
+        if logging:
+            if self._log_to_screen:
+                print('Using ' + str(self._samplers[0].name()))
+                print('Generating ' + str(self._chains) + ' chains.')
+                if self._parallel:
+                    print('Running in parallel mode.')
+                else:
+                    print('Running in sequential mode.')
+
+            # Set up logger
+            logger = pints.Logger()
+            if not self._log_to_screen:
+                logger.set_stream(None)
+            if self._log_filename:
+                logger.set_filename(self._log_filename, csv=self._log_csv)
+
+            # Add fields to log
+            max_iter_guess = max(self._max_iterations or 0, 10000)
+            max_eval_guess = max_iter_guess * self._chains
+            logger.add_counter('Iter.', max_value=max_iter_guess)
+            logger.add_counter('Eval.', max_value=max_eval_guess)
+            for sampler in self._samplers:
+                sampler._log_init(logger)
+            logger.add_time('Time m:s')
 
         # Create chains
         #TODO Pre-allocate?
@@ -360,7 +383,8 @@ class MCMCSampling(object):
         #TODO Advanced logging
         chains = []
 
-        # Start searching
+        # Start sampling
+        timer = pints.Timer()
         running = True
         while running:
             # Get points
@@ -370,7 +394,7 @@ class MCMCSampling(object):
                 xs = self._samplers[0].ask()
 
             # Calculate scores
-            fxs = self._evaluator.evaluate(xs)
+            fxs = evaluator.evaluate(xs)
 
             # Perform iteration(s)
             if self._single_chain:
@@ -380,10 +404,18 @@ class MCMCSampling(object):
                 samples = self._samplers[0].tell(fxs)
             chains.append(samples)
 
-            # Show progress in verbose mode:
-            if self._verbose and iteration >= next_message:
-                # TODO: Add some sort of status printing here
-                print('' + str(iteration))
+            # Update evaluation count
+            evaluations += len(fxs)
+
+            # Show progress
+            if logging and iteration >= next_message:
+                # Log state
+                logger.log(iteration, evaluations)
+                for sampler in self._samplers:
+                    sampler._log_write(logger)
+                logger.log(timer.time())
+
+                # Choose next logging point
                 if iteration < message_warm_up:
                     next_message = iteration + 1
                 else:
@@ -401,9 +433,8 @@ class MCMCSampling(object):
             if (self._max_iterations is not None and
                     iteration >= self._max_iterations):
                 running = False
-                if self._verbose:
-                    print('Halting: Maximum number of iterations ('
-                          + str(iteration) + ') reached.')
+                halt_message = ('Halting: Maximum number of iterations ('
+                                + str(iteration) + ') reached.')
 
             #TODO Add more stopping criteria
 
@@ -415,6 +446,15 @@ class MCMCSampling(object):
             if iteration == self._adaptation_free_iterations:
                 for sampler in self._samplers:
                     sampler.set_adaptation(True)
+
+        # Log final state and show halt message
+        if logging:
+            logger.log(iteration, evaluations)
+            for sampler in self._samplers:
+                sampler._log_write(logger)
+            logger.log(timer.time())
+            if self._log_to_screen:
+                print(halt_message)
 
         # Swap axes in chains, to get indices
         #  [chain, iteration, parameter]
@@ -450,6 +490,28 @@ class MCMCSampling(object):
         self._adaptation_free_iterations = iterations
         return True
 
+    def set_log_to_file(self, filename=None, csv=False):
+        """
+        Enables logging to file when a filename is passed in, disables it if
+        ``filename`` is ``False`` or ``None``.
+
+        The argument ``csv`` can be set to ``True`` to write the file in comma
+        separated value (CSV) format. By default, the file contents will be
+        similar to the output on screen.
+        """
+        if filename:
+            self._log_filename = str(filename)
+            self._log_csv = True if csv else False
+        else:
+            self._log_filename = None
+            self._log_csv = False
+
+    def set_log_to_screen(self, enabled):
+        """
+        Enables or disables logging to screen.
+        """
+        self._log_to_screen = True if enabled else False
+
     def set_max_iterations(self, iterations=10000):
         """
         Adds a stopping criterion, allowing the routine to halt after the
@@ -470,19 +532,6 @@ class MCMCSampling(object):
         Enables/disables parallel evaluation.
         """
         self._parallel = bool(parallel)
-
-    def set_verbose(self, value):
-        """
-        Enables or disables verbose mode for this MCMC sampling. In verbose
-        mode, lots of output is generated during a run.
-        """
-        self._verbose = bool(value)
-
-    def verbose(self):
-        """
-        Returns ``True`` if the MCMC sampling is set to run in verbose mode.
-        """
-        return self._verbose
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):

@@ -4,8 +4,7 @@ I/O Helper classes
 
 .. module:: pints.io
 
-.. autoclass:: StdOutCapture
+.. autoclass:: StreamCapture
 
-
-
+.. autoclass:: TemporaryDirectory
 

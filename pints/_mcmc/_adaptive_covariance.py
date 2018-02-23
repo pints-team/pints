@@ -20,16 +20,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
     Adaptive covariance MCMC, as described in [1, 2].
 
-    The algorithm starts out as basic MCMC, but after
-
-    TODO
-
-    a certain number of iterations
-
-    TODO
-
-    starts tuning the covariance matrix, so that the acceptance rate
-    of the MCMC steps converges to a user specified rate.
+    Using a covariance matrix, that is tuned so that the acceptance rate of the
+    MCMC steps converges to a user specified value.
 
     [1] Uncertainty and variability in models of the cardiac action potential:
     Can we build trustworthy models?
@@ -106,6 +98,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         # Update sampler state
         self._running = True
 
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init`. """
+        logger.add_float('Accept.')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write`. """
+        logger.log(self._acceptance)
+
     def name(self):
         """See: :meth:`pints.MCMCSampler.name()`."""
         return 'Adaptive covariance MCMC'
@@ -133,7 +133,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         # Check if the proposed point can be accepted
         accepted = 0
         if np.isfinite(fx):
-            u = np.log(np.random.rand())
+            u = np.log(np.random.uniform(0, 1))
             if u < fx - self._current_log_pdf:
                 accepted = 1
                 self._current = self._proposed
