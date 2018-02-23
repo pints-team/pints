@@ -124,7 +124,7 @@ class TestIO(unittest.TestCase):
 
             # Check invalid save_samples() calls
             self.assertRaises(ValueError, pints.io.save_samples, filename)
-            chainX = np.random.uniform(size=(2,2,2))
+            chainX = np.random.uniform(size=(2, 2, 2))
             self.assertRaises(
                 ValueError, pints.io.save_samples, filename, chainX)
             chainY = [[1, 2], [3, 4, 5]]
