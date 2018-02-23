@@ -163,6 +163,9 @@ class CMAES(pints.PopulationBasedOptimiser):
         # maxiter(has default) Max iterations
         # noeffectcoord ?
         # noeffectaxis ?
+        # flat fitness: CMAES thinks the landscape is flat
+        # "||xmean||^2<ftarget"
+        # callback: User callback triggered stop
         stop = self._es.stop()
         if 'tolconditioncov' in stop:
             return 'Ill-conditioned covariance matrix.'

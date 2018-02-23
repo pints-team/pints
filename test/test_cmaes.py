@@ -128,6 +128,38 @@ class TestCMAES(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
 
+    def test_stopping_on_ill_conditioned_covariance_matrix(self):
+        from scipy.integrate import odeint
+
+        def OnePopControlODE(y, t, p):
+            a, b, c = p
+            dydt = np.zeros(y.shape)
+            k = (a - b) / c * (y[0] + y[1])
+            dydt[0] = a * y[0] - b * y[0] - k * y[0]
+            dydt[1] = k * y[0] - b * y[1]
+            return dydt
+
+        class Model(pints.ForwardModel):
+
+            def simulate(self, parameters, times):
+                y0 = [2000000, 0]
+                solution = odeint(
+                    OnePopControlODE, y0, times, args=(parameters,))
+                return np.sum(np.array(solution), axis=1)
+
+            def dimension(self):
+                return 3
+
+        model = Model()
+        times = [0, 0.5, 2, 4, 8, 24]
+        values = [2e6, 3.9e6, 3.1e7, 3.7e8, 1.6e9, 1.6e9]
+        problem = pints.SingleSeriesProblem(model, times, values)
+        score = pints.SumOfSquaresError(problem)
+        x0 = [2.5, 0.0001, 5e6]
+        with pints.io.StreamCapture() as c:
+            pints.optimise(score, x0)
+        self.assertTrue('Ill-conditioned covariance matrix' in c.text())
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
