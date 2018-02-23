@@ -60,7 +60,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._b = 0.01
 
     def ask(self):
-        """See: :meth:`pints.MultiChainMCMC.ask()`."""
+        """ See :meth:`pints.MultiChainMCMC.ask()`. """
         # Initialise on first call
         if not self._running:
             self._initialise()
@@ -105,11 +105,11 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._running = True
 
     def name(self):
-        """See: :meth:`pints.MCMCSampler.name()`."""
+        """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Differential Evolution MCMC'
 
     def tell(self, proposed_log_pdfs):
-        """See: :meth:`pints.MultiChainMCMC.tell()`."""
+        """ See :meth:`pints.MultiChainMCMC.tell()`. """
         # Ensure proposed_log_pdfs are numpy array
         proposed_log_pdfs = np.asarray(proposed_log_pdfs)
 

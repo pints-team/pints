@@ -107,11 +107,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         logger.log(self._acceptance)
 
     def name(self):
-        """See: :meth:`pints.MCMCSampler.name()`."""
+        """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Adaptive covariance MCMC'
 
     def tell(self, fx):
-        """See: :meth:`pints.SingleChainMCMC.tell()`."""
+        """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # First point?
         if self._need_first_point:

@@ -102,11 +102,11 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
         return self._v_hold
 
     def dimension(self):
-        """ See: :meth:`pints.ForwardModel.dimension()`. """
+        """ See :meth:`pints.ForwardModel.dimension()`. """
         return 5
 
     def simulate(self, parameters, times):
-        """ See: :meth:`pints.ForwardModel.simulate()`. """
+        """ See :meth:`pints.ForwardModel.simulate()`. """
 
         # Unpack parameters
         p1, p2, p3, p4, p5 = parameters
