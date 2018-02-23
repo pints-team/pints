@@ -25,6 +25,20 @@ class MCMCSampler(pints.Loggable):
         """
         raise NotImplementedError
 
+    def ask(self):
+        """
+        Returns a sequence of positions in the search space to evaluate.
+        """
+        raise NotImplementedError
+
+    def tell(self, fxs):
+        """
+        Performs an iteration of the MCMC algorithm, using the evaluations
+        ``fxs`` of the points previously specified by ``ask``. Returns the next
+        samples in the chains.
+        """
+        raise NotImplementedError
+
 
 class SingleChainMCMC(MCMCSampler):
     """
@@ -67,20 +81,6 @@ class SingleChainMCMC(MCMCSampler):
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
                     (self._dimension, self._dimension))
-
-    def ask(self):
-        """
-        Returns a position in the search space to evaluate.
-        """
-        raise NotImplementedError
-
-    def tell(self, fx):
-        """
-        Performs an iteration of the MCMC algorithm, using the evaluation
-        ``fx`` of the point previously specified by ``ask``. Returns the next
-        sample in the chain.
-        """
-        raise NotImplementedError
 
 
 class SingleChainAdaptiveMCMC(SingleChainMCMC):
@@ -186,20 +186,6 @@ class MultiChainMCMC(MCMCSampler):
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
                     (self._dimension, self._dimension))
-
-    def ask(self):
-        """
-        Returns a sequence of positions in the search space to evaluate.
-        """
-        raise NotImplementedError
-
-    def tell(self, fxs):
-        """
-        Performs an iteration of the MCMC algorithm, using the evaluations
-        ``fxs`` of the points previously specified by ``ask``. Returns the next
-        samples in the chains.
-        """
-        raise NotImplementedError
 
 
 class MCMCSampling(object):
@@ -378,10 +364,9 @@ class MCMCSampling(object):
             logger.add_time('Time m:s')
 
         # Create chains
+        chains = []
         #TODO Pre-allocate?
         #TODO Thinning
-        #TODO Advanced logging
-        chains = []
 
         # Start sampling
         timer = pints.Timer()
@@ -389,7 +374,8 @@ class MCMCSampling(object):
         while running:
             # Get points
             if self._single_chain:
-                xs = [sampler.ask() for sampler in self._samplers]
+                xs = np.concatenate(
+                    [np.asarray(sampler.ask()) for sampler in self._samplers])
             else:
                 xs = self._samplers[0].ask()
 
@@ -398,8 +384,10 @@ class MCMCSampling(object):
 
             # Perform iteration(s)
             if self._single_chain:
-                samples = np.array([
-                    s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+                samples = []
+                sampler = iter(self._samplers)
+                for fxs_part in np.split(np.asarray(fxs), len(self._samplers)):
+                    samples.append(next(sampler).tell(fxs_part))
             else:
                 samples = self._samplers[0].tell(fxs)
             chains.append(samples)

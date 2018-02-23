@@ -49,7 +49,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         return self._acceptance
 
     def ask(self):
-        """ See :meth:`SingleChainMCMC.ask()`. """
+        """ See :meth:`MCMCSampler.ask`. """
         # Initialise on first call
         if not self._running:
             self._initialise()
@@ -59,7 +59,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Need evaluation of first point?
         if self._need_first_point:
-            return self._current
+            return [self._current]
 
         # Propose new point
         # Note: Normal distribution is symmetric
@@ -70,7 +70,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Return proposed point
         self._proposed.setflags(write=False)
-        return self._proposed
+        return [self._proposed]
 
     def _initialise(self):
         """
@@ -107,11 +107,13 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         logger.log(self._acceptance)
 
     def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
+        """ See :meth:`pints.MCMCSampler.name`. """
         return 'Adaptive covariance MCMC'
 
-    def tell(self, fx):
-        """ See :meth:`pints.SingleChainMCMC.tell()`. """
+    def tell(self, fxs):
+        """ See :meth:`pints.MCMCSampler.tell`. """
+        # Extract single point from array
+        fx = fxs[0]
 
         # First point?
         if self._need_first_point:

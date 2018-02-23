@@ -66,9 +66,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         rate = []
         chain = []
         for i in range(100):
-            x = mcmc.ask()
-            fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
+            xs = mcmc.ask()
+            fxs = [self.log_posterior(x) for x in xs]
+            sample = mcmc.tell(fxs)
             if i == 20:
                 mcmc.set_adaptation(True)
             if i >= 50:
