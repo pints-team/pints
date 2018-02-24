@@ -34,8 +34,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
     [1] "A Markov Chain Monte Carlo version of the genetic algorithm
-    Differential Evolution: easy Bayesian computing for real parameter spaces",
-    2006, Cajo J. F. Ter Braak, Statistical Computing.
+    Differential Evolution: easy Bayesian computing for real parameter spaces"
+    Cajo J. F. Ter Braak (2006) Statistical Computing
     """
     def __init__(self, chains, x0, sigma0=None):
         super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)

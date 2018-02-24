@@ -20,12 +20,12 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
 
     Metropolis Hasting MCMC, as described in [1].
 
-    # TODO Add description.
     Standard Metropolis Hasting using multivariate Normal distribution as
     proposal step, also known as Metropolis Random Walk MCMC.
 
-    # TODO: Add citation.
-    [1]
+    [1] Equation of state calculations by fast computing machines
+    Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and
+    Teller, E. (1953) The journal of chemical physics, 21(6), pp.1087-1092
     """
     def __init__(self, x0, sigma0=None):
         super(MetropolisHastingMCMC, self).__init__(x0, sigma0)
@@ -124,7 +124,7 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
         accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            # TODO: Maybe allow temperature annealing
+            # TODO: Maybe allow simulated annealing (temperature)
             if u < fx - self._current_log_pdf:
                 accepted = 1
                 self._current = self._proposed
