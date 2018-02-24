@@ -143,7 +143,7 @@ from ._mcmc import (
     mcmc_sample,
     )
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
-from ._mcmc._metropolis_hasting import MetropolisHastingMCMC
+from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 #from ._mcmc._differential_evolution import DreamMCMC
 #from ._mcmc._result import McmcResultObject

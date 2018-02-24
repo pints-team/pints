@@ -49,7 +49,7 @@ Sampling
 
 #. :class:`MCMC without gradients<MCMCSampler>`
 
-   - :class:`MetropolisHastingMCMC`, works on any :class:`LogPDF`.
+   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
