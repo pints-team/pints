@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the metropolis hasting MCMC routine.
+# Tests the basic methods of the metropolis random walk MCMC routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,12 +15,12 @@ import numpy as np
 debug = False
 
 
-class TestMetropolisHastingMCMC(unittest.TestCase):
+class TestMetropolisRandomWalkMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the metropolis hasting MCMC routine.
+    Tests the basic methods of the metropolis random walk MCMC routine.
     """
     def __init__(self, name):
-        super(TestMetropolisHastingMCMC, self).__init__(name)
+        super(TestMetropolisRandomWalkMCMC, self).__init__(name)
 
         # Create toy model
         self.model = toy.LogisticModel()
@@ -56,7 +56,7 @@ class TestMetropolisHastingMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.MetropolisHastingMCMC(x0)
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
 
         # Perform short run
         rate = []

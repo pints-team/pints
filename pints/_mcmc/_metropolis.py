@@ -14,21 +14,21 @@ import pints
 import numpy as np
 
 
-class MetropolisHastingMCMC(pints.SingleChainMCMC):
+class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainAdaptiveMCMC`
 
-    Metropolis Hasting MCMC, as described in [1].
+    Metropolis Random Walk MCMC, as described in [1].
 
-    Standard Metropolis Hasting using multivariate Normal distribution as
-    proposal step, also known as Metropolis Random Walk MCMC.
+    Standard Metropolis using multivariate Normal distribution as proposal
+    step, also known as Metropolis Random Walk MCMC.
 
     [1] Equation of state calculations by fast computing machines
     Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and
     Teller, E. (1953) The journal of chemical physics, 21(6), pp.1087-1092
     """
     def __init__(self, x0, sigma0=None):
-        super(MetropolisHastingMCMC, self).__init__(x0, sigma0)
+        super(MetropolisRandomWalkMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -59,8 +59,7 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
         #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
         #  distribution term from the acceptance criterion
         # TODO: Maybe allow general proposal disbution which has sampling
-        #       method. This should be the "Metropolis-Hasting" rather than
-        #       "Metropolis Random Walk".
+        #       method. This should be the "Metropolis-Hasting".
         self._proposed = np.random.multivariate_normal(
             self._current, self._sigma0)
 
@@ -98,7 +97,7 @@ class MetropolisHastingMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Metropolis hasting MCMC'
+        return 'Metropolis random walk MCMC'
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
