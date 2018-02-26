@@ -148,7 +148,7 @@ class TestMCMCSampling(unittest.TestCase):
             f = 0.9 + 0.2 * np.random.rand()
             xs.append(np.array(self.real_parameters) * f)
         nchains = len(xs)
-        nparameters = len(x0)
+        nparameters = len(xs[0])
         niterations = 20
         mcmc = pints.MCMCSampling(
             self.log_posterior, nchains, xs,
@@ -159,6 +159,17 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
+
+    def test_multi(self):
+
+        # 10 chains
+        xs = []
+        for i in range(10):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(np.array(self.real_parameters) * f)
+        nchains = len(xs)
+        nparameters = len(xs[0])
+        niterations = 20
 
         # Test with multi-chain method
         mcmc = pints.MCMCSampling(
@@ -216,6 +227,44 @@ class TestMCMCSampling(unittest.TestCase):
                     self.assertEqual(f.read(), LOG_FILE)
                     pass
             self.assertEqual(capture.text(), '')
+
+    def test_adaptation(self):
+
+        # 2 chains
+        x0 = np.array(self.real_parameters) * 1.1
+        x1 = np.array(self.real_parameters) * 1.15
+        xs = [x0, x1]
+        nchains = len(xs)
+
+        # Delayed adaptation
+        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc.set_adaptation_free_iterations(10)
+        for sampler in mcmc._samplers:
+            self.assertFalse(sampler.adaptation())
+        mcmc.set_max_iterations(9)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        for sampler in mcmc._samplers:
+            self.assertFalse(sampler.adaptation())
+
+        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc.set_adaptation_free_iterations(10)
+        for sampler in mcmc._samplers:
+            self.assertFalse(sampler.adaptation())
+        mcmc.set_max_iterations(19)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        for sampler in mcmc._samplers:
+            self.assertTrue(sampler.adaptation())
+
+        # No delay
+        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc.set_adaptation_free_iterations(0)
+        for sampler in mcmc._samplers:
+            self.assertTrue(sampler.adaptation())
+        mcmc.set_adaptation_free_iterations(0)
+        for sampler in mcmc._samplers:
+            self.assertTrue(sampler.adaptation())
 
 
 if __name__ == '__main__':

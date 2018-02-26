@@ -118,7 +118,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
     def test_options(self):
 
-        # Test initial proposal is first point
+        # Test setting acceptance rate
         x0 = self.real_parameters
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
         mcmc.set_target_acceptance_rate(0.5)

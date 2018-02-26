@@ -479,9 +479,10 @@ class MCMCSampling(object):
                 'Number of adaptation free iterations cannot be negative.')
 
         # Attempt to configure samplers
+        initial_value = iterations == 0
         try:
             for sampler in self._samplers:
-                sampler.set_adaptation(False)
+                sampler.set_adaptation(initial_value)
         except AttributeError:
             # No adaptation method? Return False
             return False
