@@ -14,7 +14,7 @@ import numpy as np
 
 class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`SingleChainAdaptiveMCMC`
+    *Extends:* :class:`SingleChainMCMC`
 
     Metropolis Random Walk MCMC, as described in [1].
 
