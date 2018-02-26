@@ -1,12 +1,10 @@
 #
-# Adaptive covariance MCMC method
+# Random-walk Metropolis MCMC
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
-#
-# Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -32,8 +30,11 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Set initial state
         self._running = False
-        self._ready_for_tell = False
-        self._need_first_point = True
+
+        # Current point and proposed point
+        self._current = None
+        self._current_logpdf = None
+        self._proposed = None
 
     def acceptance_rate(self):
         """
@@ -47,24 +48,18 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._initialise()
 
-        # After this method we're ready for tell()
-        self._ready_for_tell = True
-
-        # Need evaluation of first point?
-        if self._need_first_point:
-            return self._current
-
         # Propose new point
-        # Note: Normal distribution is symmetric
-        #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
-        #  distribution term from the acceptance criterion
-        # TODO: Maybe allow general proposal disbution which has sampling
-        #       method. This should be the "Metropolis-Hasting".
-        self._proposed = np.random.multivariate_normal(
-            self._current, self._sigma0)
+        if self._proposed is None:
+            # Note: Normal distribution is symmetric
+            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
+            #  distribution term from the acceptance criterion
+            self._proposed = np.random.multivariate_normal(
+                self._current, self._sigma0)
+
+            # Set as read-only
+            self._proposed.setflags(write=False)
 
         # Return proposed point
-        self._proposed.setflags(write=False)
         return self._proposed
 
     def _initialise(self):
@@ -72,16 +67,15 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         Initialises the routine before the first iteration.
         """
         if self._running:
-            raise Exception('Already initialised.')
+            raise RuntimeError('Already initialised.')
 
-        # Set current sample
-        self._current = self._x0
-        self._current_log_pdf = float('inf')
+        # Propose x0 as first point
+        self._current = None
+        self._current_log_pdf = None
+        self._proposed = self._x0
 
-        # Iteration counts (for acceptance rate)
+        # Acceptance rate monitoring
         self._iterations = 0
-
-        # Initial acceptance rate
         self._acceptance = 0
 
         # Update sampler state
@@ -101,20 +95,28 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
+        # Check if we had a proposal
+        if self._proposed is None:
+            raise RuntimeError('Tell called before proposal was set.')
+
+        # Ensure fx is a float
+        fx = float(fx)
 
         # First point?
-        if self._need_first_point:
+        if self._current is None:
             if not np.isfinite(fx):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
+
+            # Accept
+            self._current = self._proposed
             self._current_log_pdf = fx
 
             # Increase iteration count
             self._iterations += 1
 
-            # Update state
-            self._need_first_point = False
-            self._ready_for_tell = False
+            # Clear proposal
+            self._proposed = None
 
             # Return first point for chain
             return self._current
@@ -123,11 +125,13 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            # TODO: Maybe allow simulated annealing (temperature)
             if u < fx - self._current_log_pdf:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
+
+        # Clear proposal
+        self._proposed = None
 
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
@@ -136,8 +140,6 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         # Increase iteration count
         self._iterations += 1
 
-        # Update state
-        self._ready_for_tell = False
-
         # Return new point for chain
         return self._current
+

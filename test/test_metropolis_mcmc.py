@@ -73,6 +73,41 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
         self.assertEqual(rate.shape[0], 100)
+        #TODO: Add more stringent tests
+
+    def test_flow(self):
+
+        # Test initial proposal is first point
+        x0 = self.real_parameters
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        self.assertTrue(mcmc.ask() is mcmc._x0)
+
+        # Double initialisation
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(RuntimeError, mcmc._initialise)
+
+        # Tell without ask
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0)
+
+        # Repeated asks should return same point
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        # Get nearer accepting state
+        for i in range(100):
+            mcmc.tell(self.log_posterior(mcmc.ask()))
+        x = mcmc.ask()
+        for i in range(10):
+            self.assertTrue(x is mcmc.ask())
+
+        # Repeated tells should fail
+        mcmc.tell(1)
+        self.assertRaises(RuntimeError, mcmc.tell, 1)
+
+        # Bad starting point
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
 
 if __name__ == '__main__':
