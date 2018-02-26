@@ -95,9 +95,9 @@ All methods shown here are derivative-free methods that work on any
 
    - Evolution strategies (global/local methods)
 
-     - :class:`CMA-ES`
+     - :class:`CMAES`
      - :class:`SNES`
-     - :class:`xNES`
+     - :class:`XNES`
 
    - :class:`PSO` (global method)
 
