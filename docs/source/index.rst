@@ -54,7 +54,6 @@ Sampling
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
    - emcee (MCMC Hammer)
-   - Metropolis
    - Metropolis-Hastings
    - PopulationMCMC
 
