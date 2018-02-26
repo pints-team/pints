@@ -49,11 +49,11 @@ Sampling
 
 #. :class:`MCMC without gradients<MCMCSampler>`
 
+   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
    - emcee (MCMC Hammer)
-   - Metropolis
    - Metropolis-Hastings
    - PopulationMCMC
 
@@ -94,9 +94,9 @@ All methods shown here are derivative-free methods that work on any
 
    - Evolution strategies (global/local methods)
 
-     - :class:`CMA-ES`
+     - :class:`CMAES`
      - :class:`SNES`
-     - :class:`xNES`
+     - :class:`XNES`
 
    - :class:`PSO` (global method)
 

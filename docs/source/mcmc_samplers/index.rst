@@ -13,6 +13,7 @@ interface, that can be used to sample from an unknown
 
     running
     base_classes
+    metropolis_mcmc
     adaptive_covariance_mcmc
     differential_evolution_mcmc
 
