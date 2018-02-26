@@ -36,8 +36,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Set initial state
         self._running = False
-        self._ready_for_tell = False
-        self._need_first_point = True
+
+        # Current point and proposed point
+        self._current = None
+        self._current_logpdf = None
+        self._proposed = None
 
         # Default settings
         self.set_target_acceptance_rate()
@@ -54,22 +57,19 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         if not self._running:
             self._initialise()
 
-        # After this method we're ready for tell()
-        self._ready_for_tell = True
-
-        # Need evaluation of first point?
-        if self._need_first_point:
-            return self._current
-
         # Propose new point
-        # Note: Normal distribution is symmetric
-        #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
-        #  distribution term from the acceptance criterion
-        self._proposed = np.random.multivariate_normal(
-            self._current, np.exp(self._loga) * self._sigma)
+        if self._proposed is None:
+
+            # Note: Normal distribution is symmetric
+            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
+            #  distribution term from the acceptance criterion
+            self._proposed = np.random.multivariate_normal(
+                self._current, np.exp(self._loga) * self._sigma)
+
+            # Set as read-only
+            self._proposed.setflags(write=False)
 
         # Return proposed point
-        self._proposed.setflags(write=False)
         return self._proposed
 
     def _initialise(self):
@@ -77,22 +77,23 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         Initialises the routine before the first iteration.
         """
         if self._running:
-            raise Exception('Already initialised.')
+            raise RuntimeError('Already initialised.')
+
+        # Propose x0 as first point
+        self._current = None
+        self._current_log_pdf = None
+        self._proposed = self._x0
 
         # Set initial mu and sigma
         self._mu = np.array(self._x0, copy=True)
         self._sigma = np.array(self._sigma0, copy=True)
 
-        # Set current sample
-        self._current = self._x0
-        self._current_log_pdf = float('inf')
-
-        # Iteration counts (for acceptance rate)
-        self._iterations = 0
+        # Adaptation
+        self._loga = 0
         self._adaptations = 2
 
-        # Initial acceptance rate
-        self._loga = 0
+        # Acceptance rate monitoring
+        self._iterations = 0
         self._acceptance = 0
 
         # Update sampler state
@@ -112,20 +113,28 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
+        # Check if we had a proposal
+        if self._proposed is None:
+            raise RuntimeError('Tell called before proposal was set.')
+
+        # Ensure fx is a float
+        fx = float(fx)
 
         # First point?
-        if self._need_first_point:
+        if self._current is None:
             if not np.isfinite(fx):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
+
+            # Accept
+            self._current = self._proposed
             self._current_log_pdf = fx
 
             # Increase iteration count
             self._iterations += 1
 
-            # Update state
-            self._need_first_point = False
-            self._ready_for_tell = False
+            # Clear proposal
+            self._proposed = None
 
             # Return first point for chain
             return self._current
@@ -138,6 +147,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
+
+        # Clear proposal
+        self._proposed = None
 
         # Adapt covariance matrix
         if self._adaptation:
@@ -158,9 +170,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Increase iteration count
         self._iterations += 1
-
-        # Update state
-        self._ready_for_tell = False
 
         # Return new point for chain
         return self._current
