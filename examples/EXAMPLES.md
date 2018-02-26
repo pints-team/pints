@@ -26,9 +26,9 @@ of choice.
 
 ## Bayesian inference
 - [First example](./inference-first-example.ipynb)
+- [Metropolis Random Walk MCMC](./inference-metropolis-mcmc.ipynb)
 - [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
 - [Differential Evolution DEMC](./inference-differential-evolution-mcmc.ipynb)
-- [DREAM](./inference-dream-mcmc.ipynb)
 - [Nested sampling](./inference-nested-sampling.ipynb)
 - [Writing a custom prior](./writing-a-prior.ipynb)
 
