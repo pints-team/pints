@@ -116,6 +116,17 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
+    def test_options(self):
+
+        # Test initial proposal is first point
+        x0 = self.real_parameters
+        mcmc = pints.AdaptiveCovarianceMCMC(x0)
+        mcmc.set_target_acceptance_rate(0.5)
+        mcmc.set_target_acceptance_rate(1)
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
