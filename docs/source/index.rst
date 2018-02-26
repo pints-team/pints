@@ -107,7 +107,7 @@ Problems in Pints
 
 Pints defines :class:`Problem classes<SingleSeriesProblem>` that wrap around
 models and data, and over which :class:`error measures<ErrorMeasure>` or
-:class:`log-likelihoods<LogLikelihoods>` can be defined.
+:class:`log-likelihoods<LogLikelihood>` can be defined.
 
 To find the appropriate type of ``Problem`` to use, see the overview below:
 
