@@ -46,8 +46,11 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Set initial state
         self._running = False
-        self._ready_for_tell = False
-        self._need_first_points = True
+
+        # Current points and proposed points
+        self._current = None
+        self._current_logpdf = None
+        self._proposed = None
 
         #
         # Default settings
@@ -65,25 +68,21 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if not self._running:
             self._initialise()
 
-        # After this method we're ready for tell()
-        self._ready_for_tell = True
-
-        # Need evaluation of first points?
-        if self._need_first_points:
-            return self._current
-
         # Propose new points
-        self._proposed = np.zeros(self._current.shape)
-        for j in range(self._chains):
-            r1, r2 = r_draw(j, self._chains)
-            self._proposed[j] = (
-                self._current[j]
-                + self._gamma * (self._current[r1] - self._current[r2])
-                + np.random.normal(0, self._b * self._mu, self._mu.shape)
-            )
+        if self._proposed is None:
+            self._proposed = np.zeros(self._current.shape)
+            for j in range(self._chains):
+                r1, r2 = r_draw(j, self._chains)
+                self._proposed[j] = (
+                    self._current[j]
+                    + self._gamma * (self._current[r1] - self._current[r2])
+                    + np.random.normal(0, self._b * self._mu, self._mu.shape)
+                )
+
+            # Set as read only
+            self._proposed.setflags(write=False)
 
         # Return proposed points
-        self._proposed.setflags(write=False)
         return self._proposed
 
     def _initialise(self):
@@ -91,11 +90,12 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         Initialises the routine before the first iteration.
         """
         if self._running:
-            raise Exception('Already initialised.')
+            raise RuntimeError('Already initialised.')
 
-        # Set current samples
-        self._current = self._x0
-        self._current_log_pdfs = [-float('inf')] * self._chains
+        # Propose x0 as first points
+        self._current = None
+        self._current_log_pdfs = None
+        self._proposed = self._x0
 
         # Set mu
         #TODO: Should this be a user setting?
@@ -110,21 +110,27 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def tell(self, proposed_log_pdfs):
         """ See :meth:`pints.MultiChainMCMC.tell()`. """
+        # Check if we had a proposal
+        if self._proposed is None:
+            raise RuntimeError('Tell called before proposal was set.')
+
         # Ensure proposed_log_pdfs are numpy array
-        proposed_log_pdfs = np.asarray(proposed_log_pdfs)
+        proposed_log_pdfs = np.array(proposed_log_pdfs)
 
         # First points?
-        if self._need_first_points:
+        if self._current is None:
             if not np.all(np.isfinite(proposed_log_pdfs)):
                 raise ValueError(
                     'Initial points for MCMC must have finite logpdf.')
-            self._current_log_pdfs = np.array(proposed_log_pdfs, copy=True)
 
-            # Update state
-            self._need_first_points = False
-            self._ready_for_tell = False
+            # Accept
+            self._current = self._proposed
+            self._current_log_pdfs = proposed_log_pdfs
 
-            # Return first points for chains
+            # Clear proposal
+            self._proposed = None
+
+            # Return first samples for chains
             return self._current
 
         # Perform iteration
@@ -142,6 +148,9 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+
+        # Clear proposal
+        self._proposed = None
 
         # Return samples to add to chains
         self._current.setflags(write=False)

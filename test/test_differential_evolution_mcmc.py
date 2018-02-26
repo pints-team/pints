@@ -75,6 +75,47 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
         self.assertEqual(chains.shape[2], len(xs[0]))
+        #TODO: Add more stringent tests
+
+    def test_flow(self):
+
+        # Test we have at least 3 chains
+        n = 2
+        x0 = [self.real_parameters] * n
+        self.assertRaises(ValueError, pints.DifferentialEvolutionMCMC, n, x0)
+
+        # Test initial proposal is first point
+        n = 3
+        x0 = [self.real_parameters] * n
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        self.assertTrue(mcmc.ask() is mcmc._x0)
+
+        # Double initialisation
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc.ask()
+        self.assertRaises(RuntimeError, mcmc._initialise)
+
+        # Tell without ask
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0)
+
+        # Repeated asks should return same point
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        # Get into accepting state
+        for i in range(100):
+            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
+        x = mcmc.ask()
+        for i in range(10):
+            self.assertTrue(x is mcmc.ask())
+
+        # Repeated tells should fail
+        mcmc.tell([1, 1, 1])
+        self.assertRaises(RuntimeError, mcmc.tell, [1, 1, 1])
+
+        # Bad starting point
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc.ask()
+        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
 
 if __name__ == '__main__':
