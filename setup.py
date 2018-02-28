@@ -34,7 +34,7 @@ setup(
     install_requires=[
         'cma>=2',
         'numpy>=1.8',
-        'scipy>=0.13',
+        'scipy>=0.14',
         # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
