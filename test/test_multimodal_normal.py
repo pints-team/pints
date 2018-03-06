@@ -10,6 +10,7 @@
 import pints
 import pints.toy
 import unittest
+import numpy as np
 
 
 class TestMultimodalNormal(unittest.TestCase):
@@ -23,11 +24,14 @@ class TestMultimodalNormal(unittest.TestCase):
         self.assertEqual(f.dimension(), 2)
         f1 = f([0, 0])
         f2 = f([10, 10])
+        self.assertTrue(np.isscalar(f1))
+        self.assertTrue(np.isscalar(f2))
         self.assertEqual(f1, f2)
         f3 = f([0.1, 0])
         self.assertTrue(f3 < f1)
         f4 = f([0, -0.1])
         self.assertTrue(f4 < f1)
+        self.assertEqual(f([1e6, 1e6]), -float('inf'))
         # Note: This is very basic testing, real tests are done in scipy!
 
         # Single mode, 3d, standard covariance
@@ -35,11 +39,13 @@ class TestMultimodalNormal(unittest.TestCase):
         self.assertEqual(f.dimension(), 3)
         f1 = f([1, 1, 1])
         f2 = f([0, 0, 0])
+        self.assertTrue(np.isscalar(f1))
+        self.assertTrue(np.isscalar(f2))
         self.assertTrue(f1 > f2)
 
         # Three modes, non-standard covariance
         f = pints.toy.MultimodalNormalLogPDF(
-            modes=[[1, 1, 1], [2, 2, 2], [3, 3, 3]],
+            modes=[[1, 1, 1], [10, 10, 10], [20, 20, 20]],
             covariances=[
                 [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                 [[1, 1, 0], [.1, 1, 0], [0, 0, 1]],
@@ -49,6 +55,8 @@ class TestMultimodalNormal(unittest.TestCase):
         self.assertEqual(f.dimension(), 3)
         f1 = f([1, 1, 1])
         f2 = f([0, 0, 0])
+        self.assertTrue(np.isscalar(f1))
+        self.assertTrue(np.isscalar(f2))
         self.assertTrue(f1 > f2)
 
         # Bad constructors

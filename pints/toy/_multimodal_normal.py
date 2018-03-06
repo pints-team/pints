@@ -83,7 +83,8 @@ class MultimodalNormalLogPDF(pints.LogPDF):
             for i, mode in enumerate(self._modes)]
 
     def __call__(self, x):
-        return np.log(np.sum([var.pdf(x) for var in self._vars]))
+        f = np.sum([var.pdf(x) for var in self._vars])
+        return -float('inf') if f == 0 else np.log(f)
 
     def dimension(self):
         """ See: :meth:`LogPDF.dimension()`. """
