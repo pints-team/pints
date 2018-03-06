@@ -9,9 +9,10 @@ examples.
 
 .. toctree::
 
-    logistic_model
+    goodwin_oscillator_model
     high_dimensional_normal_logpdf
-    hh_ik_model
+    hodgkin_huxley_ik_model
+    logistic_model
     multimodal_normal_logpdf
     rosenbrock
     twisted_gaussian_logpdf
