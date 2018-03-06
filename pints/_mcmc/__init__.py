@@ -38,8 +38,8 @@ class SingleChainMCMC(MCMCSampler):
     ``x0``
         An starting point in the parameter space.
     ``sigma0=None``
-        An optional initial covariance matrix, i.e., a guess of the covariance
-        of the distribution to estimate, around ``x0``.
+        An optional (initial) covariance matrix, i.e., a guess of the
+        covariance of the distribution to estimate, around ``x0``.
 
     """
     def __init__(self, x0, sigma0=None):
@@ -79,6 +79,15 @@ class SingleChainMCMC(MCMCSampler):
         Performs an iteration of the MCMC algorithm, using the evaluation
         ``fx`` of the point previously specified by ``ask``. Returns the next
         sample in the chain.
+        """
+        raise NotImplementedError
+
+    def replace(self, x, fx):
+        """
+        Replaces the chain's current position by a user-specified point ``x``,
+        with log-pdf ``fx``.
+
+        This is an optional method, and may not be implemented by all methods!
         """
         raise NotImplementedError
 
@@ -281,6 +290,7 @@ class MCMCSampling(object):
         self._log_to_screen = True
         self._log_filename = None
         self._log_csv = False
+        self.set_log_rate()
 
         # Parallelisation
         self._parallel = None
@@ -347,8 +357,6 @@ class MCMCSampling(object):
 
         # Set up progress reporting
         next_message = 0
-        message_warm_up = 3
-        message_interval = 20
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
@@ -416,11 +424,11 @@ class MCMCSampling(object):
                 logger.log(timer.time())
 
                 # Choose next logging point
-                if iteration < message_warm_up:
+                if iteration < self._message_warm_up:
                     next_message = iteration + 1
                 else:
-                    next_message = message_interval * (
-                        1 + iteration // message_interval)
+                    next_message = self._message_rate * (
+                        1 + iteration // self._message_rate)
 
             # Update iteration count
             iteration += 1
@@ -490,6 +498,27 @@ class MCMCSampling(object):
         # Store number of iterations, return True
         self._adaptation_free_iterations = iterations
         return True
+
+    def set_log_rate(self, rate=20, warm_up=3):
+        """
+        Changes the frequency with which messages are logged.
+
+        Arguments:
+
+        ``rate``
+            A log message will be shown every ``rate`` iterations.
+        ``warm_up``
+            A log message will be shown every iteration, for the first
+            ``warm_up`` iterations.
+
+        """
+        rate = int(rate)
+        if rate < 1:
+            raise ValueError('Rate must be greater than zero.')
+        warm_up = max(0, int(warm_up))
+
+        self._message_rate = rate
+        self._message_warm_up = warm_up
 
     def set_log_to_file(self, filename=None, csv=False):
         """
