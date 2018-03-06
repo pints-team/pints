@@ -11,6 +11,7 @@ examples.
 
     logistic
     hh_ik
+    high_dimensional_normal
     multimodal_normal
     rosenbrock
 

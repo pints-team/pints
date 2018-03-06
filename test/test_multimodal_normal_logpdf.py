@@ -13,9 +13,9 @@ import unittest
 import numpy as np
 
 
-class TestMultimodalNormal(unittest.TestCase):
+class TestMultimodalNormalLogPDF(unittest.TestCase):
     """
-    Tests the Rosenbrock toy problems.
+    Tests the multimodal log-pdf toy problems.
     """
     def test_default(self):
 
