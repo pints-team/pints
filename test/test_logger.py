@@ -13,40 +13,40 @@ import pints.io
 import unittest
 
 data = [
-    1, 4, 1.234567890987654321, 12, 10, 0,
-    2, 3.234, -2.234567890987654321e12, 230, 100, 7.9,
-    30, -2.23456789, -3.234567890987654321e-12, -230, 1000, 179.99999,
-    40, 1.23456789, 4.234567890987654321e-123, -12, 10000, 12345.6,
+    1, 4, 1.234567890987654321, 12, 10, 0, 'yes',
+    2, 3.234, -2.234567890987654321e12, 230, 100, 7.9, 'yes',
+    30, -2.23456789, -3.234567890987654321e-12, -230, 1000, 179.99999, 'no',
+    40, 1.23456789, 4.234567890987654321e-123, -12, 10000, 12345.6, 'no',
 ]
 out1 = (
-    '#  Latitude Number                   Val  Count Time    \n' +
-    '1   4        1.23456789098765429e+00  12  10      0:00.0\n' +
-    '2   3.234   -2.23456789098765430e+12  230 100     0:07.9\n' +
-    '30 -2.23457 -3.23456789098765439e-12 -230 1000    3:00.0\n' +
-    '40  1.23457  4.2345678909876540e-123 -12  10000 205:45.6\n'
+    '#  Latitude Number                   Val  Count Time     Q  \n' +
+    '1   4        1.23456789098765429e+00  12  10      0:00.0 yes\n' +
+    '2   3.234   -2.23456789098765430e+12  230 100     0:07.9 yes\n' +
+    '30 -2.23457 -3.23456789098765439e-12 -230 1000    3:00.0 no \n' +
+    '40  1.23457  4.2345678909876540e-123 -12  10000 205:45.6 no \n'
 )
 out2 = (
-    '#  Lat.    Val  Count Time    \n' +
-    '1   4       12  10      0:00.0\n' +
-    '2   3.234   230 100     0:07.9\n' +
-    '30 -2.2346 -230 1000    3:00.0\n' +
-    '40  1.2346 -12  10000 205:45.6\n'
+    '#  Lat.    Val  Count Time     Q  \n' +
+    '1   4       12  10      0:00.0 yes\n' +
+    '2   3.234   230 100     0:07.9 yes\n' +
+    '30 -2.2346 -230 1000    3:00.0 no \n' +
+    '40  1.2346 -12  10000 205:45.6 no \n'
 )
 out3 = (
-    '#  Lat.    Number                   Val  Count Time    \n' +
-    '1   4       1.23456789098765429e+00  12  10      0:00.0\n' +
-    '2   3.234  -2.23456789098765430e+12  230 100     0:07.9\n' +
-    '30 -2.2346 -3.23456789098765439e-12 -230 1000    3:00.0\n' +
-    '40  1.2346  4.2345678909876540e-123 -12  10000 205:45.6\n'
+    '#  Lat.    Number                   Val  Count Time     Q  \n' +
+    '1   4       1.23456789098765429e+00  12  10      0:00.0 yes\n' +
+    '2   3.234  -2.23456789098765430e+12  230 100     0:07.9 yes\n' +
+    '30 -2.2346 -3.23456789098765439e-12 -230 1000    3:00.0 no \n' +
+    '40  1.2346  4.2345678909876540e-123 -12  10000 205:45.6 no \n'
 )
 out4 = (
-    '"#","Lat.","Number","Val","Count","Time"\n' +
-    '1,4.00000000000000000e+00,1.23456789098765429e+00,12,10,0\n' +
-    '2,3.23399999999999999e+00,-2.23456789098765430e+12,230,100,7.9\n' +
+    '"#","Lat.","Number","Val","Count","Time","Q"\n' +
+    '1,4.00000000000000000e+00,1.23456789098765429e+00,12,10,0,"yes"\n' +
+    '2,3.23399999999999999e+00,-2.23456789098765430e+12,230,100,7.9,"yes"\n' +
     '30,-2.23456789000000011e+00,-3.23456789098765439e-12,-230,1000,' +
-    '179.99999\n' +
+    '179.99999,"no"\n' +
     '40,1.23456788999999989e+00,4.23456789098765400e-123,-12,10000,' +
-    '12345.6\n'
+    '12345.6,"no"\n'
 )
 
 
@@ -68,6 +68,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
 
             # Add all data in one go
             log.log(*data)
@@ -82,6 +83,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
 
             log.log(*data)
             log.log(1, 2, 3)    # not enough for more output!
@@ -96,9 +98,10 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
 
             # Add data row by row
-            n = 6
+            n = 7
             for i in range(len(data) // n):
                 log.log(*data[i * n:(i + 1) * n])
         self.assertOutput(expected=out1, returned=c.text())
@@ -112,6 +115,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
 
             # Add data cell by cell
             for d in data:
@@ -119,7 +123,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out1, returned=c.text())
 
         # Log in different sized chunks
-        order = [3, 2, 1, 1, 4, 6, 3, 2, 2]
+        order = [3, 2, 1, 1, 4, 6, 3, 2, 6]
         self.assertEqual(sum(order), len(data))
         with pints.io.StreamCapture() as c:
             log = pints.Logger()
@@ -129,6 +133,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
 
             # Add data in different sized chunks
             offset = 0
@@ -146,6 +151,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
             log.log(*data)
         self.assertOutput(expected=out2, returned=c.text())
 
@@ -161,6 +167,7 @@ class TestLogger(unittest.TestCase):
                 log.add_int('Val', width=4)
                 log.add_counter('Count', max_value=12345)
                 log.add_time('Time')
+                log.add_string('Q', 3)
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
@@ -179,6 +186,7 @@ class TestLogger(unittest.TestCase):
                 log.add_int('Val', width=4)
                 log.add_counter('Count', max_value=12345)
                 log.add_time('Time')
+                log.add_string('Q', 3)
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
@@ -198,6 +206,7 @@ class TestLogger(unittest.TestCase):
                 log.add_int('Val', width=4)
                 log.add_counter('Count', max_value=12345)
                 log.add_time('Time')
+                log.add_string('Q', 3)
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
@@ -217,6 +226,7 @@ class TestLogger(unittest.TestCase):
                 log.add_int('Val', width=4)
                 log.add_counter('Count', max_value=12345)
                 log.add_time('Time')
+                log.add_string('Q', 3)
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
@@ -233,6 +243,7 @@ class TestLogger(unittest.TestCase):
             log.add_int('Val', width=4)
             log.add_counter('Count', max_value=12345)
             log.add_time('Time')
+            log.add_string('Q', 3)
             log.log(*data)
         self.assertOutput(expected='', returned=c.text())
 
@@ -249,6 +260,7 @@ class TestLogger(unittest.TestCase):
                 log.add_int('Val', width=4)
                 log.add_counter('Count', max_value=12345)
                 log.add_time('Time')
+                log.add_string('Q', 3)
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
