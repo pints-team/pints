@@ -21,6 +21,7 @@ class TestRosenbrock(unittest.TestCase):
         f = pints.toy.RosenbrockError()
         self.assertEqual(f.dimension(), 2)
         fx = f([10, 10])
+        self.assertTrue(np.isscalar(fx))
         self.assertTrue(fx > 0)
 
         xopt = f.optimum()
@@ -48,6 +49,7 @@ class TestRosenbrock(unittest.TestCase):
         f = pints.toy.RosenbrockLogPDF()
         self.assertEqual(f.dimension(), 2)
         fx = f([10, 10])
+        self.assertTrue(np.isscalar(fx))
         self.assertTrue(fx < 0)
 
         xopt = f.optimum()

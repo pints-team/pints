@@ -20,7 +20,7 @@ class RosenbrockError(pints.ErrorMeasure):
     https://en.wikipedia.org/wiki/Rosenbrock_function):
 
     .. math::
-        f(x,y) = ((a - x)^2 + b(y - x^2)^2)
+        f(x,y) = (a - x)^2 + b(y - x^2)^2
 
     """
     def __init__(self, a=1, b=100):
@@ -46,7 +46,7 @@ class RosenbrockLogPDF(pints.LogPDF):
     *Extends:* :class:`LogPDF`.
 
     Unnormalised LogPDF based on the Rosenbrock function (see:
-    https://en.wikipedia.org/wiki/Rosenbrock_function).
+    https://en.wikipedia.org/wiki/Rosenbrock_function):
 
     .. math::
         f(x,y) = -log[ (a - x)^2 + b(y - x^2)^2 ]
