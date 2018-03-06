@@ -7,6 +7,7 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+import os
 import sys
 import pints
 import pints.io
@@ -73,6 +74,16 @@ class TestLogger(unittest.TestCase):
             # Add all data in one go
             log.log(*data)
         self.assertOutput(expected=out1, returned=c.text())
+
+        # Can't configure once logging
+        self.assertRaises(RuntimeError, log.add_counter, 'a')
+        self.assertRaises(RuntimeError, log.add_int, 'a')
+        self.assertRaises(RuntimeError, log.add_float, 'a')
+        self.assertRaises(RuntimeError, log.add_long_float, 'a')
+        self.assertRaises(RuntimeError, log.add_time, 'a')
+        self.assertRaises(RuntimeError, log.add_string, 'a', 3)
+        self.assertRaises(RuntimeError, log.set_filename, 'a')
+        self.assertRaises(RuntimeError, log.set_stream, sys.stdout)
 
         # Normal use, all data at once, plus extra bit
         with pints.io.StreamCapture() as c:
@@ -230,6 +241,20 @@ class TestLogger(unittest.TestCase):
                 log.log(*data)
                 with open(filename, 'r') as f:
                     out = f.read()
+        self.assertOutput(expected='', returned=c.text())
+        self.assertOutput(expected=out3, returned=out)
+
+        # Unset file output
+        with pints.io.StreamCapture() as c:
+            with pints.io.TemporaryDirectory() as d:
+                filename = d.path('test.csv')
+                log = pints.Logger()
+                log.set_filename(filename, csv=False)
+                log.set_filename(None)
+                log.set_stream(None)
+                log.add_counter('#', width=2)
+                log.log(1)
+                self.assertFalse(os.path.isfile(filename))
         self.assertOutput(expected='', returned=c.text())
         self.assertOutput(expected=out3, returned=out)
 

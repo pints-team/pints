@@ -58,6 +58,16 @@ class TestPopulationMCMC(unittest.TestCase):
         x0 = self.real_parameters * 1.1
         mcmc = pints.PopulationMCMC(x0)
 
+        # Test logging
+        logger = pints.Logger()
+        logger.set_stream(None)
+        mcmc._log_init(logger)
+
+        # Test schedule
+        s = np.array([0, 0.1, 0.5])
+        mcmc.set_schedule(s)
+        self.assertTrue(np.all(s == mcmc.schedule()))
+
         # Perform short run
         chain = []
         for i in range(100):
@@ -66,9 +76,13 @@ class TestPopulationMCMC(unittest.TestCase):
             sample = mcmc.tell(fx)
             if i >= 50:
                 chain.append(sample)
+            mcmc._log_write(logger)
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
+
+        # Test name
+        self.assertTrue('population' in mcmc.name().lower())
 
         #TODO: Add more stringent tests!
 
@@ -82,6 +96,14 @@ class TestPopulationMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_schedule, [0.5, 0.5])
         self.assertRaises(ValueError, mcmc.set_schedule, [0, -0.1])
         self.assertRaises(ValueError, mcmc.set_schedule, [0, 1.1])
+
+        mcmc = pints.PopulationMCMC(self.real_parameters)
+        mcmc._initialise()
+        self.assertRaises(RuntimeError, mcmc._initialise)
+        self.assertRaises(RuntimeError, mcmc.set_schedule, [0, 0.1])
+
+        mcmc = pints.PopulationMCMC(self.real_parameters)
+        self.assertRaises(RuntimeError, mcmc.tell, 1)
 
 
 if __name__ == '__main__':

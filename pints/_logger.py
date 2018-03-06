@@ -85,7 +85,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name & width
         name = str(name)
@@ -125,7 +125,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Example: 5 digits => width 11
         # -1.234e-299
@@ -177,7 +177,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name & width
         name = str(name)
@@ -212,7 +212,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Example: 17 digits = width 25
         # -1.23456699999999992e-299
@@ -259,7 +259,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name, width
         name = str(name)
@@ -292,7 +292,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name
         name = str(name)
@@ -427,7 +427,7 @@ class Logger(object):
         To obtain csv logs instead, set `csv=True`
         """
         if self._have_logged:
-            raise ValueError('Cannot configure after logging has started.')
+            raise RuntimeError('Cannot configure after logging has started.')
 
         if filename is None:
             self._filename = None
@@ -441,7 +441,7 @@ class Logger(object):
         to screen can be disabled by passing ``stream=None``.
         """
         if self._have_logged:
-            raise ValueError('Cannot configure after logging has started.')
+            raise RuntimeError('Cannot configure after logging has started.')
 
         self._stream = stream
 
