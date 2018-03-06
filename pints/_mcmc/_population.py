@@ -14,12 +14,12 @@ import pints
 import numpy as np
 
 
-class PopulationMCMC(pints.SingleChainAdaptiveMCMC):
+class PopulationMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`MCMC`
 
     Creates a chain of samples from a target distribution, using the population
-    MCMC routine described in algorithm 1 in [1].
+    MCMC (simulated tempering) routine described in algorithm 1 in [1].
 
     The algorithm goes through the following steps (after initialising ``N``
     chains):
@@ -100,7 +100,7 @@ class PopulationMCMC(pints.SingleChainAdaptiveMCMC):
         Initialises the routine before the first iteration.
         """
         if self._running:
-            raise Exception('Already initialised.')
+            raise RuntimeError('Already initialised.')
 
         # Create inner chains
         n = len(self._schedule)
@@ -148,6 +148,12 @@ class PopulationMCMC(pints.SingleChainAdaptiveMCMC):
         distribution is ``p(theta|data) ^ (1 - T)``.
         """
         return self._schedule
+
+    def replace(self, x, fx):
+        """
+        Not implemented for this method!
+        """
+        raise NotImplementedError
 
     def set_schedule(self, schedule=10):
         """
@@ -249,12 +255,12 @@ class PopulationMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Accept/reject exchange step
         self._have_exchanged = False
-        u = np.log(np.random.uniform(0, 1))
-        if u < pij + pji - (pii + pjj):
-            #print(u, pij + pji - (pii + pjj))
-            self._chains[self._i].replace(self._current[self._j], pij)
-            self._chains[self._j].replace(self._current[self._j], pji)
-            self._have_exchanged = True
+        if np.isfinite(pij) and np.isfinite(pji):
+            u = np.log(np.random.uniform(0, 1))
+            if u < pij + pji - (pii + pjj):
+                self._chains[self._i].replace(self._current[self._j], pij)
+                self._chains[self._j].replace(self._current[self._j], pji)
+                self._have_exchanged = True
 
         # Return new point for chain 0
         sample = np.array(self._current[0], copy=False)
