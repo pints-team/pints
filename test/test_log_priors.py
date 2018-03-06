@@ -85,6 +85,10 @@ class TestPrior(unittest.TestCase):
         p = [f([m1, m2]) for f in p]
         self.assertTrue(np.all(p[:-1] > p[1:]))
 
+        # Test errors
+        self.assertRaises(ValueError, pints.ComposedLogPrior)
+        self.assertRaises(ValueError, pints.ComposedLogPrior, 1)
+
     def test_composed_prior_sampling(self):
 
         m1 = 10
@@ -230,6 +234,11 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(ValueError, p, [1, 2, 3])
         p([1, 2, 3, 4, 5])
         p([-1, 2, -3, 4, -5])
+
+        # Test errors
+        self.assertRaises(
+            ValueError, pints.MultivariateNormalLogPrior, [1, 2],
+            [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
     def test_multivariate_normal_sampling(self):
         d = 1
