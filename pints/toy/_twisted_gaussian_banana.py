@@ -20,17 +20,17 @@ class TwistedGaussianLogPDF(pints.LogPDF):
     Twisted multivariate normal 'banana' with un-normalised density [1]:
 
     .. math::
-        p(x1, x2, x3, ..., xN) propto pi(\phi(x1, x2, x2, ..., xN))
+        p(x_1, x_2, x_3, ..., x_n) \propto \pi(\phi(x_1, x_2, x_2, ..., x_n))
 
-    where pi() is the multivariate normal density and
+    where pi is the multivariate normal density and
 
     .. math::
-        \phi(x1, x2, x3, ..., xN) = (x1, x2 + b*x1^2 - V*b, x3, ..., xN),
+        \phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
 
     Arguments:
 
     ``dimension``
-        Problem dimension (``N``), must be 2 or greater.
+        Problem dimension (``n``), must be 2 or greater.
     ``b``
         "Bananicity": ``b = 0.01`` induces mild non-linearity in target
         density, while non-linearity for ``b = 0.1`` is high.
