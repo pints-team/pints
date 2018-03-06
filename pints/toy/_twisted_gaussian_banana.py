@@ -59,7 +59,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
 
     def __call__(self, x):
         y = np.array(x, copy=True)
-        y[1] = x[1] - self._b * ((x[0] ** 2) - self._V)
+        y[1] = x[1] + self._b * ((x[0] ** 2) - self._V)
         y[0] = x[0] / np.sqrt(self._V)
         return self._phi.logpdf(y)
 
