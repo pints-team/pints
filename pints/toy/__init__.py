@@ -14,6 +14,4 @@ from ._hh_ik import HodgkinHuxleyIKModel                    # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF  # noqa
 from ._multimodal_normal import MultimodalNormalLogPDF      # noqa
 from ._high_dimensional_normal import HighDimensionalNormalLogPDF   # noqa
-from ._distributions import ( # noqa
-    TwistedGaussianLogPDF,
-)
+from ._twisted_gaussian_banana import TwistedGaussianLogPDF # noqa
