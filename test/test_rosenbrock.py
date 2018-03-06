@@ -31,7 +31,6 @@ class TestRosenbrock(unittest.TestCase):
         for x in np.random.uniform(-5, 5, size=(10, 2)):
             self.assertTrue(f(x) > fopt)
 
-
         f = pints.toy.RosenbrockError(10, 10)
         self.assertEqual(f.dimension(), 2)
         fx = f([11, 11])
@@ -71,10 +70,6 @@ class TestRosenbrock(unittest.TestCase):
         np.random.seed(1)
         for x in np.random.uniform(0, 20, size=(10, 2)):
             self.assertTrue(f(x) < fopt)
-
-
-
-
 
 
 if __name__ == '__main__':

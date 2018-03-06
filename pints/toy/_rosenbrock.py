@@ -22,8 +22,6 @@ class RosenbrockError(pints.ErrorMeasure):
     .. math::
         f(x,y) = ((a - x)^2 + b(y - x^2)^2)
 
-    Note the minus sign converts this from a minimisation to a maximisation
-    problem.
     """
     def __init__(self, a=1, b=100):
         self._a = float(a)
@@ -47,8 +45,12 @@ class RosenbrockLogPDF(pints.LogPDF):
     """
     *Extends:* :class:`LogPDF`.
 
-    LogPDF based on the Rosenbrock function (see:
+    Unnormalised LogPDF based on the Rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function).
+
+    .. math::
+        f(x,y) = -log[ (a - x)^2 + b(y - x^2)^2 ]
+
     """
     def __init__(self, a=1, b=100):
         self._f = RosenbrockError(a, b)
@@ -59,7 +61,7 @@ class RosenbrockLogPDF(pints.LogPDF):
 
     def optimum(self):
         """
-        Returns the global optimum for this function.
+        Returns the global optimum for this log-pdf.
         """
         return self._f.optimum()
 
