@@ -11,9 +11,9 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 from ._logistic import LogisticModel            # noqa
 from ._hh_ik import HodgkinHuxleyIKModel        # noqa
+from ._rosenbrock import RosenbrockError, RosenbrockLogPDF   # noqa
 from ._distributions import ( # noqa
     BimodalMultivariateGaussianLogPDF,
     MultivariateGaussianLogPDF,
-    RosenbrockLogPDF,
     TwistedGaussianLogPDF,
 )

@@ -158,29 +158,3 @@ class BimodalMultivariateGaussianLogPDF(pints.LogPDF):
         """ See: :meth:`LogPDF.dimension()`. """
         return self._dimension
 
-
-class RosenbrockLogPDF(pints.LogPDF):
-    """
-    *Extends:* :class:`LogPDF`.
-
-    Rosenbrock function (see:
-    https://en.wikipedia.org/wiki/Rosenbrock_function):
-
-    .. math::
-        f(x,y) = -((a - x)^2 + b(y - x^2)^2)
-
-    Note the minus sign converts this from a minimisation to a maximisation
-    problem.
-    """
-    def __init__(self, a=1, b=100):
-        self._dimension = 2
-        self._a = a
-        self._b = b
-
-    def __call__(self, x):
-        return - np.log((self._a - x[0])**2 + self._b * (x[1] - x[0]**2)**2)
-
-    def dimension(self):
-        """ See: :meth:`LogPDF.dimension()`. """
-        return self._dimension
-
