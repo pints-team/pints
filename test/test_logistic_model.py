@@ -45,6 +45,19 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(values[-1], parameters[-1])
         self.assertTrue(np.all(values[1:] >= values[:-1]))
 
+    def test_negative_k(self):
+        model = pints.toy.LogisticModel(2)
+        times = [0, 1, 2, 10000]
+        parameters = [1, -1]
+        values = model.simulate(parameters, times)
+        self.assertTrue(np.all(values == np.zeros(4)))
+
+    def test_errors(self):
+        model = pints.toy.LogisticModel(2)
+        times = [0, -1, 2, 10000]
+        parameters = [1, 0]
+        self.assertRaises(ValueError, model.simulate, parameters, times)
+
 
 if __name__ == '__main__':
     unittest.main()
