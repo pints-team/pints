@@ -14,12 +14,16 @@ import scipy
 
 class GoodwinOscillatorModel(pints.ForwardModel):
     """
-    Three-state Goodwin oscillator toy model [1].
+    Three-state Goodwin oscillator toy model [1, 2].
 
-    In this implementation of the model, only the first state is visible,
+    In this implementation of the model, only the last state is visible,
     making it very difficult to identify.
 
-    [1] TODO TODO TODO TODO TODO Needs reference!
+    [1] Oscillatory behavior in enzymatic control processes."
+    Goodwin (1965) Advances in enzyme regulation.
+
+    [2] Mathematics of cellular control processes I. Negative feedback to one
+    gene. Griffith (1968) Journal of theoretical biology.
     """
 
     def dimension(self):
@@ -31,28 +35,28 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         Right-hand side equation of the ode to solve.
         """
         x, y, z = state
-        a1, a2, alpha, k1, k2 = parameters
-        dxdt = a1 / (1 + a2 * z**10) - alpha * x
-        dydt = k1 * x - alpha * y
-        dzdt = k2 * y - alpha * z
+        k2, k3, m1, m2, m3 = parameters
+        dxdt = 1 / (1 + z**10) - m1 * x
+        dydt = k2 * x - m2 * y
+        dzdt = k3 * y - m3 * z
         return dxdt, dydt, dzdt
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate`. """
-        y0 = [0, 0, 0]
+        y0 = [0.0054, 0.053, 1.93]
         solution = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,))
-        return solution[:, 0]   # Only observe the first state
+        return solution[:, -1]   # Only observe the last state
 
     def suggested_parameters(self):
         """
         Returns a suggested array of parameter values.
         """
-        return np.array([1.97, 0.15, 0.53, 0.46, 1.49])
+        return np.array([2, 4, 0.12, 0.08, 0.1])
 
     def suggested_times(self):
         """
         Returns a suggested set of sampling times.
         """
-        return np.linspace(0, 50, 120)
+        return np.linspace(0, 100, 200)
 
