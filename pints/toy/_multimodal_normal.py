@@ -64,7 +64,7 @@ class MultimodalNormalLogPDF(pints.LogPDF):
 
         # Check covariances
         if covariances is None:
-            self._covs = [np.eye(self._dimension)] * self._dimension
+            self._covs = [np.eye(self._dimension)] * len(self._modes)
         else:
             if len(covariances) != len(self._modes):
                 raise ValueError(
