@@ -77,7 +77,6 @@ class MultivariateNormalLogPrior(pints.LogPrior):
 
     """
     def __init__(self, mean, covariance):
-
         # Check input
         mean = pints.vector(mean)
         covariance = np.array(covariance, copy=True)
