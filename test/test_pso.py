@@ -17,32 +17,32 @@ debug = False
 method = pints.PSO
 
 LOG_SCREEN = (
-    'Minimising error measure\n'
+    'Maximising LogPDF\n'
     'using Particle Swarm Optimisation (PSO)\n'
     'Running in sequential mode.\n'
     'Population size: 6\n'
     'Iter. Eval. Best      Time m:s\n'
-    '0     6     -3.425707   0:00.0\n'
-    '1     12    -3.425707   0:00.0\n'
-    '2     18    -4.072182   0:00.0\n'
-    '3     24    -4.153609   0:00.0\n'
-    '10    60    -4.635464   0:00.0\n'
+    '0     6     -0.199      0:00.0\n'
+    '1     12     0.843      0:00.0\n'
+    '2     18     0.843      0:00.0\n'
+    '3     24     0.843      0:00.0\n'
+    '10    60     1.183198   0:00.0\n'
     'Halting: Maximum number of iterations (10) reached.\n'
 )
 
 LOG_FILE = (
     'Iter. Eval. Best      f0        f1        f2        f3       '
     ' f4        f5        Time m:s\n'
-    '0     6     -3.425707 -0.199    -2.667294 -3.425707 -1.148659'
-    ' -2.648408 -1.707569   0:00.0\n'
-    '1     12    -3.425707 -0.271    -2.667294 -3.425707 -1.446224'
-    ' -2.648408 -1.707569   0:00.0\n'
-    '2     18    -4.072182 -3.093494 -2.667294 -3.425707 -4.072182'
-    ' -2.648408 -3.819189   0:00.0\n'
-    '3     24    -4.153609 -3.274445 -3.760489 -3.425707 -4.153609'
-    ' -2.675055 -3.819189   0:00.0\n'
-    '10    60    -4.635464 -4.635464 -4.473781 -4.376219 -4.372652'
-    ' -3.432041 -4.458271   0:00.0\n'
+    '0     6     -0.199     0.199     2.667294  3.425707  1.148659  2.648408 '
+    ' 1.707569   0:00.0\n'
+    '1     12     0.843     0.199    -0.843     1.621933  1.148659  1.283276 '
+    ' 1.487763   0:00.0\n'
+    '2     18     0.843    -0.196    -0.843     1.621933  1.148659  1.283276 '
+    ' 1.487763   0:00.0\n'
+    '3     24     0.843    -0.196    -0.843     0.631     1.148659 -0.404    '
+    ' 1.487763   0:00.0\n'
+    '10    60     1.183198 -1.183198 -0.843     0.631     1.148659 -0.404    '
+    '-0.0216     0:00.0\n'
 )
 
 
@@ -151,20 +151,7 @@ class TestPSO(unittest.TestCase):
 
     def test_logpdf(self):
 
-        #TODO: Replace this with toy problem!
-        #TODO: Make one as an error measure, one as a LogPDF
-        #TODO: And add to general test of Optimisation, not PSO specifically
-        class RosenbrockLogPDF(pints.LogPDF):
-            def __call__(self, x):
-                a = 1
-                b = 100
-                f = (a - x[0])**2 + b * (x[1] - x[0]**2)**2
-                return float('inf') if f == 0 else -np.log(f)
-
-            def dimension(self):
-                return 2
-
-        r = RosenbrockLogPDF()
+        r = pints.toy.RosenbrockLogPDF(1, 100)
         x0 = np.array([1.1, 1.1])
         f0 = r(x0)
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
@@ -182,19 +169,7 @@ class TestPSO(unittest.TestCase):
     def test_rosenbrock(self):
         """ Test running on the Rosenbrock function """
 
-        #TODO: Replace this with toy problem!
-        class Rosenbrock(pints.ErrorMeasure):
-
-            def __call__(self, x):
-                a = 1
-                b = 100
-                f = (a - x[0])**2 + b * (x[1] - x[0]**2)**2
-                return float('inf') if f == 0 else -np.log(f)
-
-            def dimension(self):
-                return 2
-
-        r = Rosenbrock()
+        r = pints.toy.RosenbrockError(1, 100)
         x0 = np.array([1.1, 1.1])
         f0 = r(x0)
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
@@ -207,19 +182,8 @@ class TestPSO(unittest.TestCase):
         self.assertTrue(f1 < f0)
 
     def test_logging(self):
-        #TODO: Replace this with toy problem!
-        class Rosenbrock(pints.ErrorMeasure):
 
-            def __call__(self, x):
-                a = 1
-                b = 100
-                f = (a - x[0])**2 + b * (x[1] - x[0]**2)**2
-                return float('inf') if f == 0 else -np.log(f)
-
-            def dimension(self):
-                return 2
-
-        r = Rosenbrock()
+        r = pints.toy.RosenbrockLogPDF(1, 100)
         x0 = np.array([1.1, 1.1])
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
 
