@@ -59,8 +59,8 @@ class TestMultimodalNormalLogPDF(unittest.TestCase):
         self.assertTrue(np.isscalar(f2))
         self.assertTrue(f1 > f2)
 
-        # Many modes
-        logpdf = pints.toy.MultimodalNormalLogPDF([
+        # More modes than dimensions
+        pints.toy.MultimodalNormalLogPDF([
             [1, 1], [1.5, 1.5], [3, 0], [0, 3.5]
         ])
 
