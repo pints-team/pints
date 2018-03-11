@@ -208,8 +208,8 @@ def histogram(samples, ref_parameters=None):
             # Add histogram subplot
             axes[i].set_xlabel('Parameter ' + str(i + 1))
             axes[i].set_ylabel('Frequency')
-            axes[i].hist(samples_j[:, i], bins=bins, alpha=alpha, 
-                label='Samples ' + str(1 + j_list))
+            axes[i].hist(samples_j[:, i], bins=bins, alpha=alpha,
+                         label='Samples ' + str(1 + j_list))
 
         # Add reference parameters if given
         if ref_parameters is not None:
@@ -267,7 +267,7 @@ def trace(samples, ref_parameters=None):
             # Add histogram subplot
             axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
             axes[i, 0].set_ylabel('Frequency')
-            axes[i, 0].hist(samples_j[:, i], bins=bins, alpha=alpha, 
+            axes[i, 0].hist(samples_j[:, i], bins=bins, alpha=alpha,
                             label='Samples ' + str(1 + j_list))
 
             # Add trace subplot
