@@ -415,7 +415,8 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     if ref_parameters is not None:
         if len(ref_parameters) != n_param:
             raise ValueError(
-                'Length of `ref_parameters` must be same as number of parameters')
+                'Length of `ref_parameters` must be same as number of'
+                ' parameters')
 
     # Create figure
     fig_size = (3 * n_param, 3 * n_param)
@@ -474,10 +475,12 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
                     # Add true values if given
                     if ref_parameters is not None:
                         axes[i, j].plot(
-                            [ref_parameters[j], ref_parameters[j]], [ymin, ymax],
+                            [ref_parameters[j], ref_parameters[j]],
+                            [ymin, ymax],
                             '--', c='k')
                         axes[i, j].plot(
-                            [xmin, xmax], [ref_parameters[i], ref_parameters[i]],
+                            [xmin, xmax],
+                            [ref_parameters[i], ref_parameters[i]],
                             '--', c='k')
                 else:
                     # Create a KDE-based plot
