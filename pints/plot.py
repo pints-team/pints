@@ -324,8 +324,8 @@ def series(samples, problem, thinning=None):
         parameters added by a noise model) will be ignored.
     `thinning`
         (Optional) An integer greater than zero. If specified, only every
-        n-th sample (with `n = thinning`) in the samples will be used. If left at
-        the default value `None`, a value will be chosen so that 200 to 400
+        n-th sample (with `n = thinning`) in the samples will be used. If left
+        at the default value `None`, a value will be chosen so that 200 to 400
         predictions are shown.
 
     Returns a `matplotlib` figure object and axes handle.
