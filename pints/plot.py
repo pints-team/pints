@@ -379,7 +379,7 @@ def series(samples, problem, thinning=None):
     return fig, axes
 
 
-def pairwise(samples, kde=False, opacity=None, true_values=None):
+def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
     parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
@@ -400,7 +400,7 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
     `opacity`
         When `kde=False`, this value can be used to manually set the opacity of
         the points in the scatter plots.
-    `true_values`
+    `ref_parameters`
         If true values of parameters are known, they can be passed in for
         plotting.
 
@@ -412,10 +412,10 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
     n_sample, n_param = samples.shape
 
     # Check true values
-    if true_values is not None:
-        if len(true_values) != n_param:
+    if ref_parameters is not None:
+        if len(ref_parameters) != n_param:
             raise ValueError(
-                'Length of `true_values` must be same as number of parameters')
+                'Length of `ref_parameters` must be same as number of parameters')
 
     # Create figure
     fig_size = (3 * n_param, 3 * n_param)
@@ -438,10 +438,10 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
                     axes[i, j].plot(x, stats.gaussian_kde(samples[:, i])(x))
 
                 # Add true values
-                if true_values is not None:
+                if ref_parameters is not None:
                     ymin_tv, ymax_tv = axes[i, j].get_ylim()
                     axes[i, j].plot(
-                        [true_values[i], true_values[i]],
+                        [ref_parameters[i], ref_parameters[i]],
                         [0.0, ymax_tv],
                         '--', c='k')
 
@@ -472,12 +472,12 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
                         samples[:, j], samples[:, i], alpha=opacity, s=0.1)
 
                     # Add true values if given
-                    if true_values is not None:
+                    if ref_parameters is not None:
                         axes[i, j].plot(
-                            [true_values[j], true_values[j]], [ymin, ymax],
+                            [ref_parameters[j], ref_parameters[j]], [ymin, ymax],
                             '--', c='k')
                         axes[i, j].plot(
-                            [xmin, xmax], [true_values[i], true_values[i]],
+                            [xmin, xmax], [ref_parameters[i], ref_parameters[i]],
                             '--', c='k')
                 else:
                     # Create a KDE-based plot
@@ -499,14 +499,14 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
                     axes[i, j].contour(xx, yy, f, colors='k')
 
                     # Add true values if given
-                    if true_values is not None:
+                    if ref_parameters is not None:
                         axes[i, j].plot(
-                            [true_values[j], true_values[j]],
+                            [ref_parameters[j], ref_parameters[j]],
                             [ymin, ymax],
                             '--', c='k')
                         axes[i, j].plot(
                             [xmin, xmax],
-                            [true_values[i], true_values[i]],
+                            [ref_parameters[i], ref_parameters[i]],
                             '--', c='k')
 
                     # Force equal aspect ratio
