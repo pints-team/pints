@@ -168,14 +168,14 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(chain, *args):
+def histogram(samples, *args):
     """
     Takes one or more markov chains as input and creates and returns a plot
     showing histograms for each chain.
 
     Arguments:
 
-    `chain`
+    `samples`
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
@@ -188,25 +188,25 @@ def histogram(chain, *args):
 
     bins = 40
     alpha = 0.5
-    n_sample, n_param = chain.shape
+    n_sample, n_param = samples.shape
 
-    # Set up figure, plot first chain
+    # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
     for i in range(n_param):
         # Add histogram subplot
         axes[i].set_xlabel('Parameter ' + str(i + 1))
         axes[i].set_ylabel('Frequency')
-        axes[i].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
+        axes[i].hist(samples[:, i], bins=bins, alpha=alpha, label='Chain 1')
 
     # Plot additional chains
     if args:
         for i_chain, chain in enumerate(args):
-            if chain.shape[1] != n_param:
+            if samples.shape[1] != n_param:
                 raise ValueError(
                     'All chains must have the same number of parameters.')
             for i in range(n_param):
                 axes[i].hist(
-                    chain[:, i], bins=bins, alpha=alpha,
+                    samples[:, i], bins=bins, alpha=alpha,
                     label='Chain ' + str(2 + i_chain))
         axes[0, 0].legend()
 
@@ -214,14 +214,14 @@ def histogram(chain, *args):
     return fig, axes
 
 
-def trace(chain, *args):
+def trace(samples, *args):
     """
     Takes one or more markov chains as input and creates and returns a plot
     showing histograms and traces for each chain.
 
     Arguments:
 
-    `chain`
+    `samples`
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
@@ -236,44 +236,44 @@ def trace(chain, *args):
     # arguments
     bins = 40
     alpha = 0.5
-    n_sample, n_param = chain.shape
+    n_sample, n_param = samples.shape
 
-    # Set up figure, plot first chain
+    # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
     for i in range(n_param):
         # Add histogram subplot
         axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
         axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha, label='Chain 1')
+        axes[i, 0].hist(samples[:, i], bins=bins, alpha=alpha, label='Chain 1')
 
         # Add trace subplot
         axes[i, 1].set_xlabel('Iteration')
         axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
-        axes[i, 1].plot(chain[:, i], alpha=alpha)
+        axes[i, 1].plot(samples[:, i], alpha=alpha)
 
     # Plot additional chains
     if args:
         for i_chain, chain in enumerate(args):
-            if chain.shape[1] != n_param:
+            if samples.shape[1] != n_param:
                 raise ValueError(
                     'All chains must have the same number of parameters.')
             for i in range(n_param):
-                axes[i, 0].hist(chain[:, i], bins=bins, alpha=alpha,
+                axes[i, 0].hist(samples[:, i], bins=bins, alpha=alpha,
                                 label='Chain ' + str(2 + i_chain))
-                axes[i, 1].plot(chain[:, i], alpha=alpha)
+                axes[i, 1].plot(samples[:, i], alpha=alpha)
         axes[0, 0].legend()
 
     plt.tight_layout()
     return fig, axes
 
 
-def autocorrelation(chain, max_lags=100):
+def autocorrelation(samples, max_lags=100):
     """
-    Creates and returns an autocorrelation plot for a given markov `chain`.
+    Creates and returns an autocorrelation plot for a given markov `samples`.
 
     Arguments:
 
-    `chain`
+    `samples`
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
@@ -284,11 +284,11 @@ def autocorrelation(chain, max_lags=100):
     """
     import matplotlib.pyplot as plt
 
-    n_sample, n_param = chain.shape
+    n_sample, n_param = samples.shape
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     for i in range(n_param):
-        axes[i].acorr(chain[:, i] - np.mean(chain[:, i]), maxlags=max_lags)
+        axes[i].acorr(samples[:, i] - np.mean(samples[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
         axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
 
@@ -303,17 +303,17 @@ def autocorrelation(chain, max_lags=100):
     return fig, axes
 
 
-def series(chain, problem, thinning=None):
+def series(samples, problem, thinning=None):
     """
     Creates and returns a plot of predicted time series for a given markov
-    `chain` and a single-series `problem`.
+    `samples` and a single-series `problem`.
 
     Because this method runs simulations, it can take a considerable time to
     run.
 
     Arguments:
 
-    `chain`
+    `samples`
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
@@ -324,7 +324,7 @@ def series(chain, problem, thinning=None):
         parameters added by a noise model) will be ignored.
     `thinning`
         (Optional) An integer greater than zero. If specified, only every
-        n-th sample (with `n = thinning`) in the chain will be used. If left at
+        n-th sample (with `n = thinning`) in the samples will be used. If left at
         the default value `None`, a value will be chosen so that 200 to 400
         predictions are shown.
 
@@ -332,7 +332,7 @@ def series(chain, problem, thinning=None):
     """
     import matplotlib.pyplot as plt
 
-    n_sample, n_param = chain.shape
+    n_sample, n_param = samples.shape
 
     # Get problem dimension
     dimension = problem.dimension()
@@ -350,10 +350,10 @@ def series(chain, problem, thinning=None):
     # Get times
     times = problem.times()
 
-    # Evaluate the model for all parameter sets in the chain
+    # Evaluate the model for all parameter sets in the samples
     i = 0
     predicted_values = []
-    for params in chain[::thinning, :dimension]:
+    for params in samples[::thinning, :dimension]:
         predicted_values.append(problem.evaluate(params))
         i += 1
     predicted_values = np.array(predicted_values)
@@ -379,7 +379,7 @@ def series(chain, problem, thinning=None):
     return fig, axes
 
 
-def pairwise(chain, kde=False, opacity=None, true_values=None):
+def pairwise(samples, kde=False, opacity=None, true_values=None):
     """
     Takes a markov chain and creates a set of pairwise scatterplots for all
     parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
@@ -390,7 +390,7 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
 
     Arguments:
 
-    `chain`
+    `samples`
         A markov chain of shape `(samples, dimension)`, where `samples` is the
         number of samples in the chain and `dimension` is the number of
         parameters.
@@ -408,8 +408,8 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
     """
     import matplotlib.pyplot as plt
 
-    # Check chain size
-    n_sample, n_param = chain.shape
+    # Check samples size
+    n_sample, n_param = samples.shape
 
     # Check true values
     if true_values is not None:
@@ -427,15 +427,15 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
             if i == j:
 
                 # Diagonal: Plot a histogram
-                xmin, xmax = np.min(chain[:, i]), np.max(chain[:, i])
+                xmin, xmax = np.min(samples[:, i]), np.max(samples[:, i])
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].set_xlim(xmin, xmax)
-                axes[i, j].hist(chain[:, i], bins=xbins, normed=True)
+                axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
 
                 # Add kde plot
                 if kde:
                     x = np.linspace(xmin, xmax, 100)
-                    axes[i, j].plot(x, stats.gaussian_kde(chain[:, i])(x))
+                    axes[i, j].plot(x, stats.gaussian_kde(samples[:, i])(x))
 
                 # Add true values
                 if true_values is not None:
@@ -451,8 +451,8 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
 
             else:
                 # Lower-left: Plot the samples as density map
-                xmin, xmax = np.min(chain[:, j]), np.max(chain[:, j])
-                ymin, ymax = np.min(chain[:, i]), np.max(chain[:, i])
+                xmin, xmax = np.min(samples[:, j]), np.max(samples[:, j])
+                ymin, ymax = np.min(samples[:, i]), np.max(samples[:, i])
                 axes[i, j].set_xlim(xmin, xmax)
                 axes[i, j].set_ylim(ymin, ymax)
 
@@ -460,7 +460,7 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                     # Create scatter plot
 
                     # Determine point opacity
-                    num_points = len(chain[:, i])
+                    num_points = len(samples[:, i])
                     if opacity is None:
                         if num_points < 10:
                             opacity = 1.0
@@ -469,7 +469,7 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
 
                     # Scatter points
                     axes[i, j].scatter(
-                        chain[:, j], chain[:, i], alpha=opacity, s=0.1)
+                        samples[:, j], samples[:, i], alpha=opacity, s=0.1)
 
                     # Add true values if given
                     if true_values is not None:
@@ -483,7 +483,7 @@ def pairwise(chain, kde=False, opacity=None, true_values=None):
                     # Create a KDE-based plot
 
                     # Plot values
-                    values = np.vstack([chain[:, j], chain[:, i]])
+                    values = np.vstack([samples[:, j], samples[:, i]])
                     axes[i, j].imshow(
                         np.rot90(values), cmap=plt.cm.Blues,
                         extent=[xmin, xmax, ymin, ymax])
