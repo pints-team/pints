@@ -168,63 +168,18 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(samples, *args):
+def histogram(samples, ref_parameters=None):
     """
-    Takes one or more markov chains or samples as input and creates and returns
-    a plot showing histograms for each chain.
+    Takes one or more markov chains or lists of samples as input and creates
+    and returns a plot showing histograms for each chain or list of samples.
 
     Arguments:
 
     `samples`
-        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
-        the number of samples in the chain and `dimension` is the number of
-        parameters.
-    `*args`
-        Additional chains can be added after the initial argument.
-
-    Returns a `matplotlib` figure object and axes handle.
-    """
-    import matplotlib.pyplot as plt
-
-    bins = 40
-    alpha = 0.5
-    n_sample, n_param = samples.shape
-
-    # Set up figure, plot first samples
-    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
-    for i in range(n_param):
-        # Add histogram subplot
-        axes[i].set_xlabel('Parameter ' + str(i + 1))
-        axes[i].set_ylabel('Frequency')
-        axes[i].hist(samples[:, i], bins=bins, alpha=alpha, label='Chain 1')
-
-    # Plot additional chains
-    if args:
-        for i_chain, chain in enumerate(args):
-            if samples.shape[1] != n_param:
-                raise ValueError(
-                    'All chains must have the same number of parameters.')
-            for i in range(n_param):
-                axes[i].hist(
-                    samples[:, i], bins=bins, alpha=alpha,
-                    label='Chain ' + str(2 + i_chain))
-        axes[0, 0].legend()
-
-    plt.tight_layout()
-    return fig, axes
-
-
-def trace(samples, *args):
-    """
-    Takes one or more markov chains or samples as input and creates and returns
-    a plot showing histograms and traces for each chain.
-
-    Arguments:
-
-    `samples`
-        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
-        the number of samples in the chain and `dimension` is the number of
-        parameters.
+        A list of lists of samples, with shape
+        `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
+        lists of samples, `n_samples` is the number of samples in one list and
+        `dimension` is the number of parameters.
     `*args`
         Additional chains can be added after the initial argument.
 
@@ -236,31 +191,65 @@ def trace(samples, *args):
     # arguments
     bins = 40
     alpha = 0.5
-    n_sample, n_param = samples.shape
+    n_list, n_sample, n_param = samples.shape
+
+    # Set up figure, plot first samples
+    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
+    for i in range(n_param):
+        for j_list, samples_j in enumerate(samples):
+            # Add histogram subplot
+            axes[i].set_xlabel('Parameter ' + str(i + 1))
+            axes[i].set_ylabel('Frequency')
+            axes[i].hist(samples_j[:, i], bins=bins, alpha=alpha, 
+                label='Samples ' + str(1 + j_list))
+    if n_list > 1:
+        axes[0, 0].legend()
+
+    plt.tight_layout()
+    return fig, axes
+
+
+def trace(samples, *args):
+    """
+    Takes one or more markov chains or lists of samples as input and creates
+    and returns a plot showing histograms and traces for each chain or list of
+    samples.
+
+    Arguments:
+
+    `samples`
+        A list of lists of samples, with shape
+        `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
+        lists of samples, `n_samples` is the number of samples in one list and
+        `dimension` is the number of parameters.
+    `*args`
+        Additional chains can be added after the initial argument.
+
+    Returns a `matplotlib` figure object and axes handle.
+    """
+    import matplotlib.pyplot as plt
+
+    # If we switch to Python3 exclusively, bins and alpha can be keyword-only
+    # arguments
+    bins = 40
+    alpha = 0.5
+    n_list, n_sample, n_param = samples.shape
 
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
     for i in range(n_param):
-        # Add histogram subplot
-        axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
-        axes[i, 0].set_ylabel('Frequency')
-        axes[i, 0].hist(samples[:, i], bins=bins, alpha=alpha, label='Chain 1')
+        for j_list, samples_j in enumerate(samples):
+            # Add histogram subplot
+            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_ylabel('Frequency')
+            axes[i, 0].hist(samples_j[:, i], bins=bins, alpha=alpha, 
+                            label='Samples ' + str(1 + j_list))
 
-        # Add trace subplot
-        axes[i, 1].set_xlabel('Iteration')
-        axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
-        axes[i, 1].plot(samples[:, i], alpha=alpha)
-
-    # Plot additional chains
-    if args:
-        for i_chain, chain in enumerate(args):
-            if samples.shape[1] != n_param:
-                raise ValueError(
-                    'All chains must have the same number of parameters.')
-            for i in range(n_param):
-                axes[i, 0].hist(samples[:, i], bins=bins, alpha=alpha,
-                                label='Chain ' + str(2 + i_chain))
-                axes[i, 1].plot(samples[:, i], alpha=alpha)
+            # Add trace subplot
+            axes[i, 1].set_xlabel('Iteration')
+            axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
+            axes[i, 1].plot(samples_j[:, i], alpha=alpha)
+    if n_list > 1:
         axes[0, 0].legend()
 
     plt.tight_layout()
@@ -269,14 +258,15 @@ def trace(samples, *args):
 
 def autocorrelation(samples, max_lags=100):
     """
-    Creates and returns an autocorrelation plot for a given markov `samples`.
+    Creates and returns an autocorrelation plot for a given markov chain or
+    list of `samples`.
 
     Arguments:
 
     `samples`
-        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
-        the number of samples in the chain and `dimension` is the number of
-        parameters.
+        A list of samples, with shape `(n_samples, dimension)`, where
+        `n_samples` is the number of samples in the list and `dimension` is
+        the number of parameters.
     `max_lags`
         (Optional) The maximum autocorrelation lag to plot.
 
@@ -314,12 +304,12 @@ def series(samples, problem, thinning=None):
     Arguments:
 
     `samples`
-        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
-        the number of samples in the chain and `dimension` is the number of
-        parameters.
+        A list of samples, with shape `(n_samples, dimension)`, where
+        `n_samples` is the number of samples in the list and `dimension` is
+        the number of parameters.
     `problem`
         A :class:`pints.SingleSeriesProblem` of a dimension equal to or greater
-        than the `dimension` of the markov chain. Any extra parameters present
+        than the `dimension` of the `samples`. Any extra parameters present
         in the chain but not accepted by the SingleSeriesProblem (for example
         parameters added by a noise model) will be ignored.
     `thinning`
@@ -381,8 +371,9 @@ def series(samples, problem, thinning=None):
 
 def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     """
-    Takes a markov chain and creates a set of pairwise scatterplots for all
-    parameters (p1 versus p2, p1 versus p3, p2 versus p3, etc.).
+    Takes a markov chain or list of `samples` and creates a set of pairwise
+    scatterplots for all parameters (p1 versus p2, p1 versus p3, p2 versus p3,
+    etc.).
 
     The returned plot is in a 'matrix' form, with histograms of each individual
     parameter on the diagonal, and scatter plots of parameters `i` and `j` on
@@ -391,9 +382,9 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     Arguments:
 
     `samples`
-        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
-        the number of samples in the chain and `dimension` is the number of
-        parameters.
+        A list of samples, with shape `(n_samples, dimension)`, where
+        `n_samples` is the number of samples in the list and `dimension` is
+        the number of parameters.
     `kde`
         Set to `True` to use kernel-density estimation for the histograms and
         scatter plots.
@@ -401,8 +392,8 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
         When `kde=False`, this value can be used to manually set the opacity of
         the points in the scatter plots.
     `ref_parameters`
-        If true values of parameters are known, they can be passed in for
-        plotting.
+        A set of parameters for reference in the plot. For example, if true
+        values of parameters are known, they can be passed in for plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
