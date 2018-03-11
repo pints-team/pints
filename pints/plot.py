@@ -170,14 +170,14 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
 
 def histogram(samples, *args):
     """
-    Takes one or more markov chains as input and creates and returns a plot
-    showing histograms for each chain.
+    Takes one or more markov chains or samples as input and creates and returns
+    a plot showing histograms for each chain.
 
     Arguments:
 
     `samples`
-        A markov chain of shape `(samples, dimension)`, where `samples` is the
-        number of samples in the chain and `dimension` is the number of
+        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
+        the number of samples in the chain and `dimension` is the number of
         parameters.
     `*args`
         Additional chains can be added after the initial argument.
@@ -216,14 +216,14 @@ def histogram(samples, *args):
 
 def trace(samples, *args):
     """
-    Takes one or more markov chains as input and creates and returns a plot
-    showing histograms and traces for each chain.
+    Takes one or more markov chains or samples as input and creates and returns
+    a plot showing histograms and traces for each chain.
 
     Arguments:
 
     `samples`
-        A markov chain of shape `(samples, dimension)`, where `samples` is the
-        number of samples in the chain and `dimension` is the number of
+        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
+        the number of samples in the chain and `dimension` is the number of
         parameters.
     `*args`
         Additional chains can be added after the initial argument.
@@ -274,8 +274,8 @@ def autocorrelation(samples, max_lags=100):
     Arguments:
 
     `samples`
-        A markov chain of shape `(samples, dimension)`, where `samples` is the
-        number of samples in the chain and `dimension` is the number of
+        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
+        the number of samples in the chain and `dimension` is the number of
         parameters.
     `max_lags`
         (Optional) The maximum autocorrelation lag to plot.
@@ -305,7 +305,7 @@ def autocorrelation(samples, max_lags=100):
 
 def series(samples, problem, thinning=None):
     """
-    Creates and returns a plot of predicted time series for a given markov
+    Creates and returns a plot of predicted time series for a given list of
     `samples` and a single-series `problem`.
 
     Because this method runs simulations, it can take a considerable time to
@@ -314,8 +314,8 @@ def series(samples, problem, thinning=None):
     Arguments:
 
     `samples`
-        A markov chain of shape `(samples, dimension)`, where `samples` is the
-        number of samples in the chain and `dimension` is the number of
+        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
+        the number of samples in the chain and `dimension` is the number of
         parameters.
     `problem`
         A :class:`pints.SingleSeriesProblem` of a dimension equal to or greater
@@ -391,8 +391,8 @@ def pairwise(samples, kde=False, opacity=None, true_values=None):
     Arguments:
 
     `samples`
-        A markov chain of shape `(samples, dimension)`, where `samples` is the
-        number of samples in the chain and `dimension` is the number of
+        A markov chain of shape `(n_samples, dimension)`, where `n_samples` is
+        the number of samples in the chain and `dimension` is the number of
         parameters.
     `kde`
         Set to `True` to use kernel-density estimation for the histograms and
