@@ -180,8 +180,9 @@ def histogram(samples, ref_parameters=None):
         `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
         lists of samples, `n_samples` is the number of samples in one list and
         `dimension` is the number of parameters.
-    `*args`
-        Additional chains can be added after the initial argument.
+    `ref_parameters`
+        A set of parameters for reference in the plot. For example, if true
+        values of parameters are known, they can be passed in for plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -209,7 +210,7 @@ def histogram(samples, ref_parameters=None):
     return fig, axes
 
 
-def trace(samples, *args):
+def trace(samples, ref_parameters=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms and traces for each chain or list of
@@ -222,8 +223,9 @@ def trace(samples, *args):
         `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
         lists of samples, `n_samples` is the number of samples in one list and
         `dimension` is the number of parameters.
-    `*args`
-        Additional chains can be added after the initial argument.
+    `ref_parameters`
+        A set of parameters for reference in the plot. For example, if true
+        values of parameters are known, they can be passed in for plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
