@@ -194,6 +194,13 @@ def histogram(samples, ref_parameters=None):
     alpha = 0.5
     n_list, n_sample, n_param = samples.shape
 
+    # Check reference parameters
+    if ref_parameters is not None:
+        if len(ref_parameters) != n_param:
+            raise ValueError(
+                'Length of `ref_parameters` must be same as number of'
+                ' parameters')
+
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
     for i in range(n_param):
@@ -203,6 +210,15 @@ def histogram(samples, ref_parameters=None):
             axes[i].set_ylabel('Frequency')
             axes[i].hist(samples_j[:, i], bins=bins, alpha=alpha, 
                 label='Samples ' + str(1 + j_list))
+
+        # Add reference parameters if given
+        if ref_parameters is not None:
+            # For histogram subplot
+            ymin_tv, ymax_tv = axes[i].get_ylim()
+            axes[i].plot(
+                [ref_parameters[i], ref_parameters[i]],
+                [0.0, ymax_tv],
+                '--', c='k')
     if n_list > 1:
         axes[0, 0].legend()
 
@@ -237,6 +253,13 @@ def trace(samples, ref_parameters=None):
     alpha = 0.5
     n_list, n_sample, n_param = samples.shape
 
+    # Check reference parameters
+    if ref_parameters is not None:
+        if len(ref_parameters) != n_param:
+            raise ValueError(
+                'Length of `ref_parameters` must be same as number of'
+                ' parameters')
+
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
     for i in range(n_param):
@@ -251,6 +274,22 @@ def trace(samples, ref_parameters=None):
             axes[i, 1].set_xlabel('Iteration')
             axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
+
+        # Add reference parameters if given
+        if ref_parameters is not None:
+            # For histogram subplot
+            ymin_tv, ymax_tv = axes[i, 0].get_ylim()
+            axes[i, 0].plot(
+                [ref_parameters[i], ref_parameters[i]],
+                [0.0, ymax_tv],
+                '--', c='k')
+
+            # For trace subplot
+            xmin_tv, xmax_tv = axes[i, 1].get_xlim()
+            axes[i, 1].plot(
+                [0.0, xmax_tv],
+                [ref_parameters[i], ref_parameters[i]],
+                '--', c='k')
     if n_list > 1:
         axes[0, 0].legend()
 
@@ -404,7 +443,7 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     # Check samples size
     n_sample, n_param = samples.shape
 
-    # Check true values
+    # Check reference parameters
     if ref_parameters is not None:
         if len(ref_parameters) != n_param:
             raise ValueError(
@@ -431,7 +470,7 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
                     x = np.linspace(xmin, xmax, 100)
                     axes[i, j].plot(x, stats.gaussian_kde(samples[:, i])(x))
 
-                # Add true values
+                # Add reference parameters if given
                 if ref_parameters is not None:
                     ymin_tv, ymax_tv = axes[i, j].get_ylim()
                     axes[i, j].plot(
@@ -465,7 +504,7 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
                     axes[i, j].scatter(
                         samples[:, j], samples[:, i], alpha=opacity, s=0.1)
 
-                    # Add true values if given
+                    # Add reference parameters if given
                     if ref_parameters is not None:
                         axes[i, j].plot(
                             [ref_parameters[j], ref_parameters[j]],
@@ -494,7 +533,7 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
                     axes[i, j].contourf(xx, yy, f, cmap='Blues')
                     axes[i, j].contour(xx, yy, f, colors='k')
 
-                    # Add true values if given
+                    # Add reference parameters if given
                     if ref_parameters is not None:
                         axes[i, j].plot(
                             [ref_parameters[j], ref_parameters[j]],
