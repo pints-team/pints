@@ -192,6 +192,7 @@ def histogram(samples, ref_parameters=None):
     # arguments
     bins = 40
     alpha = 0.5
+    samples = np.array(samples)  # try to handle numpy array only
     n_list, n_sample, n_param = samples.shape
 
     # Check reference parameters
@@ -251,6 +252,7 @@ def trace(samples, ref_parameters=None):
     # arguments
     bins = 40
     alpha = 0.5
+    samples = np.array(samples)  # try to handle numpy array only
     n_list, n_sample, n_param = samples.shape
 
     # Check reference parameters
