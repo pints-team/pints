@@ -192,8 +192,15 @@ def histogram(samples, ref_parameters=None):
     # arguments
     bins = 40
     alpha = 0.5
-    samples = np.array(samples)  # try to handle numpy array only
-    n_list, n_sample, n_param = samples.shape
+    n_list = len(samples)
+    _, n_param = samples[0].shape
+
+    # Check number of parameters
+    for samples_j in samples:
+        if n_param != samples_j.shape[1]:
+            raise ValueError(
+                'All samples must have the same number of parameters'
+            )
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -252,8 +259,15 @@ def trace(samples, ref_parameters=None):
     # arguments
     bins = 40
     alpha = 0.5
-    samples = np.array(samples)  # try to handle numpy array only
-    n_list, n_sample, n_param = samples.shape
+    n_list = len(samples)
+    _, n_param = samples[0].shape
+
+    # Check number of parameters
+    for samples_j in samples:
+        if n_param != samples_j.shape[1]:
+            raise ValueError(
+                'All samples must have the same number of parameters'
+            )
 
     # Check reference parameters
     if ref_parameters is not None:
