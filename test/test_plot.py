@@ -243,6 +243,9 @@ class TestPlot(unittest.TestCase):
         # Test opacity gives no error
         pints.plot.pairwise(few_samples, opacity=0.2)
 
+        # Test n_percentiles gives no error
+        pints.plot.pairwise(few_samples, n_percentiles=50)
+
         # Check invalid input of samples
         self.assertRaises(
             ValueError, pints.plot.pairwise, self.samples

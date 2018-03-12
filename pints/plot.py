@@ -336,7 +336,7 @@ def autocorrelation(samples, max_lags=100):
     # Check samples size
     try:
         n_sample, n_param = samples.shape
-    except AttributeError, ValueError:
+    except ValueError:
         raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
@@ -388,7 +388,7 @@ def series(samples, problem, thinning=None):
     # Check samples size
     try:
         n_sample, n_param = samples.shape
-    except AttributeError, ValueError:
+    except ValueError:
         raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     # Get problem dimension
@@ -439,7 +439,8 @@ def series(samples, problem, thinning=None):
 def pairwise(samples,
              kde=False,
              opacity=None,
-             ref_parameters=None):
+             ref_parameters=None,
+             n_percentiles=None):
     """
     Takes a markov chain or list of `samples` and creates a set of pairwise
     scatterplots for all parameters (p1 versus p2, p1 versus p3, p2 versus p3,
@@ -456,14 +457,18 @@ def pairwise(samples,
         `n_samples` is the number of samples in the list and `dimension` is
         the number of parameters.
     `kde`
-        Set to `True` to use kernel-density estimation for the histograms and
-        scatter plots.
+        (Optional) Set to `True` to use kernel-density estimation for the
+        histograms and scatter plots.
     `opacity`
-        When `kde=False`, this value can be used to manually set the opacity of
-        the points in the scatter plots.
+        (Optional) When `kde=False`, this value can be used to manually set
+        the opacity of the points in the scatter plots.
     `ref_parameters`
-        A set of parameters for reference in the plot. For example, if true
-        values of parameters are known, they can be passed in for plotting.
+        (Optional) A set of parameters for reference in the plot. For example,
+        if true values of parameters are known, they can be passed in for
+        plotting.
+    `n_percentiles`
+        (Optional) Shows only the middle n-th percentiles of the distribution.
+        Default shows all samples in `samples`.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -472,7 +477,7 @@ def pairwise(samples,
     # Check samples size
     try:
         n_sample, n_param = samples.shape
-    except AttributeError, ValueError:
+    except ValueError:
         raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     # Check reference parameters
@@ -492,7 +497,13 @@ def pairwise(samples,
             if i == j:
 
                 # Diagonal: Plot a histogram
-                xmin, xmax = np.min(samples[:, i]), np.max(samples[:, i])
+                if n_percentiles is None:
+                    xmin, xmax = np.min(samples[:, i]), np.max(samples[:, i])
+                else:
+                    xmin = np.percentile(samples[:, i],
+                                         50 - n_percentiles / 2.)
+                    xmax = np.percentile(samples[:, i],
+                                         50 + n_percentiles / 2.)
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].set_xlim(xmin, xmax)
                 axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
@@ -516,8 +527,18 @@ def pairwise(samples,
 
             else:
                 # Lower-left: Plot the samples as density map
-                xmin, xmax = np.min(samples[:, j]), np.max(samples[:, j])
-                ymin, ymax = np.min(samples[:, i]), np.max(samples[:, i])
+                if n_percentiles is None:
+                    xmin, xmax = np.min(samples[:, j]), np.max(samples[:, j])
+                    ymin, ymax = np.min(samples[:, i]), np.max(samples[:, i])
+                else:
+                    xmin = np.percentile(samples[:, j],
+                                         50 - n_percentiles / 2.)
+                    xmax = np.percentile(samples[:, j],
+                                         50 + n_percentiles / 2.)
+                    ymin = np.percentile(samples[:, i],
+                                         50 - n_percentiles / 2.)
+                    ymax = np.percentile(samples[:, i],
+                                         50 + n_percentiles / 2.)
                 axes[i, j].set_xlim(xmin, xmax)
                 axes[i, j].set_ylim(ymin, ymax)
 
