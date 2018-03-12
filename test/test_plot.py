@@ -9,10 +9,10 @@
 #
 import pints
 import pints.toy as toy
-import matplotlib
 import pints.plot
 import unittest
 import numpy as np
+import matplotlib
 
 # Avoid DISPLAY problem...
 matplotlib.use('Agg')
@@ -73,12 +73,14 @@ class TestPlot(unittest.TestCase):
         """
         Tests the function function.
         """
+        # Test it can plot without error
         pints.plot.function(self.log_posterior, self.real_parameters)
 
     def test_function_between_points(self):
         """
         Tests the function_between_points function.
         """
+        # Test it can plot without error
         pints.plot.function(self.log_posterior,
                             self.real_parameters * 0.8,
                             self.real_parameters * 1.2)
@@ -88,15 +90,47 @@ class TestPlot(unittest.TestCase):
         Tests the histogram function.
         """
         # Test it can plot without error
-        pints.plot.histogram(self.samples, ref_parameters=self.real_parameters)
+        fig, axes = pints.plot.histogram(self.samples,
+                                         ref_parameters=self.real_parameters)
+        # Check it returns matplotlib figure and axes
+        # self.assertIsInstance(axes, self.matplotlibAxesClass)
 
-        # Test compatible with one chain only
+        # Test compatiblity with one chain only
         pints.plot.histogram([self.samples[0]])
 
         # Check invalid ref_parameter input
         self.assertRaises(
             ValueError, pints.plot.histogram,
             self.samples, [self.real_parameters[0]]
+        )
+
+    def test_trace(self):
+        """
+        Tests the trace function.
+        """
+        # Test it can plot without error
+        fig, axes = pints.plot.trace(self.samples,
+                                     ref_parameters=self.real_parameters)
+
+        # Test compatiblity with one chain only
+        pints.plot.trace([self.samples[0]])
+
+        # Check invalid ref_parameter input
+        self.assertRaises(
+            ValueError, pints.plot.trace,
+            self.samples, [self.real_parameters[0]]
+        )
+
+    def test_autocorrelation(self):
+        """
+        Tests the autocorrelation function.
+        """
+        # Test it can plot without error
+        pints.plot.autocorrelation(self.samples[0], max_lags=20)
+
+        # Check invalid input of samples
+        self.assertRaises(
+            ValueError, pints.plot.autocorrelation, self.samples
         )
 
 
