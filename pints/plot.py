@@ -331,7 +331,11 @@ def autocorrelation(samples, max_lags=100):
     """
     import matplotlib.pyplot as plt
 
-    n_sample, n_param = samples.shape
+    # Check samples size
+    try:
+        n_sample, n_param = samples.shape
+    except AttributeError, ValueError:
+        raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     for i in range(n_param):
@@ -379,7 +383,11 @@ def series(samples, problem, thinning=None):
     """
     import matplotlib.pyplot as plt
 
-    n_sample, n_param = samples.shape
+    # Check samples size
+    try:
+        n_sample, n_param = samples.shape
+    except AttributeError, ValueError:
+        raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     # Get problem dimension
     dimension = problem.dimension()
@@ -457,7 +465,10 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
     import matplotlib.pyplot as plt
 
     # Check samples size
-    n_sample, n_param = samples.shape
+    try:
+        n_sample, n_param = samples.shape
+    except AttributeError, ValueError:
+        raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     # Check reference parameters
     if ref_parameters is not None:
