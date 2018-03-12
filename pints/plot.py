@@ -224,9 +224,9 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
                 xmin = np.min(samples_j[:, i])
                 xmax = np.max(samples_j[:, i])
             else:
-                xmin = np.percentile(samples[:, i],
+                xmin = np.percentile(samples_j[:, i],
                                      50 - n_percentiles / 2.)
-                xmax = np.percentile(samples[:, i],
+                xmax = np.percentile(samples_j[:, i],
                                      50 + n_percentiles / 2.)
             xbins = np.linspace(xmin, xmax, bins)
             axes[i].hist(samples_j[:, i], bins=xbins, alpha=alpha,
@@ -305,9 +305,9 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
                 xmin = np.min(samples_j[:, i])
                 xmax = np.max(samples_j[:, i])
             else:
-                xmin = np.percentile(samples[:, i],
+                xmin = np.percentile(samples_j[:, i],
                                      50 - n_percentiles / 2.)
-                xmax = np.percentile(samples[:, i],
+                xmax = np.percentile(samples_j[:, i],
                                      50 + n_percentiles / 2.)
             xbins = np.linspace(xmin, xmax, bins)
             axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
@@ -317,6 +317,8 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
             axes[i, 1].set_xlabel('Iteration')
             axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
+
+            # Set ylim
             ymin_all = ymin_all if ymin_all < xmin else xmin
             ymax_all = ymax_all if ymax_all > xmax else xmax
         axes[i, 1].set_ylim([ymin_all, ymax_all])
