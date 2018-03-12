@@ -112,7 +112,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
         Two points in parameter space. The method will find a line from
         ``point_1`` to ``point_2`` and plot ``f`` at several points along it.
     ``padding``
-        Specifies the amount of padding around the line segment
+        (Optional) Specifies the amount of padding around the line segment
         ``[point_1, point_2]`` that will be shown in the plot.
     ``evaluations``
         (Optional) The number of evaluation along the line in parameter space.
@@ -181,8 +181,9 @@ def histogram(samples, ref_parameters=None):
         lists of samples, `n_samples` is the number of samples in one list and
         `dimension` is the number of parameters.
     `ref_parameters`
-        A set of parameters for reference in the plot. For example, if true
-        values of parameters are known, they can be passed in for plotting.
+        (Optional) A set of parameters for reference in the plot. For example,
+        if true values of parameters are known, they can be passed in for
+        plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -248,8 +249,9 @@ def trace(samples, ref_parameters=None):
         lists of samples, `n_samples` is the number of samples in one list and
         `dimension` is the number of parameters.
     `ref_parameters`
-        A set of parameters for reference in the plot. For example, if true
-        values of parameters are known, they can be passed in for plotting.
+        (Optional) A set of parameters for reference in the plot. For example,
+        if true values of parameters are known, they can be passed in for
+        plotting.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -434,7 +436,10 @@ def series(samples, problem, thinning=None):
     return fig, axes
 
 
-def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
+def pairwise(samples,
+             kde=False,
+             opacity=None,
+             ref_parameters=None):
     """
     Takes a markov chain or list of `samples` and creates a set of pairwise
     scatterplots for all parameters (p1 versus p2, p1 versus p3, p2 versus p3,
