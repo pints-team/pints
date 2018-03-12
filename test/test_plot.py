@@ -168,6 +168,7 @@ class TestPlot(unittest.TestCase):
         """
         Tests the histogram function.
         """
+        few_samples = self.samples[:, ::10, :]
         # Test it can plot without error
         fig, axes = pints.plot.histogram(self.samples,
                                          ref_parameters=self.real_parameters)
@@ -176,6 +177,9 @@ class TestPlot(unittest.TestCase):
 
         # Test compatiblity with one chain only
         pints.plot.histogram([self.samples[0]])
+
+        # Check n_percentiles gives no error
+        pints.plot.histogram(few_samples, n_percentiles=50)
 
         # Check invalid ref_parameter input
         self.assertRaises(
@@ -187,12 +191,16 @@ class TestPlot(unittest.TestCase):
         """
         Tests the trace function.
         """
+        few_samples = self.samples[:, ::10, :]
         # Test it can plot without error
         fig, axes = pints.plot.trace(self.samples,
                                      ref_parameters=self.real_parameters)
 
         # Test compatiblity with one chain only
         pints.plot.trace([self.samples[0]])
+
+        # Check n_percentiles gives no error
+        pints.plot.trace(few_samples, n_percentiles=50)
 
         # Check invalid ref_parameter input
         self.assertRaises(

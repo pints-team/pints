@@ -168,7 +168,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(samples, ref_parameters=None):
+def histogram(samples, ref_parameters=None, n_percentiles=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms for each chain or list of samples.
@@ -184,6 +184,9 @@ def histogram(samples, ref_parameters=None):
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
+    `n_percentiles`
+        (Optional) Shows only the middle n-th percentiles of the distribution.
+        Default shows all samples in `samples`.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -217,7 +220,16 @@ def histogram(samples, ref_parameters=None):
             # Add histogram subplot
             axes[i].set_xlabel('Parameter ' + str(i + 1))
             axes[i].set_ylabel('Frequency')
-            axes[i].hist(samples_j[:, i], bins=bins, alpha=alpha,
+            if n_percentiles is None:
+                xmin = np.min(samples_j[:, i])
+                xmax = np.max(samples_j[:, i])
+            else:
+                xmin = np.percentile(samples[:, i],
+                                     50 - n_percentiles / 2.)
+                xmax = np.percentile(samples[:, i],
+                                     50 + n_percentiles / 2.)
+            xbins = np.linspace(xmin, xmax, bins)
+            axes[i].hist(samples_j[:, i], bins=xbins, alpha=alpha,
                          label='Samples ' + str(1 + j_list))
 
         # Add reference parameters if given
@@ -235,7 +247,7 @@ def histogram(samples, ref_parameters=None):
     return fig, axes
 
 
-def trace(samples, ref_parameters=None):
+def trace(samples, ref_parameters=None, n_percentiles=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms and traces for each chain or list of
@@ -252,6 +264,9 @@ def trace(samples, ref_parameters=None):
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
+    `n_percentiles`
+        (Optional) Shows only the middle n-th percentiles of the distribution.
+        Default shows all samples in `samples`.
 
     Returns a `matplotlib` figure object and axes handle.
     """
@@ -281,17 +296,30 @@ def trace(samples, ref_parameters=None):
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
     for i in range(n_param):
+        ymin_all, ymax_all = np.inf, -np.inf
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
             axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
             axes[i, 0].set_ylabel('Frequency')
-            axes[i, 0].hist(samples_j[:, i], bins=bins, alpha=alpha,
+            if n_percentiles is None:
+                xmin = np.min(samples_j[:, i])
+                xmax = np.max(samples_j[:, i])
+            else:
+                xmin = np.percentile(samples[:, i],
+                                     50 - n_percentiles / 2.)
+                xmax = np.percentile(samples[:, i],
+                                     50 + n_percentiles / 2.)
+            xbins = np.linspace(xmin, xmax, bins)
+            axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
                             label='Samples ' + str(1 + j_list))
 
             # Add trace subplot
             axes[i, 1].set_xlabel('Iteration')
             axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
+            ymin_all = ymin_all if ymin_all < xmin else xmin
+            ymax_all = ymax_all if ymax_all > xmax else xmax
+        axes[i, 1].set_ylim([ymin_all, ymax_all])
 
         # Add reference parameters if given
         if ref_parameters is not None:
