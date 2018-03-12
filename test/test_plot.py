@@ -50,7 +50,7 @@ class TestPlot(unittest.TestCase):
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
             self.log_likelihood, self.log_prior)
-        
+
         # Run MCMC
         self.x0 = [
             self.real_parameters * 1.1,
@@ -58,7 +58,7 @@ class TestPlot(unittest.TestCase):
             self.real_parameters * 1.05
         ]
         mcmc = pints.MCMCSampling(self.log_posterior, 3, self.x0,
-                                          method=pints.AdaptiveCovarianceMCMC)
+                                  method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(300)  # make it as small as possible
         self.samples = mcmc.run()
 
@@ -67,7 +67,6 @@ class TestPlot(unittest.TestCase):
         Tests the function function.
         """
         pints.plot.function(self.log_posterior, self.real_parameters)
-
 
     def test_function_between_points(self):
         """
