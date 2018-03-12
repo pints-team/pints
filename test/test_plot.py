@@ -9,11 +9,13 @@
 #
 import pints
 import pints.toy as toy
-import matplotlib  # avoid screen problem...
-matplotlib.use('Agg')
+import matplotlib
 import pints.plot
 import unittest
 import numpy as np
+
+# Avoid DISPLAY problem...
+matplotlib.use('Agg')
 
 debug = False
 
@@ -87,9 +89,9 @@ class TestPlot(unittest.TestCase):
         """
         # Test it can plot without error
         pints.plot.histogram(self.samples, ref_parameters=self.real_parameters)
-        
+
         # Test compatible with one chain only
-        pints.plot.histogram([self.samples[0]], ref_parameters=self.real_parameters)
+        pints.plot.histogram([self.samples[0]])
 
         # Check invalid ref_parameter input
         self.assertRaises(
