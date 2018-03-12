@@ -605,4 +605,3 @@ def pairwise(samples, kde=False, opacity=None, ref_parameters=None):
             axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
     return fig, axes
-

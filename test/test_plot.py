@@ -45,9 +45,11 @@ class TestPlot(unittest.TestCase):
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
+        self.lower = [0.01, 400, self.noise * 0.1]
+        self.upper = [0.02, 600, self.noise * 100]
         self.log_prior = pints.UniformLogPrior(
-            [0.01, 400, self.noise * 0.1],
-            [0.02, 600, self.noise * 100]
+            self.lower,
+            self.upper
         )
 
         # Create a log likelihood
@@ -76,14 +78,91 @@ class TestPlot(unittest.TestCase):
         # Test it can plot without error
         pints.plot.function(self.log_posterior, self.real_parameters)
 
+        # Check lower and upper bounds input gives no error
+        pints.plot.function(self.log_posterior, self.real_parameters,
+                            self.lower, self.upper)
+
+        # Check evaluations gives no error
+        pints.plot.function(self.log_posterior, self.real_parameters,
+                            evaluations=5)
+
+        # Check invalid function input
+        self.assertRaises(
+            ValueError, pints.plot.function, self.real_parameters,
+            self.real_parameters
+        )
+
+        # Check invalid dimension input
+        self.assertRaises(
+            ValueError, pints.plot.function, self.log_posterior,
+            list(self.real_parameters) + [0]
+        )
+
+        # Check invalid evaluations input
+        self.assertRaises(
+            ValueError, pints.plot.function, self.log_posterior,
+            self.real_parameters, evaluations=-1
+        )
+
     def test_function_between_points(self):
         """
         Tests the function_between_points function.
         """
         # Test it can plot without error
-        pints.plot.function(self.log_posterior,
-                            self.real_parameters * 0.8,
-                            self.real_parameters * 1.2)
+        pints.plot.function_between_points(self.log_posterior,
+                                           self.real_parameters * 0.8,
+                                           self.real_parameters * 1.2)
+
+        # Check the two points are reversible
+        pints.plot.function_between_points(self.log_posterior,
+                                           self.real_parameters * 1.2,
+                                           self.real_parameters * 0.8)
+
+        # Check padding gives no error
+        pints.plot.function_between_points(self.log_posterior,
+                                           self.real_parameters * 0.8,
+                                           self.real_parameters * 1.2,
+                                           padding=0.5)
+
+        # Check evaluations gives no error
+        pints.plot.function_between_points(self.log_posterior,
+                                           self.real_parameters * 0.8,
+                                           self.real_parameters * 1.2,
+                                           evaluations=5)
+
+        # Check invalid function input
+        self.assertRaises(
+            ValueError, pints.plot.function_between_points,
+            self.real_parameters,
+            self.real_parameters * 1.2,
+            self.real_parameters * 0.8
+        )
+
+        # Check invalid dimension input
+        self.assertRaises(
+            ValueError, pints.plot.function_between_points,
+            self.log_posterior,
+            list(self.real_parameters) + [0],
+            self.real_parameters * 0.8
+        )
+
+        # Check invalid padding input
+        self.assertRaises(
+            ValueError, pints.plot.function_between_points,
+            self.log_posterior,
+            self.real_parameters * 1.2,
+            self.real_parameters * 0.8,
+            padding=-1
+        )
+
+        # Check invalid evaluations input
+        self.assertRaises(
+            ValueError, pints.plot.function_between_points,
+            self.log_posterior,
+            self.real_parameters * 1.2,
+            self.real_parameters * 0.8,
+            evaluations=-1
+        )
 
     def test_histogram(self):
         """
@@ -131,6 +210,42 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaises(
             ValueError, pints.plot.autocorrelation, self.samples
+        )
+
+    def test_series(self):
+        """
+        Tests the series function.
+        """
+        few_samples = self.samples[0][::30, :]
+        # Test it can plot without error
+        pints.plot.series(self.samples[0], self.problem)
+
+        # Test thinning gives no error
+        pints.plot.series(few_samples, self.problem, thinning=1)
+
+        # Check invalid input of samples
+        self.assertRaises(
+            ValueError, pints.plot.series, self.samples, self.problem
+        )
+
+    def test_pairwise(self):
+        """
+        Tests the pairwise function.
+        """
+        few_samples = self.samples[0][::30, :]
+        # Test it can plot without error
+        pints.plot.pairwise(self.samples[0],
+                            ref_parameters=self.real_parameters)
+
+        # Test kde gives no error
+        pints.plot.pairwise(few_samples, kde=True)
+
+        # Test opacity gives no error
+        pints.plot.pairwise(few_samples, opacity=0.2)
+
+        # Check invalid input of samples
+        self.assertRaises(
+            ValueError, pints.plot.pairwise, self.samples
         )
 
 
