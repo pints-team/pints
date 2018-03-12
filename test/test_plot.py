@@ -9,6 +9,8 @@
 #
 import pints
 import pints.toy as toy
+import matplotlib  # avoid screen problem...
+matplotlib.use('Agg')
 import pints.plot
 import unittest
 import numpy as np
@@ -20,7 +22,9 @@ class TestPlot(unittest.TestCase):
     """
     Tests Pints plot methods.
     """
-    def __init__(self):
+    def __init__(self, name):
+        super(TestPlot, self).__init__(name)
+
         # Create toy model
         self.model = toy.LogisticModel()
         self.real_parameters = [0.015, 500]
@@ -60,6 +64,7 @@ class TestPlot(unittest.TestCase):
         mcmc = pints.MCMCSampling(self.log_posterior, 3, self.x0,
                                   method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(300)  # make it as small as possible
+        mcmc.set_log_to_screen(False)
         self.samples = mcmc.run()
 
     def test_function(self):
@@ -81,12 +86,15 @@ class TestPlot(unittest.TestCase):
         Tests the histogram function.
         """
         # Test it can plot without error
-        pints.plot.histogram(self.samples, ref_parameters=self.log_posterior)
+        pints.plot.histogram(self.samples, ref_parameters=self.real_parameters)
+        
+        # Test compatible with one chain only
+        pints.plot.histogram([self.samples[0]], ref_parameters=self.real_parameters)
 
         # Check invalid ref_parameter input
         self.assertRaises(
             ValueError, pints.plot.histogram,
-            self.samples, self.log_posterior[0]
+            self.samples, [self.real_parameters[0]]
         )
 
 

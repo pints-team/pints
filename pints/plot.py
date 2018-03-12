@@ -221,7 +221,7 @@ def histogram(samples, ref_parameters=None):
                 [0.0, ymax_tv],
                 '--', c='k')
     if n_list > 1:
-        axes[0, 0].legend()
+        axes[0].legend()
 
     plt.tight_layout()
     return fig, axes
