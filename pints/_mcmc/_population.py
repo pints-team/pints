@@ -25,16 +25,16 @@ class PopulationMCMC(pints.SingleChainMCMC):
     chains):
 
     1. Mutation: randomly select chain ``i`` and update the chain using a
-    Markov kernel that admits ``pi_i`` as its invariant distribution.
+    Markov kernel that admits ``p_i`` as its invariant distribution.
 
     2. Exchange: Select another chain ``j`` at random from the remaining and
     swap the parameter vector of ``i`` and ``j`` with probability
     ``min(1, A)``,
 
-    ``A = pi_i(x_j) * pi_j(x_i) / (pi_i(x_i) * pi_j(x_j))``
+    ``A = p_i(x_j) * p_j(x_i) / (p_i(x_i) * p_j(x_j))``
 
     where ``x_i`` and ``x_j`` are the current values of chains ``i`` and ``j``,
-    respectively, where ``pi_i = p(theta|data) ^ (1 - T_i)``, where
+    respectively, where ``p_i = p(theta|data) ^ (1 - T_i)``, where
     ``p(theta|data)`` is the target distribution and ``T_i`` is bounded between
     ``[0, 1]`` and represents a tempering parameter.
 
@@ -69,7 +69,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Temperature schedule
         self._schedule = None
-        self.set_schedule()
+        self.set_temperature_schedule()
 
         #
         # Logging
@@ -141,7 +141,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Population MCMC'
 
-    def schedule(self):
+    def temperature_schedule(self):
         """
         Returns the temperature schedule used in the tempering algorithm. Each
         temperature ``T`` pertains to particular chain whose stationary
@@ -155,7 +155,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """
         raise NotImplementedError
 
-    def set_schedule(self, schedule=10):
+    def set_temperature_schedule(self, schedule=10):
         """
         Sets a temperature schedule.
 
