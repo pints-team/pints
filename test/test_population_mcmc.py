@@ -65,8 +65,8 @@ class TestPopulationMCMC(unittest.TestCase):
 
         # Test schedule
         s = np.array([0, 0.1, 0.5])
-        mcmc.set_schedule(s)
-        self.assertTrue(np.all(s == mcmc.schedule()))
+        mcmc.set_temperature_schedule(s)
+        self.assertTrue(np.all(s == mcmc.temperature_schedule()))
 
         # Perform short run
         chain = []
@@ -89,18 +89,20 @@ class TestPopulationMCMC(unittest.TestCase):
     def test_errors(self):
 
         mcmc = pints.PopulationMCMC(self.real_parameters)
-        self.assertRaises(ValueError, mcmc.set_schedule, 1)
-        self.assertRaises(ValueError, mcmc.set_schedule, [0])
-        self.assertRaises(ValueError, mcmc.set_schedule, [0.5])
-        mcmc.set_schedule([0, 0.5])
-        self.assertRaises(ValueError, mcmc.set_schedule, [0.5, 0.5])
-        self.assertRaises(ValueError, mcmc.set_schedule, [0, -0.1])
-        self.assertRaises(ValueError, mcmc.set_schedule, [0, 1.1])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, 1)
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0.5])
+        mcmc.set_temperature_schedule([0, 0.5])
+        self.assertRaises(
+            ValueError, mcmc.set_temperature_schedule, [0.5, 0.5])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0, -0.1])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0, 1.1])
 
         mcmc = pints.PopulationMCMC(self.real_parameters)
         mcmc._initialise()
         self.assertRaises(RuntimeError, mcmc._initialise)
-        self.assertRaises(RuntimeError, mcmc.set_schedule, [0, 0.1])
+        self.assertRaises(
+            RuntimeError, mcmc.set_temperature_schedule, [0, 0.1])
 
         mcmc = pints.PopulationMCMC(self.real_parameters)
         self.assertRaises(RuntimeError, mcmc.tell, 1)
