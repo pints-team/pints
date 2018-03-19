@@ -17,6 +17,7 @@ _COUNTER = 0
 _FLOAT = 1
 _INT = 2
 _TIME = 3
+_TEXT = 4
 
 
 class Logger(object):
@@ -84,7 +85,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name & width
         name = str(name)
@@ -124,7 +125,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Example: 5 digits => width 11
         # -1.234e-299
@@ -176,7 +177,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name & width
         name = str(name)
@@ -211,7 +212,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Example: 17 digits = width 25
         # -1.23456699999999992e-299
@@ -242,6 +243,41 @@ class Logger(object):
         # Return self to allow for chaining
         return self
 
+    def add_string(self, name, width, file_only=False):
+        """
+        Adds a field showing (at most ``width`` characters of) string values.
+
+        Arguments:
+
+        ``name``
+            This field's name. Will be displayed in the header.
+        ``width``
+            The maximum width for strings to display.
+        ``file_only``
+            If set to ``True``, this field will not be shown on screen.
+
+        Returns this :class:`Logger` object.
+        """
+        if self._have_logged:
+            raise RuntimeError('Cannot add fields after logging has started.')
+
+        # Check name, width
+        name = str(name)
+        width = int(width)
+
+        # Determine field width
+        width = max(len(name), width)
+
+        # Add field
+        f1 = f2 = None
+        self._field_names.append(name)
+        self._field_formats.append((width, _TEXT, f1, f2))
+        if not file_only:
+            self._stream_fields.append(len(self._field_names) - 1)
+
+        # Return self to allow for chaining
+        return self
+
     def add_time(self, name, file_only=False):
         """
         Adds a field showing a formatted time (given in seconds).
@@ -256,7 +292,7 @@ class Logger(object):
         Returns this :class:`Logger` object.
         """
         if self._have_logged:
-            raise ValueError('Cannot add fields after logging has started.')
+            raise RuntimeError('Cannot add fields after logging has started.')
 
         # Check name
         name = str(name)
@@ -320,6 +356,8 @@ class Logger(object):
                             x = '{:.17e}'.format(next(i))
                         elif dtype == _TIME:
                             x = str(next(i))
+                        elif dtype == _TEXT:
+                            x = '"' + str(next(i)) + '"'
                         else:
                             x = str(int(next(i)))
                         line.append(x)
@@ -354,6 +392,9 @@ class Logger(object):
                     x += ' ' * (width - len(x))
                 elif dtype == _TIME:
                     x = self._format_time(next(column))
+                elif dtype == _TEXT:
+                    x = str(next(column))[:width]
+                    x += ' ' * (width - len(x))
                 else:
                     x = f1.format(int(next(column)))
                 formatted_row.append(x)
@@ -386,7 +427,7 @@ class Logger(object):
         To obtain csv logs instead, set `csv=True`
         """
         if self._have_logged:
-            raise ValueError('Cannot configure after logging has started.')
+            raise RuntimeError('Cannot configure after logging has started.')
 
         if filename is None:
             self._filename = None
@@ -400,7 +441,7 @@ class Logger(object):
         to screen can be disabled by passing ``stream=None``.
         """
         if self._have_logged:
-            raise ValueError('Cannot configure after logging has started.')
+            raise RuntimeError('Cannot configure after logging has started.')
 
         self._stream = stream
 

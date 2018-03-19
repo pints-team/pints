@@ -228,6 +228,9 @@ class TestMCMCSampling(unittest.TestCase):
                     pass
             self.assertEqual(capture.text(), '')
 
+        # Invalid log rate
+        self.assertRaises(ValueError, mcmc.set_log_rate, 0)
+
     def test_adaptation(self):
 
         # 2 chains

@@ -37,7 +37,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Current point and proposed point
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdf = None
         self._proposed = None
 
         # Default settings
@@ -171,6 +171,28 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Return new point for chain
         return self._current
+
+    def replace(self, x, fx):
+        """ See :meth:`pints.SingleChainMCMC.replace()`. """
+        # Must already be running
+        if not self._running:
+            raise RuntimeError(
+                'Replace can only be used when already running.')
+
+        # Must be after tell, before ask
+        if self._proposed is not None:
+            raise RuntimeError(
+                'Replace can only be called after tell / before ask.')
+
+        # Check values
+        x = pints.vector(x)
+        if not len(x) == len(self._current):
+            raise ValueError('Dimension mismatch in `x`.')
+        fx = float(fx)
+
+        # Store
+        self._current = x
+        self._current_log_pdf = fx
 
     def set_target_acceptance_rate(self, rate=0.3):
         """

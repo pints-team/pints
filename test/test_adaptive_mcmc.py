@@ -81,6 +81,18 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertEqual(rate.shape[0], 100)
         #TODO: Add more stringent test
 
+    def test_replace(self):
+
+        x0 = self.real_parameters * 1.1
+        mcmc = pints.AdaptiveCovarianceMCMC(x0)
+        self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+        mcmc.ask()
+        self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+        mcmc.tell(0.5)
+        mcmc.replace([1, 2, 3], 10)
+        mcmc.replace([1, 2, 3], 10)
+        self.assertRaises(ValueError, mcmc.replace, [1, 2], 1)
+
     def test_flow(self):
 
         # Test initial proposal is first point
