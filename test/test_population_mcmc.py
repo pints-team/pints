@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the metropolis random walk MCMC routine.
+# Tests the basic methods of the population MCMC routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,12 +15,12 @@ import numpy as np
 debug = False
 
 
-class TestMetropolisRandomWalkMCMC(unittest.TestCase):
+class TestPopulationMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the metropolis random walk MCMC routine.
+    Tests the basic methods of the population MCMC routine.
     """
     def __init__(self, name):
-        super(TestMetropolisRandomWalkMCMC, self).__init__(name)
+        super(TestPopulationMCMC, self).__init__(name)
 
         # Create toy model
         self.model = toy.LogisticModel()
@@ -56,10 +56,19 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+        mcmc = pints.PopulationMCMC(x0)
+
+        # Test logging
+        logger = pints.Logger()
+        logger.set_stream(None)
+        mcmc._log_init(logger)
+
+        # Test schedule
+        s = np.array([0, 0.1, 0.5])
+        mcmc.set_temperature_schedule(s)
+        self.assertTrue(np.all(s == mcmc.temperature_schedule()))
 
         # Perform short run
-        rate = []
         chain = []
         for i in range(100):
             x = mcmc.ask()
@@ -67,60 +76,36 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
             sample = mcmc.tell(fx)
             if i >= 50:
                 chain.append(sample)
-            rate.append(mcmc.acceptance_rate())
+            mcmc._log_write(logger)
         chain = np.array(chain)
-        rate = np.array(rate)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
-        self.assertEqual(rate.shape[0], 100)
+
+        # Test name
+        self.assertTrue('population' in mcmc.name().lower())
 
         #TODO: Add more stringent tests!
 
-    def test_replace(self):
+    def test_errors(self):
 
-        x0 = self.real_parameters * 1.1
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
-        mcmc.ask()
-        self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
-        mcmc.tell(0.5)
-        mcmc.replace([1, 2, 3], 10)
-        mcmc.replace([1, 2, 3], 10)
-        self.assertRaises(ValueError, mcmc.replace, [1, 2], 1)
+        mcmc = pints.PopulationMCMC(self.real_parameters)
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, 1)
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0.5])
+        mcmc.set_temperature_schedule([0, 0.5])
+        self.assertRaises(
+            ValueError, mcmc.set_temperature_schedule, [0.5, 0.5])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0, -0.1])
+        self.assertRaises(ValueError, mcmc.set_temperature_schedule, [0, 1.1])
 
-    def test_flow(self):
-
-        # Test initial proposal is first point
-        x0 = self.real_parameters
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        self.assertTrue(mcmc.ask() is mcmc._x0)
-
-        # Double initialisation
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        mcmc.ask()
+        mcmc = pints.PopulationMCMC(self.real_parameters)
+        mcmc._initialise()
         self.assertRaises(RuntimeError, mcmc._initialise)
+        self.assertRaises(
+            RuntimeError, mcmc.set_temperature_schedule, [0, 0.1])
 
-        # Tell without ask
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        self.assertRaises(RuntimeError, mcmc.tell, 0)
-
-        # Repeated asks should return same point
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        # Get nearer accepting state
-        for i in range(100):
-            mcmc.tell(self.log_posterior(mcmc.ask()))
-        x = mcmc.ask()
-        for i in range(10):
-            self.assertTrue(x is mcmc.ask())
-
-        # Repeated tells should fail
-        mcmc.tell(1)
+        mcmc = pints.PopulationMCMC(self.real_parameters)
         self.assertRaises(RuntimeError, mcmc.tell, 1)
-
-        # Bad starting point
-        mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
 
 if __name__ == '__main__':
