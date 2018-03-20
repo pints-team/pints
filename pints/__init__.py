@@ -38,7 +38,7 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, SingleSeriesProblem
+from ._core import ForwardModel, SingleSeriesProblem, MultiSeriesProblem
 
 #
 # Utility classes and methods
@@ -75,9 +75,9 @@ from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
     ScaledLogLikelihood,
     UnknownNoiseLogLikelihood,
-    SumOfIndependentLogLikelihoods,
+    UnKnownNoiseMvnLogLikelihood,
+    KnownNoiseMvnLogLikelihood
 )
-
 #
 # Boundaries
 #

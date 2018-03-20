@@ -44,11 +44,15 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._times = problem.times()
         self._values = problem.values()
         self._dimension = problem.dimension()
-
+        self._stateDimension = problem.stateDimension()
     def dimension(self):
         """ See :meth:`ErrorMeasure.dimension()`. """
         return self._dimension
-
+    def stateDimension(self):
+        """
+        Returns the dimension of the output response variable.
+        """
+        return self._stateDimension
 
 class ProbabilityBasedError(ErrorMeasure):
     """
@@ -185,10 +189,18 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
 class SumOfSquaresError(ProblemErrorMeasure):
     """
-    *Extends:* :class:`ProblemErrorMeasure`
+    *Extends:* :class:`ErrorMeasure`
 
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
     """
     def __call__(self, x):
-        return np.sum((self._problem.evaluate(x) - self._values)**2)
 
+        if self._stateDimension >= 2:
+            squareError = 0
+            solution = self._problem.evaluate(x)
+            for states in range(self._stateDimension):
+                squareError += np.sum((solution[:,states] - self._values[:,states])**2)
+        else:
+            squareError = np.sum((self._problem.evaluate(x) - self._values)**2)
+
+        return squareError

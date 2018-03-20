@@ -20,6 +20,8 @@ class LogisticModel(pints.ForwardModel):
 
     Has two parameters: A growth rate ``r`` and a carrying capacity ``k``.
     """
+    _stateDim = 1
+    _dimension = 2
     def __init__(self, initial_population_size=2):
         super(LogisticModel, self).__init__()
         self._p0 = float(initial_population_size)
@@ -28,7 +30,10 @@ class LogisticModel(pints.ForwardModel):
 
     def dimension(self):
         """ See :meth:`pints.ForwardModel.dimension()`. """
-        return 2
+        return self._dimension
+
+    def stateDimension(self):
+        return self._stateDim
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """

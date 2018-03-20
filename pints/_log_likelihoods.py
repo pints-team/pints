@@ -75,7 +75,68 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
             self._logn + self._size * np.log(x[-1])
             + np.sum(error**2) / (2 * x[-1]**2))
 
+class KnownNoiseMvnLogLikelihood(pints.LogLikelihood):
+    """
+    *Extends:* :class:`LogLikelihood`
 
+    Calculates a log-likelihood assuming independent normally-distributed noise
+    at each time point, using a known value for the standard deviation (sigma)
+    of that noise.
+    """
+    def __init__(self, problem, sigma):
+        super(KnownNoiseMvnLogLikelihood, self).__init__(problem)
+
+        self._stateDimension = problem.stateDimension()
+        self._size = len(self._times)
+
+        # Check sigma
+        self._sigma = float(sigma)
+        if self._sigma <= 0:
+            raise ValueError('Standard deviation must be greater than zero.')
+        # Calculate parts
+
+    def __call__(self, x):
+
+        mean = self._problem.evaluate(x)
+        covariance = np.eye(self._size)*self._sigma**2
+
+        assert(self._values.shape[1]==mean.shape[1])
+        assert(mean.shape[0] == covariance.shape[0] == covariance.shape[1])
+
+        logLik = 0
+        for states in range(self._stateDimension):
+            logLik += mvn.logpdf(self._values[:,states], mean = mean[:,states], cov = covariance)
+        return logLik
+class UnKnownNoiseMvnLogLikelihood(pints.LogLikelihood):
+    """
+    *Extends:* :class:`LogLikelihood`
+
+    Calculates a log-likelihood assuming independent normally-distributed noise
+    at each time point, using a known value for the standard deviation (sigma)
+    of that noise.
+    """
+    def __init__(self, problem):
+        super(KnownNoiseMvnLogLikelihood, self).__init__(problem)
+
+        self._stateDimension = problem.stateDimension()
+        self._size = len(self._times)
+        self._dimension = problem.dimension() + 1
+
+    def __call__(self, x):
+        # Check sigma
+        self._sigma = float(x[-1])
+        if self._sigma <= 0:
+            raise ValueError('Standard deviation must be greater than zero.')
+        mean = self._problem.evaluate(x[:-1])
+        covariance = np.eye(self._size)*self._sigma**2
+
+        assert(self._values.shape[1]==mean.shape[1])
+        assert(mean.shape[0] == covariance.shape[0] == covariance.shape[1])
+
+        logLik = 0
+        for states in range(self._stateDimension):
+            logLik += mvn.logpdf(self._values[:,states], mean = mean[:,states], cov = covariance)
+        return logLik
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
