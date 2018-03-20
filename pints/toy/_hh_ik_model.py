@@ -53,6 +53,8 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
     conduction and excitation in nerve
     Hodgkin, Huxley (1952d) Journal of Physiology
     """
+    _stateDim = 1
+    _dimension = 5    
     def __init__(self, initial_condition=0.3):
         super(HodgkinHuxleyIKModel, self).__init__()
 
@@ -104,8 +106,10 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
         return self._v_hold
 
     def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension()`. """
-        return 5
+        return self._dimension
+
+    def stateDimension(self):
+        return self._stateDim
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
@@ -183,4 +187,3 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
         """
         fs = 10
         return np.arange(self._duration * fs) / fs
-

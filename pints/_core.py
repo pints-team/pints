@@ -72,9 +72,10 @@ class SingleSeriesProblem(object):
         # Check model
         self._model = model
         self._dimension = model.dimension()
-
+        self._stateDimension = model.stateDimension()
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
+
         self._times = pints.vector(times)
         if np.any(self._times < 0):
             raise ValueError('Times cannot be negative.')
@@ -82,8 +83,12 @@ class SingleSeriesProblem(object):
             raise ValueError('Times must be non-decreasing.')
 
         # Check values, copy so that they can no longer be changed
-        self._values = pints.vector(values)
-        if len(self._times) != len(self._values):
+        if self._stateDimension >= 2:
+            self._values = np.array(values)
+        else:
+            self._values = pints.vector(values)
+
+        if self._times.shape[0] != self._values.shape[0]:
             raise ValueError('Times and values arrays must have same length.')
 
     def dimension(self):
@@ -91,7 +96,11 @@ class SingleSeriesProblem(object):
         Returns the dimensions of this problem.
         """
         return self._dimension
-
+    def stateDimension(self):
+        """
+        Returns the dimensions of the state space.
+        """
+        return self._stateDimension
     def evaluate(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
@@ -115,4 +124,15 @@ class SingleSeriesProblem(object):
         Returns this problem's values (as a read-only NumPy array).
         """
         return self._values
+class MultiSeriesProblem(SingleSeriesProblem):
 
+    def __init__(self, model, times, values):
+        SingleSeriesProblem.__init__(self, model, times, values)
+
+        if self._values.ndim != 2:
+            raise ValueError('The problem is single series.')
+    def stateDimension(self):
+        """
+        Returns the dimensions of this problem.
+        """
+        return self._stateDimension
