@@ -128,7 +128,6 @@ class TestLogLikelihood(unittest.TestCase):
         # Check if we get the right output
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
-
     def test_sum_of_independent_log_likelihoods(self):
         model = toy.LogisticModel()
         x = [0.015, 500]
