@@ -475,7 +475,7 @@ class Loggable(object):
 
     def _log_write(self, logger):
         """
-        Logs data for each of the fields specified in :meth:`_log_init`.
+        Logs data for each of the fields specified in :meth:`_log_init()`.
         """
         pass
 

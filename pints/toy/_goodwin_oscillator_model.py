@@ -14,6 +14,8 @@ import scipy
 
 class GoodwinOscillatorModel(pints.ForwardModel):
     """
+    *Extends:* :class:`pints.ForwardModel`.
+
     Three-state Goodwin oscillator toy model [1, 2].
 
     In this implementation of the model, only the last state is visible,
@@ -27,7 +29,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
     """
 
     def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension`. """
+        """ See :meth:`pints.ForwardModel.dimension()`. """
         return 5
 
     def _rhs(self, state, time, parameters):
@@ -42,7 +44,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         return dxdt, dydt, dzdt
 
     def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate`. """
+        """ See :meth:`pints.ForwardModel.simulate()`. """
         y0 = [0.0054, 0.053, 1.93]
         solution = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,))

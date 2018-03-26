@@ -149,7 +149,7 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
                     ' dimension.')
 
     def dimension(self):
-        """ See :meth:`LogPDF.dimension`. """
+        """ See :meth:`LogPDF.dimension()`. """
         return self._dimension
 
     def __call__(self, x):

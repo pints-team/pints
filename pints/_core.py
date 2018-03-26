@@ -61,7 +61,7 @@ class SingleSeriesProblem(object):
     ``model``
         A model or model wrapper extending :class:`ForwardModel`.
     ``times``
-        A sequence of points in time. See :meth:`model.simulate` for details.
+        A sequence of points in time. See :meth:`model.simulate()` for details.
     ``values``
         A sequence of measured (scalar) output values the model should match at
         the given ``times``.

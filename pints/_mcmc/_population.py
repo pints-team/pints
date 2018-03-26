@@ -125,14 +125,14 @@ class PopulationMCMC(pints.SingleChainMCMC):
         self._running = True
 
     def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init`. """
+        """ See :meth:`Loggable._log_init()`. """
         n = len(self._schedule)
         logger.add_counter('i', max_value=n)
         logger.add_counter('j', max_value=n)
         logger.add_string('Ex.', width=3)
 
     def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write`. """
+        """ See :meth:`Loggable._log_write()`. """
         logger.log(self._i)
         logger.log(self._j)
         logger.log('yes' if self._have_exchanged else 'no')

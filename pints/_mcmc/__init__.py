@@ -321,7 +321,7 @@ class MCMCSampling(object):
     def max_iterations(self):
         """
         Returns the maximum iterations if this stopping criterion is set, or
-        ``None`` if it is not. See :meth:`set_max_iterations`.
+        ``None`` if it is not. See :meth:`set_max_iterations()`.
         """
         return self._max_iterations
 
