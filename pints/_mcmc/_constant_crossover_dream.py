@@ -90,10 +90,16 @@ class DreamMCMC(pints.MultiChainMCMC):
         self._p_g = 0.2
 
         # Determines maximum delta to choose in sums
-        self._delta_max = 3
+        self._D = 3
+
+        # Constant crossover probability boolean
+        self._constant_crossover = False
 
         # Crossover probability for variable CR case
         self._nCR = 3
+
+        # Constant CR probability for constant CR probability
+        self._CR = 0.5
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -104,49 +110,16 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Propose new points
         if self._proposed is None:
 
-            for j in range(self._chains):
+            #TODO
 
-                # Select initial proposal
-
-                # Choose delta from [1, 2, ..., delta_max]
-                delta = 1 + np.random.randint(self._delta_max)
-
-                # Choose gamma
-                if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
-                else:
-                    gamma = 1
-
-                # Choose e
-                e = np.random.uniform(-self._b_star * mu, self._b_star * mu)
-
-                # Choose dX
-                dX = 0
-                for k in range(0, delta):
-                    r1, r2 = r_draw(j, self._num_chains)
-                    dX += (1 + e) * gamma * (self._current[r1] -
-                                             self._current[r2])
-
-                proposed = (self._current[j] + dX
-                            + np.random.normal(0, self._b * mu, len(mu)))
-
-                # Randomly set elements of proposal to original
-
-                # Select CR from multinomial distribution
-                m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
-                CR = (m + 1) / self._nCR)
-
-                if self._WARM_UP:
-                    self._L[m] += 1
-
-                #TODO: Rewrite as one-liner
-                for d in range(0, self._dimension):
-                    if 1 - CR > np.random.rand():
-                        proposed[j][d] = current[j][d]
-
-
-
-
+            #self._proposed = np.zeros(self._current.shape)
+            #for j in range(self._chains):
+            #    r1, r2 = r_draw(j, self._chains)
+            #    self._proposed[j] = (
+            #        self._current[j]
+            #        + self._gamma * (self._current[r1] - self._current[r2])
+            #        + np.random.normal(0, self._b * self._mu, self._mu.shape)
+            #    )
 
             # Set as read only
             self._proposed.setflags(write=False)
@@ -160,62 +133,64 @@ class DreamMCMC(pints.MultiChainMCMC):
         """See: :meth:`pints.MCMC.run()`."""
 
         # Initial starting parameters
-
-        #TODO: Where will we get mu? Mean of the given starting points???
         mu = self._x0
+        current = self._x0
+        current_log_pdf = self._log_pdf(current)
+        if not np.isfinite(current_log_pdf):
+            raise ValueError(
+                'Suggested starting position has a non-finite log-pdf.')
 
+        # chains of stored samples
+        chains = np.zeros(
+            (self._iterations, self._num_chains, self._dimension))
+        current_log_pdf = np.zeros(self._num_chains)
 
+        # Set initial values
+        for j in range(self._num_chains):
+            chains[0, j, :] = np.random.normal(
+                loc=mu, scale=mu / 100, size=len(mu))
+            current_log_pdf[j] = self._log_pdf(chains[0, j, :])
 
 
 
 
 
         # Go!
-        p = np.repeat(1 / self._nCR, self._nCR)
-        L = np.zeros(self._nCR)
-        Delta = np.zeros(self._nCR)
-
         for i in range(1, self._iterations):
-            # Warm-up
-            if i < self._warm_up:
-                for j in range(self._num_chains):
+            for j in range(self._num_chains):
+                # Step 1. Select (initial) proposal
+                delta = int(np.random.choice(self._D, 1)[0] + 1)
+                dX = 0
+                u1 = np.random.rand()
+                if self._p_g < u1:
+                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                else:
+                    gamma = 1.0
+                e = np.random.uniform(low=-self._b_star * mu,
+                                      high=self._b_star * mu)
+                for k in range(0, delta):
+                    r1, r2 = r_draw(j, self._num_chains)
+                    dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
+                                             chains[i - 1, r2, :])
+                proposed = (
+                    chains[i - 1, j, :] + dX
+                    + np.random.normal(loc=0, scale=self._b * mu, size=len(mu))
 
+                # Step 2. Randomly set elements of proposal to original
+                for d in range(0, self._dimension):
+                    u2 = np.random.rand()
+                    if 1 - self._CR > u2:
+                        proposed[d] = chains[i - 1, j, d]
 
-                    # Accept/reject
-                    u = np.log(np.random.rand())
-                    proposed_log_pdf = self._log_pdf(proposed)
+                # Accept/reject
+                u = np.log(np.random.rand())
+                proposed_log_pdf = self._log_pdf(proposed)
 
-                    if u < proposed_log_pdf - current_log_pdf[j]:
-                        chains[i, j, :] = proposed
-                        current_log_pdf[j] = proposed_log_pdf
-                    else:
-                        chains[i, j, :] = chains[i - 1, j, :]
-
-                    # Update CR distribution
-                    for d in range(0, self._dimension):
-                        Delta[m] += (
-                            (chains[i, j, d] - chains[i - 1, j, d])**2
-                            / np.var(chains[:, j, d])
-                        )
-                for k in range(0, self._nCR):
-                    p[k] = (i * self._num_chains * (Delta[k] / float(L[k]))
-                            / np.sum(Delta))
-                p = p / np.sum(p)
-
-            # After warm-up
-            else:
-                for j in range(self._num_chains):
-
-
-                    # Accept/reject
-                    u = np.log(np.random.rand())
-                    proposed_log_pdf = self._log_pdf(proposed)
-
-                    if u < proposed_log_pdf - current_log_pdf[j]:
-                        chains[i, j, :] = proposed
-                        current_log_pdf[j] = proposed_log_pdf
-                    else:
-                        chains[i, j, :] = chains[i - 1, j, :]
+                if u < proposed_log_pdf - current_log_pdf[j]:
+                    chains[i, j, :] = proposed
+                    current_log_pdf[j] = proposed_log_pdf
+                else:
+                    chains[i, j, :] = chains[i - 1, j, :]
 
 
 
@@ -236,6 +211,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         if gamma < 0:
             raise ValueError('Gamma must be non-negative.')
         self._gamma = gamma
+
 
 
 
