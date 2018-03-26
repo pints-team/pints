@@ -43,7 +43,7 @@ from ._core import ForwardModel, SingleSeriesProblem, MultiSeriesProblem
 #
 # Utility classes and methods
 #
-from ._util import strfloat, vector
+from ._util import strfloat, vector, matrix2d
 from ._util import Timer
 from ._logger import Logger, Loggable
 
