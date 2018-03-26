@@ -14,7 +14,7 @@ import numpy as np
 
 class RosenbrockError(pints.ErrorMeasure):
     """
-    *Extends:* :class:`ErrorMeasure`.
+    *Extends:* :class:`pints.ErrorMeasure`.
 
     Error measure based on the rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function):
@@ -28,7 +28,7 @@ class RosenbrockError(pints.ErrorMeasure):
         self._b = float(b)
 
     def dimension(self):
-        """ See: :meth:`ErrorMeasure.dimension()`. """
+        """ See :meth:`pints.ErrorMeasure.dimension()`. """
         return 2
 
     def optimum(self):
@@ -43,7 +43,7 @@ class RosenbrockError(pints.ErrorMeasure):
 
 class RosenbrockLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`LogPDF`.
+    *Extends:* :class:`pints.LogPDF`.
 
     Unnormalised LogPDF based on the Rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function):
@@ -56,7 +56,7 @@ class RosenbrockLogPDF(pints.LogPDF):
         self._f = RosenbrockError(a, b)
 
     def dimension(self):
-        """ See: :meth:`LogPDF.dimension()`. """
+        """ See :meth:`pints.LogPDF.dimension()`. """
         return self._f.dimension()
 
     def optimum(self):

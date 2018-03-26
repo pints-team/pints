@@ -15,7 +15,7 @@ import scipy.stats
 
 class MultimodalNormalLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`LogPDF`.
+    *Extends:* :class:`pints.LogPDF`.
 
     Multimodal (un-normalised) multivariate Normal distribution.
 
@@ -87,6 +87,6 @@ class MultimodalNormalLogPDF(pints.LogPDF):
         return -float('inf') if f == 0 else np.log(f)
 
     def dimension(self):
-        """ See: :meth:`LogPDF.dimension()`. """
+        """ See :meth:`pints.LogPDF.dimension()`. """
         return self._dimension
 

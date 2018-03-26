@@ -26,6 +26,10 @@ class ErrorMeasure(object):
         raise NotImplementedError
 
     def dimension(self):
+        """
+        Returns the dimension of the parameter space this measure is defined
+        over.
+        """
         raise NotImplementedError
 
 
@@ -42,7 +46,7 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._dimension = problem.dimension()
 
     def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension`. """
+        """ See :meth:`ErrorMeasure.dimension()`. """
         return self._dimension
 
 
@@ -61,7 +65,7 @@ class ProbabilityBasedError(ErrorMeasure):
         self._log_pdf = log_pdf
 
     def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension`. """
+        """ See :meth:`ErrorMeasure.dimension()`. """
         return self._log_pdf.dimension()
 
     def __call__(self, x):
@@ -137,7 +141,7 @@ class SumOfErrors(ErrorMeasure):
         self._weights = [float(w) for w in weights]
 
     def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension`. """
+        """ See :meth:`ErrorMeasure.dimension()`. """
         return self._dimension
 
     def __call__(self, x):

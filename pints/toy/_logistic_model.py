@@ -14,7 +14,9 @@ import pints
 
 class LogisticModel(pints.ForwardModel):
     """
-    Logistic model.
+    *Extends:* :class:`pints.ForwardModel`.
+
+    Simple logistic model implementation.
 
     Has two parameters: A growth rate ``r`` and a carrying capacity ``k``.
     """
@@ -25,9 +27,11 @@ class LogisticModel(pints.ForwardModel):
             raise ValueError('Population size cannot be negative.')
 
     def dimension(self):
+        """ See :meth:`pints.ForwardModel.dimension()`. """
         return 2
 
     def simulate(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulate()`. """
         r, k = [float(x) for x in parameters]
         times = np.asarray(times)
         if np.any(times < 0):

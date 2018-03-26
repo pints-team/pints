@@ -25,7 +25,8 @@ class LogPDF(object):
 
     def dimension(self):
         """
-        Returns the dimension this :class:`LogPDF` is defined over.
+        Returns the dimension of the space this :class:`LogPDF` is defined
+        over.
         """
         raise NotImplementedError
 
@@ -86,7 +87,7 @@ class ProblemLogLikelihood(LogLikelihood):
         self._dimension = problem.dimension()
 
     def dimension(self):
-        """ See :meth:`LogPDF.dimension`. """
+        """ See :meth:`LogPDF.dimension()`. """
         return self._dimension
 
 
@@ -143,6 +144,6 @@ class LogPosterior(LogPDF):
         return log_prior + self._log_likelihood(x)
 
     def dimension(self):
-        """ See :meth:`LogPDF.dimension`. """
+        """ See :meth:`LogPDF.dimension()`. """
         return self._dimension
 

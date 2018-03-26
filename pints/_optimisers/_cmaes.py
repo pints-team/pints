@@ -124,11 +124,11 @@ class CMAES(pints.PopulationBasedOptimiser):
         return 'Covariance Matrix Adaptation Evolution Strategy (CMA-ES)'
 
     def population_size(self):
-        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.population_size()`. """
         return self._population_size
 
     def set_population_size(self, population_size=None, parallel=False):
-        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.set_population_size()`. """
         if self._running:
             raise Exception('Cannot change settings during run.')
 
@@ -151,7 +151,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._population_size = population_size
 
     def stop(self):
-        """ See :meth:`Optimiser.stop`. """
+        """ See :meth:`Optimiser.stop()`. """
         if not self._running:
             return False
 
@@ -187,7 +187,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._es.tell(self._xs, fx)
 
     def xbest(self):
-        """ See :meth:`Optimiser.xbest`. """
+        """ See :meth:`Optimiser.xbest()`. """
         x = self._es.result.xbest
         return self._x0 if x is None else x
 
