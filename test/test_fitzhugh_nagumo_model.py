@@ -16,7 +16,6 @@ class TestFitzhughNagumoModel(unittest.TestCase):
     """
     Tests if the Fitzhugh-Nagumo toy model runs.
     """
-
     def test_run(self):
 
         model = pints.toy.FitzhughNagumoModel()
@@ -36,6 +35,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         # Test errors
         times = [-1, 2, 3, 4]
         self.assertRaises(ValueError, model.simulate, x, times)
+
 
 if __name__ == '__main__':
     unittest.main()
