@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests SingleSeriesProblem methods.
+# Tests MultiSeriesProblem methods.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,41 +15,45 @@ import numpy as np
 import unittest
 
 
-class TestSingleSeriesProblem(unittest.TestCase):
+class TestMultiSeriesProblem(unittest.TestCase):
     """
-    Tests SingleSeriesProblem methods.
+    Tests MultiSeriesProblem methods.
     """
     def test_basics(self):
 
-        model = pints.toy.LogisticModel()
+        model = pints.toy.FitzhughNagumoModel()
+        self.assertEqual(model.n_outputs(), 2)
+
         times = [0, 1, 2, 3]
-        x = [1, 1]
+        x = [1, 1, 1]
         values = model.simulate(x, times)
-        noisy = values + np.array([0.01, -0.01, 0.01, -0.01])
-        problem = pints.SingleSeriesProblem(model, times, noisy)
+        noisy = values + np.array([
+            [0.01, -0.02], [-0.01, -0.02], [-0.01, 0.02], [0.01, -0.02]])
+        problem = pints.MultiSeriesProblem(model, times, noisy)
 
         self.assertTrue(np.all(times == problem.times()))
         self.assertTrue(np.all(noisy == problem.values()))
         self.assertTrue(np.all(values == problem.evaluate(x)))
         self.assertEqual(problem.dimension(), model.dimension(), 2)
+        self.assertEqual(problem.dimension(), model.dimension(), 2)
+        self.assertEqual(problem.n_outputs(), model.n_outputs(), 3)
 
         # Test errors
         times[0] = -2
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.MultiSeriesProblem, model, times, values)
         times = [1, 2, 2, 1]
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.MultiSeriesProblem, model, times, values)
         times = [1, 2, 3]
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.MultiSeriesProblem, model, times, values)
 
-        # Multi-output problem not allowed
-        model = pints.toy.FitzhughNagumoModel()
-        self.assertEqual(model.n_outputs(), 2)
-        values = model.simulate([1, 1, 1], times)
-        self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+        # Single value model is fine too!
+        model = pints.toy.LogisticModel()
+        self.assertEqual(model.n_outputs(), 1)
+        values = model.simulate([1, 1], times)
+        pints.MultiSeriesProblem(model, times, values)
 
 
 if __name__ == '__main__':
