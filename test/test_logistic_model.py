@@ -57,6 +57,7 @@ class TestLogistic(unittest.TestCase):
         times = [0, -1, 2, 10000]
         parameters = [1, 0]
         self.assertRaises(ValueError, model.simulate, parameters, times)
+        self.assertRaises(ValueError, pints.toy.LogisticModel, -1)
 
 
 if __name__ == '__main__':

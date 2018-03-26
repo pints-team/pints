@@ -10,7 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy.stats import multivariate_normal as mvn
+from scipy.stats import multivariate_normal
 
 
 class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
@@ -20,9 +20,19 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
     of that noise.
+
+    This log-likelihood operates on
+    :class:`single-series problems<SingleSeriesProblem>`, for the
+    :class:`multi-series<MultiSeriesProblem>` equivalent, see
+    :class:`UnknownNoiseMvnLogLikelihood`.
     """
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
+
+        # Check problem
+        if not isinstance(problem, pints.SingleSeriesProblem):
+            raise ValueError(
+                'KnownNoiseLogLikelihood requires a single series problem.')
 
         # Check sigma
         self._sigma = float(sigma)
@@ -61,9 +71,19 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
+
+    This log-likelihood operates on
+    :class:`single-series problems<SingleSeriesProblem>`, for the
+    :class:`multi-series<MultiSeriesProblem>` equivalent, see
+    :class:`UnknownNoiseMvnLogLikelihood`.
     """
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
+
+        # Check problem
+        if not isinstance(problem, pints.SingleSeriesProblem):
+            raise ValueError(
+                'UnknownNoiseLogLikelihood requires a single series problem.')
 
         # Add sneaky parameter to end of list!
         self._dimension = problem.dimension() + 1
@@ -77,94 +97,113 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
             + np.sum(error**2) / (2 * x[-1]**2))
 
 
-class KnownNoiseMvnLogLikelihood(pints.LogLikelihood):
+class KnownMultivariateNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
 
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
     of that noise.
+
+    Arguments:
+
+    ``problem``
+        A :class:`MultiSeriesProblem`.
+    ``sigma``
+        The standard deviation of the noise. Can be a scalar (same noise level
+        on all outputs) or a sequence of ``n_outputs`` values (for varying
+        noise levels per output).
+
     """
     def __init__(self, problem, sigma):
-        super(KnownNoiseMvnLogLikelihood, self).__init__(problem)
+        super(KnownMultivariateNoiseLogLikelihood, self).__init__(problem)
 
+        # Check problem
+        if not isinstance(problem, pints.MultiSeriesProblem):
+            raise ValueError(
+                'KnownMultivariateNoiseLogLikelihood requires a multi series'
+                ' problem.')
         self._n_outputs = problem.n_outputs()
-        self._n_times = len(self._times)
 
         # Check sigma
-        self._sigma = float(sigma)
-        if self._sigma <= 0:
+        if np.isscalar(sigma):
+            sigma = np.ones(self._n_outputs) * float(sigma)
+        else:
+            sigma = pints.vector(sigma)
+            if len(sigma) != self._n_outputs:
+                raise ValueError(
+                    'Sigma must be a scalar or a vector of length n_outputs.')
+        if np.any(sigma <= 0):
             raise ValueError('Standard deviation must be greater than zero.')
-        # Calculate parts
+
+        # Create scipy multivariate_normal objects for each output
+        values = problem.values()
+        self._mvns = [
+            multivariate_normal(mean=values[:, i], cov=sigma[i]**2)
+            for i in range(self._n_outputs)]
 
     def __call__(self, x):
-
-        mean = self._problem.evaluate(x)
-        covariance = np.eye(self._n_times) * self._sigma**2
-
-        assert(self._values.shape[1] == mean.shape[1])
-        assert(mean.shape[0] == covariance.shape[0] == covariance.shape[1])
-
-        log_lik = 0
-        for i in range(self._n_outputs):
-            log_lik += mvn.logpdf(self._values[:, i], mean[:, i], covariance)
-        return log_lik
+        values = self._problem.evaluate(x)
+        return np.sum([
+            mvn.logpdf(values[:, i]) for i, mvn in enumerate(self._mvns)])
 
 
-class UnKnownNoiseMvnLogLikelihood(pints.LogLikelihood):
+class UnknownMultivariateNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
 
     Calculates a log-likelihood assuming independent normally-distributed noise
-    at each time point, using a known value for the standard deviation (sigma)
-    of that noise.
+    at each time point.
+    The standard deviations of the noise in each output (sigma1, sigma2, ...)
+    are inferred along with the remaining parameters.
+
     """
     def __init__(self, problem):
-        super(KnownNoiseMvnLogLikelihood, self).__init__(problem)
+        super(UnknownMultivariateNoiseLogLikelihood, self).__init__(problem)
 
-        self._n_times = len(self._times)
+        # Check problem
+        if not isinstance(problem, pints.MultiSeriesProblem):
+            raise ValueError(
+                'UnknownMultivariateNoiseLogLikelihood requires a multi series'
+                ' problem.')
         self._n_outputs = problem.n_outputs()
 
-        # Add parameter for noise
-        self._dimension = problem.dimension() + 1
+        # Add parameters for noise
+        self._dimension = problem.dimension() + self._n_outputs
 
     def __call__(self, x):
 
-        # Check sigma
-        self._sigma = float(x[-1])
-        if self._sigma <= 0:
-            raise ValueError('Standard deviation must be greater than zero.')
+        # Get mean by evaluating problem
+        mean = self._problem.evaluate(x[:-self._n_outputs])
 
-        mean = self._problem.evaluate(x[:-1])
-        covariance = np.eye(self._size) * self._sigma**2
+        # Get covariances from parameter vector
+        covariance = np.asarray(x[-self._n_outputs:]) ** 2
 
-        assert(self._values.shape[1] == mean.shape[1])
-        assert(mean.shape[0] == covariance.shape[0] == covariance.shape[1])
-
-        log_lik = 0
-        for i in range(self._n_outputs):
-            log_lik += mvn.logpdf(self._values[:, i], mean[:, i], covariance)
-        return log_lik
+        # Calculate and return
+        return np.sum([
+            multivariate_normal.logpdf(
+                self._values[:, i], mean[:, i], covariance[i])
+            for i in range(self._n_outputs)])
 
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
 
     Calculates a log-likelihood based on a (conditional) :class:`LogLikelihood`
     divided by the number of time samples
 
     The returned value will be ``(1/n) * log_likelihood(x|problem)``, where
-    ``n`` is the number of time samples
+    ``n`` is the number of time samples multiplied by the number of outputs.
     """
     def __init__(self, log_likelihood):
         # Check arguments
         if not isinstance(log_likelihood, pints.LogLikelihood):
             raise ValueError('Log_likelihood must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
-        self._size = len(log_likelihood._times)
         self._dimension = self._log_likelihood.dimension()
         self._problem = log_likelihood._problem
+        self._size = len(log_likelihood._times) * self._problem.n_outputs()
 
     def __call__(self, x):
         return self._log_likelihood(x) / self._size
