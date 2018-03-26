@@ -73,11 +73,13 @@ from ._log_priors import (
 #
 from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
-    ScaledLogLikelihood,
+    KnownNoiseMvnLogLikelihood,
     UnknownNoiseLogLikelihood,
     UnKnownNoiseMvnLogLikelihood,
-    KnownNoiseMvnLogLikelihood
+    ScaledLogLikelihood,
+    SumOfIndependentLogLikelihoods,
 )
+
 #
 # Boundaries
 #

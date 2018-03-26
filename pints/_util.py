@@ -88,3 +88,18 @@ def vector(x):
             raise ValueError('Unable to convert to 1d vector of scalar values')
         x = x.reshape((n,))
     return x
+
+
+def matrix2d(x):
+    """
+    Copies ``x`` and returns a 2d read-only numpy array of floats with shape
+    ``(m, n)``.
+    Raises a ``ValueError`` if ``x`` has an incompatible shape
+    """
+    x = np.array(x, copy=True, dtype=float)
+    if x.ndims == 1:
+        x = x.reshape((len(x), 1))
+    elif x.ndims != 2:
+        raise ValueError('Unable to convert to 2d matrix.')
+    x.setflags(write=False)
+    return x
