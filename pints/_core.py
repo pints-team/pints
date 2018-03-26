@@ -50,32 +50,118 @@ class ForwardModel(object):
         """
         raise NotImplementedError
 
+    def n_outputs(self):
+        """
+        Returns the number of outputs this model has. The default is 1.
+        """
+        return 1
+
 
 class SingleSeriesProblem(object):
     """
     Represents an inference problem where a model is fit to a single time
-    series.
+    series, such as measured from a system with a single output.
 
     Arguments:
 
     ``model``
         A model or model wrapper extending :class:`ForwardModel`.
     ``times``
-        A sequence of points in time. See :meth:`model.simulate()` for details.
+        A sequence of points in time. Must be non-negative and increasing.
     ``values``
-        A sequence of measured (scalar) output values the model should match at
-        the given ``times``.
+        A sequence of scalar output values, measured at the times in ``times``.
 
     """
     def __init__(self, model, times, values):
 
         # Check model
         self._model = model
-        self._dimension = model.dimension()
-        self._stateDimension = model.stateDimension()
+        self._dimension = int(model.dimension())
+        if model.n_outputs() != 1:
+            raise ValueError(
+                'Only single-output models can be used for a'
+                ' SingleSeriesProblem.')
+
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
+        self._times = pints.vector(times)
+        if np.any(self._times < 0):
+            raise ValueError('Times can not be negative.')
+        if np.any(self._times[:-1] >= self._times[1:]):
+            raise ValueError('Times must be increasing.')
 
+        # Check values, copy so that they can no longer be changed
+        self._values = pints.vector(values)
+
+        # Check times and values array have write shape
+        if len(self._times) != len(self._values):
+            raise ValueError(
+                'Times and values arrays must have same length.')
+
+    def dimension(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._dimension
+
+    def evaluate(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+        """
+        return self._model.simulate(parameters, self._times)
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs for this problem (always 1).
+        """
+        return 1
+
+    def times(self):
+        """
+        Returns this problem's times.
+
+        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        where ``n_times`` is the number of time points.
+        """
+        return self._times
+
+    def values(self):
+        """
+        Returns this problem's values.
+
+        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        where ``n_times`` is the number of time points.
+        """
+        return self._values
+
+
+class MultiSeriesProblem(object):
+    """
+    Represents an inference problem where a model is fit to a multi-valued time
+    series, such as measured from a system with multiple outputs.
+
+    Arguments:
+
+    ``model``
+        A model or model wrapper extending :class:`ForwardModel`.
+    ``times``
+        A sequence of points in time. Must be non-negative and non-decreasing.
+    ``values``
+        A sequence of multi-valued measurements. Must have shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of points in
+        ``times`` and ``n_outputs`` is the number of outputs in the model.
+
+    """
+    def __init__(self, model, times, values):
+
+        # Check model
+        self._model = model
+        self._dimension = int(model.dimension())
+        self._n_outputs = int(model.n_outputs())
+
+        # Check times, copy so that they can no longer be changed and set them
+        # to read-only
         self._times = pints.vector(times)
         if np.any(self._times < 0):
             raise ValueError('Times cannot be negative.')
@@ -83,56 +169,48 @@ class SingleSeriesProblem(object):
             raise ValueError('Times must be non-decreasing.')
 
         # Check values, copy so that they can no longer be changed
-        if self._stateDimension >= 2:
-            self._values = np.array(values)
-        else:
-            self._values = pints.vector(values)
+        self._values = pints.matrix2d(values)
 
-        if self._times.shape[0] != self._values.shape[0]:
-            raise ValueError('Times and values arrays must have same length.')
+        # Check for correct shape
+        if self._values.shape != (len(self._times), self._n_outputs):
+            raise ValueError(
+                'Values array must have shape `(n_times, n_outputs)`.')
 
     def dimension(self):
         """
-        Returns the dimensions of this problem.
+        Returns the dimension (the number of parameters) of this problem.
         """
         return self._dimension
-    def stateDimension(self):
-        """
-        Returns the dimensions of the state space.
-        """
-        return self._stateDimension
+
     def evaluate(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
         values.
         """
-        # Simulate
-        values = self._model.simulate(parameters, self._times)
-        # Make sure it's the correct shape for a single-series problem (without
-        # error checking, because this will be called a lot!)
-        # return np.array(values, copy=False).reshape(self._values.shape)
-        return values
+        return self._model.simulate(parameters, self._times)
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs for this problem.
+        """
+        return self._n_outputs
 
     def times(self):
         """
-        Returns this problem's times (as a read-only NumPy array).
+        Returns this problem's times.
+
+        The returned value is a read-only numpy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
         """
         return self._times
 
     def values(self):
         """
-        Returns this problem's values (as a read-only NumPy array).
+        Returns this problem's values.
+
+        The returned value is a read-only numpy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
         """
         return self._values
-class MultiSeriesProblem(SingleSeriesProblem):
-
-    def __init__(self, model, times, values):
-        SingleSeriesProblem.__init__(self, model, times, values)
-
-        if self._values.ndim != 2:
-            raise ValueError('The problem is single series.')
-    def stateDimension(self):
-        """
-        Returns the dimensions of this problem.
-        """
-        return self._stateDimension

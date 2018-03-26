@@ -27,14 +27,13 @@ class GoodwinOscillatorModel(pints.ForwardModel):
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
     """
-    _stateDim = 1 #should change this to 3 later
-    _dimension = 5
     def dimension(self):
         """ See :meth:`pints.ForwardModel.dimension()`. """
-        return self._dimension
+        return 5
 
-    def stateDimension(self):
-        return self._stateDim
+    def n_outputs(self):
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
+        return 1    # Should maybe change this to 3 later...
 
     def _rhs(self, state, time, parameters):
         """
@@ -65,3 +64,4 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         Returns a suggested set of sampling times.
         """
         return np.linspace(0, 100, 200)
+

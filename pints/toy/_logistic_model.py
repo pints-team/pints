@@ -16,12 +16,12 @@ class LogisticModel(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
-    Simple logistic model implementation.
+    Logistic model of population growth [1].
 
     Has two parameters: A growth rate ``r`` and a carrying capacity ``k``.
+
+    [1] https://en.wikipedia.org/wiki/Population_growth
     """
-    _stateDim = 1
-    _dimension = 2
     def __init__(self, initial_population_size=2):
         super(LogisticModel, self).__init__()
         self._p0 = float(initial_population_size)
@@ -30,10 +30,7 @@ class LogisticModel(pints.ForwardModel):
 
     def dimension(self):
         """ See :meth:`pints.ForwardModel.dimension()`. """
-        return self._dimension
-
-    def stateDimension(self):
-        return self._stateDim
+        return 2
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
