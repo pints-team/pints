@@ -15,7 +15,7 @@ from scipy.stats import multivariate_normal
 
 class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
 
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
@@ -24,7 +24,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     This log-likelihood operates on
     :class:`single-series problems<SingleSeriesProblem>`, for the
     :class:`multi-series<MultiSeriesProblem>` equivalent, see
-    :class:`UnknownNoiseMvnLogLikelihood`.
+    :class:`KnownMultivariateNoiseLogLikelihood`.
     """
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
@@ -51,7 +51,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
 class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
 
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
@@ -75,7 +75,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     This log-likelihood operates on
     :class:`single-series problems<SingleSeriesProblem>`, for the
     :class:`multi-series<MultiSeriesProblem>` equivalent, see
-    :class:`UnknownNoiseMvnLogLikelihood`.
+    :class:`UnknownMultivariateNoiseLogLikelihood`.
     """
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
@@ -114,6 +114,10 @@ class KnownMultivariateNoiseLogLikelihood(pints.ProblemLogLikelihood):
         on all outputs) or a sequence of ``n_outputs`` values (for varying
         noise levels per output).
 
+    This log-likelihood operates on
+    :class:`mutli-series problems<MultiSeriesProblem>`, for the
+    :class:`single-series<SingleSeriesProblem>` equivalent, see
+    :class:`KnownMultivariateNoiseLogLikelihood`.
     """
     def __init__(self, problem, sigma):
         super(KnownMultivariateNoiseLogLikelihood, self).__init__(problem)
@@ -157,6 +161,10 @@ class UnknownMultivariateNoiseLogLikelihood(pints.ProblemLogLikelihood):
     The standard deviations of the noise in each output (sigma1, sigma2, ...)
     are inferred along with the remaining parameters.
 
+    This log-likelihood operates on
+    :class:`mutli-series problems<MultiSeriesProblem>`, for the
+    :class:`single-series<SingleSeriesProblem>` equivalent, see
+    :class:`UnknownMultivariateNoiseLogLikelihood`.
     """
     def __init__(self, problem):
         super(UnknownMultivariateNoiseLogLikelihood, self).__init__(problem)
