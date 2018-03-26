@@ -35,6 +35,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         # Test errors
         times = [-1, 2, 3, 4]
         self.assertRaises(ValueError, model.simulate, x, times)
+        self.assertRaises(ValueError, pints.toy.FitzhughNagumoModel, [1])
 
 
 if __name__ == '__main__':
