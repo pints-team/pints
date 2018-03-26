@@ -21,7 +21,7 @@ class FitzhughNagumoModel(pints.ForwardModel):
     Has two states, and three phenomenological parameters: ``a`` , ``b``,
     ``c``. All states are visible
 
-    Arguments::
+    Arguments:
 
     ``y0``
         The system's initial

@@ -18,6 +18,10 @@ Example::
 
 .. autoclass:: UnknownNoiseLogLikelihood
 
+.. autoclass:: KnownMultivariateNoiseLogLikelihood
+
+.. autoclass:: UnknownMultivariateNoiseLogLikelihood
+
 .. autoclass:: ScaledLogLikelihood
 
 .. autoclass:: SumOfIndependentLogLikelihoods
