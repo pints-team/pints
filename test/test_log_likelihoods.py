@@ -92,10 +92,24 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Test if known/unknown give same result
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
-        l2 = pints.UnknownNoiseLogLikelihood(problem)
+        l2 = pints.KnownNoiseLogLikelihood(problem, [sigma, sigma])
+        l3 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertAlmostEqual(
             l1(parameters),
-            l2(parameters + [sigma, sigma]))
+            l2(parameters),
+            l3(parameters + [sigma, sigma]))
+
+        # Test invalid constructors
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, [1])
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, [1, 2, 3, 4])
+        self.assertRaises(
+            ValueError, pints.KnownNoiseLogLikelihood, problem, [1, 2, -3])
 
     def test_known_noise_single_and_multi(self):
         """
