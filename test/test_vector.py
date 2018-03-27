@@ -64,8 +64,8 @@ class TestVector(unittest.TestCase):
 
         # Test read-only
         def assign():
-            x[0] = 10
-        self.assertRaises(TypeError, assign)
+            v[0] = 10
+        self.assertRaises(ValueError, assign)
 
 
 if __name__ == '__main__':

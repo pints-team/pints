@@ -36,7 +36,8 @@ class ErrorMeasure(object):
 class ProblemErrorMeasure(ErrorMeasure):
     """
     Abstract base class for ErrorMeasures defined for
-    :class:`Problems <pints.Problem>`.
+    :class:`single<pints.SingleSeriesProblem>` or
+    :class:`multi-output<pints.MultiSeriesProblem>` problems.
     """
     def __init__(self, problem=None):
         super(ProblemErrorMeasure, self).__init__()
@@ -44,6 +45,7 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._times = problem.times()
         self._values = problem.values()
         self._dimension = problem.dimension()
+        self._n_outputs = problem.n_outputs()
 
     def dimension(self):
         """ See :meth:`ErrorMeasure.dimension()`. """
@@ -56,6 +58,12 @@ class ProbabilityBasedError(ErrorMeasure):
 
     Changes the sign of a :class:`LogPDF` to use it as an error. Minimising
     this error will maximise the probability.
+
+    Arguments:
+
+    ``log_pdf``
+        A :class:`LogPDF` object.
+
     """
     def __init__(self, log_pdf):
         super(ProbabilityBasedError, self).__init__()
@@ -156,11 +164,19 @@ class MeanSquaredError(ProblemErrorMeasure):
     """
     *Extends:* :class:`ProblemErrorMeasure`
 
-    Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``
+    Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``,
+    where ``n`` is the product of the number of times in the time series and
+    the number of outputs of the problem.
+
+    Arguments:
+
+    ``problem``
+        A :class:`pints.SingleSeriesProblem` or
+        :class:`pints.MultiSeriesProblem`.
     """
     def __init__(self, problem):
         super(MeanSquaredError, self).__init__(problem)
-        self._ninv = 1.0 / len(self._values)
+        self._ninv = 1.0 / np.product(self._values.shape)
 
     def __call__(self, x):
         return (np.sum((self._problem.evaluate(x) - self._values)**2) *
@@ -173,9 +189,20 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
     Calculates a root mean squared error (RMSE):
     ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
+
+    Arguments:
+
+    ``problem``
+        A :class:`pints.SingleSeriesProblem`
+
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
+
+        if not isinstance(problem, pints.SingleSeriesProblem):
+            raise ValueError(
+                'This measure is only defined for single output problems.')
+
         self._ninv = 1.0 / len(self._values)
 
     def __call__(self, x):
@@ -185,9 +212,15 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
 class SumOfSquaresError(ProblemErrorMeasure):
     """
-    *Extends:* :class:`ProblemErrorMeasure`
+    *Extends:* :class:`ErrorMeasure`
 
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
+
+    Arguments:
+
+    ``problem``
+        A :class:`pints.SingleSeriesProblem` or
+        :class:`pints.MultiSeriesProblem`.
     """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)
