@@ -24,7 +24,7 @@ class ForwardModel(object):
     def __init__(self):
         super(ForwardModel, self).__init__()
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of the parameter space.
         """
@@ -76,7 +76,7 @@ class SingleOutputProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.dimension())
+        self._dimension = int(model.n_parameters())
         if model.n_outputs() != 1:
             raise ValueError(
                 'Only single-output models can be used for a'
@@ -98,7 +98,7 @@ class SingleOutputProblem(object):
             raise ValueError(
                 'Times and values arrays must have same length.')
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension (the number of parameters) of this problem.
         """
@@ -157,7 +157,7 @@ class MultiOutputProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.dimension())
+        self._dimension = int(model.n_parameters())
         self._n_outputs = int(model.n_outputs())
 
         # Check times, copy so that they can no longer be changed and set them
@@ -176,7 +176,7 @@ class MultiOutputProblem(object):
             raise ValueError(
                 'Values array must have shape `(n_times, n_outputs)`.')
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension (the number of parameters) of this problem.
         """

@@ -56,7 +56,7 @@ class Boundaries(object):
             return False
         return True
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of this set of boundaries.
         """

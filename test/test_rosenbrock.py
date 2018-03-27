@@ -19,7 +19,7 @@ class TestRosenbrock(unittest.TestCase):
     """
     def test_error(self):
         f = pints.toy.RosenbrockError()
-        self.assertEqual(f.dimension(), 2)
+        self.assertEqual(f.n_parameters(), 2)
         fx = f([10, 10])
         self.assertTrue(np.isscalar(fx))
         self.assertTrue(fx > 0)
@@ -33,7 +33,7 @@ class TestRosenbrock(unittest.TestCase):
             self.assertTrue(f(x) > fopt)
 
         f = pints.toy.RosenbrockError(10, 10)
-        self.assertEqual(f.dimension(), 2)
+        self.assertEqual(f.n_parameters(), 2)
         fx = f([11, 11])
         self.assertTrue(fx > 0)
 
@@ -47,7 +47,7 @@ class TestRosenbrock(unittest.TestCase):
 
     def test_log_pdf(self):
         f = pints.toy.RosenbrockLogPDF()
-        self.assertEqual(f.dimension(), 2)
+        self.assertEqual(f.n_parameters(), 2)
         fx = f([10, 10])
         self.assertTrue(np.isscalar(fx))
         self.assertTrue(fx < 0)
@@ -61,7 +61,7 @@ class TestRosenbrock(unittest.TestCase):
             self.assertTrue(f(x) < fopt)
 
         f = pints.toy.RosenbrockLogPDF(10, 10)
-        self.assertEqual(f.dimension(), 2)
+        self.assertEqual(f.n_parameters(), 2)
         fx = f([11, 11])
         self.assertTrue(fx < 0)
 

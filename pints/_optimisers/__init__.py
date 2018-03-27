@@ -43,7 +43,7 @@ class Optimiser(pints.Loggable):
         # Store boundaries
         self._boundaries = boundaries
         if self._boundaries:
-            if self._boundaries.dimension() != self._dimension:
+            if self._boundaries.n_parameters() != self._dimension:
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
@@ -185,7 +185,7 @@ class Optimisation(object):
             self, function, x0, sigma0=None, boundaries=None, method=None):
 
         # Check dimension of x0 against function
-        if function.dimension() != len(x0):
+        if function.n_parameters() != len(x0):
             raise ValueError(
                 'Starting point must have same dimension as function to'
                 ' optimise.')

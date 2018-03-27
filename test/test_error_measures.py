@@ -19,7 +19,7 @@ class MiniProblem(pints.SingleOutputProblem):
         self._t = pints.vector([1, 2, 3])
         self._v = pints.vector([-1, 2, 3])
 
-    def dimension(self):
+    def n_parameters(self):
         return 3
 
     def evaluate(self, parameters):
@@ -38,7 +38,7 @@ class MultiMiniProblem(pints.MultiOutputProblem):
         self._v = pints.matrix2d(
             np.array([[-1, 2, 3], [-1, 2, 3]]).swapaxes(0, 1))
 
-    def dimension(self):
+    def n_parameters(self):
         return 3
 
     def n_outputs(self):
@@ -60,7 +60,7 @@ class BigMiniProblem(MiniProblem):
         self._t = pints.vector([1, 2, 3, 4, 5, 6])
         self._v = pints.vector([-1, 2, 3, 4, 5, -6])
 
-    def dimension(self):
+    def n_parameters(self):
         return 6
 
 
@@ -69,7 +69,7 @@ class BadMiniProblem(MiniProblem):
         super(BadMiniProblem, self).__init__()
         self._v = pints.vector([bad_value, 2, -3])
 
-    def dimension(self):
+    def n_parameters(self):
         return 3
 
 
@@ -78,7 +78,7 @@ class BadErrorMeasure(pints.ErrorMeasure):
         super(BadErrorMeasure, self).__init__()
         self._v = bad_value
 
-    def dimension(self):
+    def n_parameters(self):
         return 3
 
     def __call__(self, parameters):
@@ -86,7 +86,7 @@ class BadErrorMeasure(pints.ErrorMeasure):
 
 
 class MiniLogPDF(pints.LogPDF):
-    def dimension(self):
+    def n_parameters(self):
         return 3
 
     def __call__(self, parameters):
@@ -103,7 +103,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_mean_squared_error(self):
         p = MiniProblem()
         e = pints.MeanSquaredError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -116,7 +116,7 @@ class TestErrorMeasures(unittest.TestCase):
 
         p = MultiMiniProblem()
         e = pints.MeanSquaredError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -130,7 +130,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_probability_based_error(self):
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         self.assertEqual(e([1, 2, 3]), -10)
         p = MiniProblem()
         self.assertRaises(ValueError, pints.ProbabilityBasedError, p)
@@ -138,7 +138,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_root_mean_squared_error(self):
         p = MiniProblem()
         e = pints.RootMeanSquaredError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -155,7 +155,7 @@ class TestErrorMeasures(unittest.TestCase):
     def test_sum_of_squares_error(self):
         p = MiniProblem()
         e = pints.SumOfSquaresError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -168,7 +168,7 @@ class TestErrorMeasures(unittest.TestCase):
 
         p = MultiMiniProblem()
         e = pints.SumOfSquaresError(p)
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         float(e([1, 2, 3]))
         self.assertEqual(e([-1, 2, 3]), 0)
         self.assertNotEqual(np.all(e([1, 2, 3])), 0)
@@ -188,26 +188,26 @@ class TestErrorMeasures(unittest.TestCase):
         # Basic use
         e = pints.SumOfErrors([e1, e2])
         x = [0, 0, 0]
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         self.assertEqual(e(x), e1(x) + e2(x))
         e = pints.SumOfErrors([e1, e2], [3.1, 4.5])
         x = [0, 0, 0]
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         self.assertEqual(e(x), 3.1 * e1(x) + 4.5 * e2(x))
         e = pints.SumOfErrors(
             [e1, e1, e1, e1, e1, e1], [1, 2, 3, 4, 5, 6])
-        self.assertEqual(e.dimension(), 3)
+        self.assertEqual(e.n_parameters(), 3)
         self.assertEqual(e(x), e1(x) * 21)
         self.assertNotEqual(e(x), 0)
 
         with np.errstate(all='ignore'):
             e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [10, 1, 1, 1, 1, 1])
-            self.assertEqual(e.dimension(), 3)
+            self.assertEqual(e.n_parameters(), 3)
             self.assertEqual(e(x), float('inf'))
             e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [0, 2, 0, 2, 0, 2])
-            self.assertEqual(e.dimension(), 3)
+            self.assertEqual(e.n_parameters(), 3)
             self.assertTrue(e(x), 6 * e1(x))
             e5 = pints.SumOfSquaresError(BadMiniProblem(float('-inf')))
             e = pints.SumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])

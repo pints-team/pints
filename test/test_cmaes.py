@@ -147,7 +147,7 @@ class TestCMAES(unittest.TestCase):
                     OnePopControlODE, y0, times, args=(parameters,))
                 return np.sum(np.array(solution), axis=1)
 
-            def dimension(self):
+            def n_parameters(self):
                 return 3
 
         model = Model()

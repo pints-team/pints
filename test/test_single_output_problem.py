@@ -31,7 +31,7 @@ class TestSingleOutputProblem(unittest.TestCase):
         self.assertTrue(np.all(times == problem.times()))
         self.assertTrue(np.all(noisy == problem.values()))
         self.assertTrue(np.all(values == problem.evaluate(x)))
-        self.assertEqual(problem.dimension(), model.dimension(), 2)
+        self.assertEqual(problem.n_parameters(), model.n_parameters(), 2)
         self.assertEqual(problem.n_outputs(), model.n_outputs(), 1)
 
         # Test errors

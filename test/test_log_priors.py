@@ -113,7 +113,7 @@ class TestPrior(unittest.TestCase):
             p2,
             p2,
         )
-        d = p.dimension()
+        d = p.n_parameters()
         self.assertEqual(d, 6)
         n = 1
         x = p.sample(n)
