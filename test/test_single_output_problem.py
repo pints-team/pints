@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests SingleSeriesProblem methods.
+# Tests SingleOutputProblem methods.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,9 +15,9 @@ import numpy as np
 import unittest
 
 
-class TestSingleSeriesProblem(unittest.TestCase):
+class TestSingleOutputProblem(unittest.TestCase):
     """
-    Tests SingleSeriesProblem methods.
+    Tests SingleOutputProblem methods.
     """
     def test_basics(self):
 
@@ -26,7 +26,7 @@ class TestSingleSeriesProblem(unittest.TestCase):
         x = [1, 1]
         values = model.simulate(x, times)
         noisy = values + np.array([0.01, -0.01, 0.01, -0.01])
-        problem = pints.SingleSeriesProblem(model, times, noisy)
+        problem = pints.SingleOutputProblem(model, times, noisy)
 
         self.assertTrue(np.all(times == problem.times()))
         self.assertTrue(np.all(noisy == problem.values()))
@@ -37,20 +37,20 @@ class TestSingleSeriesProblem(unittest.TestCase):
         # Test errors
         times[0] = -2
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.SingleOutputProblem, model, times, values)
         times = [1, 2, 2, 1]
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.SingleOutputProblem, model, times, values)
         times = [1, 2, 3]
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.SingleOutputProblem, model, times, values)
 
         # Multi-output problem not allowed
         model = pints.toy.FitzhughNagumoModel()
         self.assertEqual(model.n_outputs(), 2)
         values = model.simulate([1, 1, 1], times)
         self.assertRaises(
-            ValueError, pints.SingleSeriesProblem, model, times, values)
+            ValueError, pints.SingleOutputProblem, model, times, values)
 
 
 if __name__ == '__main__':

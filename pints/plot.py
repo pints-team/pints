@@ -34,7 +34,7 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     ``evaluations``
         (Optional) The number of evaluations to use in each plot.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -117,7 +117,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     ``evaluations``
         (Optional) The number of evaluation along the line in parameter space.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -175,20 +175,20 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
 
     Arguments:
 
-    `samples`
+    ``samples``
         A list of lists of samples, with shape
-        `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
-        lists of samples, `n_samples` is the number of samples in one list and
-        `dimension` is the number of parameters.
-    `ref_parameters`
+        ``(n_lists, n_samples, dimension)``, where ``n_lists`` is the number of
+        lists of samples, ``n_samples`` is the number of samples in one list \
+        and ``dimension`` is the number of parameters.
+    ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
-    `n_percentiles`
+    ``n_percentiles``
         (Optional) Shows only the middle n-th percentiles of the distribution.
-        Default shows all samples in `samples`.
+        Default shows all samples in ``samples``.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -255,20 +255,20 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
 
     Arguments:
 
-    `samples`
+    ``samples``
         A list of lists of samples, with shape
-        `(n_lists, n_samples, dimension)`, where `n_lists` is the number of
-        lists of samples, `n_samples` is the number of samples in one list and
-        `dimension` is the number of parameters.
-    `ref_parameters`
+        ``(n_lists, n_samples, dimension)``, where ``n_lists`` is the number of
+        lists of samples, ``n_samples`` is the number of samples in one list
+        and ``dimension`` is the number of parameters.
+    ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
-    `n_percentiles`
+    ``n_percentiles``
         (Optional) Shows only the middle n-th percentiles of the distribution.
-        Default shows all samples in `samples`.
+        Default shows all samples in ``samples``.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -352,14 +352,14 @@ def autocorrelation(samples, max_lags=100):
 
     Arguments:
 
-    `samples`
-        A list of samples, with shape `(n_samples, dimension)`, where
-        `n_samples` is the number of samples in the list and `dimension` is
+    ``samples``
+        A list of samples, with shape ``(n_samples, dimension)``, where
+        ``n_samples`` is the number of samples in the list and ``dimension`` is
         the number of parameters.
-    `max_lags`
+    ``max_lags``
         (Optional) The maximum autocorrelation lag to plot.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -389,29 +389,29 @@ def autocorrelation(samples, max_lags=100):
 def series(samples, problem, thinning=None):
     """
     Creates and returns a plot of predicted time series for a given list of
-    `samples` and a single-series `problem`.
+    ``samples`` and a single-output ``problem``.
 
     Because this method runs simulations, it can take a considerable time to
     run.
 
     Arguments:
 
-    `samples`
+    ``samples``
         A list of samples, with shape `(n_samples, dimension)`, where
         `n_samples` is the number of samples in the list and `dimension` is
         the number of parameters.
-    `problem`
-        A :class:`pints.SingleSeriesProblem` of a dimension equal to or greater
-        than the `dimension` of the `samples`. Any extra parameters present
-        in the chain but not accepted by the SingleSeriesProblem (for example
-        parameters added by a noise model) will be ignored.
-    `thinning`
+    ``problem``
+        A :class:`pints.SingleOutputProblem` of a dimension equal to or greater
+        than the ``dimension`` of the `samples`. Any extra parameters present
+        in the chain but not accepted by the ``SingleOutputProblem`` (for
+        example parameters added by a noise model) will be ignored.
+    ``thinning``
         (Optional) An integer greater than zero. If specified, only every
-        n-th sample (with `n = thinning`) in the samples will be used. If left
-        at the default value `None`, a value will be chosen so that 200 to 400
-        predictions are shown.
+        n-th sample (with ``n = thinning``) in the samples will be used. If
+        left at the default value ``None``, a value will be chosen so that
+        200 to 400 predictions are shown.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 
@@ -477,30 +477,30 @@ def pairwise(samples,
     etc.).
 
     The returned plot is in a 'matrix' form, with histograms of each individual
-    parameter on the diagonal, and scatter plots of parameters `i` and `j` on
-    each entry `(i, j)` below the diagonal.
+    parameter on the diagonal, and scatter plots of parameters ``i`` and ``j``
+    on each entry ``(i, j)`` below the diagonal.
 
     Arguments:
 
-    `samples`
-        A list of samples, with shape `(n_samples, dimension)`, where
-        `n_samples` is the number of samples in the list and `dimension` is
+    ``samples``
+        A list of samples, with shape ``(n_samples, dimension)``, where
+        ``n_samples`` is the number of samples in the list and ``dimension`` is
         the number of parameters.
-    `kde`
-        (Optional) Set to `True` to use kernel-density estimation for the
+    ``kde``
+        (Optional) Set to ``True`` to use kernel-density estimation for the
         histograms and scatter plots.
-    `opacity`
-        (Optional) When `kde=False`, this value can be used to manually set
+    ``opacity``
+        (Optional) When ``kde=False``, this value can be used to manually set
         the opacity of the points in the scatter plots.
-    `ref_parameters`
+    ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
-    `n_percentiles`
+    ``n_percentiles``
         (Optional) Shows only the middle n-th percentiles of the distribution.
-        Default shows all samples in `samples`.
+        Default shows all samples in ``samples``.
 
-    Returns a `matplotlib` figure object and axes handle.
+    Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
 

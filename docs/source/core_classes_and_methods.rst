@@ -9,8 +9,10 @@ Forward model
 
 .. autoclass:: ForwardModel
 
-Single series problem
-*********************
+Problems
+********
 
-.. autoclass:: SingleSeriesProblem
+.. autoclass:: SingleOutputProblem
+
+.. autoclass:: MultiOutputProblem
 

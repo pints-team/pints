@@ -57,7 +57,7 @@ class ForwardModel(object):
         return 1
 
 
-class SingleSeriesProblem(object):
+class SingleOutputProblem(object):
     """
     Represents an inference problem where a model is fit to a single time
     series, such as measured from a system with a single output.
@@ -80,7 +80,7 @@ class SingleSeriesProblem(object):
         if model.n_outputs() != 1:
             raise ValueError(
                 'Only single-output models can be used for a'
-                ' SingleSeriesProblem.')
+                ' SingleOutputProblem.')
 
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
@@ -136,7 +136,7 @@ class SingleSeriesProblem(object):
         return self._values
 
 
-class MultiSeriesProblem(object):
+class MultiOutputProblem(object):
     """
     Represents an inference problem where a model is fit to a multi-valued time
     series, such as measured from a system with multiple outputs.

@@ -31,7 +31,7 @@ class TestCMAES(unittest.TestCase):
         self.values = self.model.simulate(self.real_parameters, self.times)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleSeriesProblem(
+        self.problem = pints.SingleOutputProblem(
             self.model, self.times, self.values)
 
         # Select a score function
@@ -153,7 +153,7 @@ class TestCMAES(unittest.TestCase):
         model = Model()
         times = [0, 0.5, 2, 4, 8, 24]
         values = [2e6, 3.9e6, 3.1e7, 3.7e8, 1.6e9, 1.6e9]
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
         score = pints.SumOfSquaresError(problem)
         x0 = [2.5, 0.0001, 5e6]
         with pints.io.StreamCapture() as c:

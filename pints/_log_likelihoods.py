@@ -23,7 +23,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     Arguments:
 
     ``problem``
-        A :class:`SingleSeriesProblem` or :class`MultiSeriesProblem`.
+        A :class:`SingleOutputProblem` or :class`MultiOutputProblem`.
     ``sigma``
         The standard devation(s) of the noise. Can be a single value or a
         sequence of sigma's for each output.
@@ -80,7 +80,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     Arguments:
 
     ``problem``
-        A :class:`SingleSeriesProblem` or :class`MultiSeriesProblem`. For a
+        A :class:`SingleOutputProblem` or :class`MultiOutputProblem`. For a
         single-output problem a single parameter is added, for a multi-output
         problem ``n_outputs`` parameters are added.
 
