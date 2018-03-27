@@ -16,9 +16,11 @@ class LogisticModel(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
-    Simple logistic model implementation.
+    Logistic model of population growth [1].
 
     Has two parameters: A growth rate ``r`` and a carrying capacity ``k``.
+
+    [1] https://en.wikipedia.org/wiki/Population_growth
     """
     def __init__(self, initial_population_size=2):
         super(LogisticModel, self).__init__()

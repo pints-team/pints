@@ -38,12 +38,12 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, SingleSeriesProblem
+from ._core import ForwardModel, SingleSeriesProblem, MultiSeriesProblem
 
 #
 # Utility classes and methods
 #
-from ._util import strfloat, vector
+from ._util import strfloat, vector, matrix2d
 from ._util import Timer
 from ._logger import Logger, Loggable
 
@@ -73,8 +73,8 @@ from ._log_priors import (
 #
 from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
-    ScaledLogLikelihood,
     UnknownNoiseLogLikelihood,
+    ScaledLogLikelihood,
     SumOfIndependentLogLikelihoods,
 )
 
