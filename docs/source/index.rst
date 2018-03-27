@@ -49,13 +49,13 @@ Sampling
 
 #. :class:`MCMC without gradients<MCMCSampler>`
 
-   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
    - emcee (MCMC Hammer)
+   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - Metropolis-Hastings
-   - PopulationMCMC
+   - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
 
 #. :class:`Nested sampling<NestedSampler>`
 
