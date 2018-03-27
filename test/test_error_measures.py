@@ -32,6 +32,28 @@ class MiniProblem(pints.SingleSeriesProblem):
         return self._v
 
 
+class MultiMiniProblem(pints.MultiSeriesProblem):
+    def __init__(self):
+        self._t = pints.vector([1, 2, 3])
+        self._v = pints.matrix2d(
+            np.array([[-1, 2, 3], [-1, 2, 3]]).swapaxes(0, 1))
+
+    def dimension(self):
+        return 3
+
+    def n_outputs(self):
+        return 2
+
+    def evaluate(self, parameters):
+        return np.array([parameters, parameters]).swapaxes(0, 1)
+
+    def times(self):
+        return self._t
+
+    def values(self):
+        return self._v
+
+
 class BigMiniProblem(MiniProblem):
     def __init__(self):
         super(BigMiniProblem, self).__init__()
@@ -92,6 +114,19 @@ class TestErrorMeasures(unittest.TestCase):
         y = (4 + 1 + 4) / 3
         self.assertEqual(e(x), y)
 
+        p = MultiMiniProblem()
+        e = pints.MeanSquaredError(p)
+        self.assertEqual(e.dimension(), 3)
+        float(e([1, 2, 3]))
+        self.assertEqual(e([-1, 2, 3]), 0)
+        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
+        x = [0, 0, 0]
+        y = (1 + 4 + 9) / 3
+        self.assertAlmostEqual(e(x), y)
+        x = [1, 1, 1]
+        y = (4 + 1 + 4) / 3
+        self.assertEqual(e(x), y)
+
     def test_probability_based_error(self):
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
@@ -114,6 +149,9 @@ class TestErrorMeasures(unittest.TestCase):
         y = np.sqrt((4 + 1 + 4) / 3)
         self.assertEqual(e(x), y)
 
+        p = MultiMiniProblem()
+        self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
+
     def test_sum_of_squares_error(self):
         p = MiniProblem()
         e = pints.SumOfSquaresError(p)
@@ -127,6 +165,19 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 1, 1]
         y = 4 + 1 + 4
         self.assertEqual(e(x), y)
+
+        p = MultiMiniProblem()
+        e = pints.SumOfSquaresError(p)
+        self.assertEqual(e.dimension(), 3)
+        float(e([1, 2, 3]))
+        self.assertEqual(e([-1, 2, 3]), 0)
+        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
+        x = [0, 0, 0]
+        y = 1 + 4 + 9
+        self.assertEqual(e(x), 2 * y)
+        x = [1, 1, 1]
+        y = 4 + 1 + 4
+        self.assertEqual(e(x), 2 * y)
 
     def test_sum_of_errors(self):
         e1 = pints.SumOfSquaresError(MiniProblem())
