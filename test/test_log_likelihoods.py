@@ -14,6 +14,7 @@ import numpy as np
 
 
 class TestLogLikelihood(unittest.TestCase):
+
     def test_scaled_log_likelihood(self):
 
         model = toy.LogisticModel()
@@ -41,8 +42,23 @@ class TestLogLikelihood(unittest.TestCase):
         # Test bad constructor
         self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
 
-    def test_known_and_unknown_noise_log_likelihood(self):
+        # Test on multi-output problem
+        model = toy.FitzhughNagumoModel()
+        nt = 10
+        no = model.n_outputs()
+        times = np.linspace(0, 100, nt)
+        values = model.simulate([0.5, 0.5, 0.5], times)
+        problem = pints.MultiSeriesProblem(model, times, values)
+        unscaled = pints.KnownNoiseLogLikelihood(problem, 1)
+        scaled = pints.ScaledLogLikelihood(unscaled)
+        x = unscaled([0.1, 0.1, 0.1])
+        y = scaled([0.1, 0.1, 0.1])
+        self.assertEqual(y, x / nt / no)
 
+    def test_known_and_unknown_noise_single(self):
+        """
+        Single-output test for known/unknown noise log-likelihood methods
+        """
         model = toy.LogisticModel()
         parameters = [0.015, 500]
         sigma = 0.1
@@ -62,8 +78,10 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
-    def test_known_and_unknown_multivariate_noise_log_likelihood(self):
-
+    def test_known_and_unknown_noise_multi(self):
+        """
+        Multi-output test for known/unknown noise log-likelihood methods
+        """
         model = toy.FitzhughNagumoModel()
         parameters = [0.5, 0.5, 0.5]
         sigma = 0.1
@@ -73,19 +91,17 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiSeriesProblem(model, times, values)
 
         # Test if known/unknown give same result
-        l1 = pints.KnownMultivariateNoiseLogLikelihood(problem, sigma)
-        l2 = pints.UnknownMultivariateNoiseLogLikelihood(problem)
+        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertAlmostEqual(
             l1(parameters),
             l2(parameters + [sigma, sigma]))
 
-        # Test invalid constructors
-        self.assertRaises(
-            ValueError, pints.KnownMultivariateNoiseLogLikelihood, problem, 0)
-        self.assertRaises(
-            ValueError, pints.KnownMultivariateNoiseLogLikelihood, problem, -1)
-
-    def test_known_normal_and_multivariate_noise(self):
+    def test_known_noise_single_and_multi(self):
+        """
+        Tests the output of single-series against multi-series known noise
+        log-likelihoods.
+        """
 
         # Define boring 1-output and 2-output models
         class NullModel1(pints.ForwardModel):
@@ -122,7 +138,7 @@ class TestLogLikelihood(unittest.TestCase):
         values3 = np.array([values1, values2]).swapaxes(0, 1)
         model2d = NullModel2()
         problem3 = pints.MultiSeriesProblem(model2d, times, values3)
-        log3 = pints.KnownMultivariateNoiseLogLikelihood(
+        log3 = pints.KnownNoiseLogLikelihood(
             problem3, [sigma1, sigma2])
 
         # Check if we get the right output

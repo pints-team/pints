@@ -73,9 +73,7 @@ from ._log_priors import (
 #
 from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
-    KnownMultivariateNoiseLogLikelihood,
     UnknownNoiseLogLikelihood,
-    UnknownMultivariateNoiseLogLikelihood,
     ScaledLogLikelihood,
     SumOfIndependentLogLikelihoods,
 )
