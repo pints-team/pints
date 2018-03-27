@@ -38,7 +38,7 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, SingleSeriesProblem, MultiSeriesProblem
+from ._core import ForwardModel, SingleOutputProblem, MultiOutputProblem
 
 #
 # Utility classes and methods

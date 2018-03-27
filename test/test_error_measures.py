@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 
 
-class MiniProblem(pints.SingleSeriesProblem):
+class MiniProblem(pints.SingleOutputProblem):
     def __init__(self):
         self._t = pints.vector([1, 2, 3])
         self._v = pints.vector([-1, 2, 3])
@@ -32,7 +32,7 @@ class MiniProblem(pints.SingleSeriesProblem):
         return self._v
 
 
-class MultiMiniProblem(pints.MultiSeriesProblem):
+class MultiMiniProblem(pints.MultiOutputProblem):
     def __init__(self):
         self._t = pints.vector([1, 2, 3])
         self._v = pints.matrix2d(

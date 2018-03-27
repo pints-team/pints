@@ -36,8 +36,8 @@ class ErrorMeasure(object):
 class ProblemErrorMeasure(ErrorMeasure):
     """
     Abstract base class for ErrorMeasures defined for
-    :class:`single<pints.SingleSeriesProblem>` or
-    :class:`multi-output<pints.MultiSeriesProblem>` problems.
+    :class:`single<pints.SingleOutputProblem>` or
+    :class:`multi-output<pints.MultiOutputProblem>` problems.
     """
     def __init__(self, problem=None):
         super(ProblemErrorMeasure, self).__init__()
@@ -171,8 +171,8 @@ class MeanSquaredError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem` or
-        :class:`pints.MultiSeriesProblem`.
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`.
     """
     def __init__(self, problem):
         super(MeanSquaredError, self).__init__(problem)
@@ -193,13 +193,13 @@ class RootMeanSquaredError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem`
+        A :class:`pints.SingleOutputProblem`
 
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
 
-        if not isinstance(problem, pints.SingleSeriesProblem):
+        if not isinstance(problem, pints.SingleOutputProblem):
             raise ValueError(
                 'This measure is only defined for single output problems.')
 
@@ -219,8 +219,8 @@ class SumOfSquaresError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem` or
-        :class:`pints.MultiSeriesProblem`.
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`.
     """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)
