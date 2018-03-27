@@ -21,7 +21,7 @@ class TestHodgkinHuxleyIKModel(unittest.TestCase):
     def test_hh_ik(self):
         model = pints.toy.HodgkinHuxleyIKModel()
         p0 = model.suggested_parameters()
-        self.assertEqual(len(p0), model.dimension())
+        self.assertEqual(len(p0), model.n_parameters())
         times = model.suggested_times()
         self.assertTrue(np.all(times[1:] > times[:-1]))
         values = model.simulate(p0, times)

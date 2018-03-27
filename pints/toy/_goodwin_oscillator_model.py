@@ -27,8 +27,8 @@ class GoodwinOscillatorModel(pints.ForwardModel):
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
     """
-    def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
 
     def n_outputs(self):

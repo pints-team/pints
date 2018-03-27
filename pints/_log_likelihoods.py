@@ -93,7 +93,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         self._no = problem.n_outputs()
 
         # Add parameters to problem
-        self._dimension = problem.dimension() + self._no
+        self._dimension = problem.n_parameters() + self._no
 
         # Pre-calculate parts
         self._logn = 0.5 * len(self._times) * np.log(2 * np.pi)
@@ -187,16 +187,16 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
 
         # Get and check dimension
         i = iter(self._log_likelihoods)
-        self._dimension = next(i).dimension()
+        self._dimension = next(i).n_parameters()
         for e in i:
-            if e.dimension() != self._dimension:
+            if e.n_parameters() != self._dimension:
                 raise ValueError(
                     'All log-likelihoods passed to'
                     ' SumOfIndependentLogLikelihoods must have same'
                     ' dimension.')
 
-    def dimension(self):
-        """ See :meth:`LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
         return self._dimension
 
     def __call__(self, x):

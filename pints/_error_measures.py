@@ -25,7 +25,7 @@ class ErrorMeasure(object):
     def __call__(self, x):
         raise NotImplementedError
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of the parameter space this measure is defined
         over.
@@ -44,11 +44,11 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
-        self._dimension = problem.dimension()
+        self._dimension = problem.n_parameters()
         self._n_outputs = problem.n_outputs()
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._dimension
 
 
@@ -72,9 +72,9 @@ class ProbabilityBasedError(ErrorMeasure):
                 'Given log_pdf must be an instance of pints.LogPDF.')
         self._log_pdf = log_pdf
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
-        return self._log_pdf.dimension()
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
+        return self._log_pdf.n_parameters()
 
     def __call__(self, x):
         return -self._log_pdf(x)
@@ -138,9 +138,9 @@ class SumOfErrors(ErrorMeasure):
 
         # Get and check dimension
         i = iter(self._errors)
-        self._dimension = next(i).dimension()
+        self._dimension = next(i).n_parameters()
         for e in i:
-            if e.dimension() != self._dimension:
+            if e.n_parameters() != self._dimension:
                 raise ValueError(
                     'All errors passed to SumOfErrors must have same'
                     ' dimension.')
@@ -148,8 +148,8 @@ class SumOfErrors(ErrorMeasure):
         # Check weights
         self._weights = [float(w) for w in weights]
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._dimension
 
     def __call__(self, x):

@@ -119,14 +119,14 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Define boring 1-output and 2-output models
         class NullModel1(pints.ForwardModel):
-            def dimension(self):
+            def n_parameters(self):
                 return 1
 
             def simulate(self, x, times):
                 return np.zeros(times.shape)
 
         class NullModel2(pints.ForwardModel):
-            def dimension(self):
+            def n_parameters(self):
                 return 1
 
             def n_outputs(self):
@@ -169,7 +169,7 @@ class TestLogLikelihood(unittest.TestCase):
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
-        self.assertEqual(l1.dimension(), ll.dimension())
+        self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
 
         # Test invalid constructors

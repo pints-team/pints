@@ -63,7 +63,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         y[0] = x[0] / np.sqrt(self._V)
         return self._phi.logpdf(y)
 
-    def dimension(self):
-        """ See :meth:`pints.LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
 

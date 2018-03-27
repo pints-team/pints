@@ -42,7 +42,7 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
             'Given function must be pints.LogPDF or pints.ErrorMeasure.')
-    dimension = f.dimension()
+    dimension = f.n_parameters()
 
     # Check point
     x = pints.vector(x)
@@ -125,7 +125,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
             'Given function must be pints.LogPDF or pints.ErrorMeasure.')
-    dimension = f.dimension()
+    dimension = f.n_parameters()
 
     # Check points
     point_1 = pints.vector(point_1)
@@ -422,7 +422,7 @@ def series(samples, problem, thinning=None):
         raise ValueError('`samples` must be of shape (n_sample, n_param)')
 
     # Get problem dimension
-    dimension = problem.dimension()
+    dimension = problem.n_parameters()
 
     # Get thinning rate
     if thinning is None:
