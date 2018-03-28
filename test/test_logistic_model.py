@@ -58,6 +58,16 @@ class TestLogistic(unittest.TestCase):
         parameters = [1, 0]
         self.assertRaises(ValueError, model.simulate, parameters, times)
 
+    def test_sensitivities(self):
+        model = pints.toy.LogisticModel(2)
+        times = [0, -1, 2, 10000]
+        parameters = [1, 5]
+        sens = model.sensitivities(parameters, times)
+        self.assertEqual(sens[0, 0], 0)
+        self.assertEqual(sens[-1, 0], 0.0)
+        self.assertEqual(sens[0, 1], 0)
+        self.assertEqual(sens[-1, 1], 1.0)
+
 
 if __name__ == '__main__':
     unittest.main()

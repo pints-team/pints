@@ -50,6 +50,30 @@ class ForwardModel(object):
         """
         raise NotImplementedError
 
+    def sensitivities(self, parameters, times):
+        """
+        Calculates the sensitivities of the forward simulation with respect to 
+        the parameters.
+
+        Arguments:
+
+        ``parameters``
+            An ordered list of parameter values at which to calculate the 
+            sensitivities
+        ``times``
+            The times at which to evaluate. Must be an ordered sequence,
+            without duplicates, and without negative values.
+            All simulations are started at time 0, regardless of whether this
+            value appears in ``times``.
+
+        Returns:
+
+        A 2d numpy array of size ``(t,p)``, where ``p`` is the number of 
+        parameters, and ``t`` is the number of time points
+
+        """
+        raise NotImplementedError
+
 
 class SingleSeriesProblem(object):
     """
@@ -67,6 +91,7 @@ class SingleSeriesProblem(object):
         the given ``times``.
 
     """
+
     def __init__(self, model, times, values):
 
         # Check model
@@ -115,4 +140,3 @@ class SingleSeriesProblem(object):
         Returns this problem's values (as a read-only NumPy array).
         """
         return self._values
-
