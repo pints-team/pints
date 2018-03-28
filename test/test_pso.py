@@ -60,7 +60,7 @@ class TestPSO(unittest.TestCase):
         self.values = self.model.simulate(self.real_parameters, self.times)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleSeriesProblem(
+        self.problem = pints.SingleOutputProblem(
             self.model, self.times, self.values)
 
         # Select a score function

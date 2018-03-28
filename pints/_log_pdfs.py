@@ -18,12 +18,12 @@ class LogPDF(object):
     All :class:`LogPDF` types are callable: when called with a vector argument
     ``theta`` they return some value ``log(f(theta))`` where ``f(theta)`` is an
     unnormalised PDF. The size of the argument `theta` is given by
-    :meth:`dimension()`.
+    :meth:`n_parameters()`.
     """
     def __call__(self, x):
         raise NotImplementedError
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of the space this :class:`LogPDF` is defined
         over.
@@ -84,10 +84,10 @@ class ProblemLogLikelihood(LogLikelihood):
         # Cache some problem variables
         self._values = problem.values()
         self._times = problem.times()
-        self._dimension = problem.dimension()
+        self._dimension = problem.n_parameters()
 
-    def dimension(self):
-        """ See :meth:`LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
         return self._dimension
 
 
@@ -124,8 +124,8 @@ class LogPosterior(LogPDF):
                 'Given log_likelihood must extend pints.LogLikelihood.')
 
         # Check dimensions
-        self._dimension = log_prior.dimension()
-        if log_likelihood.dimension() != self._dimension:
+        self._dimension = log_prior.n_parameters()
+        if log_likelihood.n_parameters() != self._dimension:
             raise ValueError(
                 'Given log_prior and log_likelihood must have same dimension.')
 
@@ -143,7 +143,7 @@ class LogPosterior(LogPDF):
             return self._minf
         return log_prior + self._log_likelihood(x)
 
-    def dimension(self):
-        """ See :meth:`LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
         return self._dimension
 

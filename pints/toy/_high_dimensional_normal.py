@@ -43,7 +43,7 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
     def __call__(self, x):
         return self._var.logpdf(x)
 
-    def dimension(self):
-        """ See :meth:`pints.LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
 

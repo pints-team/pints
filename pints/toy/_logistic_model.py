@@ -28,8 +28,8 @@ class LogisticModel(pints.ForwardModel):
         if self._p0 < 0:
             raise ValueError('Population size cannot be negative.')
 
-    def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 2
 
     def simulate(self, parameters, times):

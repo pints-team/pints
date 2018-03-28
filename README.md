@@ -13,7 +13,7 @@ Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisa
 To use a model in Pints, you need to make sure it extends the [ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface, which has just two methods:
 
 ```
-dimension() --> Returns the dimension of the parameter space.
+n_parameters() --> Returns the dimension of the parameter space.
         
 simulate(parameters, times) --> Returns a vector of model evaluations at
                                 the given times, using the given parameters

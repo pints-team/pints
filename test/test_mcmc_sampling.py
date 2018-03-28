@@ -58,7 +58,7 @@ class TestMCMCSampling(unittest.TestCase):
         self.real_parameters.append(self.noise)
 
         # Create an object with links to the model and time series
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable

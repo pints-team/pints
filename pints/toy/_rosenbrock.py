@@ -27,8 +27,8 @@ class RosenbrockError(pints.ErrorMeasure):
         self._a = float(a)
         self._b = float(b)
 
-    def dimension(self):
-        """ See :meth:`pints.ErrorMeasure.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ErrorMeasure.n_parameters()`. """
         return 2
 
     def optimum(self):
@@ -55,9 +55,9 @@ class RosenbrockLogPDF(pints.LogPDF):
     def __init__(self, a=1, b=100):
         self._f = RosenbrockError(a, b)
 
-    def dimension(self):
-        """ See :meth:`pints.LogPDF.dimension()`. """
-        return self._f.dimension()
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._f.n_parameters()
 
     def optimum(self):
         """
