@@ -45,6 +45,38 @@ class ForwardModel(object):
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
 
+        Returns:
+            A numpy array of length ``t`` representing the values of the model
+            at the given time points, where ``t`` is the number of time points.
+
+        Note: For efficiency, both ``parameters`` and ``times`` will be passed
+        in as read-only numpy arrays.
+        """
+        raise NotImplementedError
+
+    def simulate_with_sensitivities(self, parameters, times):
+        """
+        Runs a forward simulation with the given ``parameters`` and returns a
+        time-series with data points corresponding to the given ``times``,
+        along with the sensitivities of the forward simulation with respect to
+        the parameters.
+
+        Arguments:
+
+        ``parameters``
+            An ordered list of parameter values.
+        ``times``
+            The times at which to evaluate. Must be an ordered sequence,
+            without duplicates, and without negative values.
+            All simulations are started at time 0, regardless of whether this
+            value appears in ``times``.
+
+        Returns:
+            A tuple of 2 numpy arrays. The first is a 1d array of length ``t``
+            representing the values of the model at the given time points. The
+            second is a 2d numpy array of size ``(t,p)``, where ``p`` is the
+            number of parameters
+
         Note: For efficiency, both ``parameters`` and ``times`` will be passed
         in as read-only numpy arrays.
         """
@@ -72,6 +104,7 @@ class SingleOutputProblem(object):
         A sequence of scalar output values, measured at the times in ``times``.
 
     """
+
     def __init__(self, model, times, values):
 
         # Check model
@@ -153,6 +186,7 @@ class MultiOutputProblem(object):
         ``times`` and ``n_outputs`` is the number of outputs in the model.
 
     """
+
     def __init__(self, model, times, values):
 
         # Check model
