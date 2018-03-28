@@ -60,13 +60,14 @@ class TestLogistic(unittest.TestCase):
 
     def test_sensitivities(self):
         model = pints.toy.LogisticModel(2)
-        times = [0, -1, 2, 10000]
+        times = [0, 1, 2, 10000]
         parameters = [1, 5]
-        sens = model.sensitivities(parameters, times)
-        self.assertEqual(sens[0, 0], 0)
-        self.assertEqual(sens[-1, 0], 0.0)
-        self.assertEqual(sens[0, 1], 0)
-        self.assertEqual(sens[-1, 1], 1.0)
+        values, dvdp = model.simulate(
+            parameters, times, sensitivities=True)
+        self.assertEqual(dvdp[0, 0], 0)
+        self.assertEqual(dvdp[-1, 0], 0.0)
+        self.assertEqual(dvdp[0, 1], 0)
+        self.assertEqual(dvdp[-1, 1], 1.0)
 
 
 if __name__ == '__main__':
