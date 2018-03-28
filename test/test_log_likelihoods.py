@@ -25,7 +25,7 @@ class TestLogLikelihood(unittest.TestCase):
         values = model.simulate(real_parameters, times)
 
         # Create an object with links to the model and time series
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a scaled and not scaled log_likelihood
         log_likelihood_not_scaled = pints.KnownNoiseLogLikelihood(
@@ -48,7 +48,7 @@ class TestLogLikelihood(unittest.TestCase):
         no = model.n_outputs()
         times = np.linspace(0, 100, nt)
         values = model.simulate([0.5, 0.5, 0.5], times)
-        problem = pints.MultiSeriesProblem(model, times, values)
+        problem = pints.MultiOutputProblem(model, times, values)
         unscaled = pints.KnownNoiseLogLikelihood(problem, 1)
         scaled = pints.ScaledLogLikelihood(unscaled)
         x = unscaled([0.1, 0.1, 0.1])
@@ -65,7 +65,7 @@ class TestLogLikelihood(unittest.TestCase):
         times = np.linspace(0, 1000, 100)
         values = model.simulate(parameters, times)
         values += np.random.normal(0, sigma, values.shape)
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
 
         # Test if known/unknown give same result
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
@@ -88,7 +88,7 @@ class TestLogLikelihood(unittest.TestCase):
         times = np.linspace(0, 100, 100)
         values = model.simulate(parameters, times)
         values += np.random.normal(0, sigma, values.shape)
-        problem = pints.MultiSeriesProblem(model, times, values)
+        problem = pints.MultiOutputProblem(model, times, values)
 
         # Test if known/unknown give same result
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
@@ -119,14 +119,14 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Define boring 1-output and 2-output models
         class NullModel1(pints.ForwardModel):
-            def dimension(self):
+            def n_parameters(self):
                 return 1
 
             def simulate(self, x, times):
                 return np.zeros(times.shape)
 
         class NullModel2(pints.ForwardModel):
-            def dimension(self):
+            def n_parameters(self):
                 return 1
 
             def n_outputs(self):
@@ -143,15 +143,15 @@ class TestLogLikelihood(unittest.TestCase):
         values1 = np.random.uniform(0, sigma1, times.shape)
         values2 = np.random.uniform(0, sigma2, times.shape)
         model1d = NullModel1()
-        problem1 = pints.SingleSeriesProblem(model1d, times, values1)
-        problem2 = pints.SingleSeriesProblem(model1d, times, values2)
+        problem1 = pints.SingleOutputProblem(model1d, times, values1)
+        problem2 = pints.SingleOutputProblem(model1d, times, values2)
         log1 = pints.KnownNoiseLogLikelihood(problem1, sigma1)
         log2 = pints.KnownNoiseLogLikelihood(problem2, sigma2)
 
         # Create one multi output problem
         values3 = np.array([values1, values2]).swapaxes(0, 1)
         model2d = NullModel2()
-        problem3 = pints.MultiSeriesProblem(model2d, times, values3)
+        problem3 = pints.MultiOutputProblem(model2d, times, values3)
         log3 = pints.KnownNoiseLogLikelihood(
             problem3, [sigma1, sigma2])
 
@@ -164,12 +164,12 @@ class TestLogLikelihood(unittest.TestCase):
         sigma = 0.1
         times = np.linspace(0, 1000, 100)
         values = model.simulate(x, times)
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
 
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
-        self.assertEqual(l1.dimension(), ll.dimension())
+        self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
 
         # Test invalid constructors

@@ -37,8 +37,8 @@ class FitzhughNagumoModel(pints.ForwardModel):
             if len(self._y0) != 2:
                 raise ValueError('Initial value must have size 2.')
 
-    def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters)`. """
         return 3
 
     def n_outputs(self):

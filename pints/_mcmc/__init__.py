@@ -247,7 +247,7 @@ class MCMCSampling(object):
         self._log_pdf = log_pdf
 
         # Get dimension
-        self._dimension = self._log_pdf.dimension()
+        self._dimension = self._log_pdf.n_parameters()
 
         # Check number of chains
         self._chains = int(chains)

@@ -25,7 +25,7 @@ class TestLogPosterior(unittest.TestCase):
         sigma = 0.001
         times = np.linspace(0, 1000, 100)
         values = model.simulate(real_parameters, times)
-        problem = pints.SingleSeriesProblem(model, times, values)
+        problem = pints.SingleOutputProblem(model, times, values)
         loglikelihood = pints.KnownNoiseLogLikelihood(problem, sigma)
 
         # Create a prior

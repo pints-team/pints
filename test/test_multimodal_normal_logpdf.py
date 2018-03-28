@@ -21,7 +21,7 @@ class TestMultimodalNormalLogPDF(unittest.TestCase):
 
         # Default settings
         f = pints.toy.MultimodalNormalLogPDF()
-        self.assertEqual(f.dimension(), 2)
+        self.assertEqual(f.n_parameters(), 2)
         f1 = f([0, 0])
         f2 = f([10, 10])
         self.assertTrue(np.isscalar(f1))
@@ -36,7 +36,7 @@ class TestMultimodalNormalLogPDF(unittest.TestCase):
 
         # Single mode, 3d, standard covariance
         f = pints.toy.MultimodalNormalLogPDF([[1, 1, 1]])
-        self.assertEqual(f.dimension(), 3)
+        self.assertEqual(f.n_parameters(), 3)
         f1 = f([1, 1, 1])
         f2 = f([0, 0, 0])
         self.assertTrue(np.isscalar(f1))
@@ -52,7 +52,7 @@ class TestMultimodalNormalLogPDF(unittest.TestCase):
                 [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
             ]
         )
-        self.assertEqual(f.dimension(), 3)
+        self.assertEqual(f.n_parameters(), 3)
         f1 = f([1, 1, 1])
         f2 = f([0, 0, 0])
         self.assertTrue(np.isscalar(f1))

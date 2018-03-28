@@ -25,7 +25,7 @@ class ErrorMeasure(object):
     def __call__(self, x):
         raise NotImplementedError
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of the parameter space this measure is defined
         over.
@@ -36,19 +36,19 @@ class ErrorMeasure(object):
 class ProblemErrorMeasure(ErrorMeasure):
     """
     Abstract base class for ErrorMeasures defined for
-    :class:`single<pints.SingleSeriesProblem>` or
-    :class:`multi-output<pints.MultiSeriesProblem>` problems.
+    :class:`single<pints.SingleOutputProblem>` or
+    :class:`multi-output<pints.MultiOutputProblem>` problems.
     """
     def __init__(self, problem=None):
         super(ProblemErrorMeasure, self).__init__()
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
-        self._dimension = problem.dimension()
+        self._dimension = problem.n_parameters()
         self._n_outputs = problem.n_outputs()
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._dimension
 
 
@@ -72,9 +72,9 @@ class ProbabilityBasedError(ErrorMeasure):
                 'Given log_pdf must be an instance of pints.LogPDF.')
         self._log_pdf = log_pdf
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
-        return self._log_pdf.dimension()
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
+        return self._log_pdf.n_parameters()
 
     def __call__(self, x):
         return -self._log_pdf(x)
@@ -138,9 +138,9 @@ class SumOfErrors(ErrorMeasure):
 
         # Get and check dimension
         i = iter(self._errors)
-        self._dimension = next(i).dimension()
+        self._dimension = next(i).n_parameters()
         for e in i:
-            if e.dimension() != self._dimension:
+            if e.n_parameters() != self._dimension:
                 raise ValueError(
                     'All errors passed to SumOfErrors must have same'
                     ' dimension.')
@@ -148,8 +148,8 @@ class SumOfErrors(ErrorMeasure):
         # Check weights
         self._weights = [float(w) for w in weights]
 
-    def dimension(self):
-        """ See :meth:`ErrorMeasure.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._dimension
 
     def __call__(self, x):
@@ -171,8 +171,8 @@ class MeanSquaredError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem` or
-        :class:`pints.MultiSeriesProblem`.
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`.
     """
     def __init__(self, problem):
         super(MeanSquaredError, self).__init__(problem)
@@ -193,13 +193,13 @@ class RootMeanSquaredError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem`
+        A :class:`pints.SingleOutputProblem`
 
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
 
-        if not isinstance(problem, pints.SingleSeriesProblem):
+        if not isinstance(problem, pints.SingleOutputProblem):
             raise ValueError(
                 'This measure is only defined for single output problems.')
 
@@ -219,8 +219,8 @@ class SumOfSquaresError(ProblemErrorMeasure):
     Arguments:
 
     ``problem``
-        A :class:`pints.SingleSeriesProblem` or
-        :class:`pints.MultiSeriesProblem`.
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`.
     """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)

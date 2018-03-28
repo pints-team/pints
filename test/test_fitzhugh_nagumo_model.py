@@ -19,7 +19,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
     def test_run(self):
 
         model = pints.toy.FitzhughNagumoModel()
-        self.assertEqual(model.dimension(), 3)
+        self.assertEqual(model.n_parameters(), 3)
         self.assertEqual(model.n_outputs(), 2)
 
         x = [1, 1, 1]

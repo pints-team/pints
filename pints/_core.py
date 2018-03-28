@@ -24,7 +24,7 @@ class ForwardModel(object):
     def __init__(self):
         super(ForwardModel, self).__init__()
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension of the parameter space.
         """
@@ -57,7 +57,7 @@ class ForwardModel(object):
         return 1
 
 
-class SingleSeriesProblem(object):
+class SingleOutputProblem(object):
     """
     Represents an inference problem where a model is fit to a single time
     series, such as measured from a system with a single output.
@@ -76,11 +76,11 @@ class SingleSeriesProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.dimension())
+        self._dimension = int(model.n_parameters())
         if model.n_outputs() != 1:
             raise ValueError(
                 'Only single-output models can be used for a'
-                ' SingleSeriesProblem.')
+                ' SingleOutputProblem.')
 
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
@@ -98,7 +98,7 @@ class SingleSeriesProblem(object):
             raise ValueError(
                 'Times and values arrays must have same length.')
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension (the number of parameters) of this problem.
         """
@@ -136,7 +136,7 @@ class SingleSeriesProblem(object):
         return self._values
 
 
-class MultiSeriesProblem(object):
+class MultiOutputProblem(object):
     """
     Represents an inference problem where a model is fit to a multi-valued time
     series, such as measured from a system with multiple outputs.
@@ -157,7 +157,7 @@ class MultiSeriesProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.dimension())
+        self._dimension = int(model.n_parameters())
         self._n_outputs = int(model.n_outputs())
 
         # Check times, copy so that they can no longer be changed and set them
@@ -176,7 +176,7 @@ class MultiSeriesProblem(object):
             raise ValueError(
                 'Values array must have shape `(n_times, n_outputs)`.')
 
-    def dimension(self):
+    def n_parameters(self):
         """
         Returns the dimension (the number of parameters) of this problem.
         """
