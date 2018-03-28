@@ -43,7 +43,7 @@ class Optimiser(pints.Loggable):
         # Store boundaries
         self._boundaries = boundaries
         if self._boundaries:
-            if self._boundaries.dimension() != self._dimension:
+            if self._boundaries.n_parameters() != self._dimension:
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
@@ -185,7 +185,7 @@ class Optimisation(object):
             self, function, x0, sigma0=None, boundaries=None, method=None):
 
         # Check dimension of x0 against function
-        if function.dimension() != len(x0):
+        if function.n_parameters() != len(x0):
             raise ValueError(
                 'Starting point must have same dimension as function to'
                 ' optimise.')
@@ -235,7 +235,7 @@ class Optimisation(object):
     def max_iterations(self):
         """
         Returns the maximum iterations if this stopping criterion is set, or
-        ``None`` if it is not. See :meth:`set_max_iterations`.
+        ``None`` if it is not. See :meth:`set_max_iterations()`.
         """
         return self._max_iterations
 
@@ -243,7 +243,7 @@ class Optimisation(object):
         """
         Returns a tuple ``(iterations, threshold)`` specifying a maximum
         unchanged iterations stopping criterion, or ``(None, None)`` if no such
-        criterion is set. See :meth:`set_max_unchanged_iterations`.
+        criterion is set. See :meth:`set_max_unchanged_iterations()`.
         """
         if self._max_unchanged_iterations is None:
             return (None, None)
@@ -522,7 +522,7 @@ class Optimisation(object):
     def threshold(self):
         """
         Returns the threshold stopping criterion, or ``None`` if no threshold
-        stopping criterion is set. See :meth:`set_threshold`.
+        stopping criterion is set. See :meth:`set_threshold()`.
         """
         return self._threshold
 

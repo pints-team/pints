@@ -15,7 +15,7 @@ import scipy.stats
 
 class TwistedGaussianLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`LogPDF`.
+    *Extends:* :class:`pints.LogPDF`.
 
     Twisted multivariate normal 'banana' with un-normalised density [1]:
 
@@ -63,7 +63,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         y[0] = x[0] / np.sqrt(self._V)
         return self._phi.logpdf(y)
 
-    def dimension(self):
-        """ See: :meth:`LogPDF.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
 

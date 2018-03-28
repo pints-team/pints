@@ -9,6 +9,7 @@ examples.
 
 .. toctree::
 
+    fitzhugh_nagumo_model
     goodwin_oscillator_model
     high_dimensional_normal_logpdf
     hodgkin_huxley_ik_model

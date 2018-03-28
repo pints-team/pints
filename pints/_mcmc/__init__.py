@@ -247,7 +247,7 @@ class MCMCSampling(object):
         self._log_pdf = log_pdf
 
         # Get dimension
-        self._dimension = self._log_pdf.dimension()
+        self._dimension = self._log_pdf.n_parameters()
 
         # Check number of chains
         self._chains = int(chains)
@@ -321,7 +321,7 @@ class MCMCSampling(object):
     def max_iterations(self):
         """
         Returns the maximum iterations if this stopping criterion is set, or
-        ``None`` if it is not. See :meth:`set_max_iterations`.
+        ``None`` if it is not. See :meth:`set_max_iterations()`.
         """
         return self._max_iterations
 

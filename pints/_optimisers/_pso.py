@@ -157,19 +157,19 @@ class PSO(pints.PopulationBasedOptimiser):
         self._running = True
 
     def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init`. """
+        """ See :meth:`Loggable._log_init()`. """
         # Show best position of each particle
         for i in range(self._population_size):
             logger.add_float('f' + str(i), file_only=True)
 
     def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write`. """
+        """ See :meth:`Loggable._log_write()`. """
         # Show best position of each particle
         for f in self._fl:
             logger.log(f)
 
     def population_size(self):
-        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.population_size()`. """
         return self._population_size
 
     def set_local_global_balance(self, r=0.5):
@@ -192,7 +192,7 @@ class PSO(pints.PopulationBasedOptimiser):
         self._agmax = _amax - self._almax
 
     def set_population_size(self, population_size=None, parallel=False):
-        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.set_population_size()`. """
         if self._running:
             raise Exception('Cannot change settings during run.')
 

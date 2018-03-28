@@ -38,7 +38,7 @@ class NestedSampler(object):
         self._log_prior = log_prior
 
         # Get dimension
-        self._dimension = self._log_likelihood.dimension()
+        self._dimension = self._log_likelihood.n_parameters()
 
         # Print info to console
         self._verbose = True

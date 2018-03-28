@@ -82,11 +82,11 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         self._running = True
 
     def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init`. """
+        """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Accept.')
 
     def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write`. """
+        """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
 
     def name(self):
