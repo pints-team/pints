@@ -49,13 +49,13 @@ Sampling
 
 #. :class:`MCMC without gradients<MCMCSampler>`
 
-   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
    - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
    - DREAM
    - emcee (MCMC Hammer)
+   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
    - Metropolis-Hastings
-   - PopulationMCMC
+   - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
 
 #. :class:`Nested sampling<NestedSampler>`
 
@@ -105,7 +105,8 @@ All methods shown here are derivative-free methods that work on any
 Problems in Pints
 =================
 
-Pints defines :class:`Problem classes<SingleSeriesProblem>` that wrap around
+Pints defines :class:`single<SingleOutputProblem>` and
+:class:`multi-output<MultiOutputProblem>` problem classes that wrap around
 models and data, and over which :class:`error measures<ErrorMeasure>` or
 :class:`log-likelihoods<LogLikelihood>` can be defined.
 
@@ -113,14 +114,15 @@ To find the appropriate type of ``Problem`` to use, see the overview below:
 
 #. Systems with a single observable output
 
-   - Single data set: Use a :class:`SingleSeriesProblem` and any of the
+   - Single data set: Use a :class:`SingleOutputProblem` and any of the
      appropriate error measures or log-likelihoods
    - Multiple, independent data sets: Define multiple
-     :class:`SingleSeriesProblems<SingleSeriesProblem>` and an error measure
+     :class:`SingleOutputProblems<SingleOutputProblem>` and an error measure
      / log-likelihood on each, and then combine using e.g.
      :class:`SumOfErrors` or :class:`SumOfIndependentLogLikelihoods`.
 
 #. Systems with multiple observable outputs
 
-   - Not implemented yet!
+   - Single data set: Use a :class:`MultiOutputProblem` and any of the
+     appropriate error measures or log-likelihoods
 

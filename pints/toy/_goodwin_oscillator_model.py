@@ -14,6 +14,8 @@ import scipy
 
 class GoodwinOscillatorModel(pints.ForwardModel):
     """
+    *Extends:* :class:`pints.ForwardModel`.
+
     Three-state Goodwin oscillator toy model [1, 2].
 
     In this implementation of the model, only the last state is visible,
@@ -25,10 +27,13 @@ class GoodwinOscillatorModel(pints.ForwardModel):
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
     """
-
-    def dimension(self):
-        """ See :meth:`pints.ForwardModel.dimension`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
+
+    def n_outputs(self):
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
+        return 1    # Should maybe change this to 3 later...
 
     def _rhs(self, state, time, parameters):
         """
@@ -42,7 +47,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         return dxdt, dydt, dzdt
 
     def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate`. """
+        """ See :meth:`pints.ForwardModel.simulate()`. """
         y0 = [0.0054, 0.053, 1.93]
         solution = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,))

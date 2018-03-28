@@ -33,7 +33,7 @@ class TestBoundaries(unittest.TestCase):
         lower = [1, -2]
         upper = [3, 4]
         b = pints.Boundaries(lower, upper)
-        self.assertEqual(b.dimension(), len(lower))
+        self.assertEqual(b.n_parameters(), len(lower))
         self.assertTrue(np.all(b.lower() == np.array(lower)))
         self.assertTrue(np.all(b.upper() == np.array(upper)))
         self.assertTrue(np.all(b.range() == np.array(upper) - np.array(lower)))

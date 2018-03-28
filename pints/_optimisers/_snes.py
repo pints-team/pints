@@ -124,11 +124,11 @@ class SNES(pints.Optimiser):
         return 'Seperable Natural Evolution Strategy (SNES)'
 
     def population_size(self):
-        """ See :meth:`PopulationBasedOptimiser.population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.population_size()`. """
         return self._population_size
 
     def set_population_size(self, population_size=None, parallel=False):
-        """ See :meth:`PopulationBasedOptimiser.set_population_size`. """
+        """ See :meth:`PopulationBasedOptimiser.set_population_size()`. """
         if self._running:
             raise Exception('Cannot change settings during run.')
 
@@ -178,6 +178,6 @@ class SNES(pints.Optimiser):
             self._fbest = fx[order[0]]
 
     def xbest(self):
-        """ See :meth:`Optimiser.xbest`. """
+        """ See :meth:`Optimiser.xbest()`. """
         return self._xbest
 

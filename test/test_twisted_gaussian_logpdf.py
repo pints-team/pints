@@ -20,7 +20,7 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
     def test_twisted_gaussian_logpdf(self):
         # Test basics
         f = pints.toy.TwistedGaussianLogPDF()
-        self.assertEqual(f.dimension(), 10)
+        self.assertEqual(f.n_parameters(), 10)
         self.assertTrue(np.isscalar(f(np.zeros(10))))
 
         # TODO: Test more?

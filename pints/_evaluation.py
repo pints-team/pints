@@ -89,9 +89,7 @@ class Evaluator(object):
         return self._evaluate(positions)
 
     def _evaluate(self, positions):
-        """
-        Internal version of :meth:`evaluate()`.
-        """
+        """ See :meth:`evaluate()`. """
         raise NotImplementedError
 
 

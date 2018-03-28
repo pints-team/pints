@@ -34,7 +34,7 @@ class ComposedLogPrior(pints.LogPrior):
         for prior in priors:
             if not isinstance(prior, pints.LogPrior):
                 raise ValueError('All sub-priors must extend pints.LogPrior.')
-            self._dimension += prior.dimension()
+            self._dimension += prior.n_parameters()
 
         # Store
         self._priors = priors
@@ -44,12 +44,12 @@ class ComposedLogPrior(pints.LogPrior):
         lo = hi = 0
         for prior in self._priors:
             lo = hi
-            hi += prior.dimension()
+            hi += prior.n_parameters()
             output += prior(x[lo:hi])
         return output
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
         return self._dimension
 
     def sample(self, n=1):
@@ -58,7 +58,7 @@ class ComposedLogPrior(pints.LogPrior):
         lo = hi = 0
         for prior in self._priors:
             lo = hi
-            hi += prior.dimension()
+            hi += prior.n_parameters()
             output[:, lo:hi] = prior.sample(n)
         return output
 
@@ -96,8 +96,8 @@ class MultivariateNormalLogPrior(pints.LogPrior):
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._covariance))
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
         return self._dimension
 
     def sample(self, n=1):
@@ -129,8 +129,8 @@ class NormalLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
         return 1
 
     def sample(self, n=1):
@@ -163,7 +163,7 @@ class UniformLogPrior(pints.LogPrior):
             self._boundaries = pints.Boundaries(lower_or_boundaries, upper)
 
         # Cache dimension
-        self._dimension = self._boundaries.dimension()
+        self._dimension = self._boundaries.n_parameters()
 
         # Cache output value
         self._minf = -float('inf')
@@ -172,8 +172,8 @@ class UniformLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else self._minf
 
-    def dimension(self):
-        """ See :meth:`LogPrior.dimension()`. """
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
         return self._dimension
 
     def sample(self, n=1):

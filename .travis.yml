@@ -4,23 +4,24 @@ dist: trusty
 
 language: python
 
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-
 env:
   matrix:
     - PINTS_RUN_TESTS=true
 
 matrix:
     include:
-        # Coverage
+        - python: "2.7"
+          if: type != cron
+        - python: "3.4"
+          if: type != cron
+        - python: "3.5"
+          if: type != cron
+        - python: "3.6"
         - python: "3.6"
           env:
             - PINTS_COVERAGE=true
             - PINTS_RUN_TESTS=false
+          if: type != cron
 
 
 # command to install dependencies

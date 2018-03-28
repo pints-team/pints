@@ -14,7 +14,9 @@ import pints
 
 class LogisticModel(pints.ForwardModel):
     """
-    Logistic model.
+    *Extends:* :class:`pints.ForwardModel`.
+
+    Logistic model of population growth [1].
 
     .. math::
         f(t) &= \\frac{k}{1+(k/p_0 - 1)*\exp(-r t)} \\\\
@@ -27,6 +29,8 @@ class LogisticModel(pints.ForwardModel):
     Has two parameters: A growth rate :math:`r` and a carrying capacity
     :math:`k`. The initial population size :math:`f(0) = p_0` can be set using
     the (optional) named constructor arg ``initial_population_size``
+
+    [1] https://en.wikipedia.org/wiki/Population_growth
     """
 
     def __init__(self, initial_population_size=2):
@@ -35,7 +39,8 @@ class LogisticModel(pints.ForwardModel):
         if self._p0 < 0:
             raise ValueError('Population size cannot be negative.')
 
-    def dimension(self):
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 2
 
     def simulate(self, parameters, times):
