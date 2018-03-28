@@ -30,10 +30,14 @@ class ForwardModel(object):
         """
         raise NotImplementedError
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters, times, sensitivities=False):
         """
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``.
+
+        If ``sensitivities == True`` the function also calculates the
+        sensitivities of the forward simulation with respect to
+        the parameters.
 
         Arguments:
 
@@ -44,33 +48,18 @@ class ForwardModel(object):
             without duplicates, and without negative values.
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
+        ``sensitivities``
+            (optional) Set to ``True`` to calculate sensitivities
+            (default is ``False``).
+
+        Returns:
+            A numpy array of length ``t`` representing the values of the model
+            at the given time points. If  ``sensitivities == True`` it also
+            returns  a 2d numpy array of size ``(t,p)``, where ``p`` is the
+            number of parameters
 
         Note: For efficiency, both ``parameters`` and ``times`` will be passed
         in as read-only numpy arrays.
-        """
-        raise NotImplementedError
-
-    def sensitivities(self, parameters, times):
-        """
-        Calculates the sensitivities of the forward simulation with respect to
-        the parameters.
-
-        Arguments:
-
-        ``parameters``
-            An ordered list of parameter values at which to calculate the
-            sensitivities
-        ``times``
-            The times at which to evaluate. Must be an ordered sequence,
-            without duplicates, and without negative values.
-            All simulations are started at time 0, regardless of whether this
-            value appears in ``times``.
-
-        Returns:
-
-        A 2d numpy array of size ``(t,p)``, where ``p`` is the number of
-        parameters, and ``t`` is the number of time points
-
         """
         raise NotImplementedError
 
