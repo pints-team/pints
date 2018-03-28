@@ -39,7 +39,7 @@ class FitzhughNagumoModel(pints.ForwardModel):
                     \\right]\\\\
         \\frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
         \\left[\\begin{matrix} c \\left(- 3 V^{2} + 1\\right) & c \\\\
-                        - \\frac{1}{c} & - \\frac{b}{c}\\end{matrix}\\right] \\\\
+                    - \\frac{1}{c} & - \\frac{b}{c}\\end{matrix}\\right] \\\\
         \\frac{\partial \mathbf{f}}{\partial \mathbf{p}} &=
                         \\left[\\begin{matrix}0 & 0 & R - V^{3} + V\\\\
                         \\frac{1}{c} & - \\frac{R}{c} &
