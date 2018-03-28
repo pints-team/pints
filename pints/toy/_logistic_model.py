@@ -38,7 +38,13 @@ class LogisticModel(pints.ForwardModel):
     def dimension(self):
         return 2
 
-    def simulate(self, parameters, times, sensitivities=False):
+    def simulate(self, parameters, times):
+        return self._simulate(parameters, times, False)
+
+    def simulate_with_sensitivities(self, parameters, times):
+        return self._simulate(parameters, times, True)
+
+    def _simulate(self, parameters, times, sensitivities):
         r, k = [float(x) for x in parameters]
         times = np.asarray(times)
         if np.any(times < 0):
