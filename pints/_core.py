@@ -52,13 +52,13 @@ class ForwardModel(object):
 
     def sensitivities(self, parameters, times):
         """
-        Calculates the sensitivities of the forward simulation with respect to 
+        Calculates the sensitivities of the forward simulation with respect to
         the parameters.
 
         Arguments:
 
         ``parameters``
-            An ordered list of parameter values at which to calculate the 
+            An ordered list of parameter values at which to calculate the
             sensitivities
         ``times``
             The times at which to evaluate. Must be an ordered sequence,
@@ -68,7 +68,7 @@ class ForwardModel(object):
 
         Returns:
 
-        A 2d numpy array of size ``(t,p)``, where ``p`` is the number of 
+        A 2d numpy array of size ``(t,p)``, where ``p`` is the number of
         parameters, and ``t`` is the number of time points
 
         """
