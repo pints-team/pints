@@ -12,6 +12,7 @@ import pints
 import numpy as np
 import scipy
 import scipy.stats
+import scipy.special
 
 
 class ComposedLogPrior(pints.LogPrior):
@@ -118,6 +119,10 @@ class NormalLogPrior(pints.LogPrior):
     deviation of ``1``.
     """
     def __init__(self, mean, standard_deviation):
+        # Check that standard deviation is positive
+        if float(standard_deviation) <= 0:
+            raise ValueError('Standard deviation must be positve')
+
         # Parse input arguments
         self._mean = float(mean)
         self._sigma = float(standard_deviation)
@@ -136,6 +141,56 @@ class NormalLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
+
+class StudentTLogPrior():
+    """
+    *Extends:* :class:`LogPrior`
+
+    Defines a 1-d Student-t (log) prior with a given ``degrees of freedom``, ``location``,
+    and ``scale``.
+
+    For example: ``p = StudentTLogPrior(3, 0, 1)`` for degrees of freedom of ``3``, a location parameter of ``0``,
+    and scale of ``1``.
+    """
+    def __init__(self, df, location, scale):
+        # Test inputs
+        if float(df) <= 0:
+            raise ValueError('Degrees of freedom must be positive')
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        self._df = float(df)
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = 0.5 * (1.0 + self._df)
+        self._log_df = np.log(self._df)
+        self._log_scale = np.log(self._scale)
+        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+    def __call__(self, x):
+        return self._first * (self._log_df - np.log(self._df + ((x[0] - self._location) / self._scale)**2)) - 0.5 * self._log_df - self._log_scale - self._log_beta
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return rvs(df=self._df, loc=self._location, scale=self._scale, size=1)
+
+    def __call__(self, x):
+        return self._first * (self._log_df - np.log(self._df + ((x[0] - self._location) / self._scale)**2)) - 0.5 * self_log_df - self._log_scale - self._log_beta
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return rvs(df=self._df, loc=self._location, scale=self._scale, size=1)
 
 
 class UniformLogPrior(pints.LogPrior):
