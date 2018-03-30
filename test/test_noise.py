@@ -22,7 +22,6 @@ class TestNoise(unittest.TestCase):
     """
 
     def test_independent_noise(self):
-        # Test the special case where the initial size is zero
         values_1 = np.asarray([1, 2, 3, 10])
         values_2 = add_independent_noise(values_1, 1.0)
         for v1, v2 in zip(values_1, values_2):
