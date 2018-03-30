@@ -17,9 +17,10 @@ class ConstantModel(pints.ForwardModel):
     *Extends:* :class:`pints.ForwardModel`.
     .. math::
         f(t) &= a
-        
-    Has one parameter: :math:`r`, which is the user-specified output of the function.
-    This function is mostly useful for unit testing.
+
+    Has one parameter: :math:`r`, which is the user-specified
+    output of the function. This function is mostly useful for
+    unit testing.
 
     """
 
