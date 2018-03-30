@@ -148,10 +148,10 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as (nu_1, sigma_1, nu_2, sigma_2,...)
         params = x[-(2 * self._no):]
-        nu = params[0::2]
-        sigma = params[1::2]
+        nu = np.asarray(params[0::2])
+        sigma = np.asarray(params[1::2])
         error = self._values - self._problem.evaluate(x[:-(2 * self._no)])
-        return np.sum(0.5 * self._N * nu * np.log(nu) - self._N * np.log(sigma) - self._N * np.log(scipy.special.beta(0.5 * nu, 0.5)) - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2)))
+        return np.sum(0.5 * self._N * nu * np.log(nu) - self._N * np.log(sigma) - self._N * np.log(scipy.special.beta(0.5 * nu, 0.5)) - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2),axis=0))
 
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):

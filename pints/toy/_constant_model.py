@@ -27,11 +27,15 @@ class ConstantModel(pints.ForwardModel):
     def __init__(self):
         super(ConstantModel, self).__init__()
         self._no = None
-        self._parameters = None
+        self._parameters = [0]
 
     def parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        """ Returns parameters """
         return self._parameters
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return len(self._parameters)
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.outputs()`. """
@@ -56,4 +60,5 @@ class ConstantModel(pints.ForwardModel):
         if self._no == 1:
             return self._parameters[0] * np.ones(times.shape)
         else:
-            return [x * np.ones(times.shape) for x in self._parameters]
+            return np.transpose(np.asarray([x * np.ones(times.shape)
+                                            for x in self._parameters]))
