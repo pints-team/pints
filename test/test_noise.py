@@ -37,6 +37,7 @@ class TestNoise(unittest.TestCase):
         self.assertRaises(ValueError, AR1, 10, 1, 100)
         self.assertRaises(ValueError, AR1, 0.5, -1, 100)
         self.assertRaises(TypeError, AR1, 0.5, 1, 100.5)
+        self.assertRaises(ValueError, AR1, 0.5, 1, 0)
         self.assertTrue(np.abs(np.std(AR1(0.99, 1, 1000)) -
                         np.std(AR1(0.50, 1, 1000)) < 5))
         self.assertTrue(np.abs(np.std(AR1(0.50, 1, 1000)) -
@@ -56,6 +57,7 @@ class TestNoise(unittest.TestCase):
     def test_AR1_unity(self):
         self.assertRaises(ValueError, AR1_unity, 10, 1, 100)
         self.assertRaises(ValueError, AR1_unity, 0.5, -1, 100)
+        self.assertRaises(ValueError, AR1_unity, 0.5, 1, 0)
         self.assertTrue(np.abs(np.std(AR1_unity(0.9, 1, 10000)) -
                         np.std(AR1_unity(0.50, 1, 10000))) < 2)
         self.assertTrue(np.abs(np.mean(AR1_unity(-0.5, 1, 10000)) - 1) < 2)
@@ -68,6 +70,7 @@ class TestNoise(unittest.TestCase):
             self.assertNotEqual(v1, v2)
         self.assertRaises(ValueError, multiply_AR1_noise, values_1, 10, 1)
         self.assertRaises(ValueError, multiply_AR1_noise, values_1, 0.5, -1)
+        self.assertRaises(ValueError, multiply_AR1_noise, [], 0.5, 1)
 
 
 if __name__ == '__main__':
