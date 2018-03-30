@@ -20,9 +20,9 @@ class TestConstantModel(unittest.TestCase):
 
     def test_params_outputs(self):
         model = pints.toy.ConstantModel()
-        # Before simulating parameters and output numbers are -99
-        self.assertEqual(model.parameters(), -99)
-        self.assertEqual(model.n_outputs(), -99)
+        # Before simulating parameters and output numbers are None
+        self.assertEqual(model.parameters(), None)
+        self.assertEqual(model.n_outputs(), None)
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
         values = model.simulate(parameters, times)
@@ -57,7 +57,7 @@ class TestConstantModel(unittest.TestCase):
     def test_random_number_parameters(self):
         model = pints.toy.ConstantModel()
         times = [0, 1, 2, 10000]
-        no = np.random.randint(low=1, high=10, size=1)
+        no = np.random.randint(low=2, high=10, size=1)
         parameters = np.random.uniform(low=-100, high=1000, size=no)
         values = model.simulate(parameters, times)
         for v in values:
