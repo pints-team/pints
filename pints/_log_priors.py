@@ -190,7 +190,7 @@ class StudentTLogPrior():
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return rvs(df=self._df, loc=self._location, scale=self._scale, size=1)
+        return scipy.stats.t.rvs(df=self._df, loc=self._location, scale=self._scale, size=1)
 
 
 class UniformLogPrior(pints.LogPrior):
