@@ -50,7 +50,7 @@ class ConstantModel(pints.ForwardModel):
             raise ValueError('Function takes at least 1 parameter')
         if np.any(np.isnan(self._parameters)):
             raise ValueError('Parameters must be a number.')
-        if np.any(np.isinf(self._a)):
+        if np.any(np.isinf(self._parameters)):
             raise ValueError('Parameters must be finite.')
 
         if self._no == 1:
