@@ -17,6 +17,13 @@ class TestConstantModel(unittest.TestCase):
     """
     Tests if the constant (toy) model with multiple outputs works.
     """
+    
+    def test_params_outputs(self):
+        model = pints.toy.ConstantModel()
+        times = [0, 1, 2, 10000]
+        parameters = [-1, 2, 100]
+        self.assertSequenceEqual(model.parameters(), parameters)
+        self.assertEqual(model.n_outputs(), len(parameters))
 
     def test_zero(self):
         # Test the special case where value is zero for a single input
@@ -60,6 +67,7 @@ class TestConstantModel(unittest.TestCase):
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
+        self.assertRaises(ValueError, model.simulate, [], times)
         self.assertRaises(ValueError, model.simulate, [-10, np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
