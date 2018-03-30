@@ -34,14 +34,14 @@ class FitzhughNagumoModel(pints.ForwardModel):
 
     .. math::
         \\mathbf{f}(\\mathbf{y},\\mathbf{p},t) &= \\left[\\begin{matrix}
-                    c \\left(R - V^{3}+V\\right)\\\\
+                    c \\left(R - V^{3}/3+V\\right)\\\\
                     - \\frac{1}{c} \\left(R b + V - a\\right)\\end{matrix}
                     \\right]\\\\
         \\frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
-        \\left[\\begin{matrix} c \\left(- 3 V^{2} + 1\\right) & c \\\\
+        \\left[\\begin{matrix} c \\left(1- V^{2}\\right) & c \\\\
                     - \\frac{1}{c} & - \\frac{b}{c}\\end{matrix}\\right] \\\\
         \\frac{\partial \mathbf{f}}{\partial \mathbf{p}} &=
-                        \\left[\\begin{matrix}0 & 0 & R - V^{3} + V\\\\
+                        \\left[\\begin{matrix}0 & 0 & R - V^{3}/3 + V\\\\
                         \\frac{1}{c} & - \\frac{R}{c} &
                         \\frac{1}{c^{2}} \\left(R b + V - a\\right)
                         \\end{matrix}\\right]
@@ -95,7 +95,7 @@ class FitzhughNagumoModel(pints.ForwardModel):
             def jac(y):
                 V, R = y
                 ret = np.empty((2, 2))
-                ret[0, 0] = c*(1-V**2)
+                ret[0, 0] = c * (1 - V**2)
                 ret[0, 1] = c
                 ret[1, 0] = -1 / c
                 ret[1, 1] = -b / c
@@ -106,7 +106,7 @@ class FitzhughNagumoModel(pints.ForwardModel):
                 ret = np.empty((2, 3))
                 ret[0, 0] = 0
                 ret[0, 1] = 0
-                ret[0, 2] = R - V**3/3 + V
+                ret[0, 2] = R - V**3 / 3 + V
                 ret[1, 0] = 1 / c
                 ret[1, 1] = -R / c
                 ret[1, 2] = (R * b + V - a) / c**2
