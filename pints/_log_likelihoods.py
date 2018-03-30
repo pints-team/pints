@@ -10,6 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import scipy.special
 
 
 class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
@@ -118,7 +119,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         
         .. math::
         \log{L(\\theta, \nu, \sigma)} =
-        \\frac{\nu}{2}\log(\nu) - N\log(\sigma) - N\log B(\nu/2, 1/2)
+        N\\frac{\nu}{2}\log(\nu) - N\log(\sigma) - N\log B(\nu/2, 1/2)
         -\\frac{1+\nu}{2}\sum_{i=1}^N\log(\nu + \\frac{x_i - f(\\theta)}{\sigma}^2)
         
         where B(.,.) is a beta function.
@@ -146,11 +147,11 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
 
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as (nu_1, sigma_1, nu_2, sigma_2,...)
-        params = x[:-self._no:]
+        params = x[-(2 * self._no):]
         nu = params[0::2]
         sigma = params[1::2]
-        error = self._values - self._problem.evaluate(x[:-self._no])
-        return np.sum(0.5 * nu * np.log(nu) - self._N * np.log(sigma) - self._N * np.log(scipy.special.beta(0.5 * nu, 0.5)) - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2)))
+        error = self._values - self._problem.evaluate(x[:-(2 * self._no)])
+        return np.sum(0.5 * self._N * nu * np.log(nu) - self._N * np.log(sigma) - self._N * np.log(scipy.special.beta(0.5 * nu, 0.5)) - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2)))
 
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
