@@ -33,12 +33,13 @@ class TestConstantModel(unittest.TestCase):
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
         values = model.simulate(parameters, times)
-        self.assertEqual(len(values), len(times))
+        for v in values:
+            self.assertEqual(len(v), len(times))
         i = 0
         for v in values:
             for x in v:
                 self.assertEqual(x, parameters[i])
-        i += 1
+            i += 1
 
     def test_random_number_parameters(self):
         model = pints.toy.ConstantModel()
@@ -52,14 +53,13 @@ class TestConstantModel(unittest.TestCase):
         for v in values:
             for x in v:
                 self.assertEqual(x, parameters[i])
-        i += 1
+            i += 1
 
     def test_errors(self):
         model = pints.toy.ConstantModel()
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
-        self.assertRaises(ValueError, model.simulate, [1, 2], times)
         self.assertRaises(ValueError, model.simulate, [-10, np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
