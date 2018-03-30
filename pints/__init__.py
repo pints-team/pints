@@ -65,7 +65,6 @@ from ._log_priors import (
     ComposedLogPrior,
     MultivariateNormalLogPrior,
     NormalLogPrior,
-    StudentTLogPrior,
     UniformLogPrior,
 )
 
@@ -75,7 +74,6 @@ from ._log_priors import (
 from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
     UnknownNoiseLogLikelihood,
-    StudentTLogLikelihood,
     ScaledLogLikelihood,
     SumOfIndependentLogLikelihoods,
 )

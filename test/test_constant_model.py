@@ -15,11 +15,24 @@ import pints.toy
 
 class TestConstantModel(unittest.TestCase):
     """
-    Tests if the constant (toy) model works.
+    Tests if the constant (toy) model with multiple outputs works.
     """
 
+    def test_params_outputs(self):
+        model = pints.toy.ConstantModel()
+        # Before simulating parameters and output numbers are None
+        self.assertEqual(model.parameters(), None)
+        self.assertEqual(model.n_outputs(), None)
+        times = [0, 1, 2, 10000]
+        parameters = [-1, 2, 100]
+        values = model.simulate(parameters, times)
+        # After simulating
+        self.assertEqual(len(values[0]), len(times))
+        self.assertSequenceEqual(model.parameters(), parameters)
+        self.assertEqual(model.n_outputs(), len(parameters))
+
     def test_zero(self):
-        # Test the special case where the initial size is zero
+        # Test the special case where value is zero for a single input
         model = pints.toy.ConstantModel()
         times = [0, 1, 2, 10000]
         parameters = [0]
@@ -28,23 +41,40 @@ class TestConstantModel(unittest.TestCase):
         for v in values:
             self.assertEqual(v, 0)
 
-    def test_100(self):
-        # Test the special case where the initial size is zero
+    def test_minus_1_2_100(self):
         model = pints.toy.ConstantModel()
         times = [0, 1, 2, 10000]
-        parameters = [100]
+        parameters = [-1, 2, 100]
         values = model.simulate(parameters, times)
-        self.assertEqual(len(values), len(times))
         for v in values:
-            self.assertEqual(v, 100)
+            self.assertEqual(len(v), len(times))
+        i = 0
+        for v in values:
+            for x in v:
+                self.assertEqual(x, parameters[i])
+            i += 1
+
+    def test_random_number_parameters(self):
+        model = pints.toy.ConstantModel()
+        times = [0, 1, 2, 10000]
+        no = np.random.randint(low=2, high=10, size=1)
+        parameters = np.random.uniform(low=-100, high=1000, size=no)
+        values = model.simulate(parameters, times)
+        for v in values:
+            self.assertEqual(len(v), len(times))
+        i = 0
+        for v in values:
+            for x in v:
+                self.assertEqual(x, parameters[i])
+            i += 1
 
     def test_errors(self):
         model = pints.toy.ConstantModel()
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
-        self.assertRaises(ValueError, model.simulate, [1, 2], times)
-        self.assertRaises(ValueError, model.simulate, [np.nan], times)
+        self.assertRaises(ValueError, model.simulate, [], times)
+        self.assertRaises(ValueError, model.simulate, [-10, np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
 

@@ -77,7 +77,7 @@ class TestLogLikelihood(unittest.TestCase):
             ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
-    
+
     def test_student_t_log_likelihood_single(self):
         """
         Single-output test for Student-t noise log-likelihood methods
@@ -102,7 +102,7 @@ class TestLogLikelihood(unittest.TestCase):
         values += np.random.normal(0, sigma, values.shape)
         problem = pints.MultiOutputProblem(model, times, values)
         log_likelihood = pints.StudentTLogLikelihood(problem)
-        
+
 
     def test_known_and_unknown_noise_multi(self):
         """
