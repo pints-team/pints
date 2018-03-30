@@ -17,11 +17,16 @@ class TestConstantModel(unittest.TestCase):
     """
     Tests if the constant (toy) model with multiple outputs works.
     """
-    
+
     def test_params_outputs(self):
         model = pints.toy.ConstantModel()
+        # Before simulating parameters and output numbers are -99
+        self.assertSequenceEqual(model.parameters(), -99)
+        self.assertEqual(model.n_outputs(), -99)
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
+        values = model.simulate(parameters, times)
+        # After simulating
         self.assertSequenceEqual(model.parameters(), parameters)
         self.assertEqual(model.n_outputs(), len(parameters))
 
