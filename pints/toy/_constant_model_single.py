@@ -1,5 +1,5 @@
 #
-# Constant model.
+# Constant model with single output.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -12,7 +12,7 @@ import numpy as np
 import pints
 
 
-class ConstantModel(pints.ForwardModel):
+class ConstantModelSingle(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
     .. math::
@@ -25,7 +25,7 @@ class ConstantModel(pints.ForwardModel):
     """
 
     def __init__(self):
-        super(ConstantModel, self).__init__()
+        super(ConstantModelSingle, self).__init__()
         self._a = -99
 
     def n_parameters(self):
@@ -33,9 +33,9 @@ class ConstantModel(pints.ForwardModel):
         return 1
 
     def simulate(self, parameters, times):
-        return self._simulate(parameters, times, False)
+        return self._simulate(parameters, times)
 
-    def _simulate(self, parameters, times, sensitivities):
+    def _simulate(self, parameters, times):
         self._a = float(parameters[0])
         times = np.asarray(times)
         if np.any(times < 0):
