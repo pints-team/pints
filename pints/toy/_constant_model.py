@@ -27,7 +27,7 @@ class ConstantModel(pints.ForwardModel):
     def __init__(self):
         super(ConstantModel, self).__init__()
         self._no = -99
-        self._a = -99
+        self._parameters = -99
 
     def parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
