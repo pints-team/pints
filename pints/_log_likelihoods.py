@@ -10,7 +10,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import scipy.special
 
 
 class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
@@ -70,7 +69,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
             \prod_{i=1}^N \\frac{1}{2\pi\sigma^2}\exp\left(
             -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
 
-    leading to a log likelihood of:
+    leading to a log likelihood of
 
     .. math::
         \log{L(\\theta, \sigma)} =
@@ -104,54 +103,6 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         error = self._values - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
-
-
-class StudentTLogLikelihood(pints.ProblemLogLikelihood):
-    """
-        *Extends:* :class:`ProblemLogLikelihood`
-        
-        Calculates a log-likelihood assuming independent Student-t-distributed noise
-        at each time point, and adds two parameters: one representing the
-        degrees of freedom (``nu''), the other representing the scale (``sigma'').
-        
-        For a noise characterised by ``nu'' and ``sigma``, the log likelihood is of
-        the form:
-        
-        .. math::
-        \log{L(\\theta, \nu, \sigma)} =
-        N\\frac{\nu}{2}\log(\nu) - N\log(\sigma) - N\log B(\nu/2, 1/2)
-        -\\frac{1+\nu}{2}\sum_{i=1}^N\log(\nu + \\frac{x_i - f(\\theta)}{\sigma}^2)
-        
-        where B(.,.) is a beta function.
-        
-        Arguments:
-        
-        ``problem``
-        A :class:`SingleOutputProblem` or :class`MultiOutputProblem`. For a
-        single-output problem a single parameter is added, for a multi-output
-        problem ``n_outputs`` parameters are added.
-        
-        """
-    def __init__(self, problem):
-        super(StudentTLogLikelihood, self).__init__(problem)
-
-        # Get number of times, number of outputs
-        self._nt = len(self._times)
-        self._no = problem.n_outputs()
-
-        # Add parameters to problem (two for each output)
-        self._dimension = problem.n_parameters() + 2 * self._no
-
-        # Pre-calculate
-        self._N = len(self._times)
-
-    def __call__(self, x):
-        # For multiparameter problems the parameters are stored as (nu_1, sigma_1, nu_2, sigma_2,...)
-        params = x[-(2 * self._no):]
-        nu = params[0::2]
-        sigma = params[1::2]
-        error = self._values - self._problem.evaluate(x[:-(2 * self._no)])
-        return np.sum(0.5 * self._N * nu * np.log(nu) - self._N * np.log(sigma) - self._N * np.log(scipy.special.beta(0.5 * nu, 0.5)) - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2)))
 
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
