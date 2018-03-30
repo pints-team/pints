@@ -43,10 +43,11 @@ class TestConstantModel(unittest.TestCase):
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
-        self.assertRaises(ValueError, model.simulate, [1,2], times)
+        self.assertRaises(ValueError, model.simulate, [1, 2], times)
         self.assertRaises(ValueError, model.simulate, [np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
+
 
 if __name__ == '__main__':
     unittest.main()
