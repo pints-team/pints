@@ -77,6 +77,18 @@ class TestLogLikelihood(unittest.TestCase):
             ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
+    
+    def test_student_t_log_likelihood_single(self):
+        """
+        Single-output test for Student-t noise log-likelihood methods
+        """
+        model = toy.ConstantModel()
+        parameters = [0]
+        times = np.asarray([1,2,3,4])
+        values = np.asarray([1.0, -10.7, 15.5])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood(parameters),-13.39815657335125)
 
     def test_known_and_unknown_noise_multi(self):
         """
