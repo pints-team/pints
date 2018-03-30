@@ -75,6 +75,7 @@ from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
     UnknownNoiseLogLikelihood,
     ScaledLogLikelihood,
+    StudentTLogLikelihood,
     SumOfIndependentLogLikelihoods,
 )
 
