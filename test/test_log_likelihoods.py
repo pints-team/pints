@@ -82,14 +82,13 @@ class TestLogLikelihood(unittest.TestCase):
         """
         Single-output test for Student-t noise log-likelihood methods
         """
-        model = toy.LogisticModel()
-        parameters = [0.015, 500]
-        sigma = 0.1
-        times = np.linspace(0, 1000, 5)
-        values = model.simulate(parameters, times)
-        values += np.asarray([1,-1,1,-1,1])
+        model = toy.ConstantModel()
+        parameters = [0]
+        times = np.asarray([1,2,3,4])
+        values = np.asarray([1.0, -10.7, 15.5])
         problem = pints.SingleOutputProblem(model, times, values)
-    
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood(parameters),-13.39815657335125)
 
     def test_known_and_unknown_noise_multi(self):
         """
