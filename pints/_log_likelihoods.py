@@ -108,30 +108,30 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
 class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     """
-        *Extends:* :class:`ProblemLogLikelihood`
+    *Extends:* :class:`ProblemLogLikelihood`
         
-        Calculates a log-likelihood assuming independent Student-t-distributed noise
-        at each time point, and adds two parameters: one representing the
-        degrees of freedom (``nu''), the other representing the scale (``sigma'').
+    Calculates a log-likelihood assuming independent Student-t-distributed noise
+    at each time point, and adds two parameters: one representing the
+    degrees of freedom (``nu''), the other representing the scale (``sigma'').
         
-        For a noise characterised by ``nu'' and ``sigma``, the log likelihood is of
-        the form:
+    For a noise characterised by ``nu'' and ``sigma``, the log likelihood is of
+    the form:
         
-        .. math::
+    .. math::
         \log{L(\\theta, \nu, \sigma)} =
         N\\frac{\nu}{2}\log(\nu) - N\log(\sigma) - N\log B(\nu/2, 1/2)
         -\\frac{1+\nu}{2}\sum_{i=1}^N\log(\nu + \\frac{x_i - f(\\theta)}{\sigma}^2)
         
-        where B(.,.) is a beta function.
+    where B(.,.) is a beta function.
         
-        Arguments:
+    Arguments:
         
-        ``problem``
-        A :class:`SingleOutputProblem` or :class`MultiOutputProblem`. For a
-        single-output problem a single parameter is added, for a multi-output
-        problem ``n_outputs`` parameters are added.
-        
-        """
+    ``problem``
+    A :class:`SingleOutputProblem` or :class`MultiOutputProblem`. For a
+    single-output problem two parameters is added (nu, sigma), where nu is
+    the dgrees of freedom and sigma is scale, for a multi-output
+    problem ``2 * n_outputs`` parameters are added.
+    """
     def __init__(self, problem):
         super(StudentTLogLikelihood, self).__init__(problem)
 

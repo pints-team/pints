@@ -89,6 +89,20 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.StudentTLogLikelihood(problem)
         self.assertAlmostEqual(log_likelihood(parameters),-13.39815657335125)
+    
+    def test_student_t_log_likelihood_multi(self):
+        """
+        Multi-output test for Student-t noise log-likelihood methods
+        """
+        model = toy.FitzhughNagumoModel()
+        parameters = [0.5, 0.5, 0.5]
+        sigma = 0.1
+        times = np.linspace(0, 100, 100)
+        values = model.simulate(parameters, times)
+        values += np.random.normal(0, sigma, values.shape)
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        
 
     def test_known_and_unknown_noise_multi(self):
         """
