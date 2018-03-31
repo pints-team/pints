@@ -66,6 +66,7 @@ from ._log_priors import (
     MultivariateNormalLogPrior,
     NormalLogPrior,
     UniformLogPrior,
+    StudentTLogPrior,
 )
 
 #
