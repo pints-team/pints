@@ -58,9 +58,60 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
         self._current = None
         self._current_log_pdf = None
         self._proposed = None
+        
+        # Default scale for momentum proposals
+        self._momentum_sigma = np.identity(self._dimension)
+        
+        # Default integration step size for leapfrog algorithm
+        self._epsilon = 0.2
+        
+        # Default number of steps to integrate over
+        self._L = 20
+        
+        # Default masses
+        self._mass = np.ones(self._dimension)
+        
+        # Default threshold for Hamiltonian divergences
+        # (currently set to match Stan)
+        self._hamiltonian_threshold = 10**3
 
-        # Default settings
-        self.set_target_acceptance_rate()
+    def set_momentum_sigma(self, momentum_sigma):
+        """
+        Sets the standard deviation for the multivariate
+        normal distribution used to propose new momentum
+        values.
+        """
+        if not self.is_pos_def(momentum_sigma):
+            raise ValueError('Multivariate normal for momentum ' + \
+                             'proposals must be positive definite')
+        self._momentum_sigma = momentum_sigma
+    
+    def is_pos_def(self, x):
+        """
+        Checks if a matrix is positive definite by testing
+        that all of the eigenvalues are positive.
+        """
+        return np.all(np.linalg.eigvals(x) > 0)
+    
+    def set_epsilon(self, epsilon):
+        """
+        Sets the step size for the leapfrog algorithm.
+        """
+        if epsilon <= 0:
+            raise ValueError('Step size for leapfrog algorithm ' + \
+                             'must be positive.')
+        self._epsilon = epsilon
+    
+    def set_L(self, L):
+        """
+        Sets the number of leapfrog steps to carry out for each
+        iteration.
+        """
+        if not isinstance(L, int):
+            raise TypeError('Number of steps must be an integer')
+        if L < 1:
+            raise ValueError('Number of steps must exceed 0.')
+        self._L = L
 
     def acceptance_rate(self):
         """
@@ -76,13 +127,30 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Propose new point
         if self._proposed is None:
+            # Sample initial momentum
+            q = self._current
+            p = np.random.multivariate_normal(
+                np.zeros(self._dimension), self._momentum_sigma)
+            self._current_p = p
+            
+            # Leapfrog algorithm
+            p = p - epsilon * grad_U(q) / 2
+            
+            for i in range(0, self._L):
+                # Make a full step for the position
+                q = q + epsilon * p
 
-            # Note: Normal distribution is symmetric
-            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
-            #  distribution term from the acceptance criterion
-            self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._loga) * self._sigma)
-
+                # Make a full step for the momentum, except at end of trajectory
+                if(i != L):
+                    p = p - epsilon * grad_U(q)
+            
+            self._proposed = q
+            # Make a half step for momentum at the end.
+            p = p - epsilon * grad_U(q) / 2
+            
+            # Negate momentum at end of trajectory to make the proposal symmetric
+            self._proposed_p = -p
+            
             # Set as read-only
             self._proposed.setflags(write=False)
 
@@ -104,14 +172,17 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
         # Set initial mu and sigma
         self._mu = np.array(self._x0, copy=True)
         self._sigma = np.array(self._sigma0, copy=True)
-
-        # Adaptation
-        self._loga = 0
-        self._adaptations = 2
-
+        
         # Acceptance rate monitoring
         self._iterations = 0
         self._acceptance = 0
+        
+        # Set initial momentum proposals to None
+        self._current_p = None
+        self._proposed_p = None
+        
+        # Create a vector of divergent iterations
+        self._divergent = np.asarray([], dtype='int')
 
         # Update sampler state
         self._running = True
@@ -126,7 +197,7 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Adaptive covariance MCMC'
+        return 'Hamiltonian Monte Carlo'
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -155,40 +226,30 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
 
             # Return first point for chain
             return self._current
-
-        # Check if the proposed point can be accepted
-        accepted = 0
-        if np.isfinite(fx):
-            u = np.log(np.random.uniform(0, 1))
-            if u < fx - self._current_log_pdf:
-                accepted = 1
-                self._current = self._proposed
-                self._current_log_pdf = fx
-
-        # Clear proposal
-        self._proposed = None
-
-        # Adapt covariance matrix
-        if self._adaptation:
-            # Set gamma based on number of adaptive iterations
-            gamma = self._adaptations ** -0.6
-            self._adaptations += 1
-
-            # Update mu, log acceptance rate, and covariance matrix
-            self._mu = (1 - gamma) * self._mu + gamma * self._current
-            self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-            self._sigma = (
-                (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
-
+        
+        current_K = np.sum(self._current_p**2 / (2.0 * self._mass))
+        proposed_K = np.sum(self._proposed_p**2 / (2.0 * self._mass))
+        
+        # Check for divergent iterations by testing whether the
+        # Hamiltonian difference is above a threshold
+        if fx + proposed_K - (self._current_log_pdf + current_K) > self._hamiltonian_threshold:
+            self._divergent = np.append(self._divergent, self._iterations)
+  
+        # Accept or reject the state at end of trajectory, returning either
+        # the position at the end of the trajectory or the initial position
+        r = np.exp(self._current_log_pdf - fx + current_K - proposed_K)
+        if np.random.rand() < r:
+            accepted = 1
+            self._current = self._proposed
+            self._current_log_pdf = fx
+        else:
+            accepted = 0
+        
+        self._iterations += 1    
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
                             (self._iterations + 1))
-
-        # Increase iteration count
-        self._iterations += 1
-
-        # Return new point for chain
+        
         return self._current
 
     def replace(self, x, fx):
@@ -212,21 +273,3 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
         # Store
         self._current = x
         self._current_log_pdf = fx
-
-    def set_target_acceptance_rate(self, rate=0.3):
-        """
-        Sets the target acceptance rate.
-        """
-        rate = float(rate)
-        if rate <= 0:
-            raise ValueError('Target acceptance rate must be greater than 0.')
-        elif rate > 1:
-            raise ValueError('Target acceptance rate cannot exceed 1.')
-        self._target_acceptance = rate
-
-    def target_acceptance_rate(self):
-        """
-        Returns the target acceptance rate.
-        """
-        return self._target_acceptance_rate
-
