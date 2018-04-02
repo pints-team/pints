@@ -12,9 +12,9 @@ import pints
 import numpy as np
 
 
-class HMCMCMC(pints.SingleChainAdaptiveMCMC):
+class HMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`SingleChainAdaptiveMCMC`
+    *Extends:* :class:`SingleChainMCMC`
 
     Implements Hamiltonian Monte Caro as described in [1].
 
@@ -49,7 +49,7 @@ class HMCMCMC(pints.SingleChainAdaptiveMCMC):
 
     """
     def __init__(self, x0, sigma0=None):
-        super(SingleChainAdaptive, self).__init__(x0, sigma0)
+        super(HMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
