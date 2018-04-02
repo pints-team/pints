@@ -59,6 +59,17 @@ class TestLogistic(unittest.TestCase):
         self.assertRaises(ValueError, model.simulate, parameters, times)
         self.assertRaises(ValueError, pints.toy.LogisticModel, -1)
 
+    def test_sensitivities(self):
+        model = pints.toy.LogisticModel(2)
+        times = [0, 1, 2, 10000]
+        parameters = [1, 5]
+        values, dvdp = model.simulate_with_sensitivities(
+            parameters, times)
+        self.assertEqual(dvdp[0, 0], 0)
+        self.assertEqual(dvdp[-1, 0], 0.0)
+        self.assertEqual(dvdp[0, 1], 0)
+        self.assertEqual(dvdp[-1, 1], 1.0)
+
 
 if __name__ == '__main__':
     unittest.main()

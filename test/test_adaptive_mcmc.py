@@ -35,7 +35,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.real_parameters = np.array(self.real_parameters)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleSeriesProblem(
+        self.problem = pints.SingleOutputProblem(
             self.model, self.times, self.values)
 
         # Create a uniform prior over both the parameters and the new noise

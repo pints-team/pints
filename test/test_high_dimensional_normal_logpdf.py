@@ -21,7 +21,7 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
 
         # Test basic usage
         f = pints.toy.HighDimensionalNormalLogPDF(3)
-        self.assertEqual(f.dimension(), 3)
+        self.assertEqual(f.n_parameters(), 3)
         cov = np.array([
             [1, 0.5 * np.sqrt(2), 0.5 * np.sqrt(3)],
             [0.5 * np.sqrt(2), 2, 0.5 * np.sqrt(2) * np.sqrt(3)],
@@ -34,7 +34,7 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         self.assertTrue(f1 > f2)
 
         f = pints.toy.HighDimensionalNormalLogPDF(100)
-        self.assertEqual(f.dimension(), 100)
+        self.assertEqual(f.n_parameters(), 100)
         f1 = f(np.zeros(100))
         f2 = f(np.ones(100) * 0.1)
         self.assertTrue(np.isscalar(f1))
