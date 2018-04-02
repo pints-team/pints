@@ -26,12 +26,6 @@ class ConstantModel(pints.ForwardModel):
 
     def __init__(self):
         super(ConstantModel, self).__init__()
-        self._no = None
-        self._parameters = [0]
-
-    def parameters(self):
-        """ Returns parameters """
-        return self._parameters
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """

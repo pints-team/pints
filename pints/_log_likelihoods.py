@@ -132,7 +132,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     ``problem``
     A :class:`SingleOutputProblem` or :class`MultiOutputProblem`. For a
     single-output problem two parameters is added (nu, sigma), where nu is
-    the dgrees of freedom and sigma is scale, for a multi-output
+    the degrees of freedom and sigma is scale, for a multi-output
     problem ``2 * n_outputs`` parameters are added.
     """
     def __init__(self, problem):
@@ -150,7 +150,8 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
 
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as
-        # (nu_1, sigma_1, nu_2, sigma_2,...)
+        # (model_params_1, model_params_2, ..., model_params_k,
+        # nu_1, sigma_1, nu_2, sigma_2,...)
         params = x[-(2 * self._no):]
         nu = np.asarray(params[0::2])
         sigma = np.asarray(params[1::2])

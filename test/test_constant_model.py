@@ -21,14 +21,11 @@ class TestConstantModel(unittest.TestCase):
     def test_params_outputs(self):
         model = pints.toy.ConstantModel()
         # Before simulating parameters and output numbers are None
-        self.assertEqual(model.parameters()[0], 0)
-        self.assertEqual(model.n_outputs(), None)
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
         values = np.transpose(model.simulate(parameters, times))
         # After simulating
         self.assertEqual(len(values[0]), len(times))
-        self.assertSequenceEqual(model.parameters(), parameters)
         self.assertEqual(model.n_outputs(), len(parameters))
 
     def test_zero(self):
