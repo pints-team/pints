@@ -138,6 +138,48 @@ class NormalLogPrior(pints.LogPrior):
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
 
 
+class StudentTLogPrior():
+    """
+    *Extends:* :class:`LogPrior`
+    Defines a 1-d Student-t (log) prior with a given ``degrees of freedom``,
+    ``location``, and ``scale``.
+    For example: ``p = StudentTLogPrior(3, 0, 1)`` for degrees of freedom
+    of ``3``, a location parameter of ``0``, and scale of ``1``.
+    """
+    def __init__(self, location, df, scale):
+        # Test inputs
+        if float(df) <= 0:
+            raise ValueError('Degrees of freedom must be positive')
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        self._df = float(df)
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = 0.5 * (1.0 + self._df)
+        self._log_df = np.log(self._df)
+        self._log_scale = np.log(self._scale)
+        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+    def __call__(self, x):
+        return self._first * (self._log_df -
+                              np.log(self._df + ((x[0] - self._location)
+                                                 / self._scale)**2)) \
+            - 0.5 * self._log_df - self._log_scale - self._log_beta
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.t.rvs(df=self._df, loc=self._location,
+                                 scale=self._scale, size=n)
+
+
 class UniformLogPrior(pints.LogPrior):
     """
     *Extends:* :class:`LogPrior`
