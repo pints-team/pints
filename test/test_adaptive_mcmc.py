@@ -11,6 +11,7 @@ import pints
 import pints.toy as toy
 import unittest
 import numpy as np
+import sampler_validation
 
 debug = False
 
@@ -51,6 +52,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
             self.log_likelihood, self.log_prior)
+
+        # Create validation object
+        validation = sampler_validation.SamplerValidation(pints.AdaptiveCovarianceMCMC)
 
     def test_method(self):
 
@@ -139,6 +143,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
 
+    def test_validation_normal_low_correlation(self):
+        validation.normal_low_correlation(4)
+    
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
