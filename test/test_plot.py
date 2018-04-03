@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 import matplotlib
 
-# Avoid DISPLAY problem...
+# Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
 
 debug = False
