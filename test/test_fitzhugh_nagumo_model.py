@@ -16,6 +16,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
     """
     Tests if the Fitzhugh-Nagumo toy model runs.
     """
+
     def test_run(self):
 
         model = pints.toy.FitzhughNagumoModel()
@@ -25,12 +26,16 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         x = [1, 1, 1]
         times = [1, 2, 3, 4]
         values = model.simulate(x, times)
-        self.assertEqual(values.shape, (4, 2))
+        self.assertEqual(values.shape, (len(times), 2))
+
+        values, dvalues_dp = model.simulate_with_sensitivities(x, times)
+        self.assertEqual(values.shape, (len(times), 2))
+        self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
 
         # Test alternative starting position
         model = pints.toy.FitzhughNagumoModel([0.1, 0.1])
         values = model.simulate(x, times)
-        self.assertEqual(values.shape, (4, 2))
+        self.assertEqual(values.shape, (len(times), 2))
 
         # Test errors
         times = [-1, 2, 3, 4]
