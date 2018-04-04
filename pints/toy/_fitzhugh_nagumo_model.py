@@ -49,7 +49,7 @@ class FitzhughNagumoModel(pints.ForwardModel):
     Arguments:
 
     ``y0``
-        The system's initial
+        The system's initial state
     """
 
     def __init__(self, y0=None):
@@ -78,7 +78,28 @@ class FitzhughNagumoModel(pints.ForwardModel):
         return self._simulate(parameters, times, True)
 
     def _simulate(self, parameters, times, sensitivities):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
+        """
+        Private helper function that either simulates the model with 
+        sensitivities (`sensitivities == true`) or without 
+        (`sensitivities == false`)
+
+        Arguments:
+
+        ``parameters``
+            The three phenomenological parameters: ``a`` , ``b``, ``c``.
+
+        ``times``
+            The times at which to calculate the model output / sensitivities
+
+        ``sensitivities``
+            If set to `true` the function returns the model outputs and 
+            sensitivities `(values,sensitivities)`. If set to `false` the 
+            function only returns the model outputs `values`. See 
+            :meth:`pints.ForwardModel.simulate()` and 
+            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for 
+            details.
+        """
+
         a, b, c = [float(x) for x in parameters]
 
         times = np.asarray(times)
