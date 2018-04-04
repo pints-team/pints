@@ -78,6 +78,42 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
+    def test_student_t_log_likelihood_single(self):
+        """
+        Single-output test for Student-t noise log-likelihood methods
+        """
+        model = toy.ConstantModel()
+        parameters = [0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([1.0, -10.7, 15.5])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
+        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
+
+    def test_student_t_log_likelihood_multi(self):
+        """
+        Multi-output test for Student-t noise log-likelihood methods
+        """
+        model = toy.ConstantModel()
+        parameters = [0, 0, 0, 0]
+        times = np.arange(1, 4)
+        model.simulate(parameters, times)
+        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
+                             [1.1, -10.3, 15.6, 5.5],
+                             [-10, -30.5, -5, 7.6]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        # Test Student-t_logpdf((3.5,1.1,-10)|mean=0, df=2, scale=13) +
+        #      Student-t_logpdf((7.6,-10.3,-30.5)|mean=0, df=1, scale=8) +
+        #      Student-t_logpdf((8.5,15.6,-5)|mean=0, df=2.5, scale=13.5) +
+        #      Student-t_logpdf((3.4,5.5,7.6)|mean=0, df=3.4, scale=10.5)
+        #      = -47.83....
+        self.assertAlmostEqual(log_likelihood(parameters + [2, 13, 1, 8, 2.5,
+                                                            13.5, 3.4, 10.5]),
+                               -47.83720347766945)
+
     def test_known_and_unknown_noise_multi(self):
         """
         Multi-output test for known/unknown noise log-likelihood methods

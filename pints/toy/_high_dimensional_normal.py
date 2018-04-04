@@ -1,5 +1,5 @@
 #
-# Rosenbrock error measure and log-pdf
+# N-dimensional log normal pdf
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -17,14 +17,20 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
     """
     *Extends:* :class:`pints.LogPDF`.
 
-    High-dimensional multivariate normal log pdf, with tricky off-diagonal
-    covariances.
+    N-dimensional multivariate normal log pdf with constant
+    correlation rho between
+    all dimensions. By default, rho = 0.5, and N = 100,
+    and the variance of dimension i is i.
     """
-    def __init__(self, dimension=100):
+    def __init__(self, dimension=100, correlation=0.5):
         self._dimension = int(dimension)
         if self._dimension < 1:
             raise ValueError('Dimension must be 1 or greater.')
+        if np.absolute(correlation) > 1:
+            raise ValueError('Correlation between dimensions ' +
+                             'must be less than 1 in magnitude')
 
+        self._correlation = correlation
         # Construct mean array
         self._mean = np.zeros(self._dimension)
 
@@ -33,9 +39,10 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         cov = np.arange(1, 1 + self._dimension).reshape((self._dimension, 1))
         cov = cov.repeat(self._dimension, axis=1)
         cov = np.sqrt(cov)
-        cov = 0.5 * cov * cov.T
+        cov = correlation * cov * cov.T
         np.fill_diagonal(cov, 1 + np.arange(self._dimension))
         self._cov = cov
+        self._sd = 1 + np.arange(self._dimension)
 
         # Construct scipy 'random variable'
         self._var = scipy.stats.multivariate_normal(self._mean, self._cov)
@@ -47,3 +54,8 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
 
+    def covariance_matrix(self):
+        """
+        Returns covariance matrix.
+        """
+        return self._cov

@@ -20,7 +20,7 @@ class McmcResultObject(object):
     quantiles, rhat and effective sample size
     """
 
-    def __init__(self, chains, time):
+    def __init__(self, chains, time=None):
         self._chains = chains
         self._time = time
         self._summary_list = []
