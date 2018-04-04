@@ -17,7 +17,8 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
     """
     *Extends:* :class:`pints.LogPDF`.
 
-    N-dimensional multivariate normal log pdf with constant correlation rho between
+    N-dimensional multivariate normal log pdf with constant
+    correlation rho between
     all dimensions. By default, rho = 0.5, and N = 100,
     and the variance of dimension i is i.
     """
@@ -26,8 +27,9 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         if self._dimension < 1:
             raise ValueError('Dimension must be 1 or greater.')
         if np.absolute(correlation) > 1:
-           raise ValueError('Correlation between dimensions must be less than 1 in magnitude')
-        
+            raise ValueError('Correlation between dimensions ' +
+                             'must be less than 1 in magnitude')
+
         self._correlation = correlation
         # Construct mean array
         self._mean = np.zeros(self._dimension)
@@ -51,18 +53,6 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
-
-    def correlation(self):
-        """
-        Returns correlation between dimensions.
-        """
-        return self._correlation
-
-    def standard_deviation(self):
-        """
-        Returns standard deviation in each dimension."
-        """
-        return self._sd
 
     def covariance_matrix(self):
         """
