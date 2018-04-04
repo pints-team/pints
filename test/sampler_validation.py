@@ -20,7 +20,6 @@ class SamplerValidation(unittest.TestCase):
     Tests a sampler against a number of targets.
     """
     def __init__(self, method):
-        super(SamplerValidation, self).__init__(method)
         if not issubclass(method, pints.MCMCSampler):
             raise ValueError('Given method must extend pints.MCMCSampler.')
         self._method = method
@@ -53,11 +52,11 @@ class SamplerValidation(unittest.TestCase):
         chains = np.vstack(chains)
         
         # Compare means and standard deviations
-        means_est = np.mean(chains, axis=0)
-        sd_est = np.var(chains, axis=0)
+        mean_est = np.mean(chains, axis=0)
+        sd_est = np.std(chains, axis=0)
         sd_true = np.sqrt([1, 2, 3])
-        self.AssertTrue(np.linalg.norm(mean_est) < self._threshold_mean_1)
-        self.AssertTrue(np.linalg.norm(sd_est - sd_true) < self._threshold_sd_1)
+        self.assertTrue(np.linalg.norm(mean_est) < self._threshold_mean_1)
+        self.assertTrue(np.linalg.norm(sd_est - sd_true) < self._threshold_sd_1)
 
 
 if __name__ == '__main__':
