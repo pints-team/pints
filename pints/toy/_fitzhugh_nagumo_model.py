@@ -79,8 +79,8 @@ class FitzhughNagumoModel(pints.ForwardModel):
 
     def _simulate(self, parameters, times, sensitivities):
         """
-        Private helper function that either simulates the model with 
-        sensitivities (`sensitivities == true`) or without 
+        Private helper function that either simulates the model with
+        sensitivities (`sensitivities == true`) or without
         (`sensitivities == false`)
 
         Arguments:
@@ -92,11 +92,11 @@ class FitzhughNagumoModel(pints.ForwardModel):
             The times at which to calculate the model output / sensitivities
 
         ``sensitivities``
-            If set to `true` the function returns the model outputs and 
-            sensitivities `(values,sensitivities)`. If set to `false` the 
-            function only returns the model outputs `values`. See 
-            :meth:`pints.ForwardModel.simulate()` and 
-            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for 
+            If set to `true` the function returns the model outputs and
+            sensitivities `(values,sensitivities)`. If set to `false` the
+            function only returns the model outputs `values`. See
+            :meth:`pints.ForwardModel.simulate()` and
+            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
         """
 
