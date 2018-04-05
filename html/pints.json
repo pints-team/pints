@@ -1,0 +1,135 @@
+{
+ "name": "pints",
+ "children": [
+  {
+   "name": "sampling",
+   "children": [
+    {
+     "name": "Markov Chain Monte Carlo (MCMC)",
+     "children": [
+      {"name": "gradient-free",
+        "children":[
+          {"name": "non-adaptive",
+            "children":
+            [
+              {"name": "random walk Metropolis"},
+              {"name": "Metropolis-Hastings"}
+            ]
+          },
+          {"name": "adaptive",
+            "children":
+            [
+              {"name": "Adaptive Covariance MCMC"},
+              {"name": "Delayed Acceptance Adaptive Metropolis (DRAM)"}
+            ]
+          },
+          {"name": "differential evolution",
+            "children":
+            [
+              {"name": "vanilla differential evolution"},
+              {"name": "emcee hammer"},
+              {"name": "DiffeRential Evolution Adaptive Metropolis (DREAM)"}
+            ]
+          },
+          {"name": "population MCMC"}
+        ]
+      },
+      {"name": "use gradients",
+        "children":
+        [
+          {"name": "1st order only",
+            "children":
+            [
+              {"name": "Hamiltonian Monte Carlo (HMC)"},
+              {"name": "No-U-Turn Sampler (NUTS)"},
+              {"name": "Metropolis-Adjusted Langevin Algorithm (MALA)"}
+            ]
+          },
+          {"name": "1st & 2nd order",
+            "children":
+            [
+              {"name": "Riemannian Manifold Hamiltonian Monte Carlo (RMHMC)"},
+              {"name": "Simplified Manifold Metropolis-Adjusted Langevin Algorithm (smMALA)"}
+            ]
+          }
+        ]
+      }
+     ]
+    },
+    {
+     "name": "nested sampling",
+     "children": [
+      {"name": "vanilla nested sampling"},
+      {"name": "ellipsoidal nested sampling"},
+      {"name": "MultiNest"}
+     ]
+    },
+    {
+     "name": "particle sampling",
+     "children": [
+      {"name": "sequential Monte Carlo"}
+     ]
+    },
+    {
+     "name": "Approximate Bayesian Computation (ABC)",
+     "children": [
+      {"name": "vanilla rejection ABC"},
+      {"name": "Markov Chain Monte Carlo ABC (ABC-MCMC)"},
+      {"name": "sequential Monte Carlo ABC (ABC-SMC)"}
+     ]
+    }
+   ]
+  },
+  {
+   "name": "optimisation",
+   "children": [
+    {"name": "gradient-free",
+      "children":
+      [
+        {"name": "particle based methods",
+        "children":
+        [
+          {"name": "evolution strategies",
+            "children":
+            [
+              {"name": "Covariance Matrix Adaptation Evolution Strategy (CMAES)"},
+              {"name": "Separable Natural Evolution Strategy (SNES)"},
+              {"name": "Exponential Natural Evolution Strategy (XNES)"},
+              {"name": "differential evolution"}
+            ]
+          },
+          {"name": "Particle Swarm Optimisation (PSO)"}
+        ]
+        },
+        {"name": "Nelder-Mead"},
+        {"name": "simulated annealing"},
+        {"name": "random search"}
+      ]
+    },
+    {"name": "use gradients",
+      "children":
+      [
+        {"name": "1st order only",
+          "children":
+          [
+            {"name": "stochastic gradient descent"},
+            {"name": "AdaGrad"},
+            {"name": "Adaptive Moment Estimation (Adam)"},
+            {"name": "RMSProp"}
+          ]
+        },
+        {"name": "1st & 2nd order",
+          "children":
+          [
+            {"name": "stochastic gradient descent"},
+            {"name": "conjugate gradients"},
+            {"name": "Newton's method"}
+          ]
+        }
+      ]
+    }
+   ]
+  }
+  ]
+}
+  
