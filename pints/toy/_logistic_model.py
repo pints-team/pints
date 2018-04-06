@@ -12,7 +12,7 @@ import numpy as np
 import pints
 
 
-class LogisticModel(pints.ForwardModel):
+class LogisticModel(pints.ForwardModelWithSensitivities):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
