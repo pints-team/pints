@@ -15,44 +15,77 @@ import pints
 class ConstantModel(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
-    .. math::
-        f(t) &= (a_1,a_2,...,a_k)
 
-    Has a vector of parameters of dimensionality k: each of which
-    is the user-specified output of a given component of the function.
-    This function is mostly useful for unit testing.
+    Toy model that's constant over time, linear over the parameters.
+
+    For an `n`-dimensional model, evaluated with parameters
+    ``p = [p_1, p_2, ..., p_n]``, the simulated value at each time t equals:
+
+    .. math::
+        f(t) = (p_1, p_2, ..., p_n)
+
+    By default, the simulated output will have shape ``(n_times, )`` if
+    ``n == 1`` and shape ``(n_times, n_outputs)`` if ``n > 1``. This can be
+    tweaked using ``force_multi_output``.
+
+    This model is mostly useful for unit testing.
+
+    Arguments:
+
+    ``n``
+        The number of parameters (and outputs) the model should have.
+    ``force_multi_output``
+        Set to ``True`` to always return output of the shape
+        ``(n_times, n_outputs)``, even if ``n_outputs == 1``.
+
+    Example::
+
+        times = np.linspace(0, 1, 100)
+        m = pints.ConstantModel(2)
+        m.simulate([1, 2], times)
+
+    In this example, the returned output is ``[1, 2]`` at every point in time.
 
     """
 
-    def __init__(self):
+    def __init__(self, n, force_multi_output=False):
         super(ConstantModel, self).__init__()
+
+        self._n = int(n)
+        if self._n < 1:
+            raise ValueError('Number of parameters must be 1 or greater.')
+
+        # Reshape for single-output models?
+        self._reshape = (n == 1 and not force_multi_output)
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return len(self._parameters)
+        return self._n
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.outputs()`. """
-        return self._no
+        return self._n
 
     def simulate(self, parameters, times):
-        return self._simulate(parameters, times)
+        """ See :meth:`pints.ForwardModel.simulate()`. """
 
-    def _simulate(self, parameters, times):
-        self._no = len(parameters)
-        self._parameters = [float(x) for x in parameters]
+        # Check input
+        parameters = np.asarray(parameters)
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-        if len(parameters) < 1:
-            raise ValueError('Function takes at least 1 parameter')
-        if np.any(np.isnan(self._parameters)):
-            raise ValueError('Parameters must be a number.')
-        if np.any(np.isinf(self._parameters)):
-            raise ValueError('Parameters must be finite.')
+        if len(parameters) != self._n:
+            raise ValueError('Expected ' + str(self._n) + ' parameters.')
+        if not np.all(np.isfinite(parameters)):
+            raise ValueError('All parameters must be finite.')
 
-        if self._no == 1:
-            return self._parameters[0] * np.ones(times.shape)
-        else:
-            return np.transpose(np.asarray([x * np.ones(times.shape)
-                                            for x in self._parameters]))
+        # Calculate
+
+        out = parameters.reshape((1, self._n)).repeat(len(times), axis=0)
+        if self._reshape:
+            out = out.reshape((len(times), ))
+        return out
+
+    def simulate_with_sensitivities(self, parameters, times):
+        """ Not implemented. """
+        raise NotImplementedError

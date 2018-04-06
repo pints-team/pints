@@ -18,62 +18,83 @@ class TestConstantModel(unittest.TestCase):
     Tests if the constant (toy) model with multiple outputs works.
     """
 
-    def test_params_outputs(self):
-        model = pints.toy.ConstantModel()
-        # Before simulating parameters and output numbers are None
-        times = [0, 1, 2, 10000]
-        parameters = [-1, 2, 100]
-        values = np.transpose(model.simulate(parameters, times))
-        # After simulating
-        self.assertEqual(len(values[0]), len(times))
-        self.assertEqual(model.n_outputs(), len(parameters))
-
     def test_zero(self):
         # Test the special case where value is zero for a single input
-        model = pints.toy.ConstantModel()
+        # Output given for a SingleOutputProblem
+        model = pints.toy.ConstantModel(1)
         times = [0, 1, 2, 10000]
         parameters = [0]
         values = model.simulate(parameters, times)
-        self.assertEqual(len(values), len(times))
-        for v in values:
-            self.assertEqual(v, 0)
+
+        # Check output shape (n_times, n_outputs) and values
+        self.assertEqual(values.shape, (len(times), ))
+        self.assertTrue(np.all(values == 0))
+
+        # Output given for a MultiOutputProblem with 1 output
+        model = pints.toy.ConstantModel(1, force_multi_output=True)
+        times = [0, 1, 2, 10000]
+        parameters = [0]
+        values = model.simulate(parameters, times)
+
+        # Check output shape (n_times, n_outputs) and values
+        self.assertEqual(values.shape, (len(times), 1))
+        self.assertTrue(np.all(values == 0))
 
     def test_minus_1_2_100(self):
-        model = pints.toy.ConstantModel()
+        model = pints.toy.ConstantModel(3)
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
-        values = np.transpose(model.simulate(parameters, times))
-        for v in values:
-            self.assertEqual(len(v), len(times))
-        i = 0
-        for v in values:
-            for x in v:
-                self.assertEqual(x, parameters[i])
-            i += 1
+        values = model.simulate(parameters, times)
 
-    def test_random_number_parameters(self):
-        model = pints.toy.ConstantModel()
+        # Check output shape (n_times, n_outputs) and values
+        self.assertEqual(values.shape, (len(times), len(parameters)))
+        for i, p in enumerate(parameters):
+            self.assertTrue(np.all(values[:, i] == p))
+
+    def test_varying_numbers_of_parameters(self):
         times = [0, 1, 2, 10000]
-        no = np.random.randint(low=2, high=10, size=1)
-        parameters = np.random.uniform(low=-100, high=1000, size=no)
-        values = np.transpose(model.simulate(parameters, times))
-        for v in values:
-            self.assertEqual(len(v), len(times))
-        i = 0
-        for v in values:
-            for x in v:
-                self.assertEqual(x, parameters[i])
-            i += 1
+        for n in range(2, 10):
+            model = pints.toy.ConstantModel(n)
+            parameters = np.random.uniform(low=-100, high=1000, size=n)
+            values = model.simulate(parameters, times)
+            # Check output shape (n_times, n_outputs) and values
+            self.assertEqual(values.shape, (len(times), len(parameters)))
+            for i, p in enumerate(parameters):
+                self.assertTrue(np.all(values[:, i] == p))
 
     def test_errors(self):
-        model = pints.toy.ConstantModel()
+        # Negative times
+        model = pints.toy.ConstantModel(1)
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
+        # Wrong number of parameters
         self.assertRaises(ValueError, model.simulate, [], times)
-        self.assertRaises(ValueError, model.simulate, [-10, np.nan], times)
+        self.assertRaises(ValueError, model.simulate, [1, 1], times)
+        # Non-finite parameters
+        self.assertRaises(ValueError, model.simulate, [np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
+        # Invalid number of parameters
+        self.assertRaises(ValueError, pints.toy.ConstantModel, 0)
+        self.assertRaises(ValueError, pints.toy.ConstantModel, -1)
+
+    def test_in_problem(self):
+        # Single output
+        model = pints.toy.ConstantModel(1)
+        times = [0, 1, 2, 1000]
+        values = [10, 0, 1, 10]
+        problem = pints.SingleOutputProblem(model, times, values)
+        problem.evaluate([1])
+        # Multi output (n=1)
+        problem = pints.MultiOutputProblem(model, times, values)
+        problem.evaluate([1])
+        # Multi output (n=3)
+        model = pints.toy.ConstantModel(3)
+        times = [0, 1, 2, 1000]
+        values = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [8, 7, 6]]
+        problem = pints.MultiOutputProblem(model, times, values)
+        problem.evaluate([1, 2, 3])
 
 
 if __name__ == '__main__':
