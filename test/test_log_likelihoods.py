@@ -82,7 +82,7 @@ class TestLogLikelihood(unittest.TestCase):
         """
         Single-output test for Student-t noise log-likelihood methods
         """
-        model = toy.ConstantModel()
+        model = toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
         model.simulate(parameters, times)
@@ -96,7 +96,7 @@ class TestLogLikelihood(unittest.TestCase):
         """
         Multi-output test for Student-t noise log-likelihood methods
         """
-        model = toy.ConstantModel()
+        model = toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 4)
         model.simulate(parameters, times)
@@ -110,9 +110,9 @@ class TestLogLikelihood(unittest.TestCase):
         #      Student-t_logpdf((8.5,15.6,-5)|mean=0, df=2.5, scale=13.5) +
         #      Student-t_logpdf((3.4,5.5,7.6)|mean=0, df=3.4, scale=10.5)
         #      = -47.83....
-        self.assertAlmostEqual(log_likelihood(parameters + [2, 13, 1, 8, 2.5,
-                                                            13.5, 3.4, 10.5]),
-                               -47.83720347766945)
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]),
+            -47.83720347766945)
 
     def test_known_and_unknown_noise_multi(self):
         """

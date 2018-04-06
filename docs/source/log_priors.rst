@@ -18,5 +18,7 @@ Example::
 
 .. autoclass:: NormalLogPrior
 
+.. autoclass:: StudentTLogPrior
+
 .. autoclass:: UniformLogPrior
 

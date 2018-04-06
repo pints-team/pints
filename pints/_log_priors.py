@@ -141,10 +141,24 @@ class NormalLogPrior(pints.LogPrior):
 class StudentTLogPrior():
     """
     *Extends:* :class:`LogPrior`
-    Defines a 1-d Student-t (log) prior with a given ``degrees of freedom``,
-    ``location``, and ``scale``.
-    For example: ``p = StudentTLogPrior(3, 0, 1)`` for degrees of freedom
-    of ``3``, a location parameter of ``0``, and scale of ``1``.
+
+    Defines a 1-d Student-t (log) prior with a given ``location``,
+    ``degrees of freedom``,  and ``scale``.
+
+    For example, to create a prior centered around 0 with 3 degrees of freedom
+    and a scale of 1, use::
+
+        p = pints.StudentTLogPrior(0, 3, 1)
+
+    Arguments:
+
+    ``location``
+        The center of the distribution.
+    ``df``
+        The number of degrees of freedom of the distribution.
+    ``scale``
+        The scale of the distribution.
+
     """
     def __init__(self, location, df, scale):
         # Test inputs
