@@ -22,11 +22,14 @@ if sys.version_info[0] < 3:
 #
 # Expose pints version
 #
+
+
 def version(formatted=False):
     if formatted:
         return 'Pints ' + VERSION
     else:
         return VERSION_INT
+
 
 #
 # Constants
@@ -38,7 +41,8 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, SingleOutputProblem, MultiOutputProblem
+from ._core import ForwardModel, ForwardModelWithSensitivities
+from ._core import SingleOutputProblem, MultiOutputProblem
 
 #
 # Utility classes and methods
@@ -56,7 +60,7 @@ from ._log_pdfs import (
     LogLikelihood,
     LogPosterior,
     ProblemLogLikelihood,
-    )
+)
 
 #
 # Log-priors
@@ -141,7 +145,7 @@ from ._mcmc import (
     MultiChainMCMC,
     MCMCSampling,
     mcmc_sample,
-    )
+)
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
