@@ -66,9 +66,7 @@ class ForwardModelWithSensitivities(ForwardModel):
     Defines an interface for user-supplied forward models which can
     (optionally) provide sensitivities.
 
-    Derived from :class:`pints.ForwardModel`, please see this class for
-    additional functions that need to be implemented for concrete derived
-    classes
+    Derived from :class:`pints.ForwardModel`.
     """
 
     def __init__(self):
