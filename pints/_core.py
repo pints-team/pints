@@ -54,6 +54,26 @@ class ForwardModel(object):
         """
         raise NotImplementedError
 
+    def n_outputs(self):
+        """
+        Returns the number of outputs this model has. The default is 1.
+        """
+        return 1
+
+
+class ForwardModelWithSensitivities(ForwardModel):
+    """
+    Defines an interface for user-supplied forward models which can
+    (optionally) provide sensitivities.
+
+    Derived from :class:`pints.ForwardModel`, please see this class for
+    additional functions that need to be implemented for concrete derived
+    classes
+    """
+
+    def __init__(self):
+        super(ForwardModelWithSensitivities, self).__init__()
+
     def simulate_with_sensitivities(self, parameters, times):
         """
         Runs a forward simulation with the given ``parameters`` and returns a
@@ -81,12 +101,6 @@ class ForwardModel(object):
         in as read-only numpy arrays.
         """
         raise NotImplementedError
-
-    def n_outputs(self):
-        """
-        Returns the number of outputs this model has. The default is 1.
-        """
-        return 1
 
 
 class SingleOutputProblem(object):
