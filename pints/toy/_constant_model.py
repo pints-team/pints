@@ -86,6 +86,3 @@ class ConstantModel(pints.ForwardModel):
             out = out.reshape((len(times), ))
         return out
 
-    def simulate_with_sensitivities(self, parameters, times):
-        """ Not implemented. """
-        raise NotImplementedError
