@@ -201,7 +201,7 @@ Next, open a browser, and navigate to your local pints directory (by typing the 
 
 Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) stored in the [examples directory](examples). Which features are "major" is of course wholy subjective, so please discuss on GitHub first!
 
-All example notebooks should be listed in [EXAMPLES.md](examples/EXAMPLES.md). Please follow the (naming and writing) style of existing notebooks where possible.
+All example notebooks should be listed in [examples/README.md]. Please follow the (naming and writing) style of existing notebooks where possible.
 
 
 
