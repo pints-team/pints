@@ -34,7 +34,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
     ``sigma``
         The standard devation(s) of the noise. Can be a single value or a
-        sequence of sigma's for each output.
+        sequence of sigma's for each output. Must be greater than zero.
 
     """
     def __init__(self, problem, sigma):
