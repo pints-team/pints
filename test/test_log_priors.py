@@ -273,6 +273,44 @@ class TestPrior(unittest.TestCase):
         self.assertTrue(np.all(
             np.abs(np.diag(covariance) - x.std(axis=0)**2) < 0.1))
 
+    def test_student_t_prior(self):
+        # Test two specific function values
+        p1 = pints.StudentTLogPrior(0, 2, 10)
+        self.assertEqual(p1([0]), -3.342305863833964)
+        p2 = pints.StudentTLogPrior(10, 5, 10)
+        self.assertEqual(p2([10]), -3.27120468204877)
+
+        # Test exceptions
+        self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 0, 10)
+        self.assertRaises(ValueError, pints.StudentTLogPrior, 0, -1, 10)
+        self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, 0)
+        self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, -1)
+
+        # Test other function calls
+        self.assertEqual(p1.n_parameters(), 1)
+        self.assertEqual(p2.n_parameters(), 1)
+
+    def test_student_t_prior_sampling(self):
+        p1 = pints.StudentTLogPrior(0, 1000, 1)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 10000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+        self.assertTrue(np.absolute(np.mean(samples1)) < 2)
+
+        p2 = pints.StudentTLogPrior(0, 1, 1)
+        samples2 = p2.sample(n)
+        self.assertGreater(np.var(samples2), np.var(samples1))
+
+        p3 = pints.StudentTLogPrior(0, 1000, 1000)
+        samples3 = p3.sample(n)
+        self.assertGreater(np.var(samples3), np.var(samples1))
+
+        p4 = pints.StudentTLogPrior(1000, 1000, 1)
+        samples4 = p4.sample(n)
+        self.assertGreater(np.mean(samples4), np.mean(samples1))
+
 
 if __name__ == '__main__':
     unittest.main()

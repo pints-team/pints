@@ -17,6 +17,8 @@ Example::
 
 .. autoclass:: ScaledLogLikelihood
 
+.. autoclass:: StudentTLogLikelihood
+
 .. autoclass:: SumOfIndependentLogLikelihoods
 
 .. autoclass:: UnknownNoiseLogLikelihood
