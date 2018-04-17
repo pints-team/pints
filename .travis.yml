@@ -5,10 +5,9 @@ dist: trusty
 language: python
 
 env:
-  matrix:
-    - PINTS_TESTS=false
-    - PINTS_COVER=false
-    - PINTS_STYLE=false
+  - PINTS_TESTS=false
+  - PINTS_COVER=false
+  - PINTS_STYLE=false
 
 matrix:
     include:
