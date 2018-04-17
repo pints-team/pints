@@ -87,7 +87,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     where ``n_t`` is the number of time points in the series, ``x_j`` is the
     sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
-    
+
     For a system with ``n_o`` outputs, this becomes
 
     .. math::
