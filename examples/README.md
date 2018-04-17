@@ -46,7 +46,7 @@ relevant code.
 - [Effective sample size](./effective-sample-size.ipynb)
 
 ## Toy problems
-- [Constant model](./toy-constant.model.ipynb)
+- [Constant model](./toy-constant-model.ipynb)
 - [Fitzhugh-Nagumo model](./toy-fitzhugh-nagumo-model.ipynb)
 - [Goodwin oscillator model](./toy-goodwin-oscillator-model.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-hodgkin-huxley-ik-model.ipynb)
