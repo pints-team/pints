@@ -12,12 +12,13 @@ Each category starts off with a detailed first example, followed by a number of
 of choice.
 
 ## Getting started
+- [Optimisation: First example](./optimisation-first-example.ipynb)
+- [Sampling: First example](./sampling-first-example.ipynb)
 - [Writing a model](./writing-a-model.ipynb)
 - [Writing a custom LogPDF](./writing-a-logpdf.ipynb)
 - [Writing a custom LogPrior](./writing-a-prior.ipynb)
 
 ## Optimisation
-- [First example](./optimisation-first-example.ipynb)
 
 ### Particle-based methods
 - [CMA-ES](./optimisation-cmaes.ipynb)
@@ -25,14 +26,12 @@ of choice.
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
 
-### More optimisation
+### Customising optimisations
 
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 
-
 ## Sampling
-- [First example](./sampling-first-example.ipynb)
 
 ### MCMC without gradients
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
