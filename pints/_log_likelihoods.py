@@ -74,7 +74,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     .. math::
         L(\\theta, \sigma) = p(data | \\theta, \sigma) =
-            \prod_{i=1}^N \\frac{1}{2\pi\sigma^2}\exp\left(
+            \prod_{i=1}^N \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
             -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of:
