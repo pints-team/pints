@@ -74,16 +74,29 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     .. math::
         L(\\theta, \sigma) = p(data | \\theta, \sigma) =
-            \prod_{i=1}^N \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
-            -\\frac{(x_i - f_i(\\theta))^2}{2\sigma^2}\\right)
+            \prod_{j=1}^{n_t} \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
+            -\\frac{(x_j - f_j(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of:
 
     .. math::
         \log{L(\\theta, \sigma)} =
-            -\\frac{N}{2}\log{2\pi}
-            -N\log{\sigma}
-            -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
+            -\\frac{n_t}{2} \log{2\pi}
+            -n_t \log{\sigma}
+            -\\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
+
+    where ``n_t`` is the number of time points in the series, ``x_j`` is the
+    sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
+    
+    For a system with ``n_o`` outputs, this becomes
+
+    .. math::
+        \log{L(\\theta, \sigma)} =
+            -\\frac{n_t n_o}{2}\log{2\pi}
+            -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
+            -\sum_{i=1}^{n_o}{\\left[
+                \\frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
+             \\right]}
 
     Arguments:
 
@@ -104,7 +117,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         self._dimension = problem.n_parameters() + self._no
 
         # Pre-calculate parts
-        self._logn = 0.5 * len(self._times) * np.log(2 * np.pi)
+        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
