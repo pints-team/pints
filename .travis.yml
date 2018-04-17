@@ -6,31 +6,45 @@ language: python
 
 env:
   matrix:
-    - PINTS_RUN_TESTS=true
+    - PINTS_TESTS=false
+    - PINTS_COVER=false
+    - PINTS_STYLE=false
 
 matrix:
     include:
+        # Unit testing for different versions
         - python: "2.7"
+          env:
+            - PINTS_TESTS=true           
           if: type != cron
         - python: "3.4"
+          env:
+            - PINTS_TESTS=true           
           if: type != cron
         - python: "3.5"
+          env:
+            - PINTS_TESTS=true           
           if: type != cron
-        - python: "3.6"
         - python: "3.6"
           env:
-            - PINTS_COVERAGE=true
-            - PINTS_RUN_TESTS=false
+            - PINTS_TESTS=true           
           if: type != cron
-
+        # Style and cover checking, latest version only
+        - python: "3.6"
+          env:
+            - PINTS_STYLE=true
+          if: type != cron
+        - python: "3.6"
+          env:
+            - PINTS_COVER=true
+          if: type != cron
 
 # command to install dependencies
 install:
   - pip install .
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
-  - pip install coverage
-  - pip install codecov
+  - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
 
 before_script:
 - python --version
@@ -40,13 +54,13 @@ before_script:
 # issues with debug output:
 # https://github.com/travis-ci/travis-ci/issues/5716
 script:
-  - python -m flake8
-  - if [[ $PINTS_RUN_TESTS == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_TESTS == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
+  - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --nosub; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
-  - if [[ $PINTS_COVERAGE == true ]]; then coverage run run-tests.py --nosub; fi;
 
 after_success:
-  - if [[ $PINTS_COVERAGE == true ]]; then codecov; fi;
+  - if [[ $PINTS_COVER == true ]]; then codecov; fi;
 
 notifications:
   email:
