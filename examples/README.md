@@ -32,10 +32,10 @@ relevant code.
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
-- [Differential Evolution MCMC](./inference-differential-evolution-mcmc.ipynb)
+- [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
 
 ### Nested sampling
-- [Nested sampling](./inference-nested-sampling.ipynb)
+- [Nested sampling](./sampling-nested-sampling.ipynb)
 
 ### Analysing sampling results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
@@ -47,7 +47,7 @@ relevant code.
 
 ## Toy problems
 - Logistic model
-- [Fitzhugh-Nagumo model](./toy-hodgkin-huxley-ik-model.ipynb)
+- [Fitzhugh-Nagumo model](./toy-fitzhugh-nagumo-model.ipynb)
 - [Goodwin oscillator model](./toy-goodwin-oscillator-model.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-hodgkin-huxley-ik-model.ipynb)
 - [Toy distributions](./toy-distributions.ipynb)
