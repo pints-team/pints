@@ -35,7 +35,7 @@ relevant code.
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
 
 ### Nested sampling
-- [Nested sampling](./sampling-nested-sampling.ipynb)
+- [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
 
 ### Analysing sampling results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
