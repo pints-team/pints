@@ -19,7 +19,7 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
                                 the given times, using the given parameters
 ```
 
-If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [MCMC](examples/inference-first-example.ipynb).
+If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
 ### Examples and documentation
 
