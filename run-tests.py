@@ -77,13 +77,16 @@ def run_flake8():
         sys.exit(ret)
 
 
-def check_docs():
+def run_doctests():
     """
-    Checks if the documentation can be built.
+    Checks if the documentation can be built, runs any doctests (currently not
+    used).
     """
     print('Checking if docs can be built.')
     p = subprocess.Popen([
         'sphinx-build',
+        '-b',
+        'doctest',
         'docs/source',
         'docs/build/html',
         '-W',
@@ -221,11 +224,7 @@ if __name__ == '__main__':
         epilog='To run individual unit tests, use e.g.'
                ' $ test/test_logistic_model.py',
     )
-    parser.add_argument(
-        '--quick',
-        action='store_true',
-        help='Run quick checks (unit tests, flake8, docs)',
-    )
+    # Unit tests
     parser.add_argument(
         '--unit',
         action='store_true',
@@ -246,6 +245,7 @@ if __name__ == '__main__':
         action='store_true',
         help='Run all unit tests without starting a subprocess.',
     )
+    # Notebook tests
     parser.add_argument(
         '--books',
         action='store_true',
@@ -257,15 +257,25 @@ if __name__ == '__main__':
         metavar=('in', 'out'),
         help='Export a Jupyter notebook to a Python file for manual testing.',
     )
+    # Doctests
+    parser.add_argument(
+        '--doctest',
+        action='store_true',
+        help='Run any doctests, check if docs can be built',
+    )
+    # Combined test sets
+    parser.add_argument(
+        '--quick',
+        action='store_true',
+        help='Run quick checks (unit tests, flake8, docs)',
+    )
+
+    # Parse!
     args = parser.parse_args()
 
     # Run tests
     has_run = False
-    if args.quick:
-        has_run = True
-        run_flake8()
-        run_unit_tests('python')
-        check_docs()
+    # Unit tests
     if args.unit:
         has_run = True
         run_unit_tests('python')
@@ -278,11 +288,23 @@ if __name__ == '__main__':
     if args.nosub:
         has_run = True
         run_unit_tests()
+    # Doctests
+    if args.doctest:
+        has_run = True
+        run_doctests()
+    # Notebook tests
     if args.books:
         has_run = True
         run_notebook_tests()
     if args.debook:
         has_run = True
         export_notebook(*args.debook)
+    # Combined test sets
+    if args.quick:
+        has_run = True
+        run_flake8()
+        run_unit_tests('python')
+        run_doctests()
+    # Help
     if not has_run:
         parser.print_help()

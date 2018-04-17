@@ -5,13 +5,14 @@ dist: trusty
 language: python
 
 env:
-  - PINTS_TESTS=false
-    PINTS_COVER=false
+  - PINTS_UNIT=false
+    PINTS_DOCS=false
     PINTS_STYLE=false
+    PINTS_COVER=false
 
 matrix:
     include:
-        # Unit testing for different versions
+        # Unit testing on all supported Python versions
         - python: "2.7"
           env:
             - PINTS_TESTS=true           
@@ -28,7 +29,11 @@ matrix:
           env:
             - PINTS_TESTS=true           
           if: type != cron
-        # Style and cover checking, latest version only
+        # Docs, style and cover checking, latest Python version only
+        - python: "3.6"
+          env:
+            - PINTS_DOCS=true
+          if: type != cron
         - python: "3.6"
           env:
             - PINTS_STYLE=true
@@ -42,7 +47,8 @@ matrix:
 install:
   - pip install .
   - pip install -r requirements.txt
-  - pip install -r requirements-dev.txt
+  - if [[ $PINTS_DOCS == true ]]; then pip install -r requirements-docs.txt; fi
+  - if [[ $PINTS_STYLE == true ]]; then pip install -r requirements-dev.txt; fi
   - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
 
 before_script:
@@ -53,7 +59,8 @@ before_script:
 # issues with debug output:
 # https://github.com/travis-ci/travis-ci/issues/5716
 script:
-  - if [[ $PINTS_TESTS == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
   - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
   - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --nosub; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
