@@ -19,7 +19,14 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
-    of that noise.
+    of that noise:
+
+    .. math::
+        \log{L(\\theta, \sigma)} =
+            -\\frac{N}{2}\log{2\pi}
+            -N\log{\sigma}
+            -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
+
 
     Arguments:
 
