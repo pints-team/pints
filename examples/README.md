@@ -50,10 +50,18 @@ relevant code.
 - [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
 
 ## Toy problems
-- [Constant model](./toy-constant-model.ipynb)
-- [Fitzhugh-Nagumo model](./toy-fitzhugh-nagumo-model.ipynb)
-- [Goodwin oscillator model](./toy-goodwin-oscillator-model.ipynb)
-- [Hodgkin-Huxley Potassium current model](./toy-hodgkin-huxley-ik-model.ipynb)
+
+### Models
+
+- [Constant model](./toy-model-constant.ipynb)
+- [Fitzhugh-Nagumo model](./toy-model-fitzhugh-nagumo.ipynb)
+- [Goodwin oscillator model](./toy-model-goodwin-oscillator.ipynb)
+- [Hodgkin-Huxley Potassium current model](./toy-model-hodgkin-huxley-ik.ipynb)
 - Logistic model
-- [Toy distributions](./toy-distributions.ipynb)
+
+### Distributions
+
+- [Multimodal normal distribution](./toy-distribution-multimodal-normal.ipynb)
+- [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
+- [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
 
