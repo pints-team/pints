@@ -21,7 +21,7 @@ relevant code.
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
 
-### Customising optimisations
+### Further optimisation
 
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
@@ -43,7 +43,11 @@ relevant code.
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
-- [Effective sample size](./effective-sample-size.ipynb)
+
+### Further sampling
+
+- [Effective sample size](./sampling-effective-sample-size.ipynb)
+- [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
 
 ## Toy problems
 - [Constant model](./toy-constant-model.ipynb)
