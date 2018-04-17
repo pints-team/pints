@@ -14,33 +14,47 @@ of choice.
 ## Getting started
 - [Writing a model](./writing-a-model.ipynb)
 - [Writing a custom LogPDF](./writing-a-logpdf.ipynb)
+- [Writing a custom LogPrior](./writing-a-prior.ipynb)
 
 ## Optimisation
 - [First example](./optimisation-first-example.ipynb)
+
+### Particle-based methods
 - [CMA-ES](./optimisation-cmaes.ipynb)
 - [PSO](./optimisation-pso.ipynb)
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
+
+### More optimisation
+
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 
-## Bayesian inference
-- [First example](./inference-first-example.ipynb)
-- [Metropolis Random Walk MCMC](./inference-metropolis-mcmc.ipynb)
-- [Adaptive Covariance MCMC](./inference-adaptive-covariance-mcmc.ipynb)
-- [Differential Evolution DEMC](./inference-differential-evolution-mcmc.ipynb)
-- [Nested sampling](./inference-nested-sampling.ipynb)
-- [Writing a custom prior](./writing-a-prior.ipynb)
 
-## Plotting inference results
+## Sampling
+- [First example](./sampling-first-example.ipynb)
+
+### MCMC without gradients
+- [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
+- [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
+- [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Differential Evolution MCMC](./inference-differential-evolution-mcmc.ipynb)
+
+### Nested sampling
+- [Nested sampling](./inference-nested-sampling.ipynb)
+
+### Analysing sampling results
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plot-mcmc-trace-plots.ipynb)
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
+- [Effective sample size](./effective-sample-size.ipynb)
 
 ## Toy problems
 - Logistic model
-- [Hodgkin-Huxley Potassium current](./toy-hodgkin-huxley-ik.ipynb)
-- [Distributions](./toy-distributions.ipynb)
+- [Fitzhugh-Nagumo model](./toy-hodgkin-huxley-ik-model.ipynb)
+- [Goodwin oscillator model](./toy-goodwin-oscillator-model.ipynb)
+- [Hodgkin-Huxley Potassium current model](./toy-hodgkin-huxley-ik-model.ipynb)
+- [Toy distributions](./toy-distributions.ipynb)
 
