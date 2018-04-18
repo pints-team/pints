@@ -10,6 +10,7 @@
 import unittest
 import pints
 import pints.toy
+import numpy as np
 
 
 class TestFitzhughNagumoModel(unittest.TestCase):
@@ -31,6 +32,9 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         values, dvalues_dp = model.simulate_with_sensitivities(x, times)
         self.assertEqual(values.shape, (len(times), 2))
         self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
+
+        values_only = model.simulate(x, times)
+        self.assertAlmostEqual(np.linalg.norm(values - values_only), 0.0, 6)
 
         # Test alternative starting position
         model = pints.toy.FitzhughNagumoModel([0.1, 0.1])
