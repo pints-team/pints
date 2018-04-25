@@ -63,8 +63,7 @@ class TestLogistic(unittest.TestCase):
         model = pints.toy.LogisticModel(2)
         times = [0, 1, 2, 10000]
         parameters = [1, 5]
-        values, dvdp = model.simulate_with_sensitivities(
-            parameters, times)
+        values, dvdp = model.simulate(parameters, times, 1)
         self.assertEqual(dvdp[0, 0], 0)
         self.assertEqual(dvdp[-1, 0], 0.0)
         self.assertEqual(dvdp[0, 1], 0)

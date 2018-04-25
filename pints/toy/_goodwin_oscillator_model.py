@@ -46,7 +46,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         dzdt = k3 * y - m3 * z
         return dxdt, dydt, dzdt
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters, times, n_derivatives=0):
         """ See :meth:`pints.ForwardModel.simulate()`. """
         y0 = [0.0054, 0.053, 1.93]
         solution = scipy.integrate.odeint(

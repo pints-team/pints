@@ -107,7 +107,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters, times, n_derivatives=0):
         """ See :meth:`pints.ForwardModel.simulate()`. """
 
         # Unpack parameters

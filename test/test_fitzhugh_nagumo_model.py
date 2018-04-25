@@ -28,7 +28,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
 
-        values, dvalues_dp = model.simulate_with_sensitivities(x, times)
+        values, dvalues_dp = model.simulate(x, times, 1)
         self.assertEqual(values.shape, (len(times), 2))
         self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
 

@@ -82,7 +82,7 @@ class MultimodalNormalLogPDF(pints.LogPDF):
             scipy.stats.multivariate_normal(mode, self._covs[i])
             for i, mode in enumerate(self._modes)]
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
         f = np.sum([var.pdf(x) for var in self._vars])
         return -float('inf') if f == 0 else np.log(f)
 

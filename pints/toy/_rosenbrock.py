@@ -65,7 +65,7 @@ class RosenbrockLogPDF(pints.LogPDF):
         """
         return self._f.optimum()
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
         f = self._f(x)
         return float('inf') if f == 0 else -np.log(f)
 

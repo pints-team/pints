@@ -141,7 +141,7 @@ class TestCMAES(unittest.TestCase):
 
         class Model(pints.ForwardModel):
 
-            def simulate(self, parameters, times):
+            def simulate(self, parameters, times, n_derivatives=0):
                 y0 = [2000000, 0]
                 solution = odeint(
                     OnePopControlODE, y0, times, args=(parameters,))

@@ -24,13 +24,35 @@ class ForwardModel(object):
     def __init__(self):
         super(ForwardModel, self).__init__()
 
+    def max_derivatives(self):
+        """
+        Returns the highest order of derivatives this model can return.
+        The default is ``0`` (no derivatives).
+
+        By returning ``1`` models declare that they support calculation of
+        first-order derivatives ``dy/dp`` of the simulated values ``y`` with
+        respect to the parameters ``p``.
+
+        By returning ``2`` models declare that they support calculation of
+        first-order derivatives ``dy/dp`` and second-order derivatives
+        ``d2y/dp2`` of the simulated values ``y`` with respect to the
+        parameters ``p``.
+        """
+        return 0
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs this model has. The default is 1.
+        """
+        return 1
+
     def n_parameters(self):
         """
         Returns the dimension of the parameter space.
         """
         raise NotImplementedError
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters, times, n_derivatives=0):
         """
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``.
@@ -44,56 +66,25 @@ class ForwardModel(object):
             without duplicates, and without negative values.
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
+        ``n_derivatives``
+            An optional argument specifying the highest order of derivatives
+            to include in the results (default=0, see below).
+            Models that do not support derivatives can ignore this argument.
 
         Returns:
-            A numpy array of length ``t`` representing the values of the model
-            at the given time points, where ``t`` is the number of time points.
 
-        Note: For efficiency, both ``parameters`` and ``times`` will be passed
-        in as read-only numpy arrays.
-        """
-        raise NotImplementedError
+        For models that don't support derivatives, this method should return a
+        NumPy array ``y`` of length ``len(times)`` representing the values of
+        the model at the given time points.
 
-    def n_outputs(self):
-        """
-        Returns the number of outputs this model has. The default is 1.
-        """
-        return 1
-
-
-class ForwardModelWithSensitivities(ForwardModel):
-    """
-    Defines an interface for user-supplied forward models which can
-    (optionally) provide sensitivities.
-
-    Derived from :class:`pints.ForwardModel`.
-    """
-
-    def __init__(self):
-        super(ForwardModelWithSensitivities, self).__init__()
-
-    def simulate_with_sensitivities(self, parameters, times):
-        """
-        Runs a forward simulation with the given ``parameters`` and returns a
-        time-series with data points corresponding to the given ``times``,
-        along with the sensitivities of the forward simulation with respect to
-        the parameters.
-
-        Arguments:
-
-        ``parameters``
-            An ordered list of parameter values.
-        ``times``
-            The times at which to evaluate. Must be an ordered sequence,
-            without duplicates, and without negative values.
-            All simulations are started at time 0, regardless of whether this
-            value appears in ``times``.
-
-        Returns:
-            A tuple of 2 numpy arrays. The first is a 1d array of length ``t``
-            representing the values of the model at the given time points. The
-            second is a 2d numpy array of size ``(t,p)``, where ``p`` is the
-            number of parameters
+        For models that support first-order derivatives (i.e. that return
+        :meth:`max_derivatives() > 0`), the return type depends on the value of
+        the optional argument ``n_derivatives``.
+        In this case, for ``n_derivatives=0`` the returned value is ``y``, for
+        ``n_dervatives=1`` the returned value is a tuple  ``(y, y')``, and for
+        ``n_derivatives=2`` a tuple ``(y, y', y'')`` is returned.
+        Requests for ``n_derivatives`` higher than the model supports can
+        safely be ignored.
 
         Note: For efficiency, both ``parameters`` and ``times`` will be passed
         in as read-only numpy arrays.
@@ -141,17 +132,41 @@ class SingleOutputProblem(object):
         self._n_parameters = int(model.n_parameters())
         self._n_times = len(self._times)
 
+        # Check highest supported order of derivatives
+        self._max_derivatives = int(model.max_derivatives())
+
         # Check times and values array have write shape
         if len(self._values) != self._n_times:
             raise ValueError(
                 'Times and values arrays must have same length.')
 
-    def evaluate(self, parameters):
+    def evaluate(self, parameters, n_derivatives=0):
         """
-        Runs a simulation using the given parameters, returning the simulated
-        values.
+        Runs a simulation using the given ``parameters``, and returns the
+        simulated values.
+
+        For problems that support first-order derivatives, the optional
+        argument ``n_derivatives`` can be set to ``1`` to return a tuple
+        ``(values, jacobian)`` instead, where ``values`` is a vector containing
+        the simulated values and ``jacobian`` is a matrix containing the
+        first-order derivatives of those values with respect to the
+        ``parameters``.
+
+        For problems that support second-order derivatives, ``n_derivatives``
+        can be set to ``2`` to return a tuple ``(values, jacobian, hessian)``
+        where ``hessian`` is a matrix containing the second-order derivatives
+        of ``values`` with respect to ``parameters``.
+
+        See also :meth:`max_derivatives()`.
         """
-        return self._model.simulate(parameters, self._times)
+        return self._model.simulate(parameters, self._times, n_derivatives=0)
+
+    def max_derivatives(self):
+        """
+        Returns the highest order of derivatives this problem can evaluate (see
+        :meth:`ForwardModel.max_derivatives`).
+        """
+        return self._max_derivatives
 
     def n_outputs(self):
         """
@@ -230,17 +245,41 @@ class MultiOutputProblem(object):
         self._n_outputs = int(model.n_outputs())
         self._n_times = len(self._times)
 
+        # Check highest supported order of derivatives
+        self._max_derivatives = int(model.max_derivatives())
+
         # Check for correct shape
         if self._values.shape != (self._n_times, self._n_outputs):
             raise ValueError(
                 'Values array must have shape `(n_times, n_outputs)`.')
 
-    def evaluate(self, parameters):
+    def evaluate(self, parameters, n_derivatives=0):
         """
-        Runs a simulation using the given parameters, returning the simulated
-        values.
+        Runs a simulation using the given ``parameters``, and returns the
+        simulated values.
+
+        For problems that support first-order derivatives, the optional
+        argument ``n_derivatives`` can be set to ``1`` to return a tuple
+        ``(values, jacobian)`` instead, where ``values`` is a vector containing
+        the simulated values and ``jacobian`` is a matrix containing the
+        first-order derivatives of those values with respect to the
+        ``parameters``.
+
+        For problems that support second-order derivatives, ``n_derivatives``
+        can be set to ``2`` to return a tuple ``(values, jacobian, hessian)``
+        where ``hessian`` is a matrix containing the second-order derivatives
+        of ``values`` with respect to ``parameters``.
+
+        See also :meth:`max_derivatives()`.
         """
-        return self._model.simulate(parameters, self._times)
+        return self._model.simulate(parameters, self._times, n_derivatives=0)
+
+    def max_derivatives(self):
+        """
+        Returns the highest order of derivatives this problem can evaluate (see
+        :meth:`ForwardModel.max_derivatives`).
+        """
+        return self._max_derivatives
 
     def n_outputs(self):
         """

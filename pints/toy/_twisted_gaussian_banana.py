@@ -57,7 +57,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         self._phi = scipy.stats.multivariate_normal(
             np.zeros(self._dimension), np.eye(self._dimension))
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
         y = np.array(x, copy=True)
         y[1] = x[1] + self._b * ((x[0] ** 2) - self._V)
         y[0] = x[0] / np.sqrt(self._V)
