@@ -37,6 +37,7 @@ class TestMultiOutputProblem(unittest.TestCase):
         self.assertEqual(problem.n_parameters(), model.n_parameters(), 2)
         self.assertEqual(problem.n_parameters(), model.n_parameters(), 2)
         self.assertEqual(problem.n_outputs(), model.n_outputs(), 3)
+        self.assertEqual(problem.n_times(), len(times))
 
         # Test errors
         times[0] = -2

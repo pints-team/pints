@@ -121,7 +121,6 @@ class SingleOutputProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.n_parameters())
         if model.n_outputs() != 1:
             raise ValueError(
                 'Only single-output models can be used for a'
@@ -138,16 +137,14 @@ class SingleOutputProblem(object):
         # Check values, copy so that they can no longer be changed
         self._values = pints.vector(values)
 
+        # Check dimensions
+        self._n_parameters = int(model.n_parameters())
+        self._n_times = len(self._times)
+
         # Check times and values array have write shape
-        if len(self._times) != len(self._values):
+        if len(self._values) != self._n_times:
             raise ValueError(
                 'Times and values arrays must have same length.')
-
-    def n_parameters(self):
-        """
-        Returns the dimension (the number of parameters) of this problem.
-        """
-        return self._dimension
 
     def evaluate(self, parameters):
         """
@@ -161,6 +158,19 @@ class SingleOutputProblem(object):
         Returns the number of outputs for this problem (always 1).
         """
         return 1
+
+    def n_parameters(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._n_parameters
+
+    def n_times(self):
+        """
+        Returns the number of sampling points, i.e. the length of the vectors
+        returned by :meth:`times()` and :meth:`values()`.
+        """
+        return self._n_times
 
     def times(self):
         """
@@ -203,8 +213,6 @@ class MultiOutputProblem(object):
 
         # Check model
         self._model = model
-        self._dimension = int(model.n_parameters())
-        self._n_outputs = int(model.n_outputs())
 
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
@@ -217,16 +225,15 @@ class MultiOutputProblem(object):
         # Check values, copy so that they can no longer be changed
         self._values = pints.matrix2d(values)
 
+        # Check dimensions
+        self._n_parameters = int(model.n_parameters())
+        self._n_outputs = int(model.n_outputs())
+        self._n_times = len(self._times)
+
         # Check for correct shape
-        if self._values.shape != (len(self._times), self._n_outputs):
+        if self._values.shape != (self._n_times, self._n_outputs):
             raise ValueError(
                 'Values array must have shape `(n_times, n_outputs)`.')
-
-    def n_parameters(self):
-        """
-        Returns the dimension (the number of parameters) of this problem.
-        """
-        return self._dimension
 
     def evaluate(self, parameters):
         """
@@ -240,6 +247,19 @@ class MultiOutputProblem(object):
         Returns the number of outputs for this problem.
         """
         return self._n_outputs
+
+    def n_parameters(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._n_parameters
+
+    def n_times(self):
+        """
+        Returns the number of sampling points, i.e. the length of the vectors
+        returned by :meth:`times()` and :meth:`values()`.
+        """
+        return self._n_times
 
     def times(self):
         """
