@@ -8,10 +8,11 @@
 #  software package.
 #
 import pints
-import pints.io
 import pints.toy
 import unittest
 import numpy as np
+
+from shared import StreamCapture
 
 debug = False
 method = pints.CMAES
@@ -91,7 +92,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -102,7 +103,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
@@ -114,7 +115,7 @@ class TestCMAES(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn(
                 'Halting: Objective function crossed threshold', c.text())
@@ -156,7 +157,7 @@ class TestCMAES(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         score = pints.SumOfSquaresError(problem)
         x0 = [2.5, 0.0001, 5e6]
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             pints.optimise(score, x0)
         self.assertTrue('Ill-conditioned covariance matrix' in c.text())
 
