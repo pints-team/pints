@@ -116,7 +116,7 @@ class TestEvaluators(unittest.TestCase):
         try:
             e.evaluate([1, 2, 50])
         except Exception as e:
-            self.assertIn('Exception in subprocess', e.message)
+            self.assertIn('Exception in subprocess', str(e))
 
         # System exit
         def system_exit_on_40(x):
@@ -129,7 +129,7 @@ class TestEvaluators(unittest.TestCase):
         try:
             e.evaluate([1, 2, 40])
         except Exception as e:
-            self.assertIn('Exception in subprocess', e.message)
+            self.assertIn('Exception in subprocess', str(e))
 
         # Keyboard interrupt (Ctrl-C)
         def user_cancel_on_30(x):
@@ -142,7 +142,7 @@ class TestEvaluators(unittest.TestCase):
         try:
             e.evaluate([1, 2, 30])
         except Exception as e:
-            self.assertIn('Exception in subprocess', e.message)
+            self.assertIn('Exception in subprocess', str(e))
 
 
 if __name__ == '__main__':
