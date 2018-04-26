@@ -444,12 +444,10 @@ class _Worker(multiprocessing.Process):
                 self._results.put((i, f))
 
                 # Check for errors in other workers
-                # This is reached, but cover seems unable to detect it
-                if self._error.is_set():    # pragma: no cover
+                if self._error.is_set():
                     return
 
-        # This is reached in tests, but cover seems unable to detect it
-        except (Exception, KeyboardInterrupt, SystemExit):  # pragma: no cover
+        except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
 
