@@ -15,19 +15,19 @@ matrix:
         # Unit testing on all supported Python versions
         - python: "2.7"
           env:
-            - PINTS_TESTS=true           
+            - PINTS_UNIT=true           
           if: type != cron
         - python: "3.4"
           env:
-            - PINTS_TESTS=true           
+            - PINTS_UNIT=true           
           if: type != cron
         - python: "3.5"
           env:
-            - PINTS_TESTS=true           
+            - PINTS_UNIT=true           
           if: type != cron
         - python: "3.6"
           env:
-            - PINTS_TESTS=true           
+            - PINTS_UNIT=true           
           if: type != cron
         # Docs, style and cover checking, latest Python version only
         - python: "3.6"
