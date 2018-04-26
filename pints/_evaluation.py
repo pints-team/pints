@@ -273,7 +273,7 @@ multiprocessing.html#all-platforms>`_ for details).
                     # Repolate
                     self._populate()
 
-        except (IOError, EOFError):
+        except (IOError, EOFError):     # pragma: no cover
             # IOErrors can originate from the queues as a result of issues in
             # the subprocesses. Check if the error flag is set. If it is, let
             # the subprocess exception handling deal with it. If it isn't,
@@ -284,7 +284,7 @@ multiprocessing.html#all-platforms>`_ for details).
             # TODO: Maybe this should be something like while(error is not set)
             # wait for it to be set, then let the subprocess handle it...
 
-        except (Exception, SystemExit, KeyboardInterrupt):
+        except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # All other exceptions, including Ctrl-C and user triggered exits
             # should (1) cause all child processes to stop and (2) bubble up to
             # the caller.
@@ -301,7 +301,9 @@ multiprocessing.html#all-platforms>`_ for details).
                     'Exception in subprocess:\n' + trace
                     + '\nException in subprocess')
             else:
-                raise Exception('Unknown exception in subprocess.')
+                # Don't think this is reachable!
+                raise Exception(
+                    'Unknown exception in subprocess.')  # pragma: no cover
 
         # Return results
         return results
@@ -440,11 +442,14 @@ class _Worker(multiprocessing.Process):
                 i, x = self._tasks.get()
                 f = self._function(x, *self._args)
                 self._results.put((i, f))
+
                 # Check for errors in other workers
-                if self._error.is_set():
+                # This is reached, but cover seems unable to detect it
+                if self._error.is_set():    # pragma: no cover
                     return
 
-        except (Exception, KeyboardInterrupt, SystemExit):
+        # This is reached in tests, but cover seems unable to detect it
+        except (Exception, KeyboardInterrupt, SystemExit):  # pragma: no cover
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
 
