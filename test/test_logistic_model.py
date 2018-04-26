@@ -44,6 +44,8 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(values[0], 2)
         self.assertEqual(values[-1], parameters[-1])
         self.assertTrue(np.all(values[1:] >= values[:-1]))
+        self.assertTrue(np.all(values >= 2))
+        self.assertTrue(np.all(values <= parameters[-1]))
 
     def test_negative_k(self):
         model = pints.toy.LogisticModel(2)
@@ -59,12 +61,23 @@ class TestLogistic(unittest.TestCase):
         self.assertRaises(ValueError, model.simulate, parameters, times)
         self.assertRaises(ValueError, pints.toy.LogisticModel, -1)
 
-    def test_sensitivities(self):
+
+class TestLogisticS1(unittest.TestCase):
+    """
+    Tests if the logistic toy model with sensitivities works.
+    """
+    def test_errors(self):
         model = pints.toy.LogisticModel(2)
+        times = [0, -1, 2, 10000]
+        parameters = [1, 0]
+        self.assertRaises(ValueError, model.simulate, parameters, times)
+        self.assertRaises(ValueError, pints.toy.LogisticModel, -1)
+
+    def test_simulate(self):
+        model = pints.toy.LogisticModelWithSensitivities(2)
         times = [0, 1, 2, 10000]
         parameters = [1, 5]
-        values, dvdp = model.simulate_with_sensitivities(
-            parameters, times)
+        values, dvdp = model.simulate(parameters, times)
         self.assertEqual(dvdp[0, 0], 0)
         self.assertEqual(dvdp[-1, 0], 0.0)
         self.assertEqual(dvdp[0, 1], 0)

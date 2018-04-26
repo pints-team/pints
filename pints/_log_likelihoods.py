@@ -114,7 +114,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         self._no = problem.n_outputs()
 
         # Add parameters to problem
-        self._dimension = problem.n_parameters() + self._no
+        self._n_parameters = problem.n_parameters() + self._no
 
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)

@@ -19,7 +19,7 @@ try:
     from io import StringIO
 except ImportError:
     # Python2
-    from cStringIO import StringIO
+    import cStringIO.StringIO as StringIO
 
 
 def load_samples(filename, n=None):
@@ -281,3 +281,4 @@ class TemporaryDirectory(object):
             return '<TemporaryDirectory, outside of context>'
         else:
             return self._dir
+

@@ -19,6 +19,9 @@ class MiniProblem(pints.SingleOutputProblem):
         self._t = pints.vector([1, 2, 3])
         self._v = pints.vector([-1, 2, 3])
 
+    def n_outputs(self):
+        return 1
+
     def n_parameters(self):
         return 3
 
@@ -38,11 +41,11 @@ class MultiMiniProblem(pints.MultiOutputProblem):
         self._v = pints.matrix2d(
             np.array([[-1, 2, 3], [-1, 2, 3]]).swapaxes(0, 1))
 
-    def n_parameters(self):
-        return 3
-
     def n_outputs(self):
         return 2
+
+    def n_parameters(self):
+        return 3
 
     def evaluate(self, parameters):
         return np.array([parameters, parameters]).swapaxes(0, 1)

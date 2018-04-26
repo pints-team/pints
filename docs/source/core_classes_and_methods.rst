@@ -9,15 +9,20 @@ Forward model
 
 .. autoclass:: ForwardModel
 
-Forward model with sensitivities
-********************************
-
-.. autoclass:: ForwardModelWithSensitivities
-
 Problems
 ********
 
 .. autoclass:: SingleOutputProblem
 
 .. autoclass:: MultiOutputProblem
+
+
+Models and problems with sensitivities
+**************************************
+
+.. autoclass:: ForwardModelS1
+
+.. autoclass:: SingleOutputProblemS1
+
+.. autoclass:: MultiOutputProblemS1
 
