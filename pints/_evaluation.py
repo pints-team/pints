@@ -242,6 +242,7 @@ multiprocessing.html#all-platforms>`_ for details).
         #    raise Exception('Unhandled tasks/results left in queues.')
         # Clean up any dead workers
         self._clean()
+
         # Ensure worker pool is populated
         self._populate()
         # Start
@@ -277,21 +278,26 @@ multiprocessing.html#all-platforms>`_ for details).
                 raise
             # TODO: Maybe this should be something like while(error is not set)
             # wait for it to be set, then let the subprocess handle it...
+
         except (Exception, SystemExit, KeyboardInterrupt):
             # All other exceptions, including Ctrl-C and user triggered exits
             # should (1) cause all child processes to stop and (2) bubble up to
             # the caller.
             self._stop()
             raise
+
         # Error in worker threads
         if self._error.is_set():
             errors = self._stop()
             # Raise exception
             if errors:
                 pid, trace = errors[0]
-                raise Exception('Exception in subprocess:' + trace)
+                raise Exception(
+                    'Exception in subprocess:\n' + trace
+                    + '\nException in subprocess')
             else:
                 raise Exception('Unknown exception in subprocess.')
+
         # Return results
         return results
 
