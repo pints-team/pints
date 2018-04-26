@@ -10,8 +10,10 @@
 import os
 import sys
 import pints
-import pints.io
 import unittest
+
+from shared import StreamCapture, TemporaryDirectory
+
 
 data = [
     1, 4, 1.234567890987654321, 12, 10, 0, 'yes',
@@ -57,7 +59,7 @@ class TestLogger(unittest.TestCase):
     """
     def test_logger(self):
         # Normal use, all data at once
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             # Test logger with no fields
             log = pints.Logger()
             self.assertRaises(ValueError, log.log, 1)
@@ -86,7 +88,7 @@ class TestLogger(unittest.TestCase):
         self.assertRaises(RuntimeError, log.set_stream, sys.stdout)
 
         # Normal use, all data at once, plus extra bit
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
             log.add_float('Latitude', width=1)
@@ -101,7 +103,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out1, returned=c.text())
 
         # Normal use, data row by row
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
             log.add_float('Latitude', width=1)
@@ -118,7 +120,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out1, returned=c.text())
 
         # Normal use, data field by field
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
             log.add_float('Latitude', width=1)
@@ -136,7 +138,7 @@ class TestLogger(unittest.TestCase):
         # Log in different sized chunks
         order = [3, 2, 1, 1, 4, 6, 3, 2, 6]
         self.assertEqual(sum(order), len(data))
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
             log.add_float('Latitude', width=1)
@@ -154,7 +156,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out1, returned=c.text())
 
         # Log with file-only fields, and shorter name
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
             log.add_float('Lat.', width=1)
@@ -167,8 +169,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out2, returned=c.text())
 
         # Log with file-only fields, and shorter name, and file
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
                 log = pints.Logger()
                 log.set_filename(filename)
@@ -186,8 +188,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out3, returned=out)
 
         # Repeat in csv mode
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=True)
@@ -205,8 +207,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out4, returned=out)
 
         # Repeat without screen output
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=True)
@@ -225,8 +227,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out4, returned=out)
 
         # Repeat without screen output, outside of csv mode
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
@@ -245,8 +247,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out3, returned=out)
 
         # Unset file output
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
@@ -259,7 +261,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out3, returned=out)
 
         # Repeat without any output
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             log = pints.Logger()
             log.set_stream(None)
             log.add_counter('#', width=2)
@@ -273,8 +275,8 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected='', returned=c.text())
 
         # Repeat on stderr
-        with pints.io.StreamCapture(stdout=True, stderr=True) as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture(stdout=True, stderr=True) as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
