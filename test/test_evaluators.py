@@ -66,6 +66,7 @@ class TestEvaluators(unittest.TestCase):
         # Args must be a sequence
         self.assertRaises(ValueError, pints.SequentialEvaluator, g, 1)
 
+    '''
     def test_parallel(self):
 
         # Create test function
@@ -106,43 +107,108 @@ class TestEvaluators(unittest.TestCase):
         # Exceptions in called method should trigger halt, cause new exception
 
         # Any old exception
-        def ioerror_on_fifty(x):
-            if x == 50:
+        def ioerror_on_five(x):
+            if x == 5:
                 raise IOError
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_fifty)
-        self.assertRaises(Exception, e.evaluate, range(100))
+        e = pints.ParallelEvaluator(ioerror_on_five)
+        self.assertRaises(Exception, e.evaluate, range(10))
         try:
-            e.evaluate([1, 2, 50])
+            e.evaluate([1, 2, 5])
         except Exception as e:
             self.assertIn('Exception in subprocess', str(e))
 
         # System exit
-        def system_exit_on_40(x):
-            if x == 40:
+        def system_exit_on_four(x):
+            if x == 4:
                 raise SystemExit
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_fifty)
-        self.assertRaises(Exception, e.evaluate, range(100))
+        e = pints.ParallelEvaluator(ioerror_on_four)
+        self.assertRaises(Exception, e.evaluate, range(10))
         try:
-            e.evaluate([1, 2, 40])
+            e.evaluate([1, 2, 4])
         except Exception as e:
             self.assertIn('Exception in subprocess', str(e))
 
         # Keyboard interrupt (Ctrl-C)
-        def user_cancel_on_30(x):
-            if x == 30:
+        def user_cancel_on_three(x):
+            if x == 3:
                 raise KeyboardInterrupt
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_fifty)
-        self.assertRaises(Exception, e.evaluate, range(100))
+        e = pints.ParallelEvaluator(ioerror_on_three)
+        self.assertRaises(Exception, e.evaluate, range(10))
         try:
-            e.evaluate([1, 2, 30])
+            e.evaluate([1, 2, 3])
         except Exception as e:
             self.assertIn('Exception in subprocess', str(e))
+    '''
+
+    def test_worker(self):
+        """
+        Manual test of worker, since cover doesn't pick up on its run method.
+        """
+        from pints._evaluation import _Worker as Worker
+
+        # Define function
+        def f(x):
+            if x == 30:
+                raise KeyboardInterrupt
+            return 2 * x
+
+        # Create queues for worker
+        import multiprocessing
+        tasks = multiprocessing.Queue()
+        results = multiprocessing.Queue()
+        errors = multiprocessing.Queue()
+        error = multiprocessing.Event()
+        tasks.put((0, 1))
+        tasks.put((1, 2))
+        tasks.put((2, 3))
+        max_tasks = 3
+
+        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w.run()
+
+        self.assertEqual(results.get(timeout=0.01), (0, 2))
+        self.assertEqual(results.get(timeout=0.01), (1, 4))
+        self.assertEqual(results.get(timeout=0.01), (2, 6))
+        self.assertTrue(results.empty())
+
+        # Test worker stops if error flag is set
+        tasks = multiprocessing.Queue()
+        results = multiprocessing.Queue()
+        errors = multiprocessing.Queue()
+        error = multiprocessing.Event()
+        tasks.put((0, 1))
+        tasks.put((1, 2))
+        tasks.put((2, 3))
+        error.set()
+
+        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w.run()
+
+        self.assertEqual(results.get(timeout=0.01), (0, 2))
+        self.assertTrue(results.empty())
+
+        # Tests worker catches, stores and halts on exception
+        tasks = multiprocessing.Queue()
+        results = multiprocessing.Queue()
+        errors = multiprocessing.Queue()
+        error = multiprocessing.Event()
+        tasks.put((0, 1))
+        tasks.put((1, 30))
+        tasks.put((2, 3))
+
+        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w.run()
+
+        self.assertEqual(results.get(timeout=0.01), (0, 2))
+        self.assertTrue(results.empty())
+        self.assertTrue(error.is_set())
+        self.assertFalse(errors.empty())
 
 
 if __name__ == '__main__':
