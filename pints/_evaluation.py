@@ -58,20 +58,26 @@ class Evaluator(object):
         A function or other callable object ``f`` that takes a value ``x`` and
         returns an evaluation ``f(x)``.
     ``args``
-        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        An optional sequence of extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
 
     """
     def __init__(self, function, args=None):
+
+        # Check function
         if not callable(function):
             raise ValueError('The given function must be callable.')
         self._function = function
+
+        # Check args
         if args is None:
             self._args = ()
-        elif type(args) != tuple:
-            raise ValueError(
-                'The argument `args` must be either None or a tuple.')
         else:
+            try:
+                len(args)
+            except TypeError:
+                raise ValueError(
+                    'The argument `args` must be either None or a sequence.')
             self._args = args
 
     def evaluate(self, positions):
@@ -138,7 +144,8 @@ multiprocessing.html#all-platforms>`_ for details).
         ``max_tasks_per_worker`` evaluations. This number can be tweaked for
         best performance on a given task / system.
     ``args``
-        An optional tuple containing extra arguments to the objective function.
+        An optional sequence of extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
 
     The evaluator will keep it's subprocesses alive and running until it is
     tidied up by garbage collection.
