@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the evaluator methods and classes.
 #
@@ -48,15 +48,23 @@ class TestEvaluators(unittest.TestCase):
         # Test sequential evaluator
         e = pints.SequentialEvaluator(f)
         self.assertTrue(np.all(ys == e.evaluate(xs)))
+
+        # Function must be callable
         self.assertRaises(ValueError, pints.SequentialEvaluator, 3)
 
+        # Argument must be sequence
+        self.assertRaises(ValueError, e.evaluate, 1)
+
         # Test args
-        def f(x, y, z):
+        def g(x, y, z):
             self.assertEqual(y, 10)
             self.assertEqual(z, 20)
 
-        e = pints.SequentialEvaluator(f, [10, 20])
+        e = pints.SequentialEvaluator(g, [10, 20])
         e.evaluate([1])
+
+        # Args must be a sequence
+        self.assertRaises(ValueError, pints.SequentialEvaluator, g, 1)
 
     def test_parallel(self):
 
@@ -75,6 +83,9 @@ class TestEvaluators(unittest.TestCase):
         # Function must be callable
         self.assertRaises(ValueError, pints.ParallelEvaluator, 3)
 
+        # Argument must be sequence
+        self.assertRaises(ValueError, e.evaluate, 1)
+
         # Test args
         def g(x, y, z):
             self.assertEqual(y, 10)
@@ -91,6 +102,47 @@ class TestEvaluators(unittest.TestCase):
 
         # max tasks must be >0
         self.assertRaises(ValueError, pints.ParallelEvaluator, f, 1, 0)
+
+        # Exceptions in called method should trigger halt, cause new exception
+
+        # Any old exception
+        def ioerror_on_fifty(x):
+            if x == 50:
+                raise IOError
+            return x
+
+        e = pints.ParallelEvaluator(ioerror_on_fifty)
+        self.assertRaises(Exception, e.evaluate, range(100))
+        try:
+            e.evaluate([1, 2, 50])
+        except Exception as e:
+            self.assertIn('Exception in subprocess', e.message)
+
+        # System exit
+        def system_exit_on_40(x):
+            if x == 40:
+                raise SystemExit
+            return x
+
+        e = pints.ParallelEvaluator(ioerror_on_fifty)
+        self.assertRaises(Exception, e.evaluate, range(100))
+        try:
+            e.evaluate([1, 2, 40])
+        except Exception as e:
+            self.assertIn('Exception in subprocess', e.message)
+
+        # Keyboard interrupt (Ctrl-C)
+        def user_cancel_on_30(x):
+            if x == 30:
+                raise KeyboardInterrupt
+            return x
+
+        e = pints.ParallelEvaluator(ioerror_on_fifty)
+        self.assertRaises(Exception, e.evaluate, range(100))
+        try:
+            e.evaluate([1, 2, 30])
+        except Exception as e:
+            self.assertIn('Exception in subprocess', e.message)
 
 
 if __name__ == '__main__':
