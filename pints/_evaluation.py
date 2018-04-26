@@ -245,11 +245,14 @@ multiprocessing.html#all-platforms>`_ for details).
 
         # Ensure worker pool is populated
         self._populate()
+
         # Start
         try:
+
             # Enqueue all tasks (non-blocking)
             for k, x in enumerate(positions):
                 self._tasks.put((k, x))
+
             # Collect results (blocking)
             n = len(positions)
             m = 0
@@ -264,10 +267,12 @@ multiprocessing.html#all-platforms>`_ for details).
                         m += 1
                 except queue.Empty:
                     pass
+
                 # Clean dead workers
                 if self._clean():
                     # Repolate
                     self._populate()
+
         except (IOError, EOFError):
             # IOErrors can originate from the queues as a result of issues in
             # the subprocesses. Check if the error flag is set. If it is, let
@@ -438,6 +443,7 @@ class _Worker(multiprocessing.Process):
                 # Check for errors in other workers
                 if self._error.is_set():
                     return
+
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
