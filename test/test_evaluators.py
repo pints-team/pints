@@ -66,7 +66,6 @@ class TestEvaluators(unittest.TestCase):
         # Args must be a sequence
         self.assertRaises(ValueError, pints.SequentialEvaluator, g, 1)
 
-    '''
     def test_parallel(self):
 
         # Create test function
@@ -125,7 +124,7 @@ class TestEvaluators(unittest.TestCase):
                 raise SystemExit
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_four)
+        e = pints.ParallelEvaluator(system_exit_on_four)
         self.assertRaises(Exception, e.evaluate, range(10))
         try:
             e.evaluate([1, 2, 4])
@@ -138,13 +137,12 @@ class TestEvaluators(unittest.TestCase):
                 raise KeyboardInterrupt
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_three)
+        e = pints.ParallelEvaluator(user_cancel_on_three)
         self.assertRaises(Exception, e.evaluate, range(10))
         try:
             e.evaluate([1, 2, 3])
         except Exception as e:
             self.assertIn('Exception in subprocess', str(e))
-    '''
 
     def test_worker(self):
         """
@@ -208,7 +206,8 @@ class TestEvaluators(unittest.TestCase):
         self.assertEqual(results.get(timeout=0.01), (0, 2))
         self.assertTrue(results.empty())
         self.assertTrue(error.is_set())
-        self.assertFalse(errors.empty())
+        #self.assertFalse(errors.empty())   # Fails on travis!
+        self.assertIsNotNone(errors.get(timeout=0.01))
 
 
 if __name__ == '__main__':
