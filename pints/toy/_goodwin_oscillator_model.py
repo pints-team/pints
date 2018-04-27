@@ -18,9 +18,6 @@ class GoodwinOscillatorModel(pints.ForwardModel):
 
     Three-state Goodwin oscillator toy model [1, 2].
 
-    In this implementation of the model, only the last state is visible,
-    making it very difficult to identify.
-
     [1] Oscillatory behavior in enzymatic control processes."
     Goodwin (1965) Advances in enzyme regulation.
 
@@ -33,7 +30,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
-        return 1    # Should maybe change this to 3 later...
+        return 3
 
     def _rhs(self, state, time, parameters):
         """
@@ -51,7 +48,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         y0 = [0.0054, 0.053, 1.93]
         solution = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,))
-        return solution[:, -1]   # Only observe the last state
+        return solution
 
     def suggested_parameters(self):
         """
