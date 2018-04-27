@@ -9,16 +9,40 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
+import pints
+
 
 class LogPDF(object):
     """
-    Represents the natural logarithm of a (not necessarily normalised)
-    probability density function (PDF).
+    Callable class that represents the natural logarithm of a (not necessarily
+    normalised) probability density function (PDF).
 
-    All :class:`LogPDF` types are callable: when called with a vector argument
-    ``theta`` they return some value ``log(f(theta))`` where ``f(theta)`` is an
-    unnormalised PDF. The size of the argument `theta` is given by
-    :meth:`n_parameters()`.
+    When called with a vector argument ``x``, a ``LogPDF`` returns a value
+    ``fx`` where ``fx = log(f(x))`` and ``f(x)`` is an unnormalised PDF.
+
+    The size of the argument ``x`` is given by :meth:`n_parameters()`.
+    """
+    def __call__(self, x):
+        raise NotImplementedError
+
+    def n_parameters(self):
+        """
+        Returns the dimension of the space this :class:`LogPDF` is defined
+        over.
+        """
+        raise NotImplementedError
+
+
+class LogPDFS1(object):
+    """
+    Callable class that provides not just a :class:`LogPDF`, but also it's
+    derivatives with respect to the parameters.
+
+    When called with a vector argument ``x``, a ``LogPDFS1`` returns a
+    tuple ``(fx, dfx)`` where ``fx = log(f(x))`` and ``f(x)`` is an
+    unnormalised PDF, and where ``dfx = d/dp log(f(x))``.
+
+    The size of the argument ``x`` is given by :meth:`n_parameters()`.
     """
     def __call__(self, x):
         raise NotImplementedError
@@ -64,6 +88,15 @@ class LogLikelihood(LogPDF):
     """
 
 
+class LogLikelihoodS1(LogPDFS1):
+    """
+    *Extends:* :class:`LogPDFS1`
+
+    Represents a log-likelihood defined on a parameter space, for which the
+    derivatives of the log-likelihood with respect to the parameters are known.
+    """
+
+
 class ProblemLogLikelihood(LogLikelihood):
     """
     *Extends:* :class:`LogLikelihood`
@@ -75,20 +108,69 @@ class ProblemLogLikelihood(LogLikelihood):
     Arguments:
 
     ``problem``
-        The time-series problem this log-likelihood is defined for.
+        The time-series problem this log-likelihood is defined for. Must extend
+        :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
 
     """
     def __init__(self, problem):
         super(LogLikelihood, self).__init__()
+
+        # Check problem
         self._problem = problem
+        if not (isinstance(problem, pints.SingleOutputProblem) or
+                isinstance(problem, pints.MultiOutputProblem)):
+            raise TypeError(
+                'Expecting a single or multi-output problem without'
+                ' sensitivities.')
+
         # Cache some problem variables
         self._values = problem.values()
         self._times = problem.times()
-        self._dimension = problem.n_parameters()
+        self._n_parameters = problem.n_parameters()
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
+
+
+class ProblemLogLikelihoodS1(LogLikelihoodS1):
+    """
+    *Extends:* :class:`LogLikelihoodS1`
+
+    Represents a log-likelihood on a problem's parameter space, used to
+    indicate the likelihood of an observed (fixed) time-series given a
+    particular parameter set (variable).
+
+    Unlike the :class:`ProblemLogLikelihood` class, this class expects a
+    problem that can provide first-order derivatives with respect to the
+    parameter vector.
+
+    Arguments:
+
+    ``problem``
+        The time-series problem this log-likelihood is defined for. Must extend
+        :class:`SingleOutputProblemS1` or :class:`MultiOutputProblemS1`.
+
+    """
+    def __init__(self, problem):
+        super(LogLikelihood, self).__init__()
+
+        # Check problem
+        self._problem = problem
+        if not (isinstance(problem, pints.SingleOutputProblemS1) or
+                isinstance(problem, pints.MultiOutputProblemS1)):
+            raise TypeError(
+                'Expecting a single or multi-output problem without'
+                ' sensitivities.')
+
+        # Cache some problem variables
+        self._values = problem.values()
+        self._times = problem.times()
+        self._n_parameters = problem.n_parameters()
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
 
 
 class LogPosterior(LogPDF):
@@ -123,11 +205,12 @@ class LogPosterior(LogPDF):
             raise ValueError(
                 'Given log_likelihood must extend pints.LogLikelihood.')
 
-        # Check dimensions
-        self._dimension = log_prior.n_parameters()
-        if log_likelihood.n_parameters() != self._dimension:
+        # Check number of parameters
+        self._n_parameters = log_prior.n_parameters()
+        if log_likelihood.n_parameters() != self._n_parameters:
             raise ValueError(
-                'Given log_prior and log_likelihood must have same dimension.')
+                'Given log_prior and log_likelihood must have same number of'
+                ' parameters.')
 
         # Store prior and likelihood
         self._log_prior = log_prior
@@ -145,5 +228,5 @@ class LogPosterior(LogPDF):
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 

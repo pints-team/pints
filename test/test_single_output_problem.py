@@ -36,12 +36,15 @@ class TestSingleOutputProblem(unittest.TestCase):
         self.assertEqual(problem.n_times(), len(times))
 
         # Test errors
+        # Times less than 0
         times[0] = -2
         self.assertRaises(
             ValueError, pints.SingleOutputProblem, model, times, values)
+        # Decreasing times
         times = [1, 2, 2, 1]
         self.assertRaises(
             ValueError, pints.SingleOutputProblem, model, times, values)
+        # Time array too short
         times = [1, 2, 3]
         self.assertRaises(
             ValueError, pints.SingleOutputProblem, model, times, values)

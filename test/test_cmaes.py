@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the basic methods of the CMAES optimiser.
 #
@@ -91,9 +91,10 @@ class TestCMAES(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StreamCapture() as c:
+        with pints.io.StreamCapture(stdout=True, stderr=True) as c:
             opt.run()
-            self.assertIn('Halting: Maximum number of iterations', c.text())
+        co, ce = c.text()
+        self.assertIn('Halting: Maximum number of iterations', co)
 
     def test_stopping_max_unchanged(self):
 
@@ -102,9 +103,10 @@ class TestCMAES(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StreamCapture() as c:
+        with pints.io.StreamCapture(stdout=True, stderr=True) as c:
             opt.run()
-            self.assertIn('Halting: No significant change', c.text())
+        co, ce = c.text()
+        self.assertIn('Halting: No significant change', co)
 
     def test_stopping_threshold(self):
 
@@ -114,10 +116,11 @@ class TestCMAES(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StreamCapture() as c:
+        with pints.io.StreamCapture(stdout=True, stderr=True) as c:
             opt.run()
-            self.assertIn(
-                'Halting: Objective function crossed threshold', c.text())
+        co, ce = c.text()
+        self.assertIn(
+            'Halting: Objective function crossed threshold', co)
 
     def test_stopping_no_criterion(self):
 
@@ -156,9 +159,10 @@ class TestCMAES(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         score = pints.SumOfSquaresError(problem)
         x0 = [2.5, 0.0001, 5e6]
-        with pints.io.StreamCapture() as c:
+        with pints.io.StreamCapture(stdout=True, stderr=True) as c:
             pints.optimise(score, x0)
-        self.assertTrue('Ill-conditioned covariance matrix' in c.text())
+        co, ce = c.text()
+        self.assertTrue('Ill-conditioned covariance matrix' in co)
 
 
 if __name__ == '__main__':

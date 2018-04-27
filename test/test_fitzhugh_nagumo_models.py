@@ -12,11 +12,10 @@ import pints
 import pints.toy
 
 
-class TestFitzhughNagumoModel(unittest.TestCase):
+class TestFitzhughNagumoModels(unittest.TestCase):
     """
-    Tests if the Fitzhugh-Nagumo toy model runs.
+    Tests if the Fitzhugh-Nagumo toy models run.
     """
-
     def test_run(self):
 
         model = pints.toy.FitzhughNagumoModel()
@@ -28,14 +27,27 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
 
-        values, dvalues_dp = model.simulate_with_sensitivities(x, times)
-        self.assertEqual(values.shape, (len(times), 2))
-        self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
-
         # Test alternative starting position
         model = pints.toy.FitzhughNagumoModel([0.1, 0.1])
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
+
+        # Test errors
+        times = [-1, 2, 3, 4]
+        self.assertRaises(ValueError, model.simulate, x, times)
+        self.assertRaises(ValueError, pints.toy.FitzhughNagumoModel, [1])
+
+    def test_run_with_sensitivities(self):
+
+        model = pints.toy.FitzhughNagumoModelWithSensitivities()
+        self.assertEqual(model.n_parameters(), 3)
+        self.assertEqual(model.n_outputs(), 2)
+
+        x = [1, 1, 1]
+        times = [1, 2, 3, 4]
+        values, dvalues_dp = model.simulate(x, times)
+        self.assertEqual(values.shape, (len(times), 2))
+        self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
 
         # Test errors
         times = [-1, 2, 3, 4]

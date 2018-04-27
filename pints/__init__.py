@@ -41,8 +41,13 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, ForwardModelWithSensitivities
-from ._core import SingleOutputProblem, MultiOutputProblem
+from ._core import ForwardModel, ForwardModelS1
+from ._core import (
+    SingleOutputProblem,
+    SingleOutputProblemS1,
+    MultiOutputProblem,
+    MultiOutputProblemS1,
+)
 
 #
 # Utility classes and methods
@@ -58,8 +63,10 @@ from ._log_pdfs import (
     LogPDF,
     LogPrior,
     LogLikelihood,
+    LogLikelihoodS1,
     LogPosterior,
     ProblemLogLikelihood,
+    ProblemLogLikelihoodS1,
 )
 
 #
