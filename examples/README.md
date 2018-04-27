@@ -57,7 +57,7 @@ relevant code.
 - [Fitzhugh-Nagumo model](./toy-model-fitzhugh-nagumo.ipynb)
 - [Goodwin oscillator model](./toy-model-goodwin-oscillator.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-model-hodgkin-huxley-ik.ipynb)
-- Logistic model
+- [Logistic model](./toy-model-logistic.ipynb)
 
 ### Distributions
 
