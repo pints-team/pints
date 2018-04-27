@@ -58,20 +58,26 @@ class Evaluator(object):
         A function or other callable object ``f`` that takes a value ``x`` and
         returns an evaluation ``f(x)``.
     ``args``
-        An optional tuple containing extra arguments to ``f``. If ``args`` is
+        An optional sequence of extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
 
     """
     def __init__(self, function, args=None):
+
+        # Check function
         if not callable(function):
             raise ValueError('The given function must be callable.')
         self._function = function
+
+        # Check args
         if args is None:
             self._args = ()
-        elif type(args) != tuple:
-            raise ValueError(
-                'The argument `args` must be either None or a tuple.')
         else:
+            try:
+                len(args)
+            except TypeError:
+                raise ValueError(
+                    'The argument `args` must be either None or a sequence.')
             self._args = args
 
     def evaluate(self, positions):
@@ -138,7 +144,8 @@ multiprocessing.html#all-platforms>`_ for details).
         ``max_tasks_per_worker`` evaluations. This number can be tweaked for
         best performance on a given task / system.
     ``args``
-        An optional tuple containing extra arguments to the objective function.
+        An optional sequence of extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
 
     The evaluator will keep it's subprocesses alive and running until it is
     tidied up by garbage collection.
@@ -235,13 +242,17 @@ multiprocessing.html#all-platforms>`_ for details).
         #    raise Exception('Unhandled tasks/results left in queues.')
         # Clean up any dead workers
         self._clean()
+
         # Ensure worker pool is populated
         self._populate()
+
         # Start
         try:
+
             # Enqueue all tasks (non-blocking)
             for k, x in enumerate(positions):
                 self._tasks.put((k, x))
+
             # Collect results (blocking)
             n = len(positions)
             m = 0
@@ -256,11 +267,13 @@ multiprocessing.html#all-platforms>`_ for details).
                         m += 1
                 except queue.Empty:
                     pass
+
                 # Clean dead workers
                 if self._clean():
                     # Repolate
                     self._populate()
-        except (IOError, EOFError):
+
+        except (IOError, EOFError):     # pragma: no cover
             # IOErrors can originate from the queues as a result of issues in
             # the subprocesses. Check if the error flag is set. If it is, let
             # the subprocess exception handling deal with it. If it isn't,
@@ -270,21 +283,28 @@ multiprocessing.html#all-platforms>`_ for details).
                 raise
             # TODO: Maybe this should be something like while(error is not set)
             # wait for it to be set, then let the subprocess handle it...
-        except (Exception, SystemExit, KeyboardInterrupt):
+
+        except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # All other exceptions, including Ctrl-C and user triggered exits
             # should (1) cause all child processes to stop and (2) bubble up to
             # the caller.
             self._stop()
             raise
+
         # Error in worker threads
         if self._error.is_set():
             errors = self._stop()
             # Raise exception
             if errors:
                 pid, trace = errors[0]
-                raise Exception('Exception in subprocess:' + trace)
+                raise Exception(
+                    'Exception in subprocess:\n' + trace
+                    + '\nException in subprocess')
             else:
-                raise Exception('Unknown exception in subprocess.')
+                # Don't think this is reachable!
+                raise Exception(
+                    'Unknown exception in subprocess.')  # pragma: no cover
+
         # Return results
         return results
 
@@ -422,9 +442,11 @@ class _Worker(multiprocessing.Process):
                 i, x = self._tasks.get()
                 f = self._function(x, *self._args)
                 self._results.put((i, f))
+
                 # Check for errors in other workers
                 if self._error.is_set():
                     return
+
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
