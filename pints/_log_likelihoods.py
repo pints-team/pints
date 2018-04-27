@@ -255,7 +255,6 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
             pints.UnknownNoiseLogLikelihood(problem2),
         ])
 
-
     """
     def __init__(self, log_likelihoods):
         super(SumOfIndependentLogLikelihoods, self).__init__()
