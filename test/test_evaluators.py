@@ -106,17 +106,19 @@ class TestEvaluators(unittest.TestCase):
         # Exceptions in called method should trigger halt, cause new exception
 
         # Any old exception
+        import time
         def ioerror_on_five(x):
             if x == 5:
                 raise IOError
             return x
 
-        e = pints.ParallelEvaluator(ioerror_on_five)
+        e = pints.ParallelEvaluator(ioerror_on_five, n_workers=2)
         self.assertRaises(Exception, e.evaluate, range(10))
         try:
             e.evaluate([1, 2, 5])
-        except Exception as e:
-            self.assertIn('Exception in subprocess', str(e))
+        except Exception as ex:
+            self.assertIn('Exception in subprocess', str(ex))
+        e.evaluate([1, 2])
 
         # System exit
         def system_exit_on_four(x):
@@ -124,12 +126,13 @@ class TestEvaluators(unittest.TestCase):
                 raise SystemExit
             return x
 
-        e = pints.ParallelEvaluator(system_exit_on_four)
+        e = pints.ParallelEvaluator(system_exit_on_four, n_workers=2)
         self.assertRaises(Exception, e.evaluate, range(10))
         try:
             e.evaluate([1, 2, 4])
-        except Exception as e:
-            self.assertIn('Exception in subprocess', str(e))
+        except Exception as ex:
+            self.assertIn('Exception in subprocess', str(ex))
+        e.evaluate([1, 2])
 
         # Keyboard interrupt (Ctrl-C)
         def user_cancel_on_three(x):
@@ -137,12 +140,13 @@ class TestEvaluators(unittest.TestCase):
                 raise KeyboardInterrupt
             return x
 
-        e = pints.ParallelEvaluator(user_cancel_on_three)
+        e = pints.ParallelEvaluator(user_cancel_on_three, n_workers=2)
         self.assertRaises(Exception, e.evaluate, range(10))
         try:
             e.evaluate([1, 2, 3])
-        except Exception as e:
-            self.assertIn('Exception in subprocess', str(e))
+        except Exception as ex:
+            self.assertIn('Exception in subprocess', str(ex))
+        e.evaluate([1, 2])
 
     def test_worker(self):
         """
