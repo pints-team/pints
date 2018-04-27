@@ -114,7 +114,7 @@ class ParallelEvaluator(Evaluator):
     By default, the number of processes ("workers") used to evaluate the
     function is set equal to the number of CPU cores reported by python's
     ``multiprocessing`` module. To override the number of workers used, set
-    ``nworkers`` to some integer greater than ``0``.
+    ``n_workers`` to some integer greater than ``0``.
 
     There are two important caveats for using multiprocessing to evaluate
     functions:
@@ -132,9 +132,9 @@ multiprocessing.html#all-platforms>`_ for details).
 
     ``function``
         The function to evaluate
-    ``nworkers``
+    ``n_workers``
         The number of worker processes to use. If left at the default value
-        ``nworkers=None`` the number of workers will equal the number of CPU
+        ``n_workers=None`` the number of workers will equal the number of CPU
         cores in the machine this is run on. In many cases this will provide
         good performance.
     ``max_tasks_per_worker``
@@ -156,17 +156,17 @@ multiprocessing.html#all-platforms>`_ for details).
     """
     def __init__(
             self, function,
-            nworkers=None,
+            n_workers=None,
             max_tasks_per_worker=500,
             args=None):
         super(ParallelEvaluator, self).__init__(function, args)
 
         # Determine number of workers
-        if nworkers is None:
-            self._nworkers = max(1, multiprocessing.cpu_count())
+        if n_workers is None:
+            self._n_workers = max(1, multiprocessing.cpu_count())
         else:
-            self._nworkers = int(nworkers)
-            if self._nworkers < 1:
+            self._n_workers = int(n_workers)
+            if self._n_workers < 1:
                 raise ValueError(
                     'Number of workers must be an integer greater than 0 or'
                     ' `None` to use the default value.')
@@ -219,7 +219,7 @@ multiprocessing.html#all-platforms>`_ for details).
         """
         Populates (but usually repopulates) the worker pool.
         """
-        for k in range(self._nworkers - len(self._workers)):
+        for k in range(self._n_workers - len(self._workers)):
             w = _Worker(
                 self._function,
                 self._args,
