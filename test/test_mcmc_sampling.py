@@ -8,10 +8,12 @@
 #  software package.
 #
 import pints
-import pints.io
 import pints.toy
 import unittest
 import numpy as np
+
+from shared import StreamCapture, TemporaryDirectory
+
 
 debug = False
 
@@ -197,7 +199,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
 
         # No output
-        with pints.io.StreamCapture() as capture:
+        with StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(False)
@@ -206,7 +208,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         # With output to screen
         np.random.seed(1)
-        with pints.io.StreamCapture() as capture:
+        with StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(True)
@@ -215,8 +217,8 @@ class TestMCMCSampling(unittest.TestCase):
 
         # With output to file
         np.random.seed(1)
-        with pints.io.StreamCapture() as capture:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as capture:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
                 mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
                 mcmc.set_max_iterations(10)
