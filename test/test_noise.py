@@ -59,6 +59,10 @@ class TestNoise(unittest.TestCase):
         self.assertRaises(ValueError, pn.ar1, 1.1, 5, 10)
         self.assertRaises(ValueError, pn.ar1, -1.1, 5, 10)
 
+        # Sigma cannot be negative
+        pn.ar1(0.5, 5, 10)
+        self.assertRaises(ValueError, pn.ar1, 0.5, -5, 10)
+
         # N cannot be negative
         pn.ar1(0.5, 5, 0)
         self.assertRaises(ValueError, pn.ar1, 0.5, 5, -1)
@@ -85,6 +89,10 @@ class TestNoise(unittest.TestCase):
         pn.ar1(-1, 5, 10)
         self.assertRaises(ValueError, pn.ar1_unity, 1.1, 5, 10)
         self.assertRaises(ValueError, pn.ar1_unity, -1.1, 5, 10)
+
+        # Sigma cannot be negative
+        pn.ar1_unity(0.5, 5, 10)
+        self.assertRaises(ValueError, pn.ar1_unity, 0.5, -5, 10)
 
         # N cannot be negative
         pn.ar1(0.5, 5, 0)
