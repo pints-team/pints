@@ -75,11 +75,10 @@ def ar1(rho, sigma, n):
         return np.array([])
 
     # Generate noise
-    v = np.zeros(n)
+    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n)
     v[0] = np.random.rand()
     for t in range(1, n):
-        v[t] = rho * v[t - 1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
+        v[t] += rho * v[t - 1]
     return v
 
 
@@ -117,10 +116,9 @@ def ar1_unity(rho, sigma, n):
         raise ValueError('Must supply at least one value.')
 
     # Generate noise
-    v = np.zeros(n + 1)
+    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n + 1)
     v[0] = 1
     for t in range(1, n + 1):
-        v[t] = (1 - rho) + rho * v[t - 1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
+        v[t] += (1 - rho) + rho * v[t - 1]
     return v[1:]
 
