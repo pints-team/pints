@@ -106,7 +106,6 @@ class TestEvaluators(unittest.TestCase):
         # Exceptions in called method should trigger halt, cause new exception
 
         # Any old exception
-        import time
         def ioerror_on_five(x):
             if x == 5:
                 raise IOError
