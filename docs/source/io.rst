@@ -8,7 +8,3 @@ I/O Helper classes
 
 .. autofunction:: save_samples
 
-.. autoclass:: StreamCapture
-
-.. autoclass:: TemporaryDirectory
-

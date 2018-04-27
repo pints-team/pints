@@ -8,10 +8,12 @@
 #  software package.
 #
 import pints
-import pints.io
 import pints.toy
 import unittest
 import numpy as np
+
+from shared import StreamCapture, TemporaryDirectory
+
 
 debug = False
 method = pints.PSO
@@ -112,7 +114,7 @@ class TestPSO(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(2)
         opt.set_max_unchanged_iterations(None)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
@@ -123,7 +125,7 @@ class TestPSO(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
 
@@ -135,7 +137,7 @@ class TestPSO(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         opt.set_threshold(1e4 * self.cutoff)
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt.run()
             self.assertIn(
                 'Halting: Objective function crossed threshold', c.text())
@@ -188,7 +190,7 @@ class TestPSO(unittest.TestCase):
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
 
         # No logging
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
             opt.set_max_iterations(10)
             opt.set_log_to_screen(False)
@@ -197,7 +199,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(c.text(), '')
 
         # Log to screen
-        with pints.io.StreamCapture() as c:
+        with StreamCapture() as c:
             opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
             opt.set_max_iterations(10)
             opt.set_log_to_screen(True)
@@ -206,8 +208,8 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(c.text(), LOG_SCREEN)
 
         # Log to file
-        with pints.io.StreamCapture() as c:
-            with pints.io.TemporaryDirectory() as d:
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
                 opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
                 opt.set_max_iterations(10)
