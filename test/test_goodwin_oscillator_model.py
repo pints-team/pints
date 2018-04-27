@@ -20,11 +20,11 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
     def test_run(self):
         model = pints.toy.GoodwinOscillatorModel()
         self.assertEqual(model.n_parameters(), 5)
-        self.assertEqual(model.n_outputs(), 1)
+        self.assertEqual(model.n_outputs(), 3)
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         values = model.simulate(parameters, times)
-        self.assertEqual(times.shape, values.shape)
+        self.assertEqual(values.shape, (len(times), 3))
 
 
 if __name__ == '__main__':
