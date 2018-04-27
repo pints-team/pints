@@ -58,6 +58,7 @@ relevant code.
 - [Goodwin oscillator model](./toy-model-goodwin-oscillator.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-model-hodgkin-huxley-ik.ipynb)
 - [Logistic model](./toy-model-logistic.ipynb)
+- [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
 
 ### Distributions
 

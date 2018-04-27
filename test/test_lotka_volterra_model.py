@@ -29,6 +29,12 @@ class LotkaVolterraModel(unittest.TestCase):
         self.assertEqual(values.shape, (len(times), 2))
         self.assertTrue(np.all(values > 0))
 
+        # Initial conditions cannot be negative
+        pints.toy.LotkaVolterraModel([0, 0])
+        self.assertRaises(ValueError, pints.toy.LotkaVolterraModel, [-1, 0])
+        self.assertRaises(ValueError, pints.toy.LotkaVolterraModel, [0, -1])
+        self.assertRaises(ValueError, pints.toy.LotkaVolterraModel, [-1, -1])
+
 
 if __name__ == '__main__':
     unittest.main()

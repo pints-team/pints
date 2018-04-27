@@ -31,12 +31,9 @@ class LotkaVolterraModel(pints.ForwardModel):
     """
     def __init__(self, y0=None):
         if y0 is None:
-            self._y0 = [1.6, 1.6]
+            self.set_initial_conditions([2, 2])
         else:
-            a, b = y0
-            if a < 0 or b < 0:
-                raise ValueError('Initial populations cannot be negative.')
-            self._y0 = [a, b]
+            self.set_initial_conditions(y0)
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
@@ -54,6 +51,15 @@ class LotkaVolterraModel(pints.ForwardModel):
         a, b, c, d = parameters
         return np.array([a * x - b * x * y, -c * y + d * x * y])
 
+    def set_initial_conditions(self, y0):
+        """
+        Changes the initial conditions for this model.
+        """
+        a, b = y0
+        if a < 0 or b < 0:
+            raise ValueError('Initial populations cannot be negative.')
+        self._y0 = [a, b]
+
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
         return scipy.integrate.odeint(
@@ -69,5 +75,5 @@ class LotkaVolterraModel(pints.ForwardModel):
         """
         Returns a suggested set of sampling times.
         """
-        return np.linspace(0, 3, 100)
+        return np.linspace(0, 3, 300)
 
