@@ -34,6 +34,7 @@ Contents
     log_priors
     mcmc_samplers/index
     nested_samplers/index
+    noise_generators
     optimisers/index
     toy/index
     utilities
