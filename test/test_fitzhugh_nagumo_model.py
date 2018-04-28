@@ -19,16 +19,19 @@ class TestFitzhughNagumoModel(unittest.TestCase):
 
     def test_run(self):
 
+        # Test basic properties
         model = pints.toy.FitzhughNagumoModel()
         self.assertEqual(model.n_parameters(), 3)
         self.assertEqual(model.n_outputs(), 2)
 
+        # Test simulation
         x = [1, 1, 1]
         times = [1, 2, 3, 4]
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
 
-        values, dvalues_dp = model.simulate_with_sensitivities(x, times)
+        # Simulation with sensitivities
+        values, dvalues_dp = model.simulateS1(x, times)
         self.assertEqual(values.shape, (len(times), 2))
         self.assertEqual(dvalues_dp.shape, (len(times), 2, 3))
 
@@ -37,9 +40,12 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
 
-        # Test errors
+        # Times can't be negative
         times = [-1, 2, 3, 4]
         self.assertRaises(ValueError, model.simulate, x, times)
+
+        # Initial value must have size 2
+        pints.toy.FitzhughNagumoModel([1, 1])
         self.assertRaises(ValueError, pints.toy.FitzhughNagumoModel, [1])
 
 

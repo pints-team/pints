@@ -53,17 +53,24 @@ class TestLogistic(unittest.TestCase):
         self.assertTrue(np.all(values == np.zeros(4)))
 
     def test_errors(self):
+
         model = pints.toy.LogisticModel(2)
-        times = [0, -1, 2, 10000]
-        parameters = [1, 0]
+
+        # Times can't be negative
+        times = [0, 1, 2, 10000]
+        parameters = [1, 1]
+        model.simulate(parameters, times)
+        times[1] = -1
         self.assertRaises(ValueError, model.simulate, parameters, times)
+
+        # Initial value can't be negative
         self.assertRaises(ValueError, pints.toy.LogisticModel, -1)
 
     def test_sensitivities(self):
         model = pints.toy.LogisticModel(2)
         times = [0, 1, 2, 10000]
         parameters = [1, 5]
-        values, dvdp = model.simulate_with_sensitivities(
+        values, dvdp = model.simulateS1(
             parameters, times)
         self.assertEqual(dvdp[0, 0], 0)
         self.assertEqual(dvdp[-1, 0], 0.0)
