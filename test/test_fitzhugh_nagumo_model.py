@@ -25,8 +25,8 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         self.assertEqual(model.n_outputs(), 2)
 
         # Test simulation
-        x = [1, 1, 1]
-        times = [1, 2, 3, 4]
+        x = model.suggested_parameters()
+        times = model.suggested_times()
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), 2))
 

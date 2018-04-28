@@ -153,3 +153,16 @@ class FitzhughNagumoModel(pints.ForwardModelS1):
         else:
             values = odeint(r, self._y0, times, (parameters,))
             return values
+
+    def suggested_parameters(self):
+        """
+        Returns a suggested set of parameters for this toy model.
+        """
+        return np.array([0.1, 0.5, 3])
+
+    def suggested_times(self):
+        """
+        Returns a suggested set of simulation times for this toy model.
+        """
+        return np.linspace(0, 20, 200)
+
