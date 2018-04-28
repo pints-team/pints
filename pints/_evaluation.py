@@ -211,7 +211,7 @@ multiprocessing.html#all-platforms>`_ for details).
                 w.join()
                 cleaned += 1
                 del(self._workers[k])
-        if cleaned:
+        if cleaned:     # pragma: no cover
             gc.collect()
         return cleaned
 
