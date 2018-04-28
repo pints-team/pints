@@ -104,31 +104,58 @@ class TestErrorMeasures(unittest.TestCase):
         super(TestErrorMeasures, self).__init__(name)
 
     def test_mean_squared_error(self):
-        p = MiniProblem()
-        e = pints.MeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = (1 + 4 + 9) / 3
-        self.assertAlmostEqual(e(x), y)
-        x = [1, 1, 1]
-        y = (4 + 1 + 4) / 3
-        self.assertEqual(e(x), y)
 
-        p = MultiMiniProblem()
+        # Single-output
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+        values = [1, 1, 1]
+        p = pints.SingleOutputProblem(model, times, values)
+
         e = pints.MeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = (1 + 4 + 9) / 3
-        self.assertAlmostEqual(e(x), y)
-        x = [1, 1, 1]
-        y = (4 + 1 + 4) / 3
-        self.assertEqual(e(x), y)
+        self.assertEqual(e.n_parameters(), 1)
+        float(e([1]))
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([2]), 1)
+        self.assertEqual(e([0]), 1)
+        self.assertEqual(e([3]), 4)
+
+        # Single-output derivatives
+        for x in [1, 2, 3, 4]:
+            y, dy = e.evaluateS1([x])
+            r = x - 1
+            self.assertEqual(y, e([x]))
+            self.assertEqual(dy.shape, (1, ))
+            self.assertTrue(np.all(dy == 2 * r))
+
+        # Multi-output
+        model = pints.toy.ConstantModel(2)
+        times = [1, 2, 3]
+        values = [[1, 2], [1, 2], [1, 2]]
+        p = pints.MultiOutputProblem(model, times, values)
+
+        e = pints.MeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 2)
+        float(e([1, 2]))
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([2, 2]), 0.5)
+        self.assertEqual(e([2, 3]), 1)
+        self.assertEqual(e([3, 4]), 4)
+
+        # Multi-output derivatives
+        values = np.array([[1, 2], [2, 3], [3, 4]])
+        p = pints.MultiOutputProblem(model, times, values)
+        e = pints.MeanSquaredError(p)
+        x = [1, 2]
+        # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
+        # Error is 1+1+4+4=10, divided by 6
+        self.assertAlmostEqual(e(x), 10 / 6)
+        y, dy = e.evaluateS1(x)
+        self.assertAlmostEqual(y, 10 / 6)
+        # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
+        # dy1 is: 2 * [0*1+-1*1+-2*1 + 0*1+-1*1+-2*1] = 2 * [-3 + -3] = -12
+        # dy1 is: 2 * [0*1+-1*1+-2*1 + 0*1+-1*1+-2*1] = 2 * [-3 + -3] = -12
+        self.assertEqual(dy[0], -12 / 6)
+        self.assertEqual(dy[1], -12 / 6)
 
     def test_probability_based_error(self):
         p = MiniLogPDF()
