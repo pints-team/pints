@@ -256,7 +256,7 @@ class UniformLogPrior(pints.LogPrior):
         # Ignoring points on the boundaries (i.e. on the surface of the
         # hypercube), because it's very unlikely and won't help the search
         # much...
-        return self(x), 0
+        return self(x), np.zeros(self._n_parameters)
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """

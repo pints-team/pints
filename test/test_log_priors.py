@@ -173,6 +173,19 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
 
+        # Test derivatives (always 0)
+        for x in [[0, 0], [0, 5], [0, 19], [0, 21], [5, 0], [5, 21]]:
+            y, dy = p.evaluateS1(x)
+            self.assertEqual(y, p(x))
+            self.assertEqual(dy.shape, (2, ))
+            self.assertTrue(np.all(dy == 0))
+
+        for x in [[1, 2], [1, 5], [1, 20 - 1e-14], [5, 5], [5, 20 - 1e-14]]:
+            y, dy = p.evaluateS1(x)
+            self.assertEqual(y, p(x))
+            self.assertEqual(dy.shape, (2, ))
+            self.assertTrue(np.all(dy == 0))
+
         # Test bad constructor
         self.assertRaises(ValueError, pints.UniformLogPrior, lower)
 
