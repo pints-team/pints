@@ -92,6 +92,9 @@ class MiniLogPDF(pints.LogPDF):
     def __call__(self, parameters):
         return 10
 
+    def evaluateS1(self, parameters):
+        return 10, np.array([1, 2, 3])
+
 
 class TestErrorMeasures(unittest.TestCase):
     """
@@ -134,6 +137,13 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e([1, 2, 3]), -10)
         p = MiniProblem()
         self.assertRaises(ValueError, pints.ProbabilityBasedError, p)
+
+        # Test derivatives
+        x = [1, 2, 3]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (3, ))
+        self.assertTrue(np.all(dy == [-1, -2, -3]))
 
     def test_root_mean_squared_error(self):
         p = MiniProblem()
