@@ -68,7 +68,7 @@ class ComposedLogPrior(pints.LogPrior):
             hi += prior.n_parameters()
             p, dp = prior.evaluateS1(x[lo:hi])
             output += p
-            doutput += np.asarray(dp)
+            doutput[lo:hi] = np.asarray(dp)
         return output, doutput
 
     def n_parameters(self):
@@ -154,6 +154,7 @@ class NormalLogPrior(pints.LogPrior):
         return self._offset - self._factor * (x[0] - self._mean)**2
 
     def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
         return self(x), self._factor2 * (self._mean - np.asarray(x))
 
     def n_parameters(self):

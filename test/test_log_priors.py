@@ -97,7 +97,15 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(ValueError, pints.ComposedLogPrior, 1)
 
         # Test derivatives
-        #TODO
+        p = pints.ComposedLogPrior(p1, p2)
+        x = [8, -40]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = p1.evaluateS1(x[:1])
+        y2, dy2 = p2.evaluateS1(x[1:])
+        self.assertAlmostEqual(dy[0], dy1[0])
+        self.assertAlmostEqual(dy[1], dy2[0])
 
     def test_composed_prior_sampling(self):
 
