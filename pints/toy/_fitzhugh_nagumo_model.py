@@ -14,7 +14,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
+class FitzhughNagumoModel(pints.ForwardModel):
     """
     Fitzhugh Nagumo model of action potential.
 
@@ -63,56 +63,39 @@ class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
             if len(self._y0) != 2:
                 raise ValueError('Initial value must have size 2.')
 
+    def max_derivatives(self):
+        """ See :meth:`pints.ForwardModel.max_parameters()`. """
+        return 1
+
     def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters)`. """
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 3
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.outputs()`. """
         return 2
 
-    def simulate(self, parameters, times):
-        return self._simulate(parameters, times, False)
+    def simulate(self, parameters, times, n_derivatives=0):
 
-    def simulate_with_sensitivities(self, parameters, times):
-        return self._simulate(parameters, times, True)
-
-    def _simulate(self, parameters, times, sensitivities):
-        """
-        Private helper function that either simulates the model with
-        sensitivities (`sensitivities == true`) or without
-        (`sensitivities == false`)
-
-        Arguments:
-
-        ``parameters``
-            The three phenomenological parameters: ``a`` , ``b``, ``c``.
-
-        ``times``
-            The times at which to calculate the model output / sensitivities
-
-        ``sensitivities``
-            If set to `true` the function returns the model outputs and
-            sensitivities `(values,sensitivities)`. If set to `false` the
-            function only returns the model outputs `values`. See
-            :meth:`pints.ForwardModel.simulate()` and
-            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
-            details.
-        """
-
+        # Unpack parameters
         a, b, c = [float(x) for x in parameters]
 
+        # Ensure times are an array
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
 
+        # Define basic right hand side function
         def r(y, t, p):
             V, R = y
             dV_dt = (V - V**3 / 3 + R) * c
             dR_dt = (V - a + b * R) / -c
             return dV_dt, dR_dt
 
-        if sensitivities:
+        if n_derivatives > 0:
+
+            # Calculate with 1-st order sensitivities
+
             def jac(y):
                 V, R = y
                 ret = np.empty((2, 2))
@@ -136,10 +119,8 @@ class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
             def rhs(y_and_dydp, t, p):
                 y = y_and_dydp[0:2]
                 dydp = y_and_dydp[2:].reshape((2, 3))
-
                 dydt = r(y, t, p)
                 d_dydp_dt = np.matmul(jac(y), dydp) + dfdp(y)
-
                 return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
 
             y0 = np.zeros(8)
@@ -148,6 +129,8 @@ class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
             values = result[:, 0:2]
             dvalues_dp = result[:, 2:].reshape((len(times), 2, 3))
             return values, dvalues_dp
+
         else:
+
             values = odeint(r, self._y0, times, (parameters,))
             return values

@@ -158,7 +158,7 @@ class TestLogLikelihood(unittest.TestCase):
             def n_parameters(self):
                 return 1
 
-            def simulate(self, x, times):
+            def simulate(self, x, times, n_derivatives=0):
                 return np.zeros(times.shape)
 
         class NullModel2(pints.ForwardModel):
@@ -168,7 +168,7 @@ class TestLogLikelihood(unittest.TestCase):
             def n_outputs(self):
                 return 2
 
-            def simulate(self, x, times):
+            def simulate(self, x, times, n_derivatives=0):
                 return np.zeros((len(times), 2))
 
         # Create two single output problems

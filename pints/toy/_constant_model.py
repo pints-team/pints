@@ -66,7 +66,7 @@ class ConstantModel(pints.ForwardModel):
         """ See :meth:`pints.ForwardModel.outputs()`. """
         return self._n
 
-    def simulate(self, parameters, times):
+    def simulate(self, parameters, times, n_derivatives=0):
         """ See :meth:`pints.ForwardModel.simulate()`. """
 
         # Check input

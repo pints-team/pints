@@ -19,9 +19,26 @@ class LogPDF(object):
     ``theta`` they return some value ``log(f(theta))`` where ``f(theta)`` is an
     unnormalised PDF. The size of the argument `theta` is given by
     :meth:`n_parameters()`.
+
+    For LogPDFs that support derivatives, an optional argument
+    ``n_derivatives`` can be passed in to determine the number of higher order
+    derivatives to return.
+    For ``n_derivatives=0`` only ``log(f(theta))`` is returned.
+    For ``n_derivatives=1``, a tuple ``(log(f(theta)),
+    d/dtheta log(f(theta)))`` is returned.
+    For ``n_derivatives=2`` a tuple containing ``(log(f(theta)),
+    d/dtheta log(f(theta))), d/d2theta log(f(theta)))`` is returned.
+
     """
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
         raise NotImplementedError
+
+    def max_derivatives(self):
+        """
+        Returns the highest order of derivatives this class can evaluate
+        (default=0).
+        """
+        return self._max_derivatives
 
     def n_parameters(self):
         """

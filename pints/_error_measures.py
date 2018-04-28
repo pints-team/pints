@@ -25,6 +25,13 @@ class ErrorMeasure(object):
     def __call__(self, x):
         raise NotImplementedError
 
+    def max_derivatives(self):
+        """
+        Returns the highest order of derivatives this class can evaluate
+        (default=0).
+        """
+        return self._max_derivatives
+
     def n_parameters(self):
         """
         Returns the dimension of the parameter space this measure is defined
@@ -76,7 +83,12 @@ class ProbabilityBasedError(ErrorMeasure):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._log_pdf.n_parameters()
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         return -self._log_pdf(x)
 
 
@@ -152,7 +164,12 @@ class SumOfErrors(ErrorMeasure):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._dimension
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         i = iter(self._weights)
         total = 0
         for e in self._errors:
@@ -178,7 +195,12 @@ class MeanSquaredError(ProblemErrorMeasure):
         super(MeanSquaredError, self).__init__(problem)
         self._ninv = 1.0 / np.product(self._values.shape)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         return (np.sum((self._problem.evaluate(x) - self._values)**2) *
                 self._ninv)
 
@@ -205,7 +227,12 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
         self._ninv = 1.0 / len(self._values)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         return np.sqrt(self._ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
 
@@ -222,6 +249,11 @@ class SumOfSquaresError(ProblemErrorMeasure):
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
     """
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         return np.sum((self._problem.evaluate(x) - self._values)**2)
 

@@ -57,7 +57,12 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         self._offset -= len(self._times) * np.log(sigma)
         self._multip = -1 / (2.0 * sigma**2)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         error = self._values - self._problem.evaluate(x)
         return np.sum(self._offset + self._multip * np.sum(error**2, axis=0))
 
@@ -119,7 +124,12 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         sigma = np.asarray(x[-self._no:])
         error = self._values - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
@@ -168,7 +178,12 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         # Pre-calculate
         self._n = len(self._times)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         # For multiparameter problems the parameters are stored as
         # (model_params_1, model_params_2, ..., model_params_k,
         # nu_1, sigma_1, nu_2, sigma_2,...)
@@ -225,7 +240,12 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         # Pre-calculate parts
         self._f = 1.0 / np.product(self._values.shape)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         return self._log_likelihood(x) * self._f
 
 
@@ -287,8 +307,14 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._dimension
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
+
+        if n_derivatives > 0:
+            raise NotImplementedError(
+                'Derivatives are not supported for this LogLikelihood.')
+
         total = 0
         for e in self._log_likelihoods:
             total += e(x)
         return total
+

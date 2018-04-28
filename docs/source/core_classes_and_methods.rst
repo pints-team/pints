@@ -9,11 +9,6 @@ Forward model
 
 .. autoclass:: ForwardModel
 
-Forward model with sensitivities
-********************************
-
-.. autoclass:: ForwardModelWithSensitivities
-
 Problems
 ********
 

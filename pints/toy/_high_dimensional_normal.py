@@ -40,7 +40,7 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         # Construct scipy 'random variable'
         self._var = scipy.stats.multivariate_normal(self._mean, self._cov)
 
-    def __call__(self, x):
+    def __call__(self, x, n_derivatives=0):
         return self._var.logpdf(x)
 
     def n_parameters(self):

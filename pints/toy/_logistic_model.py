@@ -12,7 +12,7 @@ import numpy as np
 import pints
 
 
-class LogisticModel(pints.ForwardModelWithSensitivities):
+class LogisticModel(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
@@ -43,32 +43,37 @@ class LogisticModel(pints.ForwardModelWithSensitivities):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 2
 
-    def simulate(self, parameters, times):
-        return self._simulate(parameters, times, False)
+    def simulate(self, parameters, times, n_derivatives=0):
 
-    def simulate_with_sensitivities(self, parameters, times):
-        return self._simulate(parameters, times, True)
-
-    def _simulate(self, parameters, times, sensitivities):
+        # Unpack parameters
         r, k = [float(x) for x in parameters]
+
+        # Check times
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
+
+        # Trivial cases
         if self._p0 == 0:
-            return np.zeros(times.shape)
-        if k < 0:
-            return np.zeros(times.shape)
+            #TODO: THIS WILL FAIL WHEN DERIVATIVES ARE REQUESTED
+            values = np.zeros(times.shape)
+        elif k < 0:
+            #TODO: THIS WILL FAIL WHEN DERIVATIVES ARE REQUESTED
+            values = np.zeros(times.shape)
+        else:
+            exp = np.exp(-r * times)
+            c = (k / self._p0 - 1)
+            values = k / (1 + c * exp)
 
-        exp = np.exp(-r * times)
-        c = (k / self._p0 - 1)
+        if n_derivatives > 0:
 
-        values = k / (1 + c * exp)
-
-        if sensitivities:
             dvalues_dp = np.empty((len(times), len(parameters)))
             dvalues_dp[:, 0] = k * times * c * exp / (c * exp + 1)**2
             dvalues_dp[:, 1] = -k * exp / \
                 (self._p0 * (c * exp + 1)**2) + 1 / (c * exp + 1)
             return values, dvalues_dp
+
         else:
+
             return values
+
