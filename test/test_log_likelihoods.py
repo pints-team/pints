@@ -42,6 +42,17 @@ class TestLogLikelihood(unittest.TestCase):
         # Test bad constructor
         self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
 
+        # Test single-output derivatives
+        y1, dy1 = log_likelihood_not_scaled.evaluateS1(test_parameters)
+        y2, dy2 = log_likelihood_scaled.evaluateS1(test_parameters)
+        self.assertEqual(y1, log_likelihood_not_scaled(test_parameters))
+        self.assertEqual(dy1.shape, (2, ))
+        self.assertEqual(y2, log_likelihood_scaled(test_parameters))
+        self.assertEqual(dy2.shape, (2, ))
+        dy3 = dy2 * len(times)
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
+
         # Test on multi-output problem
         model = toy.FitzhughNagumoModel()
         nt = 10
@@ -51,9 +62,21 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         unscaled = pints.KnownNoiseLogLikelihood(problem, 1)
         scaled = pints.ScaledLogLikelihood(unscaled)
-        x = unscaled([0.1, 0.1, 0.1])
-        y = scaled([0.1, 0.1, 0.1])
+        p = [0.1, 0.1, 0.1]
+        x = unscaled(p)
+        y = scaled(p)
         self.assertEqual(y, x / nt / no)
+
+        # Test multi-output derivatives
+        y1, dy1 = unscaled.evaluateS1(p)
+        y2, dy2 = scaled.evaluateS1(p)
+        self.assertAlmostEqual(y1, unscaled(p))
+        self.assertEqual(dy1.shape, (3, ))
+        self.assertAlmostEqual(y2, scaled(p))
+        self.assertEqual(dy2.shape, (3, ))
+        dy3 = dy2 * nt * no
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
     def test_known_and_unknown_noise_single(self):
         """
