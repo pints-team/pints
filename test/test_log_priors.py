@@ -33,6 +33,13 @@ class TestPrior(unittest.TestCase):
         py = [p([i]) for i in y]
         self.assertTrue(np.all(py[1:] <= py[:-1]))
 
+        # Test derivatives
+        x = [8]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertEqual(dy.shape, (1, ))
+        self.assertEqual(dy[0], (mean - x[0]) / std**2)
+
     def test_normal_prior_sampling(self):
         mean = 10
         std = 2
@@ -88,6 +95,9 @@ class TestPrior(unittest.TestCase):
         # Test errors
         self.assertRaises(ValueError, pints.ComposedLogPrior)
         self.assertRaises(ValueError, pints.ComposedLogPrior, 1)
+
+        # Test derivatives
+        #TODO
 
     def test_composed_prior_sampling(self):
 

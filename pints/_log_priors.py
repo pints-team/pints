@@ -148,9 +148,13 @@ class NormalLogPrior(pints.LogPrior):
         # Cache constants
         self._offset = 1 / np.sqrt(2 * np.pi * self._sigma ** 2)
         self._factor = 1 / (2 * self._sigma ** 2)
+        self._factor2 = 1 / self._sigma**2
 
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
+
+    def evaluateS1(self, x):
+        return self(x), self._factor2 * (self._mean - np.asarray(x))
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
