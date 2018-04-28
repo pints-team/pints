@@ -85,13 +85,25 @@ class HES1Model(pints.ForwardModel):
 
     def set_implicit_parameters(self, k):
         """
-        Changes the initial conditions for this model.
+        Changes the implicit parameters for this model.
         """
         a, b, c = k
         if a < 0 or b < 0 or c < 0:
             raise ValueError('Implicit parameters cannot be negative.')
         self._p0 = [a, b]
         self._kdeg = c
+
+    def initial_conditions(self):
+        """
+        Returns the initial conditions of this model.
+        """
+        return self._y0
+
+    def implicit_parameters(self):
+        """
+        Returns the implicit parameters of this model.
+        """
+        return [self._p0[0], self._p0[1], self._kdeg]
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
