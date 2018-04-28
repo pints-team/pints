@@ -16,11 +16,26 @@ class LogPDF(object):
     probability density function (PDF).
 
     All :class:`LogPDF` types are callable: when called with a vector argument
-    ``theta`` they return some value ``log(f(theta))`` where ``f(theta)`` is an
-    unnormalised PDF. The size of the argument `theta` is given by
+    ``p`` they return some value ``log(f(p))`` where ``f(p)`` is an
+    unnormalised PDF. The size of the argument ``p`` is given by
     :meth:`n_parameters()`.
     """
     def __call__(self, x):
+        raise NotImplementedError
+
+    def evaluateS1(self, x):
+        """
+        Evaluates this LogPDF, and returns the result plus the partial
+        derivatives of the result with respect to the parameters.
+
+        The returned data has the shape ``(L, L')`` where ``L`` is a scalar
+        value and ``L'`` is a sequence of length ``n_parameters``.
+
+        Note that the derivative returned is of the loglikelihood, so
+        ``L' = d/dp log(f(p))``, evaluated at ``p=x``.
+
+        *This is an optional method that is not always implemented.*
+        """
         raise NotImplementedError
 
     def n_parameters(self):
@@ -110,7 +125,6 @@ class LogPosterior(LogPDF):
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
 
-
     """
     def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__()
@@ -142,6 +156,23 @@ class LogPosterior(LogPDF):
         if log_prior == self._minf:
             return self._minf
         return log_prior + self._log_likelihood(x)
+
+    def evaluateS1(self, x):
+        """
+        Evaluates this LogPDF, and returns the result plus the partial
+        derivatives of the result with respect to the parameters.
+
+        The returned data has the shape ``(L, L')`` where ``L`` is a scalar
+        value and ``L'`` is a sequence of length ``n_parameters``.
+
+        *This method only works if the underlying :class:`LogLikelihood` and
+        :class:`LogPrior` implement the optional method
+        :meth:`LogPDF.evaluateS1()`!*
+        """
+        #TODO: Is there an optimisation to be made here?
+        a, da = self._log_prior.evaluateS1(x)
+        b, db = self._log_likelihood.evaluateS1(x)
+        return a + b, da + db
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """

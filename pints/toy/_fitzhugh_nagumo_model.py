@@ -14,7 +14,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
+class FitzhughNagumoModel(pints.ForwardModelS1):
     """
     Fitzhugh Nagumo model of action potential.
 
@@ -72,9 +72,11 @@ class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
         return 2
 
     def simulate(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulate()`. """
         return self._simulate(parameters, times, False)
 
-    def simulate_with_sensitivities(self, parameters, times):
+    def simulateS1(self, parameters, times):
+        """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
         return self._simulate(parameters, times, True)
 
     def _simulate(self, parameters, times, sensitivities):

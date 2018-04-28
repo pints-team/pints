@@ -40,26 +40,53 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
 
+        # Store counts
+        self._no = problem.n_outputs()
+        self._np = problem.n_parameters()
+        self._nt = problem.n_times()
+
         # Check sigma
-        no = problem.n_outputs()
         if np.isscalar(sigma):
-            sigma = np.ones(no) * float(sigma)
+            sigma = np.ones(self._no) * float(sigma)
         else:
             sigma = pints.vector(sigma)
-            if len(sigma) != no:
+            if len(sigma) != self._no:
                 raise ValueError(
                     'Sigma must be a scalar or a vector of length n_outputs.')
         if np.any(sigma <= 0):
             raise ValueError('Standard deviation must be greater than zero.')
 
         # Pre-calculate parts
-        self._offset = -0.5 * len(self._times) * np.log(2 * np.pi)
-        self._offset -= len(self._times) * np.log(sigma)
+        self._offset = -0.5 * self._nt * np.log(2 * np.pi)
+        self._offset -= self._nt * np.log(sigma)
         self._multip = -1 / (2.0 * sigma**2)
+
+        # Pre-calculate S1 parts
+        self._isigma2 = sigma**-2
 
     def __call__(self, x):
         error = self._values - self._problem.evaluate(x)
         return np.sum(self._offset + self._multip * np.sum(error**2, axis=0))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x)
+        r = self._values - y
+
+        # Reshape y and r, in case we're working with a single-output problem
+        r = r.reshape(self._nt, self._no)
+        dy = dy.reshape(self._nt, self._no, self._np)
+
+        # Calculate log-likelihood
+        L = np.sum(self._offset + self._multip * np.sum(r**2, axis=0))
+
+        # Calculate derivative
+        dL = np.sum(
+            (self._isigma2 * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
+
+        # Return
+        return L, dL
 
 
 class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
@@ -226,7 +253,17 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         self._f = 1.0 / np.product(self._values.shape)
 
     def __call__(self, x):
-        return self._log_likelihood(x) * self._f
+        return self._f * self._log_likelihood(x)
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`LogPDF.evaluateS1()`.
+
+        *This method only works if the underlying :class:`LogLikelihood`
+        object implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        a, b = self._log_likelihood.evaluateS1(x)
+        return self._f * a, self._f * np.asarray(b)
 
 
 class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
@@ -283,12 +320,28 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
                     ' SumOfIndependentLogLikelihoods must have same'
                     ' dimension.')
 
-    def n_parameters(self):
-        """ See :meth:`LogPDF.n_parameters()`. """
-        return self._dimension
-
     def __call__(self, x):
         total = 0
         for e in self._log_likelihoods:
             total += e(x)
         return total
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`LogPDF.evaluateS1()`.
+
+        *This method only works if all the underlying :class:`LogLikelihood`
+        objects implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        total = 0
+        dtotal = np.zeros(self._n_parameters)
+        for e in self._log_likelihoods:
+            a, b = e.evaluateS1(x)
+            total += a
+            dtotal += np.asarray(b)
+        return total, dtotal
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._dimension
+

@@ -78,6 +78,92 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
+    def test_known_noise_single_S1(self):
+        """
+        Simple tests for single known noise log-likelihood with sensitivities.
+        """
+        model = toy.LogisticModel()
+        x = [0.015, 500]
+        sigma = 0.1
+        times = np.linspace(0, 1000, 100)
+        values = model.simulate(x, times)
+        values += np.random.normal(0, sigma, values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Test if values are correct
+        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L1 = f(x)
+        L2, dL = f.evaluateS1(x)
+        self.assertEqual(L1, L2)
+        self.assertEqual(dL.shape, (2,))
+
+        # Test without noise
+        values = model.simulate(x, times)
+        problem = pints.SingleOutputProblem(model, times, values)
+        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L1 = f(x)
+        L2, dL = f.evaluateS1(x)
+        self.assertEqual(L1, L2)
+        self.assertEqual(dL.shape, (2,))
+
+        # Test if zero at optimum
+        self.assertTrue(np.all(dL == 0))
+
+        # Test if positive to the left, negative to the right
+        L, dL = f.evaluateS1(x + np.array([-1e-9, 0]))
+        self.assertTrue(dL[0] > 0)
+        L, dL = f.evaluateS1(x + np.array([1e-9, 0]))
+        self.assertTrue(dL[0] < 0)
+
+        # Test if positive to the left, negative to the right
+        L, dL = f.evaluateS1(x + np.array([0, -1e-9]))
+        self.assertTrue(dL[1] > 0)
+        L, dL = f.evaluateS1(x + np.array([0, 1e-9]))
+        self.assertTrue(dL[1] < 0)
+
+        # Plot derivatives
+        if False:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            r = np.linspace(x[0] * 0.95, x[0] * 1.05, 100)
+            L = []
+            dL1 = []
+            dL2 = []
+            for y in r:
+                a, b = f.evaluateS1([y, x[1]])
+                L.append(a)
+                dL1.append(b[0])
+                dL2.append(b[1])
+            plt.subplot(3, 1, 1)
+            plt.plot(r, L)
+            plt.subplot(3, 1, 2)
+            plt.plot(r, dL1)
+            plt.grid(True)
+            plt.subplot(3, 1, 3)
+            plt.plot(r, dL2)
+            plt.grid(True)
+
+            plt.figure()
+            r = np.linspace(x[1] * 0.95, x[1] * 1.05, 100)
+            L = []
+            dL1 = []
+            dL2 = []
+            for y in r:
+                a, b = f.evaluateS1([x[0], y])
+                L.append(a)
+                dL1.append(b[0])
+                dL2.append(b[1])
+            plt.subplot(3, 1, 1)
+            plt.plot(r, L)
+            plt.subplot(3, 1, 2)
+            plt.plot(r, dL1)
+            plt.grid(True)
+            plt.subplot(3, 1, 3)
+            plt.plot(r, dL2)
+            plt.grid(True)
+
+            plt.show()
+
     def test_student_t_log_likelihood_single(self):
         """
         Single-output test for Student-t noise log-likelihood methods
