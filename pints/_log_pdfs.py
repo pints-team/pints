@@ -99,11 +99,11 @@ class ProblemLogLikelihood(LogLikelihood):
         # Cache some problem variables
         self._values = problem.values()
         self._times = problem.times()
-        self._dimension = problem.n_parameters()
+        self._n_parameters = problem.n_parameters()
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
 
 class LogPosterior(LogPDF):
@@ -138,8 +138,8 @@ class LogPosterior(LogPDF):
                 'Given log_likelihood must extend pints.LogLikelihood.')
 
         # Check dimensions
-        self._dimension = log_prior.n_parameters()
-        if log_likelihood.n_parameters() != self._dimension:
+        self._n_parameters = log_prior.n_parameters()
+        if log_likelihood.n_parameters() != self._n_parameters:
             raise ValueError(
                 'Given log_prior and log_likelihood must have same dimension.')
 
@@ -176,5 +176,5 @@ class LogPosterior(LogPDF):
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
