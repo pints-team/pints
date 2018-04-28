@@ -272,7 +272,7 @@ class MultiOutputProblem(object):
         *This method only works for problems whose model implements the
         :class:`ForwardModelS1` interface.*
         """
-        return self._model.simulate(parameters, self._times)
+        return self._model.simulateS1(parameters, self._times)
 
     def n_outputs(self):
         """

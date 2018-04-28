@@ -68,13 +68,16 @@ class TestConstantModel(unittest.TestCase):
         times = [0, -1, 2, 10000]
         self.assertRaises(ValueError, model.simulate, [1], times)
         times = [0, 1, 2, 10000]
+
         # Wrong number of parameters
         self.assertRaises(ValueError, model.simulate, [], times)
         self.assertRaises(ValueError, model.simulate, [1, 1], times)
+
         # Non-finite parameters
         self.assertRaises(ValueError, model.simulate, [np.nan], times)
         self.assertRaises(ValueError, model.simulate, [np.inf], times)
         self.assertRaises(ValueError, model.simulate, [-np.inf], times)
+
         # Invalid number of parameters
         self.assertRaises(ValueError, pints.toy.ConstantModel, 0)
         self.assertRaises(ValueError, pints.toy.ConstantModel, -1)
@@ -86,15 +89,41 @@ class TestConstantModel(unittest.TestCase):
         values = [10, 0, 1, 10]
         problem = pints.SingleOutputProblem(model, times, values)
         problem.evaluate([1])
+
         # Multi output (n=1)
         problem = pints.MultiOutputProblem(model, times, values)
         problem.evaluate([1])
+
         # Multi output (n=3)
         model = pints.toy.ConstantModel(3)
         times = [0, 1, 2, 1000]
         values = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [8, 7, 6]]
         problem = pints.MultiOutputProblem(model, times, values)
         problem.evaluate([1, 2, 3])
+
+    def test_derivatives(self):
+
+        # Single output
+        model = pints.toy.ConstantModel(1)
+        times = [0, 1, 2, 1000]
+        values = [10, 0, 1, 10]
+        problem = pints.SingleOutputProblem(model, times, values)
+        x = [3]
+        y, dy = problem.evaluateS1(x)
+        self.assertEqual(dy.shape, (1, ))
+        self.assertTrue(np.all(dy == 1))
+        self.assertTrue(np.all(y == problem.evaluate(x)))
+
+        # Multi-output
+        model = pints.toy.ConstantModel(2)
+        times = [0, 1, 2, 1000]
+        values = [[0, 0], [1, 10], [2, 20], [3, 30]]
+        problem = pints.MultiOutputProblem(model, times, values)
+        x = [3, 4]
+        y, dy = problem.evaluateS1(x)
+        self.assertEqual(dy.shape, (2, 2))
+        self.assertTrue(np.all(dy == 1))
+        self.assertTrue(np.all(y == problem.evaluate(x)))
 
 
 if __name__ == '__main__':
