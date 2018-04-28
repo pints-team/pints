@@ -12,9 +12,9 @@ import numpy as np
 import pints
 
 
-class ConstantModel(pints.ForwardModel):
+class ConstantModel(pints.ForwardModelS1):
     """
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModelS1`.
 
     Toy model that's constant over time, linear over the parameters.
 
@@ -86,3 +86,11 @@ class ConstantModel(pints.ForwardModel):
             out = out.reshape((len(times), ))
         return out
 
+    def simulateS1(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulateS1()`. """
+        y = self.simulate(parameters, times)
+        if self._n == 1:
+            dy = np.ones(self._n)
+        else:
+            dy = np.ones((self._n, self._n))
+        return (y, dy)
