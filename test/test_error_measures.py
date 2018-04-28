@@ -261,18 +261,52 @@ class TestErrorMeasures(unittest.TestCase):
 
         # Wrong number of arguments
         self.assertRaises(ValueError, pints.SumOfErrors, [e1], [1])
+
         # Wrong argument types
         self.assertRaises(
             TypeError, pints.SumOfErrors, [e1, e1], [e1, 1])
         self.assertRaises(
             ValueError, pints.SumOfErrors, [e1, 3], [2, 1])
+
         # Mismatching sizes
         self.assertRaises(
             ValueError, pints.SumOfErrors, [e1, e1, e1], [1, 1])
+
         # Mismatching problem dimensions
         self.assertRaises(
             ValueError, pints.SumOfErrors, [e1, e1, e3], [1, 2, 3])
 
+        # Single-output derivatives
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+        p1 = pints.SingleOutputProblem(model, times, [1, 1, 1])
+        p2 = pints.SingleOutputProblem(model, times, [2, 2, 2])
+        e1 = pints.SumOfSquaresError(p1)
+        e2 = pints.SumOfSquaresError(p2)
+        e = pints.SumOfErrors([e1, e2], [1, 2])
+        x = [4]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (1, ))
+        y1, dy1 = e1.evaluateS1(x)
+        y2, dy2 = e2.evaluateS1(x)
+        self.assertTrue(np.all(dy == dy1 + 2 * dy2))
+
+        # Multi-output derivatives
+        model = pints.toy.ConstantModel(2)
+        times = [1, 2, 3]
+        p1 = pints.MultiOutputProblem(model, times, [[3, 2], [1, 7], [3, 2]])
+        p2 = pints.MultiOutputProblem(model, times, [[2, 3], [3, 4], [5, 6]])
+        e1 = pints.SumOfSquaresError(p1)
+        e2 = pints.SumOfSquaresError(p2)
+        e = pints.SumOfErrors([e1, e2], [1, 2])
+        x = [4, -2]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = e1.evaluateS1(x)
+        y2, dy2 = e2.evaluateS1(x)
+        self.assertTrue(np.all(dy == dy1 + 2 * dy2))
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
