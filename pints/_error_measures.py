@@ -56,8 +56,9 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
-        self._n_parameters = problem.n_parameters()
         self._n_outputs = problem.n_outputs()
+        self._n_parameters = problem.n_parameters()
+        self._n_times = len(self._times)
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
@@ -264,4 +265,13 @@ class SumOfSquaresError(ProblemErrorMeasure):
     """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)
+
+    def evaluateS1(self, x):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+        y, dy = self._problem.evaluateS1(x)
+        dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
+        r = y - self._values
+        e = np.sum(r**2)
+        de = 2 * np.sum((r.T * dy.T), axis=(1, 2))
+        return e, de
 

@@ -153,31 +153,58 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
 
     def test_sum_of_squares_error(self):
-        p = MiniProblem()
-        e = pints.SumOfSquaresError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = 1 + 4 + 9
-        self.assertEqual(e(x), y)
-        x = [1, 1, 1]
-        y = 4 + 1 + 4
-        self.assertEqual(e(x), y)
 
-        p = MultiMiniProblem()
+        # Single-output
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+        values = [1, 1, 1]
+        p = pints.SingleOutputProblem(model, times, values)
+
         e = pints.SumOfSquaresError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = 1 + 4 + 9
-        self.assertEqual(e(x), 2 * y)
-        x = [1, 1, 1]
-        y = 4 + 1 + 4
-        self.assertEqual(e(x), 2 * y)
+        self.assertEqual(e.n_parameters(), 1)
+        float(e([1]))
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([2]), 3)
+        self.assertEqual(e([0]), 3)
+        self.assertEqual(e([3]), 12)
+
+        # Single-output derivatives
+        for x in [1, 2, 3, 4]:
+            y, dy = e.evaluateS1([x])
+            r = x - 1
+            self.assertEqual(y, e([x]))
+            self.assertEqual(dy.shape, (1, ))
+            self.assertTrue(np.all(dy == 3 * 2 * r))
+
+        # Multi-output
+        model = pints.toy.ConstantModel(2)
+        times = [1, 2, 3]
+        values = [[1, 2], [1, 2], [1, 2]]
+        p = pints.MultiOutputProblem(model, times, values)
+
+        e = pints.SumOfSquaresError(p)
+        self.assertEqual(e.n_parameters(), 2)
+        float(e([1, 2]))
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([2, 2]), 3)
+        self.assertEqual(e([2, 3]), 6)
+        self.assertEqual(e([3, 4]), 4 * 6)
+
+        # Multi-output derivatives
+        values = np.array([[1, 2], [2, 3], [3, 4]])
+        p = pints.MultiOutputProblem(model, times, values)
+        e = pints.SumOfSquaresError(p)
+        x = [1, 2]
+        # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
+        # Error is 1+1+4+4=10
+        self.assertEqual(e(x), 10)
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, 10)
+        # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
+        # dy1 is: 2 * [0*1+-1*1+-2*1 + 0*1+-1*1+-2*1] = 2 * [-3 + -3] = -12
+        # dy1 is: 2 * [0*1+-1*1+-2*1 + 0*1+-1*1+-2*1] = 2 * [-3 + -3] = -12
+        self.assertEqual(dy[0], -12)
+        self.assertEqual(dy[1], -12)
 
     def test_sum_of_errors(self):
         e1 = pints.SumOfSquaresError(MiniProblem())
