@@ -110,7 +110,7 @@ class TestConstantModel(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         x = [3]
         y, dy = problem.evaluateS1(x)
-        self.assertEqual(dy.shape, (1, ))
+        self.assertEqual(dy.shape, (4, ))
         self.assertTrue(np.all(dy == 1))
         self.assertTrue(np.all(y == problem.evaluate(x)))
 
@@ -121,7 +121,7 @@ class TestConstantModel(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         x = [3, 4]
         y, dy = problem.evaluateS1(x)
-        self.assertEqual(dy.shape, (2, 2))
+        self.assertEqual(dy.shape, (4, 2, 2))
         self.assertTrue(np.all(dy == 1))
         self.assertTrue(np.all(y == problem.evaluate(x)))
 

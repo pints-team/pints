@@ -90,7 +90,7 @@ class ConstantModel(pints.ForwardModelS1):
         """ See :meth:`pints.ForwardModel.simulateS1()`. """
         y = self.simulate(parameters, times)
         if self._n == 1:
-            dy = np.ones(self._n)
+            dy = np.ones(len(times))
         else:
-            dy = np.ones((self._n, self._n))
+            dy = np.ones((len(times), self._n, self._n))
         return (y, dy)
