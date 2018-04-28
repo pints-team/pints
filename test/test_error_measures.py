@@ -318,6 +318,7 @@ class TestErrorMeasures(unittest.TestCase):
         y2, dy2 = e2.evaluateS1(x)
         self.assertTrue(np.all(dy == dy1 + 2 * dy2))
 
+
 if __name__ == '__main__':
     print('Add -v for more debug output')
     import sys
