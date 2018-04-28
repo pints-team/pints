@@ -21,6 +21,12 @@ class LotkaVolterraModel(pints.ForwardModel):
     This model describes cyclical fluctuations in the populations of two
     interacting species.
 
+    .. math::
+        \\frac{dx}{dt} = ax - bxy \\\\
+        \\frac{dy}{dt} = -cy + dxy
+
+    where ``x`` is the number of prey, and ``y`` is the number of predators.
+
     [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
 
     Arguments:
@@ -34,6 +40,12 @@ class LotkaVolterraModel(pints.ForwardModel):
             self.set_initial_conditions([2, 2])
         else:
             self.set_initial_conditions(y0)
+
+    def initial_conditions(self):
+        """
+        Returns the current initial conditions.
+        """
+        return np.array(self._y0, copy=True)
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """

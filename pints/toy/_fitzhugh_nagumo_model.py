@@ -98,6 +98,7 @@ class FitzhughNagumoModel(pints.ForwardModelWithSensitivities):
             :meth:`pints.ForwardModel.simulate()` and
             :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
+
         """
 
         a, b, c = [float(x) for x in parameters]
