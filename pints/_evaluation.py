@@ -207,7 +207,7 @@ multiprocessing.html#all-platforms>`_ for details).
         cleaned = 0
         for k in range(len(self._workers) - 1, -1, -1):
             w = self._workers[k]
-            if w.exitcode is not None:
+            if w.exitcode is not None:  # pragma: no cover
                 w.join()
                 cleaned += 1
                 del(self._workers[k])
@@ -269,7 +269,7 @@ multiprocessing.html#all-platforms>`_ for details).
                     pass
 
                 # Clean dead workers
-                if self._clean():
+                if self._clean():  # pragma: no cover
                     # Repolate
                     self._populate()
 
