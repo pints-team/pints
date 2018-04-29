@@ -125,28 +125,6 @@ class TestEvaluators(unittest.TestCase):
                 raise SystemExit
             return x
 
-        e = pints.ParallelEvaluator(system_exit_on_four, n_workers=2)
-        self.assertRaises(Exception, e.evaluate, range(10))
-        try:
-            e.evaluate([1, 2, 4])
-        except Exception as ex:
-            self.assertIn('Exception in subprocess', str(ex))
-        e.evaluate([1, 2])
-
-        # Keyboard interrupt (Ctrl-C)
-        def user_cancel_on_three(x):
-            if x == 3:
-                raise KeyboardInterrupt
-            return x
-
-        e = pints.ParallelEvaluator(user_cancel_on_three, n_workers=2)
-        self.assertRaises(Exception, e.evaluate, range(10))
-        try:
-            e.evaluate([1, 2, 3])
-        except Exception as ex:
-            self.assertIn('Exception in subprocess', str(ex))
-        e.evaluate([1, 2])
-
     def test_worker(self):
         """
         Manual test of worker, since cover doesn't pick up on its run method.
