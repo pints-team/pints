@@ -12,6 +12,7 @@ examples.
     constant_model
     fitzhugh_nagumo_model
     goodwin_oscillator_model
+    hes1_michaelis_menten_model
     high_dimensional_normal_logpdf
     hodgkin_huxley_ik_model
     logistic_model
