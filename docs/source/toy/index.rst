@@ -15,6 +15,7 @@ examples.
     high_dimensional_normal_logpdf
     hodgkin_huxley_ik_model
     logistic_model
+    lotka_volterra_model
     multimodal_normal_logpdf
     rosenbrock
     twisted_gaussian_logpdf

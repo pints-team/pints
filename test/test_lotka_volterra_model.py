@@ -14,7 +14,7 @@ import pints
 import pints.toy
 
 
-class LotkaVolterraModel(unittest.TestCase):
+class TestLotkaVolterraModel(unittest.TestCase):
     """
     Tests if the Lotka-Volterra toy model runs.
     """
