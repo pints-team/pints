@@ -11,7 +11,8 @@ import pints
 import numpy as np
 import scipy
 
-class HES1Model(pints.ForwardModel):
+
+class Hes1Model(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
@@ -69,10 +70,9 @@ class HES1Model(pints.ForwardModel):
         m, p1, p2 = state
         P0, v, k1, h = parameters
         output = np.array([
-                - self._kdeg * m + 1. / (1. + (p2 / P0)**h),
-                - self._kdeg * p1 + v * m - k1 * p1,
-                - self._kdeg * p2 + k1 * p1
-                ])
+            - self._kdeg * m + 1. / (1. + (p2 / P0)**h),
+            - self._kdeg * p1 + v * m - k1 * p1,
+            - self._kdeg * p2 + k1 * p1])
         return output
 
     def set_initial_conditions(self, y0):
