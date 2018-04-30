@@ -21,7 +21,7 @@ class HES1Model(pints.ForwardModel):
     Hes1.
 
     .. math::
-        \\frac{dm}{dt} &= -k_{deg}m + \\frac{1}{1 + (p2/P_0)^h} \\\\
+        \\frac{dm}{dt} &= -k_{deg}m + \\frac{1}{1 + (p_2/P_0)^h} \\\\
         \\frac{dp_1}{dt} &= -k_{deg} p_1 + \\nu m - k_1 p_1 \\\\
         \\frac{dp_2}{dt} &= -k_{deg} p_2 + k_1 p_1
 
@@ -69,7 +69,7 @@ class HES1Model(pints.ForwardModel):
         m, p1, p2 = state
         P0, v, k1, h = parameters
         output = np.array([
-                self._kdeg * m + 1. / (1. + (p2 / P0)**h),
+                - self._kdeg * m + 1. / (1. + (p2 / P0)**h),
                 - self._kdeg * p1 + v * m - k1 * p1,
                 - self._kdeg * p2 + k1 * p1
                 ])
@@ -110,14 +110,24 @@ class HES1Model(pints.ForwardModel):
         y0 = [self._y0, self._p0[0], self._p0[1]]
         solved_states = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,))
-        # only return the observable
+        # Only return the observable
         return solved_states[:, 0]
+
+    def simulate_all_states(self, parameters, times):
+        """
+        Returns all state variables that ``simulate()`` does not return.
+        """
+        y0 = [self._y0, self._p0[0], self._p0[1]]
+        solved_states = scipy.integrate.odeint(
+            self._rhs, y0, times, args=(parameters,))
+        # Return all states
+        return solved_states
 
     def suggested_parameters(self):
         """
         Returns a suggested array of parameter values.
         """
-        return np.array([2.4, 6.9, 0.025, 0.11])
+        return np.array([2.4, 0.025, 0.11, 6.9])
 
     def suggested_times(self):
         """
