@@ -21,8 +21,8 @@ class TestRepressilatorModel(unittest.TestCase):
 
         # Test basic properties
         model = pints.toy.SIRModel()
-        self.assertEqual(model.n_parameters(), 4)
-        self.assertEqual(model.n_outputs(), 3)
+        self.assertEqual(model.n_parameters(), 3)
+        self.assertEqual(model.n_outputs(), 2)
 
         # Test simulation
         x = model.suggested_parameters()
@@ -31,16 +31,15 @@ class TestRepressilatorModel(unittest.TestCase):
         self.assertEqual(values.shape, (len(times), model.n_outputs()))
 
         # Test setting intial conditions
-        model = pints.toy.RepressilatorModel([1, 1, 1, 1, 1, 1])
+        model = pints.toy.SIRModel([1, 1, 1])
 
-        # Must have 6 init cond.
+        # Must have 3 init cond.
         self.assertRaises(
-            ValueError, pints.toy.SIRModel, [1, 1, 1, 1, 1])
+            ValueError, pints.toy.SIRModel, [1, 1])
 
-        # Concentrations are never negative
+        # Populations are never negative
         self.assertRaises(
             ValueError, pints.toy.SIRModel, [1, 1, 1, -1, 1, 1])
-
 
 
 if __name__ == '__main__':
