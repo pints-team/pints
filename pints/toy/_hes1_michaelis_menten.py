@@ -43,7 +43,7 @@ class Hes1Model(pints.ForwardModel):
         The initial condition of the observable and requires ``y0 >= 0``.
     ``implicit_parameters``
         The implicit parameter of the model that is not inferred, given as a
-        vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0`.
+        vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
