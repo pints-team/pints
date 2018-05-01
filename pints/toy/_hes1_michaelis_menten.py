@@ -53,7 +53,7 @@ class Hes1Model(pints.ForwardModel):
         if implicit_parameters is None:
             self.set_implicit_parameters([5., 3., 0.03])
         else:
-            self.set_initial_conditions(implicit_parameters)
+            self.set_implicit_parameters(implicit_parameters)
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
