@@ -12,7 +12,7 @@ import numpy as np
 import pints
 
 
-class LogisticModel(pints.ForwardModelWithSensitivities):
+class LogisticModel(pints.ForwardModelWithSensitivities, pints.ToyModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
@@ -72,3 +72,13 @@ class LogisticModel(pints.ForwardModelWithSensitivities):
             return values, dvalues_dp
         else:
             return values
+
+    def suggested_parameters(self):
+        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+
+        return np.array([0.1, 50])
+
+    def suggested_times(self):
+        """ See :meth:`pints.ToyModel.suggested_times()`. """
+
+        return np.linspace(0, 100, 100)
