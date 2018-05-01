@@ -72,7 +72,7 @@ class ToyModel(object):
 
     def suggested_times(self):
         """
-        Returns an numpy array of time points that is representative of the 
+        Returns an numpy array of time points that is representative of the
         model
         """
         raise NotImplementedError
