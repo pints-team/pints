@@ -30,6 +30,10 @@ class TestSIRModel(unittest.TestCase):
         values = model.simulate(x, times)
         self.assertEqual(values.shape, (len(times), model.n_outputs()))
 
+        # Test suggested values
+        v = model.suggested_values()
+        self.assertEqual(v.shape, (len(times), model.n_outputs()))
+
         # Test setting intial conditions
         model = pints.toy.SIRModel([1, 1, 1])
 
