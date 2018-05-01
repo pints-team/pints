@@ -42,6 +42,7 @@ FLOAT_FORMAT = '{: .17e}'
 # Core classes
 #
 from ._core import ForwardModel, ForwardModelWithSensitivities
+from ._core import ToyModel
 from ._core import SingleOutputProblem, MultiOutputProblem
 
 #
