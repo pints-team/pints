@@ -62,6 +62,30 @@ class ForwardModel(object):
         return 1
 
 
+class ToyModel(object):
+    """
+    Defines an interface for the toy problems.
+    """
+
+    def __init__(self):
+        super(ToyModel, self).__init__()
+
+    def suggested_times(self):
+        """
+        Returns an numpy array of time points that is representative of the 
+        model
+        """
+        raise NotImplementedError
+
+    def suggested_parameters(self):
+        """
+        Returns an numpy array of the parameter values that are representative
+        of the model. For example, these parameters might reproduce a
+        particular result that the model is famous for.
+        """
+        raise NotImplementedError
+
+
 class ForwardModelS1(ForwardModel):
     """
     Defines an interface for user-supplied forward models which can calculate

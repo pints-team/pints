@@ -12,7 +12,7 @@ import numpy as np
 import scipy
 
 
-class GoodwinOscillatorModel(pints.ForwardModel):
+class GoodwinOscillatorModel(pints.ForwardModel, pints.ToyModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
@@ -24,6 +24,7 @@ class GoodwinOscillatorModel(pints.ForwardModel):
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
     """
+
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
@@ -51,14 +52,11 @@ class GoodwinOscillatorModel(pints.ForwardModel):
         return solution
 
     def suggested_parameters(self):
-        """
-        Returns a suggested array of parameter values.
-        """
+        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+
         return np.array([2, 4, 0.12, 0.08, 0.1])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of sampling times.
-        """
-        return np.linspace(0, 100, 200)
+        """ See :meth:`pints.ToyModel.suggested_times()`. """
 
+        return np.linspace(0, 100, 200)

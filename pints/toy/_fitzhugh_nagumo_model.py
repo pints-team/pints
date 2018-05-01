@@ -14,7 +14,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class FitzhughNagumoModel(pints.ForwardModelS1):
+class FitzhughNagumoModel(pints.ForwardModelWithSensitivities, pints.ToyModel):
     """
     Fitzhugh Nagumo model of action potential.
 
@@ -156,14 +156,11 @@ class FitzhughNagumoModel(pints.ForwardModelS1):
             return values
 
     def suggested_parameters(self):
-        """
-        Returns a suggested set of parameters for this toy model.
-        """
+        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+
         return np.array([0.1, 0.5, 3])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of simulation times for this toy model.
-        """
-        return np.linspace(0, 20, 200)
+        """ See :meth:`pints.ToyModel.suggested_times()`. """
 
+        return np.linspace(0, 20, 200)
