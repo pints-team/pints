@@ -13,6 +13,7 @@ from __future__ import print_function, unicode_literals
 from ._constant_model import ConstantModel                          # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
+from ._hes1_michaelis_menten import Hes1Model                       # noqa
 from ._hh_ik_model import HodgkinHuxleyIKModel                      # noqa
 from ._high_dimensional_normal import HighDimensionalNormalLogPDF   # noqa
 from ._logistic_model import LogisticModel                          # noqa

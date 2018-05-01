@@ -56,6 +56,7 @@ relevant code.
 - [Constant model](./toy-model-constant.ipynb)
 - [Fitzhugh-Nagumo model](./toy-model-fitzhugh-nagumo.ipynb)
 - [Goodwin oscillator model](./toy-model-goodwin-oscillator.ipynb)
+- [HES1 Michaelis-Menten model](./toy-model-hes1-michaelis-menten.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-model-hodgkin-huxley-ik.ipynb)
 - [Logistic model](./toy-model-logistic.ipynb)
 - [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
