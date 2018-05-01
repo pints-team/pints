@@ -14,7 +14,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class FitzhughNagumoModel(pints.ForwardModelWithSensitivities, pints.ToyModel):
+class FitzhughNagumoModel(pints.ForwardModelS1, pints.ToyModel):
     """
     Fitzhugh Nagumo model of action potential.
 
