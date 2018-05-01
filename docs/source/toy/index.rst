@@ -19,5 +19,6 @@ examples.
     lotka_volterra_model
     multimodal_normal_logpdf
     rosenbrock
+    sir_model
     twisted_gaussian_logpdf
 
