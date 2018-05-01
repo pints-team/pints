@@ -14,7 +14,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class RepressilatorModel(pints.ForwardModelS1):
+class RepressilatorModel(pints.ForwardModel):
     """
     The "Repressilator" model describes oscillations in a network of proteins
     that suppress their own creation [1].
