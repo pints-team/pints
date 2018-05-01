@@ -33,6 +33,13 @@ class TestPrior(unittest.TestCase):
         py = [p([i]) for i in y]
         self.assertTrue(np.all(py[1:] <= py[:-1]))
 
+        # Test derivatives
+        x = [8]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertEqual(dy.shape, (1, ))
+        self.assertEqual(dy[0], (mean - x[0]) / std**2)
+
     def test_normal_prior_sampling(self):
         mean = 10
         std = 2
@@ -88,6 +95,17 @@ class TestPrior(unittest.TestCase):
         # Test errors
         self.assertRaises(ValueError, pints.ComposedLogPrior)
         self.assertRaises(ValueError, pints.ComposedLogPrior, 1)
+
+        # Test derivatives
+        p = pints.ComposedLogPrior(p1, p2)
+        x = [8, -40]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = p1.evaluateS1(x[:1])
+        y2, dy2 = p2.evaluateS1(x[1:])
+        self.assertAlmostEqual(dy[0], dy1[0])
+        self.assertAlmostEqual(dy[1], dy2[0])
 
     def test_composed_prior_sampling(self):
 
@@ -172,6 +190,19 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([1, 20 - 1e-14]), w)
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
+
+        # Test derivatives (always 0)
+        for x in [[0, 0], [0, 5], [0, 19], [0, 21], [5, 0], [5, 21]]:
+            y, dy = p.evaluateS1(x)
+            self.assertEqual(y, p(x))
+            self.assertEqual(dy.shape, (2, ))
+            self.assertTrue(np.all(dy == 0))
+
+        for x in [[1, 2], [1, 5], [1, 20 - 1e-14], [5, 5], [5, 20 - 1e-14]]:
+            y, dy = p.evaluateS1(x)
+            self.assertEqual(y, p(x))
+            self.assertEqual(dy.shape, (2, ))
+            self.assertTrue(np.all(dy == 0))
 
         # Test bad constructor
         self.assertRaises(ValueError, pints.UniformLogPrior, lower)

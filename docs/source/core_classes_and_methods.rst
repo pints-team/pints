@@ -12,7 +12,7 @@ Forward model
 Forward model with sensitivities
 ********************************
 
-.. autoclass:: ForwardModelWithSensitivities
+.. autoclass:: ForwardModelS1
 
 Problems
 ********

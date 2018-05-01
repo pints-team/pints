@@ -9,7 +9,7 @@
 #
 import unittest
 import pints
-import pints.toy as toy
+import pints.toy
 import numpy as np
 
 
@@ -17,7 +17,7 @@ class TestLogLikelihood(unittest.TestCase):
 
     def test_scaled_log_likelihood(self):
 
-        model = toy.LogisticModel()
+        model = pints.toy.LogisticModel()
         real_parameters = [0.015, 500]
         test_parameters = [0.014, 501]
         sigma = 0.001
@@ -42,8 +42,19 @@ class TestLogLikelihood(unittest.TestCase):
         # Test bad constructor
         self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
 
+        # Test single-output derivatives
+        y1, dy1 = log_likelihood_not_scaled.evaluateS1(test_parameters)
+        y2, dy2 = log_likelihood_scaled.evaluateS1(test_parameters)
+        self.assertEqual(y1, log_likelihood_not_scaled(test_parameters))
+        self.assertEqual(dy1.shape, (2, ))
+        self.assertEqual(y2, log_likelihood_scaled(test_parameters))
+        self.assertEqual(dy2.shape, (2, ))
+        dy3 = dy2 * len(times)
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
+
         # Test on multi-output problem
-        model = toy.FitzhughNagumoModel()
+        model = pints.toy.FitzhughNagumoModel()
         nt = 10
         no = model.n_outputs()
         times = np.linspace(0, 100, nt)
@@ -51,15 +62,27 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         unscaled = pints.KnownNoiseLogLikelihood(problem, 1)
         scaled = pints.ScaledLogLikelihood(unscaled)
-        x = unscaled([0.1, 0.1, 0.1])
-        y = scaled([0.1, 0.1, 0.1])
+        p = [0.1, 0.1, 0.1]
+        x = unscaled(p)
+        y = scaled(p)
         self.assertEqual(y, x / nt / no)
+
+        # Test multi-output derivatives
+        y1, dy1 = unscaled.evaluateS1(p)
+        y2, dy2 = scaled.evaluateS1(p)
+        self.assertAlmostEqual(y1, unscaled(p))
+        self.assertEqual(dy1.shape, (3, ))
+        self.assertAlmostEqual(y2, scaled(p))
+        self.assertEqual(dy2.shape, (3, ))
+        dy3 = dy2 * nt * no
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
     def test_known_and_unknown_noise_single(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
         """
-        model = toy.LogisticModel()
+        model = pints.toy.LogisticModel()
         parameters = [0.015, 500]
         sigma = 0.1
         times = np.linspace(0, 1000, 100)
@@ -78,11 +101,97 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
+    def test_known_noise_single_S1(self):
+        """
+        Simple tests for single known noise log-likelihood with sensitivities.
+        """
+        model = pints.toy.LogisticModel()
+        x = [0.015, 500]
+        sigma = 0.1
+        times = np.linspace(0, 1000, 100)
+        values = model.simulate(x, times)
+        values += np.random.normal(0, sigma, values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Test if values are correct
+        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L1 = f(x)
+        L2, dL = f.evaluateS1(x)
+        self.assertEqual(L1, L2)
+        self.assertEqual(dL.shape, (2,))
+
+        # Test without noise
+        values = model.simulate(x, times)
+        problem = pints.SingleOutputProblem(model, times, values)
+        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L1 = f(x)
+        L2, dL = f.evaluateS1(x)
+        self.assertEqual(L1, L2)
+        self.assertEqual(dL.shape, (2,))
+
+        # Test if zero at optimum
+        self.assertTrue(np.all(dL == 0))
+
+        # Test if positive to the left, negative to the right
+        L, dL = f.evaluateS1(x + np.array([-1e-9, 0]))
+        self.assertTrue(dL[0] > 0)
+        L, dL = f.evaluateS1(x + np.array([1e-9, 0]))
+        self.assertTrue(dL[0] < 0)
+
+        # Test if positive to the left, negative to the right
+        L, dL = f.evaluateS1(x + np.array([0, -1e-9]))
+        self.assertTrue(dL[1] > 0)
+        L, dL = f.evaluateS1(x + np.array([0, 1e-9]))
+        self.assertTrue(dL[1] < 0)
+
+        # Plot derivatives
+        if False:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            r = np.linspace(x[0] * 0.95, x[0] * 1.05, 100)
+            L = []
+            dL1 = []
+            dL2 = []
+            for y in r:
+                a, b = f.evaluateS1([y, x[1]])
+                L.append(a)
+                dL1.append(b[0])
+                dL2.append(b[1])
+            plt.subplot(3, 1, 1)
+            plt.plot(r, L)
+            plt.subplot(3, 1, 2)
+            plt.plot(r, dL1)
+            plt.grid(True)
+            plt.subplot(3, 1, 3)
+            plt.plot(r, dL2)
+            plt.grid(True)
+
+            plt.figure()
+            r = np.linspace(x[1] * 0.95, x[1] * 1.05, 100)
+            L = []
+            dL1 = []
+            dL2 = []
+            for y in r:
+                a, b = f.evaluateS1([x[0], y])
+                L.append(a)
+                dL1.append(b[0])
+                dL2.append(b[1])
+            plt.subplot(3, 1, 1)
+            plt.plot(r, L)
+            plt.subplot(3, 1, 2)
+            plt.plot(r, dL1)
+            plt.grid(True)
+            plt.subplot(3, 1, 3)
+            plt.plot(r, dL2)
+            plt.grid(True)
+
+            plt.show()
+
     def test_student_t_log_likelihood_single(self):
         """
         Single-output test for Student-t noise log-likelihood methods
         """
-        model = toy.ConstantModel(1)
+        model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
         model.simulate(parameters, times)
@@ -96,7 +205,7 @@ class TestLogLikelihood(unittest.TestCase):
         """
         Multi-output test for Student-t noise log-likelihood methods
         """
-        model = toy.ConstantModel(4)
+        model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 4)
         model.simulate(parameters, times)
@@ -118,7 +227,7 @@ class TestLogLikelihood(unittest.TestCase):
         """
         Multi-output test for known/unknown noise log-likelihood methods
         """
-        model = toy.FitzhughNagumoModel()
+        model = pints.toy.FitzhughNagumoModel()
         parameters = [0.5, 0.5, 0.5]
         sigma = 0.1
         times = np.linspace(0, 100, 100)
@@ -195,11 +304,13 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
     def test_sum_of_independent_log_likelihoods(self):
-        model = toy.LogisticModel()
+
+        # Test single output
+        model = pints.toy.LogisticModel()
         x = [0.015, 500]
         sigma = 0.1
         times = np.linspace(0, 1000, 100)
-        values = model.simulate(x, times)
+        values = model.simulate(x, times) + 0.1
         problem = pints.SingleOutputProblem(model, times, values)
 
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
@@ -208,19 +319,52 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
 
-        # Test invalid constructors
+        # Test single output derivatives
+        y, dy = ll.evaluateS1(x)
+        self.assertEqual(y, ll(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = l1.evaluateS1(x)
+        self.assertTrue(np.all(3 * dy1 == dy))
+
         # Wrong number of arguments
         self.assertRaises(TypeError, pints.SumOfIndependentLogLikelihoods)
         self.assertRaises(
             ValueError, pints.SumOfIndependentLogLikelihoods, [l1])
+
         # Wrong types
         self.assertRaises(
             ValueError, pints.SumOfIndependentLogLikelihoods, [l1, 1])
         self.assertRaises(
             ValueError, pints.SumOfIndependentLogLikelihoods, [problem, l1])
+
         # Mismatching dimensions
         self.assertRaises(
             ValueError, pints.SumOfIndependentLogLikelihoods, [l1, l2])
+
+        # Test multi-output
+        model = pints.toy.FitzhughNagumoModel()
+        x = model.suggested_parameters()
+        nt = 10
+        nx = model.n_parameters()
+        times = np.linspace(0, 10, nt)
+        values = model.simulate(x, times) + 0.01
+        problem = pints.MultiOutputProblem(model, times, values)
+        sigma = 0.01
+        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
+        self.assertEqual(l1.n_parameters(), ll.n_parameters())
+        self.assertEqual(3 * l1(x), ll(x))
+
+        # Test multi-output derivatives
+        y, dy = ll.evaluateS1(x)
+
+        # Note: y and ll(x) differ a bit, because the solver acts slightly
+        # different when evaluating with and without sensitivities!
+        self.assertTrue(np.abs(y - ll(x) < 1e-6))
+
+        self.assertEqual(dy.shape, (nx, ))
+        y1, dy1 = l1.evaluateS1(x)
+        self.assertTrue(np.all(3 * dy1 == dy))
 
 
 if __name__ == '__main__':
