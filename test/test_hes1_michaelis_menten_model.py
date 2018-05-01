@@ -28,15 +28,33 @@ class TestHes1Model(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertEqual(values.shape, (len(times),))
         self.assertTrue(np.all(values > 0))
+        states = model.simulate_all_states(parameters, times)
+        self.assertEqual(states.shape, (len(times), 3))
+        self.assertTrue(np.all(states > 0))
+        suggested_values = model.suggested_values()
+        self.assertEqual(suggested_values.shape, (len(times),))
+        self.assertTrue(np.all(suggested_values > 0))
 
         # Test setting and getting init cond.
         self.assertFalse(np.all(model.initial_conditions() == 10))
         model.set_initial_conditions(10)
         self.assertTrue(np.all(model.initial_conditions() == 10))
 
+        # Test setting and getting implicit param.
+        self.assertFalse(np.all(model.implicit_parameters() == [10, 10, 10]))
+        model.set_implicit_parameters([10, 10, 10])
+        self.assertTrue(np.all(model.implicit_parameters() == [10, 10, 10]))
+
         # Initial conditions cannot be negative
         model = pints.toy.Hes1Model(0)
         self.assertRaises(ValueError, pints.toy.Hes1Model, -1)
+
+        # Implicit parameters cannot be negative
+        model = pints.toy.Hes1Model(0, [0, 0, 0])
+        self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [-1, 0, 0]))
+        self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [0, -1, 0]))
+        self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [0, 0, -1]))
+        self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [-1, -1, -1]))
 
 
 if __name__ == '__main__':
