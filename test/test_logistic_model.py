@@ -45,6 +45,14 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(values[-1], parameters[-1])
         self.assertTrue(np.all(values[1:] >= values[:-1]))
 
+    def test_suggested(self):
+        model = pints.toy.LogisticModel(2)
+        times = model.suggested_times()
+        parameters = model.suggested_parameters()
+        values = model.simulate(parameters, times)
+        self.assertAlmostEqual(
+            values[-1], parameters[-1], delta=0.01 * parameters[1])
+
     def test_negative_k(self):
         model = pints.toy.LogisticModel(2)
         times = [0, 1, 2, 10000]
