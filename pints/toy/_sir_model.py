@@ -40,6 +40,9 @@ class SIRModel(pints.ForwardModel):
     The model does not account for births and deaths, which are assumed to
     happen much slower than the spread of the (non-lethal) disease.
 
+    Real data is included via :meth:`suggested_values`, which was taken from
+    [3,4,5].
+
     Arguments:
 
     ``y0``
@@ -55,6 +58,12 @@ class SIRModel(pints.ForwardModel):
     [3] Approximate Bayesian computation scheme for parameter inference and
     model selection in dynamical systems. Toni, Welch, Strelkowa, Ipsen, Stumpf
     (2009) J. R. Soc. Interface.
+
+    [4] A mathematical model of common-cold epidemics on Tristan da Cunha.
+    Hammond, Tyrrell (1971) Epidemiology & Infection.
+
+    [5] Common colds on Tristan da Cunha. Shybli, Gooch, Lewis, Tyrell (1971)
+    Epidemiology & Infection.
 
     """
 
@@ -114,7 +123,7 @@ class SIRModel(pints.ForwardModel):
     def suggested_values(self):
         """
         Returns the data from a common-cold outbreak on the remote island of
-        Tristan da Cunha, as given in [3].
+        Tristan da Cunha, as given in [3,4,5].
         """
         # Toni et al.
         return np.array([
