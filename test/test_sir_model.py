@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
-# Tests if the Repressilator toy model runs.
+# Tests if the SIR toy model runs.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -12,9 +12,9 @@ import pints
 import pints.toy
 
 
-class TestRepressilatorModel(unittest.TestCase):
+class TestSIRModel(unittest.TestCase):
     """
-    Tests if the Repressilator toy model runs.
+    Tests if the SIR toy model runs.
     """
 
     def test_run(self):
