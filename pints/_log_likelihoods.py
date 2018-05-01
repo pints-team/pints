@@ -72,6 +72,8 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         """ See :meth:`LogPDF.evaluateS1()`. """
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x)
+
+        # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
 
         # Reshape y and r, in case we're working with a single-output problem
