@@ -12,10 +12,8 @@ import numpy as np
 import pints
 
 
-class LogisticModel(pints.ForwardModelWithSensitivities):
+class LogisticModel(pints.ForwardModelS1):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     Logistic model of population growth [1].
 
     .. math::
@@ -44,9 +42,11 @@ class LogisticModel(pints.ForwardModelWithSensitivities):
         return 2
 
     def simulate(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulate()`. """
         return self._simulate(parameters, times, False)
 
-    def simulate_with_sensitivities(self, parameters, times):
+    def simulateS1(self, parameters, times):
+        """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
         return self._simulate(parameters, times, True)
 
     def _simulate(self, parameters, times, sensitivities):

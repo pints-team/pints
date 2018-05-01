@@ -18,11 +18,16 @@ class ComposedLogPrior(pints.LogPrior):
     """
     *Extends:* :class:`LogPrior`
 
-    LogPrior composed of one or more other LogPriors. The evaluation of the
-    composed log-prior assumes the input log-priors are all independent from
-    each other
+    N-dimensional LogPrior composed of one or more other Ni-dimensional
+    LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
+    log-prior assumes the input log-priors are all independent from each other.
 
-    For example: ``p = ComposedLogPrior(log_prior1, log_prior2, log_prior3)``.
+    For example, a composed log prior::
+
+        p = ComposedLogPrior(log_prior1, log_prior2, log_prior3)
+
+    where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
+    itself.
     """
     def __init__(self, *priors):
         # Check if sub-priors given
@@ -30,11 +35,11 @@ class ComposedLogPrior(pints.LogPrior):
             raise ValueError('Must have at least one sub-prior')
 
         # Check if proper priors, count dimension
-        self._dimension = 0
+        self._n_parameters = 0
         for prior in priors:
             if not isinstance(prior, pints.LogPrior):
                 raise ValueError('All sub-priors must extend pints.LogPrior.')
-            self._dimension += prior.n_parameters()
+            self._n_parameters += prior.n_parameters()
 
         # Store
         self._priors = priors
@@ -48,13 +53,31 @@ class ComposedLogPrior(pints.LogPrior):
             output += prior(x[lo:hi])
         return output
 
+    def evaluateS1(self, x):
+        """
+        See :meth:`LogPDF.evaluateS1()`.
+
+        *This method only works if the underlying :class:`LogPrior` classes all
+        implement the optional method :class:`LogPDF.evaluateS1().`.*
+        """
+        output = 0
+        doutput = np.zeros(self._n_parameters)
+        lo = hi = 0
+        for prior in self._priors:
+            lo = hi
+            hi += prior.n_parameters()
+            p, dp = prior.evaluateS1(x[lo:hi])
+            output += p
+            doutput[lo:hi] = np.asarray(dp)
+        return output, doutput
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        output = np.zeros((n, self._dimension))
+        output = np.zeros((n, self._n_parameters))
         lo = hi = 0
         for prior in self._priors:
             lo = hi
@@ -89,7 +112,7 @@ class MultivariateNormalLogPrior(pints.LogPrior):
         # Store
         self._mean = mean
         self._covariance = covariance
-        self._dimension = mean.shape[0]
+        self._n_parameters = mean.shape[0]
 
     def __call__(self, x):
         return np.log(
@@ -98,7 +121,7 @@ class MultivariateNormalLogPrior(pints.LogPrior):
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.call()`. """
@@ -125,9 +148,14 @@ class NormalLogPrior(pints.LogPrior):
         # Cache constants
         self._offset = 1 / np.sqrt(2 * np.pi * self._sigma ** 2)
         self._factor = 1 / (2 * self._sigma ** 2)
+        self._factor2 = 1 / self._sigma**2
 
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        return self(x), self._factor2 * (self._mean - np.asarray(x))
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -219,7 +247,7 @@ class UniformLogPrior(pints.LogPrior):
             self._boundaries = pints.Boundaries(lower_or_boundaries, upper)
 
         # Cache dimension
-        self._dimension = self._boundaries.n_parameters()
+        self._n_parameters = self._boundaries.n_parameters()
 
         # Cache output value
         self._minf = -float('inf')
@@ -228,14 +256,21 @@ class UniformLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else self._minf
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPrior.evaluateS1()`. """
+        # Ignoring points on the boundaries (i.e. on the surface of the
+        # hypercube), because it's very unlikely and won't help the search
+        # much...
+        return self(x), np.zeros(self._n_parameters)
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return np.random.uniform(
             self._boundaries.lower(),
             self._boundaries.upper(),
-            size=(n, self._dimension))
+            size=(n, self._n_parameters))
 

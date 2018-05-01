@@ -39,6 +39,31 @@ class TestLogPosterior(unittest.TestCase):
         self.assertEqual(p(y), -float('inf'))
         self.assertEqual(p(y), logprior(y))
 
+        # Test derivatives
+        logprior = pints.ComposedLogPrior(
+            pints.NormalLogPrior(0.015, 0.3),
+            pints.NormalLogPrior(500, 100))
+        logposterior = pints.LogPosterior(loglikelihood, logprior)
+        x = [0.013, 540]
+        y, dy = logposterior.evaluateS1(x)
+        self.assertEqual(y, logposterior(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = logprior.evaluateS1(x)
+        y2, dy2 = loglikelihood.evaluateS1(x)
+        self.assertTrue(np.all(dy == dy1 + dy2))
+
+        # First arg must be LogLikelihood
+        self.assertRaises(ValueError, pints.LogPosterior, logprior, logprior)
+
+        # Second arg must be LogPrior
+        self.assertRaises(
+            ValueError, pints.LogPosterior, loglikelihood, loglikelihood)
+
+        # Prior and likelihood must have same dimension
+        self.assertRaises(
+            ValueError, pints.LogPosterior, loglikelihood,
+            pints.NormalLogPrior(0.015, 0.3))
+
 
 if __name__ == '__main__':
     unittest.main()

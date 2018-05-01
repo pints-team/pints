@@ -46,8 +46,9 @@ class ForwardModel(object):
             value appears in ``times``.
 
         Returns:
-            A numpy array of length ``t`` representing the values of the model
-            at the given time points, where ``t`` is the number of time points.
+
+        A numpy array of length ``len(times)`` representing the values of the
+        model at the given ``times``.
 
         Note: For efficiency, both ``parameters`` and ``times`` will be passed
         in as read-only numpy arrays.
@@ -61,18 +62,19 @@ class ForwardModel(object):
         return 1
 
 
-class ForwardModelWithSensitivities(ForwardModel):
+class ForwardModelS1(ForwardModel):
     """
-    Defines an interface for user-supplied forward models which can
-    (optionally) provide sensitivities.
+    Defines an interface for user-supplied forward models which can calculate
+    the first-order derivative of the simulated values with respect to the
+    parameters.
 
     Derived from :class:`pints.ForwardModel`.
     """
 
     def __init__(self):
-        super(ForwardModelWithSensitivities, self).__init__()
+        super(ForwardModelS1, self).__init__()
 
-    def simulate_with_sensitivities(self, parameters, times):
+    def simulateS1(self, parameters, times):
         """
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``,
@@ -90,13 +92,14 @@ class ForwardModelWithSensitivities(ForwardModel):
             value appears in ``times``.
 
         Returns:
-            A tuple of 2 numpy arrays. The first is a 1d array of length ``t``
-            representing the values of the model at the given time points. The
-            second is a 2d numpy array of size ``(t,p)``, where ``p`` is the
-            number of parameters
 
-        Note: For efficiency, both ``parameters`` and ``times`` will be passed
-        in as read-only numpy arrays.
+        A tuple ``(y, y')`` of the simulated values ``y`` and their derivatives
+        ``y'`` with resepect to the ``parameters``.
+        The first entry ``y`` must be a sequence of ``n_times`` values, or
+        a NumPy array of shape ``(n_times, n_outputs)``.
+        The second entry ``y'`` must be a numpy array of shape
+        ``(n_times, n_parameters)`` or an array of shape
+        ``(n_times, n_outputs, n_parameters)``.
         """
         raise NotImplementedError
 
@@ -152,6 +155,19 @@ class SingleOutputProblem(object):
         values.
         """
         return self._model.simulate(parameters, self._times)
+
+    def evaluateS1(self, parameters):
+        """
+        Runs a simulation with first-order sensitivity calculation, returning
+        the simulated values and derivatives.
+
+        The returned data is a tuple ``(y, y')``, where ``y`` is a sequence of
+        length ``n_times``, while ``y'`` has shape ``(n_times, n_parameters)``.
+
+        *This method only works for problems whose model implements the
+        :class:`ForwardModelS1` interface.*
+        """
+        return self._model.simulateS1(parameters, self._times)
 
     def n_outputs(self):
         """
@@ -239,8 +255,24 @@ class MultiOutputProblem(object):
         """
         Runs a simulation using the given parameters, returning the simulated
         values.
+
+        The returned data has shape ``(n_times, n_outputs)``.
         """
         return self._model.simulate(parameters, self._times)
+
+    def evaluateS1(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+
+        The returned data is a tuple ``(y, y')``, where ``y`` has shape
+        ``(n_times, n_outputs)``, while ``y'`` has shape
+        ``(n_times, n_outputs, n_parameters)``.
+
+        *This method only works for problems whose model implements the
+        :class:`ForwardModelS1` interface.*
+        """
+        return self._model.simulateS1(parameters, self._times)
 
     def n_outputs(self):
         """

@@ -25,6 +25,18 @@ class ErrorMeasure(object):
     def __call__(self, x):
         raise NotImplementedError
 
+    def evaluateS1(self, x):
+        """
+        Evaluates this error measure, and returns the result plus the partial
+        derivatives of the result with respect to the parameters.
+
+        The returned data has the shape ``(e, e')`` where ``e`` is a scalar
+        value and ``e'`` is a sequence of length ``n_parameters``.
+
+        *This is an optional method that is not always implemented.*
+        """
+        raise NotImplementedError
+
     def n_parameters(self):
         """
         Returns the dimension of the parameter space this measure is defined
@@ -44,12 +56,13 @@ class ProblemErrorMeasure(ErrorMeasure):
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
-        self._dimension = problem.n_parameters()
         self._n_outputs = problem.n_outputs()
+        self._n_parameters = problem.n_parameters()
+        self._n_times = len(self._times)
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 
 
 class ProbabilityBasedError(ErrorMeasure):
@@ -72,12 +85,22 @@ class ProbabilityBasedError(ErrorMeasure):
                 'Given log_pdf must be an instance of pints.LogPDF.')
         self._log_pdf = log_pdf
 
+    def __call__(self, x):
+        return -self._log_pdf(x)
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`ErrorMeasure.evaluateS1()`.
+
+        *This method only works if the underlying :class:`LogPDF`
+        implements the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        y, dy = self._log_pdf.evaluateS1(x)
+        return -y, -np.asarray(dy)
+
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._log_pdf.n_parameters()
-
-    def __call__(self, x):
-        return -self._log_pdf(x)
 
 
 class SumOfErrors(ErrorMeasure):
@@ -138,9 +161,9 @@ class SumOfErrors(ErrorMeasure):
 
         # Get and check dimension
         i = iter(self._errors)
-        self._dimension = next(i).n_parameters()
+        self._n_parameters = next(i).n_parameters()
         for e in i:
-            if e.n_parameters() != self._dimension:
+            if e.n_parameters() != self._n_parameters:
                 raise ValueError(
                     'All errors passed to SumOfErrors must have same'
                     ' dimension.')
@@ -148,16 +171,34 @@ class SumOfErrors(ErrorMeasure):
         # Check weights
         self._weights = [float(w) for w in weights]
 
-    def n_parameters(self):
-        """ See :meth:`ErrorMeasure.n_parameters()`. """
-        return self._dimension
-
     def __call__(self, x):
         i = iter(self._weights)
         total = 0
         for e in self._errors:
             total += e(x) * next(i)
         return total
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`ErrorMeasure.evaluateS1()`.
+
+        *This method only works if all the underlying :class:`ErrorMeasure`
+        objects implement the optional method
+        :meth:`ErrorMeasure.evaluateS1()`!*
+        """
+        i = iter(self._weights)
+        total = 0
+        dtotal = np.zeros(self._n_parameters)
+        for e in self._errors:
+            w = next(i)
+            a, b = e.evaluateS1(x)
+            total += w * a
+            dtotal += w * np.asarray(b)
+        return total, dtotal
+
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
+        return self._n_parameters
 
 
 class MeanSquaredError(ProblemErrorMeasure):
@@ -181,6 +222,15 @@ class MeanSquaredError(ProblemErrorMeasure):
     def __call__(self, x):
         return (np.sum((self._problem.evaluate(x) - self._values)**2) *
                 self._ninv)
+
+    def evaluateS1(self, x):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+        y, dy = self._problem.evaluateS1(x)
+        dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
+        r = y - self._values
+        e = self._ninv * np.sum(r**2)
+        de = 2 * self._ninv * np.sum((r.T * dy.T), axis=(1, 2))
+        return e, de
 
 
 class RootMeanSquaredError(ProblemErrorMeasure):
@@ -224,4 +274,13 @@ class SumOfSquaresError(ProblemErrorMeasure):
     """
     def __call__(self, x):
         return np.sum((self._problem.evaluate(x) - self._values)**2)
+
+    def evaluateS1(self, x):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+        y, dy = self._problem.evaluateS1(x)
+        dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
+        r = y - self._values
+        e = np.sum(r**2)
+        de = 2 * np.sum((r.T * dy.T), axis=(1, 2))
+        return e, de
 
