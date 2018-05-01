@@ -12,7 +12,7 @@ import numpy as np
 import pints
 
 
-class LogisticModel(pints.ForwardModelS1):
+class LogisticModel(pints.ForwardModelS1, pints.ToyModel):
     """
     Logistic model of population growth [1].
 
@@ -73,3 +73,13 @@ class LogisticModel(pints.ForwardModelS1):
             return values, dvalues_dp
         else:
             return values
+
+    def suggested_parameters(self):
+        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+
+        return np.array([0.1, 50])
+
+    def suggested_times(self):
+        """ See :meth:`pints.ToyModel.suggested_times()`. """
+
+        return np.linspace(0, 100, 100)
