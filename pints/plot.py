@@ -386,7 +386,7 @@ def autocorrelation(samples, max_lags=100):
     return fig, axes
 
 
-def series(samples, problem, thinning=None):
+def series(samples, problem, ref_parameters=None, thinning=None):
     """
     Creates and returns a plot of predicted time series for a given list of
     ``samples`` and a single-output ``problem``.
@@ -405,6 +405,10 @@ def series(samples, problem, thinning=None):
         than the ``dimension`` of the `samples`. Any extra parameters present
         in the chain but not accepted by the ``SingleOutputProblem`` (for
         example parameters added by a noise model) will be ignored.
+    ``ref_parameters``
+        (Optional) A set of parameters for reference in the plot. For example,
+        if true values of parameters are known, they can be passed in for
+        plotting.
     ``thinning``
         (Optional) An integer greater than zero. If specified, only every
         n-th sample (with ``n = thinning``) in the samples will be used. If
@@ -420,6 +424,13 @@ def series(samples, problem, thinning=None):
         n_sample, n_param = samples.shape
     except ValueError:
         raise ValueError('`samples` must be of shape (n_sample, n_param)')
+
+    # Check reference parameters
+    if ref_parameters is not None:
+        if len(ref_parameters) != n_param:
+            raise ValueError(
+                'Length of `ref_parameters` must be same as number of'
+                ' parameters')
 
     # Get problem dimension
     dimension = problem.n_parameters()
@@ -461,6 +472,12 @@ def series(samples, problem, thinning=None):
     for v in predicted_values[1:]:
         plt.plot(times, v, color='#1f77b4', alpha=alpha)
     plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
+
+    # Add reference series if given
+    if ref_parameters is not None:
+        plt.plot(times, problem.evaluate(ref_parameters), color='#d62728',
+                 ls='--', label='Reference series')
+
     plt.legend()
 
     return fig, axes
