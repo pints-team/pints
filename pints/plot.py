@@ -439,7 +439,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         ref_series = problem.evaluate(ref_parameters[:dimension])
 
     # Get number of problem output
-    n_output = problem.n_output()
+    n_outputs = problem.n_outputs()
 
     # Get thinning rate
     if thinning is None:
@@ -467,9 +467,9 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
     # Plot prediction
-    fig, axes = plt.subplots(n_output, 1, figsize=(8, np.sqrt(n_output) * 3))
+    fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3))
 
-    if n_output == 1:
+    if n_outputs == 1:
         plt.xlabel('Time')
         plt.ylabel('Value')
         plt.plot(
@@ -490,16 +490,16 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
         plt.legend()
 
-    elif n_output > 1:
+    elif n_outputs > 1:
         axes[-1].set_xlabel('Time')
-        for i_output in range(n_output):
-            axes[i_output].set_ylabel('Output %d'i_output)
+        for i_output in range(n_outputs):
+            axes[i_output].set_ylabel('Output %d' % i_output)
             axes[i_output].plot(
-                    times, problem.values()[:, i_output], 'x', color='#7f7f7f',
-                    ms=6.5, alpha=0.5, label='Original data')
+                times, problem.values()[:, i_output], 'x', color='#7f7f7f',
+                ms=6.5, alpha=0.5, label='Original data')
             axes[i_output].plot(
-                    times, predicted_values[0][:, i_output], color='#1f77b4',
-                    label='Inferred series')
+                times, predicted_values[0][:, i_output], color='#1f77b4',
+                label='Inferred series')
             for v in predicted_values[1:]:
                 axes[i_output].plot(times, v[:, i_output], color='#1f77b4',
                                     alpha=alpha)
@@ -515,7 +515,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         axes[0].legend()
 
     else:
-        raise ValueError('`n_output` of the problem must be greater than'
+        raise ValueError('`n_outputs` of the problem must be greater than'
                          ' zero.')
 
     plt.tight_layout()
