@@ -15,7 +15,7 @@ import pints
 from scipy.integrate import odeint
 
 
-class HodgkinHuxleyIKModel(pints.ForwardModel):
+class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
@@ -167,6 +167,8 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
 
     def suggested_parameters(self):
         """
+        See :meth:`pints.ToyModel.suggested_parameters()`.
+
         Returns an array with the original model parameters used by Hodgkin
         and Huxley.
         """
@@ -179,7 +181,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel):
 
     def suggested_times(self):
         """
-        Returns a suggested set of sampling times.
+        See :meth:`pints.ToyModel.suggested_times()`.
         """
         fs = 10
         return np.arange(self._duration * fs) / fs
