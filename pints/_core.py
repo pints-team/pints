@@ -13,6 +13,7 @@ import numpy as np
 
 
 class ForwardModel(object):
+
     """
     Defines an interface for user-supplied forward models.
 
@@ -62,7 +63,33 @@ class ForwardModel(object):
         return 1
 
 
+class ToyModel(object):
+
+    """
+    Defines an interface for the toy problems.
+    """
+
+    def __init__(self):
+        super(ToyModel, self).__init__()
+
+    def suggested_times(self):
+        """
+        Returns an numpy array of time points that is representative of the
+        model
+        """
+        raise NotImplementedError
+
+    def suggested_parameters(self):
+        """
+        Returns an numpy array of the parameter values that are representative
+        of the model. For example, these parameters might reproduce a
+        particular result that the model is famous for.
+        """
+        raise NotImplementedError
+
+
 class ForwardModelS1(ForwardModel):
+
     """
     Defines an interface for user-supplied forward models which can calculate
     the first-order derivative of the simulated values with respect to the
@@ -105,6 +132,7 @@ class ForwardModelS1(ForwardModel):
 
 
 class SingleOutputProblem(object):
+
     """
     Represents an inference problem where a model is fit to a single time
     series, such as measured from a system with a single output.
@@ -208,6 +236,7 @@ class SingleOutputProblem(object):
 
 
 class MultiOutputProblem(object):
+
     """
     Represents an inference problem where a model is fit to a multi-valued time
     series, such as measured from a system with multiple outputs.
