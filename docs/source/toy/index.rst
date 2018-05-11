@@ -18,6 +18,7 @@ examples.
     logistic_model
     lotka_volterra_model
     multimodal_normal_logpdf
+    repressilator_model
     rosenbrock
     twisted_gaussian_logpdf
 
