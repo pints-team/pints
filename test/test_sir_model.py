@@ -43,7 +43,7 @@ class TestSIRModel(unittest.TestCase):
 
         # Populations are never negative
         self.assertRaises(
-            ValueError, pints.toy.SIRModel, [1, -1])
+            ValueError, pints.toy.SIRModel, [1, 1, -1])
 
 
 if __name__ == '__main__':
