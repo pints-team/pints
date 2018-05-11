@@ -21,5 +21,6 @@ from ._lotka_volterra_model import LotkaVolterraModel               # noqa
 from ._multimodal_normal import MultimodalNormalLogPDF              # noqa
 from ._repressilator_model import RepressilatorModel                # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa
+from ._sir_model import SIRModel                                    # noqa
 from ._twisted_gaussian_banana import TwistedGaussianLogPDF         # noqa
 
