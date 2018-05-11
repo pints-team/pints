@@ -20,5 +20,6 @@ examples.
     multimodal_normal_logpdf
     repressilator_model
     rosenbrock
+    sir_model
     twisted_gaussian_logpdf
 
