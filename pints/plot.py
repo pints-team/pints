@@ -203,7 +203,7 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
     for samples_j in samples:
         if n_param != samples_j.shape[1]:
             raise ValueError(
-                'All samples must have the same number of parameters'
+                'All samples must have the same number of parameters.'
             )
 
     # Check reference parameters
@@ -211,7 +211,7 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
         if len(ref_parameters) != n_param:
             raise ValueError(
                 'Length of `ref_parameters` must be same as number of'
-                ' parameters')
+                ' parameters.')
 
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
@@ -283,7 +283,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
     for samples_j in samples:
         if n_param != samples_j.shape[1]:
             raise ValueError(
-                'All samples must have the same number of parameters'
+                'All samples must have the same number of parameters.'
             )
 
     # Check reference parameters
@@ -291,7 +291,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
         if len(ref_parameters) != n_param:
             raise ValueError(
                 'Length of `ref_parameters` must be same as number of'
-                ' parameters')
+                ' parameters.')
 
     # Set up figure, plot first samples
     fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
@@ -367,7 +367,7 @@ def autocorrelation(samples, max_lags=100):
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param)')
+        raise ValueError('`samples` must be of shape (n_sample, n_param).')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     for i in range(n_param):
@@ -425,7 +425,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param)')
+        raise ValueError('`samples` must be of shape (n_sample, n_param).')
 
     # Get problem dimension
     dimension = problem.n_parameters()
@@ -435,7 +435,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         if len(ref_parameters) != n_param and len(ref_parameters) != dimension:
             raise ValueError(
                 'Length of `ref_parameters` must be same as number of'
-                ' parameters')
+                ' parameters.')
         ref_series = problem.evaluate(ref_parameters[:dimension])
 
     # Get number of problem output
@@ -565,14 +565,14 @@ def pairwise(samples,
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param)')
+        raise ValueError('`samples` must be of shape (n_sample, n_param).')
 
     # Check reference parameters
     if ref_parameters is not None:
         if len(ref_parameters) != n_param:
             raise ValueError(
                 'Length of `ref_parameters` must be same as number of'
-                ' parameters')
+                ' parameters.')
 
     # Create figure
     fig_size = (3 * n_param, 3 * n_param)
