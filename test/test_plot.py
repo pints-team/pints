@@ -366,7 +366,7 @@ class TestPlot(unittest.TestCase):
         # Check invalid ref_parameter input
         self.assertRaises(
             ValueError, pints.plot.pairwise,
-            self.samples, ref_parameters=[self.real_parameters[0]]
+            few_samples, ref_parameters=[self.real_parameters[0]]
         )
 
 
