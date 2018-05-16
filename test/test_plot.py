@@ -314,7 +314,7 @@ class TestPlot(unittest.TestCase):
         # Test invalid thinning input
         self.assertRaises(
             ValueError, pints.plot.series, few_samples, self.problem,
-            {'thinning':0}
+            {'thinning': 0}
         )
 
         # Check invalid input of samples
