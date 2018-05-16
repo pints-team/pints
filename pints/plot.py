@@ -386,10 +386,10 @@ def autocorrelation(samples, max_lags=100):
     return fig, axes
 
 
-def series(samples, problem, thinning=None):
+def series(samples, problem, ref_parameters=None, thinning=None):
     """
     Creates and returns a plot of predicted time series for a given list of
-    ``samples`` and a single-output ``problem``.
+    ``samples`` and a single-output or multi-output ``problem``.
 
     Because this method runs simulations, it can take a considerable time to
     run.
@@ -401,10 +401,16 @@ def series(samples, problem, thinning=None):
         `n_samples` is the number of samples in the list and `dimension` is
         the number of parameters.
     ``problem``
-        A :class:`pints.SingleOutputProblem` of a dimension equal to or greater
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem` of a dimension equal to or greater
         than the ``dimension`` of the `samples`. Any extra parameters present
-        in the chain but not accepted by the ``SingleOutputProblem`` (for
-        example parameters added by a noise model) will be ignored.
+        in the chain but not accepted by the ``SingleOutputProblem`` or
+        ``MultiOutputProblem`` (for example parameters added by a noise model)
+        will be ignored.
+    ``ref_parameters``
+        (Optional) A set of parameters for reference in the plot. For example,
+        if true values of parameters are known, they can be passed in for
+        plotting.
     ``thinning``
         (Optional) An integer greater than zero. If specified, only every
         n-th sample (with ``n = thinning``) in the samples will be used. If
@@ -423,6 +429,17 @@ def series(samples, problem, thinning=None):
 
     # Get problem dimension
     dimension = problem.n_parameters()
+
+    # Check reference parameters
+    if ref_parameters is not None:
+        if len(ref_parameters) != n_param and len(ref_parameters) != dimension:
+            raise ValueError(
+                'Length of `ref_parameters` must be same as number of'
+                ' parameters')
+        ref_series = problem.evaluate(ref_parameters[:dimension])
+
+    # Get number of problem output
+    n_outputs = problem.n_outputs()
 
     # Get thinning rate
     if thinning is None:
@@ -450,19 +467,59 @@ def series(samples, problem, thinning=None):
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
     # Plot prediction
-    fig, axes = plt.subplots(1, 1, figsize=(6, 4))
-    plt.xlabel('Time')
-    plt.ylabel('Value')
-    plt.plot(
-        times, problem.values(), 'x', color='#7f7f7f', ms=6.5, alpha=0.5,
-        label='Original data')
-    plt.plot(
-        times, predicted_values[0], color='#1f77b4', label='Inferred series')
-    for v in predicted_values[1:]:
-        plt.plot(times, v, color='#1f77b4', alpha=alpha)
-    plt.plot(times, mean_values, 'k:', lw=2, label='Mean of inferred series')
-    plt.legend()
+    fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3),
+                             sharex=True)
 
+    if n_outputs == 1:
+        plt.xlabel('Time')
+        plt.ylabel('Value')
+        plt.plot(
+            times, problem.values(), 'x', color='#7f7f7f', ms=6.5, alpha=0.5,
+            label='Original data')
+        plt.plot(
+            times, predicted_values[0], color='#1f77b4',
+            label='Inferred series')
+        for v in predicted_values[1:]:
+            plt.plot(times, v, color='#1f77b4', alpha=alpha)
+        plt.plot(times, mean_values, 'k:', lw=2,
+                 label='Mean of inferred series')
+
+        # Add reference series if given
+        if ref_parameters is not None:
+            plt.plot(times, ref_series, color='#d62728', ls='--',
+                     label='Reference series')
+
+        plt.legend()
+
+    elif n_outputs > 1:
+        # Remove horizontal space between axes and set common xlabel
+        fig.subplots_adjust(hspace=0)
+        axes[-1].set_xlabel('Time')
+
+        # Go through each output
+        for i_output in range(n_outputs):
+            axes[i_output].set_ylabel('Output %d' % (i_output + 1))
+            axes[i_output].plot(
+                times, problem.values()[:, i_output], 'x', color='#7f7f7f',
+                ms=6.5, alpha=0.5, label='Original data')
+            axes[i_output].plot(
+                times, predicted_values[0][:, i_output], color='#1f77b4',
+                label='Inferred series')
+            for v in predicted_values[1:]:
+                axes[i_output].plot(times, v[:, i_output], color='#1f77b4',
+                                    alpha=alpha)
+            axes[i_output].plot(times, mean_values[:, i_output], 'k:', lw=2,
+                                label='Mean of inferred series')
+
+            # Add reference series if given
+            if ref_parameters is not None:
+                axes[i_output].plot(times, ref_series[:, i_output],
+                                    color='#d62728', ls='--',
+                                    label='Reference series')
+
+        axes[0].legend()
+
+    plt.tight_layout()
     return fig, axes
 
 

@@ -27,7 +27,7 @@ class TestPlot(unittest.TestCase):
     def __init__(self, name):
         super(TestPlot, self).__init__(name)
 
-        # Create toy model
+        # Create toy model (single output)
         self.model = toy.LogisticModel()
         self.real_parameters = [0.015, 500]
         self.times = np.linspace(0, 1000, 100)  # small problem
@@ -70,6 +70,43 @@ class TestPlot(unittest.TestCase):
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples = mcmc.run()
+
+        # Create toy model (multi-output)
+        self.model2 = toy.LotkaVolterraModel()
+        self.real_parameters2 = self.model2.suggested_parameters()
+        self.times2 = self.model2.suggested_times()[::10]  # down sample it
+        self.values2 = self.model2.simulate(self.real_parameters2, self.times2)
+
+        # Add noise
+        self.noise2 = 0.05
+        self.values2 += np.random.normal(0, self.noise2, self.values2.shape)
+
+        # Create an object with links to the model and time series
+        self.problem2 = pints.MultiOutputProblem(
+            self.model2, self.times2, self.values2)
+
+        # Create a uniform prior over both the parameters and the new noise
+        # variable
+        self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
+        # Create a log likelihood
+        self.log_likelihood2 = pints.KnownNoiseLogLikelihood(self.problem2,
+                                                             self.noise2)
+
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
+        self.log_posterior2 = pints.LogPosterior(
+            self.log_likelihood2, self.log_prior2)
+
+        # Run MCMC
+        self.x02 = [
+            self.real_parameters2 * 1.1,
+            self.real_parameters2 * 0.9,
+            self.real_parameters2 * 1.05
+        ]
+        mcmc = pints.MCMCSampling(self.log_posterior2, 3, self.x02,
+                                  method=pints.AdaptiveCovarianceMCMC)
+        mcmc.set_max_iterations(300)  # make it as small as possible
+        mcmc.set_log_to_screen(False)
+        self.samples2 = mcmc.run()
 
     def test_function(self):
         """
@@ -234,6 +271,37 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaises(
             ValueError, pints.plot.series, self.samples, self.problem
+        )
+
+        # Check reference parameters gives no error
+        pints.plot.series(few_samples, self.problem,
+                          ref_parameters=self.real_parameters)
+        # Check invalid reference parameters input
+        self.assertRaises(
+            ValueError, pints.plot.series, few_samples, self.problem,
+            self.real_parameters[:-2]
+        )
+
+        # Test mutli-output
+        few_samples2 = self.samples2[0][::30, :]
+        # Test it can plot without error
+        pints.plot.series(self.samples2[0], self.problem2)
+
+        # Test thinning gives no error
+        pints.plot.series(few_samples2, self.problem2, thinning=1)
+
+        # Check invalid input of samples
+        self.assertRaises(
+            ValueError, pints.plot.series, self.samples2, self.problem2
+        )
+
+        # Check reference parameters gives no error
+        pints.plot.series(few_samples2, self.problem2,
+                          ref_parameters=self.real_parameters2)
+        # Check invalid reference parameters input
+        self.assertRaises(
+            ValueError, pints.plot.series, few_samples2, self.problem2,
+            self.real_parameters2[:-2]
         )
 
     def test_pairwise(self):
