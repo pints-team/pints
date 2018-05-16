@@ -289,6 +289,11 @@ class TestPlot(unittest.TestCase):
 
         # Test thinning gives no error
         pints.plot.series(few_samples, self.problem, thinning=1)
+        # Test invalid thinning input
+        self.assertRaises(
+            ValueError, pints.plot.series, few_samples, self.problem,
+            thinning=0
+        )
 
         # Check invalid input of samples
         self.assertRaises(
@@ -313,8 +318,8 @@ class TestPlot(unittest.TestCase):
         pints.plot.series(few_samples2, self.problem2, thinning=1)
         # Test invalid thinning input
         self.assertRaises(
-            ValueError, pints.plot.series, few_samples, self.problem,
-            {'thinning': 0}
+            ValueError, pints.plot.series, few_samples2, self.problem2,
+            thinning=0
         )
 
         # Check invalid input of samples
@@ -361,7 +366,7 @@ class TestPlot(unittest.TestCase):
         # Check invalid ref_parameter input
         self.assertRaises(
             ValueError, pints.plot.pairwise,
-            self.samples, [self.real_parameters[0]]
+            self.samples, ref_parameters=[self.real_parameters[0]]
         )
 
 
