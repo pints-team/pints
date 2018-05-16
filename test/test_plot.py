@@ -118,6 +118,16 @@ class TestPlot(unittest.TestCase):
         # Check lower and upper bounds input gives no error
         pints.plot.function(self.log_posterior, self.real_parameters,
                             self.lower, self.upper)
+        # Check invalid lower bound
+        self.assertRaises(
+            ValueError, pints.plot.function, self.log_posterior,
+            self.real_parameters, self.lower[:-1], self.upper
+        )
+        # Check invalid upper bound
+        self.assertRaises(
+            ValueError, pints.plot.function, self.log_posterior,
+            self.real_parameters, self.lower, self.upper[:-1]
+        )
 
         # Check evaluations gives no error
         pints.plot.function(self.log_posterior, self.real_parameters,
@@ -218,6 +228,12 @@ class TestPlot(unittest.TestCase):
         # Check n_percentiles gives no error
         pints.plot.histogram(few_samples, n_percentiles=50)
 
+        # Check invalid samples input
+        self.assertRaises(
+            ValueError, pints.plot.histogram,
+            [self.samples[0, :, :], self.samples[1:, :, :-1]]
+        )
+
         # Check invalid ref_parameter input
         self.assertRaises(
             ValueError, pints.plot.histogram,
@@ -238,6 +254,12 @@ class TestPlot(unittest.TestCase):
 
         # Check n_percentiles gives no error
         pints.plot.trace(few_samples, n_percentiles=50)
+
+        # Check invalid samples input
+        self.assertRaises(
+            ValueError, pints.plot.trace,
+            [self.samples[0, :, :], self.samples[1:, :, :-1]]
+        )
 
         # Check invalid ref_parameter input
         self.assertRaises(
@@ -289,6 +311,11 @@ class TestPlot(unittest.TestCase):
 
         # Test thinning gives no error
         pints.plot.series(few_samples2, self.problem2, thinning=1)
+        # Test invalid thinning input
+        self.assertRaises(
+            ValueError, pints.plot.series, few_samples, self.problem,
+            {'thinning':0}
+        )
 
         # Check invalid input of samples
         self.assertRaises(
@@ -314,10 +341,14 @@ class TestPlot(unittest.TestCase):
                             ref_parameters=self.real_parameters)
 
         # Test kde gives no error
-        pints.plot.pairwise(few_samples, kde=True)
+        pints.plot.pairwise(few_samples, kde=True,
+                            ref_parameters=self.real_parameters)
 
         # Test opacity gives no error
         pints.plot.pairwise(few_samples, opacity=0.2)
+
+        # Test opacity auto setting gives no error
+        pints.plot.pairwise(few_samples[:5, :])
 
         # Test n_percentiles gives no error
         pints.plot.pairwise(few_samples, n_percentiles=50)
@@ -325,6 +356,12 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaises(
             ValueError, pints.plot.pairwise, self.samples
+        )
+
+        # Check invalid ref_parameter input
+        self.assertRaises(
+            ValueError, pints.plot.pairwise,
+            self.samples, [self.real_parameters[0]]
         )
 
 
