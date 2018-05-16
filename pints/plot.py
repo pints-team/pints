@@ -432,7 +432,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
     # Check reference parameters
     if ref_parameters is not None:
-        if len(ref_parameters) != n_param or len(ref_parameters) != dimension:
+        if len(ref_parameters) != n_param and len(ref_parameters) != dimension:
             raise ValueError(
                 'Length of `ref_parameters` must be same as number of'
                 ' parameters')
@@ -467,7 +467,8 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
 
     # Plot prediction
-    fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3))
+    fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3),
+                             sharex=True)
 
     if n_outputs == 1:
         plt.xlabel('Time')
@@ -491,9 +492,13 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         plt.legend()
 
     elif n_outputs > 1:
+        # Remove horizontal space between axes and set common xlabel
+        fig.subplots_adjust(hspace=0)
         axes[-1].set_xlabel('Time')
+
+        # Go through each output
         for i_output in range(n_outputs):
-            axes[i_output].set_ylabel('Output %d' % i_output)
+            axes[i_output].set_ylabel('Output %d' % (i_output + 1))
             axes[i_output].plot(
                 times, problem.values()[:, i_output], 'x', color='#7f7f7f',
                 ms=6.5, alpha=0.5, label='Original data')
@@ -513,10 +518,6 @@ def series(samples, problem, ref_parameters=None, thinning=None):
                                     label='Reference series')
 
         axes[0].legend()
-
-    else:
-        raise ValueError('`n_outputs` of the problem must be greater than'
-                         ' zero.')
 
     plt.tight_layout()
     return fig, axes
