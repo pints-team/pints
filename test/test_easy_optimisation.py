@@ -9,7 +9,7 @@
 #
 import pints
 import unittest
-#import numpy as np
+import numpy as np
 
 
 class TestEasyOptimisation(unittest.TestCase):
@@ -26,6 +26,7 @@ class TestEasyOptimisation(unittest.TestCase):
         # Basic test
         def f(x):
             return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
+
         xopt, fopt = pints.fmin(f, [1, 1], method=pints.XNES)
         self.assertAlmostEqual(xopt[0], 3)
         self.assertAlmostEqual(xopt[1], -5)
@@ -50,7 +51,39 @@ class TestEasyOptimisation(unittest.TestCase):
         """
         Tests :meth:`pints.curve_fit()`.
         """
-        pass
+        # Note: This just wraps around `Optimisation`, so testing done here is
+        # for wrapper code, not main functionality!
+
+        # Basic test
+        def f(x, a, b, c):
+            return a + b * x + c * x ** 2
+
+        x = np.linspace(-5, 5, 100)
+        e = np.random.normal(loc=0, scale=0.1)
+        y = f(x, 9, 3, 1) + e
+
+        p0 = [0, 0, 0]
+        popt = pints.curve_fit(f, x, y, p0, method=pints.XNES)
+        self.assertAlmostEqual(popt[0], 9 + np.mean(e))
+        self.assertAlmostEqual(popt[1], 3)
+        self.assertAlmostEqual(popt[2], 1)
+
+        # Function must be callable
+        self.assertRaisesRegexp(
+            ValueError, 'callable', pints.curve_fit, 3, x, y, p0)
+
+        # Test with boundaries
+        pints.curve_fit(
+            f, x, y, p0,
+            boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
+        self.assertAlmostEqual(popt[0], 9 + np.mean(e))
+        self.assertAlmostEqual(popt[1], 3)
+        self.assertAlmostEqual(popt[2], 1)
+
+        # Test with invalid sizes of `x` and `y`
+        x = np.linspace(-5, 5, 99)
+        self.assertRaisesRegexp(
+            ValueError, 'dimension', pints.curve_fit, f, x, y, p0)
 
 
 if __name__ == '__main__':
