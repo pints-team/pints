@@ -8,3 +8,10 @@ Running an optimisation
 .. autofunction:: optimise
 
 .. autoclass:: Optimisation
+
+Convenience methods
+-------------------
+
+.. autofunction:: fmin
+
+.. autofunction:: curve_fit

@@ -53,20 +53,21 @@ class TestEasyOptimisation(unittest.TestCase):
         """
         # Note: This just wraps around `Optimisation`, so testing done here is
         # for wrapper code, not main functionality!
+        np.random.seed(1)
 
         # Basic test
         def f(x, a, b, c):
             return a + b * x + c * x ** 2
 
         x = np.linspace(-5, 5, 100)
-        e = np.random.normal(loc=0, scale=0.1)
+        e = np.random.normal(loc=0, scale=0.1, size=x.shape)
         y = f(x, 9, 3, 1) + e
 
         p0 = [0, 0, 0]
         popt = pints.curve_fit(f, x, y, p0, method=pints.XNES)
-        self.assertAlmostEqual(popt[0], 9 + np.mean(e))
-        self.assertAlmostEqual(popt[1], 3)
-        self.assertAlmostEqual(popt[2], 1)
+        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
+        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
+        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
 
         # Function must be callable
         self.assertRaisesRegexp(
@@ -76,9 +77,9 @@ class TestEasyOptimisation(unittest.TestCase):
         pints.curve_fit(
             f, x, y, p0,
             boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
-        self.assertAlmostEqual(popt[0], 9 + np.mean(e))
-        self.assertAlmostEqual(popt[1], 3)
-        self.assertAlmostEqual(popt[2], 1)
+        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
+        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
+        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
 
         # Test with invalid sizes of `x` and `y`
         x = np.linspace(-5, 5, 99)
