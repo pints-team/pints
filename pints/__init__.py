@@ -123,6 +123,8 @@ from ._optimisers import (
     TriangleWaveTransform,
     Optimisation,
     optimise,
+    fmin,
+    curve_fit,
 )
 from ._optimisers._cmaes import CMAES
 from ._optimisers._pso import PSO

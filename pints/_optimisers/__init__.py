@@ -590,3 +590,104 @@ class TriangleWaveTransform(object):
         z = np.remainder(y, self._range)
         return ((self._lower + z) * (y < self._range)
                 + (self._upper - z) * (y >= self._range))
+
+
+def curve_fit():
+    raise NotImplementedError
+
+
+def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
+         max_unchanged=200, verbose=False, method=None):
+    """
+    Minimises a callable function ``f``, starting from position ``x0``, using a
+    :class:`pints.Optimiser`.
+
+    Example:
+
+        import pints
+
+        def f(x):
+            return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
+
+        xopt, fopt = pints.fmin(f, [1, 1])
+
+    Arguments:
+
+    ``f``
+        A function or callable class to be minimised.
+    ``x0``
+        The initial point to search at. Must be a 1-dimensional sequence (e.g.
+        a list or a numpy array).
+    ``args``
+        An optional tuple of extra arguments for ``f``.
+    ``boundaries``
+        An optional :class:`pints.Boundaries` object or a tuple
+        ``(lower, upper)`` specifying lower and upper boundaries for the
+        search. If no boundaries are provided an unbounded search is run.
+    ``threshold``
+        An optional absolute threshold stopping criterium.
+    ``max_iter``
+        An optional maximum number of iterations stopping criterium.
+    ``max_unchanged=200``
+        A stopping criterion based on the maximum number of successive
+        iterations without a signficant change in ``f`` (see
+        :meth:`pints.Optimisation`).
+    ``verbose=False``
+        Set to ``True`` to print progress messages to the screen.
+    ``method``
+        The :class:`pints.Optimiser` to use. If no method is specified,
+        ``pints.CMAES`` is used.
+
+    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
+    corresponding value ``fbest = f(xbest)``.
+    """
+    # Test function
+    if not callable(f):
+        raise ValueError('The argument `f` must be callable.')
+
+    # Get problem dimension from x0
+    d = len(x0)
+
+    # Test extra arguments
+    if args is not None:
+        args = tuple(args)
+
+    # Check boundaries
+    if not (boundaries is None or isinstance(boundaries, pints.Boundaries)):
+        lower, upper = boundaries
+        boundaries = pints.Boundaries(lower, upper)
+
+    # Create an error measure
+    if args is None:
+
+        class Err(pints.ErrorMeasure):
+            def n_parameters(self):
+                return d
+
+            def __call__(self, x):
+                return f(x)
+
+    else:
+
+        class Err(pints.ErrorMeasure):
+            def n_parameters(self):
+                return d
+
+            def __call__(self, x):
+                return f(x, *args)
+
+    # Set up optimisation
+    e = Err()
+    opt = pints.Optimisation(e, x0, boundaries=boundaries, method=method)
+
+    # Set stopping criteria
+    opt.set_threshold(threshold)
+    opt.set_max_iterations(max_iter)
+    opt.set_max_unchanged_iterations(max_unchanged)
+
+    # Set output
+    opt.set_log_to_screen(True if verbose else False)
+
+    # Run and return
+    return opt.run()
+
