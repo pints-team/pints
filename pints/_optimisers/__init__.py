@@ -592,8 +592,105 @@ class TriangleWaveTransform(object):
                 + (self._upper - z) * (y >= self._range))
 
 
-def curve_fit():
-    raise NotImplementedError
+def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
+              max_unchanged=200, verbose=False, method=None):
+    """
+    Fits a function ``f(x, *p)`` to a dataset ``(x, y)`` by finding the value
+    of ``p`` for which ``sum((y - f(x, *p))**2) / n`` is minimised (where ``n``
+    is the number of entries in ``y``).
+
+    Example:
+
+        import numpy as np
+        import pints
+
+        def f(x, a, b, c):
+            return a + b * x + c * x ** 2
+
+        x = np.linspace(-5, 5, 100)
+        y = f(x, 1, 2, 3) + np.random.normal(0, 1)
+
+        p0 = [0, 0, 0]
+        popt = pints.curve_fit(f, x, y, p0)
+
+    Arguments:
+
+    ``f``
+        A function or callable class to be minimised.
+    ``x``
+        The values of an independent variable, at which ``y`` was recorded.
+    ``y``
+        Measured values ``y = f(x, p) + noise``.
+    ``p0``
+        An initial guess for the optimal parameters ``p``.
+    ``boundaries``
+        An optional :class:`pints.Boundaries` object or a tuple
+        ``(lower, upper)`` specifying lower and upper boundaries for the
+        search. If no boundaries are provided an unbounded search is run.
+    ``threshold``
+        An optional absolute threshold stopping criterium.
+    ``max_iter``
+        An optional maximum number of iterations stopping criterium.
+    ``max_unchanged=200``
+        A stopping criterion based on the maximum number of successive
+        iterations without a signficant change in ``f`` (see
+        :meth:`pints.Optimisation`).
+    ``verbose=False``
+        Set to ``True`` to print progress messages to the screen.
+    ``method``
+        The :class:`pints.Optimiser` to use. If no method is specified,
+        ``pints.CMAES`` is used.
+
+    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
+    corresponding value ``fbest = f(xbest)``.
+
+
+    """
+    # Test function
+    if not callable(f):
+        raise ValueError('The argument `f` must be callable.')
+
+    # Get problem dimension from p0
+    d = len(p0)
+
+    # First dimension of x and y must agree
+    x = np.asarray(x)
+    y = np.asarray(y)
+    if x.shape[0] != y.shape[0]:
+        raise ValueError(
+            'The first dimension of `x` and `y` must be the same.')
+
+    # Get number of points in data
+    n = 1 / np.product(y.shape)
+
+    # Check boundaries
+    if not (boundaries is None or isinstance(boundaries, pints.Boundaries)):
+        lower, upper = boundaries
+        boundaries = pints.Boundaries(lower, upper)
+
+    # Create an error measure
+    class Err(pints.ErrorMeasure):
+        def n_parameters(self):
+            return d
+
+        def __call__(self, p):
+            return np.sum((y - f(x, *p))**2) * n
+
+    # Set up optimisation
+    e = Err()
+    opt = pints.Optimisation(e, p0, boundaries=boundaries, method=method)
+
+    # Set stopping criteria
+    opt.set_threshold(threshold)
+    opt.set_max_iterations(max_iter)
+    opt.set_max_unchanged_iterations(max_unchanged)
+
+    # Set output
+    opt.set_log_to_screen(True if verbose else False)
+
+    # Run and return
+    popt, fopt = opt.run()
+    return popt
 
 
 def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
