@@ -1,4 +1,4 @@
-Copyright (c) 2017-2018, University of Oxford.
+Copyright (c) 2017-2018, University of Oxford (University of Oxford means the Chancellor, Masters and Scholars of the University of Oxford, having an administrative office at Wellington Square, Oxford OX1 2JD, UK).
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,3 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-University of Oxford means the Chancellor, Masters and Scholars of the
-University of Oxford, having an administrative office at Wellington
-Square, Oxford OX1 2JD, UK.
