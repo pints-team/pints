@@ -25,6 +25,7 @@ relevant code.
 
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
+- [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
 
 ## Sampling
 
