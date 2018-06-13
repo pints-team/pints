@@ -86,13 +86,13 @@ class TestEasyOptimisation(unittest.TestCase):
         self.assertTrue(np.abs(popt[1] - 3) < 0.1)
         self.assertTrue(np.abs(popt[2] - 1) < 0.1)
 
+        # Test with parallelisation
+        pints.curve_fit(f, x, y, p0, parallel=True, method=pints.XNES)
+
         # Test with invalid sizes of `x` and `y`
         x = np.linspace(-5, 5, 99)
         self.assertRaisesRegexp(
             ValueError, 'dimension', pints.curve_fit, f, x, y, p0)
-
-        # Test with parallelisation
-        pints.curve_fit(f, x, y, p0, parallel=True, method=pints.XNES)
 
 
 if __name__ == '__main__':
