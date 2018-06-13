@@ -659,7 +659,7 @@ class TriangleWaveTransform(object):
 
 
 def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
-              max_unchanged=200, verbose=False, method=None):
+              max_unchanged=200, verbose=False, parallel=False, method=None):
     """
     Fits a function ``f(x, *p)`` to a dataset ``(x, y)`` by finding the value
     of ``p`` for which ``sum((y - f(x, *p))**2) / n`` is minimised (where ``n``
@@ -703,6 +703,12 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         :meth:`pints.Optimisation`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
+    ``parallel=False``
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
     ``method``
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
@@ -751,6 +757,9 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     opt.set_max_iterations(max_iter)
     opt.set_max_unchanged_iterations(max_unchanged)
 
+    # Set parallelisation
+    opt.set_parallel(parallel)
+
     # Set output
     opt.set_log_to_screen(True if verbose else False)
 
@@ -760,7 +769,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
 
 
 def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
-         max_unchanged=200, verbose=False, method=None):
+         max_unchanged=200, verbose=False, parallel=False, method=None):
     """
     Minimises a callable function ``f``, starting from position ``x0``, using a
     :class:`pints.Optimiser`.
@@ -797,6 +806,12 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
         :meth:`pints.Optimisation`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
+    ``parallel=False``
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
     ``method``
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
@@ -847,6 +862,9 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     opt.set_threshold(threshold)
     opt.set_max_iterations(max_iter)
     opt.set_max_unchanged_iterations(max_unchanged)
+
+    # Set parallelisation
+    opt.set_parallel(parallel)
 
     # Set output
     opt.set_log_to_screen(True if verbose else False)
