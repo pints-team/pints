@@ -27,6 +27,7 @@ class TestEasyOptimisation(unittest.TestCase):
         def f(x):
             return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
 
+        np.random.seed(1)
         xopt, fopt = pints.fmin(f, [1, 1], method=pints.XNES)
         self.assertAlmostEqual(xopt[0], 3)
         self.assertAlmostEqual(xopt[1], -5)
@@ -36,7 +37,7 @@ class TestEasyOptimisation(unittest.TestCase):
 
         # Test with boundaries
         xopt, fopt = pints.fmin(
-            f, [1, 1], boundaries=([-10, -10], [10, 10]), method=pints.XNES)
+            f, [1, 1], boundaries=([-10, -10], [10, 10]), method=pints.SNES)
         self.assertAlmostEqual(xopt[0], 3)
         self.assertAlmostEqual(xopt[1], -5)
 
@@ -46,6 +47,9 @@ class TestEasyOptimisation(unittest.TestCase):
         xopt, fopt = pints.fmin(g, [1, 1], args=[1, 2], method=pints.XNES)
         self.assertAlmostEqual(xopt[0], 3)
         self.assertAlmostEqual(xopt[1], -5)
+
+        # Test with parallelisation
+        pints.fmin(f, [1, 1], parallel=True, method=pints.XNES)
 
     def test_curve_fit(self):
         """
@@ -64,6 +68,7 @@ class TestEasyOptimisation(unittest.TestCase):
         y = f(x, 9, 3, 1) + e
 
         p0 = [0, 0, 0]
+        np.random.seed(1)
         popt = pints.curve_fit(f, x, y, p0, method=pints.XNES)
         self.assertTrue(np.abs(popt[0] - 9) < 0.1)
         self.assertTrue(np.abs(popt[1] - 3) < 0.1)
@@ -85,6 +90,9 @@ class TestEasyOptimisation(unittest.TestCase):
         x = np.linspace(-5, 5, 99)
         self.assertRaisesRegexp(
             ValueError, 'dimension', pints.curve_fit, f, x, y, p0)
+
+        # Test with parallelisation
+        pints.curve_fit(f, x, y, p0, parallel=True, method=pints.XNES)
 
 
 if __name__ == '__main__':
