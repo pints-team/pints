@@ -328,7 +328,7 @@ class MCMCSampling(object):
     def parallel(self):
         """
         Returns the number of parallel worker processes this routine will be
-        run on, or ``False`` if parallisation is disabled.
+        run on, or ``False`` if parallelisation is disabled.
         """
         return self._n_workers if self._parallel else False
 
@@ -366,9 +366,8 @@ class MCMCSampling(object):
                 print('Using ' + str(self._samplers[0].name()))
                 print('Generating ' + str(self._chains) + ' chains.')
                 if self._parallel:
-                    print(
-                        'Running in parallel with ' + str(n_workers) +
-                        ' worker processess.')
+                    print('Running in parallel with ' + str(n_workers) +
+                          ' worker processess.')
                 else:
                     print('Running in sequential mode.')
 
