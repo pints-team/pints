@@ -29,16 +29,29 @@ def evaluate(f, x, parallel=False, args=None):
     Evaluates the function ``f`` on every value present in ``x`` and returns
     a sequence of evaluations ``f(x[i])``.
 
-    To run the evaluations on all available cores, set ``parallel=True``. For
-    details see :class:`ParallelEvaluator`.
+    Arguments:
 
-    Extra arguments to pass to ``f`` can be given in the optional tuple
-    ``args``. If used, ``f`` will be called as ``f(x[i], *args)``.
+    ``f``
+        The function to evaluate, called as ``f(x[i], *args)``.
+    ``x``
+        A list of values to evaluate ``f`` with
+    ``parallel=False``
+        Run in parallel or not. When set to ``False`` or ``0`, the evaluations
+        will happen sequentially. If set to an integer greater than ``0``, it
+        will be interpreted as the number of worker processes to use to
+        evaluate ``f`` in parallel. If set to ``True`` the number of workers
+        will be set automatically, depending on the number of cpu cores
+        available.
+    ``args``
+        Optional extra arguments to pass into ``f``.
+
+    Returns a list of evaluations ``y = f(x, *args)``.
     """
     if parallel:
-        evaluator = ParallelEvaluator(f, args)
+        n_workers = None if parallel is True else float(parallel)
+        evaluator = ParallelEvaluator(f, n_workers=n_workers, args=args)
     else:
-        evaluator = SequentialEvaluator(f, args)
+        evaluator = SequentialEvaluator(f, args=args)
     return evaluator.evaluate(x)
 
 
@@ -163,7 +176,7 @@ multiprocessing.html#all-platforms>`_ for details).
 
         # Determine number of workers
         if n_workers is None:
-            self._n_workers = max(1, multiprocessing.cpu_count())
+            self._n_workers = ParallelEvaluator.cpu_count()
         else:
             self._n_workers = int(n_workers)
             if self._n_workers < 1:
@@ -214,6 +227,16 @@ multiprocessing.html#all-platforms>`_ for details).
         if cleaned:     # pragma: no cover
             gc.collect()
         return cleaned
+
+    @staticmethod
+    def cpu_count():
+        """
+        Uses the multiprocessing module to guess the number of available cores.
+
+        For machines with simultaneous multithreading (`hyperthreading') this
+        will return the number of virtual cores.
+        """
+        return max(1, multiprocessing.cpu_count())
 
     def _populate(self):
         """

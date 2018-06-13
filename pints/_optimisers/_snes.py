@@ -142,8 +142,7 @@ class SNES(pints.Optimiser):
 
         # Round up to number of CPU cores
         if parallel:
-            import multiprocessing
-            cpu_count = multiprocessing.cpu_count()
+            cpu_count = pints.ParallelEvaluator.cpu_count()
             population_size = cpu_count * (
                 ((population_size - 1) // cpu_count) + 1)
 
