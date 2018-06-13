@@ -20,7 +20,7 @@ method = pints.PSO
 LOG_SCREEN = (
     'Maximising LogPDF\n'
     'using Particle Swarm Optimisation (PSO)\n'
-    'Running in sequential mode.\n'
+    'Running in parallel with 2 worker processes.\n'
     'Population size: 6\n'
     'Iter. Eval. Best      Time m:s\n'
     '0     6     -0.199      0:00.0\n'
@@ -124,6 +124,7 @@ class TestPSO(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(2)
+        self.assertEqual(opt.max_unchanged_iterations()[0], 2)
         with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
@@ -135,7 +136,10 @@ class TestPSO(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
-        opt.set_threshold(1e4 * self.cutoff)
+        self.assertEqual(opt.max_unchanged_iterations(), (None, None))
+        t = 1e4 * self.cutoff
+        opt.set_threshold(t)
+        self.assertEqual(opt.threshold(), t)
         with StreamCapture() as c:
             opt.run()
             self.assertIn(
@@ -148,6 +152,7 @@ class TestPSO(unittest.TestCase):
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
+        self.assertEqual(opt.max_unchanged_iterations(), (None, None))
         self.assertRaises(ValueError, opt.run)
 
     def test_logpdf(self):
@@ -201,6 +206,7 @@ class TestPSO(unittest.TestCase):
         with StreamCapture() as c:
             opt = pints.Optimisation(r, x0, boundaries=b, method=method)
             opt.set_max_iterations(10)
+            opt.set_parallel(2)
             opt.set_log_to_screen(True)
             np.random.seed(1)
             opt.run()
@@ -299,6 +305,20 @@ class TestPSO(unittest.TestCase):
         self.assertRaisesRegexp(
             ValueError, 'have dimension 2', pints.PSO, x0, [3, 3, 3])
 
+    def test_optimisation_creation(self):
+        """
+        Test optimisation creation.
+        """
+        # Test invalid dimensions
+        r = pints.toy.RosenbrockError(1, 100)
+        self.assertRaisesRegexp(
+            ValueError, 'same dimension', pints.Optimisation, r, [1])
+
+        # Test invalid method
+        self.assertRaisesRegexp(
+            ValueError, 'subclass', pints.Optimisation, r, [1, 1],
+            method=pints.AdaptiveCovarianceMCMC)
+
     def test_set_population_size(self):
         """
         Tests the set_population_size method for this optimiser.
@@ -307,10 +327,18 @@ class TestPSO(unittest.TestCase):
         x0 = np.array([1.1, 1.1])
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt = opt.optimiser()
-        n = opt.population_size()
-        opt.set_population_size(n + 1)
-        self.assertEqual(opt.population_size(), n + 1)
+        m = opt.optimiser()
+        n = m.population_size()
+        m.set_population_size(n + 1)
+        self.assertEqual(m.population_size(), n + 1)
+
+        # Test invalid size
+        self.assertRaisesRegexp(
+            ValueError, 'at least 1', m.set_population_size, 0)
+
+        # Test changing during run
+        m.ask()
+        self.assertRaises(Exception, m.set_population_size, 2)
 
 
 if __name__ == '__main__':
