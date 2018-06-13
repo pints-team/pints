@@ -196,10 +196,18 @@ class TestCMAES(unittest.TestCase):
         x0 = np.array([1.1, 1.1])
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt = opt.optimiser()
-        n = opt.population_size()
-        opt.set_population_size(n + 1)
-        self.assertEqual(opt.population_size(), n + 1)
+        m = opt.optimiser()
+        n = m.population_size()
+        m.set_population_size(n + 1)
+        self.assertEqual(m.population_size(), n + 1)
+
+        # Test invalid size
+        self.assertRaisesRegexp(
+            ValueError, 'at least 1', m.set_population_size, 0)
+
+        # Test changing during run
+        m.ask()
+        self.assertRaises(Exception, m.set_population_size, 2)
 
 
 if __name__ == '__main__':
