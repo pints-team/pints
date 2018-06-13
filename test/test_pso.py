@@ -82,7 +82,6 @@ class TestPSO(unittest.TestCase):
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
-    '''
     def test_bounded(self):
 
         opt = pints.Optimisation(self.score, self.x0,
@@ -220,7 +219,6 @@ class TestPSO(unittest.TestCase):
                 with open(filename, 'r') as f:
                     self.assertEqual(f.read(), LOG_FILE)
             self.assertEqual(c.text(), '')
-    '''
 
     def test_parallel(self):
         """ Test parallelised running on the Rosenbrock function. """
