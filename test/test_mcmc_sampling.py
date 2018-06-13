@@ -189,6 +189,38 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc.set_max_iterations(None)
         self.assertRaises(ValueError, mcmc.run)
 
+    def test_parallel(self):
+        """ Test running MCMC with parallisation. """
+
+        xs = []
+        for i in range(10):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(np.array(self.real_parameters) * f)
+        nchains = len(xs)
+        nparameters = len(xs[0])
+        niterations = 20
+        mcmc = pints.MCMCSampling(
+            self.log_posterior, nchains, xs,
+            method=pints.AdaptiveCovarianceMCMC)
+        mcmc.set_max_iterations(niterations)
+        mcmc.set_log_to_screen(False)
+
+        # Test with auto-detected number of worker processes
+        mcmc.set_parallel(True)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], nchains)
+        self.assertEqual(chains.shape[1], niterations)
+        self.assertEqual(chains.shape[2], nparameters)
+
+        # Test with fixed number of worker processes
+        mcmc.set_parallel(2)
+        self.assertIs(mcmc._parallel, True)
+        self.assertEqual(mcmc._n_workers, 2)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], nchains)
+        self.assertEqual(chains.shape[1], niterations)
+        self.assertEqual(chains.shape[2], nparameters)
+
     def test_logging(self):
 
         np.random.seed(1)

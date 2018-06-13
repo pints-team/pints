@@ -36,20 +36,22 @@ def evaluate(f, x, parallel=False, args=None):
     ``x``
         A list of values to evaluate ``f`` with
     ``parallel=False``
-        Run in parallel or not. When set to ``False`` or ``0`, the evaluations
-        will happen sequentially. If set to an integer greater than ``0``, it
-        will be interpreted as the number of worker processes to use to
-        evaluate ``f`` in parallel. If set to ``True`` the number of workers
-        will be set automatically, depending on the number of cpu cores
-        available.
+        Run in parallel or not.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
     ``args``
         Optional extra arguments to pass into ``f``.
 
     Returns a list of evaluations ``y = f(x, *args)``.
     """
-    if parallel:
-        n_workers = None if parallel is True else float(parallel)
-        evaluator = ParallelEvaluator(f, n_workers=n_workers, args=args)
+    if parallel is True:
+        evaluator = ParallelEvaluator(f, args=args)
+    elif parallel >= 1:
+        evaluator = ParallelEvaluator(f, n_workers=int(parallel), args=args)
     else:
         evaluator = SequentialEvaluator(f, args=args)
     return evaluator.evaluate(x)
