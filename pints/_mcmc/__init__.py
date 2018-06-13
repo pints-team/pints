@@ -292,7 +292,8 @@ class MCMCSampling(object):
         self.set_log_rate()
 
         # Parallelisation
-        self._parallel = None
+        self._parallel = False
+        self._n_workers = 1
         self.set_parallel()
 
         # Adaptive methods
@@ -326,9 +327,10 @@ class MCMCSampling(object):
 
     def parallel(self):
         """
-        Returns ``True`` if this sampling is set to use parallelisation.
+        Returns the number of parallel worker processes this routine will be
+        run on, or ``False`` if parallisation is disabled.
         """
-        return self._parallel
+        return self._n_workers if self._parallel else False
 
     def run(self):
         """
@@ -347,10 +349,10 @@ class MCMCSampling(object):
 
         # Create evaluator object
         if self._parallel:
-            # Guess good number of workers
-            nworkers = min(pints.ParallelEvaluator.cpu_count(), self._chains)
+            # Use at most n_workers workers
+            n_workers = min(self._n_workers, self._chains)
             evaluator = pints.ParallelEvaluator(
-                self._log_pdf, nworkers=nworkers)
+                self._log_pdf, n_workers=n_workers)
         else:
             evaluator = pints.SequentialEvaluator(self._log_pdf)
 
@@ -364,7 +366,9 @@ class MCMCSampling(object):
                 print('Using ' + str(self._samplers[0].name()))
                 print('Generating ' + str(self._chains) + ' chains.')
                 if self._parallel:
-                    print('Running in parallel mode.')
+                    print(
+                        'Running in parallel with ' + str(n_workers) +
+                        ' worker processess.')
                 else:
                     print('Running in sequential mode.')
 
@@ -559,8 +563,23 @@ class MCMCSampling(object):
     def set_parallel(self, parallel=False):
         """
         Enables/disables parallel evaluation.
+
+        If ``parallel=True``, the method will run using a number of worker
+        processes equal to the detected cpu core count. The number of workers
+        can be set explicitly by setting ``parallel`` to an integer greater
+        than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
         """
-        self._parallel = bool(parallel)
+        if parallel is True:
+            self._parallel = True
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
+        elif parallel >= 1:
+            self._parallel = True
+            self._n_workers = int(parallel)
+        else:
+            self._parallel = False
+            self._n_workers = 1
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
