@@ -156,6 +156,19 @@ class TestXNES(unittest.TestCase):
         self.assertTrue(type(opt.parallel()) == int)
         self.assertEqual(opt.parallel(), 1)
 
+    def test_set_population_size(self):
+        """
+        Tests the set_population_size method for this optimiser.
+        """
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt = opt.optimiser()
+        n = opt.population_size()
+        opt.set_population_size(n + 1)
+        self.assertEqual(opt.population_size(), n + 1)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
