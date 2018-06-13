@@ -235,7 +235,7 @@ multiprocessing.html#all-platforms>`_ for details).
         """
         Uses the multiprocessing module to guess the number of available cores.
 
-        For machines with simultaneous multithreading (`hyperthreading') this
+        For machines with simultaneous multithreading ("hyperthreading") this
         will return the number of virtual cores.
         """
         return max(1, multiprocessing.cpu_count())
