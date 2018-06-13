@@ -271,6 +271,34 @@ class TestPSO(unittest.TestCase):
         self.assertEquals(opt.suggested_population_size(7) % 7, 0)
         self.assertEquals(opt.suggested_population_size(11) % 11, 0)
 
+    def test_creation(self):
+        """ Test optimiser creation. """
+        # Test basic creation
+        x0 = [1, 2, 3]
+        pints.PSO(x0)
+        self.assertRaisesRegexp(
+            ValueError, 'greater than zero', pints.PSO, [])
+
+        # Test with boundaries
+        x0 = [1, 2]
+        b = pints.Boundaries([0, 0], [3, 3])
+        pints.PSO(x0, boundaries=b)
+        self.assertRaisesRegexp(
+            ValueError, 'within given boundaries', pints.PSO, [4, 4],
+            boundaries=b)
+
+        # Test with scalar sigma
+        pints.PSO(x0, 3)
+        self.assertRaisesRegexp(
+            ValueError, 'greater than zero', pints.PSO, x0, -1)
+
+        # Test with vector sigma
+        pints.PSO(x0, [3, 3])
+        self.assertRaisesRegexp(
+            ValueError, 'greater than zero', pints.PSO, x0, [3, -1])
+        self.assertRaisesRegexp(
+            ValueError, 'have dimension 2', pints.PSO, x0, [3, 3, 3])
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
