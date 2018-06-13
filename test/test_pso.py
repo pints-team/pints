@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the basic methods of the PSO optimiser.
 #
@@ -13,7 +13,6 @@ import unittest
 import numpy as np
 
 from shared import StreamCapture, TemporaryDirectory
-
 
 debug = False
 method = pints.PSO
@@ -83,6 +82,7 @@ class TestPSO(unittest.TestCase):
         # Maximum tries before it counts as failed
         self.max_tries = 3
 
+    '''
     def test_bounded(self):
 
         opt = pints.Optimisation(self.score, self.x0,
@@ -157,7 +157,7 @@ class TestPSO(unittest.TestCase):
         x0 = np.array([1.1, 1.1])
         f0 = r(x0)
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
         opt.set_max_iterations(100)
         opt.set_max_unchanged_iterations(100)
         opt.set_log_to_screen(debug)
@@ -175,7 +175,7 @@ class TestPSO(unittest.TestCase):
         x0 = np.array([1.1, 1.1])
         f0 = r(x0)
         b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
         opt.set_max_iterations(100)
         opt.set_max_unchanged_iterations(100)
         opt.set_log_to_screen(debug)
@@ -191,7 +191,7 @@ class TestPSO(unittest.TestCase):
 
         # No logging
         with StreamCapture() as c:
-            opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+            opt = pints.Optimisation(r, x0, boundaries=b, method=method)
             opt.set_max_iterations(10)
             opt.set_log_to_screen(False)
             np.random.seed(1)
@@ -200,7 +200,7 @@ class TestPSO(unittest.TestCase):
 
         # Log to screen
         with StreamCapture() as c:
-            opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+            opt = pints.Optimisation(r, x0, boundaries=b, method=method)
             opt.set_max_iterations(10)
             opt.set_log_to_screen(True)
             np.random.seed(1)
@@ -211,7 +211,7 @@ class TestPSO(unittest.TestCase):
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
-                opt = pints.Optimisation(r, x0, boundaries=b, method=pints.PSO)
+                opt = pints.Optimisation(r, x0, boundaries=b, method=method)
                 opt.set_max_iterations(10)
                 opt.set_log_to_screen(False)
                 opt.set_log_to_file(filename)
@@ -220,6 +220,58 @@ class TestPSO(unittest.TestCase):
                 with open(filename, 'r') as f:
                     self.assertEqual(f.read(), LOG_FILE)
             self.assertEqual(c.text(), '')
+    '''
+
+    def test_parallel(self):
+        """ Test parallelised running on the Rosenbrock function. """
+
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+
+        # Run with guessed number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(False)
+        self.assertIs(opt.parallel(), False)
+        opt.set_parallel(True)
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertTrue(opt.parallel() >= 1)
+        opt.run()
+
+        # Run with explicit number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(1)
+        opt.run()
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertEqual(opt.parallel(), 1)
+
+    def test_suggest_population_size(self):
+        """
+        Tests the suggested_population_size() method for population based
+        optimisers.
+        """
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt = opt.optimiser()
+
+        # Test basic usage
+        self.assertEqual(type(opt.suggested_population_size()), int)
+        self.assertTrue(opt.suggested_population_size() > 0)
+
+        # Test rounding
+        n = opt.suggested_population_size() + 1
+        self.assertEquals(opt.suggested_population_size(n), n)
+        self.assertEquals(opt.suggested_population_size(2) % 2, 0)
+        self.assertEquals(opt.suggested_population_size(3) % 3, 0)
+        self.assertEquals(opt.suggested_population_size(5) % 5, 0)
+        self.assertEquals(opt.suggested_population_size(7) % 7, 0)
+        self.assertEquals(opt.suggested_population_size(11) % 11, 0)
 
 
 if __name__ == '__main__':

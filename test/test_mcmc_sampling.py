@@ -203,7 +203,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.log_posterior, nchains, xs,
             method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(niterations)
-        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_screen(debug)
 
         # Test with auto-detected number of worker processes
         mcmc.set_parallel(True)

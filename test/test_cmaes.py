@@ -161,6 +161,33 @@ class TestCMAES(unittest.TestCase):
             pints.optimise(score, x0)
         self.assertTrue('Ill-conditioned covariance matrix' in c.text())
 
+    def test_parallel(self):
+        """ Test parallelised running on the Rosenbrock function. """
+
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+
+        # Run with guessed number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(False)
+        self.assertIs(opt.parallel(), False)
+        opt.set_parallel(True)
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertTrue(opt.parallel() >= 1)
+        opt.run()
+
+        # Run with explicit number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(1)
+        opt.run()
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertEqual(opt.parallel(), 1)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
