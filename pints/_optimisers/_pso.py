@@ -207,8 +207,7 @@ class PSO(pints.PopulationBasedOptimiser):
         # Round up to number of CPU cores
         # (With a minimum of 3 times the CPU count)
         if parallel:
-            import multiprocessing
-            cpu_count = multiprocessing.cpu_count()
+            cpu_count = pints.ParallelEvaluator.cpu_count()
             population_size = cpu_count * max(
                 3, (((population_size - 1) // cpu_count) + 1))
 
