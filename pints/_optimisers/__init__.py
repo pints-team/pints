@@ -463,17 +463,19 @@ class Optimisation(object):
                                     + str(iteration) + ') reached.')
 
                 # Maximum number of iterations without significant change
-                if (self._max_unchanged_iterations is not None and
-                        unchanged_iterations >= self._max_unchanged_iterations):
+                halt = (self._max_unchanged_iterations is not None and
+                        unchanged_iterations >= self._max_unchanged_iterations)
+                if halt:
                     running = False
-                    halt_message = ('Halting: No significant change for '
-                                    + str(unchanged_iterations) + ' iterations.')
+                    halt_message = ('Halting: No significant change for ' +
+                                    str(unchanged_iterations) + ' iterations.')
 
                 # Threshold value
                 if self._threshold is not None and fbest < self._threshold:
                     running = False
                     halt_message = ('Halting: Objective function crossed'
-                                    ' threshold: ' + str(self._threshold) + '.')
+                                    ' threshold: ' + str(self._threshold) +
+                                    '.')
 
                 # Error in optimiser
                 error = self._optimiser.stop()
