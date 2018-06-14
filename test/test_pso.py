@@ -25,10 +25,8 @@ LOG_SCREEN = (
     'Iter. Eval. Best      Time m:s\n'
     '0     6     -0.199      0:00.0\n'
     '1     12     0.843      0:00.0\n'
-    '2     18     0.843      0:00.0\n'
-    '3     24     0.843      0:00.0\n'
-    '10    60     1.183198   0:00.0\n'
-    'Halting: Maximum number of iterations (10) reached.\n'
+    '2     12     0.843      0:00.0\n'
+    'Halting: Maximum number of iterations (2) reached.\n'
 )
 
 LOG_FILE = (
@@ -205,7 +203,7 @@ class TestPSO(unittest.TestCase):
         # Log to screen
         with StreamCapture() as c:
             opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-            opt.set_max_iterations(10)
+            opt.set_max_iterations(2)
             opt.set_parallel(2)
             opt.set_log_to_screen(True)
             np.random.seed(1)
