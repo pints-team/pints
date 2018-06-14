@@ -28,11 +28,12 @@ class TestEvaluators(unittest.TestCase):
             return float(x)**2
 
         # Create test data
-        xs = np.random.normal(0, 10, 100)
+        xs = np.random.normal(0, 10, 10)
         ys = [f(x) for x in xs]
 
         # Test evaluate function
         self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=True)))
+        self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=1)))
         self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=False)))
 
     def test_sequential(self):

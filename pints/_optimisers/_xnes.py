@@ -40,9 +40,6 @@ class XNES(pints.PopulationBasedOptimiser):
         self._running = False
         self._ready_for_tell = False
 
-        # Set default settings
-        self.set_population_size()
-
         # Best solution found
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
@@ -125,32 +122,13 @@ class XNES(pints.PopulationBasedOptimiser):
         """ See :meth:`Optimiser.name()`. """
         return 'Exponential Natural Evolution Strategy (xNES)'
 
-    def population_size(self):
-        """ See :meth:`PopulationBasedOptimiser.population_size()`. """
-        return self._population_size
+    def running(self):
+        """ See :meth:`Optimiser.running()`. """
+        return self._running
 
-    def set_population_size(self, population_size=None, parallel=False):
-        """ See :meth:`PopulationBasedOptimiser.set_population_size()`. """
-        if self._running:
-            raise Exception('Cannot change settings during run.')
-
-        # Check population size or set using heuristic
-        if population_size is None:
-            population_size = 4 + int(3 * np.log(self._dimension))
-        else:
-            population_size = int(population_size)
-            if population_size < 1:
-                raise ValueError('Population size must be at least 1.')
-
-        # Round up to number of CPU cores
-        if parallel:
-            import multiprocessing
-            cpu_count = multiprocessing.cpu_count()
-            population_size = cpu_count * (
-                ((population_size - 1) // cpu_count) + 1)
-
-        # Store
-        self._population_size = population_size
+    def _suggested_population_size(self):
+        """ See :meth:`Optimiser._suggested_population_size(). """
+        return 4 + int(3 * np.log(self._dimension))
 
     def tell(self, fx):
         """ See :meth:`Optimiser.tell()`. """

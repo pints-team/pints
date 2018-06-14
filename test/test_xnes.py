@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the basic methods of the xNES optimiser.
 #
@@ -128,6 +128,54 @@ class TestXNES(unittest.TestCase):
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
         self.assertRaises(ValueError, opt.run)
+
+    def test_parallel(self):
+        """ Test parallelised running on the Rosenbrock function. """
+
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+
+        # Run with guessed number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(False)
+        self.assertIs(opt.parallel(), False)
+        opt.set_parallel(True)
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertTrue(opt.parallel() >= 1)
+        opt.run()
+
+        # Run with explicit number of cores
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(debug)
+        opt.set_parallel(1)
+        opt.run()
+        self.assertTrue(type(opt.parallel()) == int)
+        self.assertEqual(opt.parallel(), 1)
+
+    def test_set_population_size(self):
+        """
+        Tests the set_population_size method for this optimiser.
+        """
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        m = opt.optimiser()
+        n = m.population_size()
+        m.set_population_size(n + 1)
+        self.assertEqual(m.population_size(), n + 1)
+
+        # Test invalid size
+        self.assertRaisesRegexp(
+            ValueError, 'at least 1', m.set_population_size, 0)
+
+        # Test changing during run
+        m.ask()
+        self.assertRaises(Exception, m.set_population_size, 2)
 
 
 if __name__ == '__main__':
