@@ -132,7 +132,9 @@ from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
 
 
-# diagnostics
+#
+# Diagnostics
+#
 from ._diagnostics import (
     effective_sample_size,
     rhat,
@@ -158,6 +160,7 @@ from ._mcmc._population import PopulationMCMC
 #from ._mcmc._differential_evolution import DreamMCMC
 #from ._mcmc._result import McmcResultObject
 
+
 #
 # Nested samplers
 #
@@ -165,8 +168,9 @@ from ._nested import NestedSampler
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
 
+
 #
-# Noise adders
+# Noise generators (always import!)
 #
 import pints.noise
 
