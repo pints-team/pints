@@ -105,6 +105,12 @@ class Optimiser(pints.Loggable):
         """
         raise NotImplementedError
 
+    def running(self):
+        """
+        Returns ``True`` if this an optimisation is in progress.
+        """
+        raise NotImplementedError
+
     def stop(self):
         """
         Checks if this method has run into trouble and should terminate.
@@ -134,22 +140,64 @@ class PopulationBasedOptimiser(Optimiser):
     Base class for optimisers that work by moving multiple points through the
     search space.
     """
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super(PopulationBasedOptimiser, self).__init__(x0, sigma0, boundaries)
+
+        # Set initial population size using heuristic
+        self._population_size = self._suggested_population_size()
+
     def population_size(self):
         """
         Returns this optimiser's population size.
-        """
-        raise NotImplementedError
 
-    def set_population_size(self, population_size=None, parallel=False):
+        If no explicit population size has been set, ``None`` may be returned.
+        Once running, the correct value will always be returned.
+        """
+        return self._population_size
+
+    def set_population_size(self, population_size=None):
         """
         Sets a population size to use in this optimisation.
 
-        If `population_size` is set to `None` a default value will be set using
-        a heuristic (e.g. based on the dimension of the search space).
+        If `population_size` is set to ``None``, the population size will be
+        set using the heuristic :meth:`suggested_population_size()`.
+        """
+        if self.running():
+            raise Exception('Cannot change population size during run.')
 
-        If `parallel` is set to `True`, the population size will be adjusted to
-        a value suitable for parallel computations (e.g. by rounding up to a
-        multiple of the number of reported CPU cores).
+        # Check population size or set using heuristic
+        if population_size is not None:
+            population_size = int(population_size)
+            if population_size < 1:
+                raise ValueError('Population size must be at least 1.')
+
+        # Store
+        self._population_size = population_size
+
+    def suggested_population_size(self, round_up_to_multiple_of=None):
+        """
+        Returns a suggested population size for this method, based on the
+        dimension of the search space (e.g. the parameter space).
+
+        If the optional argument ``round_up_to_multiple_of`` is set to an
+        integer greater than 1, the method will round up the estimate to a
+        multiple of that number. This can be useful to obtain a population size
+        based on e.g. the number of worker processes used to perform objective
+        function evaluations.
+        """
+        population_size = self._suggested_population_size()
+
+        if round_up_to_multiple_of is not None:
+            n = int(round_up_to_multiple_of)
+            if n > 1:
+                population_size = n * (((population_size - 1) // n) + 1)
+
+        return population_size
+
+    def _suggested_population_size(self):
+        """
+        Returns a suggested population size for use by
+        :meth:`suggested_population_size`.
         """
         raise NotImplementedError
 
@@ -212,8 +260,9 @@ class Optimisation(object):
         self._log_filename = None
         self._log_csv = False
 
-        # Run parallelised version
-        self._parallel = None
+        # Parallelisation
+        self._parallel = False
+        self._n_workers = 1
         self.set_parallel()
 
         #
@@ -258,9 +307,10 @@ class Optimisation(object):
 
     def parallel(self):
         """
-        Returns ``True`` if this optimisation runs in parallel.
+        Returns the number of parallel worker processes this routine will be
+        run on, or ``False`` if parallelisation is disabled.
         """
-        return self._parallel
+        return self._n_workers if self._parallel else False
 
     def run(self):
         """
@@ -284,7 +334,15 @@ class Optimisation(object):
 
         # Create evaluator object
         if self._parallel:
-            evaluator = pints.ParallelEvaluator(self._function)
+            # Get number of workers
+            n_workers = self._n_workers
+
+            # For population based optimisers, don't use more workers than
+            # particles!
+            if isinstance(self._optimiser, PopulationBasedOptimiser):
+                n_workers = min(n_workers, self._optimiser.population_size())
+            evaluator = pints.ParallelEvaluator(
+                self._function, n_workers=n_workers)
         else:
             evaluator = pints.SequentialEvaluator(self._function)
 
@@ -314,7 +372,8 @@ class Optimisation(object):
 
                 # Show parallelisation
                 if self._parallel:
-                    print('Running in parallel mode.')
+                    print('Running in parallel with ' + str(n_workers) +
+                          ' worker processes.')
                 else:
                     print('Running in sequential mode.')
 
@@ -491,19 +550,26 @@ class Optimisation(object):
         self._max_unchanged_iterations = iterations
         self._min_significant_change = threshold
 
-    def set_parallel(self, parallel=False, update_population_size=True):
+    def set_parallel(self, parallel=False):
         """
-        Enables/disables parallel function evaluation.
+        Enables/disables parallel evaluation.
 
-        If a :class:`PopulationBasedOptimiser` method is used, this method will
-        also update the used population size. To disable this behaviour, use
-        `update_population_size=False`.
+        If ``parallel=True``, the method will run using a number of worker
+        processes equal to the detected cpu core count. The number of workers
+        can be set explicitly by setting ``parallel`` to an integer greater
+        than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
         """
-        self._parallel = bool(parallel)
-
-        if update_population_size:
-            if isinstance(self._optimiser, PopulationBasedOptimiser):
-                self._optimiser.set_population_size(parallel=parallel)
+        if parallel is True:
+            self._parallel = True
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
+        elif parallel >= 1:
+            self._parallel = True
+            self._n_workers = int(parallel)
+        else:
+            self._parallel = False
+            self._n_workers = 1
 
     def set_threshold(self, threshold):
         """
@@ -593,7 +659,7 @@ class TriangleWaveTransform(object):
 
 
 def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
-              max_unchanged=200, verbose=False, method=None):
+              max_unchanged=200, verbose=False, parallel=False, method=None):
     """
     Fits a function ``f(x, *p)`` to a dataset ``(x, y)`` by finding the value
     of ``p`` for which ``sum((y - f(x, *p))**2) / n`` is minimised (where ``n``
@@ -637,6 +703,12 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         :meth:`pints.Optimisation`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
+    ``parallel=False``
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
     ``method``
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
@@ -685,6 +757,9 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     opt.set_max_iterations(max_iter)
     opt.set_max_unchanged_iterations(max_unchanged)
 
+    # Set parallelisation
+    opt.set_parallel(parallel)
+
     # Set output
     opt.set_log_to_screen(True if verbose else False)
 
@@ -694,7 +769,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
 
 
 def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
-         max_unchanged=200, verbose=False, method=None):
+         max_unchanged=200, verbose=False, parallel=False, method=None):
     """
     Minimises a callable function ``f``, starting from position ``x0``, using a
     :class:`pints.Optimiser`.
@@ -731,6 +806,12 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
         :meth:`pints.Optimisation`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
+    ``parallel=False``
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
     ``method``
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
@@ -781,6 +862,9 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     opt.set_threshold(threshold)
     opt.set_max_iterations(max_iter)
     opt.set_max_unchanged_iterations(max_unchanged)
+
+    # Set parallelisation
+    opt.set_parallel(parallel)
 
     # Set output
     opt.set_log_to_screen(True if verbose else False)
