@@ -1,100 +1,124 @@
 #
-# A number of functions which can be used to add various types of noise to
-# exact simulations to create fake data
+# A number of functions which can be used to generate different types of noise,
+# which can then be added to model output to simulate experimental data.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-#
 import numpy as np
 
 
-def add_independent_noise(values, sigma):
+def independent(sigma, shape):
     """
-    Adds independent Gaussian noise (``iid N(0,sigma)``) to a list of simulated
-    values.
+    Generates independent Gaussian noise (``iid N(0,sigma)``).
+
+    Arguments:
+
+    ``sigma``
+        The standard deviation of the noise. Must be zero or greater.
+    ``shape``
+        A tuple (or sequence) defining the shape of the generated noise array.
+
+    Returns an array of shape ``shape`` containing the generated noise.
+
+    Example::
+
+        values = model.simulate(parameters, times)
+        noisy_values = values + noise.independent(5, values.shape)
+
     """
-    if sigma <= 0:
-        raise ValueError('Standard deviation of noise must be positive')
-    if len(values) < 1:
-        raise ValueError('Must supply at least one value')
+    # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
 
-    return values + np.random.normal(0, sigma, values.shape)
+    return np.random.normal(0, sigma, shape)
 
 
-def AR1(rho, sigma, T):
+def ar1(rho, sigma, n):
     """
-    Creates an autoregressive order 1 series ``vX[t+t] ~ rho * vX[t-1] + e(t)``
-    where ``e(t) ~ N(0,sqrt(sigma^2 / (1 - rho^2)))`` with ``vX[0] = 0``, of
-    length ``T``. This choice of parameterisation ensures that the AR1 process
-    has a mean of 0 and a standard deviation of sigma.
-    """
-    if np.absolute(rho) > 1:
-        raise ValueError('rho must be less than 1 in magnitude (otherwise ' +
-                         'the process is explosive)')
-    if sigma <= 0:
-        raise ValueError('Standard deviation of noise must be positive')
-    if T < 1:
-        raise ValueError('Noise must be at least one unit long')
+    Generates first-order autoregressive (AR1) noise that can be added to a
+    vector of simulated data.
 
-    vX = np.zeros(T)
-    vX[0] = np.random.rand()
-    for t in range(1, T):
-        vX[t] = rho * vX[t - 1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
-    return vX
+    The generated noise follows the distribution
+    ``e(t) ~ rho * e(t - 1) + v(t)``, where ``v(t) ~ iid N(0, sigma)``.
 
+    Arguments:
 
-def add_AR1_noise(values, rho, sigma):
-    """
-    Adds autoregressive order 1 noise to data. i.e. the errors follow
-    ``e(t) ~ rho * e(t-1) + v(t)``, where ``v(t) ~ iid N(0,sigma)``.
-    """
-    if np.absolute(rho) > 1:
-        raise ValueError('rho must be less than 1 in magnitude (otherwise '
-                         + 'the process is explosive)')
-    if sigma <= 0:
-        raise ValueError('Standard deviation of noise must be positive')
-    if len(values) < 1:
-        raise ValueError('Must supply at least one value')
-    return values + AR1(rho, sigma, values.shape[0])
+    ``rho``
+        Determines the magnitude of the noise (see above). Must be less than or
+        equal to 1.
+    ``sigma``
+        The standard deviation of ``v(t)`` (see above). Must be greater than
+        zero.
+    ``n``
+        The length of the signal. (Only single time-series are supported.)
 
+    Returns an array of length ``n`` containing the generated noise.
 
-def AR1_unity(rho, sigma, T):
-    """
-    Creates an autoregressive order 1 series
-    ``vX[t+t] ~ (1 - rho) + rho * vT[t-1] + e(t)``
-    where ``e(t) ~ N(0,sqrt(sigma^2 / (1 - rho^2)))`` with ``vX[0] = 0``, of
-    length ``T``. This choice of parameterisation ensures that the AR1 process
-    has mean 1 and a standard deviation of sigma.
+    Example::
+
+        values = model.simulate(parameters, times)
+        noisy_values = values + noise.ar1(5, len(values))
+
     """
     if np.absolute(rho) > 1:
-        raise ValueError('rho must be less than 1 in magnitude (otherwise '
-                         + 'the process is explosive)')
-    if sigma <= 0:
-        raise ValueError('Standard deviation of noise must be positive')
-    if T < 1:
-        raise ValueError('Noise must be at least one unit long')
+        raise ValueError(
+            'Magnitude of rho cannot be greater than 1 (otherwise the process'
+            ' is explosive).')
+    if sigma < 0:
+        raise ValueError('Standard deviation cannot be negative.')
 
-    vX = np.zeros((T + 1))
-    vX[0] = 1
-    for t in range(1, T + 1):
-        vX[t] = (1 - rho) + rho * vX[t - 1] + np.random.normal(
-            0, sigma * np.sqrt(1 - rho**2))
-    return vX[1:]
+    n = int(n)
+    if n < 0:
+        raise ValueError('Length of signal cannot be negative.')
+    elif n == 0:
+        return np.array([])
+
+    # Generate noise
+    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n)
+    v[0] = np.random.rand()
+    for t in range(1, n):
+        v[t] += rho * v[t - 1]
+    return v
 
 
-def multiply_AR1_noise(values, rho, sigma):
+def ar1_unity(rho, sigma, n):
     """
-    Multiplies signal by a noise process that follows an autoregressive order 1
-    process of mean 1."""
+    Generates noise following an autoregressive order 1 process of mean 1, that
+    a vector of simulated data can be multiplied with.
+
+    ``rho``
+        Determines the magnitude of the noise (see :meth:`ar1`). Must be less
+        than or equal to 1.
+    ``sigma``
+        The standard deviation of ``v(t)`` (see :meth:`ar`). Must be zero or
+        greater.
+    ``n``
+        The length of the signal. (Only single time-series are supported.)
+
+    Returns an array of length ``n`` containing the generated noise.
+
+    Example::
+
+        values = model.simulate(parameters, times)
+        noisy_values = values * noise.ar1_unity(0.5, 1, len(values))
+
+    """
     if np.absolute(rho) > 1:
-        raise ValueError('rho must be less than 1 in magnitude (otherwise ' +
-                         'the process is explosive)')
-    if sigma <= 0:
-        raise ValueError('Standard deviation of noise must be positive')
-    if len(values) < 1:
-        raise ValueError('Must supply at least one value')
-    return values * AR1_unity(rho, sigma, values.shape[0])
+        raise ValueError(
+            'Rho must be less than 1 in magnitude (otherwise the process is'
+            ' explosive).')
+    if sigma < 0:
+        raise ValueError('Standard deviation cannot be negative.')
+
+    n = int(n)
+    if n < 1:
+        raise ValueError('Must supply at least one value.')
+
+    # Generate noise
+    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n + 1)
+    v[0] = 1
+    for t in range(1, n + 1):
+        v[t] += (1 - rho) + rho * v[t - 1]
+    return v[1:]
+
