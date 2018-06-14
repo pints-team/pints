@@ -403,82 +403,94 @@ class Optimisation(object):
         # Start searching
         timer = pints.Timer()
         running = True
-        while running:
-            # Get points
-            xs = self._optimiser.ask()
+        try:
+            while running:
+                # Get points
+                xs = self._optimiser.ask()
 
-            # Calculate scores
-            fs = evaluator.evaluate(xs)
+                # Calculate scores
+                fs = evaluator.evaluate(xs)
 
-            # Perform iteration
-            self._optimiser.tell(fs)
+                # Perform iteration
+                self._optimiser.tell(fs)
 
-            # Check if new best found
-            fnew = self._optimiser.fbest()
-            if fnew < fbest:
-                # Check if this counts as a significant change
-                if np.abs(fnew - fbest) < self._min_significant_change:
+                # Check if new best found
+                fnew = self._optimiser.fbest()
+                if fnew < fbest:
+                    # Check if this counts as a significant change
+                    if np.abs(fnew - fbest) < self._min_significant_change:
+                        unchanged_iterations += 1
+                    else:
+                        unchanged_iterations = 0
+
+                    # Update best
+                    fbest = fnew
+
+                    # Update user value of fbest
+                    fbest_user = fbest if self._minimising else -fbest
+                else:
                     unchanged_iterations += 1
-                else:
-                    unchanged_iterations = 0
 
-                # Update best
-                fbest = fnew
+                # Update evaluation count
+                evaluations += len(fs)
 
-                # Update user value of fbest
-                fbest_user = fbest if self._minimising else -fbest
-            else:
-                unchanged_iterations += 1
+                # Show progress
+                if logging and iteration >= next_message:
+                    # Log state
+                    logger.log(iteration, evaluations, fbest_user)
+                    self._optimiser._log_write(logger)
+                    logger.log(timer.time())
 
-            # Update evaluation count
-            evaluations += len(fs)
+                    # Choose next logging point
+                    if iteration < message_warm_up:
+                        next_message = iteration + 1
+                    else:
+                        next_message = message_interval * (
+                            1 + iteration // message_interval)
 
-            # Show progress
-            if logging and iteration >= next_message:
-                # Log state
-                logger.log(iteration, evaluations, fbest_user)
-                self._optimiser._log_write(logger)
-                logger.log(timer.time())
+                # Update iteration count
+                iteration += 1
 
-                # Choose next logging point
-                if iteration < message_warm_up:
-                    next_message = iteration + 1
-                else:
-                    next_message = message_interval * (
-                        1 + iteration // message_interval)
+                #
+                # Check stopping criteria
+                #
 
-            # Update iteration count
-            iteration += 1
+                # Maximum number of iterations
+                if (self._max_iterations is not None and
+                        iteration >= self._max_iterations):
+                    running = False
+                    halt_message = ('Halting: Maximum number of iterations ('
+                                    + str(iteration) + ') reached.')
 
-            #
-            # Check stopping criteria
-            #
+                # Maximum number of iterations without significant change
+                if (self._max_unchanged_iterations is not None and
+                        unchanged_iterations >= self._max_unchanged_iterations):
+                    running = False
+                    halt_message = ('Halting: No significant change for '
+                                    + str(unchanged_iterations) + ' iterations.')
 
-            # Maximum number of iterations
-            if (self._max_iterations is not None and
-                    iteration >= self._max_iterations):
-                running = False
-                halt_message = ('Halting: Maximum number of iterations ('
-                                + str(iteration) + ') reached.')
+                # Threshold value
+                if self._threshold is not None and fbest < self._threshold:
+                    running = False
+                    halt_message = ('Halting: Objective function crossed'
+                                    ' threshold: ' + str(self._threshold) + '.')
 
-            # Maximum number of iterations without significant change
-            if (self._max_unchanged_iterations is not None and
-                    unchanged_iterations >= self._max_unchanged_iterations):
-                running = False
-                halt_message = ('Halting: No significant change for '
-                                + str(unchanged_iterations) + ' iterations.')
-
-            # Threshold value
-            if self._threshold is not None and fbest < self._threshold:
-                running = False
-                halt_message = ('Halting: Objective function crossed'
-                                ' threshold: ' + str(self._threshold) + '.')
-
-            # Error in optimiser
-            error = self._optimiser.stop()
-            if error:
-                running = False
-                halt_message = ('Halting: ' + str(error))
+                # Error in optimiser
+                error = self._optimiser.stop()
+                if error:
+                    running = False
+                    halt_message = ('Halting: ' + str(error))
+        except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
+            # Unexpected end!
+            # Show last result and exit
+            print('\n' + '-' * 40)
+            print('Unexpected termination.')
+            print('Current best score: ' + str(fbest))
+            print('Current best position:')
+            for p in self._optimiser.xbest():
+                print(pints.strfloat(p))
+            print('-' * 40)
+            raise
 
         # Log final values and show halt message
         if logging:
