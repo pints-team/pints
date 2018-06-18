@@ -23,7 +23,7 @@ If your model implements these methods - [or you can write a wrapper class that 
 
 ### Examples and documentation
 
-Pints comes with a number of [detailed examples](examples/EXAMPLES.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
+Pints comes with a number of [detailed examples](examples/README.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
 
 ## How can I install Pints?
 
