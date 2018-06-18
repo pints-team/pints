@@ -1,7 +1,7 @@
 .. Root of all pints docs
 
 .. _GitHub: https://github.com/martinjrobins/pints
-.. _Detailed examples: https://github.com/martinjrobins/pints/blob/master/examples/EXAMPLES.md
+.. _Detailed examples: https://github.com/martinjrobins/pints/blob/master/examples/README.md
 
 Welcome to the pints documentation
 ==================================
