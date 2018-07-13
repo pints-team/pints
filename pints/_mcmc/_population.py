@@ -55,10 +55,11 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Set initial state
         self._running = False
 
-        # Current points, and the log pdfs of those points (_not_ the tempered
-        # versions!)
+        # Current points, the log_likelihood (_not_ the tempered
+        # version!) and log_prior of those points 
         self._current = None
-        self._current_log_pdfs = None
+        self._current_log_prior = None
+        self._current_log_likelihood = None
 
         # Single proposed point
         self._proposed = None
@@ -129,7 +130,9 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Propose initial point
         self._current = None
-        self._current_log_pdfs = None
+        self._current_log_prior = None
+        self._current_log_likelihood = None
+        
         self._proposed = self._x0
 
         # Next chain to update
@@ -203,7 +206,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
             if schedule < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            self._schedule = np.linspace(0, 0.95, schedule)
+            self._schedule = np.linspace(0,1,schedule)**5 #np.linspace(0, 0.95, schedule)
             self._schedule.setflags(write=False)
 
         else:
@@ -233,38 +236,49 @@ class PopulationMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
 
         # Ensure fx is a float
-        fx = float(fx)
-
+        fx = [float(fx[i]) for i in xrange(2)]
+        n = len(self._chains)
+        
         # First point?
         if self._current is None:
             # Pass to inner chains (ignore returned x0)
             for chain in self._chains:
-                chain.tell(fx)
+                chain.tell(fx[0]+fx[1])
 
             # Always accept
-            n = len(self._chains)
+            
             self._current = np.array([self._x0] * n)
 
             # Store untempered logpdfs
-            self._current_log_pdfs = np.array([fx] * n)
+            self._current_log_likelihood = np.array([fx[0]] * n)
+            self._current_log_prior = np.array([fx[1]] * n)
 
             # Clear proposal
             self._proposed = None
 
-            # Return first point for chain 0
-            sample = np.array(self._current[0], copy=False)
+            # Return first point for last chain at temperature 1
+            sample = np.array(self._current[n-1], copy=False)
             sample.setflags(write=False)
-            return sample
+
+            # Return posterior pdf for all chains
+            tempered_log_pdf = np.array([self._chains[i]._current_log_pdf for i in xrange(len(self._chains))], copy=False)
+            tempered_log_pdf.setflags(write=False)
+
+            joint_samples = np.concatenate((sample, tempered_log_pdf))
+            joint_samples.setflags(write=False)
+
+            return joint_samples
 
         # Perform mutation step (update one chain)
 
         # Update chain, get new sample
-        sample = self._chains[self._i].tell(fx * (1 - self._schedule[self._i]))
+        sample = self._chains[self._i].tell(fx[0] * self._schedule[self._i] + fx[1])
 
         # Update current sample and untempered log pdf
         if np.any(sample != self._current[self._i]):
             self._current[self._i] = sample
-            self._current_log_pdfs[self._i] = fx
+            self._current_log_likelihood[self._i] = fx[0]
+            self._current_log_prior[self._i] = fx[1]
 
         # Clear proposal
         self._proposed = None
@@ -272,12 +286,11 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform exchange step
 
         # Calculate current tempered likelihoods
-        pii = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._i]
-        pjj = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._j]
-
+        pii = (self._schedule[self._i] * self._current_log_likelihood[self._i]) + self._current_log_prior[self._i]
+        pjj = (self._schedule[self._j] * self._current_log_likelihood[self._j]) + self._current_log_prior[self._j]
         # Calculate proposed log likelihoods
-        pij = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._j]
-        pji = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._i]
+        pij = (self._schedule[self._i] * self._current_log_likelihood[self._j]) + self._current_log_prior[self._j]
+        pji = (self._schedule[self._j] * self._current_log_likelihood[self._i]) + self._current_log_prior[self._i]
 
         # Accept/reject exchange step
         self._have_exchanged = False
@@ -285,13 +298,23 @@ class PopulationMCMC(pints.SingleChainMCMC):
             u = np.log(np.random.uniform(0, 1))
             if u < pij + pji - (pii + pjj):
                 self._chains[self._i].replace(self._current[self._j], pij)
-                self._chains[self._j].replace(self._current[self._j], pji)
+                self._chains[self._j].replace(self._current[self._i], pji)
                 self._have_exchanged = True
 
-        # Return new point for chain 0
-        sample = np.array(self._current[0], copy=False)
+        # Return new point for last chain, at temperature 1
+        sample = np.array(self._current[n-1], copy=False)
         sample.setflags(write=False)
-        return sample
+
+        # Return posterior pdf for all chains for Bayes Factor calculation
+        
+        tempered_log_pdf = np.array([self._chains[i]._current_log_pdf for i in xrange(n)], copy=False)
+        tempered_log_pdf.setflags(write=False)
+
+        joint_samples = np.concatenate((sample, tempered_log_pdf))
+        joint_samples.setflags(write=False)
+
+        return joint_samples
+
 
     def temperature_schedule(self):
         """

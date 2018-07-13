@@ -435,9 +435,19 @@ class MCMCController(object):
         if self._parallel:
             # Use at most n_workers workers
             n_workers = min(self._n_workers, self._chains)
-            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
+            if self._samplers[0].name() == 'Population MCMC':
+                evaluator_lik = pints.ParallelEvaluator(
+                    f._log_likelihood, n_workers=n_workers)
+                evaluator_prior = pints.ParallelEvaluator(
+                    f._log_prior, n_workers=n_workers)
+            else:
+                evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(f)
+            if self._samplers[0].name() == 'Population MCMC':
+                evaluator_lik = pints.SequentialEvaluator(f._log_likelihood)
+                evaluator_prior = pints.SequentialEvaluator(f._log_prior)
+            else:
+                evaluator = pints.SequentialEvaluator(f)
 
         # Initial phase
         if self._needs_initial_phase:
@@ -545,31 +555,49 @@ class MCMCController(object):
                 xs = self._samplers[0].ask()
 
             # Calculate logpdfs
-            fxs = evaluator.evaluate(xs)
+            if self._samplers[0].name() == 'Population MCMC':
+                fxs_lik = evaluator_lik.evaluate(xs)
+                fxs_prior = evaluator_prior.evaluate(xs)
+                fxs = list([fxs_lik,fxs_prior])
+            else:
+                fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
             evaluations += len(fxs)
 
             # Update chains
-            intermediate_step = False
-            if self._single_chain:
-                samples = np.array([
-                    s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
-
-                none_found = [x is None for x in samples]
-                if any(none_found):
-                    assert(all(none_found))     # Can't mix None w. samples
-                    intermediate_step = True
+            # TODO Intermediate step, none-checking
+            # intermediate_step = False
+            #if self._single_chain:
+            #    samples = np.array([
+            #        s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+            #
+            #    none_found = [x is None for x in samples]
+            #    if any(none_found):
+            #        assert(all(none_found))     # Can't mix None w. samples
+            #        intermediate_step = True
+            # else:
+            #    samples = self._samplers[0].tell(fxs)
+            #    intermediate_step = samples is None
+            if self._samplers[0].name() == 'Population MCMC':
+                if self._single_chain:
+                    samples = np.array([s.tell([
+                         fxs[0][i],fxs[1][i]]) for i, s in enumerate(self._samplers)])
+                else:
+                    samples = self._samplers[0].tell([fxs[0],fxs[1]])
             else:
-                samples = self._samplers[0].tell(fxs)
-                intermediate_step = samples is None
+                if self._single_chain:
+                    samples = np.array([
+                        s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+                else:
+                    samples = self._samplers[0].tell(fxs)
 
             # If no new samples were added, then no MCMC iteration was
             # performed, and so the iteration count shouldn't be updated,
             # logging shouldn't be triggered, and stopping criteria shouldn't
             # be checked
-            if intermediate_step:
-                continue
+            #if intermediate_step:
+            #    continue
 
             # Add new samples to the chains
             chains.append(samples)
