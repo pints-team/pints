@@ -44,6 +44,7 @@ class TestMCMCSampling(unittest.TestCase):
     """
     Tests the MCMCSampling class.
     """
+
     def __init__(self, name):
         super(TestMCMCSampling, self).__init__(name)
 
@@ -90,6 +91,7 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
+        self.assertEqual(len(mcmc.samplers()), nchains)
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
@@ -177,6 +179,7 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, nchains, xs,
             method=pints.DifferentialEvolutionMCMC)
+        self.assertEqual(len(mcmc.samplers()), 1)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
