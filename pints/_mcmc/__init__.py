@@ -18,6 +18,7 @@ class MCMCSampler(pints.Loggable):
 
     All MCMC samplers implement the :class:`pints.Loggable` interface.
     """
+
     def name(self):
         """
         Returns this method's full name.
@@ -41,6 +42,7 @@ class SingleChainMCMC(MCMCSampler):
         covariance of the distribution to estimate, around ``x0``.
 
     """
+
     def __init__(self, x0, sigma0=None):
 
         # Check initial position
@@ -104,6 +106,7 @@ class SingleChainAdaptiveMCMC(SingleChainMCMC):
         of the distribution to estimate, around ``x0``.
 
     """
+
     def __init__(self, x0, sigma0=None):
         super(SingleChainAdaptiveMCMC, self).__init__(x0, sigma0)
 
@@ -155,6 +158,7 @@ class MultiChainMCMC(MCMCSampler):
         ``diag(sigma0)`` will be used.
 
     """
+
     def __init__(self, chains, x0, sigma0=None):
 
         # Check number of chains
@@ -238,6 +242,7 @@ class MCMCSampling(object):
         :class:`AdaptiveCovarianceMCMC` is used.
 
     """
+
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
 
         # Store function
@@ -308,7 +313,15 @@ class MCMCSampling(object):
         self._max_iterations = None
         self.set_max_iterations()
 
-        #TODO: Add more stopping criteria
+        # TODO: Add more stopping criteria
+
+    def samplers(self):
+        """
+        Returns the underlying array of samplers. The length of the array will
+        either be the number of chains, or one for samplers that sample
+        multiple chains
+        """
+        return self._samplers
 
     def adaptation_free_iterations(self):
         """
@@ -388,9 +401,9 @@ class MCMCSampling(object):
             logger.add_time('Time m:s')
 
         # Create chains
-        #TODO Pre-allocate?
-        #TODO Thinning
-        #TODO Advanced logging
+        # TODO Pre-allocate?
+        # TODO Thinning
+        # TODO Advanced logging
         chains = []
 
         # Start sampling
@@ -446,7 +459,7 @@ class MCMCSampling(object):
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
 
-            #TODO Add more stopping criteria
+            # TODO Add more stopping criteria
 
             #
             # Adaptive methods
