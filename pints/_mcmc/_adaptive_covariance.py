@@ -194,7 +194,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         self._current = x
         self._current_log_pdf = fx
 
-    def set_target_acceptance_rate(self, rate=0.3):
+    def set_target_acceptance_rate(self, rate=0.234):
         """
         Sets the target acceptance rate.
         """
