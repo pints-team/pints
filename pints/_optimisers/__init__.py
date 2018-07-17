@@ -205,14 +205,14 @@ class PopulationBasedOptimiser(Optimiser):
         raise NotImplementedError
 
     def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters(). """
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 1
 
     def set_hyper_parameters(self, x):
         """
         Hyper-parameter vector is [population_size]
 
-        See :meth:`TunableMethod.set_hyper_parameters().
+        See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_population_size(x[0])
 
