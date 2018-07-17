@@ -25,6 +25,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and
     Teller, E. (1953) The journal of chemical physics, 21(6), pp.1087-1092
     """
+
     def __init__(self, x0, sigma0=None):
         super(MetropolisRandomWalkMCMC, self).__init__(x0, sigma0)
 
@@ -164,4 +165,3 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         # Store
         self._current = x
         self._current_log_pdf = fx
-

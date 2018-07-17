@@ -196,14 +196,14 @@ class PSO(pints.PopulationBasedOptimiser):
         self._agmax = _amax - self._almax
 
     def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters(). """
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 2
 
     def set_hyper_parameters(self, x):
         """
         Hyper-parameter vector is [population_size, local_global_balance]
 
-        See :meth:`TunableMethod.set_hyper_parameters().
+        See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_population_size(x[0])
         self.set_local_global_balance(x[1])

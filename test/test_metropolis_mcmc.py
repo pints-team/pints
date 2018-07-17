@@ -19,6 +19,7 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
     """
     Tests the basic methods of the metropolis random walk MCMC routine.
     """
+
     def __init__(self, name):
         super(TestMetropolisRandomWalkMCMC, self).__init__(name)
 
@@ -74,7 +75,7 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
         self.assertEqual(rate.shape[0], 100)
 
-        #TODO: Add more stringent tests!
+        # TODO: Add more stringent tests!
 
     def test_replace(self):
 
@@ -121,6 +122,17 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         mcmc = pints.MetropolisRandomWalkMCMC(x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+
+    def test_set_hyper_parameters(self):
+        """
+        Tests the hyper-parameter interface for this optimiser.
+        """
+        x0 = self.real_parameters
+        mcmc = pints.MetropolisRandomWalkMCMC(x0)
+
+        self.assertEqual(mcmc.n_hyper_parameters(), 0)
+
+        mcmc.set_hyper_parameters([])
 
 
 if __name__ == '__main__':

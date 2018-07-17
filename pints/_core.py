@@ -354,7 +354,7 @@ class TunableMethod(object):
         """
         Returns the number of hyper-parameters for this method.
         """
-        raise NotImplementedError
+        return 0
 
     def set_hyper_parameters(self, x):
         """
@@ -365,4 +365,4 @@ class TunableMethod(object):
         ``x`` an array of length `n_hyper_parameters` used to set the
               hyper-parameters
         """
-        raise NotImplementedError
+        pass

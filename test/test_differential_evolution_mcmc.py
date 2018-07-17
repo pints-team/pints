@@ -19,6 +19,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
     """
     Tests the basic methods of the differential evolution MCMC method.
     """
+
     def __init__(self, name):
         super(TestDifferentialEvolutionMCMC, self).__init__(name)
 
@@ -75,7 +76,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
         self.assertEqual(chains.shape[2], len(xs[0]))
-        #TODO: Add more stringent tests
+        # TODO: Add more stringent tests
 
     def test_flow(self):
 
@@ -116,6 +117,26 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+
+    def test_set_hyper_parameters(self):
+        """
+        Tests the hyper-parameter interface for this optimiser.
+        """
+        n = 3
+        x0 = [self.real_parameters] * n
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+
+        mcmc.set_hyper_parameters([0.5, 0.6])
+        self.assertEqual(mcmc._gamma, 0.5)
+        self.assertEqual(mcmc._b, 0.6)
+
+        self.assertRaisesRegexp(
+            ValueError, 'non-negative', mcmc.set_hyper_parameters, [-1, 0.5])
+
+        self.assertRaisesRegexp(
+            ValueError, 'non-negative', mcmc.set_hyper_parameters, [1, -0.5])
 
 
 if __name__ == '__main__':
