@@ -43,6 +43,7 @@ FLOAT_FORMAT = '{: .17e}'
 #
 from ._core import ForwardModel, ForwardModelS1
 from ._core import ToyModel
+from ._core import TunableMethod
 from ._core import SingleOutputProblem, MultiOutputProblem
 
 #

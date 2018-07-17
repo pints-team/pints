@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class Optimiser(pints.Loggable):
+class Optimiser(pints.Loggable, pints.TunableMethod):
     """
     Base class for optimisers implementing an ask-and-tell interface.
 
@@ -31,8 +31,10 @@ class Optimiser(pints.Loggable):
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
 
-    All optimisers implement the :class:`pints.Loggable` interface.
+    All optimisers implement the :class:`pints.Loggable` and
+    :class:`pints.TunableMethod` interfaces.
     """
+
     def __init__(self, x0, sigma0=None, boundaries=None):
 
         # Get dimension
@@ -140,6 +142,7 @@ class PopulationBasedOptimiser(Optimiser):
     Base class for optimisers that work by moving multiple points through the
     search space.
     """
+
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(PopulationBasedOptimiser, self).__init__(x0, sigma0, boundaries)
 
@@ -201,6 +204,18 @@ class PopulationBasedOptimiser(Optimiser):
         """
         raise NotImplementedError
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters(). """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        Hyper-parameter vector is [population_size]
+
+        See :meth:`TunableMethod.set_hyper_parameters().
+        """
+        self.set_population_size(x[0])
+
 
 class Optimisation(object):
     """
@@ -229,6 +244,7 @@ class Optimisation(object):
         If no method is specified, :class:`CMAES` is used.
 
     """
+
     def __init__(
             self, function, x0, sigma0=None, boundaries=None, method=None):
 
@@ -659,6 +675,7 @@ class TriangleWaveTransform(object):
     a scattered population, with different particles exploring different mirror
     images. Other strategies should be used for such problems.
     """
+
     def __init__(self, boundaries):
         self._lower = boundaries.lower()
         self._upper = boundaries.upper()
@@ -885,4 +902,3 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
 
     # Run and return
     return opt.run()
-

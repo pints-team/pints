@@ -49,6 +49,7 @@ class TestPSO(unittest.TestCase):
     """
     Tests the basic methods of the PSO optimiser.
     """
+
     def __init__(self, name):
         super(TestPSO, self).__init__(name)
 
@@ -337,6 +338,27 @@ class TestPSO(unittest.TestCase):
         # Test changing during run
         m.ask()
         self.assertRaises(Exception, m.set_population_size, 2)
+
+    def test_set_hyper_parameters(self):
+        """
+        Tests the hyper-parameter interface for this optimiser.
+        """
+        r = pints.toy.RosenbrockError(1, 100)
+        x0 = np.array([1.1, 1.1])
+        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
+        m = opt.optimiser()
+        self.assertEqual(m.n_hyper_parameters(), 2)
+        n = m.population_size()
+
+        m.set_hyper_parameters([n + 1, 0.5])
+        self.assertEqual(m.population_size(), n + 1)
+
+        # Test invalid size
+        self.assertRaisesRegexp(
+            ValueError, 'at least 1', m.set_hyper_parameters, [0, 0.5])
+        self.assertRaisesRegexp(
+            ValueError, 'in the range 0-1', m.set_hyper_parameters, [n, 1.5])
 
 
 if __name__ == '__main__':

@@ -341,3 +341,28 @@ class MultiOutputProblem(object):
         points and ``n_outputs`` is the number of outputs.
         """
         return self._values
+
+
+class TunableMethod(object):
+
+    """
+    Defines an interface for a numerical method with a given number of
+    hyper-parameters.
+    """
+
+    def n_hyper_parameters(self):
+        """
+        Returns the number of hyper-parameters for this method.
+        """
+        raise NotImplementedError
+
+    def set_hyper_parameters(self, x):
+        """
+        Sets the hyper-parameters for the method.
+
+        Arguments:
+
+        ``x`` an array of length `n_hyper_parameters` used to set the
+              hyper-parameters
+        """
+        raise NotImplementedError

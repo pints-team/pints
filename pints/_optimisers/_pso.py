@@ -74,6 +74,7 @@ class PSO(pints.PopulationBasedOptimiser):
     IEEE International Conference on Neural Networks
 
     """
+
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(PSO, self).__init__(x0, sigma0, boundaries)
 
@@ -194,6 +195,19 @@ class PSO(pints.PopulationBasedOptimiser):
         self._almax = r * _amax
         self._agmax = _amax - self._almax
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters(). """
+        return 2
+
+    def set_hyper_parameters(self, x):
+        """
+        Hyper-parameter vector is [population_size, local_global_balance]
+
+        See :meth:`TunableMethod.set_hyper_parameters().
+        """
+        self.set_population_size(x[0])
+        self.set_local_global_balance(x[1])
+
     def _suggested_population_size(self):
         """ See :meth:`Optimiser._suggested_population_size(). """
         return 4 + int(3 * np.log(self._dimension))
@@ -245,4 +259,3 @@ class PSO(pints.PopulationBasedOptimiser):
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
         return np.array(self._pg, copy=True)
-
