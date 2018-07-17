@@ -29,6 +29,7 @@ class CMAES(pints.PopulationBasedOptimiser):
     (CMA-ES).
 
     """
+
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(CMAES, self).__init__(x0, sigma0, boundaries)
 
@@ -168,4 +169,3 @@ class CMAES(pints.PopulationBasedOptimiser):
         """ See :meth:`Optimiser.xbest()`. """
         x = self._es.result.xbest
         return self._x0 if x is None else x
-
