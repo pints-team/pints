@@ -37,6 +37,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     Differential Evolution: easy Bayesian computing for real parameter spaces"
     Cajo J. F. Ter Braak (2006) Statistical Computing
     """
+
     def __init__(self, chains, x0, sigma0=None):
         super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)
 
@@ -98,7 +99,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._proposed = self._x0
 
         # Set mu
-        #TODO: Should this be a user setting?
+        # TODO: Should this be a user setting?
         self._mu = np.mean(self._x0, axis=0)
 
         # Update sampler state
@@ -176,9 +177,22 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('Gamma must be non-negative.')
         self._gamma = gamma
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
+    def set_hyper_parameters(self, x):
+        """
+        Hyper-parameter vector is [gamma, normal_scale_coefficient]
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_gamma(x[0])
+        self.set_normal_scale_coefficient(x[1])
+
 
 def r_draw(i, num_chains):
-    #TODO: Needs a docstring!
+    # TODO: Needs a docstring!
     r1, r2 = np.random.choice(num_chains, 2, replace=False)
     while(r1 == i or r2 == i or r1 == r2):
         r1, r2 = np.random.choice(num_chains, 2, replace=False)
