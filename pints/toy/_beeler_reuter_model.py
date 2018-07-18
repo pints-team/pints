@@ -1,5 +1,5 @@
 #
-# HES1 Michaelis-Menten model of regulatory dynamics.
+# Beeler-Reuter model for mammalian ventricular action potential
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -27,11 +27,13 @@ class ActionPotentialModel(pints.ForwardModel):
     Arguments:
 
     ``y0``
-        (Optional) The initial condition of the observables ``v``, ``cai`` and requires ``cai0 >= 0``.
+        (Optional) The initial condition of the observables ``v``, ``cai`` and
+        requires ``cai0 >= 0``.
     ``implicit_parameters``
-        (Optional) The implicit parameter of the model that is not inferred, given as a
-        vector ``[m0, h0, j0, d0, f0, x10, C_m, E_Na, I_Stim_amp, I_Stim_period, I_Stim_length]``, all
-        implicit parameters have to be greater than zero except ``E_Na``
+        (Optional) The implicit parameter of the model that is not inferred,
+        given as a vector ``[m0, h0, j0, d0, f0, x10, C_m, E_Na, I_Stim_amp,
+        I_Stim_period, I_Stim_length]``. All implicit parameters have to be
+        greater than zero except ``E_Na``.
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
@@ -64,36 +66,44 @@ class ActionPotentialModel(pints.ForwardModel):
         # INa
         INa = (gNaBar * m**3 * h * j + gNaC) * (V - self._E_Na)
         alpha = (V + 47) / (1 - np.exp(-0.1 * (V + 47)))
-        beta  = 40 * np.exp(-0.056 * (V + 72))
+        beta = 40 * np.exp(-0.056 * (V + 72))
         dmdt = alpha * (1 - m) - beta * m
         alpha = 0.126 * np.exp(-0.25 * (V + 77))
-        beta  = 1.7 / (1 + np.exp(-0.082 * (V + 22.5)))
+        beta = 1.7 / (1 + np.exp(-0.082 * (V + 22.5)))
         dhdt = alpha * (1 - h) - beta * h
-        alpha = 0.055 * np.exp(-0.25 * (V + 78)) / (1 + np.exp(-0.2 * (V + 78)))
-        beta  = 0.3 / (1 + np.exp(-0.1 * (V + 32)))
+        alpha = 0.055 * np.exp(-0.25 * (V + 78)) \
+            / (1 + np.exp(-0.2 * (V + 78)))
+        beta = 0.3 / (1 + np.exp(-0.1 * (V + 32)))
         djdt = alpha * (1 - j) - beta * j
         # ICa
         E_Ca = -82.3 - 13.0287 * np.log(Cai)
         ICa = gCaBar * d * f * (V - E_Ca)
-        alpha = 0.095 * np.exp(-0.01 * (V + -5)) / (np.exp(-0.072 * (V + -5)) + 1)
-        beta  = 0.07 * np.exp(-0.017 * (V + 44)) / (np.exp(0.05 * (V + 44)) + 1)
-        dddt =  alpha * (1 - d) - beta * d
-        alpha = 0.012 * np.exp(-0.008 * (V + 28)) / (np.exp(0.15 * (V + 28)) + 1)
-        beta  = 0.0065 * np.exp(-0.02 * (V + 30)) / (np.exp(-0.2 * (V + 30)) + 1)
+        alpha = 0.095 * np.exp(-0.01 * (V + -5)) \
+            / (np.exp(-0.072 * (V + -5)) + 1)
+        beta = 0.07 * np.exp(-0.017 * (V + 44)) \
+            / (np.exp(0.05 * (V + 44)) + 1)
+        dddt = alpha * (1 - d) - beta * d
+        alpha = 0.012 * np.exp(-0.008 * (V + 28)) \
+            / (np.exp(0.15 * (V + 28)) + 1)
+        beta = 0.0065 * np.exp(-0.02 * (V + 30)) \
+            / (np.exp(-0.2 * (V + 30)) + 1)
         dfdt = alpha * (1 - f) - beta * f
         # Cai
         dCaidt = -1e-7 * ICa + 0.07 * (1e-7 - Cai)
         # IK1
         IK1 = gK1Bar * (
-                4 * (np.exp(0.04 * (V + 85)) - 1)
-                / (np.exp(0.08 * (V + 53)) + np.exp(0.04 * (V + 53)))
-                + 0.2 * (V + 23)
-                / (1 - np.exp(-0.04 * (V + 23)))
-            )
+            4 * (np.exp(0.04 * (V + 85)) - 1)
+            / (np.exp(0.08 * (V + 53)) + np.exp(0.04 * (V + 53)))
+            + 0.2 * (V + 23)
+            / (1 - np.exp(-0.04 * (V + 23)))
+        )
         # IX1
-        Ix1 = gx1Bar * x1 * (np.exp(0.04 * (V + 77)) - 1) / np.exp(0.04 * (V + 35))
-        alpha = 0.0005 * np.exp(0.083 * (V + 50)) / (np.exp(0.057 * (V + 50)) + 1)
-        beta  = 0.0013 * np.exp(-0.06 * (V + 20)) / (np.exp(-0.04 * (V + 333)) + 1)
+        Ix1 = gx1Bar * x1 * (np.exp(0.04 * (V + 77)) - 1) \
+            / np.exp(0.04 * (V + 35))
+        alpha = 0.0005 * np.exp(0.083 * (V + 50)) \
+            / (np.exp(0.057 * (V + 50)) + 1)
+        beta = 0.0013 * np.exp(-0.06 * (V + 20)) \
+            / (np.exp(-0.04 * (V + 333)) + 1)
         dx1dt = alpha * (1 - x1) - beta * x1
         # I_Stim
         if (time % self._I_Stim_period) < self._I_Stim_length:
@@ -118,7 +128,8 @@ class ActionPotentialModel(pints.ForwardModel):
         Changes the initial conditions for this model.
         """
         if y0[1] < 0:
-            raise ValueError('Initial condition of ``cai`` cannot be negative.')
+            raise ValueError('Initial condition of ``cai`` cannot be'
+                             ' negative.')
         self._v0 = y0[0]
         self._cai0 = y0[1]
 
@@ -127,7 +138,8 @@ class ActionPotentialModel(pints.ForwardModel):
         Changes the implicit parameters for this model.
         """
         if not (k[:7] > 0).all() or not (k[8:] > 0).all():
-            raise ValueError('Implicit parameters cannot be negative except ``E_Na``.')
+            raise ValueError('Implicit parameters cannot be negative except'
+                             ' ``E_Na``.')
         # Initial condition for non-observable states
         self._m0 = k[0]
         self._h0 = k[1]
@@ -170,7 +182,7 @@ class ActionPotentialModel(pints.ForwardModel):
         solved_states = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length)
         # Only return the observable (V, Cai)
-        return solved_states[:, 0], solved_states[:, 1]
+        return solved_states[:, 0:2]
 
     def simulate_all_states(self, parameters, times):
         """
@@ -206,7 +218,7 @@ class ActionPotentialModel(pints.ForwardModel):
         Returns a suggested array of implicit parameter values.
         """
         # membrane capacitance, in uF/cm^2
-        C_m = 1.0 
+        C_m = 1.0
         # Nernst reversal potentials, in mV
         E_Na = 50.0
         # Stimulus current, in uA/cm^2
@@ -222,7 +234,6 @@ class ActionPotentialModel(pints.ForwardModel):
         x10 = 0.0004
         return np.array([m0, h0, j0, d0, f0, x10, C_m, E_Na, I_Stim_amp,
                          I_Stim_period, I_Stim_length])
-
 
     def suggested_times(self):
         """
