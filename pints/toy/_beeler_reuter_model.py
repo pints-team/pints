@@ -18,6 +18,19 @@ class ActionPotentialModel(pints.ForwardModel):
 
     The Beeler-Reuter model for mammalian ventricular action potential [1].
 
+    The action potential (cell's transmembrane voltage) model contains
+    multiple currents which their magnitude is determined by the maximum-
+    conductance while their shape is controlled by other parameters. In this
+    simplified (but not trivial) action potential toy model, we define the
+    maximum-conductance values of all the currents as the parameter of
+    interest, and assume all other parameters of the model are known and well-
+    defined. We also define the maximum-conductance values in logarithmic
+    scale.
+
+    The observables of this model are the transmembrane voltage (the action
+    potential itsefl) and the calcium concentration of the cell (also known as
+    the calcium transient).
+
     References:
 
     [1] Reconstruction of the action potential of ventricular myocardial
@@ -61,7 +74,7 @@ class ActionPotentialModel(pints.ForwardModel):
         """
         # Set-up
         V, Cai, m, h, j, d, f, x1 = states
-        gNaBar, gNaC, gCaBar, gK1Bar, gx1Bar = parameters
+        gNaBar, gNaC, gCaBar, gK1Bar, gx1Bar = np.exp(parameters)
         # Equations
         # INa
         INa = (gNaBar * m**3 * h * j + gNaC) * (V - self._E_Na)
@@ -211,7 +224,7 @@ class ActionPotentialModel(pints.ForwardModel):
         g_Ca = 0.09
         g_K1 = 0.35
         g_x1 = 0.8
-        return np.array([g_Na, g_NaC, g_Ca, g_K1, g_x1])
+        return np.log([g_Na, g_NaC, g_Ca, g_K1, g_x1])
 
     def suggested_implicit_parameters(self):
         """
