@@ -29,10 +29,10 @@ matrix:
           env:
             - PINTS_UNIT=true           
           if: type != cron
-        - python: "3.7"
-          env:
-            - PINT_UNIT=true
-          if: type != cron
+        #- python: "3.7"
+        #  env:
+        #    - PINT_UNIT=true
+        #  if: type != cron
         # Docs, style and cover checking, latest Python version only
         - python: "3.6"
           env:
