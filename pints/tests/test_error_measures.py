@@ -314,7 +314,6 @@ class TestErrorMeasures(unittest.TestCase):
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, 15)
 
-
     def test_sum_of_errors(self):
         e1 = pints.SumOfSquaresError(MiniProblem())
         e2 = pints.MeanSquaredError(MiniProblem())
