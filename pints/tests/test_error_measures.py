@@ -184,6 +184,15 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[0], -1)
         self.assertEqual(dex[1], -6)
 
+        # Test weighting input
+        e = pints.MeanSquaredError(p, weights=[1, 2])
+        self.assertRaises(ValueError, pints.MeanSquaredError, p, [1, 2, 3])
+        # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
+        # Error is (1+4)+(1+4)*2=15, divided by 6
+        self.assertEqual(e(x), 15 / 6)
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, 15 / 6)
+
     def test_probability_based_error(self):
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
@@ -295,6 +304,16 @@ class TestErrorMeasures(unittest.TestCase):
         # dex2 is: 2 * (0 - 3 - 6) * 2 = 2 * -9 * 2 = -36
         self.assertEqual(dex[0], -6)
         self.assertEqual(dex[1], -36)
+
+        # Test weighting
+        e = pints.SumOfSquaresError(p, weights=[1, 2])
+        self.assertRaises(ValueError, pints.SumOfSquaresError, p, [1, 2, 3])
+        # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
+        # Error is (1+4)+(1+4)*2=15
+        self.assertEqual(e(x), 15)
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, 15)
+
 
     def test_sum_of_errors(self):
         e1 = pints.SumOfSquaresError(MiniProblem())
