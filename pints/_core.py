@@ -348,6 +348,13 @@ class TunableMethod(object):
     """
     Defines an interface for a numerical method with a given number of
     hyper-parameters.
+
+    Each optimiser or sampler method implemented in pints has a number of
+    parameters which alters its behaviour, which can be called "hyper-parameters".
+    The optimiser/sampler method will provide member functions to set each
+    of these hyper-parameters individually. Alternatively, this interface provides
+    a generic way to set the hyper-parameters, which allows the user to, for example,
+    use an optimiser to tune the hyper-parameters of the method.
     """
 
     def n_hyper_parameters(self):
@@ -358,7 +365,7 @@ class TunableMethod(object):
 
     def set_hyper_parameters(self, x):
         """
-        Sets the hyper-parameters for the method.
+        Sets the hyper-parameters for the method with the given vector of values.
 
         Arguments:
 
