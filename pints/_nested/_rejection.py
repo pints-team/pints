@@ -12,7 +12,6 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 from scipy.misc import logsumexp
-from pints._nested import reject_sample_prior
 
 
 class NestedRejectionSampler(pints.NestedSampler):
@@ -98,7 +97,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         # log marginal likelihood holder
         v_log_Z = np.zeros(self._iterations + 1)
 
-        # run iter
+        # Run
         for i in range(0, self._iterations):
             a_running_log_likelihood = np.min(m_active[:, d])
             a_min_index = np.argmin(m_active[:, d])
@@ -106,10 +105,17 @@ class NestedRejectionSampler(pints.NestedSampler):
             w[i] = X[i] - X[i + 1]
             v_log_Z[i] = a_running_log_likelihood
             m_inactive[i, :] = m_active[a_min_index, :]
-            m_active[a_min_index, :] = reject_sample_prior(
-                a_running_log_likelihood,
-                self._log_likelihood,
-                self._log_prior)
+
+            # Independently samples params from the prior until
+            # log_likelihood(params) > threshold.
+            #TODO: Count evals of prior and of likelihood
+            proposed = self._log_prior.sample()[0]
+            while self._log_likelihood(proposed) < a_running_log_likelihood:
+                proposed = self._log_prior.sample()[0]
+            #TODO: Optimise out this extra eval of likelihood
+            m_active[a_min_index, :] = np.concatenate(
+                (proposed, np.array([log_likelihood(proposed)])))
+
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(

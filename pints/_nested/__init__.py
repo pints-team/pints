@@ -40,8 +40,10 @@ class NestedSampler(object):
         # Get dimension
         self._dimension = self._log_likelihood.n_parameters()
 
-        # Print info to console
-        self._verbose = True
+        # Logging
+        self._log_to_screen = True
+        self._log_filename = None
+        self._log_csv = False
 
     def run(self):
         """
@@ -50,27 +52,25 @@ class NestedSampler(object):
         """
         raise NotImplementedError
 
-    def set_verbose(self, value):
+    def set_log_to_file(self, filename=None, csv=False):
         """
-        Enables or disables verbose mode for this nested sampling routine. In
-        verbose mode, lots of output is generated during a run.
-        """
-        self._verbose = bool(value)
+        Enables logging to file when a filename is passed in, disables it if
+        ``filename`` is ``False`` or ``None``.
 
-    def verbose(self):
+        The argument ``csv`` can be set to ``True`` to write the file in comma
+        separated value (CSV) format. By default, the file contents will be
+        similar to the output on screen.
         """
-        Returns ``True`` if the nested sampling routine is set to run in
-        verbose mode.
+        if filename:
+            self._log_filename = str(filename)
+            self._log_csv = True if csv else False
+        else:
+            self._log_filename = None
+            self._log_csv = False
+
+    def set_log_to_screen(self, enabled):
         """
-        return self._verbose
+        Enables or disables logging to screen.
+        """
+        self._log_to_screen = True if enabled else False
 
-
-def reject_sample_prior(threshold, log_likelihood, log_prior):
-    """
-    Independently samples params from the prior until
-    ``log_likelihood(params) > threshold``.
-    """
-    proposed = log_prior.sample()[0]
-    while log_likelihood(proposed) < threshold:
-        proposed = log_prior.sample()[0]
-    return np.concatenate((proposed, np.array([log_likelihood(proposed)])))
