@@ -183,7 +183,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        Hyper-parameter vector is [gamma, normal_scale_coefficient]
+        The hyper-parameter vector is [gamma, normal_scale_coefficient]
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
