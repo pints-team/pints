@@ -86,6 +86,11 @@ class TestSNES(unittest.TestCase):
         self.assertRaisesRegex(
             Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
 
+    def test_name(self):
+        """ Test the name() method. """
+        opt = pints.SNES(np.array([0, 1.01]))
+        self.assertIn('SNES', opt.name())
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

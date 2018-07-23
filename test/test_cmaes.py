@@ -136,6 +136,11 @@ class TestCMAES(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'at least 1', m.set_hyper_parameters, [0])
 
+    def test_name(self):
+        """ Test the name() method. """
+        opt = pints.CMAES(np.array([0, 1.01]))
+        self.assertIn('CMA-ES', opt.name())
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

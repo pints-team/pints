@@ -234,6 +234,11 @@ class TestPSO(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'in the range 0-1', m.set_hyper_parameters, [n, 1.5])
 
+    def test_name(self):
+        """ Test the name() method. """
+        opt = pints.PSO(np.array([0, 1.01]))
+        self.assertIn('PSO', opt.name())
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
