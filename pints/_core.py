@@ -360,18 +360,19 @@ class TunableMethod(object):
 
     def n_hyper_parameters(self):
         """
-        Returns the number of hyper-parameters for this method.
+        Returns the number of hyper-parameters for this method (see
+        :class:`TunableMethod`).
         """
         return 0
 
     def set_hyper_parameters(self, x):
         """
         Sets the hyper-parameters for the method with the given vector of
-        values.
+        values (see :class:`TunableMethod`).
 
         Arguments:
 
-        ``x`` an array of length `n_hyper_parameters` used to set the
+        ``x`` an array of length ``n_hyper_parameters`` used to set the
               hyper-parameters
         """
         pass
