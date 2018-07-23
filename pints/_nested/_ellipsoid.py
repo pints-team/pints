@@ -300,9 +300,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             u = new_u
         c = np.dot(u, points)
         A = la.inv(
-                + np.dot(np.dot(points.T, np.diag(u)), points)
-                - np.multiply.outer(c, c)
-            ) / d
+            + np.dot(np.dot(points.T, np.diag(u)), points)
+            - np.multiply.outer(c, c)
+        ) / d
         return A, c
 
     def _reject_sample_prior(self, threshold):
