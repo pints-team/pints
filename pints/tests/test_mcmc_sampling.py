@@ -211,27 +211,20 @@ class TestMCMCSampling(unittest.TestCase):
         pints.MCMCSampling(self.log_prior, nchains, xs, method=meth)
         pints.MCMCSampling(self.log_likelihood, nchains, xs, method=meth)
 
-        def f(x):
-            return x
-        self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCSampling, f, nchains,
-            xs, method=meth)
-
         # Test x0 and chain argument
         self.assertRaisesRegex(
-            ValueError, 'chains must be at least 1',
-            pints.MCMCSampling, self.log_posterior, 0, [], method=meth)
+            ValueError, 'chains must be at least 1', meth, 0, [])
+        self.assertRaisesRegex(
+            ValueError, 'at least 3',
+            meth, 1, [x0])
         self.assertRaisesRegex(
             ValueError, 'positions must be equal to number of chains',
-            pints.MCMCSampling, self.log_posterior, 1, x0, method=meth)
-        self.assertRaisesRegex(
-            ValueError, 'positions must be equal to number of chains',
-            pints.MCMCSampling, self.log_posterior, 2, xs, method=meth)
+            meth, 5, xs)
         self.assertRaisesRegex(
             ValueError, 'same dimension',
-            pints.MCMCSampling, self.log_posterior, 1, [x0[:-1]], method=meth)
+            meth, 3, [x0, x0, x0[:-1]])
 
-        # Check different sigma0 initialisations
+        # Check different sigma0 initialisations work
         pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCSampling(
