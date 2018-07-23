@@ -45,37 +45,38 @@ class TestMCMCSampling(unittest.TestCase):
     Tests the MCMCSampling class.
     """
 
-    def __init__(self, name):
-        super(TestMCMCSampling, self).__init__(name)
+    @classmethod
+    def setUpClass(cls):
+        """ Prepare problem for tests. """
 
         # Create toy model
         model = pints.toy.LogisticModel()
-        self.real_parameters = [0.015, 500]
+        cls.real_parameters = [0.015, 500]
         times = np.linspace(0, 1000, 1000)
-        values = model.simulate(self.real_parameters, times)
+        values = model.simulate(cls.real_parameters, times)
 
         # Add noise
         np.random.seed(1)
-        self.noise = 10
-        values += np.random.normal(0, self.noise, values.shape)
-        self.real_parameters.append(self.noise)
+        cls.noise = 10
+        values += np.random.normal(0, cls.noise, values.shape)
+        cls.real_parameters.append(cls.noise)
 
         # Create an object with links to the model and time series
         problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior = pints.UniformLogPrior(
-            [0.01, 400, self.noise * 0.1],
-            [0.02, 600, self.noise * 100]
+        cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400, cls.noise * 0.1],
+            [0.02, 600, cls.noise * 100]
         )
 
         # Create a log-likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior = pints.LogPosterior(
-            self.log_likelihood, self.log_prior)
+        cls.log_posterior = pints.LogPosterior(
+            cls.log_likelihood, cls.log_prior)
 
     def test_single(self):
         """ Test with a SingleChainMCMC method. """
