@@ -149,7 +149,7 @@ class NestedRejectionSampler(pints.NestedSampler):
 
             # Update log
             if logging:
-                self.logger.log(i, self._n_evals, timer.time())
+                logger.log(i, self._n_evals, timer.time())
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(
