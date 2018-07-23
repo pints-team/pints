@@ -132,7 +132,6 @@ class TestMCMCSampling(unittest.TestCase):
             ValueError, 'extend pints.MCMCSampler',
             pints.MCMCSampling, self.log_posterior, 1, xs, method=12)
 
-
         # Check different sigma0 initialisations
         pints.MCMCSampling(self.log_posterior, nchains, xs)
         sigma0 = [0.005, 100, 0.5 * self.noise]
@@ -185,19 +184,20 @@ class TestMCMCSampling(unittest.TestCase):
 
     def test_multi(self):
 
-        # 10 chains
+        # Set up problem for 10 chains
+        x0 = np.array(self.real_parameters)
         xs = []
         for i in range(10):
             f = 0.9 + 0.2 * np.random.rand()
-            xs.append(np.array(self.real_parameters) * f)
+            xs.append(x0 * f)
         nchains = len(xs)
         nparameters = len(xs[0])
         niterations = 20
 
         # Test with multi-chain method
+        meth = pints.DifferentialEvolutionMCMC
         mcmc = pints.MCMCSampling(
-            self.log_posterior, nchains, xs,
-            method=pints.DifferentialEvolutionMCMC)
+            self.log_posterior, nchains, xs, method=meth)
         self.assertEqual(len(mcmc.samplers()), 1)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
@@ -206,7 +206,56 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
 
+        # Check constructor arguments
+        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
+        pints.MCMCSampling(self.log_prior, nchains, xs, method=meth)
+        pints.MCMCSampling(self.log_likelihood, nchains, xs, method=meth)
+
+        def f(x):
+            return x
+        self.assertRaisesRegex(
+            ValueError, 'extend pints.LogPDF', pints.MCMCSampling, f, nchains,
+            xs, method=meth)
+
+        # Test x0 and chain argument
+        self.assertRaisesRegex(
+            ValueError, 'chains must be at least 1',
+            pints.MCMCSampling, self.log_posterior, 0, [], method=meth)
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 1, x0, method=meth)
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 2, xs, method=meth)
+        self.assertRaisesRegex(
+            ValueError, 'same dimension',
+            pints.MCMCSampling, self.log_posterior, 1, [x0[:-1]], method=meth)
+
+        # Check different sigma0 initialisations
+        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
+        sigma0 = [0.005, 100, 0.5 * self.noise]
+        pints.MCMCSampling(
+            self.log_posterior, nchains, xs, sigma0, method=meth)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
+        pints.MCMCSampling(
+            self.log_posterior, nchains, xs, sigma0, method=meth)
+        sigma0 = [0.005, 100, 0.5 * self.noise, 10]
+        self.assertRaises(
+            ValueError,
+            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            method=meth)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
+        self.assertRaises(
+            ValueError,
+            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            method=meth)
+
+    def test_stopping(self):
+        """ Test different stopping criteria. """
+
         # Test without stopping criteria
+        nchains = 1
+        xs = [np.array(self.real_parameters) * 1.1]
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(None)
         self.assertRaises(ValueError, mcmc.run)
