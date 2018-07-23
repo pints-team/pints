@@ -14,6 +14,12 @@ import numpy as np
 
 from shared import StreamCapture, TemporaryDirectory
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 debug = False
 
@@ -98,22 +104,34 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
 
-        # Check function argument
+        # Check constructor arguments
         pints.MCMCSampling(self.log_posterior, nchains, xs)
         pints.MCMCSampling(self.log_prior, nchains, xs)
         pints.MCMCSampling(self.log_likelihood, nchains, xs)
 
         def f(x):
             return x
-        self.assertRaises(ValueError, pints.MCMCSampling, f, nchains, xs)
+        self.assertRaisesRegex(
+            ValueError, 'extend pints.LogPDF', pints.MCMCSampling, f, nchains,
+            xs)
 
         # Test x0 and chain argument
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 0, [])
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 1, x0)
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 2, xs)
+        self.assertRaisesRegex(
+            ValueError, 'chains must be at least 1',
+            pints.MCMCSampling, self.log_posterior, 0, [])
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 1, x0)
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 2, xs)
+        self.assertRaisesRegex(
+            ValueError, 'same dimension',
+            pints.MCMCSampling, self.log_posterior, 1, [x0[:-1]])
+        self.assertRaisesRegex(
+            ValueError, 'extend pints.MCMCSampler',
+            pints.MCMCSampling, self.log_posterior, 1, xs, method=12)
+
 
         # Check different sigma0 initialisations
         pints.MCMCSampling(self.log_posterior, nchains, xs)
@@ -279,7 +297,9 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Delayed adaptation
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        self.assertNotEqual(mcmc.adaptation_free_iterations(), 10)
         mcmc.set_adaptation_free_iterations(10)
+        self.assertEqual(mcmc.adaptation_free_iterations(), 10)
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.adaptation())
         mcmc.set_max_iterations(9)
