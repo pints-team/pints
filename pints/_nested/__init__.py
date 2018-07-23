@@ -9,7 +9,6 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
-import numpy as np
 
 
 class NestedSampler(object):
@@ -29,16 +28,21 @@ class NestedSampler(object):
 
         # Store log_likelihood and log_prior
         if not isinstance(log_likelihood, pints.LogLikelihood):
-            raise ValueError('Given function must extend pints.LogLikelihood')
+            raise ValueError(
+                'Given log_likelihood must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
 
         # Store function
         if not isinstance(log_prior, pints.LogPrior):
-            raise ValueError('Given function must extend pints.LogPrior')
+            raise ValueError('Given log_prior must extend pints.LogPrior')
         self._log_prior = log_prior
 
         # Get dimension
         self._dimension = self._log_likelihood.n_parameters()
+        if self._dimension != self._log_prior.n_parameters():
+            raise ValueError(
+                'Given log_likelihood and log_prior must have same number of'
+                ' parameters.')
 
         # Logging
         self._log_to_screen = True
