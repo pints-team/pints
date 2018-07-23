@@ -22,6 +22,7 @@ class TestCMAES(unittest.TestCase):
     """
     Tests the basic methods of the CMAES optimiser.
     """
+
     def __init__(self, name):
         super(TestCMAES, self).__init__(name)
 
@@ -204,6 +205,13 @@ class TestCMAES(unittest.TestCase):
         # Test invalid size
         self.assertRaisesRegexp(
             ValueError, 'at least 1', m.set_population_size, 0)
+
+        # test hyper parameter interface
+        self.assertEqual(m.n_hyper_parameters(), 1)
+        m.set_hyper_parameters([n + 2])
+        self.assertEqual(m.population_size(), n + 2)
+        self.assertRaisesRegexp(
+            ValueError, 'at least 1', m.set_hyper_parameters, [0])
 
         # Test changing during run
         m.ask()

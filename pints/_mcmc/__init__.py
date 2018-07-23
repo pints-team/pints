@@ -12,11 +12,12 @@ import pints
 import numpy as np
 
 
-class MCMCSampler(pints.Loggable):
+class MCMCSampler(pints.Loggable, pints.TunableMethod):
     """
     Abstract base class for (single or multi-chain) MCMC methods.
 
-    All MCMC samplers implement the :class:`pints.Loggable` interface.
+    All MCMC samplers implement the :class:`pints.Loggable` and
+    :class:`pints.TunableMethod` interfaces.
     """
 
     def name(self):
