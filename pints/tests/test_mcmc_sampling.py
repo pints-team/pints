@@ -253,12 +253,23 @@ class TestMCMCSampling(unittest.TestCase):
     def test_stopping(self):
         """ Test different stopping criteria. """
 
-        # Test without stopping criteria
         nchains = 1
         xs = [np.array(self.real_parameters) * 1.1]
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+
+        # Test setting max iterations
+        maxi = mcmc.max_iterations() + 2
+        self.assertNotEqual(maxi, mcmc.max_iterations())
+        mcmc.set_max_iterations(maxi)
+        self.assertEqual(maxi, mcmc.max_iterations())
+        self.assertRaisesRegex(
+            ValueError, 'negative', mcmc.set_max_iterations, -1)
+
+        # Test without stopping criteria
         mcmc.set_max_iterations(None)
-        self.assertRaises(ValueError, mcmc.run)
+        self.assertIsNone(mcmc.max_iterations())
+        self.assertRaisesRegex(
+            ValueError, 'At least one stopping criterion', mcmc.run)
 
     def test_parallel(self):
         """ Test running MCMC with parallisation. """
@@ -277,7 +288,9 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc.set_log_to_screen(debug)
 
         # Test with auto-detected number of worker processes
+        self.assertFalse(mcmc.parallel())
         mcmc.set_parallel(True)
+        self.assertTrue(mcmc.parallel())
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
