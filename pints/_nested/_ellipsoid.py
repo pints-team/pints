@@ -284,12 +284,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Finds the ellipse equation in "center form":
         ``(x-c).T * A * (x-c) = 1``.
         """
-        try:
-            N, d = points.shape
-        except ValueError:  # pragma: no cover
-            N = points.shape[0]
-            d = 1
-
+        N, d = points.shape
         Q = np.column_stack((points, np.ones(N))).T
         err = tol + 1
         u = np.ones(N) / N
@@ -304,12 +299,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             err = la.norm(new_u - u)
             u = new_u
         c = np.dot(u, points)
-        if d > 1:
-            A = la.inv(np.dot(np.dot(points.T, np.diag(u)), points)
-                       - np.multiply.outer(c, c)) / d
-        else:
-            A = 1 / (np.dot(np.dot(points.T, np.diag(u)), points)
-                     - np.multiply.outer(c, c))
+        A = la.inv(
+                + np.dot(np.dot(points.T, np.diag(u)), points)
+                - np.multiply.outer(c, c)
+            ) / d
         return A, c
 
     def _reject_sample_prior(self, threshold):
@@ -332,21 +325,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         ``logLikelihood(params) > threshold``. Accepts ``A`` as input (which is
         only updated every ``N`` steps).
         """
-        aDim = len(m_samples_previous.shape)
-        if aDim > 1:
-            A = (1 / enlargement_factor) * A
-            return self._reject_draw_from_ellipsoid(
-                la.inv(A), centroid, threshold)
-        else:
-            #TODO: When is this used???
-            a_min = np.min(m_samples_previous)
-            a_max = np.max(m_samples_previous)
-            a_middle = (a_min + a_max) / 2
-            a_diff = a_max - a_min
-            a_diff = a_diff * enlargement_factor
-            a_min = a_middle - (a_diff / 2)
-            a_max = a_middle + (a_diff / 2)
-            return self._reject_uniform_draw(a_min, a_max, threshold)
+        return self._reject_draw_from_ellipsoid(
+            la.inv((1 / enlargement_factor) * A), centroid, threshold)
 
     def _reject_draw_from_ellipsoid(self, A, centroid, threshold):
         """
@@ -406,17 +386,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             ) + cent
 
         return pnts
-
-    def _reject_uniform_draw(self, a_min, a_max, threshold):
-        """
-        Equivalent to :meth:`reject_draw_from_ellipsoid` but in 1D.
-        """
-        log_likelihood = threshold - 1
-        while log_likelihood < threshold:
-            proposed = np.random.uniform(a_min, a_max, 1)
-            log_likelihood = self._log_likelihood(proposed)
-            self._n_evals += 1
-        return np.concatenate((proposed, np.array([log_likelihood])))
 
 
 #TODO: THIS METHOD IS NEVER USED
