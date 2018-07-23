@@ -105,8 +105,7 @@ class PSO(pints.PopulationBasedOptimiser):
         """
         Initialises the optimiser for the first iteration.
         """
-        if self._running:
-            raise Exception('Already initialised.')
+        assert(not self._running)
 
         # Initialize swarm
         self._xs = []     # Particle coordinate vectors

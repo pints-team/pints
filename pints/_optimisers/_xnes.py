@@ -75,8 +75,7 @@ class XNES(pints.PopulationBasedOptimiser):
         """
         Initialises the optimiser for the first iteration.
         """
-        if self._running:
-            raise Exception('Already initialised.')
+        assert(not self._running)
 
         # Apply wrapper to implement boundaries
         if self._boundaries is not None:
@@ -108,15 +107,6 @@ class XNES(pints.PopulationBasedOptimiser):
 
         # Update optimiser state
         self._running = True
-
-    def mu(self):
-        """
-        Returns `mu`, the current estimate of the distribution's minimum.
-        """
-        if self._boundaries:
-            return self._xtransform(self._mu)
-        else:
-            return np.array(self._mu, copy=True)
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """

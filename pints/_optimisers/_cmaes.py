@@ -66,8 +66,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         """
         Initialises the optimiser for the first iteration.
         """
-        if self._running:
-            raise Exception('Already initialised.')
+        assert(not self._running)
 
         # Import cma (may fail!)
         # Only the first time this is called in a running program incurs
