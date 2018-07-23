@@ -274,8 +274,13 @@ class MCMCSampling(object):
         # Set default method
         if method is None:
             method = pints.AdaptiveCovarianceMCMC
-        elif not issubclass(method, pints.MCMCSampler):
-            raise ValueError('Given method must extend pints.MCMCSampler.')
+        else:
+            try:
+                ok = issubclass(method, pints.MCMCSampler)
+            except TypeError:   # Not a class
+                ok = False
+            if not ok:
+                raise ValueError('Given method must extend pints.MCMCSampler.')
 
         # Using single chain samplers?
         self._single_chain = issubclass(method, pints.SingleChainMCMC)
@@ -622,4 +627,5 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`AdaptiveCovarianceMCMC` is used.
     """
-    return MCMCSampling(log_pdf, chains, x0, sigma0, method).run()
+    return MCMCSampling(    # pragma: no cover
+        log_pdf, chains, x0, sigma0, method).run()

@@ -7,10 +7,13 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import pints
-import pints.toy as toy
 import unittest
 import numpy as np
+
+import pints
+import pints.toy as toy
+
+from shared import StreamCapture
 
 debug = False
 
@@ -20,38 +23,39 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
     Tests the basic methods of the metropolis random walk MCMC routine.
     """
 
-    def __init__(self, name):
-        super(TestMetropolisRandomWalkMCMC, self).__init__(name)
+    @classmethod
+    def setUpClass(cls):
+        """ Set up a problem for testing with. """
 
         # Create toy model
-        self.model = toy.LogisticModel()
-        self.real_parameters = [0.015, 500]
-        self.times = np.linspace(0, 1000, 1000)
-        self.values = self.model.simulate(self.real_parameters, self.times)
+        cls.model = toy.LogisticModel()
+        cls.real_parameters = [0.015, 500]
+        cls.times = np.linspace(0, 1000, 1000)
+        cls.values = cls.model.simulate(cls.real_parameters, cls.times)
 
         # Add noise
-        self.noise = 10
-        self.values += np.random.normal(0, self.noise, self.values.shape)
-        self.real_parameters.append(self.noise)
-        self.real_parameters = np.array(self.real_parameters)
+        cls.noise = 10
+        cls.values += np.random.normal(0, cls.noise, cls.values.shape)
+        cls.real_parameters.append(cls.noise)
+        cls.real_parameters = np.array(cls.real_parameters)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleOutputProblem(
-            self.model, self.times, self.values)
+        cls.problem = pints.SingleOutputProblem(
+            cls.model, cls.times, cls.values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior = pints.UniformLogPrior(
-            [0.01, 400, self.noise * 0.1],
-            [0.02, 600, self.noise * 100]
+        cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400, cls.noise * 0.1],
+            [0.02, 600, cls.noise * 100]
         )
 
         # Create a log likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
+        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior = pints.LogPosterior(
-            self.log_likelihood, self.log_prior)
+        cls.log_posterior = pints.LogPosterior(
+            cls.log_likelihood, cls.log_prior)
 
     def test_method(self):
 
@@ -133,6 +137,20 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 0)
 
         mcmc.set_hyper_parameters([])
+
+    def test_logging(self):
+        """
+        Test logging includes name and custom fields.
+        """
+        x = [self.real_parameters] * 3
+        mcmc = pints.MCMCSampling(
+            self.log_posterior, 3, x, method=pints.MetropolisRandomWalkMCMC)
+        mcmc.set_max_iterations(5)
+        with StreamCapture() as c:
+            mcmc.run()
+        text = c.text()
+        self.assertIn('Metropolis random walk MCMC', text)
+        self.assertIn(' Accept. ', text)
 
 
 if __name__ == '__main__':
