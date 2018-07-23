@@ -17,6 +17,12 @@ import unittest
 
 from shared import TemporaryDirectory
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestIO(unittest.TestCase):
     """
@@ -67,23 +73,31 @@ class TestIO(unittest.TestCase):
             self.assertFalse(chain2 is test2)
 
             # Check invalid save_samples() calls
-            self.assertRaises(ValueError, pints.io.save_samples, filename)
+            self.assertRaisesRegex(
+                ValueError, 'At least one set of samples',
+                pints.io.save_samples, filename)
             chainX = np.random.uniform(size=(2, 2, 2))
-            self.assertRaises(
-                ValueError, pints.io.save_samples, filename, chainX)
+            self.assertRaisesRegex(
+                ValueError, 'must be given as 2d arrays',
+                pints.io.save_samples, filename, chainX)
             chainY = [[1, 2], [3, 4, 5]]
-            self.assertRaises(
-                ValueError, pints.io.save_samples, filename, chainY)
+            self.assertRaisesRegex(
+                ValueError, 'same length',
+                pints.io.save_samples, filename, chainY)
 
             # Test invalid load_samples calls
-            self.assertRaises(ValueError, pints.io.load_samples, filename, 0)
+            self.assertRaisesRegex(
+                ValueError, 'integer greater than zero',
+                pints.io.load_samples, filename, 0)
             filename = d.path('x.csv')
             try:
+                # Python 3
                 self.assertRaises(
                     FileNotFoundError, pints.io.load_samples, filename)
                 self.assertRaises(
                     FileNotFoundError, pints.io.load_samples, filename, 10)
-            except NameError:  # pragma: no python 3 cover
+            except NameError:
+                # Python 2
                 self.assertRaises(
                     IOError, pints.io.load_samples, filename)
                 self.assertRaises(
