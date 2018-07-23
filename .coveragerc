@@ -1,7 +1,7 @@
 [run]
 source = pints
 omit = 
-    pints/tests
+    pints/tests/*
 
 [report]
 exclude_lines =
