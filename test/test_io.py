@@ -76,13 +76,14 @@ class TestIO(unittest.TestCase):
                 ValueError, pints.io.save_samples, filename, chainY)
 
             # Test invalid load_samples calls
+            self.assertRaises(ValueError, pints.io.load_samples, filename, 0)
             filename = d.path('x.csv')
             try:
                 self.assertRaises(
                     FileNotFoundError, pints.io.load_samples, filename)
                 self.assertRaises(
                     FileNotFoundError, pints.io.load_samples, filename, 10)
-            except NameError:
+            except NameError:  # pragma: no python 3 cover
                 self.assertRaises(
                     IOError, pints.io.load_samples, filename)
                 self.assertRaises(
