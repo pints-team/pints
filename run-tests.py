@@ -26,8 +26,9 @@ def run_unit_tests(executable=None):
     If an ``executable`` is given, tests are run in subprocesses using the
     given executable (e.g. ``python2`` or ``python3``).
     """
+    tests = os.path.join('pints', 'tests')
     if executable is None:
-        suite = unittest.defaultTestLoader.discover('test', pattern='test*.py')
+        suite = unittest.defaultTestLoader.discover(tests, pattern='test*.py')
         unittest.TextTestRunner(verbosity=2).run(suite)
     else:
         print('Running unit tests with executable `' + executable + '`')
@@ -36,7 +37,7 @@ def run_unit_tests(executable=None):
             'unittest',
             'discover',
             '-v',
-            'test',
+            tests,
         ]
         p = subprocess.Popen(cmd)
         try:
