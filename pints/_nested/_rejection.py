@@ -53,7 +53,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         Returns the number of active points that will be used in next run.
         """
-        return self._acceptance_target
+        return self._active_points
 
     def iterations(self):
         """
@@ -61,6 +61,13 @@ class NestedRejectionSampler(pints.NestedSampler):
         next run.
         """
         return self._iterations
+
+    def posterior_samples(self):
+        """
+        Returns the number of posterior samples that will be returned (see
+        :meth:`set_posterior_samples()`).
+        """
+        return self._posterior_samples
 
     def run(self):
         """ See :meth:`pints.MCMC.run()`. """
@@ -185,8 +192,15 @@ class NestedRejectionSampler(pints.NestedSampler):
         self._iterations = iterations
 
     def set_posterior_samples(self, posterior_samples):
-
-        self._posterior_samples = int(posterior_samples)
+        """
+        Sets the number of posterior samples to generate from points proposed
+        by the nested sampling algorithm.
+        """
+        posterior_samples = int(posterior_samples)
+        if posterior_samples < 1:
+            raise ValueError(
+                'Number of posterior samples must be greater than zero.')
+        self._posterior_samples = posterior_samples
 
     def _reject_sample_prior(self, threshold):
         """
