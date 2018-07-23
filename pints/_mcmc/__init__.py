@@ -627,5 +627,5 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`AdaptiveCovarianceMCMC` is used.
     """
-    # pragma: no cover
-    return MCMCSampling(log_pdf, chains, x0, sigma0, method).run()
+    return MCMCSampling(    # pragma: no cover
+        log_pdf, chains, x0, sigma0, method).run()
