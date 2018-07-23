@@ -209,5 +209,5 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         """
         Returns the target acceptance rate.
         """
-        return self._target_acceptance_rate
+        return self._target_acceptance
 

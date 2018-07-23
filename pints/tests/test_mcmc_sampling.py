@@ -14,6 +14,12 @@ import numpy as np
 
 from shared import StreamCapture, TemporaryDirectory
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 debug = False
 
@@ -45,37 +51,38 @@ class TestMCMCSampling(unittest.TestCase):
     Tests the MCMCSampling class.
     """
 
-    def __init__(self, name):
-        super(TestMCMCSampling, self).__init__(name)
+    @classmethod
+    def setUpClass(cls):
+        """ Prepare problem for tests. """
 
         # Create toy model
         model = pints.toy.LogisticModel()
-        self.real_parameters = [0.015, 500]
+        cls.real_parameters = [0.015, 500]
         times = np.linspace(0, 1000, 1000)
-        values = model.simulate(self.real_parameters, times)
+        values = model.simulate(cls.real_parameters, times)
 
         # Add noise
         np.random.seed(1)
-        self.noise = 10
-        values += np.random.normal(0, self.noise, values.shape)
-        self.real_parameters.append(self.noise)
+        cls.noise = 10
+        values += np.random.normal(0, cls.noise, values.shape)
+        cls.real_parameters.append(cls.noise)
 
         # Create an object with links to the model and time series
         problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior = pints.UniformLogPrior(
-            [0.01, 400, self.noise * 0.1],
-            [0.02, 600, self.noise * 100]
+        cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400, cls.noise * 0.1],
+            [0.02, 600, cls.noise * 100]
         )
 
         # Create a log-likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior = pints.LogPosterior(
-            self.log_likelihood, self.log_prior)
+        cls.log_posterior = pints.LogPosterior(
+            cls.log_likelihood, cls.log_prior)
 
     def test_single(self):
         """ Test with a SingleChainMCMC method. """
@@ -97,22 +104,33 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
 
-        # Check function argument
+        # Check constructor arguments
         pints.MCMCSampling(self.log_posterior, nchains, xs)
         pints.MCMCSampling(self.log_prior, nchains, xs)
         pints.MCMCSampling(self.log_likelihood, nchains, xs)
 
         def f(x):
             return x
-        self.assertRaises(ValueError, pints.MCMCSampling, f, nchains, xs)
+        self.assertRaisesRegex(
+            ValueError, 'extend pints.LogPDF', pints.MCMCSampling, f, nchains,
+            xs)
 
         # Test x0 and chain argument
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 0, [])
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 1, x0)
-        self.assertRaises(
-            ValueError, pints.MCMCSampling, self.log_posterior, 2, xs)
+        self.assertRaisesRegex(
+            ValueError, 'chains must be at least 1',
+            pints.MCMCSampling, self.log_posterior, 0, [])
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 1, x0)
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            pints.MCMCSampling, self.log_posterior, 2, xs)
+        self.assertRaisesRegex(
+            ValueError, 'same dimension',
+            pints.MCMCSampling, self.log_posterior, 1, [x0[:-1]])
+        self.assertRaisesRegex(
+            ValueError, 'extend pints.MCMCSampler',
+            pints.MCMCSampling, self.log_posterior, 1, xs, method=12)
 
         # Check different sigma0 initialisations
         pints.MCMCSampling(self.log_posterior, nchains, xs)
@@ -166,19 +184,20 @@ class TestMCMCSampling(unittest.TestCase):
 
     def test_multi(self):
 
-        # 10 chains
+        # Set up problem for 10 chains
+        x0 = np.array(self.real_parameters)
         xs = []
         for i in range(10):
             f = 0.9 + 0.2 * np.random.rand()
-            xs.append(np.array(self.real_parameters) * f)
+            xs.append(x0 * f)
         nchains = len(xs)
         nparameters = len(xs[0])
         niterations = 20
 
         # Test with multi-chain method
+        meth = pints.DifferentialEvolutionMCMC
         mcmc = pints.MCMCSampling(
-            self.log_posterior, nchains, xs,
-            method=pints.DifferentialEvolutionMCMC)
+            self.log_posterior, nchains, xs, method=meth)
         self.assertEqual(len(mcmc.samplers()), 1)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
@@ -187,10 +206,63 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
 
-        # Test without stopping criteria
+        # Check constructor arguments
+        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
+        pints.MCMCSampling(self.log_prior, nchains, xs, method=meth)
+        pints.MCMCSampling(self.log_likelihood, nchains, xs, method=meth)
+
+        # Test x0 and chain argument
+        self.assertRaisesRegex(
+            ValueError, 'chains must be at least 1', meth, 0, [])
+        self.assertRaisesRegex(
+            ValueError, 'at least 3',
+            meth, 1, [x0])
+        self.assertRaisesRegex(
+            ValueError, 'positions must be equal to number of chains',
+            meth, 5, xs)
+        self.assertRaisesRegex(
+            ValueError, 'same dimension',
+            meth, 3, [x0, x0, x0[:-1]])
+
+        # Check different sigma0 initialisations work
+        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
+        sigma0 = [0.005, 100, 0.5 * self.noise]
+        pints.MCMCSampling(
+            self.log_posterior, nchains, xs, sigma0, method=meth)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
+        pints.MCMCSampling(
+            self.log_posterior, nchains, xs, sigma0, method=meth)
+        sigma0 = [0.005, 100, 0.5 * self.noise, 10]
+        self.assertRaises(
+            ValueError,
+            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            method=meth)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
+        self.assertRaises(
+            ValueError,
+            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            method=meth)
+
+    def test_stopping(self):
+        """ Test different stopping criteria. """
+
+        nchains = 1
+        xs = [np.array(self.real_parameters) * 1.1]
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+
+        # Test setting max iterations
+        maxi = mcmc.max_iterations() + 2
+        self.assertNotEqual(maxi, mcmc.max_iterations())
+        mcmc.set_max_iterations(maxi)
+        self.assertEqual(maxi, mcmc.max_iterations())
+        self.assertRaisesRegex(
+            ValueError, 'negative', mcmc.set_max_iterations, -1)
+
+        # Test without stopping criteria
         mcmc.set_max_iterations(None)
-        self.assertRaises(ValueError, mcmc.run)
+        self.assertIsNone(mcmc.max_iterations())
+        self.assertRaisesRegex(
+            ValueError, 'At least one stopping criterion', mcmc.run)
 
     def test_parallel(self):
         """ Test running MCMC with parallisation. """
@@ -209,7 +281,9 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc.set_log_to_screen(debug)
 
         # Test with auto-detected number of worker processes
+        self.assertFalse(mcmc.parallel())
         mcmc.set_parallel(True)
+        self.assertTrue(mcmc.parallel())
         chains = mcmc.run()
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
@@ -217,9 +291,12 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Test with fixed number of worker processes
         mcmc.set_parallel(2)
+        mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
         self.assertEqual(mcmc._n_workers, 2)
-        chains = mcmc.run()
+        with StreamCapture() as c:
+            chains = mcmc.run()
+        self.assertIn('with 2 worker', c.text())
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
@@ -238,6 +315,7 @@ class TestMCMCSampling(unittest.TestCase):
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(False)
+            mcmc.set_log_to_file(False)
             mcmc.run()
         self.assertEqual(capture.text(), '')
 
@@ -247,6 +325,7 @@ class TestMCMCSampling(unittest.TestCase):
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(True)
+            mcmc.set_log_to_file(False)
             mcmc.run()
         self.assertEqual(capture.text(), LOG_SCREEN)
 
@@ -278,7 +357,11 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Delayed adaptation
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        self.assertNotEqual(mcmc.adaptation_free_iterations(), 10)
         mcmc.set_adaptation_free_iterations(10)
+        self.assertEqual(mcmc.adaptation_free_iterations(), 10)
+        self.assertRaisesRegex(
+            ValueError, 'negative', mcmc.set_adaptation_free_iterations, -1)
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.adaptation())
         mcmc.set_max_iterations(9)
