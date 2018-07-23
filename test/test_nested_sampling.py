@@ -102,6 +102,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler.set_iterations(10)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(False)
+            sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         self.assertEqual(c.text(), '')
 
@@ -113,6 +114,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler.set_iterations(10)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(True)
+            sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
         self.assertEqual(len(lines), 25)
@@ -145,6 +147,21 @@ class TestNestedRejectionSampler(unittest.TestCase):
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
+
+    def test_settings_check(self):
+        """
+        Tests the settings check at the start of a run.
+        """
+        sampler = pints.NestedRejectionSampler(
+            self.log_likelihood, self.log_prior)
+        sampler.set_posterior_samples(2)
+        sampler.set_iterations(10)
+        sampler.set_active_points_rate(10)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+
+        sampler.set_posterior_samples(10)
+        self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
 
     def test_getters_and_setters(self):
         """
@@ -236,7 +253,6 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
 
         sampler = pints.NestedEllipsoidSampler(
             self.log_likelihood, self.log_prior)
-
         sampler.set_posterior_samples(10)
         sampler.set_rejection_samples(20)
         sampler.set_iterations(50)
@@ -245,6 +261,26 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         samples, margin = sampler.run()
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
+
+    def test_settings_check(self):
+        """
+        Tests the settings check at the start of a run.
+        """
+        sampler = pints.NestedEllipsoidSampler(
+            self.log_likelihood, self.log_prior)
+        sampler.set_posterior_samples(2)
+        sampler.set_rejection_samples(5)
+        sampler.set_iterations(10)
+        sampler.set_active_points_rate(10)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+
+        sampler.set_posterior_samples(10)
+        self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
+        sampler.set_posterior_samples(2)
+        sampler.set_iterations(4)
+        self.assertRaisesRegex(
+            ValueError, 'exceed number of iterations', sampler.run)
 
     def test_logging(self):
         """ Tests logging to screen and file. """
@@ -258,6 +294,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_iterations(10)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(False)
+            sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         self.assertEqual(c.text(), '')
 
@@ -270,6 +307,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_iterations(10)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(True)
+            sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
         self.assertEqual(len(lines), 26)

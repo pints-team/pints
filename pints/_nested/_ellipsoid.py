@@ -107,11 +107,12 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         max_post = 0.25 * (self._iterations + self._active_points)
         if self._posterior_samples > max_post:
             raise ValueError(
-                'Number of posterior samples must be fewer than 25% the total'
-                ' number of preliminary points.')
+                'Number of posterior samples must not exceed 0.25 times (the'
+                ' number of iterations + the number of active points).')
         if self._rejection_samples > self._iterations:
             raise ValueError(
-                'Must have fewer rejection samples than total samples.')
+                'Number of rejection samples must not exceed number of'
+                ' iterations.')
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
