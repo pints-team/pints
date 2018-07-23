@@ -7,13 +7,14 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import pints
-import pints.toy
+import re
 import unittest
 import numpy as np
 
-#from shared import StreamCapture, TemporaryDirectory
+import pints
+import pints.toy
 
+from shared import StreamCapture, TemporaryDirectory
 
 debug = False
 
@@ -51,12 +52,11 @@ class TestNestedRejectionSampler(unittest.TestCase):
         # Create a log-likelihood
         cls.log_likelihood = pints.KnownNoiseLogLikelihood(problem, cls.noise)
 
-    def test_quick(self):
+    def test_quick_run(self):
         """ Test a single run. """
 
         sampler = pints.NestedRejectionSampler(
             self.log_likelihood, self.log_prior)
-
         sampler.set_posterior_samples(10)
         sampler.set_iterations(50)
         sampler.set_active_points_rate(50)
@@ -64,6 +64,61 @@ class TestNestedRejectionSampler(unittest.TestCase):
         samples, margin = sampler.run()
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
+
+    def test_logging(self):
+        """ Tests logging to screen and file. """
+
+        # No logging
+        with StreamCapture() as c:
+            sampler = pints.NestedRejectionSampler(
+                self.log_likelihood, self.log_prior)
+            sampler.set_posterior_samples(2)
+            sampler.set_iterations(10)
+            sampler.set_active_points_rate(10)
+            sampler.set_log_to_screen(False)
+            samples, margin = sampler.run()
+        self.assertEqual(c.text(), '')
+
+        # Log to screen
+        with StreamCapture() as c:
+            sampler = pints.NestedRejectionSampler(
+                self.log_likelihood, self.log_prior)
+            sampler.set_posterior_samples(2)
+            sampler.set_iterations(10)
+            sampler.set_active_points_rate(10)
+            sampler.set_log_to_screen(True)
+            samples, margin = sampler.run()
+        lines = c.text().splitlines()
+        self.assertEqual(len(lines), 25)
+        self.assertEqual(lines[0], 'Running nested rejection sampling')
+        self.assertEqual(lines[1], 'Number of active points: 10')
+        self.assertEqual(lines[2], 'Total number of iterations: 10')
+        self.assertEqual(lines[3], 'Total number of posterior samples: 2')
+        self.assertEqual(lines[4], 'Iter. Eval. Time m:s')
+        pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
+        for line in lines[5:]:
+            self.assertTrue(pattern.match(line))
+
+        # Log to file
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                filename = d.path('test.txt')
+                sampler = pints.NestedRejectionSampler(
+                    self.log_likelihood, self.log_prior)
+                sampler.set_posterior_samples(2)
+                sampler.set_iterations(10)
+                sampler.set_active_points_rate(10)
+                sampler.set_log_to_screen(False)
+                sampler.set_log_to_file(filename)
+                samples, margin = sampler.run()
+                with open(filename, 'r') as f:
+                    lines = f.read().splitlines()
+            self.assertEqual(c.text(), '')
+        self.assertEqual(len(lines), 21)
+        self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
+        pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
+        for line in lines[5:]:
+            self.assertTrue(pattern.match(line))
 
 
 class TestNestedEllipsoidSampler(unittest.TestCase):
@@ -114,8 +169,67 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
 
-#TODO: Test remaining methods, errors, etc.
+    def test_logging(self):
+        """ Tests logging to screen and file. """
 
+        # No logging
+        with StreamCapture() as c:
+            sampler = pints.NestedEllipsoidSampler(
+                self.log_likelihood, self.log_prior)
+            sampler.set_posterior_samples(2)
+            sampler.set_rejection_samples(5)
+            sampler.set_iterations(10)
+            sampler.set_active_points_rate(10)
+            sampler.set_log_to_screen(False)
+            samples, margin = sampler.run()
+        self.assertEqual(c.text(), '')
+
+        # Log to screen
+        with StreamCapture() as c:
+            sampler = pints.NestedEllipsoidSampler(
+                self.log_likelihood, self.log_prior)
+            sampler.set_posterior_samples(2)
+            sampler.set_rejection_samples(5)
+            sampler.set_iterations(10)
+            sampler.set_active_points_rate(10)
+            sampler.set_log_to_screen(True)
+            samples, margin = sampler.run()
+        lines = c.text().splitlines()
+        self.assertEqual(len(lines), 26)
+        self.assertEqual(lines[0], 'Running nested rejection sampling')
+        self.assertEqual(lines[1], 'Number of active points: 10')
+        self.assertEqual(lines[2], 'Total number of iterations: 10')
+        self.assertEqual(lines[3], 'Enlargement factor: 1.5')
+        self.assertEqual(lines[4], 'Total number of posterior samples: 2')
+        self.assertEqual(lines[5], 'Iter. Eval. Time m:s')
+        pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
+        for line in lines[6:]:
+            self.assertTrue(pattern.match(line))
+
+        # Log to file
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                filename = d.path('test.txt')
+                sampler = pints.NestedEllipsoidSampler(
+                    self.log_likelihood, self.log_prior)
+                sampler.set_posterior_samples(2)
+                sampler.set_rejection_samples(5)
+                sampler.set_iterations(10)
+                sampler.set_active_points_rate(10)
+                sampler.set_log_to_screen(False)
+                sampler.set_log_to_file(filename)
+                samples, margin = sampler.run()
+                with open(filename, 'r') as f:
+                    lines = f.read().splitlines()
+            self.assertEqual(c.text(), '')
+        self.assertEqual(len(lines), 21)
+        self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
+        pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
+        for line in lines[5:]:
+            self.assertTrue(pattern.match(line))
+
+
+#TODO: Test remaining methods, errors, etc.
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
