@@ -60,16 +60,45 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def active_points_rate(self):
         """
-        Returns the number of active points that will be used in next run.
+        Returns the number of active points that will be used in next run (see
+        :meth:`set_active_points_rate()`).
         """
-        return self._acceptance_target
+        return self._active_points
+
+    def ellipsoid_update_gap(self):
+        """
+        Returns the ellipsoid update gap used in the algorithm (see
+        :meth:`set_ellipsoid_update_gap()`).
+        """
+        return self._ellipsoid_update_gap
+
+    def enlargement_factor(self):
+        """
+        Returns the enlargement factor used in the algorithm (see
+        :meth:`set_enlargement_factor()`).
+        """
+        return self._enlargement_factor
 
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run.
+        next run (see :meth:`set_iterations()`).
         """
         return self._iterations
+
+    def posterior_samples(self):
+        """
+        Returns the number of posterior samples that will be returned (see
+        :meth:`set_posterior_samples()`).
+        """
+        return self._posterior_samples
+
+    def rejection_samples(self):
+        """
+        Returns the number of rejection sample used in the algorithm (see
+        :meth:`set_rejection_samples()`).
+        """
+        return self._rejection_samples
 
     def run(self):
         """ See :meth:`pints.MCMC.run()`. """
@@ -210,6 +239,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Sets the number of posterior samples to generate from points proposed
         by the nested sampling algorithm.
         """
+        posterior_samples = int(posterior_samples)
+        if posterior_samples < 1:
+            raise ValueError(
+                'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
     def set_enlargement_factor(self, enlargement_factor):
@@ -219,7 +252,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         likely that areas of high probability mass will be missed. A low value
         means that rejection sampling is more efficient.
         """
-        if enlargement_factor < 1:
+        if enlargement_factor <= 1:
             raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
@@ -241,7 +274,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         it is often desirable to compute this every n iterates.
         """
         ellipsoid_update_gap = int(ellipsoid_update_gap)
-        if ellipsoid_update_gap < 1:
+        if ellipsoid_update_gap <= 1:
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
@@ -252,7 +285,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         """
         try:
             N, d = points.shape
-        except ValueError:
+        except ValueError:  # pragma: no cover
             N = points.shape[0]
             d = 1
 
@@ -304,6 +337,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             return self._reject_draw_from_ellipsoid(
                 la.inv(A), centroid, threshold)
         else:
+            #TODO: When is this used???
             a_min = np.min(m_samples_previous)
             a_max = np.max(m_samples_previous)
             a_middle = (a_min + a_max) / 2
@@ -333,7 +367,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         """
         try:
             ndims = covmat.shape[0]
-        except IndexError:
+        except IndexError:  # pragma: no cover
             ndims = 1
 
         # calculate eigen_values (e) and eigen_vectors (v)

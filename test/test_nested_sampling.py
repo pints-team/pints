@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
@@ -15,6 +15,12 @@ import pints
 import pints.toy
 
 from shared import StreamCapture, TemporaryDirectory
+
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 debug = False
 
@@ -64,6 +70,26 @@ class TestNestedRejectionSampler(unittest.TestCase):
         samples, margin = sampler.run()
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
+
+    def test_construction_errors(self):
+        """ Tests if invalid constructor calls are picked up. """
+
+        # First arg must be a log likelihood
+        self.assertRaisesRegex(
+            ValueError, 'must extend pints.LogLikelihood',
+            pints.NestedRejectionSampler, self.log_prior, self.log_prior)
+
+        # First arg must be a log prior
+        self.assertRaisesRegex(
+            ValueError, 'must extend pints.LogPrior',
+            pints.NestedRejectionSampler,
+            self.log_likelihood, self.log_likelihood)
+
+        # Both must have same number of parameters
+        log_prior = pints.UniformLogPrior([0.01, 400, 1], [0.02, 600, 3])
+        self.assertRaisesRegex(
+            ValueError, 'same number of parameters',
+            pints.NestedRejectionSampler, self.log_likelihood, log_prior)
 
     def test_logging(self):
         """ Tests logging to screen and file. """
@@ -120,6 +146,37 @@ class TestNestedRejectionSampler(unittest.TestCase):
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
 
+    def test_getters_and_setters(self):
+        """
+        Tests various get() and set() methods.
+        """
+        sampler = pints.NestedRejectionSampler(
+            self.log_likelihood, self.log_prior)
+
+        # Iterations
+        x = sampler.iterations() + 1
+        self.assertNotEqual(sampler.iterations(), x)
+        sampler.set_iterations(x)
+        self.assertEqual(sampler.iterations(), x)
+        self.assertRaisesRegex(
+            ValueError, 'negative', sampler.set_iterations, -1)
+
+        # Active points rate
+        x = sampler.active_points_rate() + 1
+        self.assertNotEqual(sampler.active_points_rate(), x)
+        sampler.set_active_points_rate(x)
+        self.assertEqual(sampler.active_points_rate(), x)
+        self.assertRaisesRegex(
+            ValueError, 'greater than 5', sampler.set_active_points_rate, 5)
+
+        # Posterior samples
+        x = sampler.posterior_samples() + 1
+        self.assertNotEqual(sampler.posterior_samples(), x)
+        sampler.set_posterior_samples(x)
+        self.assertEqual(sampler.posterior_samples(), x)
+        self.assertRaisesRegex(
+            ValueError, 'greater than zero', sampler.set_posterior_samples, 0)
+
 
 class TestNestedEllipsoidSampler(unittest.TestCase):
     """
@@ -153,6 +210,26 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
 
         # Create a log-likelihood
         cls.log_likelihood = pints.KnownNoiseLogLikelihood(problem, cls.noise)
+
+    def test_construction_errors(self):
+        """ Tests if invalid constructor calls are picked up. """
+
+        # First arg must be a log likelihood
+        self.assertRaisesRegex(
+            ValueError, 'must extend pints.LogLikelihood',
+            pints.NestedEllipsoidSampler, self.log_prior, self.log_prior)
+
+        # First arg must be a log prior
+        self.assertRaisesRegex(
+            ValueError, 'must extend pints.LogPrior',
+            pints.NestedEllipsoidSampler,
+            self.log_likelihood, self.log_likelihood)
+
+        # Both must have same number of parameters
+        log_prior = pints.UniformLogPrior([0.01, 400, 1], [0.02, 600, 3])
+        self.assertRaisesRegex(
+            ValueError, 'same number of parameters',
+            pints.NestedEllipsoidSampler, self.log_likelihood, log_prior)
 
     def test_quick(self):
         """ Test a single run. """
@@ -228,8 +305,65 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
 
+    def test_getters_and_setters(self):
+        """
+        Tests various get() and set() methods.
+        """
+        sampler = pints.NestedEllipsoidSampler(
+            self.log_likelihood, self.log_prior)
 
-#TODO: Test remaining methods, errors, etc.
+        # Iterations
+        x = sampler.iterations() + 1
+        self.assertNotEqual(sampler.iterations(), x)
+        sampler.set_iterations(x)
+        self.assertEqual(sampler.iterations(), x)
+        self.assertRaisesRegex(
+            ValueError, 'negative', sampler.set_iterations, -1)
+
+        # Active points rate
+        x = sampler.active_points_rate() + 1
+        self.assertNotEqual(sampler.active_points_rate(), x)
+        sampler.set_active_points_rate(x)
+        self.assertEqual(sampler.active_points_rate(), x)
+        self.assertRaisesRegex(
+            ValueError, 'greater than 5', sampler.set_active_points_rate, 5)
+
+        # Posterior samples
+        x = sampler.posterior_samples() + 1
+        self.assertNotEqual(sampler.posterior_samples(), x)
+        sampler.set_posterior_samples(x)
+        self.assertEqual(sampler.posterior_samples(), x)
+        self.assertRaisesRegex(
+            ValueError, 'greater than zero', sampler.set_posterior_samples, 0)
+
+        # Rejection samples
+        x = sampler.rejection_samples() + 1
+        self.assertNotEqual(sampler.rejection_samples(), x)
+        sampler.set_rejection_samples(x)
+        self.assertEqual(sampler.rejection_samples(), x)
+        self.assertRaisesRegex(
+            ValueError, 'negative', sampler.set_rejection_samples, -1)
+
+        # Enlargement factor
+        x = sampler.enlargement_factor() * 2
+        self.assertNotEqual(sampler.enlargement_factor(), x)
+        sampler.set_enlargement_factor(x)
+        self.assertEqual(sampler.enlargement_factor(), x)
+        self.assertRaisesRegex(
+            ValueError, 'exceed 1', sampler.set_enlargement_factor, 0.5)
+        self.assertRaisesRegex(
+            ValueError, 'exceed 1', sampler.set_enlargement_factor, 1)
+
+        # Ellipsoid update gap
+        x = sampler.ellipsoid_update_gap() * 2
+        self.assertNotEqual(sampler.ellipsoid_update_gap(), x)
+        sampler.set_ellipsoid_update_gap(x)
+        self.assertEqual(sampler.ellipsoid_update_gap(), x)
+        self.assertRaisesRegex(
+            ValueError, 'exceed 1', sampler.set_ellipsoid_update_gap, 0.5)
+        self.assertRaisesRegex(
+            ValueError, 'exceed 1', sampler.set_ellipsoid_update_gap, 1)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
