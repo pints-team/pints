@@ -76,6 +76,11 @@ class TestPSO(unittest.TestCase):
         self.assertRaisesRegex(
             Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
 
+        # Can't change settings while running
+        opt.ask()
+        self.assertRaisesRegex(
+            Exception, 'during run', opt.set_local_global_balance, 0.1)
+
     def test_logging(self):
         """ Tests logging for PSO and other optimisers. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
