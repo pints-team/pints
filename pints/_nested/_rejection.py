@@ -73,11 +73,11 @@ class NestedRejectionSampler(pints.NestedSampler):
         """ See :meth:`pints.MCMC.run()`. """
 
         # Check if settings are sensible
-        if self._posterior_samples > np.round(
-                0.25 * (self._iterations + self._active_points)):
+        max_post = 0.25 * (self._iterations + self._active_points)
+        if self._posterior_samples > max_post:
             raise ValueError(
-                'Number of posterior samples must be fewer than 25% the total'
-                ' number of preliminary points.')
+                'Number of posterior samples must not exceed 0.25 times (the'
+                ' number of iterations + the number of active points).')
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
