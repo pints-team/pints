@@ -145,7 +145,6 @@ class NestedRejectionSampler(pints.NestedSampler):
 
             # Independently samples params from the prior until
             # log_likelihood(params) > threshold.
-            #TODO: Count evals of likelihood
             log_likelihood = a_running_log_likelihood - 1
             while log_likelihood < a_running_log_likelihood:
                 proposed = self._log_prior.sample()[0]
@@ -201,16 +200,4 @@ class NestedRejectionSampler(pints.NestedSampler):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
-
-    def _reject_sample_prior(self, threshold):
-        """
-        Independently samples params from the prior until
-        ``log_likelihood(params) > threshold``.
-        """
-        log_likelihood = threshold - 1
-        while log_likelihood < threshold:
-            proposed = self._log_prior.sample()[0]
-            log_likelihood = self._log_likelihood(proposed)
-            self._n_evals += 1
-        return np.concatenate((proposed, np.array([log_likelihood])))
 
