@@ -35,8 +35,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     Bayesian Analysis 1:4 (2006).
     """
     def __init__(self, log_likelihood, log_prior):
-        super(NestedRejectionSampler, self).__init__(
-            log_likelihood, log_prior)
+        super(NestedRejectionSampler, self).__init__(log_likelihood, log_prior)
 
         # Target acceptance rate
         self._active_points = 1000
@@ -46,6 +45,9 @@ class NestedRejectionSampler(pints.NestedSampler):
 
         # Total number of posterior samples
         self._posterior_samples = 1000
+
+        # Total number of likelihood evaluations made
+        self._n_evals = 0
 
     def active_points_rate(self):
         """
@@ -63,13 +65,39 @@ class NestedRejectionSampler(pints.NestedSampler):
     def run(self):
         """ See :meth:`pints.MCMC.run()`. """
 
-        # Report the current settings
-        if self._verbose:
-            print('Running nested rejection sampling')
-            print('Number of active points: ' + str(self._active_points))
-            print('Total number of iterations: ' + str(self._iterations))
-            print('Total number of posterior samples: ' + str(
-                self._posterior_samples))
+        # Check if settings are sensible
+        if self._posterior_samples > np.round(
+                0.25 * (self._iterations + self._active_points)):
+            raise ValueError(
+                'Number of posterior samples must be fewer than 25% the total'
+                ' number of preliminary points.')
+
+        # Start logging
+        logging = self._log_to_screen or self._log_filename
+        if logging:
+            # Create timer
+            timer = pints.Timer()
+
+            if self._log_to_screen:
+                # Show current settings
+                print('Running nested rejection sampling')
+                print('Number of active points: ' + str(self._active_points))
+                print('Total number of iterations: ' + str(self._iterations))
+                print('Total number of posterior samples: ' + str(
+                    self._posterior_samples))
+
+            # Set up logger
+            logger = pints.Logger()
+            if not self._log_to_screen:
+                logger.set_stream(None)
+            if self._log_filename:
+                logger.set_filename(self._log_filename, csv=self._log_csv)
+
+            # Add fields to log
+            logger.add_counter('Iter.', max_value=self._iterations)
+            logger.add_counter('Eval.', max_value=self._iterations * 10)
+            #TODO: Add other informative fields ?
+            logger.add_time('Time m:s')
 
         # Problem dimension
         d = self._dimension
@@ -78,9 +106,11 @@ class NestedRejectionSampler(pints.NestedSampler):
         # generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
         m_initial = self._log_prior.sample(self._active_points)
-
         for i in range(0, self._active_points):
             m_active[i, d] = self._log_likelihood(m_initial[i, :])
+            self._n_evals += 1
+            if logging:
+                logger.log(0, self._n_evals, timer.time())
         m_active[:, :-1] = m_initial
 
         # store all inactive points, along with their respective
@@ -108,34 +138,39 @@ class NestedRejectionSampler(pints.NestedSampler):
 
             # Independently samples params from the prior until
             # log_likelihood(params) > threshold.
-            #TODO: Count evals of prior and of likelihood
-            proposed = self._log_prior.sample()[0]
-            while self._log_likelihood(proposed) < a_running_log_likelihood:
+            #TODO: Count evals of likelihood
+            log_likelihood = a_running_log_likelihood - 1
+            while log_likelihood < a_running_log_likelihood:
                 proposed = self._log_prior.sample()[0]
-            #TODO: Optimise out this extra eval of likelihood
+                log_likelihood = self._log_likelihood(proposed)
+                self._n_evals += 1
             m_active[a_min_index, :] = np.concatenate(
-                (proposed, np.array([log_likelihood(proposed)])))
+                (proposed, np.array([log_likelihood])))
 
+            # Update log
+            if logging:
+                self.logger.log(i, self._n_evals, timer.time())
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(
             self._active_points)
         m_samples_all = np.vstack((m_inactive, m_active))
         log_Z = logsumexp(v_log_Z, b=w[0:(self._iterations + 1)])
-        # vLogP = m_samples_all[:, d] - log_Z + np.log(w)
+
         vP = np.exp(m_samples_all[:, d] - log_Z) * w
         m_theta = m_samples_all[:, :-1]
         vIndex = np.random.choice(
             range(0, self._iterations + self._active_points),
             self._posterior_samples, p=vP)
         m_posterior_samples = m_theta[vIndex, :]
+
         return m_posterior_samples, log_Z
 
     def set_active_points_rate(self, active_points):
         """
         Sets the number of active points for the next run.
         """
-        active_points = float(active_points)
+        active_points = int(active_points)
         if active_points <= 5:
             raise ValueError('Number of active points must be greater than 5.')
         self._active_points = active_points
@@ -151,10 +186,17 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def set_posterior_samples(self, posterior_samples):
 
-        if posterior_samples > np.round(
-                0.25 * (self._iterations + self._active_points)):
-            raise ValueError(
-                'Number of posterior samples must be fewer than 25% the total'
-                ' number of preminary points.')
-        self._posterior_samples = posterior_samples
+        self._posterior_samples = int(posterior_samples)
+
+    def _reject_sample_prior(self, threshold):
+        """
+        Independently samples params from the prior until
+        ``log_likelihood(params) > threshold``.
+        """
+        log_likelihood = threshold - 1
+        while log_likelihood < threshold:
+            proposed = self._log_prior.sample()[0]
+            log_likelihood = self._log_likelihood(proposed)
+            self._n_evals += 1
+        return np.concatenate((proposed, np.array([log_likelihood])))
 
