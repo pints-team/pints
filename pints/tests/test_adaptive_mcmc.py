@@ -133,7 +133,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Test setting acceptance rate
         x0 = self.real_parameters
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
+        self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
+        self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(1)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
