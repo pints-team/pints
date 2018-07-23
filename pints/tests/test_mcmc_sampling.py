@@ -291,9 +291,12 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Test with fixed number of worker processes
         mcmc.set_parallel(2)
+        mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
         self.assertEqual(mcmc._n_workers, 2)
-        chains = mcmc.run()
+        with StreamCapture() as c:
+            chains = mcmc.run()
+        self.assertIn('with 2 worker', c.text())
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
@@ -312,6 +315,7 @@ class TestMCMCSampling(unittest.TestCase):
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(False)
+            mcmc.set_log_to_file(False)
             mcmc.run()
         self.assertEqual(capture.text(), '')
 
@@ -321,6 +325,7 @@ class TestMCMCSampling(unittest.TestCase):
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(True)
+            mcmc.set_log_to_file(False)
             mcmc.run()
         self.assertEqual(capture.text(), LOG_SCREEN)
 
@@ -355,6 +360,8 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertNotEqual(mcmc.adaptation_free_iterations(), 10)
         mcmc.set_adaptation_free_iterations(10)
         self.assertEqual(mcmc.adaptation_free_iterations(), 10)
+        self.assertRaisesRegex(
+            ValueError, 'negative', mcmc.set_adaptation_free_iterations, -1)
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.adaptation())
         mcmc.set_max_iterations(9)
