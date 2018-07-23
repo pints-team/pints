@@ -7,42 +7,23 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import pints
-import pints.toy
+import re
 import unittest
 import numpy as np
 
+import pints
+import pints.toy
+
 from shared import StreamCapture, TemporaryDirectory
+
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 debug = False
 method = pints.PSO
-
-LOG_SCREEN = (
-    'Maximising LogPDF\n'
-    'using Particle Swarm Optimisation (PSO)\n'
-    'Running in parallel with 2 worker processes.\n'
-    'Population size: 6\n'
-    'Iter. Eval. Best      Time m:s\n'
-    '0     6     -0.199      0:00.0\n'
-    '1     12     0.843      0:00.0\n'
-    '2     12     0.843      0:00.0\n'
-    'Halting: Maximum number of iterations (2) reached.\n'
-)
-
-LOG_FILE = (
-    'Iter. Eval. Best      f0        f1        f2        f3       '
-    ' f4        f5        Time m:s\n'
-    '0     6     -0.199     0.199     2.667294  3.425707  1.148659  2.648408 '
-    ' 1.707569   0:00.0\n'
-    '1     12     0.843     0.199    -0.843     1.621933  1.148659  1.283276 '
-    ' 1.487763   0:00.0\n'
-    '2     18     0.843    -0.196    -0.843     1.621933  1.148659  1.283276 '
-    ' 1.487763   0:00.0\n'
-    '3     24     0.843    -0.196    -0.843     0.631     1.148659 -0.404    '
-    ' 1.487763   0:00.0\n'
-    '10    60     1.183198 -1.183198 -0.843     0.631     1.148659 -0.404    '
-    '-0.0216     0:00.0\n'
-)
 
 
 class TestPSO(unittest.TestCase):
@@ -50,207 +31,123 @@ class TestPSO(unittest.TestCase):
     Tests the basic methods of the PSO optimiser.
     """
 
-    def __init__(self, name):
-        super(TestPSO, self).__init__(name)
+    def setUp(self):
+        """ Called before every test """
+        np.random.seed(1)
 
-        # Create toy model
-        self.model = pints.toy.LogisticModel()
-        self.real_parameters = [0.015, 500]
-        self.times = np.linspace(0, 1000, 1000)
-        self.values = self.model.simulate(self.real_parameters, self.times)
-
-        # Create an object with links to the model and time series
-        self.problem = pints.SingleOutputProblem(
-            self.model, self.times, self.values)
-
-        # Select a score function
-        self.score = pints.SumOfSquaresError(self.problem)
-
-        # Select some boundaries
-        self.boundaries = pints.Boundaries([0, 400], [0.03, 600])
-
-        # Set an initial position
-        self.x0 = 0.014, 499
-
-        # Set an initial guess of the standard deviation in each parameter
-        self.sigma0 = [0.001, 1]
-
-        # Minimum score function value to obtain
-        self.cutoff = 1e3   # Global method!
-
-        # Maximum tries before it counts as failed
-        self.max_tries = 3
+    def test_unbounded(self):
+        """ Runs an optimisation without boundaries. """
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        opt = pints.Optimisation(r, x, method=method)
+        opt.set_log_to_screen(debug)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(found_solution < 1e-3)
 
     def test_bounded(self):
-
-        opt = pints.Optimisation(self.score, self.x0,
-                                 boundaries=self.boundaries, method=method)
+        """ Runs an optimisation with boundaries. """
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
-        opt.set_max_unchanged_iterations(1000)
-        for i in range(self.max_tries):
-            found_parameters, found_solution = opt.run()
-            if found_solution < self.cutoff:
-                break
-        self.assertTrue(found_solution < self.cutoff)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(found_solution < 1e-3)
 
     def test_bounded_and_sigma(self):
-
-        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
-                                 self.boundaries, method)
+        """ Runs an optimisation without boundaries and sigma. """
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(debug)
-        opt.set_max_unchanged_iterations(1000)
-        for i in range(self.max_tries):
-            found_parameters, found_solution = opt.run()
-            if found_solution < self.cutoff:
-                break
-        self.assertTrue(found_solution < self.cutoff)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(found_solution < 1e-3)
 
-    def test_stopping_max_iter(self):
+    def test_ask_tell(self):
+        """ Tests ask-and-tell related error handling. """
+        opt = method(np.array([1.1, 1.1]))
 
-        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
-                                 self.boundaries, method)
-        opt.set_log_to_screen(True)
-        opt.set_max_iterations(2)
-        opt.set_max_unchanged_iterations(None)
-        with StreamCapture() as c:
-            opt.run()
-            self.assertIn('Halting: Maximum number of iterations', c.text())
+        # Stop called when not running
+        self.assertFalse(opt.stop())
 
-    def test_stopping_max_unchanged(self):
+        # Tell before ask
+        self.assertRaisesRegex(
+            Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
 
-        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
-                                 self.boundaries, method)
-        opt.set_log_to_screen(True)
-        opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(2)
-        self.assertEqual(opt.max_unchanged_iterations()[0], 2)
-        with StreamCapture() as c:
-            opt.run()
-            self.assertIn('Halting: No significant change', c.text())
-
-    def test_stopping_threshold(self):
-
-        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
-                                 self.boundaries, method)
-        opt.set_log_to_screen(True)
-        opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(None)
-        self.assertEqual(opt.max_unchanged_iterations(), (None, None))
-        t = 1e4 * self.cutoff
-        opt.set_threshold(t)
-        self.assertEqual(opt.threshold(), t)
-        with StreamCapture() as c:
-            opt.run()
-            self.assertIn(
-                'Halting: Objective function crossed threshold', c.text())
-
-    def test_stopping_no_criterion(self):
-
-        opt = pints.Optimisation(self.score, self.x0, self.sigma0,
-                                 self.boundaries, method)
-        opt.set_log_to_screen(debug)
-        opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(None)
-        self.assertEqual(opt.max_unchanged_iterations(), (None, None))
-        self.assertRaises(ValueError, opt.run)
-
-    def test_logpdf(self):
-
-        r = pints.toy.RosenbrockLogPDF(1, 100)
-        x0 = np.array([1.1, 1.1])
-        f0 = r(x0)
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt.set_max_iterations(100)
-        opt.set_max_unchanged_iterations(100)
-        opt.set_log_to_screen(debug)
-
-        # PSO isn't very good at this function, unless we give it lots more
-        # iterations, check if it's moving in the right direction
-        np.random.seed(1)
-        x1, f1 = opt.run()
-        self.assertTrue(f1 > f0)
-
-    def test_rosenbrock(self):
-        """ Test running on the Rosenbrock function """
-
-        r = pints.toy.RosenbrockError(1, 100)
-        x0 = np.array([1.1, 1.1])
-        f0 = r(x0)
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt.set_max_iterations(100)
-        opt.set_max_unchanged_iterations(100)
-        opt.set_log_to_screen(debug)
-        np.random.seed(1)
-        x1, f1 = opt.run()
-        self.assertTrue(f1 < f0)
+        # Can't change settings while running
+        opt.ask()
+        self.assertRaisesRegex(
+            Exception, 'during run', opt.set_local_global_balance, 0.1)
 
     def test_logging(self):
-
-        r = pints.toy.RosenbrockLogPDF(1, 100)
-        x0 = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        """ Tests logging for PSO and other optimisers. """
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.Optimisation(r, x, s, b, method)
 
         # No logging
+        opt = pints.Optimisation(r, x, s, b, method)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(False)
+        opt.set_log_to_file(False)
         with StreamCapture() as c:
-            opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-            opt.set_max_iterations(10)
-            opt.set_log_to_screen(False)
-            np.random.seed(1)
             opt.run()
         self.assertEqual(c.text(), '')
 
         # Log to screen
+        opt = pints.Optimisation(r, x, s, b, method)
+        opt.set_parallel(2)
+        opt.set_max_iterations(10)
+        opt.set_log_to_screen(True)
+        opt.set_log_to_file(False)
         with StreamCapture() as c:
-            opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-            opt.set_max_iterations(2)
-            opt.set_parallel(2)
-            opt.set_log_to_screen(True)
-            np.random.seed(1)
             opt.run()
-        self.assertEqual(c.text(), LOG_SCREEN)
+        lines = c.text().splitlines()
+
+        self.assertEqual(len(lines), 11)
+        self.assertEqual(lines[0], 'Maximising LogPDF')
+        self.assertEqual(lines[1], 'using Particle Swarm Optimisation (PSO)')
+        self.assertEqual(
+            lines[2], 'Running in parallel with 2 worker processes.')
+        self.assertEqual(lines[3], 'Population size: 6')
+        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
+
+        pint = '[0-9]+[ ]+'
+        pflt = '[0-9.-]+[ ]+'
+        ptim = '[0-9]{1}:[0-9]{2}.[0-9]{1}'
+        pattern = re.compile(pint * 2 + pflt + ptim)
+        for line in lines[5:-1]:
+            self.assertTrue(pattern.match(line))
+        self.assertEqual(
+            lines[-1], 'Halting: Maximum number of iterations (10) reached.')
 
         # Log to file
+        opt = pints.Optimisation(r, x, s, b, method=method)
+        opt.set_max_iterations(10)
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
-                opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-                opt.set_max_iterations(10)
                 opt.set_log_to_screen(False)
                 opt.set_log_to_file(filename)
-                np.random.seed(1)
                 opt.run()
                 with open(filename, 'r') as f:
-                    self.assertEqual(f.read(), LOG_FILE)
+                    lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
 
-    def test_parallel(self):
-        """ Test parallelised running on the Rosenbrock function. """
+        self.assertEqual(len(lines), 6)
+        self.assertEqual(
+            lines[0],
+            'Iter. Eval. Best      f0        f1        f2        f3       '
+            ' f4        f5        Time m:s'
+        )
 
-        r = pints.toy.RosenbrockError(1, 100)
-        x0 = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-
-        # Run with guessed number of cores
-        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt.set_max_iterations(10)
-        opt.set_log_to_screen(debug)
-        opt.set_parallel(False)
-        self.assertIs(opt.parallel(), False)
-        opt.set_parallel(True)
-        self.assertTrue(type(opt.parallel()) == int)
-        self.assertTrue(opt.parallel() >= 1)
-        opt.run()
-
-        # Run with explicit number of cores
-        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        opt.set_max_iterations(10)
-        opt.set_log_to_screen(debug)
-        opt.set_parallel(1)
-        opt.run()
-        self.assertTrue(type(opt.parallel()) == int)
-        self.assertEqual(opt.parallel(), 1)
+        pattern = re.compile(pint * 2 + pflt * 7 + ptim)
+        for line in lines[1:]:
+            self.assertTrue(pattern.match(line))
 
     def test_suggest_population_size(self):
         """
@@ -281,27 +178,30 @@ class TestPSO(unittest.TestCase):
         # Test basic creation
         x0 = [1, 2, 3]
         pints.PSO(x0)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'greater than zero', pints.PSO, [])
 
         # Test with boundaries
         x0 = [1, 2]
         b = pints.Boundaries([0, 0], [3, 3])
         pints.PSO(x0, boundaries=b)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'within given boundaries', pints.PSO, [4, 4],
+            boundaries=b)
+        self.assertRaisesRegex(
+            ValueError, 'same dimension', pints.PSO, [4, 4, 4],
             boundaries=b)
 
         # Test with scalar sigma
         pints.PSO(x0, 3)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'greater than zero', pints.PSO, x0, -1)
 
         # Test with vector sigma
         pints.PSO(x0, [3, 3])
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'greater than zero', pints.PSO, x0, [3, -1])
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'have dimension 2', pints.PSO, x0, [3, 3, 3])
 
     def test_optimisation_creation(self):
@@ -310,34 +210,13 @@ class TestPSO(unittest.TestCase):
         """
         # Test invalid dimensions
         r = pints.toy.RosenbrockError(1, 100)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'same dimension', pints.Optimisation, r, [1])
 
         # Test invalid method
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'subclass', pints.Optimisation, r, [1, 1],
             method=pints.AdaptiveCovarianceMCMC)
-
-    def test_set_population_size(self):
-        """
-        Tests the set_population_size method for this optimiser.
-        """
-        r = pints.toy.RosenbrockError(1, 100)
-        x0 = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x0, boundaries=b, method=method)
-        m = opt.optimiser()
-        n = m.population_size()
-        m.set_population_size(n + 1)
-        self.assertEqual(m.population_size(), n + 1)
-
-        # Test invalid size
-        self.assertRaisesRegexp(
-            ValueError, 'at least 1', m.set_population_size, 0)
-
-        # Test changing during run
-        m.ask()
-        self.assertRaises(Exception, m.set_population_size, 2)
 
     def test_set_hyper_parameters(self):
         """
@@ -355,10 +234,15 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(m.population_size(), n + 1)
 
         # Test invalid size
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'at least 1', m.set_hyper_parameters, [0, 0.5])
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'in the range 0-1', m.set_hyper_parameters, [n, 1.5])
+
+    def test_name(self):
+        """ Test the name() method. """
+        opt = pints.PSO(np.array([0, 1.01]))
+        self.assertIn('PSO', opt.name())
 
 
 if __name__ == '__main__':
