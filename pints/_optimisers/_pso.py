@@ -201,7 +201,8 @@ class PSO(pints.PopulationBasedOptimiser):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is [population_size, local_global_balance]
+        The hyper-parameter vector is ``[population_size,
+        local_global_balance]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
