@@ -52,10 +52,8 @@ def load_samples(filename, n=None):
     for filename in filenames:
         if not os.path.isfile(filename):
             try:
-                # Python 3
                 raise FileNotFoundError('File not found: ' + filename)
-            except NameError:
-                # Python 2
+            except NameError:   # pragma: no python 3 cover
                 raise IOError('File not found: ' + filename)
 
     # Load and return
@@ -88,14 +86,15 @@ def save_samples(filename, *sample_lists):
         filenames = [parts[0] + '_' + str(i) + parts[1] for i in range(k)]
 
     # Check shapes
-    i = iter(sample_lists)
-    shape = np.asarray(next(i)).shape
+    try:
+        sample_lists = np.array(sample_lists, dtype=float)
+    except ValueError:
+        raise ValueError(
+            'Sample lists must contain only floats and be of same length.')
+    shape = sample_lists[0].shape
     if len(shape) != 2:
         raise ValueError(
             'Samples must be given as 2d arrays (e.g. lists of lists).')
-    for samples in i:
-        if np.asarray(samples).shape != shape:
-            raise ValueError('All sample lists must have same shape.')
 
     # Store
     filename = iter(filenames)
