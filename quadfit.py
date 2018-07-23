@@ -200,3 +200,79 @@ def quadfit_minimum(A, B, C):
         if 'not positive definite' in str(e):
             return False
         raise
+
+
+
+
+class QuadFitTest(unittest.TestCase):
+    """
+    Tests the quadratic polynomial fitting in myokit.lib.fit.
+    """
+    def test_quadfit(self):
+        """
+        Tests quadfit(x, y)
+        """
+        e = 1e-13
+
+        # 1D
+        AA = 7
+        BB = np.array([-3])
+        CC = np.array([[-2]])
+
+        def f(x):
+            x = np.array(x)
+            return AA + BB.dot(x) + 0.5 * x.transpose() * CC * x
+
+        x = [-2, 1, 6]
+        y = [f(i) for i in x]
+        A, B, C = fit.quadfit(x, y)
+        self.assertTrue(np.all(np.abs(A - AA) < e))
+        self.assertTrue(np.all(np.abs(B - BB) < e))
+        self.assertTrue(np.all(np.abs(C - CC) < e))
+
+        # 2D
+        a = 5, 4, 3, 1, -2, -4
+
+        def f(x, y):
+            return (
+                a[0] +
+                a[1] * x +
+                a[2] * y +
+                a[3] * x**2 +
+                a[4] * x * y +
+                a[5] * y**2)
+        x = [[-2, -1], [-1, 3], [0, -1], [1, 2], [2, 2], [3, -4]]
+        y = [f(*i) for i in x]
+        A, B, C = fit.quadfit(x, y)
+        AA = np.array([a[0]])
+        BB = np.array([a[1], a[2]])
+        CC = np.array([[a[3] * 2, a[4]], [a[4], a[5] * 2]])
+        self.assertTrue(np.all(np.abs(A - AA) < e))
+        self.assertTrue(np.all(np.abs(B - BB) < e))
+        self.assertTrue(np.all(np.abs(C - CC) < e))
+
+        # 3D
+        a = 3, 2, 1, -1, -6, 5, 4, 3, 2, 1
+
+        def f(x, y, z):
+            return (
+                a[0] + a[1] * x + a[2] * y + a[3] * z +
+                a[4] * x**2 + a[5] * x * y + a[6] * x * z +
+                a[7] * y**2 + a[8] * y * z +
+                a[9] * z**2)
+        x = [
+            [-2, -1, 0], [-1, 2, 3], [0, 2, -1], [1, 1, 2], [2, 2, 2],
+            [-1, 3, -4], [4, 2, -1], [4, 1, 2], [4, 2, 2], [1, 2, 3]
+        ]
+        y = [f(*i) for i in x]
+        A, B, C = fit.quadfit(x, y)
+        AA = np.array([a[0]])
+        BB = np.array([a[1], a[2], a[3]])
+        CC = np.array([
+            [a[4] * 2, a[5] * 1, a[6] * 1],
+            [a[5] * 1, a[7] * 2, a[8] * 1],
+            [a[6] * 1, a[8] * 1, a[9] * 2],
+        ])
+        self.assertTrue(np.all(np.abs(A - AA) < e))
+        self.assertTrue(np.all(np.abs(B - BB) < e))
+        self.assertTrue(np.all(np.abs(C - CC) < e))
