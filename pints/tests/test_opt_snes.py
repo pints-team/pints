@@ -43,7 +43,7 @@ class TestSNES(unittest.TestCase):
         """ Runs an optimisation with boundaries. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -53,7 +53,7 @@ class TestSNES(unittest.TestCase):
         """ Runs an optimisation without boundaries and sigma. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(debug)

@@ -48,7 +48,7 @@ class TestPSO(unittest.TestCase):
         """ Runs an optimisation with boundaries. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -58,7 +58,7 @@ class TestPSO(unittest.TestCase):
         """ Runs an optimisation without boundaries and sigma. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(debug)
@@ -90,7 +90,7 @@ class TestPSO(unittest.TestCase):
         """ Tests logging for PSO and other optimisers. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
 
@@ -161,7 +161,7 @@ class TestPSO(unittest.TestCase):
         """
         r = pints.toy.RosenbrockError(1, 100)
         x0 = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x0, boundaries=b, method=method)
         opt = opt.optimiser()
 
@@ -188,7 +188,7 @@ class TestPSO(unittest.TestCase):
 
         # Test with boundaries
         x0 = [1, 2]
-        b = pints.Boundaries([0, 0], [3, 3])
+        b = pints.RectangularBoundaries([0, 0], [3, 3])
         pints.PSO(x0, boundaries=b)
         self.assertRaisesRegex(
             ValueError, 'within given boundaries', pints.PSO, [4, 4],
@@ -229,7 +229,7 @@ class TestPSO(unittest.TestCase):
         """
         r = pints.toy.RosenbrockError(1, 100)
         x0 = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x0, boundaries=b, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 2)

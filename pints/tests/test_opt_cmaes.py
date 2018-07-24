@@ -49,7 +49,7 @@ class TestCMAES(unittest.TestCase):
 
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
@@ -61,7 +61,7 @@ class TestCMAES(unittest.TestCase):
 
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
         s = 0.1
 
         opt = pints.Optimisation(r, x, s, b, method)
