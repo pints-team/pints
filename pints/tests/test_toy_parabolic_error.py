@@ -10,7 +10,6 @@
 import pints
 import pints.toy
 import unittest
-import numpy as np
 
 
 class TestParabolicError(unittest.TestCase):
