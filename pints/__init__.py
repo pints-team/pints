@@ -163,6 +163,7 @@ from ._mcmc._population import PopulationMCMC
 #
 # SMC
 #
+from ._sequential import SMCSampler
 from ._sequential._sequentialMC import SMC
 
 #
