@@ -24,13 +24,13 @@ class TestParabolicError(unittest.TestCase):
         self.assertEqual(f.n_parameters(), 2)
         self.assertEqual(list(f.optimum()), [0, 0])
         self.assertEqual(f([0, 0]), 0)
-        self.assertTrue(f([0.1, 0.1]) >  0)
+        self.assertTrue(f([0.1, 0.1]) > 0)
 
         f = pints.toy.ParabolicError([1, 1, 1])
         self.assertEqual(f.n_parameters(), 3)
         self.assertEqual(list(f.optimum()), [1, 1, 1])
         self.assertEqual(f([1, 1, 1]), 0)
-        self.assertTrue(f([1.1, 1.1, 1.1]) >  0)
+        self.assertTrue(f([1.1, 1.1, 1.1]) > 0)
 
 
 if __name__ == '__main__':
