@@ -189,10 +189,12 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                         m_active[:, :d])
 
             if i < self._rejection_samples:
-                #TODO: SHOULD THIS HAVE BEEN REJECT_ELLIPSOID_SAMPLE ???
+                # Start off with rejection sampling, while this is still very
+                # efficient.
                 m_active[a_min_index, :] = self._reject_sample_prior(
                     a_running_log_likelihood)
             else:
+                # After a number of samples, switch to ellipsoid sampling.
                 m_active[a_min_index, :] = \
                     self._reject_ellipsoid_sample_faster(
                         a_running_log_likelihood, m_active[:, :d],
