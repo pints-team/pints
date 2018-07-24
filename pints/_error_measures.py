@@ -241,7 +241,8 @@ class MeanSquaredError(ProblemErrorMeasure):
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
         e = self._ninv * np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
-        de = 2 * self._ninv * np.sum((r.T * dy.T), axis=(1, 2))
+        de = 2 * self._ninv * np.sum(np.sum((r.T * dy.T), axis=2) *
+                                     self._weights, axis=1)
         return e, de
 
 
@@ -306,6 +307,6 @@ class SumOfSquaresError(ProblemErrorMeasure):
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
         e = np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
-        de = 2 * np.sum((r.T * dy.T), axis=(1, 2))
+        de = 2 * np.sum(np.sum((r.T * dy.T), axis=2) * self._weights, axis=1)
         return e, de
 
