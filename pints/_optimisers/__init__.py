@@ -59,14 +59,17 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         # Check initial standard deviation
         if sigma0 is None:
             # Set a standard deviation
-            if self._boundaries:
-                # Use boundaries to guess
+
+            # Try and use boundaries to guess
+            try:
                 self._sigma0 = (1 / 6) * self._boundaries.range()
-            else:
+            except AttributeError:
+                # No boundaries set, or boundaries don't support range()
                 # Use initial position to guess at parameter scaling
                 self._sigma0 = (1 / 3) * np.abs(self._x0)
                 # But add 1 for any initial value that's zero
                 self._sigma0 += (self._sigma0 == 0)
+
             self._sigma0.setflags(write=False)
 
         elif np.isscalar(sigma0):
@@ -662,11 +665,12 @@ class TriangleWaveTransform(object):
     Note: The transform is applied _inside_ optimisation methods, there is no
     need to wrap this around your own problem or score function.
 
-    This can be applied as a transformation on ``x`` to implement boundaries in
-    methods with no natural boundary mechanism. It effectively mirrors the
-    search space at every boundary, leading to a continuous (but non-smooth)
-    periodic landscape. While this effectively creates an infinite number of
-    minima/maxima, each one maps to the same point in parameter space.
+    This can be applied as a transformation on ``x`` to implement _rectangular_
+    boundaries in methods with no natural boundary mechanism. It effectively
+    mirrors the search space at every boundary, leading to a continuous (but
+    non-smooth) periodic landscape. While this effectively creates an infinite
+    number of minima/maxima, each one maps to the same point in parameter
+    space.
 
     It should work well for that maintain a single search position or a single
     search distribution (e.g. :class:`CMAES`, :class:`xNES`, :class:`SNES`),
@@ -766,7 +770,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     # Check boundaries
     if not (boundaries is None or isinstance(boundaries, pints.Boundaries)):
         lower, upper = boundaries
-        boundaries = pints.Boundaries(lower, upper)
+        boundaries = pints.RectangularBoundaries(lower, upper)
 
     # Create an error measure
     e = _CurveFitError(f, d, x, y)
@@ -871,7 +875,7 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     # Check boundaries
     if not (boundaries is None or isinstance(boundaries, pints.Boundaries)):
         lower, upper = boundaries
-        boundaries = pints.Boundaries(lower, upper)
+        boundaries = pints.RectangularBoundaries(lower, upper)
 
     # Create an error measure
     e = _FminError(f, d) if args is None else _FminErrorWithArgs(f, d, args)

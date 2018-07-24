@@ -167,8 +167,8 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
 
-        # Test from boundaries object
-        b = pints.Boundaries(lower, upper)
+        # Test from rectangular boundaries object
+        b = pints.RectangularBoundaries(lower, upper)
         p = pints.UniformLogPrior(b)
         m = float('-inf')
         self.assertEqual(p([0, 0]), m)
@@ -190,6 +190,24 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([1, 20 - 1e-14]), w)
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
+
+        # Test custom boundaries object
+        class CircleBoundaries(pints.Boundaries):
+            def __init__(self, x, y, r):
+                self.x, self.y, self.r = x, y, r
+
+            def n_parameters(self):
+                return 2
+
+            def check(self, p):
+                x, y = p
+                return (x - self.x)**2 + (y - self.y)**2 < self.r**2
+
+        b = CircleBoundaries(5, 5, 2)
+        p = pints.UniformLogPrior(b)
+        minf = -float('inf')
+        self.assertTrue(p([0, 0]) == minf)
+        self.assertTrue(p([4, 4]) > minf)
 
         # Test derivatives (always 0)
         for x in [[0, 0], [0, 5], [0, 19], [0, 21], [5, 0], [5, 21]]:

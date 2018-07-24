@@ -37,7 +37,7 @@ class TestXNES(unittest.TestCase):
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         s = 0.01
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         with StreamCapture():
             x, f = pints.optimise(r, x, s, b, method=pints.XNES)
         self.assertEqual(x.shape, (2, ))
@@ -47,7 +47,7 @@ class TestXNES(unittest.TestCase):
         """ Runs an optimisation with the max_iter stopping criterion. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(True)
@@ -63,7 +63,7 @@ class TestXNES(unittest.TestCase):
         """ Runs an optimisation with the max_unchanged stopping criterion. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(True)
@@ -84,7 +84,7 @@ class TestXNES(unittest.TestCase):
         """ Runs an optimisation with the threshold stopping criterion. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0.008, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(True)
@@ -101,7 +101,7 @@ class TestXNES(unittest.TestCase):
         """ Tries to run an optimisation with the no stopping criterion. """
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
-        b = pints.Boundaries([-0.01, 0.95], [0.01, 1.05])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.Optimisation(r, x, s, b, method)
         opt.set_log_to_screen(debug)
@@ -141,7 +141,7 @@ class TestXNES(unittest.TestCase):
 
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
         # Run with guessed number of cores
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
