@@ -763,24 +763,15 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         raise ValueError(
             'The first dimension of `x` and `y` must be the same.')
 
-    # Get number of points in data
-    n = 1 / np.product(y.shape)
-
     # Check boundaries
     if not (boundaries is None or isinstance(boundaries, pints.Boundaries)):
         lower, upper = boundaries
         boundaries = pints.Boundaries(lower, upper)
 
     # Create an error measure
-    class Err(pints.ErrorMeasure):
-        def n_parameters(self):
-            return d
-
-        def __call__(self, p):
-            return np.sum((y - f(x, *p))**2) * n
+    e = _CurveFitError(f, d, x, y)
 
     # Set up optimisation
-    e = Err()
     opt = pints.Optimisation(e, p0, boundaries=boundaries, method=method)
 
     # Set stopping criteria
@@ -797,6 +788,22 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     # Run and return
     popt, fopt = opt.run()
     return popt
+
+
+class _CurveFitError(pints.ErrorMeasure):
+    """ Error measure for :meth:`curve_fit()`. """
+    def __init__(self, function, dimension, x, y):
+        self.f = function
+        self.d = dimension
+        self.x = x
+        self.y = y
+        self.n = 1 / np.product(y.shape)    # Total number of points in data
+
+    def n_parameters(self):
+        return self.d
+
+    def __call__(self, p):
+        return np.sum((self.y - self.f(self.x, *p))**2) * self.n
 
 
 def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
@@ -867,26 +874,9 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
         boundaries = pints.Boundaries(lower, upper)
 
     # Create an error measure
-    if args is None:
-
-        class Err(pints.ErrorMeasure):
-            def n_parameters(self):
-                return d
-
-            def __call__(self, x):
-                return f(x)
-
-    else:
-
-        class Err(pints.ErrorMeasure):
-            def n_parameters(self):
-                return d
-
-            def __call__(self, x):
-                return f(x, *args)
+    e = _FminError(f, d) if args is None else _FminErrorWithArgs(f, d, args)
 
     # Set up optimisation
-    e = Err()
     opt = pints.Optimisation(e, x0, boundaries=boundaries, method=method)
 
     # Set stopping criteria
@@ -902,3 +892,31 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
 
     # Run and return
     return opt.run()
+
+
+class _FminError(pints.ErrorMeasure):
+    """ Error measure for :meth:`fmin()`. """
+    def __init__(self, f, d):
+        self.f = f
+        self.d = d
+
+    def n_parameters(self):
+        return self.d
+
+    def __call__(self, x):
+        return self.f(x)
+
+
+class _FminErrorWithArgs(pints.ErrorMeasure):
+    """ Error measure for :meth:`fmin()` for functions with args. """
+    def __init__(self, f, d, args):
+        self.f = f
+        self.d = d
+        self.args = args
+
+    def n_parameters(self):
+        return self.d
+
+    def __call__(self, x):
+        return self.f(x, *self.args)
+
