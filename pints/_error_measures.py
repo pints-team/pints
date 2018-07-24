@@ -231,15 +231,16 @@ class MeanSquaredError(ProblemErrorMeasure):
         self._weights = np.asarray([float(w) for w in weights])
 
     def __call__(self, x):
-        return (np.sum((self._problem.evaluate(x) - self._values)**2 *
-                self._weights) * self._ninv)
+        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
+                               axis=0) * self._weights) * self._ninv),
+                      axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
         y, dy = self._problem.evaluateS1(x)
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
-        e = self._ninv * np.sum(r**2 * self._weights)
+        e = self._ninv * np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
         de = 2 * self._ninv * np.sum((r.T * dy.T), axis=(1, 2))
         return e, de
 
@@ -295,15 +296,16 @@ class SumOfSquaresError(ProblemErrorMeasure):
         self._weights = np.asarray([float(w) for w in weights])
 
     def __call__(self, x):
-        return np.sum((self._problem.evaluate(x) - self._values)**2 *
-                      self._weights)
+        return np.sum((np.sum(((self._problem.evaluate(x) - self._values)**2),
+                              axis=0) * self._weights),
+                      axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
         y, dy = self._problem.evaluateS1(x)
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
-        e = np.sum(r**2 * self._weights)
+        e = np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
         de = 2 * np.sum((r.T * dy.T), axis=(1, 2))
         return e, de
 
