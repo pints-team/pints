@@ -155,11 +155,19 @@ class PSO(pints.PopulationBasedOptimiser):
             self._manual_boundaries = True
 
         # Create safe xs to pass to user
-        self._user_xs = np.array(self._xs, copy=True)
+        if self._boundary_transform is not None:
+            # Rectangular boundaries? Then apply transform to xs
+            self._xs = self._boundary_transform(self._xs)
+        if self._manual_boundaries:
+            # Manual boundaries? Then filter out out-of-bounds points from xs
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
+        else:
+            self._user_xs = np.array(self._xs, copy=True)
 
-        #TODO: FOR MANUAL CHECKING, AT THIS POINT WED HAVE TO FILTER OUT
-        # OUT-OF-BOUNDS POINTS, PRESENT ONLY THE GOOD ONES TO THE USER, AND
-        # THEN LATER FILL THEM IN AT THE CORRECT SPOT AGAIN
+        # Set user points as read-only
+        self._user_xs.setflags(write=False)
 
         # Set local/global exploration balance
         self.set_local_global_balance()
@@ -230,6 +238,12 @@ class PSO(pints.PopulationBasedOptimiser):
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
 
+        # Manual boundaries? Then reconstruct full fx vector
+        if self._manual_boundaries and len(fx) < self._population_size:
+            user_fx = fx
+            fx = np.ones((self._population_size, )) * float('inf')
+            fx[self._user_ids] = user_fx
+
         # Update particles
         for i in range(self._population_size):
 
@@ -255,18 +269,23 @@ class PSO(pints.PopulationBasedOptimiser):
             # Update position
             self._xs[i] += self._vs[i]
 
-        # Map points outside of the search space back into it
+        # Create safe xs to pass to user
         if self._boundary_transform is not None:
-            self._xs = self._boundary_transform(self._xs)
+            # Rectangular boundaries? Then apply transform to xs
+            self._user_xs = self._xs = self._boundary_transform(self._xs)
+        elif self._manual_boundaries:
+            # Manual boundaries? Then filter out out-of-bounds points from xs
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
+        else:
+            self._user_xs = np.array(self._xs, copy=True)
 
-        # Update global best
+        # Update global best score
         i = np.argmin(self._fl)
         if self._fl[i] < self._fg:
             self._fg = self._fl[i]
             self._pg = np.array(self._pl[i], copy=True)
-
-        # Create safe xs to pass to user
-        self._user_xs = np.array(self._xs, copy=True)
 
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
