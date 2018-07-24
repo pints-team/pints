@@ -192,6 +192,15 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e(x), 15 / 6)
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, 15 / 6)
+        # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
+        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        #       = 2 * [-3*1 + -3*2]
+        #       = -18
+        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        #       = 2 * [-3*1 + -3*2]
+        #       = -18
+        self.assertEqual(dy[0], -18 / 6)
+        self.assertEqual(dy[1], -18 / 6)
 
     def test_probability_based_error(self):
         p = MiniLogPDF()
@@ -313,6 +322,15 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e(x), 15)
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, 15)
+        # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
+        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        #       = 2 * [-3*1 + -3*2]
+        #       = -18
+        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        #       = 2 * [-3*1 + -3*2]
+        #       = -18
+        self.assertEqual(dy[0], -18)
+        self.assertEqual(dy[1], -18)
 
     def test_sum_of_errors(self):
         e1 = pints.SumOfSquaresError(MiniProblem())
