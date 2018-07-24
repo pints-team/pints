@@ -63,7 +63,9 @@ class TestPSO(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
         # Circular boundaries
+        # Start near edge, to increase chance of out-of-bounds occurring.
         b = CircularBoundaries([0, 0], 1)
+        x = [0.99, 0]
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
