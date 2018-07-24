@@ -117,6 +117,7 @@ class SMC(pints.SMCSampler):
         if self._verbose:
             print('Running sequential Monte Carlo')
             print('Total number of particles: ' + str(self._particles))
+            print('Number of temperatures: '  + str(len(self._schedule)))
             print('Storing 1 sample per ' + str(self._thinning_rate) + ' particle')
 
         # Initial starting parameters
@@ -139,7 +140,8 @@ class SMC(pints.SMCSampler):
         m_samples[:, :, 0] = samples
         weights_old = weights
         for i in range(0, num_iterates - 1):
-          print(i)
+          if self._verbose:
+            print('Sampling from distribution of temperature: ' + str(self._schedule[i + 1]))
           samples_new, weights_new = self.steps_2_and_3(m_samples[:, :, i], weights_old, self._schedule[i], self._schedule[i + 1])
           weights_old = weights_new
           m_samples[:, :, i + 1] = samples_new
@@ -168,9 +170,10 @@ class SMC(pints.SMCSampler):
         Returns the tempered log-pdf:
         beta * log pi(x) + (1 - beta) * log N(0, sigma)
         """
-        return beta * self._log_posterior(x) + \
-               (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
-                                                               cov=self._sigma0)
+        # Choice 1: to use annealed (without second bit) or mixture distribution (with it)
+        return beta * self._log_posterior(x)
+               #  + (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
+                                                               # cov=self._sigma0)
 
     def w_tilde(self, x_old, x_new, beta_old, beta_new):
         """
@@ -214,7 +217,6 @@ class SMC(pints.SMCSampler):
             samples_new[i] = samples[i]
           else:
             samples_new[i] = proposed[i]
-        
         assert np.count_nonzero(samples_new==0) == 0, "Zero elements appearing in samples matrix."
         return samples_new
 
@@ -250,6 +252,8 @@ class SMC(pints.SMCSampler):
         else:
           resamples, weights_new = samples_old, weights_old
         samples_new = self.kernel_sample(resamples, beta_new)
-        
         weights_new = self.new_weights(weights_old, samples_old, samples_new, beta_old, beta_new)
+        
+        # Choice 2: from remark 1 of algorithm 3.1.1. due to the form of L used (eqn. 30 and 31) resample again
+        samples_new, weights_discard = self.resample(weights_new, samples_new)
         return samples_new, weights_new
