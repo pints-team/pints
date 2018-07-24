@@ -110,12 +110,14 @@ class SMC(pints.SMCSampler):
             self._schedule = schedule
 
     def run(self):
-
+        """
+        Runs the SMC sampler.
+        """
         # Report the current settings
         if self._verbose:
             print('Running sequential Monte Carlo')
             print('Total number of particles: ' + str(self._particles))
-            print('Storing 1 sample per ' + str(self._thinning_rate) + ' iteration')
+            print('Storing 1 sample per ' + str(self._thinning_rate) + ' particle')
 
         # Initial starting parameters
         mu = self._x0
@@ -130,17 +132,18 @@ class SMC(pints.SMCSampler):
         for i in range(0, self._particles):
           weights[i] = self.tempered_distribution(samples[i],self._schedule[1]) - self.tempered_distribution(samples[i],0.0)
         weights = np.exp(weights - logsumexp(weights))
-        
+
         # Iterate steps 2 and 3 in Del Moral 3.1.1.
         num_iterates = len(self._schedule)
         m_samples = np.zeros((self._particles, self._dimension, num_iterates))
         m_samples[:, :, 0] = samples
         weights_old = weights
         for i in range(0, num_iterates - 1):
+          print(i)
           samples_new, weights_new = self.steps_2_and_3(m_samples[:, :, i], weights_old, self._schedule[i], self._schedule[i + 1])
           weights_old = weights_new
           m_samples[:, :, i + 1] = samples_new
-        
+
         return m_samples[:, :, -1]
 
     def set_thinning_rate(self, thinning):
@@ -203,14 +206,16 @@ class SMC(pints.SMCSampler):
         for i in range(0, self._particles):
           proposed[i] = np.random.multivariate_normal(mean=samples[i], cov=self._sigma0,
                                                 size=1)[0]
+        assert np.count_nonzero(proposed==0) == 0, "Zero elements appearing in proposals matrix."
         samples_new = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
           r = np.exp(self.tempered_distribution(proposed[i], beta) - self.tempered_distribution(samples[i], beta))
-          print(r)
           if r <= np.random.uniform(size=1):
             samples_new[i] = samples[i]
-        else:
+          else:
             samples_new[i] = proposed[i]
+        
+        assert np.count_nonzero(samples_new==0) == 0, "Zero elements appearing in samples matrix."
         return samples_new
 
     def ess(self, weights):
@@ -232,6 +237,7 @@ class SMC(pints.SMCSampler):
           a_end = a_end + selected[i]
           new_samples[a_start:a_end, :] = samples[i]
           a_start = a_start + selected[i]
+        assert np.count_nonzero(new_samples==0) == 0, "Zero elements appearing in samples matrix."
         return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
     def steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
@@ -244,5 +250,6 @@ class SMC(pints.SMCSampler):
         else:
           resamples, weights_new = samples_old, weights_old
         samples_new = self.kernel_sample(resamples, beta_new)
+        
         weights_new = self.new_weights(weights_old, samples_old, samples_new, beta_old, beta_new)
         return samples_new, weights_new
