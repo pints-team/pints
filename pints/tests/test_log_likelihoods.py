@@ -65,7 +65,7 @@ class TestLogLikelihood(unittest.TestCase):
         p = [0.1, 0.1, 0.1]
         x = unscaled(p)
         y = scaled(p)
-        self.assertEqual(y, x / nt / no)
+        self.assertAlmostEqual(y, x / nt / no)
 
         # Test multi-output derivatives
         y1, dy1 = unscaled.evaluateS1(p)
