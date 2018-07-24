@@ -18,7 +18,7 @@ class TestRectangularBoundaries(unittest.TestCase):
     Tests the RectangularBoundaries class.
     """
 
-    def test_boundaries(self):
+    def test_rectangular_boundaries(self):
 
         # Create boundaries
         pints.RectangularBoundaries([1, 2], [3, 4])

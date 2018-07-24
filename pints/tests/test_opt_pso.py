@@ -14,7 +14,7 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture, TemporaryDirectory, CircularBoundaries
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -46,9 +46,19 @@ class TestPSO(unittest.TestCase):
 
     def test_bounded(self):
         """ Runs an optimisation with boundaries. """
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
+
+        # Rectangular boundaries
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt.set_log_to_screen(debug)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(found_solution < 1e-3)
+
+        # Circular boundaries
+        b = CircularBoundaries([0, 1], 0.1)
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()

@@ -659,8 +659,8 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
 
 class TriangleWaveTransform(object):
     """
-    Transforms from unbounded to bounded parameter space using a periodic
-    triangle-wave transform.
+    Transforms from unbounded to (rectangular) bounded parameter space using a
+    periodic triangle-wave transform.
 
     Note: The transform is applied _inside_ optimisation methods, there is no
     need to wrap this around your own problem or score function.
@@ -672,12 +672,13 @@ class TriangleWaveTransform(object):
     number of minima/maxima, each one maps to the same point in parameter
     space.
 
-    It should work well for that maintain a single search position or a single
-    search distribution (e.g. :class:`CMAES`, :class:`xNES`, :class:`SNES`),
-    which will end up in one of the many mirror images. However, for methods
-    that use independent search particles (e.g. :class:`PSO`) it could lead to
-    a scattered population, with different particles exploring different mirror
-    images. Other strategies should be used for such problems.
+    It should work well for methods that maintain a single search position or a
+    single search distribution (e.g. :class:`CMAES`, :class:`xNES`,
+    :class:`SNES`), which will end up in one of the many mirror images.
+    However, for methods that use independent search particles (e.g.
+    :class:`PSO`) it could lead to a scattered population, with different
+    particles exploring different mirror images. Other strategies should be
+    used for such problems.
     """
 
     def __init__(self, boundaries):
@@ -750,8 +751,6 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
 
     Returns a tuple ``(xbest, fbest)`` with the best position found, and the
     corresponding value ``fbest = f(xbest)``.
-
-
     """
     # Test function
     if not callable(f):
