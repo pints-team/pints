@@ -203,6 +203,10 @@ from ._mcmc._mala import MALAMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 
+#
+# SMC
+#
+from ._sequential._sequentialMC import SMC
 
 #
 # Nested samplers
@@ -210,6 +214,8 @@ from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._nested import NestedSampler
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
+
+
 
 
 #
