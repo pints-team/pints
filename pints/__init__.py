@@ -194,6 +194,7 @@ from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 #
 # SMC
 #
+from ._sequential import SMCSampler
 from ._sequential._sequentialMC import SMC
 
 #

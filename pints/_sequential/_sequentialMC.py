@@ -13,56 +13,101 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 from scipy import stats
+from scipy.special import logsumexp
 
 
-class SMC(pints.SingleChainMCMC):
+class SMC(pints.SMCSampler):
     """
-    *Extends:* :class:`MCMC`
     Samples from a density using sequential Monte Carlo sampling [1].
 
-    Algorithm 3.1.1 from:
-    "Sequential Monte Carlo Samplers", Del Moral et al. 2006,
+    Algorithm 3.1.1 using equation (31) for w_tilde.
+    
+    [1] "Sequential Monte Carlo Samplers", Del Moral et al. 2006,
     Journal of the Royal Statistical Society. Series B.
     """
-    def __init__(self, log_likelihood, x0, sigma0=None):
-        super(SMC, self).__init__(
-            log_likelihood, x0, sigma0)
+    def __init__(self, log_posterior, x0, sigma0=None):
+        super(SMC, self).__init__(log_posterior,x0, sigma0)
 
         # Number of particles
-        self._particles = 100
-
-        # Total number of iterations
-        self._iterations = self._dimension * 2000
-
-        # Number of iterations to discard as burn-in
-        self._burn_in = int(0.5 * self._iterations)
+        self._particles = 1000
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
-    
-        # Constant weights vector
-        self._constant_weights = np.repeat(1.0 / num_samples, num_samples)
         
-    def tempered_distribution(self,theta,beta):
+        # Temperature schedule
+        self._schedule = None
+        self.set_temperature_schedule()
+        
+        # ESS threshold (default from Del Moral et al.)
+        self._ess_threshold = self._particles / 2
+        
+    def set_particles(self, particles):
         """
-        Returns the log pdf of the tempered distribution 
-        [p(theta|x) p(theta)]^(1-beta)
+        Sets the number of particles
         """
-        return (1.0 - beta) * self._log_likelihood(self)
+        if particles < 10:
+          raise ValueError(
+            'Must have more that 10 particles in SMC.')
+        self._particles = particles
 
-    def burn_in(self):
+    def set_ess_threshold(self, ess_threshold):
         """
-        Returns the number of iterations that will be discarded as burn-in in
-        the next run.
+        Sets the threshold ESS (effective sample size)
         """
-        return self._burn_in
+        if ess_threshold > self._particles:
+          raise ValueError('ESS threshold must be below actual sample size.')
+        if ess_threshold < 0:
+          raise ValueError('ESS must be greater than zero.')
+        self._ess_threshold = ess_threshold
 
-    def iterations(self):
+    def set_temperature_schedule(self, schedule=10):
         """
-        Returns the total number of iterations that will be performed in the
-        next run, including the non-adaptive and burn-in iterations.
+        Sets a temperature schedule.
+
+        If ``schedule`` is an ``int`` it is interpreted as the number of
+        temperatures and a schedule is generated that is uniformly spaced
+        on the log scale.
+
+        If ``schedule`` is a list (or array) it is interpreted as a custom
+        temperature schedule.
         """
-        return self._iterations
+
+        # Check type of schedule argument
+        if np.isscalar(schedule):
+
+            # Set using int
+            schedule = int(schedule)
+            if schedule < 2:
+                raise ValueError(
+                    'A schedule must contain at least two temperatures.')
+            
+            # Set a temperature schedule that is uniform on log(T)
+            a_max = 0
+            a_min = np.log(0.0001)
+            diff = (a_max - a_min) / schedule
+            log_schedule = np.linspace(a_min, a_max, schedule)
+            self._schedule = np.exp(log_schedule)
+            self._schedule.setflags(write=False)
+
+        else:
+
+            # Set to custom schedule
+            schedule = pints.vector(schedule)
+            if len(schedule) < 2:
+                raise ValueError(
+                    'A schedule must contain at least two temperatures.')
+            if schedule[0] != 0:
+                raise ValueError(
+                    'First element of temperature schedule must be 0.')
+
+            # Check vector elements all between 0 and 1 (inclusive)
+            if np.any(schedule < 0):
+                raise ValueError('Temperatures must be non-negative.')
+            if np.any(schedule > 1):
+                raise ValueError('Temperatures cannot exceed 1.')
+
+            # Store
+            self._schedule = schedule
 
     def run(self):
 
@@ -70,72 +115,33 @@ class SMC(pints.SingleChainMCMC):
         if self._verbose:
             print('Running sequential Monte Carlo')
             print('Total number of iterations: ' + str(self._iterations))
-            print(
-                'Number of iterations to discard as burn-in: '
-                + str(self._burn_in))
             print('Storing 1 sample per ' + str(self._thinning_rate) + ' iteration')
 
         # Initial starting parameters
         mu = self._x0
         sigma = self._sigma0
-        current = self._x0
-        current_log_likelihood = self._log_likelihood(current)
-        if not np.isfinite(current_log_likelihood):
-            raise ValueError(
-                'Suggested starting position has a non-finite log-likelihood.')
 
         # Starting parameters
         samples = np.random.multivariate_normal(mean=mu, cov=sigma,
                                                 size=self._particles)
-        
+
         # Starting weights
-        Weights = np.zeros(self._particles)
+        weights = np.zeros(self._particles)
         for i in range(0, self._particles):
-          Weights[i] = np.exp(self.tempered_distribution(lSamples[i],1) - 
-            stats.multivariate_normal.logpdf(Samples[i],mean=mu, cov=sigma))
-        weights = weights / np.sum(weights)
-
-        return weights
-
-    def set_acceptance_rate(self, rate):
-        """
-        Sets the target acceptance rate for the next run.
-        """
-        rate = float(rate)
-        if rate <= 0:
-            raise ValueError('Target acceptance rate must be greater than 0.')
-        elif rate > 1:
-            raise ValueError('Target acceptance rate cannot exceed 1.')
-        self._acceptance_target = rate
-
-    def set_burn_in(self, burn_in):
-        """
-        Sets the number of iterations to discard as burn-in in the next run.
-        """
-        burn_in = int(burn_in)
-        if burn_in < 0:
-            raise ValueError('Burn-in rate cannot be negative.')
-        self._burn_in = burn_in
-
-    def set_iterations(self, iterations):
-        """
-        Sets the total number of iterations to be performed in the next run
-        (including burn-in and non-adaptive iterations).
-        """
-        iterations = int(iterations)
-        if iterations < 0:
-            raise ValueError('Number of iterations cannot be negative.')
-        self._iterations = iterations
-
-    def set_non_adaptive_iterations(self, adaptation):
-        """
-        Sets the number of iterations to perform before using adapation in the
-        next run.
-        """
-        adaptation = int(adaptation)
-        if adaptation < 0:
-            raise ValueError('Adaptation cannot be negative.')
-        self._adaptation = adaptation
+          weights[i] = self.tempered_distribution(samples[i],self._schedule[1]) - self.tempered_distribution(samples[i],0.0)
+        weights = np.exp(weights - logsumexp(weights))
+        
+        # Iterate steps 2 and 3 in Del Moral 3.1.1.
+        num_iterates = len(self._schedule)
+        m_samples = np.zeros((self._particles, self._dimension, num_iterates))
+        m_samples[:, :, 0] = samples
+        weights_old = weights
+        for i in range(0, num_iterates - 1):
+          samples_new, weights_new = self.steps_2_and_3(m_samples[:, :, i], weights_old, self._schedule[i], self._schedule[i + 1])
+          weights_old = weights_new
+          m_samples[:, :, i + 1] = samples_new
+        
+        return m_samples[:, :, -1]
 
     def set_thinning_rate(self, thinning):
         """
@@ -159,62 +165,84 @@ class SMC(pints.SingleChainMCMC):
         Returns the tempered log-pdf:
         beta * log pi(x) + (1 - beta) * log N(0, sigma)
         """
-        return beta * log_likelihood(x) + \
+        return beta * self._log_posterior(x) + \
                (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
                                                                cov=self._sigma0)
+
+    def w_tilde(self, x_old, x_new, beta_old, beta_new):
+        """
+        Calculates the log unnormalised incremental weight as per eq. (31) in Del Moral
+        """
+        return self.tempered_distribution(x_old, beta_new) - self.tempered_distribution(x_old, beta_old)
+
+    def new_weight(self, w_old, x_old, x_new, beta_old, beta_new):
+        """
+        Calculates the log new weights as per algorithm 3.1.1.
+        in Del Moral et al. (2006).
+        """
+        w_tilde_value = self.w_tilde(x_old, x_new, beta_old, beta_new)
+        return w_old + w_tilde_value
+
+    def new_weights(self, w_old, samples_old, samples_new, beta_old, beta_new):
+        """
+        Calculates the new weights as per algorithm 3.1.1.
+        in Del Moral et al. (2006).
+        """
+        w_new = np.zeros(self._particles)
+        for i in range(0, self._particles):
+          w_new[i] = self.new_weight(w_old[i], samples_old[i], samples_new[i], beta_old, beta_new)
+        return np.exp(w_new - logsumexp(w_new))
+
+    def kernel_sample(self, samples, beta):
+        """
+        Generates a new sample by using a Metropolis kernel for a distribution with log
+        pdf:
+        beta * log pi(x) + (1 - beta) * log N(0, sigma).
+        """
+        proposed = np.zeros((self._particles, self._dimension))
+        for i in range(0, self._particles):
+          proposed[i] = np.random.multivariate_normal(mean=samples[i], cov=self._sigma0,
+                                                size=1)[0]
+        samples_new = np.zeros((self._particles, self._dimension))
+        for i in range(0, self._particles):
+          r = np.exp(self.tempered_distribution(proposed[i], beta) - self.tempered_distribution(samples[i], beta))
+          print(r)
+          if r <= np.random.uniform(size=1):
+            samples_new[i] = samples[i]
+        else:
+            samples_new[i] = proposed[i]
+        return samples_new
+
+    def ess(self, weights):
+        """
+        Calculates the effective sample size.
+        """
+        return 1.0 / np.sum(weights**2)
 
     def resample(self, weights, samples):
         """
         Returns samples according to the weights vector
         from the multinomial distribution.
         """
-        num_samples = len(weights)
-        selected = np.random.multinomial(num_samples,weights)
-        new_sample = np.zeros(0)
-        for i in range(0,num_samples):
-            if selected[i] > 0:
-                new_sample = np.concatenate((new_sample,np.repeat(samples[i],selected[i])))
-        return new_sample
-    
-    def w_tilde(x_old, x_new, beta_old, beta_new, sigma):
-        numerator = tempered_distribution(x_new, beta_new) * L(x_new, x_old, beta_old, sigma)
-        denominator = temperedDistribution(x_old, beta_old) * K(x_old, x_new, beta_new, sigma)
-        return numerator / denominator
+        selected = np.random.multinomial(self._particles, weights)
+        new_samples = np.zeros((self._particles, self._dimension))
+        a_start = 0
+        a_end = 0
+        for i in range(0, self._particles):
+          a_end = a_end + selected[i]
+          new_samples[a_start:a_end, :] = samples[i]
+          a_start = a_start + selected[i]
+        return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
-    def K(xOld,xNew,beta,aSigma):
-        return stats.norm.pdf(xNew,loc=xOld,scale=aSigma) * temperedDistribution(xNew,beta) / temperedDistribution(xOld,beta)
-
-    def L(xNew,xOld,beta,aSigma):
-        return temperedDistribution(xOld,beta) * K(xOld,xNew,beta,aSigma) / temperedDistribution(xNew,beta)
-
-    def newWeight(WOld,xOld,xNew,betaOld,betaNew,aSigma):
-        wtilde = wTilde(xOld,xNew,betaOld,betaNew,aSigma)
-        return WOld * wtilde
-
-    # def newWeights(lWOld,lSamplesOld,lSamplesNew,betaOld,betaNew,aSigma):
-    #     lNewW = map(lambda (WOld,xOld,xNew): newWeight(WOld,xOld,xNew,betaOld,betaNew,aSigma),zip(lWOld,lSamplesOld,lSamplesNew))
-    #     return lNewW / np.sum(lNewW)
-    # 
-    # def kernel_sample(samples, beta, sigma):
-    #     proposed = map(lambda x: np.random.multivariate_normal(mean=x, cov=sigma), samples)
-    #     new_samples = map(lambda (old, new): old if (tempered_distribution(new, beta) /
-    #                                                  tempered_Distribution(old, beta))
-    #                                                  <= np.random.uniform(size=1) /
-    #                                              else new,
-    #                       zip(samples, proposed))
-    #     return new_samples
-    # 
-    # def steps2And3(samples_old, weights_old, beta_old, beta_new, sigma):
-    #     """
-    #     Undertakes steps 2 and 3 from algorithm 3.1.1. in
-    #     Del Moral 2006 paper.
-    #     """
-    #     num_samples = len(weights_old)
-    #     resamples = resample(weights_old, samples_old)
-    #     samples_new = kernel_sample(resamples, beta_new, sigma)
-    #     weights_new = new_weights(self._constant_weights,
-    #                               samples_old, samples_new,
-    #                               beta_old, beta_new, sigma)
-    #     resamples_new, weights_new = resample(weights_new, samples_new)
-    #     return lResamplesNew
-
+    def steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
+        """
+        Undertakes steps 2 and 3 from algorithm 3.1.1. in
+        Del Moral et al. (2006).
+        """
+        if self.ess(weights_old) < self._ess_threshold:
+          resamples, weights_new = self.resample(weights_old, samples_old)
+        else:
+          resamples, weights_new = samples_old, weights_old
+        samples_new = self.kernel_sample(resamples, beta_new)
+        weights_new = self.new_weights(weights_old, samples_old, samples_new, beta_old, beta_new)
+        return samples_new, weights_new
