@@ -10,11 +10,14 @@ import os
 import sys
 import shutil
 import tempfile
+import numpy as np
+
+import pints
+
+# StringIO in Python 3 and 2
 try:
-    # Python 3
     from io import StringIO
 except ImportError:
-    # Python2
     from cStringIO import StringIO
 
 
@@ -184,3 +187,40 @@ class TemporaryDirectory(object):
             return '<TemporaryDirectory, outside of context>'
         else:
             return self._dir
+
+
+class CircularBoundaries(pints.Boundaries):
+    """
+    Circular boundaries, to test boundaries that are non-rectangular.
+
+    Arguments:
+
+    ``center``
+        The point these boundaries are centered on.
+    ``radius``
+        The radius (in all directions).
+
+    """
+    def __init__(self, center, radius=1):
+        super(CircularBoundaries, self).__init__()
+
+        # Check arguments
+        center = pints.vector(center)
+        if len(center) < 1:
+            raise ValueError('Number of parameters must be at least 1.')
+        self._center = center
+        self._n_parameters = len(center)
+
+        radius = float(radius)
+        if radius <= 0:
+            raise ValueError('Radius must be greater than zero.')
+        self._radius2 = radius**2
+
+    def check(self, parameters):
+        """ See :meth:`pints.Boundaries.check()`. """
+        return np.sum((parameters - self._center)**2) < self._radius2
+
+    def n_parameters(self):
+        """ See :meth:`pints.Boundaries.n_parameters()`. """
+        return self._n_parameters
+

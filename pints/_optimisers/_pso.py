@@ -117,15 +117,18 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial positions
         self._xs.append(np.array(self._x0, copy=True))
-        if self._boundaries is None:
-            for i in range(1, self._population_size):
-                self._xs.append(np.random.normal(self._x0, self._sigma0))
-        else:
-            for i in range(1, self._population_size):
-                self._xs.append(
-                    self._boundaries._lower
-                    + np.random.uniform(0, 1, self._dimension)
-                    * (self._boundaries._upper - self._boundaries._lower))
+        if self._boundaries is not None:
+            # Attempt to sample n - 1 points from the boundaries
+            try:
+                self._xs.extend(
+                    self._boundaries.sample(self._population_size - 1))
+            except NotImplementedError:
+                # Not all boundaries implement sampling
+                pass
+        # If we couldn't sample from the boundaries, use gaussian sampling
+        # around x0.
+        for i in range(1, self._population_size):
+            self._xs.append(np.random.normal(self._x0, self._sigma0))
         self._xs = np.array(self._xs, copy=True)
 
         # Set initial velocities
@@ -142,14 +145,21 @@ class PSO(pints.PopulationBasedOptimiser):
         self._fg = float('inf')
         self._pg = self._xs[0]
 
-        # Create boundary transform
+        # Create boundary transform, or use manual boundary checking
+        self._manual_boundaries = False
         self._boundary_transform = None
-        if self._boundaries is not None:
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
             self._boundary_transform = pints.TriangleWaveTransform(
                 self._boundaries)
+        elif self._boundaries is not None:
+            self._manual_boundaries = True
 
         # Create safe xs to pass to user
         self._user_xs = np.array(self._xs, copy=True)
+
+        #TODO: FOR MANUAL CHECKING, AT THIS POINT WED HAVE TO FILTER OUT
+        # OUT-OF-BOUNDS POINTS, PRESENT ONLY THE GOOD ONES TO THE USER, AND
+        # THEN LATER FILL THEM IN AT THE CORRECT SPOT AGAIN
 
         # Set local/global exploration balance
         self.set_local_global_balance()

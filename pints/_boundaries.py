@@ -15,8 +15,6 @@ import numpy as np
 class Boundaries(object):
     """
     Abstract class representing boundaries on a parameter space.
-
-    Note that the :meth:`sample()` method may not always be implemented.
     """
     def check(self, parameters):
         """
@@ -39,6 +37,9 @@ class Boundaries(object):
         The returned value is a numpy array with shape ``(n, d)`` where ``n``
         is the requested number of samples, and ``d`` is the dimension of the
         parameter space these boundaries are defined on.
+
+        *Note that the :meth:`sample()` method does not always have to be
+        implemented.*
         """
         raise NotImplementedError
 
@@ -57,6 +58,7 @@ class RectangularBoundaries(Boundaries):
     ``upper``
         The corresponding upper boundaries
 
+    *Extends:* :class:`pints.Boundaries`.
     """
     def __init__(self, lower, upper):
         super(RectangularBoundaries, self).__init__()
@@ -104,13 +106,7 @@ class RectangularBoundaries(Boundaries):
         return self._upper - self._lower
 
     def sample(self, n=1):
-        """
-        Returns ``n`` random samples from within the boundaries.
-
-        The returned value is a numpy array with shape ``(n, d)`` where ``n``
-        is the requested number of samples, and ``d`` is the dimension of the
-        parameter space these boundaries are defined on.
-        """
+        """ See :meth:`pints.Boundaries.sample()`. """
         return np.random.uniform(
             self._lower, self._upper, size=(n, self._n_parameters))
 
@@ -137,6 +133,8 @@ class LogPDFBoundaries(Boundaries):
 
     For a :class:`pints.LogPrior` based on :class:`pints.Boundaries`, see
     :class:`pints.UniformLogPrior`.
+
+    *Extends:* :class:`pints.Boundaries`.
     """
     def __init__(self, log_pdf, threshold=-float('inf')):
         super(LogPDFBoundaries, self).__init__()
