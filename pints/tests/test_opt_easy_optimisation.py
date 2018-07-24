@@ -24,9 +24,6 @@ class TestEasyOptimisation(unittest.TestCase):
         # for wrapper code, not main functionality!
 
         # Basic test
-        def f(x):
-            return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
-
         np.random.seed(1)
         xopt, fopt = pints.fmin(f, [1, 1], method=pints.XNES)
         self.assertAlmostEqual(xopt[0], 3)
@@ -60,16 +57,13 @@ class TestEasyOptimisation(unittest.TestCase):
         np.random.seed(1)
 
         # Basic test
-        def f(x, a, b, c):
-            return a + b * x + c * x ** 2
-
         x = np.linspace(-5, 5, 100)
         e = np.random.normal(loc=0, scale=0.1, size=x.shape)
-        y = f(x, 9, 3, 1) + e
+        y = g(x, 9, 3, 1) + e
 
         p0 = [0, 0, 0]
         np.random.seed(1)
-        popt = pints.curve_fit(f, x, y, p0, method=pints.XNES)
+        popt = pints.curve_fit(g, x, y, p0, method=pints.XNES)
         self.assertTrue(np.abs(popt[0] - 9) < 0.1)
         self.assertTrue(np.abs(popt[1] - 3) < 0.1)
         self.assertTrue(np.abs(popt[2] - 1) < 0.1)
@@ -80,19 +74,29 @@ class TestEasyOptimisation(unittest.TestCase):
 
         # Test with boundaries
         pints.curve_fit(
-            f, x, y, p0,
+            g, x, y, p0,
             boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
         self.assertTrue(np.abs(popt[0] - 9) < 0.1)
         self.assertTrue(np.abs(popt[1] - 3) < 0.1)
         self.assertTrue(np.abs(popt[2] - 1) < 0.1)
 
         # Test with parallelisation
-        pints.curve_fit(f, x, y, p0, parallel=True, method=pints.XNES)
+        pints.curve_fit(g, x, y, p0, parallel=True, method=pints.XNES)
 
         # Test with invalid sizes of `x` and `y`
         x = np.linspace(-5, 5, 99)
         self.assertRaisesRegexp(
-            ValueError, 'dimension', pints.curve_fit, f, x, y, p0)
+            ValueError, 'dimension', pints.curve_fit, g, x, y, p0)
+
+
+def f(x):
+    """ Pickleable test function. """
+    return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
+
+
+def g(x, a, b, c):
+    """ Pickleable test function. """
+    return a + b * x + c * x ** 2
 
 
 if __name__ == '__main__':
