@@ -42,21 +42,28 @@ class ActionPotentialModel(pints.ForwardModel):
     ``y0``
         (Optional) The initial condition of the observables ``v``, ``cai`` and
         requires ``cai0 >= 0``.
-    ``implicit_parameters``
-        (Optional) The implicit parameter of the model that is not inferred,
-        given as a vector ``[m0, h0, j0, d0, f0, x10, C_m, E_Na, I_Stim_amp,
-        I_Stim_period, I_Stim_length]``. All implicit parameters have to be
-        greater than zero except ``E_Na``.
     """
-    def __init__(self, y0=None, implicit_parameters=None):
+    def __init__(self, y0=None):
         if y0 is None:
             self.set_initial_conditions([-84.622, 2e-7])
         else:
             self.set_initial_conditions(y0)
-        if implicit_parameters is None:
-            self.set_implicit_parameters(self.suggested_implicit_parameters())
-        else:
-            self.set_implicit_parameters(implicit_parameters)
+
+        # Initial condition for non-observable states
+        self._m0 = 0.01
+        self._h0 = 0.99
+        self._j0 = 0.98
+        self._d0 = 0.003
+        self._f0 = 0.99
+        self._x10 = 0.0004
+        # membrane capacitance, in uF/cm^2
+        self._C_m = 1.0
+        # Nernst reversal potentials, in mV
+        self._E_Na = 50.0
+        # Stimulus current
+        self._I_Stim_amp = 25.0
+        self._I_Stim_period = 1000.0
+        self._I_Stim_length = 2.0
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
@@ -146,41 +153,11 @@ class ActionPotentialModel(pints.ForwardModel):
         self._v0 = y0[0]
         self._cai0 = y0[1]
 
-    def set_implicit_parameters(self, k):
-        """
-        Changes the implicit parameters for this model.
-        """
-        if not (k[:7] > 0).all() or not (k[8:] > 0).all():
-            raise ValueError('Implicit parameters cannot be negative except'
-                             ' ``E_Na``.')
-        # Initial condition for non-observable states
-        self._m0 = k[0]
-        self._h0 = k[1]
-        self._j0 = k[2]
-        self._d0 = k[3]
-        self._f0 = k[4]
-        self._x10 = k[5]
-        # membrane capacitance, in uF/cm^2
-        self._C_m = k[6]
-        # Nernst reversal potentials, in mV
-        self._E_Na = k[7]
-        # Stimulus current
-        self._I_Stim_amp = k[8]
-        self._I_Stim_period = k[9]
-        self._I_Stim_length = k[10]
-
     def initial_conditions(self):
         """
         Returns the initial conditions of this model.
         """
         return [self._v0, self._cai0]
-
-    def implicit_parameters(self):
-        """
-        Returns the implicit parameters of this model.
-        """
-        return [self._m0, self._h0, self._j0, self._d0, self._f0, self._x10,
-                self._C_m, self._E_Na]
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
@@ -225,28 +202,6 @@ class ActionPotentialModel(pints.ForwardModel):
         g_K1 = 0.35
         g_x1 = 0.8
         return np.log([g_Na, g_NaC, g_Ca, g_K1, g_x1])
-
-    def suggested_implicit_parameters(self):
-        """
-        Returns a suggested array of implicit parameter values.
-        """
-        # membrane capacitance, in uF/cm^2
-        C_m = 1.0
-        # Nernst reversal potentials, in mV
-        E_Na = 50.0
-        # Stimulus current, in uA/cm^2
-        I_Stim_amp = 25.0
-        I_Stim_period = 1000.0
-        I_Stim_length = 2.0
-        # Initial condition for non-observable states
-        m0 = 0.01
-        h0 = 0.99
-        j0 = 0.98
-        d0 = 0.003
-        f0 = 0.99
-        x10 = 0.0004
-        return np.array([m0, h0, j0, d0, f0, x10, C_m, E_Na, I_Stim_amp,
-                         I_Stim_period, I_Stim_length])
 
     def suggested_times(self):
         """
