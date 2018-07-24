@@ -59,6 +59,8 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     def fbest(self):
         """ See :meth:`Optimiser.fbest()`. """
+        if not self._running:
+            return float('inf')
         f = self._es.result.fbest
         return float('inf') if f is None else f
 
@@ -166,5 +168,7 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
-        x = self._es.result.xbest
-        return self._x0 if x is None else x
+        if self._running:
+            x = self._es.result.xbest
+            return np.array(self._x0 if x is None else x, copy=True)
+        return np.array(self._x0, copy=True)
