@@ -11,6 +11,13 @@ import pints
 import unittest
 import numpy as np
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
+
 debug = False
 
 
@@ -23,10 +30,6 @@ class TestEvaluators(unittest.TestCase):
 
     def test_function(self):
 
-        # Create test function
-        def f(x):
-            return float(x)**2
-
         # Create test data
         xs = np.random.normal(0, 10, 10)
         ys = [f(x) for x in xs]
@@ -37,10 +40,6 @@ class TestEvaluators(unittest.TestCase):
         self.assertTrue(np.all(ys == pints.evaluate(f, xs, parallel=False)))
 
     def test_sequential(self):
-
-        # Create test function
-        def f(x):
-            return float(x)**2
 
         # Create test data
         xs = np.random.normal(0, 10, 100)
@@ -57,21 +56,13 @@ class TestEvaluators(unittest.TestCase):
         self.assertRaises(ValueError, e.evaluate, 1)
 
         # Test args
-        def g(x, y, z):
-            self.assertEqual(y, 10)
-            self.assertEqual(z, 20)
-
-        e = pints.SequentialEvaluator(g, [10, 20])
+        e = pints.SequentialEvaluator(f_args, [10, 20, self])
         e.evaluate([1])
 
         # Args must be a sequence
-        self.assertRaises(ValueError, pints.SequentialEvaluator, g, 1)
+        self.assertRaises(ValueError, pints.SequentialEvaluator, f_args, 1)
 
     def test_parallel(self):
-
-        # Create test function
-        def f(x):
-            return float(x)**2
 
         # Create test data
         xs = np.random.normal(0, 10, 100)
@@ -88,15 +79,11 @@ class TestEvaluators(unittest.TestCase):
         self.assertRaises(ValueError, e.evaluate, 1)
 
         # Test args
-        def g(x, y, z):
-            self.assertEqual(y, 10)
-            self.assertEqual(z, 20)
-
-        e = pints.ParallelEvaluator(g, args=[10, 20])
+        e = pints.ParallelEvaluator(f_args, args=[10, 20, self])
         e.evaluate([1])
 
         # Args must be a sequence
-        self.assertRaises(ValueError, pints.ParallelEvaluator, g, args=1)
+        self.assertRaises(ValueError, pints.ParallelEvaluator, f_args, args=1)
 
         # n-workers must be >0
         self.assertRaises(ValueError, pints.ParallelEvaluator, f, 0)
@@ -105,38 +92,22 @@ class TestEvaluators(unittest.TestCase):
         self.assertRaises(ValueError, pints.ParallelEvaluator, f, 1, 0)
 
         # Exceptions in called method should trigger halt, cause new exception
-
-        # Any old exception
-        def ioerror_on_five(x):
-            if x == 5:
-                raise IOError
-            return x
-
         e = pints.ParallelEvaluator(ioerror_on_five, n_workers=2)
-        self.assertRaises(Exception, e.evaluate, range(10))
-        try:
-            e.evaluate([1, 2, 5])
-        except Exception as ex:
-            self.assertIn('Exception in subprocess', str(ex))
+        self.assertRaisesRegex(
+            Exception, 'Exception in subprocess', e.evaluate, [1, 2, 5])
         e.evaluate([1, 2])
 
         # System exit
-        def system_exit_on_four(x):
-            if x == 4:
-                raise SystemExit
-            return x
+        e = pints.ParallelEvaluator(system_exit_on_four, n_workers=2)
+        self.assertRaisesRegex(
+            Exception, 'Exception in subprocess', e.evaluate, [1, 2, 4])
+        e.evaluate([1, 2])
 
     def test_worker(self):
         """
         Manual test of worker, since cover doesn't pick up on its run method.
         """
         from pints._evaluation import _Worker as Worker
-
-        # Define function
-        def f(x):
-            if x == 30:
-                raise KeyboardInterrupt
-            return 2 * x
 
         # Create queues for worker
         import multiprocessing
@@ -149,7 +120,8 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((2, 3))
         max_tasks = 3
 
-        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w = Worker(
+            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -167,7 +139,8 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((2, 3))
         error.set()
 
-        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w = Worker(
+            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -182,7 +155,8 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((1, 30))
         tasks.put((2, 3))
 
-        w = Worker(f, (), tasks, results, max_tasks, errors, error)
+        w = Worker(
+            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -190,6 +164,37 @@ class TestEvaluators(unittest.TestCase):
         self.assertTrue(error.is_set())
         #self.assertFalse(errors.empty())   # Fails on travis!
         self.assertIsNotNone(errors.get(timeout=0.01))
+
+
+def f(x):
+    """
+    Test function to parallelise. (Must be here so it can be pickled on
+    windows).
+    """
+    return x ** 2
+
+
+def f_args(x, y, z, testcase):
+    testcase.assertEqual(y, 10)
+    testcase.assertEqual(z, 20)
+
+
+def ioerror_on_five(x):
+    if x == 5:
+        raise IOError
+    return x
+
+
+def interrupt_on_30(x):
+    if x == 30:
+        raise KeyboardInterrupt
+    return 2 * x
+
+
+def system_exit_on_four(x):
+    if x == 4:
+        raise SystemExit
+    return x
 
 
 if __name__ == '__main__':
