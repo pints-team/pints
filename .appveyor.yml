@@ -13,5 +13,5 @@ install:
 build: off
 
 test_script:
-  - "%PYTHON%\\python.exe -m unittest discover test"
+  - "%PYTHON%\\python.exe -m unittest discover -v -s pints/tests"
 
