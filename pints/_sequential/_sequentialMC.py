@@ -114,7 +114,7 @@ class SMC(pints.SMCSampler):
         # Report the current settings
         if self._verbose:
             print('Running sequential Monte Carlo')
-            print('Total number of iterations: ' + str(self._iterations))
+            print('Total number of particles: ' + str(self._particles))
             print('Storing 1 sample per ' + str(self._thinning_rate) + ' iteration')
 
         # Initial starting parameters
