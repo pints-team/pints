@@ -77,10 +77,15 @@ class TestSNES(unittest.TestCase):
 
     def test_ask_tell(self):
         """ Tests ask-and-tell related error handling. """
-        opt = method(np.array([1.1, 1.1]))
+        x0 = np.array([1.1, 1.1])
+        opt = method(x0)
 
         # Stop called when not running
         self.assertFalse(opt.stop())
+
+        # Best position and score called before run
+        self.assertEqual(list(opt.xbest()), list(x0))
+        self.assertEqual(opt.fbest(), float('inf'))
 
         # Tell before ask
         self.assertRaisesRegex(
