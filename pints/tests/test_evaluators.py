@@ -56,8 +56,8 @@ class TestEvaluators(unittest.TestCase):
         self.assertRaises(ValueError, e.evaluate, 1)
 
         # Test args
-        e = pints.SequentialEvaluator(f_args, [10, 20, self])
-        e.evaluate([1])
+        e = pints.SequentialEvaluator(f_args, [10, 20])
+        self.assertEqual(e.evaluate([1]), [31])
 
         # Args must be a sequence
         self.assertRaises(ValueError, pints.SequentialEvaluator, f_args, 1)
@@ -79,8 +79,8 @@ class TestEvaluators(unittest.TestCase):
         self.assertRaises(ValueError, e.evaluate, 1)
 
         # Test args
-        e = pints.ParallelEvaluator(f_args, args=[10, 20, self])
-        e.evaluate([1])
+        e = pints.SequentialEvaluator(f_args, [10, 20])
+        self.assertEqual(e.evaluate([1]), [31])
 
         # Args must be a sequence
         self.assertRaises(ValueError, pints.ParallelEvaluator, f_args, args=1)
@@ -174,9 +174,8 @@ def f(x):
     return x ** 2
 
 
-def f_args(x, y, z, testcase):
-    testcase.assertEqual(y, 10)
-    testcase.assertEqual(z, 20)
+def f_args(x, y, z):
+    return x + y + z
 
 
 def ioerror_on_five(x):
