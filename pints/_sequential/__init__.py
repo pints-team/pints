@@ -26,8 +26,8 @@ class SMCSampler(object):
     def __init__(self, log_posterior, x0, sigma0=None):
 
         # Store log_likelihood and log_prior
-        if not isinstance(log_posterior, pints.LogPosterior):
-            raise ValueError('Given function must extend pints.LogPosterior')
+        if not isinstance(log_posterior, pints.LogPDF):
+            raise ValueError('Given function must extend pints.LogPDF')
         self._log_posterior = log_posterior
         
         # Check initial position
