@@ -312,7 +312,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Independently samples params from the prior until
         ``log_likelihood(params) > threshold``.
         """
-        log_likelihood = threshold - 1
+        # Note: threshold can be -inf, so that while loop is never run.
+        proposed = self._log_prior.sample()[0]
+        log_likelihood = self._log_likelihood(proposed)
+        self._n_evals += 1
         while log_likelihood < threshold:
             proposed = self._log_prior.sample()[0]
             log_likelihood = self._log_likelihood(proposed)
@@ -335,7 +338,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Draws a random point from within ellipsoid and accepts it if
         log-likelihood exceeds threshold.
         """
-        log_likelihood = threshold - 1
+        # Note: threshold can be -inf, so that while loop is never run.
+        proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
+        log_likelihood = self._log_likelihood(proposed)
+        self._n_evals += 1
         while log_likelihood < threshold:
             proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
             log_likelihood = self._log_likelihood(proposed)
