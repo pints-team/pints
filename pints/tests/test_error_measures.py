@@ -103,15 +103,16 @@ class TestErrorMeasures(unittest.TestCase):
     def __init__(self, name):
         super(TestErrorMeasures, self).__init__(name)
 
-    def test_mean_squared_error(self):
-        """ Tests :class:`pints.MeanSquaredError`. """
+    def test_mean_squared_error_single(self):
+        """ Tests :class:`pints.MeanSquaredError` with a single output. """
 
-        # Single-output
+        # Set up problem
         model = pints.toy.ConstantModel(1)
         times = [1, 2, 3]
         values = [1, 1, 1]
         p = pints.SingleOutputProblem(model, times, values)
 
+        # Test
         e = pints.MeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 1)
         float(e([1]))
@@ -120,7 +121,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e([0]), 1)
         self.assertEqual(e([3]), 4)
 
-        # Single-output derivatives
+        # Derivatives
         for x in [1, 2, 3, 4]:
             y, dy = e.evaluateS1([x])
             r = x - 1
@@ -128,12 +129,16 @@ class TestErrorMeasures(unittest.TestCase):
             self.assertEqual(dy.shape, (1, ))
             self.assertTrue(np.all(dy == 2 * r))
 
-        # Multi-output
+    def test_mean_squared_error_multi(self):
+        """ Tests :class:`pints.MeanSquaredError` with multiple outputs. """
+
+        # Set up problem
         model = pints.toy.ConstantModel(2)
         times = [1, 2, 3]
         values = [[1, 4], [1, 4], [1, 4]]
         p = pints.MultiOutputProblem(model, times, values)
 
+        # Test
         e = pints.MeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 2)
         float(e([1, 2]))
@@ -142,7 +147,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e([2, 3]), 2.5)    # (1^2+2^2) / 2 = 2.5
         self.assertEqual(e([3, 4]), 10)     # (2^2+4^2) / 2 = 10
 
-        # Multi-output derivatives
+        # Derivatives
         values = np.array([[1, 4], [2, 7], [3, 10]])
         p = pints.MultiOutputProblem(model, times, values)
         e = pints.MeanSquaredError(p)
@@ -184,7 +189,15 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[0], -1)
         self.assertEqual(dex[1], -6)
 
-        # Test weighting input
+    def test_mean_squared_error_weighted(self):
+        """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
+
+        # Set up problem
+        model = pints.toy.ConstantModel(2)
+        times = [1, 2, 3]
+        values = [[1, 4], [1, 4], [1, 4]]
+        p = pints.MultiOutputProblem(model, times, values)
+
         e = pints.MeanSquaredError(p, weights=[1, 2])
         self.assertRaises(ValueError, pints.MeanSquaredError, p, [1, 2, 3])
         # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
@@ -196,13 +209,15 @@ class TestErrorMeasures(unittest.TestCase):
         # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
         #       = -18
-        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        # dy2 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
         #       = -18
         self.assertEqual(dy[0], -18 / 6)
         self.assertEqual(dy[1], -18 / 6)
 
     def test_probability_based_error(self):
+        """ Tests :class:`pints.ProbabilityBasedError`. """
+
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
         self.assertEqual(e.n_parameters(), 3)
@@ -218,6 +233,8 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertTrue(np.all(dy == [-1, -2, -3]))
 
     def test_root_mean_squared_error(self):
+        """ Tests :class:`pints.RootMeanSquaredError`. """
+
         p = MiniProblem()
         e = pints.RootMeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 3)
@@ -234,14 +251,16 @@ class TestErrorMeasures(unittest.TestCase):
         p = MultiMiniProblem()
         self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
 
-    def test_sum_of_squares_error(self):
+    def test_sum_of_squares_error_single(self):
+        """ Tests :class:`pints.MeanSquaredError` with a single output. """
 
-        # Single-output
+        # Set up problem
         model = pints.toy.ConstantModel(1)
         times = [1, 2, 3]
         values = [1, 1, 1]
         p = pints.SingleOutputProblem(model, times, values)
 
+        # Test
         e = pints.SumOfSquaresError(p)
         self.assertEqual(e.n_parameters(), 1)
         float(e([1]))
@@ -250,7 +269,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e([0]), 3)
         self.assertEqual(e([3]), 12)
 
-        # Single-output derivatives
+        # Derivatives
         for x in [1, 2, 3, 4]:
             ex, dex = e.evaluateS1([x])
             r = x - 1
@@ -258,12 +277,16 @@ class TestErrorMeasures(unittest.TestCase):
             self.assertEqual(dex.shape, (1, ))
             self.assertEqual(dex[0], 2 * 3 * r)
 
-        # Multi-output
+    def test_sum_of_squares_error_multi(self):
+        """ Tests :class:`pints.MeanSquaredError` with multiple outputs. """
+
+        # Set up problem
         model = pints.toy.ConstantModel(2)
         times = [1, 2, 3]
         values = [[1, 4], [1, 4], [1, 4]]
         p = pints.MultiOutputProblem(model, times, values)
 
+        # Test
         e = pints.SumOfSquaresError(p)
         self.assertEqual(e.n_parameters(), 2)
         float(e([1, 2]))
@@ -272,7 +295,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e([2, 3]), 15)     # 3*(1^2+2^2) = 15
         self.assertEqual(e([3, 4]), 60)     # 3*(2^2+4^2) = 60
 
-        # Multi-output derivatives
+        # Derivatives
         values = np.array([[1, 4], [2, 7], [3, 10]])
         p = pints.MultiOutputProblem(model, times, values)
         e = pints.SumOfSquaresError(p)
@@ -314,7 +337,16 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[0], -6)
         self.assertEqual(dex[1], -36)
 
-        # Test weighting
+    def test_sum_of_squares_error_weighted(self):
+        """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
+
+        # Set up problem
+        model = pints.toy.ConstantModel(2)
+        times = [1, 2, 3]
+        values = [[1, 4], [1, 4], [1, 4]]
+        p = pints.MultiOutputProblem(model, times, values)
+
+        # Test
         e = pints.SumOfSquaresError(p, weights=[1, 2])
         self.assertRaises(ValueError, pints.SumOfSquaresError, p, [1, 2, 3])
         # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
@@ -326,13 +358,15 @@ class TestErrorMeasures(unittest.TestCase):
         # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
         #       = -18
-        # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
+        # dy2 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
         #       = -18
         self.assertEqual(dy[0], -18)
         self.assertEqual(dy[1], -18)
 
     def test_sum_of_errors(self):
+        """ Tests :class:`pints.SumOfErrors`. """
+
         e1 = pints.SumOfSquaresError(MiniProblem())
         e2 = pints.MeanSquaredError(MiniProblem())
         e3 = pints.RootMeanSquaredError(BigMiniProblem())
