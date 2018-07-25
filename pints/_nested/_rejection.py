@@ -145,7 +145,10 @@ class NestedRejectionSampler(pints.NestedSampler):
 
             # Independently samples params from the prior until
             # log_likelihood(params) > threshold.
-            log_likelihood = a_running_log_likelihood - 1
+            # Note a_running_log_likelihood can be -inf, so while is never run
+            proposed = self._log_prior.sample()[0]
+            log_likelihood = self._log_likelihood(proposed)
+            self._n_evals += 1
             while log_likelihood < a_running_log_likelihood:
                 proposed = self._log_prior.sample()[0]
                 log_likelihood = self._log_likelihood(proposed)
