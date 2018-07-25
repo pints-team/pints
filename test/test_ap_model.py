@@ -26,6 +26,10 @@ class TestActionPotentialModel(unittest.TestCase):
         self.assertTrue(np.all(times[1:] > times[:-1]))
         values = model.simulate(p0, times)
         self.assertEqual(len(times), len(values))
+        self.assertEqual(values.shape[1], model.n_outputs())
+
+        # Try simulating all states
+        model.simulate_all_states(p0, times)
 
         # Test setting and getting init cond.
         self.assertFalse(np.all(model.initial_conditions() == [-80, 1e-5]))

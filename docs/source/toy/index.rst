@@ -9,6 +9,7 @@ examples.
 
 .. toctree::
 
+    beeler_reuter_ap_model
     constant_model
     fitzhugh_nagumo_model
     goodwin_oscillator_model
