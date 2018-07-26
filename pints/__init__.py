@@ -89,7 +89,11 @@ from ._log_likelihoods import (
 #
 # Boundaries
 #
-from ._boundaries import Boundaries
+from ._boundaries import (
+    Boundaries,
+    LogPDFBoundaries,
+    RectangularBoundaries,
+)
 
 #
 # Error measures
