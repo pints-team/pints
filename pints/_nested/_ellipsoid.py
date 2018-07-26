@@ -114,6 +114,11 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 'Number of rejection samples must not exceed number of'
                 ' iterations.')
 
+        # Set up progress reporting
+        next_message = 0
+        message_warm_up = 3
+        message_interval = 50
+
         # Start logging
         logging = self._log_to_screen or self._log_filename
         if logging:
@@ -149,10 +154,20 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         m_active = np.zeros((self._active_points, d + 1))
         m_initial = self._log_prior.sample(self._active_points)
         for i in range(0, self._active_points):
+            # Evaluate log likelihood
             m_active[i, d] = self._log_likelihood(m_initial[i, :])
             self._n_evals += 1
-            if logging:
+
+            # Show progress
+            if logging and i >= next_message:
+                # Log state
                 logger.log(0, self._n_evals, timer.time())
+
+                # Choose next logging point
+                if i > message_warm_up:
+                    next_message = message_interval * (
+                        1 + i // message_interval)
+
         m_active[:, :-1] = m_initial
 
         # store all inactive points, along with their respective
@@ -200,9 +215,15 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                         a_running_log_likelihood, m_active[:, :d],
                         self._enlargement_factor, A, centroid)
 
-            # Update log
-            if logging:
+            # Show progress
+            if logging and i >= next_message:
+                # Log state
                 logger.log(i, self._n_evals, timer.time())
+
+                # Choose next logging point
+                if i > message_warm_up:
+                    next_message = message_interval * (
+                        1 + i // message_interval)
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = \
