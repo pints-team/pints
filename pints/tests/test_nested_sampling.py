@@ -117,7 +117,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(len(lines), 25)
+        self.assertEqual(len(lines), 9)
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 10')
@@ -142,7 +142,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
-        self.assertEqual(len(lines), 21)
+        self.assertEqual(len(lines), 5)
         self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
@@ -310,7 +310,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(len(lines), 26)
+        self.assertEqual(len(lines), 10)
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 10')
@@ -337,7 +337,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
-        self.assertEqual(len(lines), 21)
+        self.assertEqual(len(lines), 5)
         self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
