@@ -232,7 +232,7 @@ class UniformLogPrior(pints.LogPrior):
     point ``x`` with a non-zero prior must have ``lower <= x < upper``.
 
     For example: ``p = UniformLogPrior([1, 1, 1], [10, 10, 100])``, or
-    ``p = UniformLogPrior(Boundaries([1, 1, 1], [10, 10, 100]))``.
+    ``p = UniformLogPrior(RectangularBoundaries([1, 1, 1], [10, 10, 100]))``.
 
     """
     def __init__(self, lower_or_boundaries, upper=None):
@@ -244,14 +244,22 @@ class UniformLogPrior(pints.LogPrior):
                     ' single Boundaries object.')
             self._boundaries = lower_or_boundaries
         else:
-            self._boundaries = pints.Boundaries(lower_or_boundaries, upper)
+            self._boundaries = pints.RectangularBoundaries(
+                lower_or_boundaries, upper)
 
         # Cache dimension
         self._n_parameters = self._boundaries.n_parameters()
 
-        # Cache output value
+        # Minimum output value
         self._minf = -float('inf')
-        self._value = -np.log(np.product(self._boundaries.range()))
+
+        # Maximum output value
+        # Use normalised value (1/area) for rectangular boundaries,
+        # otherwise just use 1.
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
+            self._value = -np.log(np.product(self._boundaries.range()))
+        else:
+            self._value = 1
 
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else self._minf
@@ -269,8 +277,5 @@ class UniformLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return np.random.uniform(
-            self._boundaries.lower(),
-            self._boundaries.upper(),
-            size=(n, self._n_parameters))
+        return self._boundaries.sample(n)
 

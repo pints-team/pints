@@ -60,13 +60,21 @@ class SNES(pints.PopulationBasedOptimiser):
                             for i in range(self._population_size)])
         self._xs = self._mu + self._sigmas * self._ss
 
-        # Perform boundary transform
-        if self._boundaries:
-            self._xs = self._xtransform(self._xs)
+        # Create safe xs to pass to user
+        if self._boundary_transform is not None:
+            # Rectangular boundaries? Then perform boundary transform
+            self._xs = self._boundary_transform(self._xs)
+        if self._manual_boundaries:
+            # Manual boundaries? Then pass only xs that are within bounds
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
+        else:
+            self._user_xs = self._xs
 
         # Set as read-only and return
-        self._xs.setflags(write=False)
-        return self._xs
+        self._user_xs.setflags(write=False)
+        return self._user_xs
 
     def fbest(self):
         """ See :meth:`Optimiser.fbest()`. """
@@ -78,9 +86,14 @@ class SNES(pints.PopulationBasedOptimiser):
         """
         assert(not self._running)
 
-        # Apply wrapper to implement boundaries
-        if self._boundaries is not None:
-            self._xtransform = pints.TriangleWaveTransform(self._boundaries)
+        # Create boundary transform, or use manual boundary checking
+        self._manual_boundaries = False
+        self._boundary_transform = None
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
+            self._boundary_transform = pints.TriangleWaveTransform(
+                self._boundaries)
+        elif self._boundaries is not None:
+            self._manual_boundaries = True
 
         # Shorthands
         d = self._dimension
@@ -123,6 +136,12 @@ class SNES(pints.PopulationBasedOptimiser):
         if not self._ready_for_tell:
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
+
+        # Manual boundaries? Then reconstruct full fx vector
+        if self._manual_boundaries and len(fx) < self._population_size:
+            user_fx = fx
+            fx = np.ones((self._population_size, )) * float('inf')
+            fx[self._user_ids] = user_fx
 
         # Order the normalized samples according to the scores
         order = np.argsort(fx)

@@ -13,7 +13,7 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture
+from shared import StreamCapture, CircularBoundaries
 
 debug = False
 method = pints.CMAES
@@ -33,45 +33,56 @@ class TestCMAES(unittest.TestCase):
         """ Called before every test """
         np.random.seed(1)
 
+    def problem(self):
+        """ Returns a test problem, starting point, sigma, and boundaries. """
+        r = pints.toy.ParabolicError()
+        x = [0.1, 0.1]
+        s = 0.1
+        b = pints.RectangularBoundaries([-1, -1], [1, 1])
+        return r, x, s, b
+
     def test_unbounded(self):
         """ Runs an optimisation without boundaries. """
-
-        r = pints.toy.RosenbrockError(1, 100)
-        x = np.array([1.1, 1.1])
-
+        r, x, s, b = self.problem()
         opt = pints.Optimisation(r, x, method=method)
+        opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-9)
+        self.assertTrue(found_solution < 1e-3)
 
     def test_bounded(self):
         """ Runs an optimisation with boundaries. """
+        r, x, s, b = self.problem()
 
-        r = pints.toy.RosenbrockError(1, 100)
-        x = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-
+        # Rectangular boundaries
+        b = pints.RectangularBoundaries([-1, -1], [1, 1])
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-9)
+        self.assertTrue(found_solution < 1e-3)
+
+        # Circular boundaries
+        # Start near edge, to increase chance of out-of-bounds occurring.
+        b = CircularBoundaries([0, 0], 1)
+        x = [0.99, 0]
+        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt.set_log_to_screen(debug)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(found_solution < 1e-3)
 
     def test_bounded_and_sigma(self):
         """ Runs an optimisation without boundaries and sigma. """
-
-        r = pints.toy.RosenbrockError(1, 100)
-        x = np.array([1.1, 1.1])
-        b = pints.Boundaries([0.5, 0.5], [1.5, 1.5])
-        s = 0.1
-
+        r, x, s, b = self.problem()
         opt = pints.Optimisation(r, x, s, b, method)
+        opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-9)
+        self.assertTrue(found_solution < 1e-3)
 
     def test_stopping_on_ill_conditioned_covariance_matrix(self):
         """ Tests that ill conditioned covariance matrices are detected. """
         from scipy.integrate import odeint
+        #TODO: A quicker test-case for this would be great!
 
         def OnePopControlODE(y, t, p):
             a, b, c = p
@@ -105,14 +116,14 @@ class TestCMAES(unittest.TestCase):
 
     def test_ask_tell(self):
         """ Tests ask-and-tell related error handling. """
-        x0 = np.array([1.1, 1.1])
-        opt = method(x0)
+        r, x, s, b = self.problem()
+        opt = method(x)
 
         # Stop called when not running
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
-        self.assertEqual(list(opt.xbest()), list(x0))
+        self.assertEqual(list(opt.xbest()), list(x))
         self.assertEqual(opt.fbest(), float('inf'))
 
         # Tell before ask
@@ -121,17 +132,15 @@ class TestCMAES(unittest.TestCase):
 
     def test_is_default(self):
         """ Checks this is the default optimiser. """
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
+        r, x, s, b = self.problem()
         opt = pints.Optimisation(r, x)
-        self.assertIsInstance(opt.optimiser(), pints.CMAES)
+        self.assertIsInstance(opt.optimiser(), method)
 
     def test_hyper_parameter_interface(self):
         """
         Tests the hyper parameter interface for this optimiser.
         """
-        r = pints.toy.RosenbrockError(1, 100)
-        x = np.array([1.01, 1.01])
+        r, x, s, b = self.problem()
         opt = pints.Optimisation(r, x, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 1)
@@ -143,7 +152,7 @@ class TestCMAES(unittest.TestCase):
 
     def test_name(self):
         """ Test the name() method. """
-        opt = pints.CMAES(np.array([0, 1.01]))
+        opt = method(np.array([0, 1.01]))
         self.assertIn('CMA-ES', opt.name())
 
 

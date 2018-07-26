@@ -51,11 +51,17 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._ready_for_tell = True
 
         # Create new samples
-        self._xs = np.array(self._es.ask())
+        self._user_xs = self._xs = np.array(self._es.ask())
+
+        # Manual boundaries? Then filter out points that are out of bounds
+        if self._manual_boundaries:
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
 
         # Set as read-only and return
-        self._xs.setflags(write=False)
-        return self._xs
+        self._user_xs.setflags(write=False)
+        return self._user_xs
 
     def fbest(self):
         """ See :meth:`Optimiser.fbest()`. """
@@ -78,12 +84,15 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Set up simulation
         options = cma.CMAOptions()
 
-        # Set boundaries
-        if self._boundaries is not None:
+        # Set boundaries, or use manual boundary checking
+        self._manual_boundaries = False
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
             options.set(
                 'bounds',
                 [list(self._boundaries._lower), list(self._boundaries._upper)]
             )
+        elif self._boundaries is not None:
+            self._manual_boundaries = True
 
         # Set stopping criteria
         #options.set('maxiter', max_iter)
@@ -162,6 +171,13 @@ class CMAES(pints.PopulationBasedOptimiser):
         if not self._ready_for_tell:
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
+
+        # Manual boundaries? Then reconstruct full fx vector
+        if self._manual_boundaries and len(fx) < self._population_size:
+            # Note: CMA-ES uses `nan` to mean "could not calculate this point".
+            user_fx = fx
+            fx = np.ones((self._population_size, )) * float('nan')
+            fx[self._user_ids] = user_fx
 
         # Tell CMA-ES
         self._es.tell(self._xs, fx)

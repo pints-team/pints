@@ -117,15 +117,18 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial positions
         self._xs.append(np.array(self._x0, copy=True))
-        if self._boundaries is None:
-            for i in range(1, self._population_size):
-                self._xs.append(np.random.normal(self._x0, self._sigma0))
-        else:
-            for i in range(1, self._population_size):
-                self._xs.append(
-                    self._boundaries._lower
-                    + np.random.uniform(0, 1, self._dimension)
-                    * (self._boundaries._upper - self._boundaries._lower))
+        if self._boundaries is not None:
+            # Attempt to sample n - 1 points from the boundaries
+            try:
+                self._xs.extend(
+                    self._boundaries.sample(self._population_size - 1))
+            except NotImplementedError:
+                # Not all boundaries implement sampling
+                pass
+        # If we couldn't sample from the boundaries, use gaussian sampling
+        # around x0.
+        for i in range(1, self._population_size):
+            self._xs.append(np.random.normal(self._x0, self._sigma0))
         self._xs = np.array(self._xs, copy=True)
 
         # Set initial velocities
@@ -142,14 +145,29 @@ class PSO(pints.PopulationBasedOptimiser):
         self._fg = float('inf')
         self._pg = self._xs[0]
 
-        # Create boundary transform
+        # Create boundary transform, or use manual boundary checking
+        self._manual_boundaries = False
         self._boundary_transform = None
-        if self._boundaries is not None:
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
             self._boundary_transform = pints.TriangleWaveTransform(
                 self._boundaries)
+        elif self._boundaries is not None:
+            self._manual_boundaries = True
 
         # Create safe xs to pass to user
-        self._user_xs = np.array(self._xs, copy=True)
+        if self._boundary_transform is not None:
+            # Rectangular boundaries? Then apply transform to xs
+            self._xs = self._boundary_transform(self._xs)
+        if self._manual_boundaries:
+            # Manual boundaries? Then filter out out-of-bounds points from xs
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
+        else:
+            self._user_xs = np.array(self._xs, copy=True)
+
+        # Set user points as read-only
+        self._user_xs.setflags(write=False)
 
         # Set local/global exploration balance
         self.set_local_global_balance()
@@ -220,6 +238,12 @@ class PSO(pints.PopulationBasedOptimiser):
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
 
+        # Manual boundaries? Then reconstruct full fx vector
+        if self._manual_boundaries and len(fx) < self._population_size:
+            user_fx = fx
+            fx = np.ones((self._population_size, )) * float('inf')
+            fx[self._user_ids] = user_fx
+
         # Update particles
         for i in range(self._population_size):
 
@@ -245,18 +269,23 @@ class PSO(pints.PopulationBasedOptimiser):
             # Update position
             self._xs[i] += self._vs[i]
 
-        # Map points outside of the search space back into it
+        # Create safe xs to pass to user
         if self._boundary_transform is not None:
-            self._xs = self._boundary_transform(self._xs)
+            # Rectangular boundaries? Then apply transform to xs
+            self._user_xs = self._xs = self._boundary_transform(self._xs)
+        elif self._manual_boundaries:
+            # Manual boundaries? Then filter out out-of-bounds points from xs
+            self._user_ids = np.nonzero(
+                [self._boundaries.check(x) for x in self._xs])
+            self._user_xs = self._xs[self._user_ids]
+        else:
+            self._user_xs = np.array(self._xs, copy=True)
 
-        # Update global best
+        # Update global best score
         i = np.argmin(self._fl)
         if self._fl[i] < self._fg:
             self._fg = self._fl[i]
             self._pg = np.array(self._pl[i], copy=True)
-
-        # Create safe xs to pass to user
-        self._user_xs = np.array(self._xs, copy=True)
 
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
