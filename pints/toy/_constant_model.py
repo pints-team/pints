@@ -22,7 +22,7 @@ class ConstantModel(pints.ForwardModelS1):
     ``p = [p_1, p_2, ..., p_n]``, the simulated value at each time t equals:
 
     .. math::
-        f(t) = (p_1, p_2, ..., p_n)
+        f(t) = (p_1, 2 * p_2, ..., n * p_n)
 
     By default, the simulated output will have shape ``(n_times, )`` if
     ``n == 1`` and shape ``(n_times, n_outputs)`` if ``n > 1``. This can be
@@ -44,16 +44,18 @@ class ConstantModel(pints.ForwardModelS1):
         m = pints.ConstantModel(2)
         m.simulate([1, 2], times)
 
-    In this example, the returned output is ``[1, 2]`` at every point in time.
+    In this example, the returned output is ``[1, 4]`` at every point in time.
 
     """
 
     def __init__(self, n, force_multi_output=False):
         super(ConstantModel, self).__init__()
 
-        self._n = int(n)
-        if self._n < 1:
+        n = int(n)
+        if n < 1:
             raise ValueError('Number of parameters must be 1 or greater.')
+        self._r = np.arange(1, 1 + n)
+        self._n = n
 
         # Reshape for single-output models?
         self._reshape = (n == 1 and not force_multi_output)
@@ -80,8 +82,8 @@ class ConstantModel(pints.ForwardModelS1):
             raise ValueError('All parameters must be finite.')
 
         # Calculate
-
-        out = parameters.reshape((1, self._n)).repeat(len(times), axis=0)
+        out = parameters.reshape((1, self._n)) * self._r
+        out = out.repeat(len(times), axis=0)
         if self._reshape:
             out = out.reshape((len(times), ))
         return out
@@ -89,8 +91,20 @@ class ConstantModel(pints.ForwardModelS1):
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulateS1()`. """
         y = self.simulate(parameters, times)
-        if self._n == 1:
+        if self._reshape:
             dy = np.ones(len(times))
         else:
-            dy = np.ones((len(times), self._n, self._n))
+            # Output has shape (times, outputs, parameters)
+            # At every time point, there is a matrix:
+            #  [[df1/dp1, df1/dp2],
+            #   [df2/dp1, df2/dp2]]  (for 2d...)
+            # i.e.
+            #  [[df1/dp1, df1/dp2],
+            #   [df2/dp1, df2/dp2]]
+            # i.e.
+            #  [[1, 0],
+            #   [0, 2]]
+            # i.e. np.diag(self._r)
+            dy = np.tile(np.diag(self._r), (len(times), 1, 1))
         return (y, dy)
+
