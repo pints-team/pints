@@ -195,16 +195,21 @@ class TestErrorMeasures(unittest.TestCase):
         # Set up problem
         model = pints.toy.ConstantModel(2)
         times = [1, 2, 3]
-        values = [[1, 4], [1, 4], [1, 4]]
+        values = np.array([[1, 4], [2, 7], [3, 10]])
         p = pints.MultiOutputProblem(model, times, values)
+        x = [1, 2]
 
+        # Test
         e = pints.MeanSquaredError(p, weights=[1, 2])
         self.assertRaises(ValueError, pints.MeanSquaredError, p, [1, 2, 3])
+
         # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
         # Error is (1+4)+(1+4)*2=15, divided by 6
         self.assertEqual(e(x), 15 / 6)
+
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, 15 / 6)
+
         # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
         # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
@@ -343,17 +348,20 @@ class TestErrorMeasures(unittest.TestCase):
         # Set up problem
         model = pints.toy.ConstantModel(2)
         times = [1, 2, 3]
-        values = [[1, 4], [1, 4], [1, 4]]
+        values = np.array([[1, 4], [2, 7], [3, 10]])
         p = pints.MultiOutputProblem(model, times, values)
+        x = [1, 2]
 
         # Test
         e = pints.SumOfSquaresError(p, weights=[1, 2])
         self.assertRaises(ValueError, pints.SumOfSquaresError, p, [1, 2, 3])
+
         # Residuals are: [[0, 0], [-1, -1], [-2, -2]]
         # Error is (1+4)+(1+4)*2=15
         self.assertEqual(e(x), 15)
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, 15)
+
         # derivatives are [[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[1, 1], [1,1]]]
         # dy1 is: 2 * [(0*1+-1*1+-2*1)*1 + (0*1+-1*1+-2*1)*2]
         #       = 2 * [-3*1 + -3*2]
