@@ -110,6 +110,16 @@ class TestLogPDFBoundaries(unittest.TestCase):
         self.assertRaisesRegexp(
             ValueError, 'must be a pints.LogPDF', pints.LogPDFBoundaries, 5, 5)
 
+        # Can't sample from this log pdf!
+        self.assertRaises(NotImplementedError, b.sample, 1)
+
+        # Can sample if we have a prior that supports it
+        b = pints.RectangularBoundaries([1, 1], [2, 2])
+        p = pints.UniformLogPrior(b)
+        p.sample(2)
+        b = pints.LogPDFBoundaries(p)
+        b.sample(2)
+
 
 if __name__ == '__main__':
     unittest.main()
