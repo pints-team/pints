@@ -29,13 +29,13 @@ class SMCSampler(object):
         if not isinstance(log_posterior, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
         self._log_posterior = log_posterior
-        
+
         # Check initial position
         self._x0 = pints.vector(x0)
 
         # Get dimension
         self._dimension = len(self._x0)
-        
+
         # Check initial standard deviation
         if sigma0 is None:
             # Get representative parameter value for each parameter
