@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests if the constant (toy) model works.
 #
@@ -9,8 +9,15 @@
 #
 import unittest
 import numpy as np
+
 import pints
 import pints.toy
+
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 class TestConstantModel(unittest.TestCase):
@@ -18,8 +25,9 @@ class TestConstantModel(unittest.TestCase):
     Tests if the constant (toy) model with multiple outputs works.
     """
 
-    def test_zero(self):
-        # Test the special case where value is zero for a single input
+    def test_1d(self):
+        """ Test in 1d (SingleOutputProblem). """
+
         # Output given for a SingleOutputProblem
         model = pints.toy.ConstantModel(1)
         times = [0, 1, 2, 10000]
@@ -40,49 +48,71 @@ class TestConstantModel(unittest.TestCase):
         self.assertEqual(values.shape, (len(times), 1))
         self.assertTrue(np.all(values == 0))
 
-    def test_minus_1_2_100(self):
+    def test_3d(self):
+        """ Test three-dimensional case (MultiOutputProblem). """
+
         model = pints.toy.ConstantModel(3)
         times = [0, 1, 2, 10000]
         parameters = [-1, 2, 100]
         values = model.simulate(parameters, times)
+        multipliers = np.arange(1, 1 + len(parameters))
 
         # Check output shape (n_times, n_outputs) and values
         self.assertEqual(values.shape, (len(times), len(parameters)))
-        for i, p in enumerate(parameters):
-            self.assertTrue(np.all(values[:, i] == p))
+        for column in values:
+            self.assertTrue(np.all(column == parameters * multipliers))
 
     def test_varying_numbers_of_parameters(self):
+        """
+        Tests for different parameter sizes (All using MultiOutputProblem).
+        """
         times = [0, 1, 2, 10000]
-        for n in range(2, 10):
-            model = pints.toy.ConstantModel(n)
+        for n in range(1, 10):
+            model = pints.toy.ConstantModel(n, force_multi_output=True)
             parameters = np.random.uniform(low=-100, high=1000, size=n)
             values = model.simulate(parameters, times)
+            multipliers = np.arange(1, 1 + n)
+
             # Check output shape (n_times, n_outputs) and values
             self.assertEqual(values.shape, (len(times), len(parameters)))
-            for i, p in enumerate(parameters):
-                self.assertTrue(np.all(values[:, i] == p))
+            for column in values:
+                self.assertTrue(np.all(column == parameters * multipliers))
 
     def test_errors(self):
+        """ Tests the right errors are raised when used improperly. """
+
         # Negative times
         model = pints.toy.ConstantModel(1)
         times = [0, -1, 2, 10000]
-        self.assertRaises(ValueError, model.simulate, [1], times)
+        self.assertRaisesRegex(
+            ValueError, 'Negative times', model.simulate, [1], times)
         times = [0, 1, 2, 10000]
 
         # Wrong number of parameters
-        self.assertRaises(ValueError, model.simulate, [], times)
-        self.assertRaises(ValueError, model.simulate, [1, 1], times)
+        self.assertRaisesRegex(
+            ValueError, 'Expected 1', model.simulate, [], times)
+        self.assertRaisesRegex(
+            ValueError, 'Expected 1', model.simulate, [1, 1], times)
 
         # Non-finite parameters
-        self.assertRaises(ValueError, model.simulate, [np.nan], times)
-        self.assertRaises(ValueError, model.simulate, [np.inf], times)
-        self.assertRaises(ValueError, model.simulate, [-np.inf], times)
+        self.assertRaisesRegex(
+            ValueError, 'must be finite', model.simulate, [np.nan], times)
+        self.assertRaisesRegex(
+            ValueError, 'must be finite', model.simulate, [np.inf], times)
+        self.assertRaisesRegex(
+            ValueError, 'must be finite', model.simulate, [-np.inf], times)
 
         # Invalid number of parameters
-        self.assertRaises(ValueError, pints.toy.ConstantModel, 0)
-        self.assertRaises(ValueError, pints.toy.ConstantModel, -1)
+        self.assertRaisesRegex(
+            ValueError, '1 or greater', pints.toy.ConstantModel, 0)
+        self.assertRaisesRegex(
+            ValueError, '1 or greater', pints.toy.ConstantModel, -1)
 
     def test_in_problem(self):
+        """
+        Tests using a ConstantModel in single and multi-output problems.
+        """
+
         # Single output
         model = pints.toy.ConstantModel(1)
         times = [0, 1, 2, 1000]
@@ -102,28 +132,55 @@ class TestConstantModel(unittest.TestCase):
         problem.evaluate([1, 2, 3])
 
     def test_derivatives(self):
+        """
+        Tests the derivatives are returned correctly.
+        """
 
         # Single output
         model = pints.toy.ConstantModel(1)
         times = [0, 1, 2, 1000]
-        values = [10, 0, 1, 10]
-        problem = pints.SingleOutputProblem(model, times, values)
         x = [3]
-        y, dy = problem.evaluateS1(x)
+        y, dy = model.simulateS1(x, times)
         self.assertEqual(dy.shape, (4, ))
         self.assertTrue(np.all(dy == 1))
-        self.assertTrue(np.all(y == problem.evaluate(x)))
+        self.assertTrue(np.all(y == model.simulate(x, times)))
+
+        # Multi-output with only 1 output
+        model = pints.toy.ConstantModel(1, force_multi_output=True)
+        times = [0, 1, 2, 1000]
+        x = [3]
+        y, dy = model.simulateS1(x, times)
+        self.assertEqual(dy.shape, (4, 1, 1))
+        self.assertTrue(np.all(dy == 1))
+        self.assertTrue(np.all(y == model.simulate(x, times)))
 
         # Multi-output
         model = pints.toy.ConstantModel(2)
-        times = [0, 1, 2, 1000]
-        values = [[0, 0], [1, 10], [2, 20], [3, 30]]
-        problem = pints.MultiOutputProblem(model, times, values)
-        x = [3, 4]
-        y, dy = problem.evaluateS1(x)
-        self.assertEqual(dy.shape, (4, 2, 2))
-        self.assertTrue(np.all(dy == 1))
-        self.assertTrue(np.all(y == problem.evaluate(x)))
+        times = [0, 1, 2]
+        x = [1, 2]
+
+        # Check model output
+        y, dy = model.simulateS1(x, times)
+        # Shape is (times, outputs)
+        self.assertEqual(y.shape, (3, 2))
+        mx = np.array(
+            [[1, 4],
+             [1, 4],
+             [1, 4]]
+        )
+        self.assertTrue(np.all(y == mx))
+        self.assertTrue(np.all(y == model.simulate(x, times)))
+        # Shape is (times, outputs, parameters)
+        self.assertEqual(dy.shape, (3, 2, 2))
+        dmx = np.array(
+            [[[1, 0],   # dx1/dp1 = 1, dx1/dp2 = 0
+              [0, 2]],  # dx2/dp2 = 0, dx2/dp2 = 2
+             [[1, 0],
+              [0, 2]],
+             [[1, 0],
+              [0, 2]]]
+        )
+        self.assertTrue(np.all(dy == dmx))
 
 
 if __name__ == '__main__':
