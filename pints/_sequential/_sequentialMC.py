@@ -12,7 +12,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy import stats
+#from scipy import stats
 from scipy.special import logsumexp
 
 
@@ -20,34 +20,33 @@ class SMC(pints.SMCSampler):
     """
     Samples from a density using sequential Monte Carlo sampling [1].
 
-    Algorithm 3.1.1 using equation (31) for w_tilde.
-    
+    Algorithm 3.1.1 using equation (31) for ``w_tilde``.
+
     [1] "Sequential Monte Carlo Samplers", Del Moral et al. 2006,
     Journal of the Royal Statistical Society. Series B.
     """
     def __init__(self, log_posterior, x0, sigma0=None):
-        super(SMC, self).__init__(log_posterior,x0, sigma0)
+        super(SMC, self).__init__(log_posterior, x0, sigma0)
 
         # Number of particles
         self._particles = 1000
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
-        
+
         # Temperature schedule
         self._schedule = None
         self.set_temperature_schedule()
-        
+
         # ESS threshold (default from Del Moral et al.)
         self._ess_threshold = self._particles / 2
-        
+
     def set_particles(self, particles):
         """
         Sets the number of particles
         """
         if particles < 10:
-          raise ValueError(
-            'Must have more that 10 particles in SMC.')
+            raise ValueError('Must have more than 10 particles in SMC.')
         self._particles = particles
 
     def set_ess_threshold(self, ess_threshold):
@@ -55,9 +54,9 @@ class SMC(pints.SMCSampler):
         Sets the threshold ESS (effective sample size)
         """
         if ess_threshold > self._particles:
-          raise ValueError('ESS threshold must be below actual sample size.')
+            raise ValueError('ESS threshold must be below actual sample size.')
         if ess_threshold < 0:
-          raise ValueError('ESS must be greater than zero.')
+            raise ValueError('ESS must be greater than zero.')
         self._ess_threshold = ess_threshold
 
     def set_temperature_schedule(self, schedule=10):
@@ -80,11 +79,11 @@ class SMC(pints.SMCSampler):
             if schedule < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            
+
             # Set a temperature schedule that is uniform on log(T)
             a_max = 0
             a_min = np.log(0.0001)
-            diff = (a_max - a_min) / schedule
+            #diff = (a_max - a_min) / schedule
             log_schedule = np.linspace(a_min, a_max, schedule)
             self._schedule = np.exp(log_schedule)
             self._schedule.setflags(write=False)
@@ -117,8 +116,9 @@ class SMC(pints.SMCSampler):
         if self._verbose:
             print('Running sequential Monte Carlo')
             print('Total number of particles: ' + str(self._particles))
-            print('Number of temperatures: '  + str(len(self._schedule)))
-            print('Storing 1 sample per ' + str(self._thinning_rate) + ' particle')
+            print('Number of temperatures: ' + str(len(self._schedule)))
+            print('Storing 1 sample per ' + str(self._thinning_rate)
+                  + ' particle')
 
         # Initial starting parameters
         mu = self._x0
@@ -131,7 +131,10 @@ class SMC(pints.SMCSampler):
         # Starting weights
         weights = np.zeros(self._particles)
         for i in range(0, self._particles):
-          weights[i] = self.tempered_distribution(samples[i],self._schedule[1]) - self.tempered_distribution(samples[i],0.0)
+            weights[i] = (
+                self.tempered_distribution(samples[i], self._schedule[1])
+                - self.tempered_distribution(samples[i], 0.0)
+            )
         weights = np.exp(weights - logsumexp(weights))
 
         # Iterate steps 2 and 3 in Del Moral 3.1.1.
@@ -140,11 +143,15 @@ class SMC(pints.SMCSampler):
         m_samples[:, :, 0] = samples
         weights_old = weights
         for i in range(0, num_iterates - 1):
-          if self._verbose:
-            print('Sampling from distribution of temperature: ' + str(self._schedule[i + 1]))
-          samples_new, weights_new = self.steps_2_and_3(m_samples[:, :, i], weights_old, self._schedule[i], self._schedule[i + 1])
-          weights_old = weights_new
-          m_samples[:, :, i + 1] = samples_new
+            if self._verbose:
+                print(
+                    'Sampling from distribution of temperature: '
+                    + str(self._schedule[i + 1]))
+            samples_new, weights_new = self.steps_2_and_3(
+                m_samples[:, :, i], weights_old, self._schedule[i],
+                self._schedule[i + 1])
+            weights_old = weights_new
+            m_samples[:, :, i + 1] = samples_new
 
         return m_samples[:, :, -1]
 
@@ -164,22 +171,27 @@ class SMC(pints.SMCSampler):
         rate of *n* indicates that only every *n-th* sample will be stored.
         """
         return self._thinning_rate
-    
+
     def tempered_distribution(self, x, beta):
         """
         Returns the tempered log-pdf:
         beta * log pi(x) + (1 - beta) * log N(0, sigma)
         """
-        # Choice 1: to use annealed (without second bit) or mixture distribution (with it)
+        # Choice 1: to use annealed (without second bit) or mixture
+        # distribution (with it)
         return beta * self._log_posterior(x)
-               #  + (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
-                                                               # cov=self._sigma0)
+        #  + (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
+        # cov=self._sigma0)
 
     def w_tilde(self, x_old, x_new, beta_old, beta_new):
         """
-        Calculates the log unnormalised incremental weight as per eq. (31) in Del Moral
+        Calculates the log unnormalised incremental weight as per eq. (31) in
+        Del Moral.
         """
-        return self.tempered_distribution(x_old, beta_new) - self.tempered_distribution(x_old, beta_old)
+        return (
+            self.tempered_distribution(x_old, beta_new)
+            - self.tempered_distribution(x_old, beta_old)
+        )
 
     def new_weight(self, w_old, x_old, x_new, beta_old, beta_new):
         """
@@ -196,28 +208,39 @@ class SMC(pints.SMCSampler):
         """
         w_new = np.zeros(self._particles)
         for i in range(0, self._particles):
-          w_new[i] = self.new_weight(w_old[i], samples_old[i], samples_new[i], beta_old, beta_new)
+            w_new[i] = self.new_weight(
+                w_old[i], samples_old[i], samples_new[i], beta_old, beta_new)
         return np.exp(w_new - logsumexp(w_new))
 
     def kernel_sample(self, samples, beta):
         """
-        Generates a new sample by using a Metropolis kernel for a distribution with log
-        pdf:
-        beta * log pi(x) + (1 - beta) * log N(0, sigma).
+        Generates a new sample by using a Metropolis kernel for a distribution
+        with log pdf::
+
+            beta * log pi(x) + (1 - beta) * log N(0, sigma).
+
         """
         proposed = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
-          proposed[i] = np.random.multivariate_normal(mean=samples[i], cov=self._sigma0,
-                                                size=1)[0]
-        assert np.count_nonzero(proposed==0) == 0, "Zero elements appearing in proposals matrix."
+            proposed[i] = np.random.multivariate_normal(
+                mean=samples[i], cov=self._sigma0, size=1)[0]
+        assert \
+            np.count_nonzero(proposed == 0) == 0, \
+            "Zero elements appearing in proposals matrix."
         samples_new = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
-          r = np.exp(self.tempered_distribution(proposed[i], beta) - self.tempered_distribution(samples[i], beta))
-          if r <= np.random.uniform(size=1):
-            samples_new[i] = samples[i]
-          else:
-            samples_new[i] = proposed[i]
-        assert np.count_nonzero(samples_new==0) == 0, "Zero elements appearing in samples matrix."
+            r = np.exp(
+                self.tempered_distribution(proposed[i], beta)
+                - self.tempered_distribution(samples[i], beta))
+            if r <= np.random.uniform(size=1):
+                samples_new[i] = samples[i]
+            else:
+                samples_new[i] = proposed[i]
+
+        assert \
+            np.count_nonzero(samples_new == 0) == 0, \
+            "Zero elements appearing in samples matrix."
+
         return samples_new
 
     def ess(self, weights):
@@ -236,10 +259,14 @@ class SMC(pints.SMCSampler):
         a_start = 0
         a_end = 0
         for i in range(0, self._particles):
-          a_end = a_end + selected[i]
-          new_samples[a_start:a_end, :] = samples[i]
-          a_start = a_start + selected[i]
-        assert np.count_nonzero(new_samples==0) == 0, "Zero elements appearing in samples matrix."
+            a_end = a_end + selected[i]
+            new_samples[a_start:a_end, :] = samples[i]
+            a_start = a_start + selected[i]
+
+        assert \
+            np.count_nonzero(new_samples == 0) == 0, \
+            "Zero elements appearing in samples matrix."
+
         return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
     def steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
@@ -248,12 +275,15 @@ class SMC(pints.SMCSampler):
         Del Moral et al. (2006).
         """
         if self.ess(weights_old) < self._ess_threshold:
-          resamples, weights_new = self.resample(weights_old, samples_old)
+            resamples, weights_new = self.resample(weights_old, samples_old)
         else:
-          resamples, weights_new = samples_old, weights_old
+            resamples, weights_new = samples_old, weights_old
         samples_new = self.kernel_sample(resamples, beta_new)
-        weights_new = self.new_weights(weights_old, samples_old, samples_new, beta_old, beta_new)
-        
-        # Choice 2: from remark 1 of algorithm 3.1.1. due to the form of L used (eqn. 30 and 31) resample again
+        weights_new = self.new_weights(
+            weights_old, samples_old, samples_new, beta_old, beta_new)
+
+        # Choice 2: from remark 1 of algorithm 3.1.1. due to the form of L used
+        # (eqn. 30 and 31) resample again
         samples_new, weights_discard = self.resample(weights_new, samples_new)
         return samples_new, weights_new
+
