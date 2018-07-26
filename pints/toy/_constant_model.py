@@ -14,21 +14,23 @@ import pints
 
 class ConstantModel(pints.ForwardModelS1):
     """
-    *Extends:* :class:`pints.ForwardModelS1`.
-
-    Toy model that's constant over time, linear over the parameters.
+    Toy model that's constant over time, linear over the parameters, mostly
+    useful for unit testing.
 
     For an `n`-dimensional model, evaluated with parameters
-    ``p = [p_1, p_2, ..., p_n]``, the simulated value at each time t equals:
+    ``p = [p_1, p_2, ..., p_n]``, the simulated values are time-invariant, so
+    that for any time ``t``
 
     .. math::
-        f(t) = (p_1, 2 * p_2, ..., n * p_n)
+        f(t) = (p_1, 2 p_2, 3 p_3, ..., n p_n)
 
-    By default, the simulated output will have shape ``(n_times, )`` if
-    ``n == 1`` and shape ``(n_times, n_outputs)`` if ``n > 1``. This can be
-    tweaked using ``force_multi_output``.
+    The derivatives with respect to the derivatives are time-invariant, and
+    simply equal
 
-    This model is mostly useful for unit testing.
+    .. math::
+
+        \\frac{\partial{f_i(t)}}{dp_j} =
+            \\begin{cases} i, i = j\\\\0, i \\neq j \end{cases}
 
     Arguments:
 
@@ -46,6 +48,7 @@ class ConstantModel(pints.ForwardModelS1):
 
     In this example, the returned output is ``[1, 4]`` at every point in time.
 
+    *Extends:* :class:`pints.ForwardModelS1`.
     """
 
     def __init__(self, n, force_multi_output=False):
