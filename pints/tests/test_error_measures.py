@@ -177,7 +177,7 @@ class TestErrorMeasures(unittest.TestCase):
         ex, dex = e.evaluateS1(x)
 
         # Check error
-        self.assertTrue(np.all(ex == e(x)))
+        self.assertAlmostEqual(ex, e(x))
 
         # Check derivatives. Shape is (parameters, )
         self.assertEqual(dex.shape, (2, ))
