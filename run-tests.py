@@ -223,7 +223,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Run unit tests for Pints.',
         epilog='To run individual unit tests, use e.g.'
-               ' $ test/test_logistic_model.py',
+               ' $ pints/tests/test_toy_logistic_model.py',
     )
     # Unit tests
     parser.add_argument(
