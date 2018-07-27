@@ -12,6 +12,12 @@ import numpy as np
 import pints
 import pints.toy
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestActionPotentialModel(unittest.TestCase):
     """
@@ -37,8 +43,9 @@ class TestActionPotentialModel(unittest.TestCase):
         self.assertTrue(np.all(model.initial_conditions() == [-80, 1e-5]))
 
         # Initial conditions cannot be negative
-        self.assertRaises(ValueError, pints.toy.ActionPotentialModel,
-                          [-80, -1])
+        self.assertRaisesRegex(
+            ValueError, 'cannot be negative',
+            pints.toy.ActionPotentialModel, [-80, -1])
 
 
 if __name__ == '__main__':

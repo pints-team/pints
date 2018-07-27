@@ -16,20 +16,18 @@ class ActionPotentialModel(pints.ForwardModel):
     """
     *Extends:* :class:`pints.ForwardModel`.
 
-    The Beeler-Reuter model for mammalian ventricular action potential [1].
+    The 1977 Beeler-Reuter model of the mammalian ventricular action potential
+    (AP) [1].
 
-    The action potential (cell's transmembrane voltage) model contains
-    multiple currents which their magnitude is determined by the maximum-
-    conductance while their shape is controlled by other parameters. In this
-    simplified (but not trivial) action potential toy model, we define the
-    maximum-conductance values of all the currents as the parameter of
-    interest, and assume all other parameters of the model are known and well-
-    defined. We also define the maximum-conductance values in logarithmic
-    scale.
+    This model describes several ion currents, each with a maximum conductance
+    parameter, that together give rise to the cardiac AP and calcium transient.
+    In this (non-trivial) `toy' model, we use the maximum conductances as the
+    parameters, and the AP and calcium transient as observable outputs. All
+    other model parameters are assumed to be known.
 
-    The observables of this model are the transmembrane voltage (the action
-    potential itsefl) and the calcium concentration of the cell (also known as
-    the calcium transient).
+    The parameters are _scaled_: instead of passing in the conductances
+    directly, users should provide the natural log of the maximum conductances.
+    This makes the parameters easier to find for optimisation algorithms.
 
     References:
 
@@ -40,8 +38,9 @@ class ActionPotentialModel(pints.ForwardModel):
     Arguments:
 
     ``y0``
-        (Optional) The initial condition of the observables ``v``, ``cai`` and
-        requires ``cai0 >= 0``.
+        (Optional) The initial condition of the observables ``v`` and ``cai``,
+        where ``cai >= 0``.
+
     """
     def __init__(self, y0=None):
         if y0 is None:
