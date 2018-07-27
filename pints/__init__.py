@@ -22,8 +22,6 @@ if sys.version_info[0] < 3:
 #
 # Expose pints version
 #
-
-
 def version(formatted=False):
     if formatted:
         return 'Pints ' + VERSION
