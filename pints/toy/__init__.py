@@ -10,6 +10,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
+from ._beeler_reuter_model import ActionPotentialModel              # noqa
 from ._constant_model import ConstantModel                          # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
