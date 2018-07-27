@@ -168,7 +168,8 @@ class ActionPotentialModel(pints.ForwardModel):
               self._f0,
               self._x10]
         solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length)
+            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length,
+            rtol=1e-7, atol=1e-9)
         # Only return the observable (V, Cai)
         return solved_states[:, 0:2]
 
