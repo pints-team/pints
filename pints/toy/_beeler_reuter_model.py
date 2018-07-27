@@ -14,14 +14,12 @@ import scipy.integrate
 
 class ActionPotentialModel(pints.ForwardModel):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
     (AP) [1].
 
     This model describes several ion currents, each with a maximum conductance
     parameter, that together give rise to the cardiac AP and calcium transient.
-    In this (non-trivial) `toy' model, we use the maximum conductances as the
+    In this (non-trivial) 'toy' model, we use the maximum conductances as the
     parameters, and the AP and calcium transient as observable outputs. All
     other model parameters are assumed to be known.
 
@@ -41,6 +39,7 @@ class ActionPotentialModel(pints.ForwardModel):
         (Optional) The initial condition of the observables ``v`` and ``cai``,
         where ``cai >= 0``.
 
+    *Extends:* :class:`pints.ForwardModel`.
     """
     def __init__(self, y0=None):
         if y0 is None:
