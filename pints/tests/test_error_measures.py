@@ -200,7 +200,9 @@ class TestErrorMeasures(unittest.TestCase):
 
         # Test
         e = pints.MeanSquaredError(p, weights=[1, 2])
-        self.assertRaises(ValueError, pints.MeanSquaredError, p, [1, 2, 3])
+        self.assertRaisesRegex(
+            ValueError, 'Number of weights',
+            pints.MeanSquaredError, p, weights=[1, 2, 3])
         self.assertEqual(e.n_parameters(), 2)
         float(e([1, 2]))
         self.assertEqual(e([1, 2]), 0)      # 0
@@ -388,7 +390,9 @@ class TestErrorMeasures(unittest.TestCase):
 
         # Test
         e = pints.SumOfSquaresError(p, weights=[1, 2])
-        self.assertRaises(ValueError, pints.MeanSquaredError, p, [1, 2, 3])
+        self.assertRaisesRegex(
+            ValueError, 'Number of weights',
+            pints.SumOfSquaresError, p, weights=[1, 2, 3])
         self.assertEqual(e.n_parameters(), 2)
         float(e([1, 2]))
         self.assertEqual(e([1, 2]), 0)      # 0
