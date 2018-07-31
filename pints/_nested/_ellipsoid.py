@@ -13,7 +13,6 @@ import pints
 import numpy as np
 import numpy.linalg as la
 from scipy.misc import logsumexp
-from pints._nested import reject_sample_prior
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
@@ -56,40 +55,119 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # Gaps between updating ellipsoid
         self._ellipsoid_update_gap = 20
 
+        # Total number of log_likelihood evaluations
+        self._n_evals = 0
+
     def active_points_rate(self):
         """
-        Returns the number of active points that will be used in next run.
+        Returns the number of active points that will be used in next run (see
+        :meth:`set_active_points_rate()`).
         """
-        return self._acceptance_target
+        return self._active_points
+
+    def ellipsoid_update_gap(self):
+        """
+        Returns the ellipsoid update gap used in the algorithm (see
+        :meth:`set_ellipsoid_update_gap()`).
+        """
+        return self._ellipsoid_update_gap
+
+    def enlargement_factor(self):
+        """
+        Returns the enlargement factor used in the algorithm (see
+        :meth:`set_enlargement_factor()`).
+        """
+        return self._enlargement_factor
 
     def iterations(self):
         """
         Returns the total number of iterations that will be performed in the
-        next run.
+        next run (see :meth:`set_iterations()`).
         """
         return self._iterations
+
+    def posterior_samples(self):
+        """
+        Returns the number of posterior samples that will be returned (see
+        :meth:`set_posterior_samples()`).
+        """
+        return self._posterior_samples
+
+    def rejection_samples(self):
+        """
+        Returns the number of rejection sample used in the algorithm (see
+        :meth:`set_rejection_samples()`).
+        """
+        return self._rejection_samples
 
     def run(self):
         """ See :meth:`pints.MCMC.run()`. """
 
-        # Report the current settings
-        if self._verbose:
-            print('Running nested rejection sampling')
-            print('Number of active points: ' + str(self._active_points))
-            print('Total number of iterations: ' + str(self._iterations))
-            print('Enlargement factor: ' + str(self._enlargement_factor))
-            print('Total number of posterior samples: ' + str(
-                self._posterior_samples))
+        # Check if settings make sense
+        max_post = 0.25 * (self._iterations + self._active_points)
+        if self._posterior_samples > max_post:
+            raise ValueError(
+                'Number of posterior samples must not exceed 0.25 times (the'
+                ' number of iterations + the number of active points).')
+        if self._rejection_samples > self._iterations:
+            raise ValueError(
+                'Number of rejection samples must not exceed number of'
+                ' iterations.')
+
+        # Set up progress reporting
+        next_message = 0
+        message_warm_up = 3
+        message_interval = 50
+
+        # Start logging
+        logging = self._log_to_screen or self._log_filename
+        if logging:
+            # Create timer
+            timer = pints.Timer()
+
+            if self._log_to_screen:
+                # Show current settings
+                print('Running nested rejection sampling')
+                print('Number of active points: ' + str(self._active_points))
+                print('Total number of iterations: ' + str(self._iterations))
+                print('Enlargement factor: ' + str(self._enlargement_factor))
+                print('Total number of posterior samples: ' + str(
+                    self._posterior_samples))
+
+            # Set up logger
+            logger = pints.Logger()
+            if not self._log_to_screen:
+                logger.set_stream(None)
+            if self._log_filename:
+                logger.set_filename(self._log_filename, csv=self._log_csv)
+
+            # Add fields to log
+            logger.add_counter('Iter.', max_value=self._iterations)
+            logger.add_counter('Eval.', max_value=self._iterations * 10)
+            #TODO: Add other informative fields ?
+            logger.add_time('Time m:s')
 
         # Problem dimension
         d = self._dimension
 
-        # go!
-        # generate initial random points by sampling from the prior
+        # Generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
         m_initial = self._log_prior.sample(self._active_points)
         for i in range(0, self._active_points):
+            # Evaluate log likelihood
             m_active[i, d] = self._log_likelihood(m_initial[i, :])
+            self._n_evals += 1
+
+            # Show progress
+            if logging and i >= next_message:
+                # Log state
+                logger.log(0, self._n_evals, timer.time())
+
+                # Choose next logging point
+                if i > message_warm_up:
+                    next_message = message_interval * (
+                        1 + i // message_interval)
+
         m_active[:, :-1] = m_initial
 
         # store all inactive points, along with their respective
@@ -105,11 +183,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
         # log marginal likelihood holder
         v_log_Z = np.zeros(self._iterations + 1)
-        if self._verbose:
-            print('Starting rejection sampling...')
 
-        # run iter
+        # Run
         for i in range(0, self._iterations):
+
             a_running_log_likelihood = np.min(m_active[:, d])
             a_min_index = np.argmin(m_active[:, d])
             X[i + 1] = np.exp(-(i + 1.0) / self._active_points)
@@ -118,48 +195,56 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             m_inactive[i, :] = m_active[a_min_index, :]
 
             if (i + 1) % self._rejection_samples == 0:
-                if self._verbose:
-                    print('Starting ellipsoidal sampling (finished'
-                          ' rejection)...')
-                A, centroid = minimum_volume_ellipsoid(m_active[:, :d])
+                A, centroid = self._minimum_volume_ellipsoid(m_active[:, :d])
+
             if i > self._rejection_samples:
                 if ((i + 1 - self._rejection_samples)
                         % self._ellipsoid_update_gap == 0):
-                    if self._verbose:
-                        print(str(i + 1 - self._rejection_samples)
-                              + ' ellipsoidal samples completed (updating'
-                                ' ellipsoid)...')
-                    A, centroid = minimum_volume_ellipsoid(m_active[:, :d])
+                    A, centroid = self._minimum_volume_ellipsoid(
+                        m_active[:, :d])
 
             if i < self._rejection_samples:
-                m_active[a_min_index, :] = reject_sample_prior(
-                    a_running_log_likelihood,
-                    self._log_likelihood,
-                    self._log_prior)
+                # Start off with rejection sampling, while this is still very
+                # efficient.
+                m_active[a_min_index, :] = self._reject_sample_prior(
+                    a_running_log_likelihood)
             else:
-                m_active[a_min_index, :] = reject_ellipsoid_sample_faster(
-                    a_running_log_likelihood, self._log_likelihood,
-                    m_active[:, :d], self._enlargement_factor, A, centroid)
+                # After a number of samples, switch to ellipsoid sampling.
+                m_active[a_min_index, :] = \
+                    self._reject_ellipsoid_sample_faster(
+                        a_running_log_likelihood, m_active[:, :d],
+                        self._enlargement_factor, A, centroid)
+
+            # Show progress
+            if logging and i >= next_message:
+                # Log state
+                logger.log(i, self._n_evals, timer.time())
+
+                # Choose next logging point
+                if i > message_warm_up:
+                    next_message = message_interval * (
+                        1 + i // message_interval)
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
-        w[self._iterations:] = float(X[self._iterations]) / float(
-            self._active_points)
+        w[self._iterations:] = \
+            float(X[self._iterations]) / float(self._active_points)
         m_samples_all = np.vstack((m_inactive, m_active))
         logZ = logsumexp(v_log_Z, b=w[0:(self._iterations + 1)])
-        # vLogP = m_samples_all[:, d] - logZ + np.log(w)
+
         vP = np.exp(m_samples_all[:, d] - logZ) * w
         mTheta = m_samples_all[:, :-1]
         vIndex = np.random.choice(
             range(0, self._iterations + self._active_points),
             self._posterior_samples, p=vP)
         m_posterior_samples = mTheta[vIndex, :]
+
         return m_posterior_samples, logZ
 
     def set_active_points_rate(self, active_points):
         """
         Sets the number of active points for the next run.
         """
-        active_points = float(active_points)
+        active_points = int(active_points)
         if active_points <= 5:
             raise ValueError('Number of active points must be greater than 5.')
         self._active_points = active_points
@@ -176,13 +261,12 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def set_posterior_samples(self, posterior_samples):
         """
         Sets the number of posterior samples to generate from points proposed
-        from nested sampling algorithm.
+        by the nested sampling algorithm.
         """
-        if posterior_samples > np.round(
-                0.25 * (self._iterations + self._active_points)):
+        posterior_samples = int(posterior_samples)
+        if posterior_samples < 1:
             raise ValueError(
-                'Number of posterior samples must be fewer than 25% the total'
-                ' number of preminary points.')
+                'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
     def set_enlargement_factor(self, enlargement_factor):
@@ -192,7 +276,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         likely that areas of high probability mass will be missed. A low value
         means that rejection sampling is more efficient.
         """
-        if enlargement_factor < 1:
+        if enlargement_factor <= 1:
             raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
@@ -203,9 +287,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         """
         if rejection_samples < 0:
             raise ValueError('Must have non-negative rejection samples.')
-        if rejection_samples > self._iterations:
-            raise ValueError(
-                'Must have fewer rejection samples than total samples.')
         self._rejection_samples = rejection_samples
 
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap):
@@ -216,37 +297,129 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         efficiently produced, yet the cost of re-computing the ellipsoid means
         it is often desirable to compute this every n iterates.
         """
-        if ellipsoid_update_gap < 1:
+        ellipsoid_update_gap = int(ellipsoid_update_gap)
+        if ellipsoid_update_gap <= 1:
             raise ValueError('Ellipsoid update gap must exceed 1.')
-        if not isinstance(ellipsoid_update_gap, int):
-            raise ValueError('Ellipsoid update gap must be an integer.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
+    def _minimum_volume_ellipsoid(self, points, tol=0.001):
+        """
+        Finds the ellipse equation in "center form":
+        ``(x-c).T * A * (x-c) = 1``.
+        """
+        N, d = points.shape
+        Q = np.column_stack((points, np.ones(N))).T
+        err = tol + 1
+        u = np.ones(N) / N
+        while err > tol:
+            # assert(u.sum() == 1) # invariant
+            X = np.dot(np.dot(Q, np.diag(u)), Q.T)
+            M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
+            jdx = np.argmax(M)
+            step_size = (M[jdx] - d - 1) / ((d + 1) * (M[jdx] - 1))
+            new_u = (1 - step_size) * u
+            new_u[jdx] += step_size
+            err = la.norm(new_u - u)
+            u = new_u
+        c = np.dot(u, points)
+        A = la.inv(
+            + np.dot(np.dot(points.T, np.diag(u)), points)
+            - np.multiply.outer(c, c)
+        ) / d
+        return A, c
 
-def reject_draw_from_ellipsoid(A, centroid, log_likelihood, threshold):
-    """
-    Draws a random point from within ellipsoid and accepts it if log-likelihood
-    exceeds threshold.
-    """
-    v_proposed = draw_from_ellipsoid(A, centroid, 1)[0]
-    temp_log_likelihood = log_likelihood(v_proposed)
-    while temp_log_likelihood < threshold:
-        v_proposed = draw_from_ellipsoid(A, centroid, 1)[0]
-        temp_log_likelihood = log_likelihood(v_proposed)
-    return np.concatenate((v_proposed, np.array([temp_log_likelihood])))
+    def _reject_sample_prior(self, threshold):
+        """
+        Independently samples params from the prior until
+        ``log_likelihood(params) > threshold``.
+        """
+        # Note: threshold can be -inf, so that while loop is never run.
+        proposed = self._log_prior.sample()[0]
+        log_likelihood = self._log_likelihood(proposed)
+        self._n_evals += 1
+        while log_likelihood < threshold:
+            proposed = self._log_prior.sample()[0]
+            log_likelihood = self._log_likelihood(proposed)
+            self._n_evals += 1
+        return np.concatenate((proposed, np.array([log_likelihood])))
+
+    def _reject_ellipsoid_sample_faster(
+            self, threshold, m_samples_previous, enlargement_factor, A,
+            centroid):
+        """
+        Independently samples params from the prior until
+        ``logLikelihood(params) > threshold``. Accepts ``A`` as input (which is
+        only updated every ``N`` steps).
+        """
+        return self._reject_draw_from_ellipsoid(
+            la.inv((1 / enlargement_factor) * A), centroid, threshold)
+
+    def _reject_draw_from_ellipsoid(self, A, centroid, threshold):
+        """
+        Draws a random point from within ellipsoid and accepts it if
+        log-likelihood exceeds threshold.
+        """
+        # Note: threshold can be -inf, so that while loop is never run.
+        proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
+        log_likelihood = self._log_likelihood(proposed)
+        self._n_evals += 1
+        while log_likelihood < threshold:
+            proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
+            log_likelihood = self._log_likelihood(proposed)
+            self._n_evals += 1
+        return np.concatenate((proposed, np.array([log_likelihood])))
+
+    def _draw_from_ellipsoid(self, covmat, cent, npts):
+        """
+        Draw `npts` random uniform points from within an ellipsoid with a
+        covariance matrix covmat and a centroid cent, as per:
+        http://www.astro.gla.ac.uk/~matthew/blog/?p=368
+        """
+        try:
+            ndims = covmat.shape[0]
+        except IndexError:  # pragma: no cover
+            ndims = 1
+
+        # calculate eigen_values (e) and eigen_vectors (v)
+        eigen_values, eigen_vectors = la.eig(covmat)
+        idx = (-eigen_values).argsort()[::-1][:ndims]
+        e = eigen_values[idx]
+        v = eigen_vectors[:, idx]
+        e = np.diag(e)
+
+        # generate radii of hyperspheres
+        rs = np.random.uniform(0, 1, npts)
+
+        # generate points
+        pt = np.random.normal(0, 1, [npts, ndims])
+
+        # get scalings for each point onto the surface of a unit hypersphere
+        fac = np.sum(pt**2, axis=1)
+
+        # calculate scaling for each point to be within the unit hypersphere
+        # with radii rs
+        fac = (rs**(1 / ndims)) / np.sqrt(fac)
+        pnts = np.zeros((npts, ndims))
+
+        # scale points to the ellipsoid using the eigen_values and rotate with
+        # the eigen_vectors and add centroid
+        d = np.sqrt(np.diag(e))
+        d.shape = (ndims, 1)
+
+        for i in range(0, npts):
+            # scale points to a uniform distribution within unit hypersphere
+            pnts[i, :] = fac[i] * pt[i, :]
+            pnts[i, :] = np.dot(
+                np.multiply(pnts[i, :], np.transpose(d)),
+                np.transpose(v)
+            ) + cent
+
+        return pnts
 
 
-def reject_uniform_draw(a_min, a_max, log_likelihood, threshold):
-    """
-    Equivalent to reject_draw_from_ellipsoid but in 1D.
-    """
-    a_proposed = np.random.uniform(a_min, a_max, 1)
-    while log_likelihood(a_proposed) < threshold:
-        a_proposed = np.random.uniform(a_min, a_max, 1)
-    return np.concatenate((a_proposed, np.array([log_likelihood(a_proposed)])))
-
-
-def reject_ellipsoid_sample(
+#TODO: THIS METHOD IS NEVER USED
+'''
+def _reject_ellipsoid_sample(
         threshold, log_likelihood, m_samples_previous, enlargement_factor):
     """
     Independently samples params from the prior until
@@ -254,9 +427,9 @@ def reject_ellipsoid_sample(
     """
     aDim = len(m_samples_previous.shape)
     if aDim > 1:
-        A, centroid = minimum_volume_ellipsoid(m_samples_previous)
+        A, centroid = _minimum_volume_ellipsoid(m_samples_previous)
         A = (1 / enlargement_factor) * A
-        v_sample = reject_draw_from_ellipsoid(
+        return _reject_draw_from_ellipsoid(
             la.inv(A), centroid, log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
@@ -266,110 +439,5 @@ def reject_ellipsoid_sample(
         a_diff = a_diff * enlargement_factor
         a_min = a_middle - (a_diff / 2)
         a_max = a_middle + (a_diff / 2)
-        v_sample = reject_uniform_draw(a_min, a_max, log_likelihood, threshold)
-    return v_sample
-
-
-def reject_ellipsoid_sample_faster(
-        threshold, log_likelihood, m_samples_previous, enlargement_factor, A,
-        centroid):
-    """
-    Independently samples params from the prior until
-    `logLikelihood(params) > threshold`. Accepts A as input (which is only
-    updated every N steps).
-    """
-    aDim = len(m_samples_previous.shape)
-    if aDim > 1:
-        A = (1 / enlargement_factor) * A
-        v_sample = reject_draw_from_ellipsoid(
-            la.inv(A), centroid, log_likelihood, threshold)
-    else:
-        a_min = np.min(m_samples_previous)
-        a_max = np.max(m_samples_previous)
-        a_middle = (a_min + a_max) / 2
-        a_diff = a_max - a_min
-        a_diff = a_diff * enlargement_factor
-        a_min = a_middle - (a_diff / 2)
-        a_max = a_middle + (a_diff / 2)
-        v_sample = reject_uniform_draw(a_min, a_max, log_likelihood, threshold)
-    return v_sample
-
-
-def draw_from_ellipsoid(covmat, cent, npts):
-    """
-    Draw `npts` random uniform points from within an ellipsoid with a
-    covariance matrix covmat and a centroid cent, as per:
-    http://www.astro.gla.ac.uk/~matthew/blog/?p=368
-    """
-    try:
-        ndims = covmat.shape[0]
-    except IndexError:
-        ndims = 1
-
-    # calculate eigen_values (e) and eigen_vectors (v)
-    eigen_values, eigen_vectors = la.eig(covmat)
-    idx = (-eigen_values).argsort()[::-1][:ndims]
-    e = eigen_values[idx]
-    v = eigen_vectors[:, idx]
-    e = np.diag(e)
-
-    # generate radii of hyperspheres
-    rs = np.random.uniform(0, 1, npts)
-
-    # generate points
-    pt = np.random.normal(0, 1, [npts, ndims])
-
-    # get scalings for each point onto the surface of a unit hypersphere
-    fac = np.sum(pt**2, axis=1)
-
-    # calculate scaling for each point to be within the unit hypersphere
-    # with radii rs
-    fac = (rs**(1 / ndims)) / np.sqrt(fac)
-    pnts = np.zeros((npts, ndims))
-
-    # scale points to the ellipsoid using the eigen_values and rotate with
-    # the eigen_vectors and add centroid
-    d = np.sqrt(np.diag(e))
-    d.shape = (ndims, 1)
-
-    for i in range(0, npts):
-        # scale points to a uniform distribution within unit hypersphere
-        pnts[i, :] = fac[i] * pt[i, :]
-        pnts[i, :] = np.dot(
-            np.multiply(pnts[i, :], np.transpose(d)), np.transpose(v)) + cent
-
-    return pnts
-
-
-def minimum_volume_ellipsoid(points, tol=0.001):
-    """
-    Finds the ellipse equation in "center form": `(x-c).T * A * (x-c) = 1`.
-    """
-    try:
-        N, d = points.shape
-    except ValueError:
-        N = points.shape[0]
-        d = 1
-
-    Q = np.column_stack((points, np.ones(N))).T
-    err = tol + 1
-    u = np.ones(N) / N
-    while err > tol:
-        # assert u.sum() == 1 # invariant
-        X = np.dot(np.dot(Q, np.diag(u)), Q.T)
-        M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
-        jdx = np.argmax(M)
-        step_size = (M[jdx] - d - 1) / ((d + 1) * (M[jdx] - 1))
-        new_u = (1 - step_size) * u
-        new_u[jdx] += step_size
-        err = la.norm(new_u - u)
-        u = new_u
-    c = np.dot(u, points)
-    if d > 1:
-        A = la.inv(np.dot(np.dot(points.T, np.diag(u)), points)
-                   - np.multiply.outer(c, c)) / d
-    else:
-        A = 1 / (np.dot(np.dot(points.T, np.diag(u)), points)
-                 - np.multiply.outer(c, c))
-    return A, c
-
+        return _reject_uniform_draw(a_min, a_max, log_likelihood, threshold)
+'''
