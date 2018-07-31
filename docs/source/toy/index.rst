@@ -9,6 +9,7 @@ examples.
 
 .. toctree::
 
+    beeler_reuter_ap_model
     constant_model
     fitzhugh_nagumo_model
     goodwin_oscillator_model
@@ -18,6 +19,7 @@ examples.
     logistic_model
     lotka_volterra_model
     multimodal_normal_logpdf
+    parabolic_error
     repressilator_model
     rosenbrock
     sir_model

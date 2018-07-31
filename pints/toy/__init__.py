@@ -10,6 +10,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
+from ._beeler_reuter_model import ActionPotentialModel              # noqa
 from ._constant_model import ConstantModel                          # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
@@ -19,6 +20,7 @@ from ._high_dimensional_normal import HighDimensionalNormalLogPDF   # noqa
 from ._logistic_model import LogisticModel                          # noqa
 from ._lotka_volterra_model import LotkaVolterraModel               # noqa
 from ._multimodal_normal import MultimodalNormalLogPDF              # noqa
+from ._parabola import ParabolicError                               # noqa
 from ._repressilator_model import RepressilatorModel                # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa
 from ._sir_model import SIRModel                                    # noqa

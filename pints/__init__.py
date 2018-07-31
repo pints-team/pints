@@ -22,8 +22,6 @@ if sys.version_info[0] < 3:
 #
 # Expose pints version
 #
-
-
 def version(formatted=False):
     if formatted:
         return 'Pints ' + VERSION
@@ -89,7 +87,11 @@ from ._log_likelihoods import (
 #
 # Boundaries
 #
-from ._boundaries import Boundaries
+from ._boundaries import (
+    Boundaries,
+    LogPDFBoundaries,
+    RectangularBoundaries,
+)
 
 #
 # Error measures

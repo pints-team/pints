@@ -214,22 +214,35 @@ class MeanSquaredError(ProblemErrorMeasure):
     ``problem``
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
+    ``weights``
+        (Optional) A sequence of (float) weights, exactly one per problem
+        output. If no weights are specified all sums will be weighted equally.
     """
-    def __init__(self, problem):
+    def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
         self._ninv = 1.0 / np.product(self._values.shape)
 
+        if weights is None:
+            weights = [1] * self._n_outputs
+        elif self._n_outputs != len(weights):
+            raise ValueError(
+                'Number of weights must match number of problem outputs.')
+        # Check weights
+        self._weights = np.asarray([float(w) for w in weights])
+
     def __call__(self, x):
-        return (np.sum((self._problem.evaluate(x) - self._values)**2) *
-                self._ninv)
+        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
+                               axis=0) * self._weights) * self._ninv),
+                      axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
         y, dy = self._problem.evaluateS1(x)
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
-        e = self._ninv * np.sum(r**2)
-        de = 2 * self._ninv * np.sum((r.T * dy.T), axis=(1, 2))
+        e = self._ninv * np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
+        de = 2 * self._ninv * np.sum(np.sum((r.T * dy.T), axis=2) *
+                                     self._weights, axis=1)
         return e, de
 
 
@@ -272,15 +285,28 @@ class SumOfSquaresError(ProblemErrorMeasure):
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
     """
+    def __init__(self, problem, weights=None):
+        super(SumOfSquaresError, self).__init__(problem)
+
+        if weights is None:
+            weights = [1] * self._n_outputs
+        elif self._n_outputs != len(weights):
+            raise ValueError(
+                'Number of weights must match number of problem outputs.')
+        # Check weights
+        self._weights = np.asarray([float(w) for w in weights])
+
     def __call__(self, x):
-        return np.sum((self._problem.evaluate(x) - self._values)**2)
+        return np.sum((np.sum(((self._problem.evaluate(x) - self._values)**2),
+                              axis=0) * self._weights),
+                      axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
         y, dy = self._problem.evaluateS1(x)
         dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
         r = y - self._values
-        e = np.sum(r**2)
-        de = 2 * np.sum((r.T * dy.T), axis=(1, 2))
+        e = np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
+        de = 2 * np.sum(np.sum((r.T * dy.T), axis=2) * self._weights, axis=1)
         return e, de
 
