@@ -61,7 +61,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     2009, Vrugt et al.,
     International Journal of Nonlinear Sciences and Numerical Simulation.
     """
-    def __init__(self, log_pdf, x0, sigma0=None):
+    def __init__(self, chains, x0, sigma0=None):
         super(DreamMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
@@ -100,7 +100,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         #
         # TODO: WARM UP PERIOD
         #
-        self._in_warm_up = False
+        self._in_warm_up = True # TODO
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -117,14 +117,14 @@ class DreamMCMC(pints.MultiChainMCMC):
             for j in range(self._chains):
 
                 # Select initial proposal for chain j
-                delta = int(np.random.choice(self._D, 1)[0] + 1)
+                delta = int(np.random.choice(self._delta_max, 1)[0] + 1)
                 if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._n_parameters)
+                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
                 else:
                     gamma = 1.0
 
                 e = np.random.uniform(
-                    low=-self._b_star * mu, high=self._b_star * mu)
+                    low=-self._b_star * self._mu, high=self._b_star * self._mu)
 
                 dX = 0
                 for k in range(0, delta):
@@ -133,12 +133,13 @@ class DreamMCMC(pints.MultiChainMCMC):
                         self._current[r1] - self._current[r2])
 
                 self._proposed[j] += dX + np.random.normal(
-                    loc=0, scale=self._b * mu, size=self._n_parameters)
+                    loc=0, scale=self._b * self._mu, size=self._dimension)
 
                 # Select CR from multinomial distribution
-                m = np.nonzero(np.random.multinomial(self._nCR, self._p))[0][0]
-                CR = (m + 1) / self._nCR
-                self._L[m] += 1
+                self._m[j] = np.nonzero(
+                    np.random.multinomial(self._nCR, self._p))[0][0]
+                CR = (self._m[j] + 1) / self._nCR
+                self._L[self._m[j]] += 1
 
                 # Randomly set elements of proposal to back original
                 for d in range(0, self._dimension):
@@ -179,7 +180,10 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set initial p, L and Delta
         self._p = np.repeat(1 / self._nCR, self._nCR)
         self._L = np.zeros(self._nCR)
-        self._Delta = np.zeros(self._nCR)
+        self._delta = np.zeros(self._nCR)
+
+        # Create empty array of m indices
+        self._m = [0] * self._chains
 
         # Iteration tracking for running variance
         # See: https://www.johndcook.com/blog/standard_deviation/
@@ -250,28 +254,33 @@ class DreamMCMC(pints.MultiChainMCMC):
 
             # Update running mean and variance
             if self._iterations == 0:
-                self._mean = self._current
-                self._variance = self._current * 0
+                self._varm = self._current
+                self._variance = self._vars = self._current * 0
             else:
-                new_varm = (self._varm
-                            + (self._current - self._varm) / self._iterations)
-                self._vars += (
-                    (self._current - self._varm) * (self._current - new_varm))
+                new_varm = self._varm + (self._current - self._varm) / (
+                    self._iterations + 1)
+                self._vars += (self._current - self._varm) * (
+                    self._current - new_varm)
                 self._varm = new_varm
-                self._variance =
+                self._variance = self._vars / (self._iterations + 1)
 
                 # Update CR distribution
                 delta = (next - self._current)**2
                 for j in range(self._chains):
-                    for d in range(0, self._n_parameters):
-                        self._Delta[m] += delta[j][d] / variance[j][d]
+                    for d in range(0, self._dimension):
+                        self._delta[self._m[j]] += (
+                            delta[j][d] / self._variance[j][d])
 
-                self._p = self._iterations * self._chains * self._Delta
-                self._p /= self.L * np.sum(self._Delta)
+                self._p = self._iterations * self._chains * self._delta
+                self._p /= self._L * np.sum(self._delta)
                 self._p /= np.sum(self._p)
 
             # Update iteration count
             self._iterations += 1
+
+            #TODO HACK HACK HACK
+            if self._iterations > 1000:
+                self._in_warm_up = False
 
         # Update (part 2)
         self._current = next

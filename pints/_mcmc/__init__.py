@@ -483,6 +483,17 @@ class MCMCSampling(object):
         # Return generated chains
         return chains
 
+    def sampler(self):
+        """
+        For multi-chain methods, this returns the single underlying sampler.
+        For single-chain methods, this raises an RuntimeError.
+        """
+        if self._single_chain:
+            raise RuntimeError(
+                'The `sampler` method is not supported for single-sampler'
+                ' methods.')
+        return self._samplers[0]
+
     def samplers(self):
         """
         Returns the underlying array of samplers. The length of the array will
