@@ -54,13 +54,16 @@ relevant code.
 
 ### Models
 
+- [Beeler-Reuter action potential model](./toy-model-beeler-reuter-ap.ipynb)
 - [Constant model](./toy-model-constant.ipynb)
 - [Fitzhugh-Nagumo model](./toy-model-fitzhugh-nagumo.ipynb)
 - [Goodwin oscillator model](./toy-model-goodwin-oscillator.ipynb)
 - [HES1 Michaelis-Menten model](./toy-model-hes1-michaelis-menten.ipynb)
 - [Hodgkin-Huxley Potassium current model](./toy-model-hodgkin-huxley-ik.ipynb)
-- [Logistic model](./toy-model-logistic.ipynb)
+- [Logistic growth model](./toy-model-logistic.ipynb)
 - [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
+- [Repressilator model](./toy-model-repressilator.ipynb)
+- [SIR Epidemiology model](./toy-model-sir.ipynb)
 
 ### Distributions
 
