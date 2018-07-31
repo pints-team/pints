@@ -92,7 +92,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Determines maximum delta to choose in sums
         self._delta_max = 3
 
-        # Crossover probability for variable CR case
+        # Variable crossover probability
         self._nCR = 3
 
     def ask(self):
@@ -246,6 +246,15 @@ class DreamMCMC(pints.MultiChainMCMC):
 
 
 
+
+
+    def b(self):
+        """
+        Returns the normal scale coefficient used in updating the position of
+        each chain.
+        """
+        return self._b
+
     def set_b(self, b):
         """
         Sets the normal scale coefficient used in updating the position of each
@@ -255,14 +264,6 @@ class DreamMCMC(pints.MultiChainMCMC):
             raise ValueError('normal scale coefficient must be non-negative.')
         self._b = b
 
-    def set_gamma(self, gamma):
-        """
-        Sets the gamma coefficient used in updating the position of each
-        chain.
-        """
-        if gamma < 0:
-            raise ValueError('Gamma must be non-negative.')
-        self._gamma = gamma
 
 
 
