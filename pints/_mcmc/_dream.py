@@ -95,7 +95,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # 1 / Variable crossover probability
         self._nCR = 3
 
-        #TODO: Check that x0 are all different
+        #TODO: CHECK THAT ALL POINTS IN X0 ARE DIFFERENT!
 
         #
         # TODO: WARM UP PERIOD
