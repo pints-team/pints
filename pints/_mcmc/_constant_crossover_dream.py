@@ -128,7 +128,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Choose dX
                 dX = 0
                 for k in range(0, delta):
-                    r1, r2 = r_draw(j, self._num_chains)
+                    r1, r2 = self._draw(j)
                     dX += (1 + e) * gamma * (self._current[r1] -
                                              self._current[r2])
 
@@ -216,7 +216,7 @@ class DreamMCMC(pints.MultiChainMCMC):
             e = np.random.uniform(low=-self._b_star * mu,
                                   high=self._b_star * mu)
             for k in range(0, delta):
-                r1, r2 = R_draw(j, self._num_chains)
+                r1, r2 = self._draw(j)
                 dX += (1 + e) * gamma * (chains[i - 1, r1, :] -
                                          chains[i - 1, r2, :])
             proposed = chains[i - 1, j, :] + dX \
@@ -338,11 +338,12 @@ class DreamMCMC(pints.MultiChainMCMC):
         self._b = b
 
 
+    def _draw(self, i):
+        """
+        Select 2 random chains, not including chain i.
+        """
+        r1, r2 = np.random.choice(self._chains, 2, replace=False)
+        while(r1 == i or r2 == i or r1 == r2):
+            r1, r2 = np.random.choice(self._chains, 2, replace=False)
+        return r1, r2
 
-
-def r_draw(i, num_chains):
-    #TODO: Needs a docstring!
-    r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    while(r1 == i or r2 == i or r1 == r2):
-        r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    return r1, r2

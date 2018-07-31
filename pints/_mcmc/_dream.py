@@ -95,6 +95,8 @@ class DreamMCMC(pints.MultiChainMCMC):
         # 1 / Variable crossover probability
         self._nCR = 3
 
+        #TODO: Check that x0 are all different
+
         #
         # TODO: WARM UP PERIOD
         #
@@ -126,7 +128,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
                 dX = 0
                 for k in range(0, delta):
-                    r1, r2 = r_draw(j, self._chains)
+                    r1, r2 = self._draw(j)
                     dX += (1 + e) * gamma * (
                         self._current[r1] - self._current[r2])
 
@@ -164,7 +166,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set proposal as read-only
         self._proposed.setflags(write=False)
 
-        #TODO: Would prefer not to use this method, have user specified x0 used instead
+        #TODO: Would prefer not to use this method, have user x0 instead
         # Set initial values
         #for j in range(self._num_chains):
         #    chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
@@ -174,27 +176,21 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set mu
         self._mu = np.mean(self._x0, axis=0)
 
-        # Set p, L and Delta
+        # Set initial p, L and Delta
         self._p = np.repeat(1 / self._nCR, self._nCR)
         self._L = np.zeros(self._nCR)
         self._Delta = np.zeros(self._nCR)
 
+        # Iteration tracking for running variance
+        # See: https://www.johndcook.com/blog/standard_deviation/
+        # Algorithm based on Knuth TAOCP vol 2, 3rd edition, page 232
+        self._iterations = 0
+        self._varm = None
+        self._vars = None
+        self._variance = None
 
         # Update sampler state
         self._running = True
-
-
-
-        #
-        #
-        # RUN RUN RUN RUN RUN
-        #
-        #TODO self._current isn't used, method uses last from chain!
-
-
-        # chains of stored samples
-        #chains = np.zeros((self._iterations, self._num_chains, self._dimension))
-        #current_log_likelihood = np.zeros(self._num_chains)
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
@@ -235,40 +231,58 @@ class DreamMCMC(pints.MultiChainMCMC):
             # Return first samples for chains
             return self._current
 
-        # Warm-up? Then store current as 'previous' positions
+        # Perform iteration
+        next = np.array(self._current, copy=True)
+        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
+
+        # Sample uniform numbers
+        u = np.log(np.random.uniform(size=self._chains))
+
+        # Get chains to be updated
+        i = u < (proposed_log_pdfs - self._current_log_pdfs)
+
+        # Update (part 1)
+        next[i] = self._proposed[i]
+        next_log_pdfs[i] = proposed_log_pdfs[i]
+
+        # Warm-up? Then update CR distribution based on current & previous
         if self._in_warm_up:
-            previous = np.array(self._current, copy=True)
 
-        # Accept/reject for each chain
-        u = np.log(np.random.rand(self._chains))
-        for j in range(self._chains):
-            if u[j] < proposed_log_pdfs[j] - self._current_log_pdfs[j]:
-                self._current[j] = self._proposed[j]
-                self._current_log_pdfs[j] = proposed_log_pdfs[j]
+            # Update running mean and variance
+            if self._iterations == 0:
+                self._mean = self._current
+                self._variance = self._current * 0
+            else:
+                new_varm = (self._varm
+                            + (self._current - self._varm) / self._iterations)
+                self._vars += (
+                    (self._current - self._varm) * (self._current - new_varm))
+                self._varm = new_varm
+                self._variance =
 
-        # Warm-up? The update CR distribution based on (new) current & previous
-        if self._in_warm_up:
+                # Update CR distribution
+                delta = (next - self._current)**2
+                for j in range(self._chains):
+                    for d in range(0, self._n_parameters):
+                        self._Delta[m] += delta[j][d] / variance[j][d]
 
-            # Update CR distribution
-            for j in range(self._chains):
-                for d in range(0, self._n_parameters):
-                    delta = self._current[j] - previous[j]
-                    #TODO: UH OH!!!!
-                    self._Delta[m] += (delta)**2 / np.var(chains[:, j, d])
+                self._p = self._iterations * self._chains * self._Delta
+                self._p /= self.L * np.sum(self._Delta)
+                self._p /= np.sum(self._p)
 
-            for k in range(0, self._nCR):
-                p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)  # NOQA
-            p = p / np.sum(p)
+            # Update iteration count
+            self._iterations += 1
 
-            #TODO: RETURN
-            return 123
+        # Update (part 2)
+        self._current = next
+        self._current_log_pdfs = next_log_pdfs
 
+        # Clear proposal
+        self._proposed = None
 
-        # Post warm-up
-
-
-
-
+        # Return samples to add to chains
+        self._current.setflags(write=False)
+        return self._current
 
     def b(self):
         """
@@ -286,12 +300,12 @@ class DreamMCMC(pints.MultiChainMCMC):
             raise ValueError('normal scale coefficient must be non-negative.')
         self._b = b
 
+    def _draw(self, i):
+        """
+        Select 2 random chains, not including chain i.
+        """
+        r1, r2 = np.random.choice(self._chains, 2, replace=False)
+        while(r1 == i or r2 == i or r1 == r2):
+            r1, r2 = np.random.choice(self._chains, 2, replace=False)
+        return r1, r2
 
-
-
-def r_draw(i, num_chains):
-    #TODO: Needs a docstring!
-    r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    while(r1 == i or r2 == i or r1 == r2):
-        r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    return r1, r2
