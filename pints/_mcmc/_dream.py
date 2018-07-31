@@ -92,8 +92,13 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Determines maximum delta to choose in sums
         self._delta_max = 3
 
-        # Variable crossover probability
+        # 1 / Variable crossover probability
         self._nCR = 3
+
+        #
+        # TODO: WARM UP PERIOD
+        #
+        self._in_warm_up = False
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -102,47 +107,41 @@ class DreamMCMC(pints.MultiChainMCMC):
             self._initialise()
 
         # Propose new points
+        # Note: Initialise sets the proposal for the very first step
         if self._proposed is None:
 
-            self._proposed = np.zeros(self._current.shape)
+            self._proposed = np.array(self._current, copy=True)
 
             for j in range(self._chains):
 
-                # Choose delta from [1, 2, ..., delta_max]
-                delta = 1 + np.random.randint(self._delta_max)
-
-                # Choose gamma
+                # Select initial proposal for chain j
+                delta = int(np.random.choice(self._D, 1)[0] + 1)
                 if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                    gamma = 2.38 / np.sqrt(2 * delta * self._n_parameters)
                 else:
-                    gamma = 1
+                    gamma = 1.0
 
-                # Choose e
-                e = np.random.uniform(-self._b_star * mu, self._b_star * mu)
+                e = np.random.uniform(
+                    low=-self._b_star * mu, high=self._b_star * mu)
 
-                # Choose dX
                 dX = 0
                 for k in range(0, delta):
-                    r1, r2 = r_draw(j, self._num_chains)
-                    dX += (1 + e) * gamma * (self._current[r1] -
-                                             self._current[r2])
+                    r1, r2 = r_draw(j, self._chains)
+                    dX += (1 + e) * gamma * (
+                        self._current[r1] - self._current[r2])
 
-                # Create new proposal for chain j
-                proposed[j] = (self._current[j] + dX
-                            + np.random.normal(0, self._b * mu, len(mu)))
+                self._proposed[j] += dX + np.random.normal(
+                    loc=0, scale=self._b * mu, size=self._n_parameters)
 
                 # Select CR from multinomial distribution
-                m = np.nonzero(np.random.multinomial(self._nCR, p))[0][0]
-                CR = (m + 1) / self._nCR)
+                m = np.nonzero(np.random.multinomial(self._nCR, self._p))[0][0]
+                CR = (m + 1) / self._nCR
+                self._L[m] += 1
 
-                # TODO: Store m (per j) for tell()
-
-                # Randomly set elements of new proposal to current
-                d = np.random.uniform(0, 1, self._dimension)
-                proposed[j][d] = current[j][d]
-
-                if self._WARM_UP:
-                    self._L[m] += 1
+                # Randomly set elements of proposal to back original
+                for d in range(0, self._dimension):
+                    if 1 - CR > np.random.rand():
+                        self._proposed[j][d] = self._current[j][d]
 
             # Set as read only
             self._proposed.setflags(write=False)
@@ -160,18 +159,42 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Propose x0 as first points
         self._current = None
         self._current_log_pdfs = None
-        self._proposed = self._x0
+        self._proposed = np.array(self._x0, copy=True)
+
+        # Set proposal as read-only
+        self._proposed.setflags(write=False)
+
+        #TODO: Would prefer not to use this method, have user specified x0 used instead
+        # Set initial values
+        #for j in range(self._num_chains):
+        #    chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
+        #                                       size=len(mu))
+        #    current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
 
         # Set mu
-        #TODO: Should this be a user setting?
         self._mu = np.mean(self._x0, axis=0)
 
+        # Set p, L and Delta
         self._p = np.repeat(1 / self._nCR, self._nCR)
         self._L = np.zeros(self._nCR)
         self._Delta = np.zeros(self._nCR)
 
+
         # Update sampler state
         self._running = True
+
+
+
+        #
+        #
+        # RUN RUN RUN RUN RUN
+        #
+        #TODO self._current isn't used, method uses last from chain!
+
+
+        # chains of stored samples
+        #chains = np.zeros((self._iterations, self._num_chains, self._dimension))
+        #current_log_likelihood = np.zeros(self._num_chains)
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
@@ -212,37 +235,36 @@ class DreamMCMC(pints.MultiChainMCMC):
             # Return first samples for chains
             return self._current
 
-        # Update chains
-        next = np.array(self._current, copy=True)
-        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
+        # Warm-up? Then store current as 'previous' positions
+        if self._in_warm_up:
+            previous = np.array(self._current, copy=True)
 
-        # Sample uniform numbers
-        u = np.log(np.random.uniform(size=self._chains))
+        # Accept/reject for each chain
+        u = np.log(np.random.rand(self._chains))
+        for j in range(self._chains):
+            if u[j] < proposed_log_pdfs[j] - self._current_log_pdfs[j]:
+                self._current[j] = self._proposed[j]
+                self._current_log_pdfs[j] = proposed_log_pdfs[j]
 
-        # Get chains to be updated
-        i = u < (proposed_log_pdfs - self._current_log_pdfs)
+        # Warm-up? The update CR distribution based on (new) current & previous
+        if self._in_warm_up:
 
-        # Update
-        next[i] = self._proposed[i]
-        next_log_pdfs[i] = proposed_log_pdfs[i]
-        self._current = next
-        self._current_log_pdfs = next_log_pdfs
-
-        if WARM_UP:
             # Update CR distribution
-            for j in range(self._num_chains):
+            for j in range(self._chains):
+                for d in range(0, self._n_parameters):
+                    delta = self._current[j] - previous[j]
+                    #TODO: UH OH!!!!
+                    self._Delta[m] += (delta)**2 / np.var(chains[:, j, d])
 
-                # When did we draw an m?
-                for d in range(0, self._dimension):
-                    Delta[m] += (
-                        (chains[i, j, d] - chains[i - 1, j, d])**2
-                        / np.var(chains[:, j, d])
-                    )
             for k in range(0, self._nCR):
-                p[k] = (i * self._num_chains * (Delta[k] / float(L[k]))
-                        / np.sum(Delta))
+                p[k] = i * self._num_chains * (Delta[k] / float(L[k])) / np.sum(Delta)  # NOQA
             p = p / np.sum(p)
 
+            #TODO: RETURN
+            return 123
+
+
+        # Post warm-up
 
 
 
