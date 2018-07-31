@@ -1,5 +1,5 @@
 *************************
-Nested Sampler base class
+Nested sampler base class
 *************************
 
 .. module:: pints
