@@ -184,7 +184,8 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set proposal as read-only
         self._proposed.setflags(write=False)
 
-        #TODO: Would prefer not to use this method, have user x0 instead
+        #TODO: Would prefer not to use this method, use x0 from user instead
+        #      Is that ok? Then this code can go
         # Set initial values
         #for j in range(self._num_chains):
         #    chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
