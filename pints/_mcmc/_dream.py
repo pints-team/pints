@@ -92,8 +92,21 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Determines maximum delta to choose in sums
         self._delta_max = 3
 
+        #
+        # Variable or constant cross-over mode
+        #
+
+        self._constant_crossover = False
+
+        # Variable
+
         # 1 / Variable crossover probability
         self._nCR = 3
+
+        # Constant
+
+        # Constant CR probability for constant CR probability
+        self._CR = 0.5
 
         #TODO: CHECK THAT ALL POINTS IN X0 ARE DIFFERENT!
 
@@ -123,8 +136,8 @@ class DreamMCMC(pints.MultiChainMCMC):
                 else:
                     gamma = 1.0
 
-                e = np.random.uniform(
-                    low=-self._b_star * self._mu, high=self._b_star * self._mu)
+                e = self._b_star * self._mu
+                e = np.random.uniform(-e, e)
 
                 dX = 0
                 for k in range(0, delta):
@@ -135,14 +148,18 @@ class DreamMCMC(pints.MultiChainMCMC):
                 self._proposed[j] += dX + np.random.normal(
                     loc=0, scale=self._b * self._mu, size=self._dimension)
 
-                # Select CR from multinomial distribution
-                self._m[j] = np.nonzero(
-                    np.random.multinomial(self._nCR, self._p))[0][0]
-                CR = (self._m[j] + 1) / self._nCR
-                self._L[self._m[j]] += 1
+                # Set crossover probability
+                if self._constant_crossover:
+                    CR = self._CR
+                else:
+                    # Select CR from multinomial distribution
+                    self._m[j] = np.nonzero(
+                        np.random.multinomial(self._nCR, self._p))[0][0]
+                    CR = (self._m[j] + 1) / self._nCR
+                    self._L[self._m[j]] += 1
 
                 # Randomly set elements of proposal to back original
-                for d in range(0, self._dimension):
+                for d in range(self._dimension):
                     if 1 - CR > np.random.rand():
                         self._proposed[j][d] = self._current[j][d]
 
@@ -250,7 +267,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
 
         # Warm-up? Then update CR distribution based on current & previous
-        if self._in_warm_up:
+        if self._in_warm_up and not self._constant_crossover:
 
             # Update running mean and variance
             if self._iterations == 0:
