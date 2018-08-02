@@ -46,9 +46,9 @@ matrix:
           env:
             - PINTS_COVER=true
           if: type != cron
-      # Cron jobs
-      - python: "3.6"
-        if: type == cron
+          # Cron jobs
+        - python: "3.6"
+          if: type == cron
 
 # command to install dependencies
 install:
