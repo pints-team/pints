@@ -15,5 +15,6 @@ interface, that can be used to sample from an unknown
     base_classes
     adaptive_covariance_mcmc
     differential_evolution_mcmc
+    dream_mcmc
     metropolis_mcmc
     population_mcmc
