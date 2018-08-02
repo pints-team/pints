@@ -12,10 +12,8 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
+class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`SingleChainAdaptiveMCMC`
-
     Adaptive covariance MCMC, as described in [1, 2].
 
     Using a covariance matrix, that is tuned so that the acceptance rate of the
@@ -28,6 +26,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
     [2] An adaptive Metropolis algorithm
     Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
+
+    *Extends:* :class:`SingleChainMCMC`
     """
     def __init__(self, x0, sigma0=None):
         super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
@@ -42,6 +42,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
 
         # Default settings
         self.set_target_acceptance_rate()
+
+        # Adaptive mode: disabled during initial phase
+        self._adaptive = False
 
     def acceptance_rate(self):
         """
@@ -97,6 +100,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         # Update sampler state
         self._running = True
 
+    def in_initial_phase(self):
+        """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
+        return not self._adaptive
+
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Accept.')
@@ -108,6 +115,15 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Adaptive covariance MCMC'
+
+    def needs_initial_phase(self):
+        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        return True
+
+    def set_initial_phase(self, initial_phase):
+        """ See :meth:`pints.MCMCSampler.set_initial_phase()`. """
+        # No adaptation during initial phase
+        self._adaptive = not bool(initial_phase)
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -150,7 +166,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainAdaptiveMCMC):
         self._proposed = None
 
         # Adapt covariance matrix
-        if self._adaptation:
+        if self._adaptive:
             # Set gamma based on number of adaptive iterations
             gamma = self._adaptations ** -0.6
             self._adaptations += 1

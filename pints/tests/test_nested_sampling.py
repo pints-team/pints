@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the basic methods of the nested sampling routines.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
