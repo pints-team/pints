@@ -347,7 +347,7 @@ class TestMCMCSampling(unittest.TestCase):
         # Invalid log rate
         self.assertRaises(ValueError, mcmc.set_log_rate, 0)
 
-    def test_adaptation(self):
+    def test_initial_phase(self):
 
         # 2 chains
         x0 = np.array(self.real_parameters) * 1.1
@@ -355,39 +355,39 @@ class TestMCMCSampling(unittest.TestCase):
         xs = [x0, x1]
         nchains = len(xs)
 
-        # Delayed adaptation
+        # Initial phase
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
-        self.assertNotEqual(mcmc.adaptation_free_iterations(), 10)
-        mcmc.set_adaptation_free_iterations(10)
-        self.assertEqual(mcmc.adaptation_free_iterations(), 10)
+        self.assertNotEqual(mcmc.initial_phase_iterations(), 10)
+        mcmc.set_initial_phase_iterations(10)
+        self.assertEqual(mcmc.initial_phase_iterations(), 10)
         self.assertRaisesRegex(
-            ValueError, 'negative', mcmc.set_adaptation_free_iterations, -1)
+            ValueError, 'negative', mcmc.set_initial_phase_iterations, -1)
         for sampler in mcmc._samplers:
-            self.assertFalse(sampler.adaptation())
+            self.assertTrue(sampler.in_initial_phase())
         mcmc.set_max_iterations(9)
         mcmc.set_log_to_screen(False)
         mcmc.run()
         for sampler in mcmc._samplers:
-            self.assertFalse(sampler.adaptation())
+            self.assertTrue(sampler.in_initial_phase())
 
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
-        mcmc.set_adaptation_free_iterations(10)
+        mcmc.set_initial_phase_iterations(10)
         for sampler in mcmc._samplers:
-            self.assertFalse(sampler.adaptation())
-        mcmc.set_max_iterations(19)
+            self.assertTrue(sampler.in_initial_phase())
+        mcmc.set_max_iterations(11)
         mcmc.set_log_to_screen(False)
         mcmc.run()
         for sampler in mcmc._samplers:
-            self.assertTrue(sampler.adaptation())
+            self.assertFalse(sampler.in_initial_phase())
 
-        # No delay
+        # No initial phase
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
-        mcmc.set_adaptation_free_iterations(0)
+        mcmc.set_initial_phase_iterations(0)
+        mcmc.set_max_iterations(1)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
         for sampler in mcmc._samplers:
-            self.assertTrue(sampler.adaptation())
-        mcmc.set_adaptation_free_iterations(0)
-        for sampler in mcmc._samplers:
-            self.assertTrue(sampler.adaptation())
+            self.assertFalse(sampler.in_initial_phase())
 
 
 if __name__ == '__main__':

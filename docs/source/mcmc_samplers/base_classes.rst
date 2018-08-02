@@ -8,7 +8,5 @@ MCMC Sampler base classes
 
 .. autoclass:: SingleChainMCMC
 
-.. autoclass:: SingleChainAdaptiveMCMC
-
 .. autoclass:: MultiChainMCMC
 
