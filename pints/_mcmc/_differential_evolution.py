@@ -63,8 +63,6 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Normal proposal std.
         self._b = 0.01
 
-        #TODO: CHECK THAT ALL POINTS IN X0 ARE DIFFERENT!
-
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
         # Initialise on first call
