@@ -26,6 +26,31 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def in_initial_phase(self):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method returns ``True`` if the
+        method is currently configured to be in its initial phase. For other
+        methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
+    def needs_initial_phase(self):
+        """
+        Returns ``True`` if this method needs an initial phase, for example an
+        adaptation-free period for adaptive covariance methods, or a warm-up
+        phase for DREAM.
+        """
+        return False
+
+    def set_initial_phase(self, in_initial_phase):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method toggles the initial phase
+        algorithm. For other methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
 
 class SingleChainMCMC(MCMCSampler):
     """
@@ -92,47 +117,6 @@ class SingleChainMCMC(MCMCSampler):
         This is an optional method, and may not be implemented by all methods!
         """
         raise NotImplementedError
-
-
-class SingleChainAdaptiveMCMC(SingleChainMCMC):
-    """
-    *Extends:* :class:`SingleChainMCMC`
-
-    Abstract base class for adaptive single chain MCMC methods.
-
-    ``x0``
-        An starting point in the parameter space.
-    ``sigma0=None``
-        An optional initial covariance matrix, i.e., a guess of the covariance
-        of the distribution to estimate, around ``x0``.
-
-    """
-
-    def __init__(self, x0, sigma0=None):
-        super(SingleChainAdaptiveMCMC, self).__init__(x0, sigma0)
-
-        # Adaptation enabled/disabled
-        self._adaptation = True
-
-    def adaptation(self):
-        """
-        Returns ``True`` if this sampler is in adaptive mode.
-        """
-        return self._adaptation
-
-    def set_adaptation(self, adaptation):
-        """
-        Switches adaptation on/off for this sampler.
-
-        Arguments:
-
-        ``adaptation``
-            A boolean specifying whether this method should (``True``) or
-            should not (``False``) run in adaptive mode for the next
-            iterations.
-
-        """
-        self._adaptation = bool(adaptation)
 
 
 class MultiChainMCMC(MCMCSampler):
@@ -307,9 +291,11 @@ class MCMCSampling(object):
         self._n_workers = 1
         self.set_parallel()
 
-        # Adaptive methods
-        self._adaptation_free_iterations = None
-        self.set_adaptation_free_iterations()
+        # Initial phase (needed for e.g. adaptive covariance)
+        self._initial_phase_iterations = 0
+        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
+        if self._needs_initial_phase:
+            self.set_initial_phase_iterations()
 
         #
         # Stopping criteria
@@ -321,21 +307,16 @@ class MCMCSampling(object):
 
         # TODO: Add more stopping criteria
 
-    def samplers(self):
+    def initial_phase_iterations(self):
         """
-        Returns the underlying array of samplers. The length of the array will
-        either be the number of chains, or one for samplers that sample
-        multiple chains
-        """
-        return self._samplers
+        For methods that require an initial phase (e.g. an adaptation-free
+        phase for the adaptive covariance MCMC method), this returns the number
+        of iterations that the initial phase will take.
 
-    def adaptation_free_iterations(self):
+        For methods that do not require an initial phase, a
+        ``NotImplementedError`` is raised.
         """
-        For adaptive methods, returns the number of adaptation free iterations
-        to use at the start of the run. Runs ``None`` for non-adaptive methods
-        or when no adaptation free period is configured
-        """
-        return self._adaptation_free_iterations
+        return self._initial_phase_iterations
 
     def max_iterations(self):
         """
@@ -362,7 +343,7 @@ class MCMCSampling(object):
         if not has_stopping_criterion:
             raise ValueError('At least one stopping criterion must be set.')
 
-        # Iterations and evaluations
+        # Iteration and evaluation counting
         iteration = 0
         evaluations = 0
 
@@ -374,6 +355,11 @@ class MCMCSampling(object):
                 self._log_pdf, n_workers=n_workers)
         else:
             evaluator = pints.SequentialEvaluator(self._log_pdf)
+
+        # Initial phase
+        if self._needs_initial_phase:
+            for sampler in self._samplers:
+                sampler.set_initial_phase(True)
 
         # Set up progress reporting
         next_message = 0
@@ -416,6 +402,14 @@ class MCMCSampling(object):
         timer = pints.Timer()
         running = True
         while running:
+            # Initial phase
+            if (self._needs_initial_phase and
+                    iteration == self._initial_phase_iterations):
+                for sampler in self._samplers:
+                    sampler.set_initial_phase(False)
+                if self._log_to_screen:
+                    print('Initial phase completed.')
+
             # Get points
             if self._single_chain:
                 xs = [sampler.ask() for sampler in self._samplers]
@@ -467,15 +461,6 @@ class MCMCSampling(object):
 
             # TODO Add more stopping criteria
 
-            #
-            # Adaptive methods
-            #
-
-            # Start adapting?
-            if iteration == self._adaptation_free_iterations:
-                for sampler in self._samplers:
-                    sampler.set_adaptation(True)
-
         # Log final state and show halt message
         if logging:
             logger.log(iteration, evaluations)
@@ -493,32 +478,32 @@ class MCMCSampling(object):
         # Return generated chains
         return chains
 
-    def set_adaptation_free_iterations(self, iterations=200):
+    def samplers(self):
         """
-        For adaptive methods, sets the number of adaptation free ``iterations``
-        at the start of a run.
-        Returns ``False`` if the chosen method doesn't support adaptation.
+        Returns the underlying array of samplers. The length of the array will
+        either be the number of chains, or one for samplers that sample
+        multiple chains
         """
-        self._adaptation_free_iterations = None
+        return self._samplers
+
+    def set_initial_phase_iterations(self, iterations=200):
+        """
+        For methods that require an initial phase (e.g. an adaptation-free
+        phase for the adaptive covariance MCMC method), this sets the number of
+        iterations that the initial phase will take.
+
+        For methods that do not require an initial phase, a
+        ``NotImplementedError`` is raised.
+        """
+        if not self._needs_initial_phase:
+            raise NotImplementedError
 
         # Check input
         iterations = int(iterations)
         if iterations < 0:
             raise ValueError(
-                'Number of adaptation free iterations cannot be negative.')
-
-        # Attempt to configure samplers
-        initial_value = iterations == 0
-        try:
-            for sampler in self._samplers:
-                sampler.set_adaptation(initial_value)
-        except AttributeError:
-            # No adaptation method? Return False
-            return False
-
-        # Store number of iterations, return True
-        self._adaptation_free_iterations = iterations
-        return True
+                'Number of initial-phase iterations cannot be negative.')
+        self._initial_phase_iterations = iterations
 
     def set_log_rate(self, rate=20, warm_up=3):
         """

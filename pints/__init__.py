@@ -151,7 +151,6 @@ from ._diagnostics import (
 from ._mcmc import (
     MCMCSampler,
     SingleChainMCMC,
-    SingleChainAdaptiveMCMC,
     MultiChainMCMC,
     MCMCSampling,
     mcmc_sample,

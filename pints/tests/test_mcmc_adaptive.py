@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
@@ -64,7 +64,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Configure
         mcmc.set_target_acceptance_rate(0.3)
-        mcmc.set_adaptation(False)
+        mcmc.set_initial_phase(True)
 
         # Perform short run
         rate = []
@@ -74,7 +74,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
             fx = self.log_posterior(x)
             sample = mcmc.tell(fx)
             if i == 20:
-                mcmc.set_adaptation(True)
+                mcmc.set_initial_phase(False)
             if i >= 50:
                 chain.append(sample)
             rate.append(mcmc.acceptance_rate())
@@ -115,7 +115,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Repeated asks should return same point
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
         # Get into accepting state
-        mcmc.set_adaptation(True)
+        mcmc.set_initial_phase(False)
         for i in range(100):
             mcmc.tell(self.log_posterior(mcmc.ask()))
         x = mcmc.ask()
