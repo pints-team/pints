@@ -92,28 +92,16 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Determines maximum delta to choose in sums
         self._delta_max = 3
 
-        #
-        # Variable or constant cross-over mode
-        #
+        # Initial phase
+        self._initial_phase = True
 
+        # Variable or constant cross-over mode
         self._constant_crossover = False
 
-        # Variable
-
+        # Constant CR probability
+        self._CR = 0.5
         # 1 / Variable crossover probability
         self._nCR = 3
-
-        # Constant
-
-        # Constant CR probability for constant CR probability
-        self._CR = 0.5
-
-        #TODO: CHECK THAT ALL POINTS IN X0 ARE DIFFERENT!
-
-        #
-        # TODO: WARM UP PERIOD
-        #
-        self._in_warm_up = True # TODO
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -214,6 +202,10 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Update sampler state
         self._running = True
 
+    def in_initial_phase(self):
+        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        return self._initial_phase
+
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         #logger.add_float('Accept.')
@@ -227,6 +219,14 @@ class DreamMCMC(pints.MultiChainMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'DiffeRential Evolution Adaptive Metropolis (DREAM) MCMC'
+
+    def needs_initial_phase(self):
+        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        return True
+
+    def set_initial_phase(self, initial_phase):
+        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        self._initial_phase = bool(initial_phase)
 
     def tell(self, proposed_log_pdfs):
         """ See :meth:`pints.MultiChainMCMC.tell()`. """
@@ -268,7 +268,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
 
         # Warm-up? Then update CR distribution based on current & previous
-        if self._in_warm_up and not self._constant_crossover:
+        if self._initial_phase and not self._constant_crossover:
 
             # Update running mean and variance
             if self._iterations == 0:
@@ -293,12 +293,8 @@ class DreamMCMC(pints.MultiChainMCMC):
                 self._p /= self._L * np.sum(self._delta)
                 self._p /= np.sum(self._p)
 
-            # Update iteration count
+            # Update iteration count for running mean/variance
             self._iterations += 1
-
-            #TODO HACK HACK HACK
-            if self._iterations > 1000:
-                self._in_warm_up = False
 
         # Update (part 2)
         self._current = next
@@ -335,4 +331,16 @@ class DreamMCMC(pints.MultiChainMCMC):
         while(r1 == i or r2 == i or r1 == r2):
             r1, r2 = np.random.choice(self._chains, 2, replace=False)
         return r1, r2
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[b]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_b(x[0])
 
