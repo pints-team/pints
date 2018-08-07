@@ -357,6 +357,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Initial phase
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        self.assertTrue(mcmc.method_needs_initial_phase())
         self.assertNotEqual(mcmc.initial_phase_iterations(), 10)
         mcmc.set_initial_phase_iterations(10)
         self.assertEqual(mcmc.initial_phase_iterations(), 10)
