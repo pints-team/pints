@@ -325,6 +325,13 @@ class MCMCSampling(object):
         """
         return self._max_iterations
 
+    def method_needs_initial_phase(self):
+        """
+        Returns true if this sampler has been created with a method that has
+        an initial phase (see :meth:`MCMCSampler.needs_initial_phase()`.)
+        """
+        return self._samplers[0].needs_initial_phase()
+
     def parallel(self):
         """
         Returns the number of parallel worker processes this routine will be
