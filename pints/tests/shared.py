@@ -146,7 +146,7 @@ class TemporaryDirectory(object):
         self._dir = None
 
     def __enter__(self):
-        self._dir = os.path.abspath(tempfile.mkdtemp())
+        self._dir = os.path.realpath(tempfile.mkdtemp())
         return self
 
     def path(self, path):
