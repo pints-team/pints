@@ -4,15 +4,9 @@ dist: trusty
 
 language: python
 
-env:
-  - PINTS_UNIT=false
-    PINTS_DOCS=false
-    PINTS_STYLE=false
-    PINTS_COVER=false
-
 matrix:
     include:
-        # Unit testing on all supported Python versions
+        # Unit testing on all supported Python versions on Ubuntu
         - python: "2.7"
           env:
             - PINTS_UNIT=true
@@ -33,6 +27,11 @@ matrix:
         #  env:
         #    - PINT_UNIT=true
         #  if: type != cron
+        # Unit testing on OS/X
+        - os: osx
+          language: generic
+          env:
+            - PINTS_UNIT=true
         # Docs, style and cover checking, latest Python version only
         - python: "3.6"
           env:
