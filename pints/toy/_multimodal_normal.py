@@ -28,10 +28,10 @@ class MultimodalNormalLogPDF(pints.LogPDF):
         f = pints.toy.MultimodalNormalLogPDF()
 
         # 3d bimodal
-        f = pints.toy.MultimodalNormalLogPDF()[0, 1, 2], [10, 10, 10]))
+        f = pints.toy.MultimodalNormalLogPDF([[0, 1, 2], [10, 10, 10]])
 
         # 2d with 3 modes
-        f = pints.toy.MultimodalNormalLogPDF()[0, 0], [5, 5], [5, 0]))
+        f = pints.toy.MultimodalNormalLogPDF([[0, 0], [5, 5], [5, 0]])
 
     Arguments:
 
