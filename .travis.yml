@@ -32,6 +32,7 @@ matrix:
           language: generic
           env:
             - PINTS_UNIT=true
+          if: type != cron
         # Docs, style and cover checking, latest Python version only
         - python: "3.6"
           env:
