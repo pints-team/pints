@@ -30,8 +30,7 @@ class ActionPotentialModel(pints.ForwardModel):
     References:
 
     [1] Reconstruction of the action potential of ventricular myocardial
-    fibres
-    Beeler, Reuter (1977) Journal of Physiology
+    fibres. Beeler, Reuter (1977) Journal of Physiology
 
     Arguments:
 
@@ -54,14 +53,20 @@ class ActionPotentialModel(pints.ForwardModel):
         self._d0 = 0.003
         self._f0 = 0.99
         self._x10 = 0.0004
+
         # membrane capacitance, in uF/cm^2
         self._C_m = 1.0
+
         # Nernst reversal potentials, in mV
         self._E_Na = 50.0
+
         # Stimulus current
         self._I_Stim_amp = 25.0
         self._I_Stim_period = 1000.0
         self._I_Stim_length = 2.0
+
+        # Solver tolerances
+        self.set_solver_tolerances()
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
@@ -80,7 +85,9 @@ class ActionPotentialModel(pints.ForwardModel):
         # Set-up
         V, Cai, m, h, j, d, f, x1 = states
         gNaBar, gNaC, gCaBar, gK1Bar, gx1Bar = np.exp(parameters)
+
         # Equations
+
         # INa
         INa = (gNaBar * m**3 * h * j + gNaC) * (V - self._E_Na)
         alpha = (V + 47) / (1 - np.exp(-0.1 * (V + 47)))
@@ -93,6 +100,7 @@ class ActionPotentialModel(pints.ForwardModel):
             / (1 + np.exp(-0.2 * (V + 78)))
         beta = 0.3 / (1 + np.exp(-0.1 * (V + 32)))
         djdt = alpha * (1 - j) - beta * j
+
         # ICa
         E_Ca = -82.3 - 13.0287 * np.log(Cai)
         ICa = gCaBar * d * f * (V - E_Ca)
@@ -106,8 +114,10 @@ class ActionPotentialModel(pints.ForwardModel):
         beta = 0.0065 * np.exp(-0.02 * (V + 30)) \
             / (np.exp(-0.2 * (V + 30)) + 1)
         dfdt = alpha * (1 - f) - beta * f
+
         # Cai
         dCaidt = -1e-7 * ICa + 0.07 * (1e-7 - Cai)
+
         # IK1
         IK1 = gK1Bar * (
             4 * (np.exp(0.04 * (V + 85)) - 1)
@@ -123,13 +133,16 @@ class ActionPotentialModel(pints.ForwardModel):
         beta = 0.0013 * np.exp(-0.06 * (V + 20)) \
             / (np.exp(-0.04 * (V + 333)) + 1)
         dx1dt = alpha * (1 - x1) - beta * x1
+
         # I_Stim
         if (time % self._I_Stim_period) < self._I_Stim_length:
             IStim = self._I_Stim_amp
         else:
             IStim = 0
+
         # V
         dVdt = -(1 / self._C_m) * (IK1 + Ix1 + INa + ICa - IStim)
+
         # Output
         output = np.array([dVdt,
                            dCaidt,
@@ -157,6 +170,14 @@ class ActionPotentialModel(pints.ForwardModel):
         """
         return [self._v0, self._cai0]
 
+    def set_solver_tolerances(self, rtol=1e-4, atol=1e-6):
+        """
+        Updates the solver tolerances.
+        See: https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
+        """ # noqa
+        self._rtol = float(rtol)
+        self._atol = float(atol)
+
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
         y0 = [self._v0,
@@ -167,9 +188,11 @@ class ActionPotentialModel(pints.ForwardModel):
               self._d0,
               self._f0,
               self._x10]
+
         solved_states = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length,
-            rtol=1e-7, atol=1e-9)
+            rtol=self._rtol, atol=self._atol)
+
         # Only return the observable (V, Cai)
         return solved_states[:, 0:2]
 
@@ -185,8 +208,10 @@ class ActionPotentialModel(pints.ForwardModel):
               self._d0,
               self._f0,
               self._x10]
+
         solved_states = scipy.integrate.odeint(
             self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length)
+
         # Return all states
         return solved_states
 
@@ -206,5 +231,5 @@ class ActionPotentialModel(pints.ForwardModel):
         """
         Returns a suggested set of sampling times.
         """
-        return np.arange(0, 500, 0.1)
+        return np.arange(0, 400, 0.5)
 
