@@ -33,11 +33,16 @@ class TestTimer(unittest.TestCase):
 
     def test_format(self):
         """ Test the format() method. """
+        import sys
+
         t = pints.Timer()
         self.assertEqual(t.format(1e-3), '0.001 seconds')
         self.assertEqual(t.format(0.000123456789), '0.000123456789 seconds')
         self.assertEqual(t.format(0.123456789), '0.12 seconds')
-        self.assertEqual(t.format(2), '2 seconds')
+        if sys.hexversion < 0x3000000:
+            self.assertEqual(t.format(2), '2.0 seconds')
+        else:
+            self.assertEqual(t.format(2), '2 seconds')
         self.assertEqual(t.format(2.5), '2.5 seconds')
         self.assertEqual(t.format(12.5), '12.5 seconds')
         self.assertEqual(t.format(59.41), '59.41 seconds')
