@@ -1,0 +1,9 @@
+# Slow notebooks
+sampling-ellipsoidal-nested-rejection-sampling.ipynb
+toy-model-beeler-reuter-ap.ipynb
+toy-model-fitzhugh-nagumo
+toy-model-goodwin-oscillator
+toy-model-hes1-michaelis-menten
+toy-model-hodgkin-huxley-ik
+toy-model-lotka-volterra
+toy-model-repressilator.ipynb
