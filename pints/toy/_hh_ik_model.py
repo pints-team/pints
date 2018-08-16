@@ -121,7 +121,8 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
             return a * (1 - n) - b * n
 
         # Integrate
-        ns = odeint(dndt, self._n0, times).reshape(times.shape)
+        ns = odeint(dndt, self._n0, times, atol=1e-8, rtol=1e-8)
+        ns = ns.reshape(times.shape)
 
         # Voltage over time
         voltage = np.array([self._protocol(t) for t in times])
@@ -183,6 +184,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         """
         See :meth:`pints.ToyModel.suggested_times()`.
         """
-        fs = 10
+        fs = 4
         return np.arange(self._duration * fs) / fs
 
