@@ -34,13 +34,17 @@ class Timer(object):
         self._start = timeit.default_timer()
         self._methods = {}
 
-    def format(self, time):
+    def format(self, time=None):
         """
         Formats a (non-integer) number of seconds, returns a string like
         "5 weeks, 3 days, 1 hour, 4 minutes, 9 seconds", or "0.0019 seconds".
         """
-        if time < 60:
-            return '1 second' if time == 1 else str(time) + ' seconds'
+        if time is None:
+            time = self.time()
+        if time < 1e-2:
+            return str(time) + ' seconds'
+        elif time < 60:
+            return str(round(time, 2)) + ' seconds'
         output = []
         time = int(round(time))
         units = [

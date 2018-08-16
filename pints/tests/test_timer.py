@@ -35,10 +35,13 @@ class TestTimer(unittest.TestCase):
         """ Test the format() method. """
         t = pints.Timer()
         self.assertEqual(t.format(1e-3), '0.001 seconds')
+        self.assertEqual(t.format(0.000123456789), '0.000123456789 seconds')
+        self.assertEqual(t.format(0.123456789), '0.12 seconds')
         self.assertEqual(t.format(2), '2 seconds')
         self.assertEqual(t.format(2.5), '2.5 seconds')
         self.assertEqual(t.format(12.5), '12.5 seconds')
         self.assertEqual(t.format(59.41), '59.41 seconds')
+        self.assertEqual(t.format(59.4126347547), '59.41 seconds')
         self.assertEqual(t.format(60.2), '1 minute, 0 seconds')
         self.assertEqual(t.format(61), '1 minute, 1 second')
         self.assertEqual(t.format(121), '2 minutes, 1 second')
