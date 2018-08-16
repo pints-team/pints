@@ -107,18 +107,36 @@ def run_doctests():
         sys.exit(ret)
 
 
-def run_notebook_tests(executable='python'):
+def run_notebook_tests(skip_slow_books=False, executable='python'):
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
+    # Ignore slow books?
+    ignore_list = []
+    if skip_slow_books and os.path.isfile('.slow-books'):
+        with open('.slow-books', 'r') as f:
+            for line in f.readlines():
+                line = line.strip()
+                if not line or line[:1] == '#':
+                    continue
+                if not line.startswith('examples/'):
+                    line = 'examples/' + line
+                if not line.endswith('.ipynb'):
+                    line = line + '.ipynb'
+                if not os.path.isfile(line):
+                    raise Exception('Slow notebook note found: ' + line)
+                ignore_list.append(line)
+
+    # Scan and run
     print('Testing notebooks with executable `' + str(executable) + '`')
-    if not scan_for_notebooks('examples', executable):
+    if not scan_for_notebooks('examples', True, executable, ignore_list):
         print('\nErrors encountered in notebooks')
         sys.exit(1)
     print('\nOK')
 
 
-def scan_for_notebooks(root, recursive=True, executable='python'):
+def scan_for_notebooks(
+        root, recursive=True, executable='python', ignore_list=[]):
     """
     Scans for, and tests, all notebooks in a directory.
     """
@@ -128,6 +146,9 @@ def scan_for_notebooks(root, recursive=True, executable='python'):
     # Scan path
     for filename in os.listdir(root):
         path = os.path.join(root, filename)
+        if path in ignore_list:
+            print('Skipping slow book: ' + path)
+            continue
 
         # Recurse into subdirectories
         if recursive and os.path.isdir(path):
@@ -151,6 +172,8 @@ def test_notebook(path, executable='python'):
     """
     Tests a single notebook, exists if it doesn't finish.
     """
+    import pints
+    b = pints.Timer()
     print('Test ' + path + ' ... ', end='')
     sys.stdout.flush()
 
@@ -191,7 +214,7 @@ def test_notebook(path, executable='python'):
         sys.exit(1)
 
     # Sucessfully run
-    print('ok')
+    print('ok (' + b.format() + ')')
     return True
 
 
@@ -250,7 +273,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--books',
         action='store_true',
-        help='Test Jupyter notebooks (using the default jupyter interpreter).',
+        help='Test only the fast Jupyter notebooks in `examples`.',
+    )
+    parser.add_argument(
+        '--allbooks',
+        action='store_true',
+        help='Test all Jupyter notebooks in `examples`.',
     )
     parser.add_argument(
         '-debook',
@@ -294,9 +322,12 @@ if __name__ == '__main__':
         has_run = True
         run_doctests()
     # Notebook tests
-    if args.books:
+    if args.allbooks:
         has_run = True
         run_notebook_tests()
+    elif args.books:
+        has_run = True
+        run_notebook_tests(True)
     if args.debook:
         has_run = True
         export_notebook(*args.debook)
