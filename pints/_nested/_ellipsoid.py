@@ -37,23 +37,29 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         super(NestedEllipsoidSampler, self).__init__(log_likelihood, log_prior)
 
         # Target acceptance rate
-        self._active_points = 1000
+        self._active_points = 0
+        self.set_active_points_rate()
 
         # Total number of iterations
-        self._iterations = 1000
+        self._iterations = 0
+        self.set_iterations()
 
         # Total number of posterior samples
-        self._posterior_samples = 1000
-
-        # Enlargement factor for ellipsoid
-        self._enlargement_factor = 1.5
+        self._posterior_samples = 0
+        self.set_posterior_samples()
 
         # Number of nested rejection samples before starting ellipsoidal
         # sampling
-        self._rejection_samples = 1000
+        self._rejection_samples = 0
+        self.set_rejection_samples()
 
         # Gaps between updating ellipsoid
-        self._ellipsoid_update_gap = 20
+        self._ellipsoid_update_gap = 0
+        self.set_ellipsoid_update_gap()
+
+        # Enlargement factor for ellipsoid
+        self._enlargement_factor = 0
+        self.set_enlargement_factor()
 
         # Total number of log_likelihood evaluations
         self._n_evals = 0
@@ -102,6 +108,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def run(self):
         """ See :meth:`pints.MCMC.run()`. """
+
+        # Reset total number of log_likelihood evaluations
+        self._n_evals = 0
 
         # Check if settings make sense
         max_post = 0.25 * (self._iterations + self._active_points)
@@ -240,7 +249,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
         return m_posterior_samples, logZ
 
-    def set_active_points_rate(self, active_points):
+    def set_active_points_rate(self, active_points=1000):
         """
         Sets the number of active points for the next run.
         """
@@ -249,7 +258,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Number of active points must be greater than 5.')
         self._active_points = active_points
 
-    def set_iterations(self, iterations):
+    def set_iterations(self, iterations=1000):
         """
         Sets the total number of iterations to be performed in the next run.
         """
@@ -258,7 +267,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Number of iterations cannot be negative.')
         self._iterations = iterations
 
-    def set_posterior_samples(self, posterior_samples):
+    def set_posterior_samples(self, posterior_samples=1000):
         """
         Sets the number of posterior samples to generate from points proposed
         by the nested sampling algorithm.
@@ -269,7 +278,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
-    def set_enlargement_factor(self, enlargement_factor):
+    def set_enlargement_factor(self, enlargement_factor=1.5):
         """
         Sets the factor (>1) by which to increase the minimal volume
         ellipsoidal in rejection sampling. A higher value means it is less
@@ -280,7 +289,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
-    def set_rejection_samples(self, rejection_samples):
+    def set_rejection_samples(self, rejection_samples=1000):
         """
         Sets the number of rejection samples to take, which will be assigned
         weights and ultimately produce a set of posterior samples.
@@ -289,7 +298,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Must have non-negative rejection samples.')
         self._rejection_samples = rejection_samples
 
-    def set_ellipsoid_update_gap(self, ellipsoid_update_gap):
+    def set_ellipsoid_update_gap(self, ellipsoid_update_gap=20):
         """
         Sets the frequency with which the minimum volume ellipsoid is
         re-estimated as part of the nested rejection sampling algorithm. A
