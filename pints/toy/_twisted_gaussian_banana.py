@@ -76,7 +76,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         The returned value is (near) zero for perfect sampling, and then
         increases as the error gets larger.
 
-        See: https://en.wikipedia.org/wiki/Kullback–Leibler_divergence
+        See: https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
         """
         # Check size of input
         if not len(samples.shape) == 2:
