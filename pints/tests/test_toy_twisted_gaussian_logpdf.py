@@ -37,7 +37,7 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         Test TwistedGaussianLogPDF.kl_divergence() and .sample().
         """
         # Ensure consistent output
-        #np.random.seed(1)
+        np.random.seed(1)
 
         # Create banana LogPDFs
         d = 6

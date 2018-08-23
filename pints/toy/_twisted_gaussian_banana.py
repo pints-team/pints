@@ -54,9 +54,8 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         self._V = float(V)
 
         # Create phi
-        self._mean = np.zeros(self._dimension)
-        self._cov = np.eye(self._dimension)
-        self._phi = scipy.stats.multivariate_normal(self._mean, self._cov)
+        self._phi = scipy.stats.multivariate_normal(
+            np.zeros(self._dimension), np.eye(self._dimension))
 
     def __call__(self, x):
         y = np.array(x, copy=True)
@@ -98,17 +97,18 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         #       - k
         #       )
         #
-        # using s1 = real sigma, as this needs to be inverted and the real one
-        # is more likely to be invertible than the sample one
+        # For this distribution, s1 is the identify matrix, and m1 is zero,
+        # so it simplifies to
+        #
+        # dkl = 0.5 * (trace(s0) + m0.dot(m0) - log(det(s0)) - k))
+        #
         m0 = np.mean(y, axis=0)
-        m1 = self._mean
         s0 = np.cov(y.T)
-        s1 = self._cov
-        cov_inv = np.linalg.inv(s1)
-        dkl1 = np.trace(cov_inv.dot(s0))
-        dkl2 = np.dot((m1 - m0).T, cov_inv).dot(m1 - m0)
-        dkl3 = np.log(np.linalg.det(s1) / np.linalg.det(s0))
-        return 0.5 * (dkl1 + dkl2 + dkl3 - self._dimension)
+        s1 = np.eye(self._dimension)
+        cov_inv = s1
+        return 0.5 * (
+            np.trace(s0) + m0.dot(m0)
+            - np.log(np.linalg.det(s0)) - self._dimension)
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
@@ -121,10 +121,8 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
 
-        x = np.random.randn(n, 2)
+        x = self._phi.rvs(n)
         x[:, 0] *= np.sqrt(self._V)
         x[:, 1] -= self._b * (x[:, 0] ** 2 - self._V)
-        if self._dimension > 2:
-            x = np.hstack((x, np.random.randn(n, self._dimension - 2)))
         return x
 
