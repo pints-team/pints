@@ -104,8 +104,6 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         #
         m0 = np.mean(y, axis=0)
         s0 = np.cov(y.T)
-        s1 = np.eye(self._dimension)
-        cov_inv = s1
         return 0.5 * (
             np.trace(s0) + m0.dot(m0)
             - np.log(np.linalg.det(s0)) - self._dimension)
