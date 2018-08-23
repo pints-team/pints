@@ -64,10 +64,6 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
 
-    def n_parameters(self):
-        """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return self._dimension
-
     def kl_divergence(self, samples):
         """
         Calculates the Kullback-Leibler divergence between a given list of
@@ -109,9 +105,26 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         s0 = np.cov(y.T)
         s1 = self._cov
         cov_inv = np.linalg.inv(s1)
-
         dkl1 = np.trace(cov_inv.dot(s0))
         dkl2 = np.dot((m1 - m0).T, cov_inv).dot(m1 - m0)
         dkl3 = np.log(np.linalg.det(s1) / np.linalg.det(s0))
         return 0.5 * (dkl1 + dkl2 + dkl3 - self._dimension)
+
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._dimension
+
+    def sample(self, n):
+        """
+        Generates samples from the underlying distribution.
+        """
+        if n < 0:
+            raise ValueError('Number of samples cannot be negative.')
+
+        x = np.random.randn(n, 2)
+        x[:, 0] *= np.sqrt(self._V)
+        x[:, 1] -= self._b * (x[:, 0] ** 2 - self._V)
+        if self._dimension > 2:
+            x = np.hstack((x, np.random.randn(n, self._dimension - 2)))
+        return x
 
