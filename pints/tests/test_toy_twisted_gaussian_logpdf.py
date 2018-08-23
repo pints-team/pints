@@ -18,12 +18,13 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
     Tests the twisted gaussian logpdf toy distribution.
     """
     def test_twisted_gaussian_logpdf(self):
+        """
+        Test TwistedGaussianLogPDF basics.
+        """
         # Test basics
         f = pints.toy.TwistedGaussianLogPDF()
         self.assertEqual(f.n_parameters(), 10)
         self.assertTrue(np.isscalar(f(np.zeros(10))))
-
-        # TODO: Test more?
 
         # Test errors
         self.assertRaises(
@@ -31,52 +32,53 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.TwistedGaussianLogPDF, b=-1)
 
-    def test_kl_divergence(self):
+    def test_sampling_and_kl_divergence(self):
         """
-        Tests :meth:`TwistedGaussianLogPDF.kl_divergence()`.
+        Test TwistedGaussianLogPDF.kl_divergence() and .sample().
         """
         # Ensure consistent output
-        np.random.seed(1)
+        #np.random.seed(1)
 
-        # Create a banana distribution LogPDF
-        dimension = 6
-        b = 0.15
-        V = 90
-        log_pdf = pints.toy.TwistedGaussianLogPDF(dimension, b, V)
+        # Create banana LogPDFs
+        d = 6
+        log_pdf1 = pints.toy.TwistedGaussianLogPDF(d, 0.01, 90)
+        log_pdf2 = pints.toy.TwistedGaussianLogPDF(d, 0.02, 80)
+        log_pdf3 = pints.toy.TwistedGaussianLogPDF(d, 0.04, 100)
 
-        # Generate samples from similar distributions
-        def sample(n, dimension, b, V):
-            x = np.random.randn(n, 2)
-            x[:, 0] *= np.sqrt(V)
-            x[:, 1] += b * (x[:, 0] ** 2 - V)
-            if dimension > 2:
-                x = np.hstack((x, np.random.randn(n, dimension - 2)))
-            return x
+        # Sample from each
+        n = 10000
+        samples1 = log_pdf1.sample(n)
+        samples2 = log_pdf2.sample(n)
+        samples3 = log_pdf3.sample(n)
 
-        #dimension = 2
-        #x = sample(10000, dimension, b, V)
-        #import matplotlib.pyplot as plt
-        #plt.figure()
-        #plt.scatter(x[:, 0], x[:, 1])
-        #plt.show()
+        # Compare calculated divergences
+        s11 = log_pdf1.kl_divergence(samples1)
+        s12 = log_pdf1.kl_divergence(samples2)
+        s13 = log_pdf1.kl_divergence(samples3)
+        self.assertLess(s11, s12)
+        self.assertLess(s11, s13)
 
-        # Test divergence of various distributions
-        n = 1000
-        s1 = sample(n, dimension, b, V)
-        s2 = s1 + 0.03
-        s3 = s2 * 1.01
-        dkl1 = log_pdf.kl_divergence(s1)
-        dkl2 = log_pdf.kl_divergence(s2)
-        dkl3 = log_pdf.kl_divergence(s3)
-        self.assertLess(dkl1, dkl2)
-        self.assertLess(dkl2, dkl3)
+        s21 = log_pdf2.kl_divergence(samples1)
+        s22 = log_pdf2.kl_divergence(samples2)
+        s23 = log_pdf2.kl_divergence(samples3)
+        self.assertLess(s22, s21)
+        self.assertLess(s22, s23)
 
-        # Test shape testing
-        self.assertEqual(s1.shape, (n, dimension))
-        x = np.ones((n, dimension + 1))
-        self.assertRaises(ValueError, log_pdf.kl_divergence, x)
-        x = np.ones((n, dimension, 2))
-        self.assertRaises(ValueError, log_pdf.kl_divergence, x)
+        s31 = log_pdf3.kl_divergence(samples1)
+        s32 = log_pdf3.kl_divergence(samples2)
+        s33 = log_pdf3.kl_divergence(samples3)
+        self.assertLess(s33, s32)
+        self.assertLess(s33, s31)
+
+        # Test sample() errors
+        self.assertRaises(ValueError, log_pdf1.sample, -1)
+
+        # Test kl_divergence() errors
+        self.assertEqual(samples1.shape, (n, d))
+        x = np.ones((n, d + 1))
+        self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
+        x = np.ones((n, d, 2))
+        self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
 
 if __name__ == '__main__':
