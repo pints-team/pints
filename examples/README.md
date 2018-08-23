@@ -69,5 +69,6 @@ relevant code.
 
 - [Multimodal normal distribution](./toy-distribution-multimodal-normal.ipynb)
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
+- [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
 
