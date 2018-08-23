@@ -23,5 +23,6 @@ examples.
     repressilator_model
     rosenbrock
     sir_model
+    simple_egg_box_logpdf
     twisted_gaussian_logpdf
 
