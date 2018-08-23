@@ -54,16 +54,64 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         self._V = float(V)
 
         # Create phi
-        self._phi = scipy.stats.multivariate_normal(
-            np.zeros(self._dimension), np.eye(self._dimension))
+        self._mean = np.zeros(self._dimension)
+        self._cov = np.eye(self._dimension)
+        self._phi = scipy.stats.multivariate_normal(self._mean, self._cov)
 
     def __call__(self, x):
         y = np.array(x, copy=True)
-        y[1] = x[1] + self._b * ((x[0] ** 2) - self._V)
-        y[0] = x[0] / np.sqrt(self._V)
+        y[0] /= np.sqrt(self._V)
+        y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._dimension
+
+    def kl_divergence(self, samples):
+        """
+        Calculates the Kullback-Leibler divergence between a given list of
+        samples and the distribution underlying this LogPDF.
+
+        The returned value is (near) zero for perfect sampling, and then
+        increases as the error gets larger.
+
+        See: https://en.wikipedia.org/wiki/Kullback–Leibler_divergence
+        """
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be 2x2.')
+        if samples.shape[1] != self._dimension:
+            raise ValueError(
+                'Given samples must have length ' + str(self._dimension))
+
+        # Untwist the given samples, making them Gaussian again
+        y = np.array(samples, copy=True)
+        y[:, 0] /= np.sqrt(self._V)
+        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+
+        # Calculate the Kullback-Leibler divergence between the given samples
+        # and the multivariate normal distribution underlying this banana.
+        # From wikipedia:
+        #
+        # k = dimension of distribution
+        # dkl = 0.5 * (
+        #       trace(s1^-1 * s0)
+        #       + (m1 - m0)T * s1^-1 * (m1 - m0)
+        #       + log( det(s1) / det(s0) )
+        #       - k
+        #       )
+        #
+        # using s1 = real sigma, as this needs to be inverted and the real one
+        # is more likely to be invertible than the sample one
+        m0 = np.mean(y, axis=0)
+        m1 = self._mean
+        s0 = np.cov(y.T)
+        s1 = self._cov
+        cov_inv = np.linalg.inv(s1)
+
+        dkl1 = np.trace(cov_inv.dot(s0))
+        dkl2 = np.dot((m1 - m0).T, cov_inv).dot(m1 - m0)
+        dkl3 = np.log(np.linalg.det(s1) / np.linalg.det(s0))
+        return 0.5 * (dkl1 + dkl2 + dkl3 - self._dimension)
 
