@@ -77,7 +77,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
         # First arg must be a log likelihood
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedRejectionSampler, self.log_prior, self.log_prior)
+            pints.NestedRejectionSampler, 'hello', self.log_prior)
 
         # First arg must be a log prior
         self.assertRaisesRegex(
@@ -234,7 +234,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         # First arg must be a log likelihood
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedEllipsoidSampler, self.log_prior, self.log_prior)
+            pints.NestedEllipsoidSampler, 'hiya', self.log_prior)
 
         # First arg must be a log prior
         self.assertRaisesRegex(
