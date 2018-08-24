@@ -77,7 +77,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
-                    + np.random.normal(0, self._b * self._mu, self._mu.shape)
+                    + np.random.normal(
+                        0, np.abs(self._b * self._mu), self._mu.shape)
                 )
 
             # Set as read only
