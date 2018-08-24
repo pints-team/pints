@@ -27,7 +27,8 @@ class NestedSampler(object):
     def __init__(self, log_likelihood, log_prior):
 
         # Store log_likelihood and log_prior
-        if not isinstance(log_likelihood, pints.LogLikelihood):
+        #if not isinstance(log_likelihood, pints.LogLikelihood):
+        if not isinstance(log_likelihood, pints.LogPDF):
             raise ValueError(
                 'Given log_likelihood must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood
