@@ -20,6 +20,7 @@ from ._high_dimensional_normal import HighDimensionalNormalLogPDF   # noqa
 from ._logistic_model import LogisticModel                          # noqa
 from ._lotka_volterra_model import LotkaVolterraModel               # noqa
 from ._multimodal_normal import MultimodalNormalLogPDF              # noqa
+from ._normal import NormalLogPDF                                   # noqa
 from ._parabola import ParabolicError                               # noqa
 from ._repressilator_model import RepressilatorModel                # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa
