@@ -134,7 +134,8 @@ class DreamMCMC(pints.MultiChainMCMC):
                         self._current[r1] - self._current[r2])
 
                 self._proposed[j] += dX + np.random.normal(
-                    loc=0, scale=self._b * self._mu, size=self._dimension)
+                    loc=0, scale=np.abs(self._b * self._mu),
+                    size=self._dimension)
 
                 # Set crossover probability
                 if self._constant_crossover:
