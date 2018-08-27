@@ -109,6 +109,9 @@ class TestMCMCSampling(unittest.TestCase):
         pints.MCMCSampling(self.log_prior, nchains, xs)
         pints.MCMCSampling(self.log_likelihood, nchains, xs)
 
+        # Check sampler() method
+        self.assertRaises(RuntimeError, mcmc.sampler)
+
         def f(x):
             return x
         self.assertRaisesRegex(
@@ -223,6 +226,9 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'same dimension',
             meth, 3, [x0, x0, x0[:-1]])
+
+        # Check sampler() method
+        self.assertIsInstance(mcmc.sampler(), pints.MultiChainMCMC)
 
         # Check different sigma0 initialisations work
         pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
