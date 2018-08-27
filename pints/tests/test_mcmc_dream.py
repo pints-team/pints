@@ -73,6 +73,7 @@ class TestDreamMCMC(unittest.TestCase):
             self.real_parameters * 0.95,
         ]
         mcmc = pints.DreamMCMC(4, xs)
+        self.assertFalse(mcmc.constant_crossover())
 
         # Perform short run
         chains = []
@@ -86,6 +87,32 @@ class TestDreamMCMC(unittest.TestCase):
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
         self.assertEqual(chains.shape[2], len(xs[0]))
+
+        # Repeat with constant crossover
+        mcmc = pints.DreamMCMC(4, xs)
+        mcmc.set_constant_crossover(True)
+        self.assertTrue(mcmc.constant_crossover())
+
+        # Perform short run
+        chains = []
+        for i in range(100):
+            xs = mcmc.ask()
+            fxs = [self.log_posterior(x) for x in xs]
+            samples = mcmc.tell(fxs)
+            if i >= 50:
+                chains.append(samples)
+        chains = np.array(chains)
+        self.assertEqual(chains.shape[0], 50)
+        self.assertEqual(chains.shape[1], len(xs))
+        self.assertEqual(chains.shape[2], len(xs[0]))
+
+        # Test getting/setting b
+        b = mcmc.b()
+        self.assertEqual(mcmc.b(), b)
+        b += 0.01
+        self.assertNotEqual(mcmc.b(), b)
+        mcmc.set_b(b)
+        self.assertEqual(mcmc.b(), b)
 
     def test_flow(self):
 

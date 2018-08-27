@@ -314,14 +314,11 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         return self._b
 
-    def set_b(self, b):
+    def constant_crossover(self):
         """
-        Sets the normal scale coefficient used in updating the position of each
-        chain.
+        Returns ``True`` if constant crossover mode is enabled.
         """
-        if b < 0:
-            raise ValueError('normal scale coefficient must be non-negative.')
-        self._b = b
+        return self._constant_crossover
 
     def _draw(self, i):
         """
@@ -335,6 +332,21 @@ class DreamMCMC(pints.MultiChainMCMC):
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 1
+
+    def set_b(self, b):
+        """
+        Sets the normal scale coefficient used in updating the position of each
+        chain.
+        """
+        if b < 0:
+            raise ValueError('normal scale coefficient must be non-negative.')
+        self._b = b
+
+    def set_constant_crossover(self, enabled):
+        """
+        Enables/disables constant-crossover mode.
+        """
+        self._constant_crossover = True if enabled else False
 
     def set_hyper_parameters(self, x):
         """
