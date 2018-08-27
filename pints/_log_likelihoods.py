@@ -15,8 +15,6 @@ import scipy.special
 
 class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`ProblemLogLikelihood`
-
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
     of that noise:
@@ -36,6 +34,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         The standard devation(s) of the noise. Can be a single value or a
         sequence of sigma's for each output. Must be greater than zero.
 
+    *Extends:* :class:`ProblemLogLikelihood`
     """
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
@@ -93,8 +92,6 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
 class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`ProblemLogLikelihood`
-
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
     deviation (sigma) of the noise on each output.
@@ -134,6 +131,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         single-output problem a single parameter is added, for a multi-output
         problem ``n_outputs`` parameters are added.
 
+    *Extends:* :class:`ProblemLogLikelihood`
     """
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
@@ -157,8 +155,6 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
 class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`ProblemLogLikelihood`
-
     Calculates a log-likelihood assuming independent Student-t-distributed
     noise at each time point, and adds two parameters: one representing the
     degrees of freedom (``nu``), the other representing the scale (``sigma``).
@@ -183,6 +179,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         ``nu`` is the degrees of freedom and ``sigma`` is scale, for a
         multi-output problem ``2 * n_outputs`` parameters are added.
 
+    *Extends:* :class:`ProblemLogLikelihood`
     """
     def __init__(self, problem):
         super(StudentTLogLikelihood, self).__init__(problem)
@@ -224,8 +221,6 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
-    *Extends:* :class:`ProblemLogLikelihood`
-
     Calculates a log-likelihood based on a (conditional)
     :class:`ProblemLogLikelihood` divided by the number of time samples.
 
@@ -238,6 +233,8 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         A :class:`ProblemLogLikelihood`.
 
     This log-likelihood operates on both single and multi-output problems.
+
+    *Extends:* :class:`ProblemLogLikelihood`
     """
     def __init__(self, log_likelihood):
         # Check arguments
@@ -270,8 +267,6 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
 
 class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
-
     Calculates a sum of :class:`LogLikelihood` objects, all defined on the same
     parameter space.
 
@@ -294,6 +289,7 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
             pints.UnknownNoiseLogLikelihood(problem2),
         ])
 
+    *Extends:* :class:`LogLikelihood`
     """
     def __init__(self, log_likelihoods):
         super(SumOfIndependentLogLikelihoods, self).__init__()

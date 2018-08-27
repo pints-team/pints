@@ -16,8 +16,6 @@ import scipy.stats
 
 class ComposedLogPrior(pints.LogPrior):
     """
-    *Extends:* :class:`LogPrior`
-
     N-dimensional LogPrior composed of one or more other Ni-dimensional
     LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
     log-prior assumes the input log-priors are all independent from each other.
@@ -28,6 +26,8 @@ class ComposedLogPrior(pints.LogPrior):
 
     where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
     itself.
+
+    *Extends:* :class:`LogPrior`
     """
     def __init__(self, *priors):
         # Check if sub-priors given
@@ -88,8 +88,6 @@ class ComposedLogPrior(pints.LogPrior):
 
 class MultivariateNormalLogPrior(pints.LogPrior):
     """
-    *Extends:* :class:`LogPrior`
-
     Defines a multivariate normal (log)prior with a given ``mean`` and
     ``covariance`` matrix.
 
@@ -98,6 +96,7 @@ class MultivariateNormalLogPrior(pints.LogPrior):
         p = MultivariateNormalLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
+    *Extends:* :class:`LogPrior`
     """
     def __init__(self, mean, covariance):
         # Check input
@@ -132,13 +131,13 @@ class MultivariateNormalLogPrior(pints.LogPrior):
 
 class NormalLogPrior(pints.LogPrior):
     """
-    *Extends:* :class:`LogPrior`
-
     Defines a 1-d normal (log) prior with a given ``mean`` and
     ``standard_deviation``.
 
     For example: ``p = NormalLogPrior(0, 1)`` for a mean of ``0`` and standard
     deviation of ``1``.
+
+    *Extends:* :class:`LogPrior`
     """
     def __init__(self, mean, standard_deviation):
         # Parse input arguments
@@ -168,8 +167,6 @@ class NormalLogPrior(pints.LogPrior):
 
 class StudentTLogPrior():
     """
-    *Extends:* :class:`LogPrior`
-
     Defines a 1-d Student-t (log) prior with a given ``location``,
     ``degrees of freedom``,  and ``scale``.
 
@@ -187,6 +184,7 @@ class StudentTLogPrior():
     ``scale``
         The scale of the distribution.
 
+    *Extends:* :class:`LogPrior`
     """
     def __init__(self, location, df, scale):
         # Test inputs
@@ -224,8 +222,6 @@ class StudentTLogPrior():
 
 class UniformLogPrior(pints.LogPrior):
     """
-    *Extends:* :class:`LogPrior`
-
     Defines a uniform prior over a given range.
 
     The range includes the lower, but not the upper boundaries, so that any
@@ -234,6 +230,7 @@ class UniformLogPrior(pints.LogPrior):
     For example: ``p = UniformLogPrior([1, 1, 1], [10, 10, 100])``, or
     ``p = UniformLogPrior(RectangularBoundaries([1, 1, 1], [10, 10, 100]))``.
 
+    *Extends:* :class:`LogPrior`
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments

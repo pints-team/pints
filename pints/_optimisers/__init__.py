@@ -140,10 +140,10 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
 
 class PopulationBasedOptimiser(Optimiser):
     """
-    *Extends:* :class:`PopulationBasedOptimiser`
-
     Base class for optimisers that work by moving multiple points through the
     search space.
+
+    *Extends:* :class:`Optimiser`
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):

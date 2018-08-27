@@ -16,8 +16,6 @@ import numpy as np
 
 class PopulationMCMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`MCMC`
-
     Creates a chain of samples from a target distribution, using the population
     MCMC (simulated tempering) routine described in algorithm 1 in [1].
 
@@ -41,6 +39,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
     We use a range of ``T = (0,delta_T,...,1)``, where
     ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
     one whose target distribution we want to sample.
+
+    *Extends:* :class:`SingleChainMCMC`
 
     [1] "On population-based simulation for static inference", Ajay Jasra,
     David A. Stephens and Christopher C. Holmes, Statistical Computing, 2007.

@@ -15,10 +15,10 @@ import scipy.stats
 
 class HighDimensionalNormalLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`pints.LogPDF`.
-
     High-dimensional multivariate normal log pdf, with tricky off-diagonal
     covariances.
+
+    *Extends:* :class:`pints.LogPDF`.
     """
     def __init__(self, dimension=100):
         self._dimension = int(dimension)

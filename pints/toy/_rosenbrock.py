@@ -14,14 +14,13 @@ import numpy as np
 
 class RosenbrockError(pints.ErrorMeasure):
     """
-    *Extends:* :class:`pints.ErrorMeasure`.
-
     Error measure based on the rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function):
 
     .. math::
         f(x,y) = (a - x)^2 + b(y - x^2)^2
 
+    *Extends:* :class:`pints.ErrorMeasure`.
     """
     def __init__(self, a=1, b=100):
         self._a = float(a)
@@ -43,14 +42,13 @@ class RosenbrockError(pints.ErrorMeasure):
 
 class RosenbrockLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`pints.LogPDF`.
-
     Unnormalised LogPDF based on the Rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function):
 
     .. math::
         f(x,y) = -log[ (a - x)^2 + b(y - x^2)^2 ]
 
+    *Extends:* :class:`pints.LogPDF`.
     """
     def __init__(self, a=1, b=100):
         self._f = RosenbrockError(a, b)

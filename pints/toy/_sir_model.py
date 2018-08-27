@@ -48,6 +48,8 @@ class SIRModel(pints.ForwardModel):
     ``y0``
         The system's initial state, must have 3 entries all >=0.
 
+    *Extends:* :class:`pints.ForwardModel`.
+
     References:
 
     [1] A Contribution to the Mathematical Theory of Epidemics. Kermack,

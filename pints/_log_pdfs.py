@@ -48,14 +48,14 @@ class LogPDF(object):
 
 class LogPrior(LogPDF):
     """
-    *Extends:* :class:`LogPDF`
-
     Represents the natural logarithm ``log(f(theta))`` of a known probability
     density function ``f(theta)``.
 
     Priors are *usually* normalised (i.e. the integral ``f(theta)`` over all
     points ``theta`` in parameter space sums to 1), but this is not a strict
     requirement.
+
+    *Extends:* :class:`LogPDF`
     """
     def sample(self, n=1):
         """
@@ -73,16 +73,14 @@ class LogPrior(LogPDF):
 
 class LogLikelihood(LogPDF):
     """
-    *Extends:* :class:`LogPDF`
-
     Represents a log-likelihood defined on a parameter space.
+
+    *Extends:* :class:`LogPDF`
     """
 
 
 class ProblemLogLikelihood(LogLikelihood):
     """
-    *Extends:* :class:`LogLikelihood`
-
     Represents a log-likelihood on a problem's parameter space, used to
     indicate the likelihood of an observed (fixed) time-series given a
     particular parameter set (variable).
@@ -92,6 +90,7 @@ class ProblemLogLikelihood(LogLikelihood):
     ``problem``
         The time-series problem this log-likelihood is defined for.
 
+    *Extends:* :class:`LogLikelihood`
     """
     def __init__(self, problem):
         super(LogLikelihood, self).__init__()
@@ -108,8 +107,6 @@ class ProblemLogLikelihood(LogLikelihood):
 
 class LogPosterior(LogPDF):
     """
-    *Extends:* :class:`LogPDF`
-
     Represents the sum of a :class:`LogLikelihood` and a :class:`LogPrior`
     defined on the same parameter space.
 
@@ -125,6 +122,7 @@ class LogPosterior(LogPDF):
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
 
+    *Extends:* :class:`LogPDF`
     """
     def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__()

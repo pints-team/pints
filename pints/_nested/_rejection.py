@@ -16,8 +16,6 @@ from scipy.misc import logsumexp
 
 class NestedRejectionSampler(pints.NestedSampler):
     """
-    *Extends:* :class:`NestedSampler`
-
     Creates a nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
 
@@ -30,6 +28,8 @@ class NestedRejectionSampler(pints.NestedSampler):
     The posterior samples are generated as described in [1] on page 849 by
     randomly sampling the preliminary point, accounting for their weights and
     likelihoods.
+
+    *Extends:* :class:`NestedSampler`
 
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).

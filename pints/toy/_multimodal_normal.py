@@ -15,8 +15,6 @@ import scipy.stats
 
 class MultimodalNormalLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`pints.LogPDF`.
-
     Multimodal (un-normalised) multivariate Normal distribution.
 
     By default, the distribution is on a 2-dimensional space, with modes at
@@ -44,6 +42,7 @@ class MultimodalNormalLogPDF(pints.LogPDF):
         A list of covariance matrices, one for each mode. If not set, a unit
         matrix will be used for each.
 
+    *Extends:* :class:`pints.LogPDF`.
     """
     def __init__(self, modes=None, covariances=None):
 

@@ -14,8 +14,6 @@ import scipy
 
 class GoodwinOscillatorModel(pints.ForwardModel, pints.ToyModel):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     Three-state Goodwin oscillator toy model [1, 2].
 
     [1] Oscillatory behavior in enzymatic control processes."
@@ -23,6 +21,8 @@ class GoodwinOscillatorModel(pints.ForwardModel, pints.ToyModel):
 
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
+
+    *Extends:* :class:`pints.ForwardModel`.
     """
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """

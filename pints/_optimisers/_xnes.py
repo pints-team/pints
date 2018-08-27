@@ -18,12 +18,12 @@ import scipy.linalg
 
 class XNES(pints.PopulationBasedOptimiser):
     """
-    *Extends:* :class:`Optimiser`
-
     Finds the best parameters using the xNES method described in [1, 2].
 
     xNES stands for Exponential Natural Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems [1].
+
+    *Extends:* :class:`PopulationBasedOptimiser`
 
     [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
     evolution strategies.

@@ -45,6 +45,8 @@ class RepressilatorModel(pints.ForwardModel):
     ``y0``
         The system's initial state, must have 6 entries all >=0.
 
+    *Extends:* :class:`pints.ForwardModel`.
+
     References:
 
     [1] A Synthetic Oscillatory Network of Transcriptional Regulators. Elowitz,

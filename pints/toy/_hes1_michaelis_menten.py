@@ -14,8 +14,6 @@ import scipy
 
 class Hes1Model(pints.ForwardModel):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     HES1 Michaelis-Menten model of regulatory dynamics [1].
 
     This model describes the expression level of the transcription factor
@@ -44,6 +42,8 @@ class Hes1Model(pints.ForwardModel):
     ``implicit_parameters``
         The implicit parameter of the model that is not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
+
+    *Extends:* :class:`pints.ForwardModel`.
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
