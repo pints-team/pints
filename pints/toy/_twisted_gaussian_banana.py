@@ -1,5 +1,5 @@
 #
-# Twisted guassian (banana) distribution toy log pdf.
+# Twisted Gaussian (banana) distribution toy log pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -15,8 +15,6 @@ import scipy.stats
 
 class TwistedGaussianLogPDF(pints.LogPDF):
     """
-    *Extends:* :class:`pints.LogPDF`.
-
     Twisted multivariate normal 'banana' with un-normalised density [1]:
 
     .. math::
@@ -37,6 +35,8 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         Must be greater than or equal to zero.
     ``V``
         Offset (see equation).
+
+    *Extends:* :class:`pints.LogPDF`.
 
     [1] Adaptive proposal distribution for random walk Metropolis algorithm
     Haario, Saksman, Tamminen (1999) Computational Statistics.
