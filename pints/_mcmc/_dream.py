@@ -14,8 +14,6 @@ import numpy as np
 
 class DreamMCMC(pints.MultiChainMCMC):
     """
-    *Extends:* :class:`MultiChainMCMC`
-
     Uses differential evolution adaptive Metropolis (DREAM) MCMC as described
     in [1] to do posterior sampling from the posterior.
 
@@ -55,6 +53,8 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
+
+    *Extends:* :class:`MultiChainMCMC`
 
     [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
     Evolution with Self-Adaptive Randomized Subspace Sampling",
