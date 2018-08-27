@@ -14,8 +14,6 @@ import scipy
 
 class LotkaVolterraModel(pints.ForwardModel):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     Lotka-Volterra model of Predatory-Prey relationships [1].
 
     This model describes cyclical fluctuations in the populations of two
@@ -27,13 +25,15 @@ class LotkaVolterraModel(pints.ForwardModel):
 
     where ``x`` is the number of prey, and ``y`` is the number of predators.
 
-    [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
-
     Arguments:
 
     ``y0``
         The initial population, given as a vector ``[a, b]`` such that
         ``a >= 0`` and ``b >= 0``.
+
+    *Extends:* :class:`pints.ForwardModel`.
+
+    [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
     """
     def __init__(self, y0=None):
         if y0 is None:

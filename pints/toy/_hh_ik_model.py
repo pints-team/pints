@@ -17,8 +17,6 @@ from scipy.integrate import odeint
 
 class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
     """
-    *Extends:* :class:`pints.ForwardModel`.
-
     Toy model based on the potassium current experiments used for Hodgkin and
     Huxley's 1952 model of the action potential of a squid's giant axon.
 
@@ -46,6 +44,8 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         for t, v in model.fold(times, values):
             plt.plot(t, v)
         plt.show()
+
+    *Extends:* :class:`pints.ForwardModel`.
 
     References:
 

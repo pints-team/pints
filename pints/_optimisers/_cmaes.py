@@ -14,20 +14,19 @@ import numpy as np
 
 class CMAES(pints.PopulationBasedOptimiser):
     """
-    *Extends:* :class:`Optimiser`
-
     Finds the best parameters using the CMA-ES method described in [1, 2] and
     implemented in the `cma` module.
 
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
 
+    *Extends:* :class:`PopulationBasedOptimiser`
+
     [1] https://www.lri.fr/~hansen/cmaesintro.html
 
     [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
     the derandomized evolution strategy with covariance matrix adaptation
     (CMA-ES).
-
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):

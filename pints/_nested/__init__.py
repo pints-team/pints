@@ -13,14 +13,14 @@ import pints
 
 class NestedSampler(object):
     """
-    Takes a :class:`LogLikelihood` function and returns a nested sampler.
+    Abstract base class for nested samplers.
 
     Arguments:
 
     ``log_likelihood``
-        A :class:`LogLikelihood` function that evaluates points in the
-        parameter space.
-    ``log_posterior``
+        A :class:`LogPDF` function that evaluates points in the parameter
+        space.
+    ``log_prior``
         A :class:`LogPrior` function on the same parameter space.
 
     """

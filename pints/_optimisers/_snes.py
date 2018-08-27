@@ -16,8 +16,6 @@ import numpy as np
 
 class SNES(pints.PopulationBasedOptimiser):
     """
-    *Extends:* :class:`Optimiser`
-
     Finds the best parameters using the SNES method described in [1, 2].
 
     SNES stands for Seperable Natural Evolution Strategy, and is designed for
@@ -26,6 +24,8 @@ class SNES(pints.PopulationBasedOptimiser):
 
     It treats each dimension separately, making it suitable for higher
     dimensions.
+
+    *Extends:* :class:`PopulationBasedOptimiser`
 
     [1] Schaul, Glasmachers, Schmidhuber (2011) High dimensions and heavy tails
     for natural evolution strategies.

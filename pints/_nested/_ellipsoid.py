@@ -17,8 +17,6 @@ from scipy.misc import logsumexp
 
 class NestedEllipsoidSampler(pints.NestedSampler):
     """
-    *Extends:* :class:`NestedSampler`
-
     Creates a nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
 
@@ -28,6 +26,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     the bounds of the ellipsoid. By sampling in the space of surviving
     particles, the efficiency of this algorithm should be better than simple
     rejection sampling.
+
+    *Extends:* :class:`NestedSampler`
 
     [1] "A nested sampling algorithm for cosmological model selection",
     Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.

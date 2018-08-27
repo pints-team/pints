@@ -16,8 +16,6 @@ import numpy as np
 
 class PSO(pints.PopulationBasedOptimiser):
     """
-    *Extends:* :class:`PopulationBasedOptimiser`
-
     Finds the best parameters using the PSO method described in [1].
 
     Particle Swarm Optimisation (PSO) is a global search method (so refinement
@@ -67,6 +65,8 @@ class PSO(pints.PopulationBasedOptimiser):
                     ag = uniform(0, agmax)
                     v[i,j] += al * (p[i,j] - x[i,j]) + ag * (pg[i,j]  - x[i,j])
                     x[i,j] += v[i,j]
+
+    *Extends:* :class:`PopulationBasedOptimiser`
 
     References:
 

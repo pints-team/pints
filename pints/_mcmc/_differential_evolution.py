@@ -14,8 +14,6 @@ import numpy as np
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     """
-    *Extends:* :class:`MultiChainMCMC`
-
     Uses differential evolution MCMC as described in [1] to do posterior
     sampling from the posterior.
 
@@ -32,6 +30,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
+
+    *Extends:* :class:`MultiChainMCMC`
 
     [1] "A Markov Chain Monte Carlo version of the genetic algorithm
     Differential Evolution: easy Bayesian computing for real parameter spaces"
