@@ -10,6 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+from scipy import stats
 
 
 class SMCSampler(object):
@@ -23,11 +24,11 @@ class SMCSampler(object):
         parameter space.
 
     """
-    def __init__(self, log_posterior, x0, sigma0=None):
+    def __init__(self, log_posterior, x0, sigma0=None, log_prior=None):
 
         # Store log_likelihood and log_prior
         if not isinstance(log_posterior, pints.LogPDF):
-            raise ValueError('Given function must extend pints.LogPDF')
+            raise ValueError('Given posterior function must extend pints.LogPDF')
         self._log_posterior = log_posterior
 
         # Check initial position
@@ -56,6 +57,13 @@ class SMCSampler(object):
 
         # Get dimension
         self._dimension = self._log_posterior.n_parameters()
+        
+        if log_prior is None:
+          self._log_prior = lambda x: stats.multivariate_normal.logpdf(x, mean=self._x0, cov=self._sigma0)
+        else:
+          if not isinstance(log_prior, pints.LogPDF):
+            raise ValueError('Given prior function must extend pints.LogPDF')
+          self._log_prior = log_prior
 
         # Print info to console
         self._verbose = True
