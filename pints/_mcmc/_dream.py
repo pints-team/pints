@@ -173,14 +173,6 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set proposal as read-only
         self._proposed.setflags(write=False)
 
-        #TODO: Would prefer not to use this method, use x0 from user instead
-        #      Is that ok? Then this code can go
-        # Set initial values
-        #for j in range(self._num_chains):
-        #    chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
-        #                                       size=len(mu))
-        #    current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
-
         # Set mu
         self._mu = np.mean(self._x0, axis=0)
 
