@@ -13,11 +13,9 @@ def autocorrelation(x):
     Calculate autocorrelation for a vector x using a spectrum density
     calculation.
     """
-    xp = x - np.mean(x)
-    f = np.fft.fft(xp)
-    p = np.array([np.real(v)**2 + np.imag(v)**2 for v in f])
-    pi = np.fft.ifft(p)
-    return np.real(pi)[:int(x.size / 2)] / np.sum(xp**2)
+    x = (x - np.mean(x)) / (np.std(x) * np.sqrt(len(x)))
+    result = np.correlate(x, x, mode='full')
+    return result[int(result.size / 2):]
 
 
 def autocorrelate_negative(autocorrelation):
