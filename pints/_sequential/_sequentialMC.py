@@ -12,7 +12,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-#from scipy import stats
+from scipy import stats
 from scipy.special import logsumexp
 
 
@@ -25,8 +25,8 @@ class SMC(pints.SMCSampler):
     [1] "Sequential Monte Carlo Samplers", Del Moral et al. 2006,
     Journal of the Royal Statistical Society. Series B.
     """
-    def __init__(self, log_posterior, x0, sigma0=None):
-        super(SMC, self).__init__(log_posterior, x0, sigma0)
+    def __init__(self, log_posterior, x0, sigma0=None, log_prior=None):
+        super(SMC, self).__init__(log_posterior, x0, sigma0, log_prior)
 
         # Number of particles
         self._particles = 1000
@@ -40,6 +40,10 @@ class SMC(pints.SMCSampler):
 
         # ESS threshold (default from Del Moral et al.)
         self._ess_threshold = self._particles / 2
+        
+        # Determines whether to resample particles at end of
+        # steps 2 and 3 from Del Moral et al. (2006)
+        self._resample_end_2_3 = True
 
     def set_particles(self, particles):
         """
@@ -48,6 +52,15 @@ class SMC(pints.SMCSampler):
         if particles < 10:
             raise ValueError('Must have more than 10 particles in SMC.')
         self._particles = particles
+        
+    def set_resample_end_2_3(self, resample_end_2_3):
+        """
+        Determines whether a resampling step is performed at end of
+        steps 2 and 3 in Del Moral et al. Algorithm 3.1.1
+        """
+        if not isinstance(resample_end_2_3, bool):
+          raise ValueError('Resample_end_2_3 should be boolean.')
+        self._resample_end_2_3 = resample_end_2_3
 
     def set_ess_threshold(self, ess_threshold):
         """
@@ -117,6 +130,10 @@ class SMC(pints.SMCSampler):
             print('Running sequential Monte Carlo')
             print('Total number of particles: ' + str(self._particles))
             print('Number of temperatures: ' + str(len(self._schedule)))
+            if self._resample_end_2_3:
+              print('Resampling at end of each iteration')
+            else:
+              print('Not resampling at end of each iteration')
             print('Storing 1 sample per ' + str(self._thinning_rate)
                   + ' particle')
 
@@ -175,13 +192,11 @@ class SMC(pints.SMCSampler):
     def tempered_distribution(self, x, beta):
         """
         Returns the tempered log-pdf:
-        beta * log pi(x) + (1 - beta) * log N(0, sigma)
+        beta * log pi(x) + (1 - beta) * log prior(x)
+        If not explicitly given prior is assumed to be
+        multivariate normal
         """
-        # Choice 1: to use annealed (without second bit) or mixture
-        # distribution (with it)
-        return beta * self._log_posterior(x)
-        #  + (1.0 - beta) * stats.multivariate_normal.logpdf(x, mean=self._x0,
-        # cov=self._sigma0)
+        return beta * self._log_posterior(x) + (1 - beta) * self._log_prior(x)
 
     def w_tilde(self, x_old, x_new, beta_old, beta_new):
         """
@@ -282,8 +297,9 @@ class SMC(pints.SMCSampler):
         weights_new = self.new_weights(
             weights_old, samples_old, samples_new, beta_old, beta_new)
 
-        # Choice 2: from remark 1 of algorithm 3.1.1. due to the form of L used
+        # Either resample again or don't: algorithm 3.1.1. due to the form of L used
         # (eqn. 30 and 31) resample again
-        samples_new, weights_discard = self.resample(weights_new, samples_new)
+        if self._resample_end_2_3:
+          samples_new, weights_discard = self.resample(weights_new, samples_new)
         return samples_new, weights_new
 
