@@ -27,7 +27,7 @@ def autocorrelate_negative(autocorrelation):
         if a < 0:
             return T - 1
         T += 1
-    return -1
+    return T
 
 
 def ess_single_param(x):

@@ -10,43 +10,21 @@
 import unittest
 import pints
 import numpy as np
+import pints._diagnostics
 
-
-class TestMatrix2d(unittest.TestCase):
+class TestDiagnostics(unittest.TestCase):
     """
-    Tests conversion to a read-only 2-d matrix type
+    Tests various diagnostic measures available in Pints
     """
-    def test_matrix2d(self):
-        # Test correct use with 2d arrays
-        x = np.array([[1, 2], [2, 3], [4, 3]])
-        v = pints.matrix2d(x)
-        x = np.array([[1, 2, 3], [2, 3, 4]])
-        v = pints.matrix2d(x)
-
-        # Test correct use with 1d arrays
-        x = np.array([1, 2, 3, 4]).reshape((4, 1))
-        v = pints.matrix2d(x)
-        self.assertEqual(v.shape, (4, 1))
-        x = np.array([1, 2, 3, 4])
-        v = pints.matrix2d(x)
-        self.assertEqual(v.shape, (4, 1))
-
-        # Test correct use with lists
-        x = [[1, 2], [2, 3], [4, 3]]
-        v = pints.matrix2d(x)
-        x = [[1, 2, 3], [2, 3, 4]]
-        v = pints.matrix2d(x)
-
-        # Test incorrect use with higher dimensional arrays
-        x = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
-        self.assertTrue(x.ndim == 3)
-        self.assertRaises(ValueError, pints.matrix2d, x)
-
-        # Test read-only
-        def assign():
-            v[0, 0] = 10
-        self.assertRaises(ValueError, assign)
-
+    def test_autocorrelation(self):
+        # Tests that autocorrelation measure is correct
+        x = np.array([1, 2, 3, 4, -1, -1])
+        y = pints._diagnostics.autocorrelation(x)
+        y_true = np.array([1., 0.21354167, -0.41666667, -0.296875, -0.03645833,
+                        0.03645833])
+        
+        for i in range(0, len(x)):
+          self.assertTrue(np.abs(y[i] - y_true[i]) < 0.01)
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
