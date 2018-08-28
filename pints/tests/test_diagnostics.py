@@ -43,11 +43,11 @@ class TestDiagnostics(unittest.TestCase):
         
         # For case with negative elements in x
         x = np.array([1, 2, 3, 4, -1, -1])
-        self.assertTrue(np.abs(pints._diagnostics.autocorrelate_negative(x) - 1.75076) < 0.01)
+        self.assertTrue(np.abs(pints._diagnostics.ess_single_param(x) - 1.75076) < 0.01)
         
         # Case with positive elements only in x
         x = np.array([1, 2, 3, 4, 1, 1])
-        self.assertTrue(np.abs(pints._diagnostics.autocorrelate_negative(x) - 
+        self.assertTrue(np.abs(pints._diagnostics.ess_single_param(x) - 
                                1.846154) < 0.01)
         
     def test_effective_sample_size(self):
@@ -80,22 +80,22 @@ class TestDiagnostics(unittest.TestCase):
         # Tests that reorder function reshapes correctly
         
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
-        assertTrue(np.array(pints._diagnostics.reorder(0, test)).shape == (4, 10))
+        self.assertTrue(np.array(pints._diagnostics.reorder(0, test)).shape == (4, 10))
     
     def test_reorder_all(self):
         # Tests that reorder_all function reshapes correctly
         
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
-        assertTrue(np.array(pints._diagnostics.reorder_all_params(test)).shape == (3, 4, 10))
+        self.assertTrue(np.array(pints._diagnostics.reorder_all_params(test)).shape == (3, 4, 10))
         
     def test_rhat(self):
         # Tests that rhat works
         
         x = np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                       [1.0, 2.0, 3.0, 4.0, 5.0]])
-        assertTrue(np.abs(pints._diagnostics.rhat(x) - 1.433115) < 0.01)
+        self.assertTrue(np.abs(pints._diagnostics.rhat(x) - 1.433115) < 0.01)
         
-    def test_rhat_all(self):
+    def test_rhat_all_params(self):
         # Tests that rhat_all works
         
         x = np.array([[[-1.10580535, 2.26589882],
@@ -113,7 +113,7 @@ class TestDiagnostics(unittest.TestCase):
 
         y = pints._diagnostics.rhat_all_params(x)
         d = np.array(y) - np.array([1.0246953961614296, 1.3219816558533388])
-        assertTrue(np.linalg.norm(d) < 0.01)
+        self.assertTrue(np.linalg.norm(d) < 0.01)
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
