@@ -105,9 +105,6 @@ def rhat(samples):
     W = within(samples)
     B = between(samples)
     t = len(samples[0])
-    print(W)
-    print(B)
-    print(t)
     return np.sqrt((W + (1.0 / t) * (B - W)) / W)
 
 
