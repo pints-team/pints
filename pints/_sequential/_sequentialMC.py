@@ -18,7 +18,8 @@ from scipy.special import logsumexp
 
 class SMC(pints.SMCSampler):
     """
-    Samples from a density using sequential Monte Carlo sampling [1].
+    Samples from a density using sequential Monte Carlo sampling [1],
+    although allows multiple MCMC steps per temperature, if desired.
 
     Algorithm 3.1.1 using equation (31) for ``w_tilde``.
 
@@ -44,6 +45,9 @@ class SMC(pints.SMCSampler):
         # Determines whether to resample particles at end of
         # steps 2 and 3 from Del Moral et al. (2006)
         self._resample_end_2_3 = True
+        
+        # Set number of MCMC steps to do for each distribution
+        self._kernel_samples = 1
 
     def set_particles(self, particles):
         """
@@ -71,6 +75,16 @@ class SMC(pints.SMCSampler):
         if ess_threshold < 0:
             raise ValueError('ESS must be greater than zero.')
         self._ess_threshold = ess_threshold
+        
+    def set_kernel_samples(self, kernel_samples):
+        """
+        Sets number of MCMC samples to do for each temperature
+        """
+        if kernel_samples < 1:
+          raiseValueError('Number of samples per temperature must be >= 1.')
+        if not isinstance(kernel_samples, int):
+          raiseValueError('Number of samples per temperature must be int.')
+        self._kernel_samples = kernel_samples
 
     def set_temperature_schedule(self, schedule=10):
         """
@@ -134,6 +148,7 @@ class SMC(pints.SMCSampler):
               print('Resampling at end of each iteration')
             else:
               print('Not resampling at end of each iteration')
+            print('Number of MCMC steps at each temperature: ' + str(self._kernel_samples))
             print('Storing 1 sample per ' + str(self._thinning_rate)
                   + ' particle')
 
@@ -233,7 +248,6 @@ class SMC(pints.SMCSampler):
         with log pdf::
 
             beta * log pi(x) + (1 - beta) * log N(0, sigma).
-
         """
         proposed = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
@@ -287,13 +301,19 @@ class SMC(pints.SMCSampler):
     def steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
         """
         Undertakes steps 2 and 3 from algorithm 3.1.1. in
-        Del Moral et al. (2006).
+        Del Moral et al. (2006) except allow multiple MCMC steps
+        per temperature if desired.
         """
         if self.ess(weights_old) < self._ess_threshold:
             resamples, weights_new = self.resample(weights_old, samples_old)
         else:
             resamples, weights_new = samples_old, weights_old
+        
         samples_new = self.kernel_sample(resamples, beta_new)
+        # Perform multiple MCMC steps per temperature
+        if self._kernel_samples > 1:
+            for i in range(0, self._kernel_samples - 1):
+                 samples_new = self.kernel_sample(samples_new, beta_new)
         weights_new = self.new_weights(
             weights_old, samples_old, samples_new, beta_old, beta_new)
 
