@@ -162,10 +162,36 @@ class TestDreamMCMC(unittest.TestCase):
         x0 = [self.real_parameters] * n
         mcmc = pints.DreamMCMC(n, x0)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 1)
+        self.assertEqual(mcmc.n_hyper_parameters(), 8)
+        self.assertRaises(mcmc.set_b_star(-5))
+        mcmc.set_b_star(5)
+        self.assertEqual(mcmc._b_star, 5)
+        self.assertRaises(mcmc.set_p_g(-0.5))
+        self.assertRaises(mcmc.set_p_g(1.5))
+        mcmc.set_p_g(0.55)
+        self.assertEqual(mcmc._p_g, 0.55)
+        self.assertRaises(mcmc.set_delta_max(1.5))
+        self.assertRaises(mcmc.set_delta_max(-1))
+        self.assertRaises(mcmc.set_delta_max(1000))
+        self.assertRaises(mcmc.set_CR(-0.5))
+        self.assertRaises(mcmc.set_CR(1.5))
+        mcmc.set_CR(0.75)
+        self.assertEqual(mcmc._CR, 0.75)
+        self.assertRaises(mcmc.set_nCR(1))
+        self.assertRaises(mcmc.set_nCR(2.5))
+        mcmc.set_nCR(4)
+        self.assertEqual(mcmc._nCR, 4)
 
-        mcmc.set_hyper_parameters([0.5])
-        self.assertEqual(mcmc._b, 0.5)
+        mcmc.set_hyper_parameters([0.50, 1.25, 0.45, 1,
+                                   0, 1, 0.32, 5])
+        self.assertEqual(mcmc._b, 0.50)
+        self.assertEqual(mcmc._b_star, 1.25)
+        self.assertEqual(mcmc._p_g, 0.45)
+        self.assertEqual(mcmc._delta_max, 1)
+        self.assertEqual(mcmc._initial_phase, False)
+        self.assertEqual(mcmc._constant_crossover, True)
+        self.assertEqual(mcmc._CR, 0.32)
+        self.assertEqual(mcmc._nCR, 5)
 
     def test_logging(self):
         """
