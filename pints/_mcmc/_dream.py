@@ -350,7 +350,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         other chains' positions in determining new positions
         """
         if b_star < 0:
-          raiseValueError('b* must be non-negative.')
+            raise ValueError('b* must be non-negative.')
         self._b_star = b_star
 
     def set_p_g(self, p_g):
@@ -360,9 +360,9 @@ class DreamMCMC(pints.MultiChainMCMC):
         means that other chains are given more weight)
         """
         if p_g < 0:
-          raiseValueError('p_g must be non-negative.')
+            raise ValueError('p_g must be non-negative.')
         if p_g > 1:
-          raiseValueError('p_g must be 1 or less.')
+            raise ValueError('p_g must be 1 or less.')
         self._p_g = p_g
 
     def set_delta_max(self, delta_max):
@@ -371,11 +371,12 @@ class DreamMCMC(pints.MultiChainMCMC):
         to use to determine next sampler position
         """
         if not isinstance(delta_max, int):
-          raiseValueError('delta_max must be an integer.')
+            raise ValueError('delta_max must be an integer.')
         if delta_max < 1:
-          raiseValueError('delta_max must be at least 1.')
+            raise ValueError('delta_max must be at least 1.')
         if delta_max > (self._chains - 2):
-          raiseValueError('delta_max must be less than available other chains.')
+            raise ValueError('delta_max must be less than available ' +
+                             'other chains.')
         self._delta_max = delta_max
 
     def set_CR(self, CR):
@@ -384,7 +385,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         constant crossover probability case.
         """
         if CR < 0 or CR > 1:
-          raiseValueError('CR is a probability and so must be in [0,1].')
+            raise ValueError('CR is a probability and so must be in [0,1].')
         self._CR = CR
 
     def set_nCR(self, nCR):
@@ -393,9 +394,11 @@ class DreamMCMC(pints.MultiChainMCMC):
         distribution.
         """
         if nCR < 2:
-          raiseValueError('Length of discrete crossover distribution must exceed 1.')
+            raise ValueError('Length of discrete crossover distribution ' +
+                             'must exceed 1.')
         if not isinstance(nCR, int):
-          raiseValueError('Length of discrete crossover distribution must be a integer.')
+            raise ValueError('Length of discrete crossover distribution ' +
+                             'must be a integer.')
         self._nCR = nCR
 
     def set_hyper_parameters(self, x):
