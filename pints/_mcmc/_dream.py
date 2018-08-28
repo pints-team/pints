@@ -54,6 +54,8 @@ class DreamMCMC(pints.MultiChainMCMC):
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
+    Here b > 0, b* > 0,  1 >= p_g >= 0, 1 >= CR >= 0.
+
     *Extends:* :class:`MultiChainMCMC`
 
     [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
