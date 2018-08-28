@@ -342,7 +342,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         self._constant_crossover = True if enabled else False
 
-    def set_b_start(self, b_star):
+    def set_b_star(self, b_star):
         """
         Sets b* which determines the weight given to
         other chains' positions in determining new positions
@@ -410,5 +410,3 @@ class DreamMCMC(pints.MultiChainMCMC):
         self.set_constant_crossover(x[5])
         self.set_CR(x[6])
         self.set_nCR(x[7])
-        self.set_initial_phase(x[4])
-
