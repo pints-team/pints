@@ -37,7 +37,7 @@ def ess_single_param(x):
     rho = autocorrelation(x)
     T = autocorrelate_negative(rho)
     n = len(x)
-    ess = n / (1 + 2 * np.sum(rho[0:(T - 1)]))
+    ess = n / (1 + 2 * np.sum(rho[0:T]))
     return ess
 
 
@@ -61,7 +61,7 @@ def within(samples):
     """
     Calculates within chain variance
     """
-    mu = list(map(lambda x: np.var(x), samples))
+    mu = list(map(lambda x: np.var(x, ddof=1), samples))
     W = np.mean(mu)
     return W
 

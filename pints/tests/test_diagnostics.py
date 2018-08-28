@@ -25,6 +25,38 @@ class TestDiagnostics(unittest.TestCase):
         
         for i in range(0, len(x)):
           self.assertTrue(np.abs(y[i] - y_true[i]) < 0.01)
+          
+    def test_autocorrelation_negative(self):
+        # Tests autocorrelation_negative yields the correct result
+        # under both possibilities
+        
+        # Test for case where there is a negative element
+        x = np.array([1, 2, 3, 4, -1, -1])
+        self.assertTrue(pints._diagnostics.autocorrelate_negative(x) == 4)
+        
+        # Test for case with no negative elements
+        x = np.array([1, 2, 3, 4, 1, 1])
+        self.assertTrue(pints._diagnostics.autocorrelate_negative(x) == 7)
+    
+    def test_ess_single_param(self):
+        # Tests that ESS for a single parameter is correct
+        
+        # For case with negative elements in x
+        x = np.array([1, 2, 3, 4, -1, -1])
+        self.assertTrue(np.abs(pints._diagnostics.autocorrelate_negative(x) - 1.75076) < 0.01)
+        
+        # Case with positive elements only in x
+        x = np.array([1, 2, 3, 4, 1, 1])
+        self.assertTrue(np.abs(pints._diagnostics.autocorrelate_negative(x) - 1.846154) < 0.01)
+        
+    def test_effective_sample_size(self):
+        # Tests ess for a matrix of parameters
+        
+        # matrix with two columns of samples
+        x = np.transpose(np.array([[1,1.1,1.4,1.3,1.3],[1,2,3,4,5]]))
+        y = pints._diagnostics.effective_sample_size(x)
+        self.assertTrue(np.abs(y[0] - 1.439232) < 0.01)
+        self.assertTrue(np.abs(y[1] - 1.315789) < 0.01)
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
