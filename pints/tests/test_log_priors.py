@@ -365,7 +365,7 @@ class TestPrior(unittest.TestCase):
         p1 = pints.CauchyLogPrior(0, 10)
         self.assertEqual(p1([0]), -3.447314978843446)
         p2 = pints.CauchyLogPrior(10, 5)
-        self.assertTrue(np.abs(p2([10])  + 2.7541677982835) < 0.001)
+        self.assertTrue(np.abs(p2([10]) + 2.7541677982835) < 0.001)
 
         # Test exceptions
         self.assertRaises(ValueError, pints.CauchyLogPrior, 0, 0)
