@@ -13,11 +13,9 @@ def autocorrelation(x):
     Calculate autocorrelation for a vector x using a spectrum density
     calculation.
     """
-    xp = x - np.mean(x)
-    f = np.fft.fft(xp)
-    p = np.array([np.real(v)**2 + np.imag(v)**2 for v in f])
-    pi = np.fft.ifft(p)
-    return np.real(pi)[:int(x.size / 2)] / np.sum(xp**2)
+    x = (x - np.mean(x)) / (np.std(x) * np.sqrt(len(x)))
+    result = np.correlate(x, x, mode='full')
+    return result[int(result.size / 2):]
 
 
 def autocorrelate_negative(autocorrelation):
@@ -29,7 +27,7 @@ def autocorrelate_negative(autocorrelation):
         if a < 0:
             return T - 1
         T += 1
-    return -1
+    return T
 
 
 def ess_single_param(x):
@@ -39,7 +37,7 @@ def ess_single_param(x):
     rho = autocorrelation(x)
     T = autocorrelate_negative(rho)
     n = len(x)
-    ess = n / (1 + 2 * np.sum(rho[0:(T - 1)]))
+    ess = n / (1 + 2 * np.sum(rho[0:T]))
     return ess
 
 
@@ -63,7 +61,7 @@ def within(samples):
     """
     Calculates within-chain variance.
     """
-    mu = list(map(lambda x: np.var(x), samples))
+    mu = list(map(lambda x: np.var(x, ddof=1), samples))
     W = np.mean(mu)
     return W
 
