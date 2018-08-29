@@ -48,7 +48,7 @@ class HMC(pints.SingleChainMCMC):
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
 
     """
-    def __init__(self, x0, sigma0=None):
+    def __init__(self, x0, log_pdf, sigma0=None):
         super(HMC, self).__init__(x0, sigma0)
 
         # Set initial state
