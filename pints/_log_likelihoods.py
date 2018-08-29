@@ -345,11 +345,10 @@ class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming independent Cauchy-distributed
-    noise at each time point, and adds one parameter: the scale (``sigma``).
+    Calculates a log-likelihood assuming independent Cauchy-distributed noise
+    at each time point, and adds one parameter: the scale (``sigma``).
 
-    For a noise characterised by ``sigma``, the log-likelihood is of
-    the form:
+    For a noise characterised by ``sigma``, the log-likelihood is of the form:
 
     .. math::
         \log{L(\\theta, \sigma)} =
