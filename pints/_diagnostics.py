@@ -41,20 +41,18 @@ def ess_single_param(x):
     return ess
 
 
-def effective_sample_size(sample):
+def effective_sample_size(samples):
     """
     Calculates ESS for a matrix of samples.
     """
     try:
-        n_sample, n_params = sample.shape
-    except IndexError:
-        IndexError('There must be at least one parameter.')
-    assert n_sample > 1
+        n_samples, n_params = samples.shape
+    except (ValueError, IndexError):
+        raise ValueError('Samples must be given as a 2d array.')
+    if n_samples < 2:
+        raise ValueError('At least two samples must be given.')
 
-    ess = np.zeros(n_params)
-    for i in range(0, n_params):
-        ess[i] = ess_single_param(sample[:, i])
-    return ess
+    return [ess_single_param(samples[:, i]) for i in range(0, n_params)]
 
 
 def within(samples):
