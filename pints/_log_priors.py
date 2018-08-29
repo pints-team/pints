@@ -220,6 +220,126 @@ class StudentTLogPrior():
                                  scale=self._scale, size=n)
 
 
+class CauchyLogPrior():
+    """
+    Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
+
+    For example, to create a prior centered around 0 and a scale of 5, use::
+
+        p = pints.CauchyLogPrior(0, 5)
+
+    Arguments:
+
+    ``location``
+        The center of the distribution.
+    ``scale``
+        The scale of the distribution.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, location, scale):
+        # Test inputs
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        # Cauchy is Student-t with 1 df
+        self._df = 1
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = 0.5 * (1.0 + self._df)
+        self._log_df = np.log(self._df)
+        self._log_scale = np.log(self._scale)
+        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+        # Cache scipy stats object
+        self._t = scipy.stats.t(
+            df=self._df, loc=self._location, scale=self._scale)
+
+    def __call__(self, x):
+        return (
+            self._first * (
+                self._log_df - np.log(
+                    self._df + ((x[0] - self._location) / self._scale)**2))
+            - 0.5 * self._log_df - self._log_scale - self._log_beta
+        )
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return self._t.rvs(n)
+
+
+class HalfCauchyLogPrior():
+    """
+    Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
+    ``scale``. This is a Cauchy distribution that has been truncated to lie in
+    between [0, inf].
+
+    For example, to create a prior centered around 0 and a scale of 5, use::
+
+        p = pints.HalfCauchyLogPrior(0, 5)
+
+    Arguments:
+
+    ``location``
+        The center of the distribution.
+    ``scale``
+        The scale of the distribution.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, location, scale):
+        # Test inputs
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        # set df for Student-t for sampling only
+        self._df = 1
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = np.log(2)
+        self._log_scale = np.log(self._scale)
+        self._log_weird = np.log(
+            np.pi + 2 * np.arctan(self._location / self._scale))
+        self._scale_sq = self._scale**2
+
+        # Store scipy distribution object
+        self._t = scipy.stats.t(
+            df=self._df, loc=self._location, scale=self._scale)
+
+    def __call__(self, x):
+        if x[0] > 0:
+            return (
+                self._first + self._log_scale - self._log_weird
+                - np.log((x[0] - self._location)**2 + self._scale_sq))
+        else:
+            return -float('inf')
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        samples = self._t.rvs(size=n)
+        resample = samples <= 0
+        n_resample = np.sum(resample)
+        while n_resample:
+            samples[resample] = self._t.rvs(size=n_resample)
+            resample = samples <= 0
+            n_resample = np.sum(resample)
+        return samples
+
+
 class UniformLogPrior(pints.LogPrior):
     """
     Defines a uniform prior over a given range.

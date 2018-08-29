@@ -12,7 +12,11 @@ Example::
     p = pints.NormalLogPrior(mean=0, variance=1)
     x = p(0.1)
 
+.. autoclass:: CauchyLogPrior
+
 .. autoclass:: ComposedLogPrior
+
+.. autoclass:: HalfCauchyLogPrior
 
 .. autoclass:: MultivariateNormalLogPrior
 
