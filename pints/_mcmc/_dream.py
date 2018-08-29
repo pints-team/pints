@@ -92,7 +92,8 @@ class DreamMCMC(pints.MultiChainMCMC):
         self._p_g = 0.2
 
         # Determines maximum delta to choose in sums
-        self._delta_max = 3
+        self._delta_max = None
+        self.set_delta_max(min(3, self._chains - 2))
 
         # Initial phase
         self._initial_phase = True
@@ -283,7 +284,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 for j in range(self._chains):
                     for d in range(0, self._dimension):
                         self._delta[self._m[j]] += (
-                            delta[j][d] / self._variance[j][d])
+                            delta[j][d] / max(self._variance[j][d], 1e-11))
 
                 self._p = self._iterations * self._chains * self._delta
                 self._p /= self._L * np.sum(self._delta)
@@ -310,14 +311,12 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         return self._b
 
-    def b_star(self, b_star):
+    def b_star(self):
         """
         Returns b*, which determines the weight given to other chains'
         positions in determining new positions (see :meth:`set_b_star()`).
         """
-        if b_star < 0:
-            raise ValueError('b* must be non-negative.')
-        self._b_star = b_star
+        return self._b_star
 
     def constant_crossover(self):
         """
@@ -325,14 +324,14 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         return self._constant_crossover
 
-    def CR(self, CR):
+    def CR(self):
         """
         Returns the probability of crossover occurring if constant crossover
         mode is enabled (see :meth:`set_CR()`).
         """
         return self._CR
 
-    def delta_max(self, delta_max):
+    def delta_max(self):
         """
         Returns the maximum number of other chains' positions to use to
         determine the next sampler position (see :meth:`set_delta_max()`).
@@ -352,7 +351,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 8
 
-    def nCR(self, nCR):
+    def nCR(self):
         """
         Returns the size of the discrete crossover probability distribution
         (only used if constant crossover mode is disabled), see

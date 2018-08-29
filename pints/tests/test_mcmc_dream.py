@@ -33,6 +33,9 @@ class TestDreamMCMC(unittest.TestCase):
     def setUpClass(cls):
         """ Prepare a problem for testing. """
 
+        # Random seed
+        np.random.seed(1)
+
         # Create toy model
         cls.model = toy.LogisticModel()
         cls.real_parameters = [0.015, 500]
@@ -158,29 +161,45 @@ class TestDreamMCMC(unittest.TestCase):
         """
         Tests the hyper-parameter interface for this optimiser.
         """
-        n = 3
+        n = 5
         x0 = [self.real_parameters] * n
         mcmc = pints.DreamMCMC(n, x0)
 
         self.assertEqual(mcmc.n_hyper_parameters(), 8)
+
+        # B star
+        x = mcmc.b_star() + 1
+        mcmc.set_b_star(x)
+        self.assertEqual(mcmc.b_star(), x)
         self.assertRaises(ValueError, mcmc.set_b_star, -5)
-        mcmc.set_b_star(5)
-        self.assertEqual(mcmc._b_star, 5)
+
+        # p_g
+        x = mcmc.p_g() + 0.1
+        mcmc.set_p_g(x)
+        self.assertEqual(mcmc._p_g, x)
         self.assertRaises(ValueError, mcmc.set_p_g, -0.5)
         self.assertRaises(ValueError, mcmc.set_p_g, 1.5)
-        mcmc.set_p_g(0.55)
-        self.assertEqual(mcmc._p_g, 0.55)
-        self.assertRaises(ValueError, mcmc.set_delta_max, 1.5)
+
+        # delta max
+        x = mcmc.delta_max() - 1
+        mcmc.set_delta_max(x)
+        self.assertEqual(mcmc.delta_max(), x)
         self.assertRaises(ValueError, mcmc.set_delta_max, -1)
         self.assertRaises(ValueError, mcmc.set_delta_max, 1000)
+
+        # CR
+        x = mcmc.CR() * 0.9
+        mcmc.set_CR(x)
+        self.assertEqual(mcmc.CR(), x)
         self.assertRaises(ValueError, mcmc.set_CR, -0.5)
         self.assertRaises(ValueError, mcmc.set_CR, 1.5)
-        mcmc.set_CR(0.75)
-        self.assertEqual(mcmc._CR, 0.75)
+
+        # nCR
+        x = mcmc.nCR() + 1
+        mcmc.set_nCR(x)
+        self.assertEqual(mcmc.nCR(), 4)
         self.assertRaises(ValueError, mcmc.set_nCR, 1)
         self.assertRaises(ValueError, mcmc.set_nCR, 2.5)
-        mcmc.set_nCR(4)
-        self.assertEqual(mcmc._nCR, 4)
 
         mcmc.set_hyper_parameters([0.50, 1.25, 0.45, 1,
                                    0, 1, 0.32, 5])
