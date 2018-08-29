@@ -6,20 +6,17 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-# Some code in this file was adapted from Myokit (see http://myokit.org)
-#
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy import stats
 from scipy.special import logsumexp
 
 
 class SMC(pints.SMCSampler):
     """
-    Samples from a density using sequential Monte Carlo sampling [1],
-    although allows multiple MCMC steps per temperature, if desired.
+    Samples from a density using sequential Monte Carlo sampling [1], although
+    allows multiple MCMC steps per temperature, if desired.
 
     Algorithm 3.1.1 using equation (31) for ``w_tilde``.
 
@@ -34,6 +31,7 @@ class SMC(pints.SMCSampler):
 
         # Thinning: Store only one sample per X
         self._thinning_rate = 1
+        #TODO Remove this, as done in other samplers!
 
         # Temperature schedule
         self._schedule = None
@@ -41,11 +39,11 @@ class SMC(pints.SMCSampler):
 
         # ESS threshold (default from Del Moral et al.)
         self._ess_threshold = self._particles / 2
-        
+
         # Determines whether to resample particles at end of
         # steps 2 and 3 from Del Moral et al. (2006)
         self._resample_end_2_3 = True
-        
+
         # Set number of MCMC steps to do for each distribution
         self._kernel_samples = 1
 
@@ -56,14 +54,14 @@ class SMC(pints.SMCSampler):
         if particles < 10:
             raise ValueError('Must have more than 10 particles in SMC.')
         self._particles = particles
-        
+
     def set_resample_end_2_3(self, resample_end_2_3):
         """
         Determines whether a resampling step is performed at end of
         steps 2 and 3 in Del Moral et al. Algorithm 3.1.1
         """
         if not isinstance(resample_end_2_3, bool):
-          raise ValueError('Resample_end_2_3 should be boolean.')
+            raise ValueError('Resample_end_2_3 should be boolean.')
         self._resample_end_2_3 = resample_end_2_3
 
     def set_ess_threshold(self, ess_threshold):
@@ -75,15 +73,15 @@ class SMC(pints.SMCSampler):
         if ess_threshold < 0:
             raise ValueError('ESS must be greater than zero.')
         self._ess_threshold = ess_threshold
-        
+
     def set_kernel_samples(self, kernel_samples):
         """
         Sets number of MCMC samples to do for each temperature
         """
         if kernel_samples < 1:
-          raiseValueError('Number of samples per temperature must be >= 1.')
+            raise ValueError('Number of samples per temperature must be >= 1.')
         if not isinstance(kernel_samples, int):
-          raiseValueError('Number of samples per temperature must be int.')
+            raise ValueError('Number of samples per temperature must be int.')
         self._kernel_samples = kernel_samples
 
     def set_temperature_schedule(self, schedule=10):
@@ -91,8 +89,8 @@ class SMC(pints.SMCSampler):
         Sets a temperature schedule.
 
         If ``schedule`` is an ``int`` it is interpreted as the number of
-        temperatures and a schedule is generated that is uniformly spaced
-        on the log scale.
+        temperatures and a schedule is generated that is uniformly spaced on
+        the log scale.
 
         If ``schedule`` is a list (or array) it is interpreted as a custom
         temperature schedule.
@@ -136,21 +134,22 @@ class SMC(pints.SMCSampler):
             self._schedule = schedule
 
     def run(self):
-        """
-        Runs the SMC sampler.
-        """
+        """ See :meth:`SMCSampler`. """
         # Report the current settings
         if self._verbose:
             print('Running sequential Monte Carlo')
             print('Total number of particles: ' + str(self._particles))
             print('Number of temperatures: ' + str(len(self._schedule)))
             if self._resample_end_2_3:
-              print('Resampling at end of each iteration')
+                print('Resampling at end of each iteration')
             else:
-              print('Not resampling at end of each iteration')
-            print('Number of MCMC steps at each temperature: ' + str(self._kernel_samples))
-            print('Storing 1 sample per ' + str(self._thinning_rate)
-                  + ' particle')
+                print('Not resampling at end of each iteration')
+            print(
+                'Number of MCMC steps at each temperature: '
+                + str(self._kernel_samples))
+            print(
+                'Storing 1 sample per ' + str(self._thinning_rate)
+                + ' particle')
 
         # Initial starting parameters
         mu = self._x0
@@ -164,8 +163,8 @@ class SMC(pints.SMCSampler):
         weights = np.zeros(self._particles)
         for i in range(0, self._particles):
             weights[i] = (
-                self.tempered_distribution(samples[i], self._schedule[1])
-                - self.tempered_distribution(samples[i], 0.0)
+                self._tempered_distribution(samples[i], self._schedule[1])
+                - self._tempered_distribution(samples[i], 0.0)
             )
         weights = np.exp(weights - logsumexp(weights))
 
@@ -179,7 +178,7 @@ class SMC(pints.SMCSampler):
                 print(
                     'Sampling from distribution of temperature: '
                     + str(self._schedule[i + 1]))
-            samples_new, weights_new = self.steps_2_and_3(
+            samples_new, weights_new = self._steps_2_and_3(
                 m_samples[:, :, i], weights_old, self._schedule[i],
                 self._schedule[i + 1])
             weights_old = weights_new
@@ -204,50 +203,52 @@ class SMC(pints.SMCSampler):
         """
         return self._thinning_rate
 
-    def tempered_distribution(self, x, beta):
+    def _tempered_distribution(self, x, beta):
         """
         Returns the tempered log-pdf:
-        beta * log pi(x) + (1 - beta) * log prior(x)
-        If not explicitly given prior is assumed to be
-        multivariate normal
+        ``beta * log pi(x) + (1 - beta) * log prior(x)``
+        If not explicitly given prior is assumed to be multivariate normal.
         """
         return beta * self._log_posterior(x) + (1 - beta) * self._log_prior(x)
 
-    def w_tilde(self, x_old, x_new, beta_old, beta_new):
+    def _w_tilde(self, x_old, x_new, beta_old, beta_new):
         """
         Calculates the log unnormalised incremental weight as per eq. (31) in
         Del Moral.
         """
         return (
-            self.tempered_distribution(x_old, beta_new)
-            - self.tempered_distribution(x_old, beta_old)
+            self._tempered_distribution(x_old, beta_new)
+            - self._tempered_distribution(x_old, beta_old)
         )
 
-    def new_weight(self, w_old, x_old, x_new, beta_old, beta_new):
+    def _new_weight(self, w_old, x_old, x_new, beta_old, beta_new):
         """
-        Calculates the log new weights as per algorithm 3.1.1.
-        in Del Moral et al. (2006).
+        Calculates the log new weights as per algorithm 3.1.1. in Del Moral et
+        al. (2006).
         """
-        w_tilde_value = self.w_tilde(x_old, x_new, beta_old, beta_new)
+        w_tilde_value = self._w_tilde(x_old, x_new, beta_old, beta_new)
         return w_old + w_tilde_value
 
-    def new_weights(self, w_old, samples_old, samples_new, beta_old, beta_new):
+    def _new_weights(
+            self, w_old, samples_old, samples_new, beta_old, beta_new):
         """
-        Calculates the new weights as per algorithm 3.1.1.
-        in Del Moral et al. (2006).
+        Calculates the new weights as per algorithm 3.1.1 in Del Moral et al.
+        (2006).
         """
-        w_new = np.zeros(self._particles)
-        for i in range(0, self._particles):
-            w_new[i] = self.new_weight(
-                w_old[i], samples_old[i], samples_new[i], beta_old, beta_new)
+        w_new = np.array([
+            self._new_weight(
+                w, samples_old[i], samples_new[i], beta_old, beta_new)
+            for i, w in enumerate(w_old)])
+
         return np.exp(w_new - logsumexp(w_new))
 
-    def kernel_sample(self, samples, beta):
+    def _kernel_sample(self, samples, beta):
         """
         Generates a new sample by using a Metropolis kernel for a distribution
         with log pdf::
 
             beta * log pi(x) + (1 - beta) * log N(0, sigma).
+
         """
         proposed = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
@@ -259,8 +260,8 @@ class SMC(pints.SMCSampler):
         samples_new = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
             r = np.exp(
-                self.tempered_distribution(proposed[i], beta)
-                - self.tempered_distribution(samples[i], beta))
+                self._tempered_distribution(proposed[i], beta)
+                - self._tempered_distribution(samples[i], beta))
             if r <= np.random.uniform(size=1):
                 samples_new[i] = samples[i]
             else:
@@ -272,16 +273,16 @@ class SMC(pints.SMCSampler):
 
         return samples_new
 
-    def ess(self, weights):
+    def _ess(self, weights):
         """
         Calculates the effective sample size.
         """
         return 1.0 / np.sum(weights**2)
 
-    def resample(self, weights, samples):
+    def _resample(self, weights, samples):
         """
-        Returns samples according to the weights vector
-        from the multinomial distribution.
+        Returns samples according to the weights vector from the multinomial
+        distribution.
         """
         selected = np.random.multinomial(self._particles, weights)
         new_samples = np.zeros((self._particles, self._dimension))
@@ -298,28 +299,28 @@ class SMC(pints.SMCSampler):
 
         return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
-    def steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
+    def _steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
         """
-        Undertakes steps 2 and 3 from algorithm 3.1.1. in
-        Del Moral et al. (2006) except allow multiple MCMC steps
-        per temperature if desired.
+        Undertakes steps 2 and 3 from algorithm 3.1.1. in Del Moral et al.
+        (2006) except allow multiple MCMC steps per temperature if desired.
         """
-        if self.ess(weights_old) < self._ess_threshold:
-            resamples, weights_new = self.resample(weights_old, samples_old)
+        if self._ess(weights_old) < self._ess_threshold:
+            resamples, weights_new = self._resample(weights_old, samples_old)
         else:
             resamples, weights_new = samples_old, weights_old
-        
-        samples_new = self.kernel_sample(resamples, beta_new)
+
+        samples_new = self._kernel_sample(resamples, beta_new)
         # Perform multiple MCMC steps per temperature
         if self._kernel_samples > 1:
             for i in range(0, self._kernel_samples - 1):
-                 samples_new = self.kernel_sample(samples_new, beta_new)
-        weights_new = self.new_weights(
+                samples_new = self._kernel_sample(samples_new, beta_new)
+        weights_new = self._new_weights(
             weights_old, samples_old, samples_new, beta_old, beta_new)
 
-        # Either resample again or don't: algorithm 3.1.1. due to the form of L used
-        # (eqn. 30 and 31) resample again
+        # Either resample again or don't: algorithm 3.1.1. due to the form of
+        # L used (eqn. 30 and 31) resample again
         if self._resample_end_2_3:
-          samples_new, weights_discard = self.resample(weights_new, samples_new)
+            samples_new, weights_discard = self._resample(
+                weights_new, samples_new)
         return samples_new, weights_new
 
