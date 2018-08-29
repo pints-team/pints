@@ -11,7 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.stats
-
+import numpy.linalg
 
 class NormalLogPDF(pints.LogPDF):
     """
@@ -108,3 +108,13 @@ class NormalLogPDF(pints.LogPDF):
             raise ValueError('Number of samples cannot be negative.')
         return self._phi.rvs(n)
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+        
+        self._sigma_inv = np.linalg.inv(self._sigma)
+        self._x_minus_mu = x - self._mean
+        dL = -0.5 * (self._sigma_inv - np.matmul(self._sigma_inv, 
+        
+        
