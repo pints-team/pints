@@ -149,6 +149,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         v_log_Z = np.zeros(self._iterations + 1)
 
         # Run
+        i_message = self._active_points - 1
         for i in range(0, self._iterations):
             a_running_log_likelihood = np.min(m_active[:, d])
             a_min_index = np.argmin(m_active[:, d])
@@ -171,14 +172,16 @@ class NestedRejectionSampler(pints.NestedSampler):
                 (proposed, np.array([log_likelihood])))
 
             # Show progress
-            if logging and i >= next_message:
-                # Log state
-                logger.log(i, self._n_evals, timer.time())
+            if logging:
+                i_message += 1
+                if i_message >= next_message:
+                    # Log state
+                    logger.log(i_message, self._n_evals, timer.time())
 
-                # Choose next logging point
-                if i > message_warm_up:
-                    next_message = message_interval * (
-                        1 + i // message_interval)
+                    # Choose next logging point
+                    if i_message > message_warm_up:
+                        next_message = message_interval * (
+                            1 + i_message // message_interval)
 
         v_log_Z[self._iterations] = logsumexp(m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(
