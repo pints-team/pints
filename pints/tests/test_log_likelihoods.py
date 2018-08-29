@@ -254,10 +254,10 @@ class TestLogLikelihood(unittest.TestCase):
         #      Cauchy_logpdf((7.6,-10.3,-30.5)|mean=0, scale=8) +
         #      Cauchy_logpdf((8.5,15.6,-5)|mean=0, scale=13.5) +
         #      Cauchy_logpdf((3.4,5.5,7.6)|mean=0, scale=10.5)
-        #      = -53.46....
+        #      = -49.51....
         self.assertAlmostEqual(
             log_likelihood(parameters + [13, 8, 13.5, 10.5]),
-            -53.46564978410437)
+            -49.51182454195375)
 
     def test_known_and_unknown_noise_multi(self):
         """
