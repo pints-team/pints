@@ -367,7 +367,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
-    
+
     def __init__(self, problem):
         super(CauchyLogLikelihood, self).__init__(problem)
 
