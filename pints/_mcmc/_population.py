@@ -144,8 +144,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
     def temperature_schedule(self):
         """
         Returns the temperature schedule used in the tempering algorithm. Each
-        temperature ``T`` pertains to particular chain whose stationary
-        distribution is ``p(theta|data) ^ (1 - T)``.
+        temperature ``beta`` pertains to particular chain whose stationary
+        distribution is ``p(theta|data) ^ beta``.
         """
         return self._schedule
 
@@ -190,9 +190,6 @@ class PopulationMCMC(pints.SingleChainMCMC):
             if len(schedule) < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            if schedule[0] != 0:
-                raise ValueError(
-                    'First element of temperature schedule must be 0.')
 
             # Check vector elements all between 0 and 1 (inclusive)
             if np.any(schedule < 0):
