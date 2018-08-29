@@ -394,7 +394,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         error = self._values - self._problem.evaluate(problem_parameters)
 
         # Distribution parameters
-        sigma = np.npasarray(x[-m:])
+        sigma = np.asarray(x[-m:])
 
         # Calculate
         return np.sum(
