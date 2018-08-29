@@ -116,7 +116,7 @@ Pints defines :class:`single<SingleOutputProblem>` and
 models and data, and over which :class:`error measures<ErrorMeasure>` or
 :class:`log-likelihoods<LogLikelihood>` can be defined.
 
-To find the appropriate type of ``Problem`` to use, see the overview below:
+To find the appropriate type of Problem to use, see the overview below:
 
 #. Systems with a single observable output
 
