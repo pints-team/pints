@@ -78,6 +78,10 @@ class TestDreamMCMC(unittest.TestCase):
         mcmc = pints.DreamMCMC(4, xs)
         self.assertFalse(mcmc.constant_crossover())
 
+        # Starts in initial phase
+        self.assertTrue(mcmc.needs_initial_phase())
+        self.assertTrue(mcmc.in_initial_phase())
+
         # Perform short run
         chains = []
         for i in range(100):
@@ -86,6 +90,7 @@ class TestDreamMCMC(unittest.TestCase):
             samples = mcmc.tell(fxs)
             if i >= 50:
                 chains.append(samples)
+                mcmc.set_initial_phase(False)
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
@@ -104,6 +109,7 @@ class TestDreamMCMC(unittest.TestCase):
             samples = mcmc.tell(fxs)
             if i >= 50:
                 chains.append(samples)
+                mcmc.set_initial_phase(False)
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
