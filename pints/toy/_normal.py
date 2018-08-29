@@ -115,6 +115,9 @@ class NormalLogPDF(pints.LogPDF):
         
         self._sigma_inv = np.linalg.inv(self._sigma)
         self._x_minus_mu = x - self._mean
-        dL = -0.5 * (self._sigma_inv - np.matmul(self._sigma_inv, 
+        
+        # derivative wrt x
+        dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
+        return L, dL
         
         
