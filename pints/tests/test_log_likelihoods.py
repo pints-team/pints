@@ -235,7 +235,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.CauchyLogLikelihood(problem)
         # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -12.3394986541736)
+        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
 
     def test_cauchy_log_likelihood_multi(self):
         """
