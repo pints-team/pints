@@ -66,6 +66,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Default settings
         #
         self._method = pints.AdaptiveCovarianceMCMC
+        self._needs_initial_phase = True
+        self._in_initial_phase = True
 
         # Temperature schedule
         self._schedule = None
@@ -95,6 +97,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
+    def in_initial_phase(self):
+        """
+        See :meth:`MCMCSampling.in_initial_phase()`.
+        """
+        return self._in_initial_phase
+
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -105,6 +113,11 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Create inner chains
         n = len(self._schedule)
         self._chains = [self._method(self._x0, self._sigma0) for i in range(n)]
+
+        # Set initial phase for methods that need it
+        if self._needs_initial_phase:
+            for chain in self._chains:
+                chain.set_initial_phase(self._in_initial_phase)
 
         # Propose initial point
         self._current = None
@@ -141,19 +154,24 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Population MCMC'
 
-    def temperature_schedule(self):
-        """
-        Returns the temperature schedule used in the tempering algorithm. Each
-        temperature ``T`` pertains to particular chain whose stationary
-        distribution is ``p(theta|data) ^ (1 - T)``.
-        """
-        return self._schedule
+    def needs_initial_phase(self):
+        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        return self._needs_initial_phase
 
     def replace(self, x, fx):
         """
         Not implemented for this method!
         """
         raise NotImplementedError
+
+    def set_initial_phase(self, phase):
+        """
+        See :meth:`MCMCSampling.set_initial_phase()`.
+        """
+        self._in_initial_phase = bool(phase)
+        if self._running:
+            for chain in self._chains:
+                chain.set_initial_phase(self._in_initial_phase)
 
     def set_temperature_schedule(self, schedule=10):
         """
@@ -266,4 +284,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         sample = np.array(self._current[0], copy=False)
         sample.setflags(write=False)
         return sample
+
+    def temperature_schedule(self):
+        """
+        Returns the temperature schedule used in the tempering algorithm. Each
+        temperature ``T`` pertains to particular chain whose stationary
+        distribution is ``p(theta|data) ^ (1 - T)``.
+        """
+        return self._schedule
 
