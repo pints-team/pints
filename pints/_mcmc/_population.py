@@ -32,12 +32,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
     ``A = p_i(x_j) * p_j(x_i) / (p_i(x_i) * p_j(x_j))``
 
     where ``x_i`` and ``x_j`` are the current values of chains ``i`` and ``j``,
-    respectively, where ``p_i = p(theta|data) ^ (1 - T_i)``, where
-    ``p(theta|data)`` is the target distribution and ``T_i`` is bounded between
+    respectively, where ``p_i = p(theta|data) ^ beta_i ``, where
+    ``p(theta|data)`` is the target distribution and ``beta_i`` is bounded between
     ``[0, 1]`` and represents a tempering parameter.
 
-    We use a range of ``T = (0,delta_T,...,1)``, where
-    ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
+    We use a range of ``beta = (0,...,1)``, where the default scale is uniform,
+    on the log scale and the chain with ``beta_i = 1`` is the
     one whose target distribution we want to sample.
 
     *Extends:* :class:`SingleChainMCMC`
