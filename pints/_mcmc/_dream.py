@@ -54,6 +54,8 @@ class DreamMCMC(pints.MultiChainMCMC):
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
+    Here b > 0, b* > 0,  1 >= p_g >= 0, 1 >= CR >= 0.
+
     *Extends:* :class:`MultiChainMCMC`
 
     [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
@@ -86,21 +88,23 @@ class DreamMCMC(pints.MultiChainMCMC):
         # b* distribution for e ~ U(-b*, b*)
         self._b_star = 0.01
 
-        # Probability of longer gamma versus regular
+        # Probability of higher gamma versus regular
         self._p_g = 0.2
 
         # Determines maximum delta to choose in sums
-        self._delta_max = 3
+        self._delta_max = None
+        self.set_delta_max(min(3, self._chains - 2))
 
         # Initial phase
         self._initial_phase = True
 
-        # Variable or constant cross-over mode
+        # Variable or constant crossover mode
         self._constant_crossover = False
 
         # Constant CR probability
         self._CR = 0.5
-        # 1 / Variable crossover probability
+
+        # Since of multinomial crossover dist for variable CR prob
         self._nCR = 3
 
     def ask(self):
@@ -173,19 +177,11 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Set proposal as read-only
         self._proposed.setflags(write=False)
 
-        #TODO: Would prefer not to use this method, use x0 from user instead
-        #      Is that ok? Then this code can go
-        # Set initial values
-        #for j in range(self._num_chains):
-        #    chains[0, j, :] = np.random.normal(loc=mu, scale=mu / 100.0,
-        #                                       size=len(mu))
-        #    current_log_likelihood[j] = self._log_likelihood(chains[0, j, :])
-
         # Set mu
         self._mu = np.mean(self._x0, axis=0)
 
         # Set initial p, L and Delta
-        self._p = np.repeat(1 / self._nCR, self._nCR)
+        self._p = np.repeat(1.0 / self._nCR, self._nCR)
         self._L = np.zeros(self._nCR)
         self._delta = np.zeros(self._nCR)
 
@@ -288,7 +284,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 for j in range(self._chains):
                     for d in range(0, self._dimension):
                         self._delta[self._m[j]] += (
-                            delta[j][d] / self._variance[j][d])
+                            delta[j][d] / max(self._variance[j][d], 1e-11))
 
                 self._p = self._iterations * self._chains * self._delta
                 self._p /= self._L * np.sum(self._delta)
@@ -315,11 +311,32 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         return self._b
 
+    def b_star(self):
+        """
+        Returns b*, which determines the weight given to other chains'
+        positions in determining new positions (see :meth:`set_b_star()`).
+        """
+        return self._b_star
+
     def constant_crossover(self):
         """
         Returns ``True`` if constant crossover mode is enabled.
         """
         return self._constant_crossover
+
+    def CR(self):
+        """
+        Returns the probability of crossover occurring if constant crossover
+        mode is enabled (see :meth:`set_CR()`).
+        """
+        return self._CR
+
+    def delta_max(self):
+        """
+        Returns the maximum number of other chains' positions to use to
+        determine the next sampler position (see :meth:`set_delta_max()`).
+        """
+        return self._delta_max
 
     def _draw(self, i):
         """
@@ -332,7 +349,21 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+        return 8
+
+    def nCR(self):
+        """
+        Returns the size of the discrete crossover probability distribution
+        (only used if constant crossover mode is disabled), see
+        :meth:`set_nCR()`.
+        """
+        return self._nCR
+
+    def p_g(self):
+        """
+        Returns ``p_g``. See :meth:`set_p_g()`.
+        """
+        return self._p_g
 
     def set_b(self, b):
         """
@@ -349,11 +380,72 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         self._constant_crossover = True if enabled else False
 
+    def set_b_star(self, b_star):
+        """
+        Sets b*, which determines the weight given to other chains' positions
+        in determining new positions.
+        """
+        if b_star < 0:
+            raise ValueError('b* must be non-negative.')
+        self._b_star = b_star
+
+    def set_p_g(self, p_g):
+        """
+        Sets ``p_g`` which is the probability of choosing a higher ``gamma``
+        versus regular (a higher ``gamma`` means that other chains are given
+        more weight).
+        """
+        if p_g < 0 or p_g > 1:
+            raise ValueError('p_g must be in the range [0, 1].')
+        self._p_g = p_g
+
+    def set_delta_max(self, delta_max):
+        """
+        Sets the maximum number of other chains' positions to use to determine
+        the next sampler position.
+        """
+        delta_max = int(delta_max)
+        if delta_max > (self._chains - 2):
+            raise ValueError(
+                'delta_max must be less than available other chains.')
+        if delta_max < 1:
+            raise ValueError('delta_max must be at least 1.')
+        self._delta_max = delta_max
+
+    def set_CR(self, CR):
+        """
+        Sets the probability of crossover occurring if constant crossover mode
+        is enabled.
+        """
+        if CR < 0 or CR > 1:
+            raise ValueError('CR is a probability and so must be in [0,1].')
+        self._CR = CR
+
+    def set_nCR(self, nCR):
+        """
+        Sets the size of the discrete crossover probability distribution (only
+        used if constant crossover mode is disabled).
+        """
+        if nCR < 2:
+            raise ValueError(
+                'Length of discrete crossover distribution must exceed 1.')
+        if not isinstance(nCR, int):
+            raise ValueError(
+                'Length of discrete crossover distribution must be a integer.')
+        self._nCR = nCR
+
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[b]``.
+        The hyper-parameter vector is ``[b, b_star, p_g, delta_max,
+        initial_phase, constant_crossover, CR, nCR]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_b(x[0])
-
+        self.set_b_star(x[1])
+        self.set_p_g(x[2])
+        self.set_delta_max(x[3])
+        self.set_initial_phase(x[4])
+        self.set_constant_crossover(x[5])
+        self.set_CR(x[6])
+        self.set_nCR(x[7])
