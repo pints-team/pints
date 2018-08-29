@@ -57,6 +57,9 @@ class TestTimer(unittest.TestCase):
             t.format(2 * 604800 + 3 * 3600 + 60 + 4),
             '2 weeks, 0 days, 3 hours, 1 minute, 4 seconds')
 
+        # Test without argument
+        self.assertIsInstance(t.format(), str)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
