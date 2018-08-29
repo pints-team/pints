@@ -29,10 +29,6 @@ class SMC(pints.SMCSampler):
         # Number of particles
         self._particles = 1000
 
-        # Thinning: Store only one sample per X
-        self._thinning_rate = 1
-        #TODO Remove this, as done in other samplers!
-
         # Temperature schedule
         self._schedule = None
         self.set_temperature_schedule()
@@ -147,17 +143,14 @@ class SMC(pints.SMCSampler):
             print(
                 'Number of MCMC steps at each temperature: '
                 + str(self._kernel_samples))
-            print(
-                'Storing 1 sample per ' + str(self._thinning_rate)
-                + ' particle')
 
         # Initial starting parameters
         mu = self._x0
         sigma = self._sigma0
 
         # Starting parameters
-        samples = np.random.multivariate_normal(mean=mu, cov=sigma,
-                                                size=self._particles)
+        samples = np.random.multivariate_normal(
+            mean=mu, cov=sigma, size=self._particles)
 
         # Starting weights
         weights = np.zeros(self._particles)
@@ -185,23 +178,6 @@ class SMC(pints.SMCSampler):
             m_samples[:, :, i + 1] = samples_new
 
         return m_samples[:, :, -1]
-
-    def set_thinning_rate(self, thinning):
-        """
-        Sets the thinning rate. With a thinning rate of *n*, only every *n-th*
-        sample will be stored.
-        """
-        thinning = int(thinning)
-        if thinning < 1:
-            raise ValueError('Thinning rate must be greater than zero.')
-        self._thinning_rate = thinning
-
-    def thinning_rate(self):
-        """
-        Returns the thinning rate that will be used in the next run. A thinning
-        rate of *n* indicates that only every *n-th* sample will be stored.
-        """
-        return self._thinning_rate
 
     def _tempered_distribution(self, x, beta):
         """
