@@ -22,7 +22,7 @@ def autocorrelation(x):
 
 def autocorrelate_negative(autocorrelation):
     """
-    Finds last positive autocorrelation, T
+    Finds last positive autocorrelation, T.
     """
     T = 1
     for a in autocorrelation:
@@ -34,7 +34,7 @@ def autocorrelate_negative(autocorrelation):
 
 def ess_single_param(x):
     """
-    Calculates ESS for a single parameter
+    Calculates ESS for a single parameter.
     """
     rho = autocorrelation(x)
     T = autocorrelate_negative(rho)
@@ -45,12 +45,12 @@ def ess_single_param(x):
 
 def effective_sample_size(sample):
     """
-    Calculates ESS for a matrix of samples
+    Calculates ESS for a matrix of samples.
     """
     try:
         n_sample, n_params = sample.shape
     except IndexError:
-        IndexError('There must be at least one parameter')
+        IndexError('There must be at least one parameter.')
     assert n_sample > 1
 
     ess = np.zeros(n_params)
@@ -61,7 +61,7 @@ def effective_sample_size(sample):
 
 def within(samples):
     """
-    Calculates within-chain variance
+    Calculates within-chain variance.
     """
     mu = list(map(lambda x: np.var(x), samples))
     W = np.mean(mu)
@@ -70,7 +70,7 @@ def within(samples):
 
 def between(samples):
     """
-    Calculates between-chain variance
+    Calculates between-chain variance.
     """
     mu = list(map(lambda x: np.mean(x), samples))
     mu_overall = np.mean(mu)
@@ -81,8 +81,8 @@ def between(samples):
 
 def reorder(param_number, chains):
     """
-    Reorders chains for a given parameter into a more useful
-    format for calculating rhat
+    Reorders chains for a given parameter into a more useful format for
+    calculating rhat.
     """
     num_chains = len(chains)
     samples = [chains[i][:, param_number] for i in range(0, num_chains)]
@@ -91,8 +91,8 @@ def reorder(param_number, chains):
 
 def reorder_all_params(chains):
     """
-    Reorders chains for all parameters into a more useful
-    format for calculating rhat
+    Reorders chains for all parameters into a more useful format for
+    calculating rhat.
     """
     num_params = chains[0].shape[1]
     samples_all = [reorder(i, chains) for i in range(0, num_params)]
@@ -101,8 +101,8 @@ def reorder_all_params(chains):
 
 def rhat(samples):
     """
-    Calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per
-    "Bayesian data analysis", 3rd edition, Gelman et al., 2014
+    Calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per "Bayesian
+    data analysis", 3rd edition, Gelman et al., 2014.
     """
     W = within(samples)
     B = between(samples)
@@ -112,8 +112,8 @@ def rhat(samples):
 
 def rhat_all_params(chains):
     """
-    Calculates r-hat for all parameters in chains as per
-    "Bayesian data analysis", 3rd edition, Gelman et al., 2014
+    Calculates r-hat for all parameters in chains as per "Bayesian data
+    analysis", 3rd edition, Gelman et al., 2014.
     """
     samples_all = reorder_all_params(chains)
     rhat_all = list(map(lambda x: rhat(x), samples_all))
