@@ -23,27 +23,28 @@ except AttributeError:
 
 debug = False
 
-LOG_SCREEN = (
-    'Using Adaptive covariance MCMC\n'
-    'Generating 3 chains.\n'
-    'Running in sequential mode.\n'
-    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s\n'
-    '0     3      0         0         0          0:00.0\n'
-    '1     6      0         0         0.5        0:00.0\n'
-    '2     9      0         0         0.333      0:00.0\n'
-    '3     12     0         0         0.5        0:00.0\n'
-    '10    30     0.1       0         0.2        0:00.0\n'
-    'Halting: Maximum number of iterations (10) reached.\n'
-)
+LOG_SCREEN = [
+    'Using Adaptive covariance MCMC',
+    'Generating 3 chains.',
+    'Running in sequential mode.',
+    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
+    '0     3      0         0         0          0:00.0',
+    '1     6      0         0         0.5        0:00.0',
+    '2     9      0         0         0.333      0:00.0',
+    '3     12     0         0         0.5        0:00.0',
+    'Initial phase completed.',
+    '10    30     0.1       0.1       0.2        0:00.0',
+    'Halting: Maximum number of iterations (10) reached.',
+]
 
-LOG_FILE = (
-    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s\n'
-    '0     3      0         0         0          0:00.0\n'
-    '1     6      0         0         0.5        0:00.0\n'
-    '2     9      0         0         0.333      0:00.0\n'
-    '3     12     0         0         0.5        0:00.0\n'
-    '10    30     0.1       0         0.2        0:00.0\n'
-)
+LOG_FILE = [
+    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
+    '0     3      0         0         0          0:00.0',
+    '1     6      0         0         0.5        0:00.0',
+    '2     9      0         0         0.333      0:00.0',
+    '3     12     0         0         0.5        0:00.0',
+    '10    30     0.1       0.1       0.2        0:00.0',
+]
 
 
 class TestMCMCSampling(unittest.TestCase):
@@ -319,6 +320,7 @@ class TestMCMCSampling(unittest.TestCase):
         # No output
         with StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc.set_initial_phase_iterations(5)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(False)
             mcmc.set_log_to_file(False)
@@ -329,11 +331,16 @@ class TestMCMCSampling(unittest.TestCase):
         np.random.seed(1)
         with StreamCapture() as capture:
             mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc.set_initial_phase_iterations(5)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(True)
             mcmc.set_log_to_file(False)
             mcmc.run()
-        self.assertEqual(capture.text(), LOG_SCREEN)
+        lines = capture.text().splitlines()
+        for i, line in enumerate(lines):
+            self.assertLess(i, len(LOG_SCREEN))
+            self.assertEqual(line, LOG_SCREEN[i])
+        self.assertEqual(len(lines), len(LOG_SCREEN))
 
         # With output to file
         np.random.seed(1)
@@ -341,13 +348,17 @@ class TestMCMCSampling(unittest.TestCase):
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
                 mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+                mcmc.set_initial_phase_iterations(5)
                 mcmc.set_max_iterations(10)
                 mcmc.set_log_to_screen(False)
                 mcmc.set_log_to_file(filename)
                 mcmc.run()
                 with open(filename, 'r') as f:
-                    self.assertEqual(f.read(), LOG_FILE)
-                    pass
+                    lines = f.read().splitlines()
+                for i, line in enumerate(lines):
+                    self.assertLess(i, len(LOG_FILE))
+                    self.assertEqual(line, LOG_FILE[i])
+                self.assertEqual(len(lines), len(LOG_FILE))
             self.assertEqual(capture.text(), '')
 
         # Invalid log rate
