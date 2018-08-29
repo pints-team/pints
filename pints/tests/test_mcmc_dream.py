@@ -115,14 +115,6 @@ class TestDreamMCMC(unittest.TestCase):
         self.assertEqual(chains.shape[1], len(xs))
         self.assertEqual(chains.shape[2], len(xs[0]))
 
-        # Test getting/setting b
-        b = mcmc.b()
-        self.assertEqual(mcmc.b(), b)
-        b += 0.01
-        self.assertNotEqual(mcmc.b(), b)
-        mcmc.set_b(b)
-        self.assertEqual(mcmc.b(), b)
-
     def test_flow(self):
 
         # Test we have at least 3 chains
@@ -172,6 +164,16 @@ class TestDreamMCMC(unittest.TestCase):
         mcmc = pints.DreamMCMC(n, x0)
 
         self.assertEqual(mcmc.n_hyper_parameters(), 8)
+
+        # Test getting/setting b
+        b = mcmc.b()
+        self.assertEqual(mcmc.b(), b)
+        b += 0.01
+        self.assertNotEqual(mcmc.b(), b)
+        mcmc.set_b(b)
+        self.assertEqual(mcmc.b(), b)
+        mcmc.set_b(0)
+        self.assertRaises(ValueError, mcmc.set_b, -1)
 
         # B star
         x = mcmc.b_star() + 1

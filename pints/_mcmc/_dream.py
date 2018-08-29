@@ -368,7 +368,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_b(self, b):
         """
         Sets the normal scale coefficient used in updating the position of each
-        chain.
+        chain (must be non-negative).
         """
         if b < 0:
             raise ValueError('normal scale coefficient must be non-negative.')
