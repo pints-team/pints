@@ -200,7 +200,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         self._running = True
 
     def in_initial_phase(self):
-        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
+        """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
         return self._initial_phase
 
     def _log_init(self, logger):
