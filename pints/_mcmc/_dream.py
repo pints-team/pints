@@ -310,11 +310,34 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         return self._b
 
+    def b_star(self, b_star):
+        """
+        Returns b*, which determines the weight given to other chains'
+        positions in determining new positions (see :meth:`set_b_star()`).
+        """
+        if b_star < 0:
+            raise ValueError('b* must be non-negative.')
+        self._b_star = b_star
+
     def constant_crossover(self):
         """
         Returns ``True`` if constant crossover mode is enabled.
         """
         return self._constant_crossover
+
+    def CR(self, CR):
+        """
+        Returns the probability of crossover occurring if constant crossover
+        mode is enabled (see :meth:`set_CR()`).
+        """
+        return self._CR
+
+    def delta_max(self, delta_max):
+        """
+        Returns the maximum number of other chains' positions to use to
+        determine the next sampler position (see :meth:`set_delta_max()`).
+        """
+        return self._delta_max
 
     def _draw(self, i):
         """
@@ -328,6 +351,20 @@ class DreamMCMC(pints.MultiChainMCMC):
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 8
+
+    def nCR(self, nCR):
+        """
+        Returns the size of the discrete crossover probability distribution
+        (only used if constant crossover mode is disabled), see
+        :meth:`set_nCR()`.
+        """
+        return self._nCR
+
+    def p_g(self):
+        """
+        Returns ``p_g``. See :meth:`set_p_g()`.
+        """
+        return self._p_g
 
     def set_b(self, b):
         """
@@ -346,8 +383,8 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_b_star(self, b_star):
         """
-        Sets b* which determines the weight given to
-        other chains' positions in determining new positions
+        Sets b*, which determines the weight given to other chains' positions
+        in determining new positions.
         """
         if b_star < 0:
             raise ValueError('b* must be non-negative.')
@@ -355,34 +392,31 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_p_g(self, p_g):
         """
-        Sets p_g which is the probability of
-        choosing a higher gamma versus regular (a higher gamma
-        means that other chains are given more weight)
+        Sets ``p_g`` which is the probability of choosing a higher ``gamma``
+        versus regular (a higher ``gamma`` means that other chains are given
+        more weight).
         """
-        if p_g < 0:
-            raise ValueError('p_g must be non-negative.')
-        if p_g > 1:
-            raise ValueError('p_g must be 1 or less.')
+        if p_g < 0 or p_g > 1:
+            raise ValueError('p_g must be in the range [0, 1].')
         self._p_g = p_g
 
     def set_delta_max(self, delta_max):
         """
-        Sets the maximum number of other chains' positions
-        to use to determine next sampler position
+        Sets the maximum number of other chains' positions to use to determine
+        the next sampler position.
         """
-        if not isinstance(delta_max, int):
-            raise ValueError('delta_max must be an integer.')
+        delta_max = int(delta_max)
+        if delta_max > (self._chains - 2):
+            raise ValueError(
+                'delta_max must be less than available other chains.')
         if delta_max < 1:
             raise ValueError('delta_max must be at least 1.')
-        if delta_max > (self._chains - 2):
-            raise ValueError('delta_max must be less than available ' +
-                             'other chains.')
         self._delta_max = delta_max
 
     def set_CR(self, CR):
         """
-        Sets the probability of crossover occurring in the
-        constant crossover probability case.
+        Sets the probability of crossover occurring if constant crossover mode
+        is enabled.
         """
         if CR < 0 or CR > 1:
             raise ValueError('CR is a probability and so must be in [0,1].')
@@ -390,20 +424,21 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_nCR(self, nCR):
         """
-        Sets the size of the discrete crossover probability
-        distribution.
+        Sets the size of the discrete crossover probability distribution (only
+        used if constant crossover mode is disabled).
         """
         if nCR < 2:
-            raise ValueError('Length of discrete crossover distribution ' +
-                             'must exceed 1.')
+            raise ValueError(
+                'Length of discrete crossover distribution must exceed 1.')
         if not isinstance(nCR, int):
-            raise ValueError('Length of discrete crossover distribution ' +
-                             'must be a integer.')
+            raise ValueError(
+                'Length of discrete crossover distribution must be a integer.')
         self._nCR = nCR
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[b]``.
+        The hyper-parameter vector is ``[b, b_star, p_g, delta_max,
+        initial_phase, constant_crossover, CR, nCR]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
