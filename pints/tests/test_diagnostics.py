@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Tests the basic methods of diagnostics.
 #
@@ -21,11 +21,11 @@ class TestDiagnostics(unittest.TestCase):
         # Tests that autocorrelation measure is correct
         x = np.array([1, 2, 3, 4, -1, -1])
         y = pints._diagnostics.autocorrelation(x)
-        y_true = np.array([1., 0.21354167, -0.41666667, -0.296875, -0.03645833,
-                           0.03645833])
+        y_true = np.array(
+            [1., 0.21354167, -0.41666667, -0.296875, -0.03645833, 0.03645833])
 
         for i in range(0, len(x)):
-            self.assertTrue(np.abs(y[i] - y_true[i]) < 0.01)
+            self.assertAlmostEqual(y[i], y_true[i])
 
     def test_autocorrelation_negative(self):
         # Tests autocorrelation_negative yields the correct result
@@ -33,11 +33,11 @@ class TestDiagnostics(unittest.TestCase):
 
         # Test for case where there is a negative element
         x = np.array([1, 2, 3, 4, -1, -1])
-        self.assertTrue(pints._diagnostics.autocorrelate_negative(x) == 4)
+        self.assertEqual(pints._diagnostics.autocorrelate_negative(x), 4)
 
         # Test for case with no negative elements
         x = np.array([1, 2, 3, 4, 1, 1])
-        self.assertTrue(pints._diagnostics.autocorrelate_negative(x) == 7)
+        self.assertEqual(pints._diagnostics.autocorrelate_negative(x), 7)
 
     def test_ess_single_param(self):
         # Tests that ESS for a single parameter is correct
@@ -45,12 +45,12 @@ class TestDiagnostics(unittest.TestCase):
         # For case with negative elements in x
         x = np.array([1, 2, 3, 4, -1, -1])
         y = pints._diagnostics.ess_single_param(x)
-        self.assertTrue(np.abs(y - 1.75076) < 0.01)
+        self.assertAlmostEqual(y, 1.75076, 5)
 
         # Case with positive elements only in x
         x = np.array([1, 2, 3, 4, 1, 1])
-        self.assertTrue(np.abs(pints._diagnostics.ess_single_param(x) -
-                               1.846154) < 0.01)
+        self.assertAlmostEqual(
+            pints._diagnostics.ess_single_param(x), 1.846154, 6)
 
     def test_effective_sample_size(self):
         # Tests ess for a matrix of parameters
@@ -59,8 +59,8 @@ class TestDiagnostics(unittest.TestCase):
         x = np.transpose(np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                                    [1.0, 2.0, 3.0, 4.0, 5.0]]))
         y = pints._diagnostics.effective_sample_size(x)
-        self.assertTrue(np.abs(y[0] - 1.439232) < 0.01)
-        self.assertTrue(np.abs(y[1] - 1.315789) < 0.01)
+        self.assertAlmostEqual(y[0], 1.439232, 6)
+        self.assertAlmostEqual(y[1], 1.315789, 6)
 
     def test_within(self):
         # Tests within chain variance calculation
@@ -68,7 +68,7 @@ class TestDiagnostics(unittest.TestCase):
         # matrix with two columns of samples
         x = np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                       [1.0, 2.0, 3.0, 4.0, 5.0]])
-        self.assertTrue(np.abs(pints._diagnostics.within(x) - 1.2635) < 0.01)
+        self.assertAlmostEqual(pints._diagnostics.within(x), 1.2635, 5)
 
     def test_between(self):
         # Tests between chain variance calculation
@@ -76,28 +76,28 @@ class TestDiagnostics(unittest.TestCase):
         # matrix with two columns of samples
         x = np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                       [1.0, 2.0, 3.0, 4.0, 5.0]])
-        self.assertTrue(np.abs(pints._diagnostics.between(x) - 7.921) < 0.01)
+        self.assertAlmostEqual(pints._diagnostics.between(x), 7.921, 4)
 
     def test_reorder(self):
         # Tests that reorder function reshapes correctly
 
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
         y = np.array(pints._diagnostics.reorder(0, test))
-        self.assertTrue(y.shape == (4, 10))
+        self.assertEqual(y.shape, (4, 10))
 
     def test_reorder_all(self):
         # Tests that reorder_all function reshapes correctly
 
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
         y = np.array(pints._diagnostics.reorder_all_params(test))
-        self.assertTrue(y.shape == (3, 4, 10))
+        self.assertEqual(y.shape, (3, 4, 10))
 
     def test_rhat(self):
         # Tests that rhat works
 
         x = np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                       [1.0, 2.0, 3.0, 4.0, 5.0]])
-        self.assertTrue(np.abs(pints._diagnostics.rhat(x) - 1.433115) < 0.01)
+        self.assertAlmostEqual(pints._diagnostics.rhat(x), 1.433115, 6)
 
     def test_rhat_all_params(self):
         # Tests that rhat_all works
@@ -117,7 +117,7 @@ class TestDiagnostics(unittest.TestCase):
 
         y = pints._diagnostics.rhat_all_params(x)
         d = np.array(y) - np.array([1.0246953961614296, 1.3219816558533388])
-        self.assertTrue(np.linalg.norm(d) < 0.01)
+        self.assertLess(np.linalg.norm(d), 0.01)
 
 
 if __name__ == '__main__':
