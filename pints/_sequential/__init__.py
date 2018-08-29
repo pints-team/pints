@@ -15,20 +15,21 @@ from scipy import stats
 
 class SMCSampler(object):
     """
-    Takes a :class:`LogPosterior` function and returns a SMC sampler.
+    Abstract base class for sequential Monte Carlo samplers.
 
     Arguments:
 
     ``log_posterior``
-        A :class:`LogPosterior` function that evaluates points in the
-        parameter space.
+        A :class:`LogPosterior` function that evaluates points in the parameter
+        space.
 
     """
     def __init__(self, log_posterior, x0, sigma0=None, log_prior=None):
 
         # Store log_likelihood and log_prior
         if not isinstance(log_posterior, pints.LogPDF):
-            raise ValueError('Given posterior function must extend pints.LogPDF')
+            raise ValueError(
+                'Given posterior function must extend pints.LogPDF')
         self._log_posterior = log_posterior
 
         # Check initial position
@@ -57,34 +58,23 @@ class SMCSampler(object):
 
         # Get dimension
         self._dimension = self._log_posterior.n_parameters()
-        
+
         if log_prior is None:
-          self._log_prior = lambda x: stats.multivariate_normal.logpdf(x, mean=self._x0, cov=self._sigma0)
+            norm = stats.multivariate_normal(mean=self._x0, cov=self._sigma0)
+            self._log_prior = norm.logpdf
         else:
-          if not isinstance(log_prior, pints.LogPDF):
-            raise ValueError('Given prior function must extend pints.LogPDF')
-          self._log_prior = log_prior
+            if not isinstance(log_prior, pints.LogPDF):
+                raise ValueError(
+                    'Given prior function must extend pints.LogPDF')
+            self._log_prior = log_prior
 
         # Print info to console
         self._verbose = True
 
     def run(self):
         """
-        Runs the SMC sampling routine and returns a tuple of the
-        posterior samples.
+        Runs the SMC sampling routine and returns a tuple of the posterior
+        samples.
         """
         raise NotImplementedError
 
-    def set_verbose(self, value):
-        """
-        Enables or disables verbose mode for this nested sampling routine. In
-        verbose mode, lots of output is generated during a run.
-        """
-        self._verbose = bool(value)
-
-    def verbose(self):
-        """
-        Returns ``True`` if the nested sampling routine is set to run in
-        verbose mode.
-        """
-        return self._verbose
