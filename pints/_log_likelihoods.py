@@ -380,7 +380,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
         # Pre-calculate
         self._n = len(self._times)
-        self._n_pi = self._n * np.pi
+        self._n_log_pi = self._n * np.log(np.pi)
 
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as
@@ -398,7 +398,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate
         return np.sum(
-            - self._n_pi
+            - self._n_log_pi
             - n * np.log(sigma)
             - np.sum(np.log(1 + (error / sigma)**2), axis=0)
         )
