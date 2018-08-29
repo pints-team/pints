@@ -61,7 +61,7 @@ def effective_sample_size(sample):
 
 def within(samples):
     """
-    Calculates within chain variance
+    Calculates within-chain variance
     """
     mu = list(map(lambda x: np.var(x), samples))
     W = np.mean(mu)
@@ -70,7 +70,7 @@ def within(samples):
 
 def between(samples):
     """
-    Calculates between chain variance
+    Calculates between-chain variance
     """
     mu = list(map(lambda x: np.mean(x), samples))
     mu_overall = np.mean(mu)
@@ -112,7 +112,8 @@ def rhat(samples):
 
 def rhat_all_params(chains):
     """
-    Calculates r-hat for all parameters in chains
+    Calculates r-hat for all parameters in chains as per
+    "Bayesian data analysis", 3rd edition, Gelman et al., 2014
     """
     samples_all = reorder_all_params(chains)
     rhat_all = list(map(lambda x: rhat(x), samples_all))
