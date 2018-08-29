@@ -10,6 +10,12 @@
 import pints
 import unittest
 
+# Strings in Python 2 and 3
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 class TestTimer(unittest.TestCase):
     """
@@ -58,7 +64,7 @@ class TestTimer(unittest.TestCase):
             '2 weeks, 0 days, 3 hours, 1 minute, 4 seconds')
 
         # Test without argument
-        self.assertIsInstance(t.format(), str)
+        self.assertIsInstance(t.format(), basestring)
 
 
 if __name__ == '__main__':
