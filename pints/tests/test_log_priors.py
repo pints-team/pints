@@ -364,7 +364,7 @@ class TestPrior(unittest.TestCase):
         # Test two specific function values
         p1 = pints.CauchyLogPrior(0, 10)
         self.assertEqual(p1([0]), -3.447314978843446)
-        p2 = pints.StudentTLogPrior(10, 5)
+        p2 = pints.CauchyLogPrior(10, 5)
         self.assertEqual(p2([10]), -2.7541677982835)
 
         # Test exceptions
@@ -386,9 +386,9 @@ class TestPrior(unittest.TestCase):
         # Test two specific function values
         p1 = pints.HalfCauchyLogPrior(0, 10)
         self.assertEqual(p1([0]), -float('Inf'))
-        self.assertEqual(p1([10]), -3.447314978843446)
+        self.assertAlmostEqual(p1([10]), -3.447314978843445)
         p2 = pints.HalfCauchyLogPrior(10, 5)
-        self.assertEqual(p2([10]), -2.594487638427916)
+        self.assertAlmostEqual(p2([10]), -2.594487638427916)
 
         # Test exceptions
         self.assertRaises(ValueError, pints.HalfCauchyLogPrior, 0, 0)
