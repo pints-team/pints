@@ -403,11 +403,10 @@ class TestPrior(unittest.TestCase):
         # because they have no mean or variance!
         p1 = pints.HalfCauchyLogPrior(0, 1000)
         self.assertEqual(len(p1.sample()), 1)
-        n = 100
+        n = 1000
         v_samples = p1.sample(n)
         self.assertEqual(len(v_samples), n)
-        for i in range(0, 100):
-            self.assertTrue(v_samples[i] > 0)
+        self.assertTrue(np.all(v_samples > 0))
 
 
 if __name__ == '__main__':

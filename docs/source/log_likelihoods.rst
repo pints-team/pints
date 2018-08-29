@@ -13,6 +13,8 @@ Example::
     x = [1, 2, 3]
     fx = loglikelihood(x)
 
+.. autoclass:: CauchyLogLikelihood
+
 .. autoclass:: KnownNoiseLogLikelihood
 
 .. autoclass:: ScaledLogLikelihood
