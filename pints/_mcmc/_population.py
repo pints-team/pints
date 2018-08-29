@@ -179,7 +179,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
             # Set a temperature schedule that is uniform on log(T)
             a_max = 0
             a_min = np.log(0.0001)
-            self._schedule = np.linspace(0.05, 1, schedule)
+            a = np.linspace(0.05, 1, 10)
+            self._schedule = a[::-1]
             # self._schedule = np.exp(log_schedule)
             self._schedule.setflags(write=False)
 
