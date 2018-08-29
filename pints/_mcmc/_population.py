@@ -160,14 +160,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         Sets a temperature schedule.
 
         If ``schedule`` is an ``int`` it is interpreted as the number of
-        temperatures and a schedule is generated accordingly.
+        temperatures and a schedule is generated that is uniformly spaced
+        on the log scale.
 
         If ``schedule`` is a list (or array) it is interpreted as a custom
         temperature schedule.
         """
-        if self._running:
-            raise RuntimeError(
-                'Temperature schedule cannot be changed during run.')
 
         # Check type of schedule argument
         if np.isscalar(schedule):
@@ -177,7 +175,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
             if schedule < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            self._schedule = np.linspace(0, 0.95, schedule)
+
+            # Set a temperature schedule that is uniform on log(T)
+            a_max = 0
+            a_min = np.log(0.0001)
+            log_schedule = np.linspace(a_min, a_max, schedule)
+            self._schedule = np.exp(log_schedule)
             self._schedule.setflags(write=False)
 
         else:
@@ -233,7 +236,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform mutation step (update one chain)
 
         # Update chain, get new sample
-        sample = self._chains[self._i].tell(fx * (1 - self._schedule[self._i]))
+        sample = self._chains[self._i].tell(fx * self._schedule[self._i])
 
         # Update current sample and untempered log pdf
         if np.any(sample != self._current[self._i]):
@@ -246,12 +249,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform exchange step
 
         # Calculate current tempered likelihoods
-        pii = (1 - self._schedule[self._i]) * self._current_log_pdf[self._i]
-        pjj = (1 - self._schedule[self._j]) * self._current_log_pdf[self._j]
+        pii = self._schedule[self._i] * self._current_log_pdf[self._i]
+        pjj = self._schedule[self._j] * self._current_log_pdf[self._j]
 
         # Calculate proposed log likelihoods
-        pij = (1 - self._schedule[self._i]) * self._current_log_pdf[self._j]
-        pji = (1 - self._schedule[self._j]) * self._current_log_pdf[self._i]
+        pij = self._schedule[self._i] * self._current_log_pdf[self._j]
+        pji = self._schedule[self._j] * self._current_log_pdf[self._i]
 
         # Accept/reject exchange step
         self._have_exchanged = False
