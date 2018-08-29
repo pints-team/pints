@@ -233,7 +233,7 @@ class TestLogLikelihood(unittest.TestCase):
         model.simulate(parameters, times)
         values = np.asarray([1.0, -10.7, 15.5])
         problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.Cauchy(problem)
+        log_likelihood = pints.CauchyLogLikelihood(problem)
         # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
         self.assertAlmostEqual(log_likelihood([0, 3, 10]), -12.3394986541736)
 
