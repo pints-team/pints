@@ -12,6 +12,12 @@ import pints
 import numpy as np
 import pints._diagnostics
 
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestDiagnostics(unittest.TestCase):
     """
@@ -61,6 +67,12 @@ class TestDiagnostics(unittest.TestCase):
         y = pints._diagnostics.effective_sample_size(x)
         self.assertAlmostEqual(y[0], 1.439232, 6)
         self.assertAlmostEqual(y[1], 1.315789, 6)
+
+        # Bad calls
+        self.assertRaisesRegex(
+            ValueError, '2d array', pints.effective_sample_size, x[0])
+        self.assertRaisesRegex(
+            ValueError, 'At least two', pints.effective_sample_size, x[:1])
 
     def test_within(self):
         # Tests within chain variance calculation
