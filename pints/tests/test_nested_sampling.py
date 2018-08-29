@@ -111,21 +111,21 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler = pints.NestedRejectionSampler(
                 self.log_likelihood, self.log_prior)
             sampler.set_posterior_samples(2)
-            sampler.set_iterations(10)
+            sampler.set_iterations(20)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(len(lines), 10)
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
-        self.assertEqual(lines[2], 'Total number of iterations: 10')
+        self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Total number of posterior samples: 2')
         self.assertEqual(lines[4], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
+        self.assertEqual(len(lines), 11)
 
         # Log to file
         with StreamCapture() as c:
@@ -304,22 +304,22 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                 self.log_likelihood, self.log_prior)
             sampler.set_posterior_samples(2)
             sampler.set_rejection_samples(5)
-            sampler.set_iterations(10)
+            sampler.set_iterations(20)
             sampler.set_active_points_rate(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(len(lines), 11)
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
-        self.assertEqual(lines[2], 'Total number of iterations: 10')
+        self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Enlargement factor: 1.5')
         self.assertEqual(lines[4], 'Total number of posterior samples: 2')
         self.assertEqual(lines[5], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[6:]:
             self.assertTrue(pattern.match(line))
+        self.assertEqual(len(lines), 12)
 
         # Log to file
         with StreamCapture() as c:

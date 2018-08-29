@@ -126,7 +126,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # Set up progress reporting
         next_message = 0
         message_warm_up = 3
-        message_interval = 50
+        message_interval = 20
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
