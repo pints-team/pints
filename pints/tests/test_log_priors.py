@@ -360,6 +360,55 @@ class TestPrior(unittest.TestCase):
         samples4 = p4.sample(n)
         self.assertGreater(np.mean(samples4), np.mean(samples1))
 
+    def test_cauchy_prior(self):
+        # Test two specific function values
+        p1 = pints.CauchyLogPrior(0, 10)
+        self.assertEqual(p1([0]), -3.447314978843446)
+        p2 = pints.StudentTLogPrior(10, 5)
+        self.assertEqual(p2([10]), -2.7541677982835)
+
+        # Test exceptions
+        self.assertRaises(ValueError, pints.CauchyLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.CauchyLogPrior, 10, -1)
+
+        # Test other function calls
+        self.assertEqual(p1.n_parameters(), 1)
+        self.assertEqual(p2.n_parameters(), 1)
+
+    def test_cauchy_prior_sampling(self):
+        # Aren't many tests for Cauchy distributions
+        # because they have no mean or variance!
+        p1 = pints.CauchyLogPrior(0, 1000)
+        self.assertEqual(len(p1.sample()), 1)
+        self.assertEqual(len(p1.sample(100)), 100)
+
+    def test_half_cauchy_prior(self):
+        # Test two specific function values
+        p1 = pints.HalfCauchyLogPrior(0, 10)
+        self.assertEqual(p1([0]), -float('Inf'))
+        self.assertEqual(p1([10]), -3.447314978843446)
+        p2 = pints.HalfCauchyLogPrior(10, 5)
+        self.assertEqual(p2([10]), -2.594487638427916)
+
+        # Test exceptions
+        self.assertRaises(ValueError, pints.HalfCauchyLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.HalfCauchyLogPrior, 10, -1)
+
+        # Test other function calls
+        self.assertEqual(p1.n_parameters(), 1)
+        self.assertEqual(p2.n_parameters(), 1)
+
+    def test_half_cauchy_prior_sampling(self):
+        # Aren't many tests for Cauchy distributions
+        # because they have no mean or variance!
+        p1 = pints.HalfCauchyLogPrior(0, 1000)
+        self.assertEqual(len(p1.sample()), 1)
+        n = 100
+        v_samples = p1.sample(n)
+        self.assertEqual(len(v_samples), n)
+        for i in range(0, 100):
+            self.assertTrue(v_samples[i] > 0)
+
 
 if __name__ == '__main__':
     unittest.main()

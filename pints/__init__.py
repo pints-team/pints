@@ -71,6 +71,8 @@ from ._log_priors import (
     NormalLogPrior,
     UniformLogPrior,
     StudentTLogPrior,
+    CauchyLogPrior,
+    HalfCauchyLogPrior,
 )
 
 #
