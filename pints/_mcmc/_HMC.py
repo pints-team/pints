@@ -135,9 +135,6 @@ class HMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._proposed = self._x0
 
-        # Set initial mu and sigma
-        self._mu = np.array(self._x0, copy=True)
-        self._sigma = np.array(self._sigma0, copy=True)
 
         # Acceptance rate monitoring
         self._iterations = 0
@@ -177,6 +174,10 @@ class HMC(pints.SingleChainMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Hamiltonian Monte Carlo'
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
 
     def set_epsilon(self, epsilon):
         """

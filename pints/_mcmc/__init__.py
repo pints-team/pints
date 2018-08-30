@@ -51,6 +51,13 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated logpdf.
+        """
+        return False
+
 
 class SingleChainMCMC(MCMCSampler):
     """
@@ -96,15 +103,20 @@ class SingleChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a position in the search space to evaluate.
+        Returns a parameter vector to evaluate the logpdf for.
         """
         raise NotImplementedError
 
     def tell(self, fx):
         """
-        Performs an iteration of the MCMC algorithm, using the evaluation
-        ``fx`` of the point previously specified by ``ask``. Returns the next
-        sample in the chain.
+        Performs an iteration of the MCMC algorithm, using the logpdf
+        evaluation ``fx`` of the point previously specified by ``ask``. Returns
+        the next sample in the chain.
+
+        For methods that require sensitivities (see
+        :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
+        ``(log_pdf, sensitivities)``, containing the values returned by
+        :meth:`pints.LogPdf.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -184,7 +196,7 @@ class MultiChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a sequence of positions in the search space to evaluate.
+        Returns a sequence of parameter vectors to evaluate a LogPDF for.
         """
         raise NotImplementedError
 
@@ -295,6 +307,15 @@ class MCMCSampling(object):
             self._n_samplers = 1
             self._samplers = [method(self._chains, x0, sigma0)]
 
+        # Check if sensitivities are required
+        self._needs_sensitivities = self._samplers[0].needs_sensitivities()
+
+        # Initial phase (needed for e.g. adaptive covariance)
+        self._initial_phase_iterations = 0
+        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
+        if self._needs_initial_phase:
+            self.set_initial_phase_iterations()
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -305,12 +326,6 @@ class MCMCSampling(object):
         self._parallel = False
         self._n_workers = 1
         self.set_parallel()
-
-        # Initial phase (needed for e.g. adaptive covariance)
-        self._initial_phase_iterations = 0
-        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
-        if self._needs_initial_phase:
-            self.set_initial_phase_iterations()
 
         #
         # Stopping criteria
@@ -369,14 +384,18 @@ class MCMCSampling(object):
         iteration = 0
         evaluations = 0
 
+        # Choose method to evaluate
+        f = self._log_pdf
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+
         # Create evaluator object
         if self._parallel:
             # Use at most n_workers workers
             n_workers = min(self._n_workers, self._chains)
-            evaluator = pints.ParallelEvaluator(
-                self._log_pdf, n_workers=n_workers)
+            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._log_pdf)
+            evaluator = pints.SequentialEvaluator(f)
 
         # Initial phase
         if self._needs_initial_phase:
@@ -416,8 +435,6 @@ class MCMCSampling(object):
 
         # Create chains
         # TODO Pre-allocate?
-        # TODO Thinning
-        # TODO Advanced logging
         chains = []
 
         # Start sampling
