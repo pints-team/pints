@@ -99,9 +99,10 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     For a noise level of ``sigma``, the likelihood becomes:
 
     .. math::
-        L(\\theta, \sigma|\boldsymbol{x}) = p(\boldsymbol{x} | \\theta, \sigma) =
-            \prod_{j=1}^{n_t} \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
-            -\\frac{(x_j - f_j(\\theta))^2}{2\sigma^2}\\right)
+        L(\\theta, \sigma|\boldsymbol{x})
+            = p(\boldsymbol{x} | \\theta, \sigma)
+            = \prod_{j=1}^{n_t} \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
+                -\\frac{(x_j - f_j(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of:
 
