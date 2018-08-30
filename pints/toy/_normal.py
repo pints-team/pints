@@ -8,10 +8,11 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+
 import pints
 import numpy as np
 import scipy.stats
-import numpy.linalg
+
 
 class NormalLogPDF(pints.LogPDF):
     """
@@ -112,12 +113,11 @@ class NormalLogPDF(pints.LogPDF):
         """ See :meth:`LogPDF.evaluateS1()`.
         """
         L = self.__call__(x)
-        
+
         self._sigma_inv = np.linalg.inv(self._sigma)
         self._x_minus_mu = x - self._mean
-        
+
         # derivative wrt x
         dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
         return L, dL
-        
-        
+
