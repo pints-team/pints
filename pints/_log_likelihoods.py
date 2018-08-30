@@ -107,7 +107,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     leading to a log likelihood of:
 
     .. math::
-        \log{L(\\theta, \sigma)|\\boldsymbol{x}} =
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{n_t}{2} \log{2\pi}
             -n_t \log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
@@ -118,7 +118,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     For a system with ``n_o`` outputs, this becomes
 
     .. math::
-        \log{L(\\theta, \sigma)|\\boldsymbol{x}} =
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{n_t n_o}{2}\log{2\pi}
             -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
             -\sum_{i=1}^{n_o}{\\left[
