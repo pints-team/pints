@@ -20,7 +20,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     of that noise:
 
     .. math::
-        \log{L(\\theta, \sigma|\boldsymbol{x})} =
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
@@ -99,15 +99,15 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     For a noise level of ``sigma``, the likelihood becomes:
 
     .. math::
-        L(\\theta, \sigma|\boldsymbol{x})
-            = p(\boldsymbol{x} | \\theta, \sigma)
+        L(\\theta, \sigma|\\boldsymbol{x})
+            = p(\\boldsymbol{x} | \\theta, \sigma)
             = \prod_{j=1}^{n_t} \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
                 -\\frac{(x_j - f_j(\\theta))^2}{2\sigma^2}\\right)
 
     leading to a log likelihood of:
 
     .. math::
-        \log{L(\\theta, \sigma)|\boldsymbol{x}} =
+        \log{L(\\theta, \sigma)|\\boldsymbol{x}} =
             -\\frac{n_t}{2} \log{2\pi}
             -n_t \log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
@@ -118,7 +118,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     For a system with ``n_o`` outputs, this becomes
 
     .. math::
-        \log{L(\\theta, \sigma)|\boldsymbol{x}} =
+        \log{L(\\theta, \sigma)|\\boldsymbol{x}} =
             -\\frac{n_t n_o}{2}\log{2\pi}
             -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
             -\sum_{i=1}^{n_o}{\\left[
@@ -164,7 +164,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     the form:
 
     .. math::
-        \log{L(\\theta, \\nu, \sigma|\boldsymbol{x})} =
+        \log{L(\\theta, \\nu, \sigma|\\boldsymbol{x})} =
             N\\frac{\\nu}{2}\log(\\nu) - N\log(\sigma) -
             N\log B(\\nu/2, 1/2)
             -\\frac{1+\\nu}{2}\sum_{i=1}^N\log(\\nu +
