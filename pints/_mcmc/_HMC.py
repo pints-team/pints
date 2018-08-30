@@ -61,14 +61,19 @@ class HMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._proposed = None
 
+        # Iterations, acceptance monitoring, and leapfrog iterations
+        self._iterations = 0
+        self._acceptance = 0
+        self._leapfrog_iteration = -1
+
         # Default scale for momentum proposals
         self._momentum_sigma = np.identity(self._dimension)
 
         # Default integration step size for leapfrog algorithm
         self._epsilon = 0.2
 
-        # Default number of steps to integrate over
-        self._L = 20
+        # Default number of leapfrog steps
+        self._leapfrog_steps = 20
 
         # Default masses
         self._mass = np.ones(self._dimension)
@@ -84,35 +89,44 @@ class HMC(pints.SingleChainMCMC):
             self._initialise()
 
         # Propose new point
-        if self._proposed is None:
-            # Sample initial momentum
-            q = self._current
-            p = np.random.multivariate_normal(
-                np.zeros(self._dimension), self._momentum_sigma)
-            self._current_p = p
+        if self._proposed is None:  #TODO Change to _asked_point or something
 
-            # Leapfrog algorithm
-            p = p - self._epsilon * grad_U(q) / 2
+            if self._leapfrog_iteration < 0:
+                # Sample initial momentum
+                q = self._current
+                p = np.random.multivariate_normal(
+                    np.zeros(self._dimension), self._momentum_sigma)
+                self._current_p = p
 
-            for i in range(0, self._L):
+                # Leapfrog algorithm
+                #TODO Move to tell
+                p = p - self._epsilon * grad_U(q) / 2
+
+                #TODO Update leapfrog iteration in tell()
+
+            elif self._leapfrog_iteration < self._leapfrog_steps:
+
                 # Make a full step for the position
                 q = q + self._epsilon * p
 
                 # Make a full step for the momentum, except at end of
                 # trajectory
-                if(i != self._L):
+                if(i != self._leapfrog_steps):
+                    #TODO Move to tell
                     p = p - self._epsilon * grad_U(q)
 
-            self._proposed = q
-            # Make a half step for momentum at the end.
-            p = p - self._epsilon * grad_U(q) / 2
+            else:
+                #TODO Update this
+                self._proposed = q
+                # Make a half step for momentum at the end.
+                p = p - self._epsilon * grad_U(q) / 2
 
-            # Negate momentum at end of trajectory to make the proposal
-            # symmetric
-            self._proposed_p = -p
+                # Negate momentum at end of trajectory to make the proposal
+                # symmetric
+                self._proposed_p = -p
 
-            # Set as read-only
-            self._proposed.setflags(write=False)
+                # Set as read-only
+                self._proposed.setflags(write=False)
 
         # Return proposed point
         return self._proposed
@@ -135,7 +149,6 @@ class HMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._proposed = self._x0
 
-
         # Acceptance rate monitoring
         self._iterations = 0
         self._acceptance = 0
@@ -150,19 +163,21 @@ class HMC(pints.SingleChainMCMC):
         # Update sampler state
         self._running = True
 
-    def L(self):
+    def leapfrog_steps(self):
         """
         Returns the number of leapfrog steps to carry out for each iteration.
         """
-        return self._L
+        return self._leapfrog_steps
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Accept.')
+        #TODO Add leapfrog iteration
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
+        #TODO Add leapfrog iteration
 
     def momentum_sigma(self):
         """
@@ -188,15 +203,15 @@ class HMC(pints.SingleChainMCMC):
                 'Step size for leapfrog algorithm must be greater than zero.')
         self._epsilon = epsilon
 
-    def set_L(self, L):
+    def set_leapfrog_steps(self, steps):
         """
         Sets the number of leapfrog steps to carry out for each iteration.
         """
-        if not isinstance(L, int):
-            raise TypeError('Number of steps must be an integer')
-        if L < 1:
+        if not isinstance(steps, int):
+            raise TypeError('Number of steps must be an integer.')
+        if steps < 1:
             raise ValueError('Number of steps must exceed 0.')
-        self._L = L
+        self._leapfrog_steps = steps
 
     def set_momentum_sigma(self, momentum_sigma):
         """
@@ -244,17 +259,17 @@ class HMC(pints.SingleChainMCMC):
             # Return first point for chain
             return self._current
 
-        current_K = np.sum(self._current_p**2 / (2.0 * self._mass))
-        proposed_K = np.sum(self._proposed_p**2 / (2.0 * self._mass))
+        current_K = np.sum(self._current_p**2 / (2 * self._mass))
+        proposed_K = np.sum(self._proposed_p**2 / (2 * self._mass))
 
-        # Check for divergent iterations by testing whether the
-        # Hamiltonian difference is above a threshold
+        # Check for divergent iterations by testing whether the Hamiltonian
+        # difference is above a threshold
         test = fx + proposed_K - (self._current_log_pdf + current_K)
         if test > self._hamiltonian_threshold:
             self._divergent = np.append(self._divergent, self._iterations)
 
-        # Accept or reject the state at end of trajectory, returning either
-        # the position at the end of the trajectory or the initial position
+        # Accept or reject the state at end of trajectory, returning either the
+        # position at the end of the trajectory or the initial position
         r = np.exp(self._current_log_pdf - fx + current_K - proposed_K)
         if np.random.rand() < r:
             accepted = 1
@@ -263,10 +278,11 @@ class HMC(pints.SingleChainMCMC):
         else:
             accepted = 0
 
-        self._iterations += 1
         # Update acceptance rate (only used for output!)
+        self._iterations += 1
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
                             (self._iterations + 1))
 
+        # Return current position
         return self._current
 
