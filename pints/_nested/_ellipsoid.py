@@ -9,11 +9,11 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+
 import numpy as np
-import numpy.linalg as la
 from scipy.misc import logsumexp
-import math
+
+import pints
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
@@ -355,7 +355,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         only updated every ``N`` steps).
         """
         return self._reject_draw_from_ellipsoid(
-            la.inv((1 / enlargement_factor) * A), centroid, threshold)
+            np.linalg.inv((1 / enlargement_factor) * A), centroid, threshold)
 
     def _reject_draw_from_ellipsoid(self, A, centroid, threshold):
         """
@@ -366,7 +366,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
         log_likelihood = self._log_likelihood(proposed)
         self._n_evals += 1
-        while math.isnan(log_likelihood) or log_likelihood < threshold:
+        while np.isnan(log_likelihood) or log_likelihood < threshold:
             proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
             log_likelihood = self._log_likelihood(proposed)
             self._n_evals += 1
@@ -384,7 +384,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             ndims = 1
 
         # calculate eigen_values (e) and eigen_vectors (v)
-        eigen_values, eigen_vectors = la.eig(covmat)
+        eigen_values, eigen_vectors = np.linalg.eig(covmat)
         idx = (-eigen_values).argsort()[::-1][:ndims]
         e = eigen_values[idx]
         v = eigen_vectors[:, idx]
@@ -433,7 +433,7 @@ def _reject_ellipsoid_sample(
         A, centroid = _minimum_volume_ellipsoid(m_samples_previous)
         A = (1 / enlargement_factor) * A
         return _reject_draw_from_ellipsoid(
-            la.inv(A), centroid, log_likelihood, threshold)
+            np.linalg.inv(A), centroid, log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
         a_max = np.max(m_samples_previous)
