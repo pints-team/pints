@@ -13,6 +13,7 @@ import pints
 import numpy as np
 import numpy.linalg as la
 from scipy.misc import logsumexp
+import math
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
@@ -362,10 +363,12 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
         log_likelihood = self._log_likelihood(proposed)
         self._n_evals += 1
-        while log_likelihood < threshold:
+        while math.isnan(log_likelihood) or log_likelihood < threshold:
             proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
             log_likelihood = self._log_likelihood(proposed)
             self._n_evals += 1
+        print(proposed)
+        print(log_likelihood)
         return np.concatenate((proposed, np.array([log_likelihood])))
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
