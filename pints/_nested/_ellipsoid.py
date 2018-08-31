@@ -282,7 +282,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
-    def set_enlargement_factor(self, enlargement_factor=1.5):
+    def set_enlargement_factor(self, enlargement_factor=1.01):
         """
         Sets the factor (>1) by which to increase the minimal volume
         ellipsoidal in rejection sampling. A higher value means it is less
@@ -316,6 +316,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
     def _minimum_volume_ellipsoid(self, points, tol=0.0):
+        """
+        Finds an approximate minimum bounding ellipse in "center form":
+        ``(x-c).T * A * (x-c) = 1``.
+        """
         cov = np.cov(np.transpose(points))
         cov_inv = np.linalg.inv(cov)
         c = np.mean(points, axis=0)
@@ -324,8 +328,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv), points[i] - c)
         enlargement_factor = np.max(dist)
         A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
-        print(A)
-        print(c)
         return A, c
 
     def _reject_sample_prior(self, threshold):
@@ -367,8 +369,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
             log_likelihood = self._log_likelihood(proposed)
             self._n_evals += 1
-        print(proposed)
-        print(log_likelihood)
         return np.concatenate((proposed, np.array([log_likelihood])))
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
