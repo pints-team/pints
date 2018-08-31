@@ -110,8 +110,11 @@ class SingleChainMCMC(MCMCSampler):
     def tell(self, fx):
         """
         Performs an iteration of the MCMC algorithm, using the logpdf
-        evaluation ``fx`` of the point previously specified by ``ask``. Returns
-        the next sample in the chain.
+        evaluation ``fx`` of the point previously specified by ``ask``.
+
+        Returns either the next sample in the chain, or ``None`` to indicate
+        that no new sample should be added to the chain (this is used to
+        implement methods that require multiple evaluations per iteration).
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
@@ -203,8 +206,16 @@ class MultiChainMCMC(MCMCSampler):
     def tell(self, fxs):
         """
         Performs an iteration of the MCMC algorithm, using the evaluations
-        ``fxs`` of the points previously specified by ``ask``. Returns the next
-        samples in the chains.
+        ``fxs`` of the points previously specified by ``ask``.
+
+        Returns either the next sample in the chain, or ``None`` to indicate
+        that no new sample should be added to the chain (this is used to
+        implement methods that require multiple evaluations per iteration).
+
+        For methods that require sensitivities (see
+        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
+        ``(log_pdfs, sensitivities)``, containing the values returned by
+        :meth:`pints.LogPdf.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -458,16 +469,26 @@ class MCMCSampling(object):
             # Calculate scores
             fxs = evaluator.evaluate(xs)
 
-            # Perform iteration(s)
+            # Update chains
             if self._single_chain:
                 samples = np.array([
                     s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
             else:
                 samples = self._samplers[0].tell(fxs)
-            chains.append(samples)
+
+            # Add new samples to the chains
+            if samples is not None:
+                chains.append(samples)
 
             # Update evaluation count
             evaluations += len(fxs)
+
+            # If no new samples were added, then no MCMC iteration was
+            # performed, and so the iteration count shouldn't be updated,
+            # logging shouldn't be triggered, and stopping criteria shouldn't
+            # be checked
+            if samples is None:
+                continue
 
             # Show progress
             if logging and iteration >= next_message:
