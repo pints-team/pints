@@ -314,30 +314,17 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
-    def _minimum_volume_ellipsoid(self, points, tol=0.001):
-        """
-        Finds the ellipse equation in "center form":
-        ``(x-c).T * A * (x-c) = 1``.
-        """
-        N, d = points.shape
-        Q = np.column_stack((points, np.ones(N))).T
-        err = tol + 1
-        u = np.ones(N) / N
-        while err > tol:
-            # assert(u.sum() == 1) # invariant
-            X = np.dot(np.dot(Q, np.diag(u)), Q.T)
-            M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
-            jdx = np.argmax(M)
-            step_size = (M[jdx] - d - 1) / ((d + 1) * (M[jdx] - 1))
-            new_u = (1 - step_size) * u
-            new_u[jdx] += step_size
-            err = la.norm(new_u - u)
-            u = new_u
-        c = np.dot(u, points)
-        A = la.inv(
-            + np.dot(np.dot(points.T, np.diag(u)), points)
-            - np.multiply.outer(c, c)
-        ) / d
+    def _minimum_volume_ellipsoid(self, points, tol=0.0):
+        cov = np.cov(np.transpose(points))
+        cov_inv = np.linalg.inv(cov)
+        c = np.mean(points, axis=0)
+        dist = np.zeros(len(points))
+        for i in range(len(points)):
+            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv), points[i] - c)
+        enlargement_factor = np.max(dist)
+        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
+        print(A)
+        print(c)
         return A, c
 
     def _reject_sample_prior(self, threshold):
