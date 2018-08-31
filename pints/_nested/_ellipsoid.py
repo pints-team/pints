@@ -282,7 +282,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
-    def set_enlargement_factor(self, enlargement_factor=1.05):
+    def set_enlargement_factor(self, enlargement_factor=1.1):
         """
         Sets the factor (>1) by which to increase the minimal volume
         ellipsoidal in rejection sampling. A higher value means it is less
