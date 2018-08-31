@@ -63,9 +63,9 @@ class SMCSampler(object):
             norm = stats.multivariate_normal(mean=self._x0, cov=self._sigma0)
             self._log_prior = norm.logpdf
         else:
-            if not isinstance(log_prior, pints.LogPDF):
+            if not isinstance(log_prior, pints.LogPrior):
                 raise ValueError(
-                    'Given prior function must extend pints.LogPDF')
+                    'Given prior function must extend pints.LogPrior.')
             self._log_prior = log_prior
 
         # Print info to console

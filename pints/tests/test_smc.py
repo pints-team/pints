@@ -9,7 +9,7 @@
 #
 #import re
 import unittest
-#import numpy as np
+import numpy as np
 
 import pints
 import pints.toy
@@ -49,27 +49,45 @@ class TestSMC(unittest.TestCase):
         # Check output has desired shape
         self.assertEqual(samples.shape, (n, d))
 
-    '''
+        # Check creation with sigma vector
+        sigma0 = np.array([2, 2])
+        sampler = pints.SMC(self.log_pdf, self.x0, sigma0, self.log_prior)
+        sampler.set_temperature_schedule(3)
+        sampler.set_particles(n)
+        sampler.set_kernel_samples(3)
+        samples = sampler.run()
+        self.assertEqual(samples.shape, (n, d))
+
+        # Check creation without sigma
+        sampler = pints.SMC(self.log_pdf, self.x0, log_prior=self.log_prior)
+        sampler.set_temperature_schedule(3)
+        sampler.set_particles(n)
+        sampler.set_kernel_samples(3)
+        samples = sampler.run()
+        self.assertEqual(samples.shape, (n, d))
+
+        # Check creation without log_prior
+        sampler = pints.SMC(self.log_pdf, self.x0)
+        sampler.set_temperature_schedule(3)
+        sampler.set_particles(n)
+        sampler.set_kernel_samples(3)
+        samples = sampler.run()
+        self.assertEqual(samples.shape, (n, d))
+
     def test_construction_errors(self):
         """ Tests if invalid constructor calls are picked up. """
 
-        # First arg must be a log likelihood
+        # First arg must be a LogPDF
         self.assertRaisesRegex(
-            ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedRejectionSampler, 'hello', self.log_prior)
+            ValueError, 'must extend pints.LogPDF',
+            pints.SMC, 'hello', self.x0)
 
-        # First arg must be a log prior
+        # Log prior must be a LogPrior
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPrior',
-            pints.NestedRejectionSampler,
-            self.log_likelihood, self.log_likelihood)
+            pints.SMC, self.log_pdf, self.x0, log_prior=12)
 
-        # Both must have same number of parameters
-        log_prior = pints.UniformLogPrior([0.01, 400, 1], [0.02, 600, 3])
-        self.assertRaisesRegex(
-            ValueError, 'same number of parameters',
-            pints.NestedRejectionSampler, self.log_likelihood, log_prior)
-
+    '''
     def test_logging(self):
         """ Tests logging to screen and file. """
 
