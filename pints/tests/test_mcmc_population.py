@@ -63,6 +63,11 @@ class TestPopulationMCMC(unittest.TestCase):
         x0 = self.real_parameters * 1.1
         mcmc = pints.PopulationMCMC(x0)
 
+        # PopulationMCMC uses adaptive covariance internally, so requires an
+        # initial phase
+        self.assertTrue(mcmc.needs_initial_phase())
+        self.assertTrue(mcmc.in_initial_phase())
+
         # Test schedule
         s = np.array([0, 0.1, 0.5])
         mcmc.set_temperature_schedule(s)
@@ -74,6 +79,10 @@ class TestPopulationMCMC(unittest.TestCase):
             x = mcmc.ask()
             fx = self.log_posterior(x)
             sample = mcmc.tell(fx)
+            if i == 20:
+                self.assertTrue(mcmc.in_initial_phase())
+                mcmc.set_initial_phase(False)
+                self.assertFalse(mcmc.in_initial_phase())
             if i >= 50:
                 chain.append(sample)
         chain = np.array(chain)
