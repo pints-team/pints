@@ -88,9 +88,10 @@ class TestDreamMCMC(unittest.TestCase):
             xs = mcmc.ask()
             fxs = [self.log_posterior(x) for x in xs]
             samples = mcmc.tell(fxs)
+            if i == 20:
+                mcmc.set_initial_phase(False)
             if i >= 50:
                 chains.append(samples)
-                mcmc.set_initial_phase(False)
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
@@ -107,9 +108,10 @@ class TestDreamMCMC(unittest.TestCase):
             xs = mcmc.ask()
             fxs = [self.log_posterior(x) for x in xs]
             samples = mcmc.tell(fxs)
+            if i == 20:
+                mcmc.set_initial_phase(False)
             if i >= 50:
                 chains.append(samples)
-                mcmc.set_initial_phase(False)
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
