@@ -287,8 +287,11 @@ class DreamMCMC(pints.MultiChainMCMC):
                             delta[j][d] / max(self._variance[j][d], 1e-11))
 
                 self._p = self._iterations * self._chains * self._delta
-                self._p /= self._L * np.sum(self._delta)
-                self._p /= np.sum(self._p)
+                d1 = self._L * np.sum(self._delta)
+                d1[d1 == 0] += 1e-11
+                self._p /= d1
+                d2 = max(np.sum(self._p), 1e-11)
+                self._p /= d2
 
             # Update iteration count for running mean/variance
             self._iterations += 1
