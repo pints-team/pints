@@ -9,10 +9,11 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+
 import numpy as np
-import numpy.linalg as la
 from scipy.misc import logsumexp
+
+import pints
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
@@ -281,7 +282,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
-    def set_enlargement_factor(self, enlargement_factor=1.5):
+    def set_enlargement_factor(self, enlargement_factor=1.1):
         """
         Sets the factor (>1) by which to increase the minimal volume
         ellipsoidal in rejection sampling. A higher value means it is less
@@ -314,30 +315,20 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
-    def _minimum_volume_ellipsoid(self, points, tol=0.001):
+    def _minimum_volume_ellipsoid(self, points, tol=0.0):
         """
-        Finds the ellipse equation in "center form":
+        Finds an approximate minimum bounding ellipse in "center form":
         ``(x-c).T * A * (x-c) = 1``.
         """
-        N, d = points.shape
-        Q = np.column_stack((points, np.ones(N))).T
-        err = tol + 1
-        u = np.ones(N) / N
-        while err > tol:
-            # assert(u.sum() == 1) # invariant
-            X = np.dot(np.dot(Q, np.diag(u)), Q.T)
-            M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
-            jdx = np.argmax(M)
-            step_size = (M[jdx] - d - 1) / ((d + 1) * (M[jdx] - 1))
-            new_u = (1 - step_size) * u
-            new_u[jdx] += step_size
-            err = la.norm(new_u - u)
-            u = new_u
-        c = np.dot(u, points)
-        A = la.inv(
-            + np.dot(np.dot(points.T, np.diag(u)), points)
-            - np.multiply.outer(c, c)
-        ) / d
+        cov = np.cov(np.transpose(points))
+        cov_inv = np.linalg.inv(cov)
+        c = np.mean(points, axis=0)
+        dist = np.zeros(len(points))
+        for i in range(len(points)):
+            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
+                                points[i] - c)
+        enlargement_factor = np.max(dist)
+        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
         return A, c
 
     def _reject_sample_prior(self, threshold):
@@ -364,7 +355,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         only updated every ``N`` steps).
         """
         return self._reject_draw_from_ellipsoid(
-            la.inv((1 / enlargement_factor) * A), centroid, threshold)
+            np.linalg.inv((1 / enlargement_factor) * A), centroid, threshold)
 
     def _reject_draw_from_ellipsoid(self, A, centroid, threshold):
         """
@@ -375,7 +366,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
         log_likelihood = self._log_likelihood(proposed)
         self._n_evals += 1
-        while log_likelihood < threshold:
+        while np.isnan(log_likelihood) or log_likelihood < threshold:
             proposed = self._draw_from_ellipsoid(A, centroid, 1)[0]
             log_likelihood = self._log_likelihood(proposed)
             self._n_evals += 1
@@ -393,7 +384,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             ndims = 1
 
         # calculate eigen_values (e) and eigen_vectors (v)
-        eigen_values, eigen_vectors = la.eig(covmat)
+        eigen_values, eigen_vectors = np.linalg.eig(covmat)
         idx = (-eigen_values).argsort()[::-1][:ndims]
         e = eigen_values[idx]
         v = eigen_vectors[:, idx]
@@ -442,7 +433,7 @@ def _reject_ellipsoid_sample(
         A, centroid = _minimum_volume_ellipsoid(m_samples_previous)
         A = (1 / enlargement_factor) * A
         return _reject_draw_from_ellipsoid(
-            la.inv(A), centroid, log_likelihood, threshold)
+            np.linalg.inv(A), centroid, log_likelihood, threshold)
     else:
         a_min = np.min(m_samples_previous)
         a_max = np.max(m_samples_previous)
