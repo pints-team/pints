@@ -213,7 +213,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
                 log_schedule = log_schedule[::-1]
                 self._schedule = np.exp(log_schedule)
             else:
-                self._schedule = np.linspace(0.0, 1, schedule)[::-1]
+                self._schedule = np.linspace(0.01, 1, schedule)[::-1]
             self._schedule.setflags(write=False)
 
         else:
@@ -245,6 +245,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """
         logged = bool(logged)
         self._log_temperature_schedule = logged
+        self.set_temperature_schedule()
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
