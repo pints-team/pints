@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
+class AdaptiveCovarianceAMGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 4 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
@@ -36,11 +36,11 @@ class AdaptiveCovarianceGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceGlobalAdaptiveMCMC, self).__init__(x0, sigma0)
+        super(AdaptiveCovarianceAMGlobalAdaptiveMCMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(AdaptiveCovarianceGlobalAdaptiveMCMC, self).ask()
+        super(AdaptiveCovarianceAMGlobalAdaptiveMCMC, self).ask()
         # Propose new point
         if self._proposed is None:
             self._proposed = np.random.multivariate_normal(self._current,
@@ -56,12 +56,12 @@ class AdaptiveCovarianceGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(AdaptiveCovarianceGlobalAdaptiveMCMC, self)._initialise()
+        super(AdaptiveCovarianceAMGlobalAdaptiveMCMC, self)._initialise()
         self._log_lambda = 0
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(AdaptiveCovarianceGlobalAdaptiveMCMC, self).tell(fx)
+        super(AdaptiveCovarianceAMGlobalAdaptiveMCMC, self).tell(fx)
         
         self._log_lambda = self._log_lambda + self._gamma * (self._alpha - self._target_acceptance)
         

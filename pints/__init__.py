@@ -162,7 +162,7 @@ from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._adaptive_covariance_remi import AdaptiveCovarianceRemiMCMC
 from ._mcmc._adaptive_covariance_am import AdaptiveCovarianceAMMCMC
 from ._mcmc._adaptive_covariance_rao_blackwell import AdaptiveCovarianceRaoBlackWellMCMC
-from ._mcmc._adaptive_covariance_global_adaptive import AdaptiveCovarianceGlobalAdaptiveMCMC
+from ._mcmc._adaptive_covariance_am_global_adaptive import AdaptiveCovarianceAMGlobalAdaptiveMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._population import PopulationMCMC
