@@ -12,12 +12,25 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
+class AdaptiveCovarianceSimpleMCMC(pints.SingleChainMCMC):
     """
-    Adaptive covariance MCMC general class covering a range of
-    methods where the covariance matrix is adapted in MCMC runs.
-    In all cases self._adaptations ^ -eta is used to control decay
-    of adaptation
+    Adaptive Metropolis MCMC, as described by Algorithm 2 in [1],
+    (with gamma = self._adaptations ** -eta which isn't specified
+    in the paper)
+    
+    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0)
+    For iteration t = 0:n_iter:
+      - Sample Y_t+1 ~ N(theta_t, lambda * sigma0)
+      - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
+      - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
+      theta_t+1 = theta_t
+      - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
+      - Update sigma_t+1 ~ sigma_t + gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
+    endfor
+
+    [1] A tutorial on adaptive MCMC
+    Christophe Andrieu and Johannes Thoms, Statistical Computing,
+    2008, 18: 343-373
 
     *Extends:* :class:`SingleChainMCMC`
     """
@@ -50,6 +63,21 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._initialise()
 
+        # Propose new point
+        if self._proposed is None:
+
+            # Note: Normal distribution is symmetric
+            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
+            #  distribution term from the acceptance criterion
+            self._proposed = np.random.multivariate_normal(
+                self._current, np.exp(self._loga) * self._sigma)
+
+            # Set as read-only
+            self._proposed.setflags(write=False)
+
+        # Return proposed point
+        return self._proposed
+
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -69,8 +97,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Adaptation
         self._loga = 0
         self._adaptations = 2
-        self._gamma = 1
-        self._eta = -0.6
 
         # Acceptance rate monitoring
         self._iterations = 0
@@ -78,16 +104,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Update sampler state
         self._running = True
-    
-    def set_eta(self, eta):
-        """
-        Updates eta which controls the rate of
-        adaptation decay by self._adaptations ^ -eta, where
-        eta > 0 to ensure asymptotic ergodicity
-        """
-        if eta <= 0:
-            raise ValueError('eta should be greater than zero')
-        self._eta = eta
 
     def in_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
@@ -143,11 +159,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Check if the proposed point can be accepted
-        self._accepted = 0
+        accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < fx - self._current_log_pdf:
-                self._accepted = 1
+                accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
 
@@ -157,12 +173,15 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Adapt covariance matrix
         if self._adaptive:
             # Set gamma based on number of adaptive iterations
-            self._gamma = self._adaptations ** -self._eta
+            gamma = self._adaptations ** -0.6
             self._adaptations += 1
 
-            # Update mu and covariance matrix
-            self.update_mu()
-            self.update_sigma()
+            # Update mu, log acceptance rate, and covariance matrix
+            self._mu = (1 - gamma) * self._mu + gamma * self._current
+            self._loga += gamma * (accepted - self._target_acceptance)
+            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
+            self._sigma = (
+                (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
 
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
@@ -173,22 +192,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Return new point for chain
         return self._current
-
-    def update_mu(self):
-        """
-        Updates the current running mean used to calculate the sample
-        covariance matrix of proposals. Note that this default is overidden in
-        some of the methods
-        """
-        self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
-        
-    def update_sigma(self):
-        """
-        Updates the covariance matrix used to generate proposals.
-        Note that this default is overidden in some of the methods
-        """
-        dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-        self._sigma = ((1 - gamma) * self._sigma + self._gamma * np.dot(dsigm, dsigm.T))
 
     def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
