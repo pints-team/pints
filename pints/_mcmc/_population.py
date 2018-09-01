@@ -65,6 +65,9 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Inner chains
         self._chains = None
+        
+        # Log vs linear schedule
+        self._log_temperature_schedule= True
 
         #
         # Default settings
@@ -203,11 +206,14 @@ class PopulationMCMC(pints.SingleChainMCMC):
             if schedule < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            a_max = 0
-            a_min = np.log(0.0001)
-            log_schedule = np.linspace(a_min, a_max, schedule)
-            log_schedule = log_schedule[::-1]
-            self._schedule = np.exp(log_schedule)
+            if self._log_temperature_schedule:
+                a_max = 0
+                a_min = np.log(0.0001)
+                log_schedule = np.linspace(a_min, a_max, schedule)
+                log_schedule = log_schedule[::-1]
+                self._schedule = np.exp(log_schedule)
+            else:
+                self._schedule = np.linspace(0.0, 1, schedule)[::-1]
             self._schedule.setflags(write=False)
 
         else:
@@ -229,6 +235,16 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
             # Store
             self._schedule = schedule
+    
+    def set_log_temperature_schedule(self, logged):
+        """
+        Determines whether to use a temperature scale that is uniform
+        on the log scale between 0.0001 and 1 (the default), or a linear scale from 0.1
+        to 10. The number of gradations is determined by
+        `set_temperature_schedule` but defaults to 10
+        """
+        logged = bool(logged)
+        self._log_temperature_schedule = logged
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
