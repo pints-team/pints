@@ -171,9 +171,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Increase iteration count
         self._iterations += 1
 
-        # Return new point for chain
-        return self._current
-
     def update_mu(self):
         """
         Updates the current running mean used to calculate the sample
