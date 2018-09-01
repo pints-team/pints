@@ -203,7 +203,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
             if schedule < 2:
                 raise ValueError(
                     'A schedule must contain at least two temperatures.')
-            self._schedule = np.linspace(0, 0.95, schedule)
+            a = np.linspace(0.05, 1, 10)
+            self._schedule = a[::-1]
             self._schedule.setflags(write=False)
 
         else:
