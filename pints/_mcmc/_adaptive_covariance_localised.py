@@ -23,21 +23,35 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
     different proposals are chosen dependent on location in parameter
     space.
     
-    Initialise mu0^1:n, sigma0^1:n, w^1:n and lambda^1:n
+    Algorithm:
+    
+    Based on initial unadaptive samples, fit Gaussian mixture model
+    to samples and obtain w^n, mu^n and sigma^n
+    
+    Initialise lambda^1:n
     
     For iteration t = 0:n_iter:
-      - Fit Gaussian mixture model to (theta_0,theta_1,theta_t) and
-        obtain weights w of each of n modes. Also obtain mu^n and
-        sigma^n for each proposal
-      - Sample Z_t+1 ~ categorical(w)
+      - Sample Z_t+1 ~ categorical(q_weight(1, theta_t), q_weight(2, theta_t),..., q_weight(n, theta_t))
       - Sample Y_t+1 ~ N(theta_t, lambda_t^Z_t+1 sigma_t^Z_t+1)
       - Set theta_t+1 = Y_t+1 with probability,
-        min(1, [p(Y_t+1|data) * / )
+        min(1, [p(Y_t+1|data) * q_weight(Y_t+1|Z_t+1) /
+               [p(Y_t+1|data) *q_weight(theta_t|Z_t+1)]);
+        otherwise theta_t+1 = theta_t
+      - Update mu^1:n, sigma^1:n, w^1:n and lambda^1:n as shown below
     endfor
     
     w^1:n are the weights of the different normals in fitting
-    q(theta) = sum_i=1^n w^k N(theta|mu^k, sigma^k) to previous
-    theta samples
+    q(theta) = sum_i=1^n w^k N(theta|mu^k, sigma^k) to samples;
+    q_weight(theta|kk) = w^k N(theta|mu^k, sigma^k) / q(theta).
+    
+    The update steps are as follows,
+    
+    for k in 1:n
+        - Calculate Q = q(theta_t+1|k)
+        - mu_t+1^k = mu_t^k + gamma_t+1 * Q * (X_t+1 - mu_t^k)
+        - sigma_t+1^k = sigma_t^k + gamma_t+1 * Q * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t^k)
+        - w_t+1^k = w_t^k + gamma_t+1 * (Q - w_t^k)
+    endfor
 
     [1] A tutorial on adaptive MCMC
     Christophe Andrieu and Johannes Thoms, Statistical Computing,
