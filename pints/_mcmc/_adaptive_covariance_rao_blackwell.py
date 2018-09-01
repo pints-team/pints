@@ -19,7 +19,7 @@ class AdaptiveCovarianceRaoBlackWellMCMC(pints.AdaptiveCovarianceMCMC):
     in the paper). Note, think there's a mistake in the paper and
     should be sampling from a covariance matrix lambda * sigma0
     
-    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0)
+    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0_t)
     For iteration t = 0:n_iter:
       - Sample Y_t+1 ~ N(theta_t, lambda * sigma0)
       - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))

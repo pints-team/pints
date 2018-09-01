@@ -18,7 +18,7 @@ class AdaptiveCovarianceAMGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
     (with gamma = self._adaptations ** -eta which isn't specified
     in the paper)
     
-    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0)
+    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0_t)
     For iteration t = 0:n_iter:
       - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
       - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
@@ -63,7 +63,7 @@ class AdaptiveCovarianceAMGlobalAdaptiveMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
         super(AdaptiveCovarianceAMGlobalAdaptiveMCMC, self).tell(fx)
         
-        self._log_lambda = self._log_lambda + self._gamma * (self._alpha - self._target_acceptance)
+        self._log_lambda += self._gamma * (self._alpha - self._target_acceptance)
         
         # Return new point for chain
         return self._current

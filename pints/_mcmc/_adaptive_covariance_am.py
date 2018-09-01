@@ -20,7 +20,7 @@ class AdaptiveCovarianceAMMCMC(pints.AdaptiveCovarianceMCMC):
     
     Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0)
     For iteration t = 0:n_iter:
-      - Sample Y_t+1 ~ N(theta_t, lambda * sigma0)
+      - Sample Y_t+1 ~ N(theta_t, lambda * sigma0_t)
       - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
       - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
       theta_t+1 = theta_t
