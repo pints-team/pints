@@ -102,7 +102,7 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
         super(AdaptiveCovarianceAMComponentMCMC, self).tell(fx)
-        
+
         if self._iter_count % self._am_global_rate == 0:
             self._log_lambda_scalar += self._gamma * (self._alpha - self._target_acceptance)
         else:

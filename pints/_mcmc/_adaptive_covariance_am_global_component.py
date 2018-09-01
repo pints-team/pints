@@ -26,7 +26,8 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
       if mod(t, self._am_global_rate == 0)
         - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
         - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        - Update log lambda_t+1^scalar = log lambda_t^scalar + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
+        - Update log lambda_t+1^scalar = log lambda_t^scalar +
+                                          gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
 
       else:
         - Sample Z_t+1 ~ N(0, Lambda^0.5 * sigma0_t * Lambda^0.5)
@@ -40,7 +41,7 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
         for k in 1:self_.dimensions:
             - Set W_t+1 = zeros(self._dimension)
             - Set W_t+1[k] = Z_t+1[k]
-            - log lambda_t+1^k += gamma_t+1 * (alpha(theta_t, theta_t + W_t+1) - self._target_acceptance)
+            - log lambda_t+1^k = log lambda_t^k + gamma_t+1 * (alpha(theta_t, theta_t + W_t+1) - self._target_acceptance)
         endfor
 
       - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
@@ -49,7 +50,7 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
 
     where e_k is a vector of zeros apart from the kth entry which equals 1;
     lambda_t^k is the kth component of lambda (which is here a vector);
-    Lambda_t = diag(lambda_t^1, lambda_t^2, ..., lambda_t^self._dimensions);
+    Lambda_t = diag(lambda_t^1, lambda_t^2, ..., lambda_t^self._dimension);
     lambda_t^scalar is a scalar-valued lambda used in global am
 
     [1] A tutorial on adaptive MCMC
@@ -70,12 +71,13 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
                 v_proposed = np.random.multivariate_normal(self._current,
                                                            np.exp(self._log_lambda_scalar) * self._sigma)
             else:
-                self._k = np.random.randint(0, self._dimension, 1)[0]
-                a_proposed = np.random.normal(self._current[self._k], np.sqrt(np.exp(self._log_lambda_vector[self._k]) *
-                                                                      self._sigma[self._k, self._k]), 1)[0]
-                v_proposed = np.copy(self._current)
-                v_proposed[self._k] = a_proposed
-            
+                Lambda = np.diag(np.exp(self._log_lambda_vector))
+                Lambda_half = Lambda**0.5
+                self._Z = np.random.multivariate_normal(np.zeros(self._dimension),
+                                                  np.matmul(np.matmul(Lambda_half, self._sigma),
+                                                            Lamda_half))
+                v_proposed = self._current + self._Z
+
             self._proposed = v_proposed
 
             # Set as read-only
@@ -93,7 +95,7 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
         self._log_lambda_vector = np.zeros(self._dimension)
         self._am_global_rate = 10
         self._iter_count = 0
-        self._k = 0
+        self._Z = np.zeros(self._dimension)
     
     def set_am_global_rate(self, am_global_rate):
         """
@@ -114,8 +116,13 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
         if self._iter_count % self._am_global_rate == 0:
             self._log_lambda_scalar += self._gamma * (self._alpha - self._target_acceptance)
         else:
-            self._log_lambda_vector[self._k] += self._gamma * (self._alpha - self._target_acceptance)
+            for k in range(0, self._dimension):
+                W = np.zeros(self._dimension)
+                W[k] = Z[k]
+                ## This line is problematic for ask/tell since
+                ## alpha = min(1, p(self._X + W|data) / p(self._X|data))
+                self._log_lambda_vector[k] += self._gamma * (alpha(self._X, self._X + W) - self._target_acceptance)
         self._iter_count += 1
-        
+
         # Return new point for chain
         return self._current
