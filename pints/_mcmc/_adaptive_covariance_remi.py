@@ -35,15 +35,13 @@ class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
         super(AdaptiveCovarianceRemiMCMC, self).ask()
-
         # Propose new point
         if self._proposed is None:
 
             # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
-            self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._loga) * self._sigma)
+            self._proposed = np.random.multivariate_normal(self._current, np.exp(self._loga) * self._sigma)
 
             # Set as read-only
             self._proposed.setflags(write=False)
@@ -55,10 +53,9 @@ class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        if self._running:
-            raise RuntimeError('Already initialised.')
-
-        # Adaptation
+        super(AdaptiveCovarianceRemiMCMC, self)._initialise()
+        
+        # log adaptation
         self._loga = 0
 
     def tell(self, fx):
@@ -66,5 +63,5 @@ class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
         super(AdaptiveCovarianceRemiMCMC, self).tell(fx)
         # Update log acceptance
         if self._adaptive:
-            self._loga += gamma * (self._accepted - self._target_acceptance)
+            self._loga += self._gamma * (self._accepted - self._target_acceptance)
 

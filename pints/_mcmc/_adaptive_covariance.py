@@ -70,7 +70,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         self._loga = 0
         self._adaptations = 2
         self._gamma = 1
-        self._eta = -0.6
+        self._eta = 0.6
 
         # Acceptance rate monitoring
         self._iterations = 0
@@ -165,7 +165,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             self.update_sigma()
 
         # Update acceptance rate (only used for output!)
-        self._acceptance = ((self._iterations * self._acceptance + accepted) /
+        self._acceptance = ((self._iterations * self._acceptance + self._accepted) /
                             (self._iterations + 1))
 
         # Increase iteration count
@@ -188,7 +188,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Note that this default is overidden in some of the methods
         """
         dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-        self._sigma = ((1 - gamma) * self._sigma + self._gamma * np.dot(dsigm, dsigm.T))
+        self._sigma = ((1 - self._gamma) * self._sigma + self._gamma * np.dot(dsigm, dsigm.T))
 
     def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
