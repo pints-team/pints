@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
+class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 5 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
@@ -21,17 +21,15 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
     
     Initialises mu0 and sigma0 used in componentwise proposal N(mu0, lambda * sigma0)
     For iteration t = 0:n_iter:
-
       if mod(t, self._am_global_rate == 0)
-        - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
-        - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        - Update log lambda_t+1^scalar = log lambda_t^scalar + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
-      else:
         - Sample component k ~ discrete-uniform(1,...,self._dimension)
         - Sample Y_t+1 ~ theta_t +  e_k * N(theta_t, lambda_t^k * sigma0_kk)
         - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
         - Update log lambda_t+1^k = log lambda_t^k + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
-        
+      else:
+        - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
+        - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
+        - Update log lambda_t+1^scalar = log lambda_t^scalar + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
       endif
       - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
       theta_t+1 = theta_t
@@ -51,11 +49,11 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceAMComponentMCMC, self).__init__(x0, sigma0)
+        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(AdaptiveCovarianceAMComponentMCMC, self).ask()
+        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).ask()
         # Propose new point
         if self._proposed is None:
             if self._iter_count % self._am_global_rate == 0:
@@ -80,7 +78,7 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(AdaptiveCovarianceAMComponentMCMC, self)._initialise()
+        super(AdaptiveCovarianceAMGlobalComponentMCMC, self)._initialise()
         self._log_lambda_scalar = 0
         self._log_lambda_vector = np.zeros(self._dimension)
         self._am_global_rate = 10
@@ -101,7 +99,7 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(AdaptiveCovarianceAMComponentMCMC, self).tell(fx)
+        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).tell(fx)
         
         if self._iter_count % self._am_global_rate == 0:
             self._log_lambda_scalar += self._gamma * (self._alpha - self._target_acceptance)
