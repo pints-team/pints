@@ -138,6 +138,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
             # Clear proposal
             self._proposed = None
+            
+            # Set alpha prob to zero
+            self._alpha = 0
 
             # Return first point for chain
             return self._current
