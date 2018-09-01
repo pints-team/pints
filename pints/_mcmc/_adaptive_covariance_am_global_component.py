@@ -14,32 +14,42 @@ import numpy as np
 
 class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, as described by Algorithm 5 in [1],
+    Adaptive Metropolis MCMC, as described by Algorithm 6 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
-    in the paper). The algorithm we use is actually a mixture of Algorithm 5
+    in the paper). The algorithm we use is actually a mixture of Algorithm 6
     and Algorithm 4, as is suggested in the text in [1].
     
     Initialises mu0 and sigma0 used in componentwise proposal N(mu0, lambda * sigma0)
+
     For iteration t = 0:n_iter:
+
       if mod(t, self._am_global_rate == 0)
-        - Sample component k ~ discrete-uniform(1,...,self._dimension)
-        - Sample Y_t+1 ~ theta_t +  e_k * N(theta_t, lambda_t^k * sigma0_kk)
-        - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        - Update log lambda_t+1^k = log lambda_t^k + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
-      else:
         - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
         - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
         - Update log lambda_t+1^scalar = log lambda_t^scalar + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
+
+      else:
+        - Sample Z_t+1 ~ N(0, Lambda^0.5 * sigma0_t * Lambda^0.5)
+        - Set Y_t+1 = theta_t + Z_t+1
+
       endif
+
       - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
-      theta_t+1 = theta_t
+        theta_t+1 = theta_t
+
+        for k in 1:self_.dimensions:
+            - Set W_t+1 = zeros(self._dimension)
+            - Set W_t+1[k] = Z_t+1[k]
+            - log lambda_t+1^k += gamma_t+1 * (alpha(theta_t, theta_t + W_t+1) - self._target_acceptance)
+        endfor
+
       - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
       - Update sigma_t+1 = sigma_t + gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
     endfor
 
     where e_k is a vector of zeros apart from the kth entry which equals 1;
     lambda_t^k is the kth component of lambda (which is here a vector);
-    sigma0_t_kk is the kth diagonal component of sigma0_t;
+    Lambda_t = diag(lambda_t^1, lambda_t^2, ..., lambda_t^self._dimensions);
     lambda_t^scalar is a scalar-valued lambda used in global am
 
     [1] A tutorial on adaptive MCMC

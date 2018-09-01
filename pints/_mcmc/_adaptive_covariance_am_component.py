@@ -34,7 +34,7 @@ class AdaptiveCovarianceAMComponentMCMC(pints.AdaptiveCovarianceMCMC):
         
       endif
       - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
-      theta_t+1 = theta_t
+        theta_t+1 = theta_t
       - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
       - Update sigma_t+1 = sigma_t + gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
     endfor
