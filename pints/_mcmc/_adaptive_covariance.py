@@ -144,6 +144,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Check if the proposed point can be accepted
         self._accepted = 0
+        r = fx - self._current_log_pdf
+        self._alpha = np.minimum(1, np.exp(r))
+        self._X = self._current
+        self._Y = self._proposed
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < fx - self._current_log_pdf:
