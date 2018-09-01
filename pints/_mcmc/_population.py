@@ -36,12 +36,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
     ``A = p_i(x_j) * p_j(x_i) / (p_i(x_i) * p_j(x_j))``
 
     where ``x_i`` and ``x_j`` are the current values of chains ``i`` and ``j``,
-    respectively, where ``p_i = p(theta|data) ^ (1 - T_i)``, where
-    ``p(theta|data)`` is the target distribution and ``T_i`` is bounded between
+    respectively, where ``p_i = p(theta|data) ^ beta_i ``, where
+    ``p(theta|data)`` is the target distribution and ``beta_i`` is bounded between
     ``[0, 1]`` and represents a tempering parameter.
 
-    We use a range of ``T = (0,delta_T,...,1)``, where
-    ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
+    We use a range of ``beta = (0,...,1)``, where the default scale is uniform,
+    on the log scale and the chain with ``beta_i = 1`` is the
     one whose target distribution we want to sample.
 
     *Extends:* :class:`SingleChainMCMC`
@@ -259,7 +259,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform mutation step (update one chain)
 
         # Update chain, get new sample
-        sample = self._chains[self._i].tell(fx * (1 - self._schedule[self._i]))
+        sample = self._chains[self._i].tell(fx * self._schedule[self._i])
 
         # Update current sample and untempered log pdf
         if np.any(sample != self._current[self._i]):
@@ -272,12 +272,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform exchange step
 
         # Calculate current tempered likelihoods
-        pii = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._i]
-        pjj = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._j]
+        pii = self._schedule[self._i] * self._current_log_pdfs[self._i]
+        pjj = self._schedule[self._j] * self._current_log_pdfs[self._j]
 
         # Calculate proposed log likelihoods
-        pij = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._j]
-        pji = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._i]
+        pij = self._schedule[self._i] * self._current_log_pdfs[self._j]
+        pji = self._schedule[self._j] * self._current_log_pdfs[self._i]
 
         # Accept/reject exchange step
         self._have_exchanged = False
