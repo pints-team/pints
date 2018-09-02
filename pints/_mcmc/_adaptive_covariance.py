@@ -200,7 +200,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         some of the methods
         """
         self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
-        
+
     def _update_sigma(self):
         """
         Updates the covariance matrix used to generate proposals.
