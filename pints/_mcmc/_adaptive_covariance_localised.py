@@ -73,9 +73,11 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         # Propose new point
         if self._proposed is None:
             # Sample Z from categorical distribution over q
-            self._Z = np.random.choice(self._mixture_components, 1,
-                                       np.exp(self._log_q_l))[0]
-
+            self._Z = np.random.choice(self._mixture_components,
+                                       1, np.exp(self._log_q_l).tolist())[0]
+            
+            print(self._sigma)
+            # choose proposed value from Zth proposal distribution
             self._proposed = np.random.multivariate_normal(self._current,
                                                            np.exp(self._log_lambda[self._Z])
                                                            * self._sigma[self._Z])
@@ -106,6 +108,10 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         
         # Initialise running expected acceptance probabilities
         self._alpha_l = np.zeros(self._mixture_components)
+        
+        # Initialise log_q_l
+        self._log_q_l = np.log(np.repeat(1.0 / self._mixture_components,
+                                         self._mixture_components))
 
     def set_mixture_components(self, mixture_components):
         """
@@ -153,16 +159,16 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
                                                                        self._sigma[i])
                        for i in range(self._mixture_components)]
             # normalise
-            a_log_tot = logsumexp(log_q_l)
-            self._log_q_l = np.array(log_q_l) - a_log_tot
+            a_log_tot = logsumexp(self._log_q_l)
+            self._log_q_l = np.array(self._log_q_l) - a_log_tot
 
         # update q values
         else:
             for i in range(self._mixture_components):
-                self._loq_q_l[i] = (np.log(self._w[i]) +
+                self._log_q_l[i] = (np.log(self._w[i]) +
                               multivariate_normal.logpdf(self._current,
                                                          self._mu[i], self._sigma[i]) - 
-                              loq_q_l[i])
+                              self._log_q_l[i])
 
     def _update_mu(self):
         """
@@ -170,7 +176,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         mu_t+1^k = mu_t^k + gamma_t+1 * q_t^k * (theta_t+1 - mu_t^k)
         """
         for i in range(self._mixture_components):
-            self._mu[i] += (self._gamma * np.exp(self._loq_q_l[i]) *
+            self._mu[i] += (self._gamma * np.exp(self._log_q_l[i]) *
                            (self._current - self._mu[i]))
     
     def _update_sigma(self):
@@ -181,9 +187,9 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         for i in range(self._mixture_components):
             dsigm = np.reshape(self._current - self._mu[i], (self._dimension, 1))
-            self._sigma[i] += ((1 - self._gamma * np.exp(self._loq_q_l[i])) *
+            self._sigma[i] += ((1 - self._gamma * np.exp(self._log_q_l[i])) *
                                self._sigma[i] +
-                               self._gamma * np.exp(self._loq_q_l[i]) * np.dot(dsigm, dsigm.T))
+                               self._gamma * np.exp(self._log_q_l[i]) * np.dot(dsigm, dsigm.T))
 
     def _update_w(self):
         """
@@ -191,7 +197,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         w_t+1^k = w_t^k + gamma_t+1 * (q_t^k - w_t^k)
         """
         for i in range(self._mixture_components):
-            self._w[i] += self._gamma * (np.exp(self._loq_q_l[i]) - self._w[i])
+            self._w[i] += self._gamma * (np.exp(self._log_q_l[i]) - self._w[i])
 
     def _update_lambda(self):
         """
@@ -201,8 +207,8 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         # Only update Zth component
         self._log_lambda[self._Z] += (self._gamma *
-                                     np.exp(self._loq_q_l[self._Z]) *
-                                     (self._alpha_l[i] - self._target_acceptance))
+                                     np.exp(self._log_q_l[self._Z]) *
+                                     (self._alpha_l[self._Z] - self._target_acceptance))
       
     def _update_alpha(self):
         """
@@ -212,7 +218,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         # Only update Zth component
         self._alpha_l[self._Z] += (self._gamma *
-                                     np.exp(self._loq_q_l[self._Z]) *
+                                     np.exp(self._log_q_l[self._Z]) *
                                      (self._alpha - self._alpha_l[self._Z]))
 
     def _ratio_q(self):
@@ -223,10 +229,10 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
                      multivariate_normal.logpdf(self._Y,
                                                 self._mu[self._Z],
                                                 self._sigma[self._Z]) - 
-                     loq_q_l[self._Z])
+                     self._log_q_l[self._Z])
         denominator = (np.log(self._w[self._Z]) +
                        multivariate_normal.logpdf(self._X,
                                                 self._mu[self._Z],
                                                 self._sigma[self._Z]) - 
-                       loq_q_l[self._Z])
+                       self._log_q_l[self._Z])
         return numerator - denominator

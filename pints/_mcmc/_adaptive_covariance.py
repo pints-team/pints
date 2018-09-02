@@ -186,8 +186,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
                 self._update_mu()
                 self._update_sigma()
 
-            
-
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + self._accepted) /
                             (self._iterations + 1))
