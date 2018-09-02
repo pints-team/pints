@@ -73,7 +73,6 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`SingleChainMCMC.ask()`. """
         super(AdaptiveCovarianceLocalisedMCMC, self).ask()
         # Propose new point
-        print(self._mu)
         if self._proposed is None:
             # Sample Z from categorical distribution over q
             self._Z = np.random.choice(self._mixture_components,
@@ -101,12 +100,12 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
                             self._mixture_components)
 
         # Create lists of randomised means and covariance matrices
-        self._epsilon_mu = (0.01 * self._mu * 
-                           np.random.normal(np.zeros(self._dimension),
-                           1, size=self._mixture_components))
+        epsilon_mu = np.random.normal(0.01 * self._mu, 1, size=(self._mixture_components,
+                                      self._dimension))
         epsilon_sigma_v = np.random.normal(np.zeros(self._dimension),
-                                           0.01, size=(self._mixture_components,
-                                                    self._dimension))
+                                           0.01,
+                                           size=(self._mixture_components,
+                                                 self._dimension))
         self._epsilon_sigma = []
         for i in range(self._mixture_components):
             dsigm = np.reshape(epsilon_sigma_v[i], (self._dimension, 1))
@@ -116,7 +115,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         self._mu = []
         self._sigma = []
         for i in range(self._mixture_components):
-            self._mu.append(a_temp + self._epsilon_mu[i])
+            self._mu.append(a_temp + epsilon_mu[i])
             self._sigma.append(a_temp_sigma + self._epsilon_sigma[i])
 
         # Initialise lambda vector
