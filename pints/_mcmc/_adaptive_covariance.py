@@ -157,13 +157,13 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         
         # Localised vs others
         if self._localised:
-            self._alpha = np.minimum(1, np.exp(r + self._ratio_q()))
-        else:
-            self._alpha = np.minimum(1, np.exp(r))
+            r = r + self._ratio_q()
+        
+        self._alpha = np.minimum(1, np.exp(r))
         
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < fx - self._current_log_pdf:
+            if u < r:
                 self._accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx

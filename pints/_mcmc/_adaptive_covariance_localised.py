@@ -75,13 +75,12 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
             # Sample Z from categorical distribution over q
             self._Z = np.random.choice(self._mixture_components,
                                        1, np.exp(self._log_q_l).tolist())[0]
-            
-            print(self._sigma)
+
             # choose proposed value from Zth proposal distribution
             self._proposed = np.random.multivariate_normal(self._current,
                                                            np.exp(self._log_lambda[self._Z])
                                                            * self._sigma[self._Z])
-
+            print(-1)
             # Set as read-only
             self._proposed.setflags(write=False)
 
@@ -167,8 +166,8 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
             for i in range(self._mixture_components):
                 self._log_q_l[i] = (np.log(self._w[i]) +
                               multivariate_normal.logpdf(self._current,
-                                                         self._mu[i], self._sigma[i]) - 
-                              self._log_q_l[i])
+                                                         self._mu[i], self._sigma[i]))
+            self._log_q_l += -logsumexp(self._log_q_l)
 
     def _update_mu(self):
         """
@@ -176,8 +175,8 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         mu_t+1^k = mu_t^k + gamma_t+1 * q_t^k * (theta_t+1 - mu_t^k)
         """
         for i in range(self._mixture_components):
-            self._mu[i] += (self._gamma * np.exp(self._log_q_l[i]) *
-                           (self._current - self._mu[i]))
+            self._mu[i]  = ((1 - self._gamma * np.exp(self._log_q_l[i])) * self._mu[i] +
+                            self._gamma * np.exp(self._log_q_l[i]) * self._current)
     
     def _update_sigma(self):
         """
@@ -187,10 +186,9 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         for i in range(self._mixture_components):
             dsigm = np.reshape(self._current - self._mu[i], (self._dimension, 1))
-            self._sigma[i] += ((1 - self._gamma * np.exp(self._log_q_l[i])) *
-                               self._sigma[i] +
+            self._sigma[i] = ((1 - self._gamma * np.exp(self._log_q_l[i])) * self._sigma[i] +
                                self._gamma * np.exp(self._log_q_l[i]) * np.dot(dsigm, dsigm.T))
-
+            
     def _update_w(self):
         """
         Updates w components according to,
