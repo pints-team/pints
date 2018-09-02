@@ -75,6 +75,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Acceptance rate monitoring
         self._iterations = 0
         self._acceptance = 0
+        
+        # For localised AM
+        self._first_adaptive = True
 
         # Update sampler state
         self._running = True
@@ -163,6 +166,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Adapt covariance matrix
         if self._adaptive:
+            # For localised AM
+            if self._first_adaptive:
+                self._fit_gaussian_mixture()
+                self._first_adaptive = False
+
             # Set gamma based on number of adaptive iterations
             self._gamma = self._adaptations ** -self._eta
             self._adaptations += 1
@@ -232,4 +240,13 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Returns the target acceptance rate.
         """
         return self._target_acceptance
+
+    def _fit_gaussian_mixture(self):
+        """
+        Fits a Gaussian mixture distribution to existing
+        samples with k components, where k can either be
+        determined by AIC or pre-specified by the user
+        """
+        raise NotImplementedError
+        
 

@@ -82,6 +82,30 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         super(AdaptiveCovarianceLocalisedMCMC, self)._initialise()
         self._log_lambda = 0
+        self._automatic_aic = False
+        self._max_mixture_components = 10
+    
+    def set_max_mixture_components(self, max_mixture_components):
+        """
+        If `self._automatic_aic` is True determines the maximum
+        number of Gaussians to consider when fitting mixture
+        model
+        """
+        if max_mixture_components < 2:
+            raise ValueError('Maximum mixture components to ' +
+                             'consider must exceed 1.)
+        if not isinstance(max_mixture_components, int):
+            raise ValueError('The number mixture components to ' +
+                             'consider must be an integer.)
+        self._max_mixture_components = max_mixture_components
+
+    def set_automatic_aic(self, automatic_aic):
+        """
+        If true determines the optimal number of components
+        in Gaussian mixture model via the AIC criterion
+        """
+        automatic_aic = bool(automatic_aic)
+        self._automatic_aic = automatic_aic
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
@@ -91,3 +115,13 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         
         # Return new point for chain
         return self._current
+        
+    def _fit_gaussian_mixture(self):
+        """
+        See :meth: `AdaptiveCovarianceMCMC.__fit_gaussian_mixture()`
+        """
+        if self._automatic_aic:
+            gmm_l = []
+            for i in range(self._max_mixture_components):
+                gmm = mixture.GaussianMixture(n_components=4, covariance_type='full').fit(X)
+            
