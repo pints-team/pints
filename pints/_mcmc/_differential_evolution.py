@@ -47,7 +47,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('Need at least 3 chains.')
 
         # Warn user against using too few chains
-        if self._chains < 1.5 * self._dimensions:
+        if self._chains < 1.5 * self._dimension:
             log = logging.getLogger(__name__)
             log.warning('This method should be run with n_chains >= '+
                          '1.5 * n_parameters')
@@ -87,7 +87,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             self._initialise()
         
         # set gamma to 1
-        if self._iter_count % self._gamma_switch == 0:
+        if self._iter_count % self._gamma_switch_rate == 0:
             self._gamma = 1
         self._iter_count += 1
 
@@ -98,7 +98,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 if self._normal_error:
                     error = np.random.normal(0, self._b_star, self._mu.shape)
                 else:
-                    error = np.random.uniform(0, self._b_star, self._mu.shape)
+                    error = np.random.uniform(-self._b_star, self._b_star, self._mu.shape)
                 r1, r2 = r_draw(j, self._chains)
                 self._proposed[j] = (
                     self._current[j]
@@ -162,7 +162,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('The interval number of steps between ' +
                               ' gamma=1 iterations must exceed 1.')
         if not isinstance(gamma_switch_rate, int):
-            raive ValueError('The interval number of steps between ' +
+            raise ValueError('The interval number of steps between ' +
                               ' gamma=1 iterations must be an integer.')
         self._gamma_switch_rate = gamma_switch_rate
     
@@ -250,7 +250,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 4
 
     def set_hyper_parameters(self, x):
         """
@@ -260,6 +260,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         self.set_gamma(x[0])
         self.set_normal_scale_coefficient(x[1])
+        self.set_gamma_switch_rate(x[2])
+        self.set_normal_error(x[3])
 
 
 def r_draw(i, num_chains):
