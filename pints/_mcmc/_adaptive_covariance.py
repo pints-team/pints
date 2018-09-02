@@ -75,12 +75,13 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Acceptance rate monitoring
         self._iterations = 0
         self._acceptance = 0
-        
-        # For localised AM
-        self._first_adaptive = True
 
         # Update sampler state
         self._running = True
+        
+        # Localised AM
+        self._localised = False
+        self._initial_fit = True
     
     def set_eta(self, eta):
         """
@@ -167,17 +168,19 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Adapt covariance matrix
         if self._adaptive:
             # For localised AM
-            if self._first_adaptive:
+            if self._localised:
                 self._fit_gaussian_mixture()
-                self._first_adaptive = False
+                self._initial_fit = False
+            else:
+                # Update mu and covariance matrix
+                self.update_mu()
+                self.update_sigma()
 
             # Set gamma based on number of adaptive iterations
             self._gamma = self._adaptations ** -self._eta
             self._adaptations += 1
 
-            # Update mu and covariance matrix
-            self.update_mu()
-            self.update_sigma()
+            
 
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + self._accepted) /
@@ -243,9 +246,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
     def _fit_gaussian_mixture(self):
         """
-        Fits a Gaussian mixture distribution to existing
-        samples with k components, where k can either be
-        determined by AIC or pre-specified by the user
+        Fits a Gaussian mixture distribution by updating
+        componentwise the means, covariance matrices,
+        weights and lamdas (eq. 36 and 37 in Andrieu &
+        Thoms 2008)
         """
         raise NotImplementedError
         

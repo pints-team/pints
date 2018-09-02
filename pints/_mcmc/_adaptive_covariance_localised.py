@@ -10,7 +10,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from sklearn import mixture
 
 
 class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
@@ -81,31 +80,34 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
         super(AdaptiveCovarianceLocalisedMCMC, self)._initialise()
-        self._log_lambda = 0
-        self._automatic_aic = False
-        self._max_mixture_components = 10
-    
-    def set_max_mixture_components(self, max_mixture_components):
-        """
-        If `self._automatic_aic` is True determines the maximum
-        number of Gaussians to consider when fitting mixture
-        model
-        """
-        if max_mixture_components < 2:
-            raise ValueError('Maximum mixture components to ' +
-                             'consider must exceed 1.)
-        if not isinstance(max_mixture_components, int):
-            raise ValueError('The number mixture components to ' +
-                             'consider must be an integer.)
-        self._max_mixture_components = max_mixture_components
+        self._localised = True
+        self._mixture_components = 3
+        
+        # Initialise weights
+        self._w = np.repeat(1.0 / self._mixture_components,
+                            self._mixture_components)
+        # Create lists of means and covariance matrices
+        self._mu = [self._mu for i in range(self._mixture_components)]
+        self._sigma = [self._sigma for i in range(self._mixture_components)]
+        
+        # Initialise lambda vector
+        self._log_lambda = np.zeros(self._mixture_components)
+        
+        # Initialise running expected acceptance probabilities
+        self._alpha = np.zeros(self._mixture_components)
 
-    def set_automatic_aic(self, automatic_aic):
+    def set_mixture_components(self, mixture_components):
         """
-        If true determines the optimal number of components
-        in Gaussian mixture model via the AIC criterion
+        Sets the number of Gaussian mixture components
+        to use for proposals
         """
-        automatic_aic = bool(automatic_aic)
-        self._automatic_aic = automatic_aic
+        if mixture_components < 2:
+            raise ValueError('Number of mixture components ' +
+                             'should exceed 1.')
+        if not isinstance(mixture_components, int):
+            raise ValueError('Number of mixture components ' +
+                             'should be an integer.')
+        self._mixture_components = mixture_components
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
@@ -120,8 +122,18 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC.__fit_gaussian_mixture()`
         """
-        if self._automatic_aic:
-            gmm_l = []
-            for i in range(self._max_mixture_components):
-                gmm = mixture.GaussianMixture(n_components=4, covariance_type='full').fit(X)
+        self.update_q()
+        self.update_mu()
+        self.update_sigma()
+        self.update_w()
+        self.update_lambda()
+        self.update_alpha()
+        
+    def update_q(self):
+        """
+        Updates q functions representing weights of Gaussian mixture
+        components. If first time this is called, then
+        this function creates q functions
+        """
+        
             
