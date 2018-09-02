@@ -49,8 +49,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Warn user against using too few chains
         if self._chains < 1.5 * self._dimension:
             log = logging.getLogger(__name__)
-            log.warning('This method should be run with n_chains >= '+
-                         '1.5 * n_parameters')
+            log.warning('This method should be run with n_chains >= ' +
+                        '1.5 * n_parameters')
 
         # Set initial state
         self._running = False
@@ -66,7 +66,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Gamma
         self._gamma = 2.38 / np.sqrt(2 * self._dimension)
-        
+
         # Gamma switch to 1 every (below) steps to help find
         # modes
         self._gamma_switch_rate = 10
@@ -85,7 +85,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Initialise on first call
         if not self._running:
             self._initialise()
-        
+
         # set gamma to 1
         if self._iter_count % self._gamma_switch_rate == 0:
             self._gamma = 1
@@ -98,7 +98,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 if self._normal_error:
                     error = np.random.normal(0, self._b_star, self._mu.shape)
                 else:
-                    error = np.random.uniform(-self._b_star, self._b_star, self._mu.shape)
+                    error = np.random.uniform(-self._b_star, self._b_star,
+                                              self._mu.shape)
                 r1, r2 = r_draw(j, self._chains)
                 self._proposed[j] = (
                     self._current[j]
@@ -108,13 +109,13 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
             # reset gamma
             self._gamma = 2.38 / np.sqrt(2 * self._dimension)
-            
+
             # Set as read only
             self._proposed.setflags(write=False)
 
         # Return proposed points
         return self._proposed
-    
+
     def set_normal_error(self, normal_error):
         """
         If true sets the error process to be a normal
@@ -160,12 +161,12 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         if gamma_switch_rate < 1:
             raise ValueError('The interval number of steps between ' +
-                              ' gamma=1 iterations must exceed 1.')
+                             ' gamma=1 iterations must exceed 1.')
         if not isinstance(gamma_switch_rate, int):
             raise ValueError('The interval number of steps between ' +
-                              ' gamma=1 iterations must be an integer.')
+                             ' gamma=1 iterations must be an integer.')
         self._gamma_switch_rate = gamma_switch_rate
-    
+
     def set_relative_scaling(self, relative_scaling):
         """
         Sets whether to use an error process whose standard deviation
