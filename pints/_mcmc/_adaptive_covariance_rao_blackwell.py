@@ -69,7 +69,7 @@ class AdaptiveCovarianceRaoBlackWellMCMC(pints.AdaptiveCovarianceMCMC):
         # Return new point for chain
         return self._current
         
-    def update_sigma(self):
+    def _update_sigma(self):
         """
         Updates sigma using Rao-Blackwellised formula,
         

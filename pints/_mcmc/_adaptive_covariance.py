@@ -173,8 +173,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
                 self._initial_fit = False
             else:
                 # Update mu and covariance matrix
-                self.update_mu()
-                self.update_sigma()
+                self._update_mu()
+                self._update_sigma()
 
             # Set gamma based on number of adaptive iterations
             self._gamma = self._adaptations ** -self._eta
@@ -189,7 +189,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Increase iteration count
         self._iterations += 1
 
-    def update_mu(self):
+    def _update_mu(self):
         """
         Updates the current running mean used to calculate the sample
         covariance matrix of proposals. Note that this default is overidden in
@@ -197,7 +197,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """
         self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
         
-    def update_sigma(self):
+    def _update_sigma(self):
         """
         Updates the covariance matrix used to generate proposals.
         Note that this default is overidden in some of the methods

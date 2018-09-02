@@ -122,14 +122,14 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC.__fit_gaussian_mixture()`
         """
-        self.update_q()
-        self.update_mu()
-        self.update_sigma()
-        self.update_w()
-        self.update_lambda()
-        self.update_alpha()
+        self._update_q()
+        self._update_mu()
+        self._update_sigma()
+        self._update_w()
+        self._update_lambda()
+        self._update_alpha()
         
-    def update_q(self):
+    def _update_q(self):
         """
         Updates q functions representing weights of Gaussian mixture
         components. If first time this is called, then
