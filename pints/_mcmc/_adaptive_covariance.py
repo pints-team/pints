@@ -152,9 +152,15 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Check if the proposed point can be accepted
         self._accepted = 0
         r = fx - self._current_log_pdf
-        self._alpha = np.minimum(1, np.exp(r))
         self._X = self._current
         self._Y = self._proposed
+        
+        # Localised vs others
+        if self._localised:
+            self._alpha = np.minimum(1, np.exp(r + self._ratio_q()))
+        else:
+            self._alpha = np.minimum(1, np.exp(r))
+        
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < fx - self._current_log_pdf:
@@ -167,6 +173,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Adapt covariance matrix
         if self._adaptive:
+            # Set gamma based on number of adaptive iterations
+            self._gamma = self._adaptations ** -self._eta
+            self._adaptations += 1
+
             # For localised AM
             if self._localised:
                 self._fit_gaussian_mixture()
@@ -175,10 +185,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
                 # Update mu and covariance matrix
                 self._update_mu()
                 self._update_sigma()
-
-            # Set gamma based on number of adaptive iterations
-            self._gamma = self._adaptations ** -self._eta
-            self._adaptations += 1
 
             
 
