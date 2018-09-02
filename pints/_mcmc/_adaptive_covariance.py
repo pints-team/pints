@@ -247,14 +247,5 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Returns the target acceptance rate.
         """
         return self._target_acceptance
-
-    def _fit_gaussian_mixture(self):
-        """
-        Fits a Gaussian mixture distribution by updating
-        componentwise the means, covariance matrices,
-        weights and lamdas (eq. 36 and 37 in Andrieu &
-        Thoms 2008)
-        """
-        raise NotImplementedError
         
 
