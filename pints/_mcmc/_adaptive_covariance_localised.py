@@ -173,7 +173,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
             self._log_q_l = [np.log(self._w[i]) + scipy.stats.multivariate_normal.logpdf(self._current,
                                                                        self._mu[i],
                                                                        self._sigma[i])
-                       for i in range(self._mixture_components)]
+                             for i in range(self._mixture_components)]
             # normalise
             a_log_tot = logsumexp(self._log_q_l)
             self._log_q_l = np.array(self._log_q_l) - a_log_tot
@@ -205,8 +205,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         for i in range(self._mixture_components):
             dsigm = np.reshape(self._current - self._mu[i], (self._dimension, 1))
             self._sigma[i] = self._sigma[i] + self._gamma * np.exp(self._log_q_l[i]) * (
-              np.dot(dsigm, dsigm.T) - self._sigma[i]
-            )
+                             np.dot(dsigm, dsigm.T) - self._sigma[i])
 
     def _update_w(self):
         """
@@ -223,19 +222,17 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
                              (alpha_k(theta_t, Y_t+1) - self._target_acceptance)
         """
         # Only update Zth component
-        self._log_lambda[self._Z] += (self._gamma *
-                                     np.exp(self._log_q_l[self._Z]) *
+        self._log_lambda[self._Z] += (self._gamma * np.exp(self._log_q_l[self._Z]) *
                                      (self._alpha_l[self._Z] - self._target_acceptance))
       
     def _update_alpha(self):
         """
         Updates running acceptance probabilities according to,
-        alpha_t+1^k = alpha_t^k + gamma_t+1 * 1(Z_t+1==k?) *
-                             (alpha_k(theta_t, Y_t+1) - self._target_acceptance)
+        alpha_t+1^k = alpha_t^k + gamma_t+1 * 1(Z_t+1==k?) * 
+                             (alpha_k(theta_t, Y_t+1) - alpha_t^k)
         """
         # Only update Zth component
-        self._alpha_l[self._Z] += (self._gamma *
-                                     np.exp(self._log_q_l[self._Z]) *
+        self._alpha_l[self._Z] += (self._gamma * np.exp(self._log_q_l[self._Z]) * 
                                      (self._alpha - self._alpha_l[self._Z]))
 
     def _ratio_q(self):
