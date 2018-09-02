@@ -117,6 +117,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         for i in range(self._mixture_components):
             self._mu.append(a_temp + epsilon_mu[i])
             self._sigma.append(a_temp_sigma + self._epsilon_sigma[i])
+        self._sigma = [10 * np.identity(self._dimension) for i in range(self._mixture_components)]
         self._mu = [np.array([2, 2]),np.array([16, 12]),np.array([24, 24])]
 
         # Initialise lambda vector
@@ -128,6 +129,8 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         # Initialise log_q_l
         self._log_q_l = np.log(np.repeat(1.0 / self._mixture_components,
                                          self._mixture_components))
+        
+        self._zz = 0
 
     def set_mixture_components(self, mixture_components):
         """
@@ -240,12 +243,21 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         # print(self._w)
         # print(-1)
         # print(self._mu)
+        
         # print(self._current)
         # print(self._sigma)
         # print(self._alpha_l[self._Z])
         # print(self._Z)
         # print(np.exp(self._log_q_l))
         # print(self._gamma)
+        # print(-1)
+        
+        if self._Z != self._zz:
+            print("hello")
+            print(np.exp(self._log_q_l))
+            print(self._current)
+            print(self._mu)
+        self._zz = self._Z
         # print(-1)
         self._alpha_l[self._Z] += (self._gamma *
                                      (self._alpha - self._alpha_l[self._Z]))
@@ -254,15 +266,19 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         Yields log q(Y_t+1|Z_t+1) - log q(theta_t|Z_t+1)
         """
-        numerator = (np.log(self._w[self._Z]) +
-                     scipy.stats.multivariate_normal.logpdf(self._Y,
-                                                self._mu[self._Z],
-                                                self._sigma[self._Z], allow_singular=True) - 
-                     logsumexp(self._log_q_l))
-        denominator = (np.log(self._w[self._Z]) +
-                       scipy.stats.multivariate_normal.logpdf(self._X,
-                                                self._mu[self._Z],
-                                                self._sigma[self._Z], allow_singular=True) 
-                       - logsumexp(self._log_q_l))
+        q_numerator = []
+        q_denominator = []
+        for i in range(self._mixture_components):
+            q_numerator.append(np.log(self._w[i]) + 
+              scipy.stats.multivariate_normal.logpdf(self._Y,
+                                                self._mu[i],
+                                                self._sigma[i]))
+            q_denominator.append(np.log(self._w[i]) + 
+              scipy.stats.multivariate_normal.logpdf(self._X,
+                                                self._mu[i],
+                                                self._sigma[i]))
+        q_numerator = q_numerator - logsumexp(q_numerator)
+        q_denominator = q_denominator - logsumexp(q_denominator)
+
         # mistake in the paper!
-        return denominator - numerator
+        return q_numerator[self._Z] - q_denominator[self._Z]
