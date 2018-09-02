@@ -265,4 +265,4 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
                                                 self._sigma[self._Z], allow_singular=True) 
                        - logsumexp(self._log_q_l))
         # mistake in the paper!
-        return numerator - denominator
+        return denominator - numerator
