@@ -228,10 +228,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._current.setflags(write=False)
         return self._current
 
-    def set_normal_scale_coefficient(self, b):
+    def set_scale_coefficient(self, b):
         """
-        Sets the normal scale coefficient ``b`` used in updating the position
-        of each chain.
+        Sets the scale coefficient ``b`` of error process used in updating
+        the position of each chain.
         """
         b = float(b)
         if b < 0:
@@ -259,7 +259,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_gamma(x[0])
-        self.set_normal_scale_coefficient(x[1])
+        self.set_scale_coefficient(x[1])
         self.set_gamma_switch_rate(x[2])
         self.set_normal_error(x[3])
 
