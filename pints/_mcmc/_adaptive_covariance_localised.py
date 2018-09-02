@@ -233,11 +233,11 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
             q_numerator.append(np.log(self._w[i]) + 
               scipy.stats.multivariate_normal.logpdf(self._Y,
                                                 self._mu[i],
-                                                self._sigma[i]))
+                                                self._sigma[i],allow_singular=True))
             q_denominator.append(np.log(self._w[i]) + 
               scipy.stats.multivariate_normal.logpdf(self._X,
                                                 self._mu[i],
-                                                self._sigma[i]))
+                                                self._sigma[i],allow_singular=True))
         q_numerator = q_numerator - logsumexp(q_numerator)
         q_denominator = q_denominator - logsumexp(q_denominator)
 
