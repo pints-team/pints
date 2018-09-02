@@ -117,7 +117,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         for i in range(self._mixture_components):
             self._mu.append(a_temp + epsilon_mu[i])
             self._sigma.append(a_temp_sigma + self._epsilon_sigma[i])
-        self._sigma = [10 * np.identity(self._dimension) for i in range(self._mixture_components)]
+        # self._sigma = [10 * np.identity(self._dimension) for i in range(self._mixture_components)]
         self._mu = [np.array([2, 2]),np.array([16, 12]),np.array([24, 24])]
 
         # Initialise lambda vector
@@ -172,24 +172,13 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         components. If first time this is called, then
         this function creates q functions
         """
-        # create log q values
-        if self._initial_fit:
-            self._log_q_l = [np.log(self._w[i]) + scipy.stats.multivariate_normal.logpdf(self._current,
-                                                                       self._mu[i],
-                                                                       self._sigma[i])
-                             for i in range(self._mixture_components)]
-            # normalise
-            a_log_tot = logsumexp(self._log_q_l)
-            self._log_q_l = np.array(self._log_q_l) - a_log_tot
-
-        # update q values
-        else:
-            for i in range(self._mixture_components):
-                self._log_q_l[i] = (np.log(self._w[i]) +
+        self._log_q_l = np.zeros(self._mixture_components)
+        for i in range(self._mixture_components):
+            self._log_q_l[i] = (np.log(self._w[i]) +
                                    scipy.stats.multivariate_normal.logpdf(self._current,
                                                          self._mu[i], self._sigma[i],
                                                          allow_singular=True))
-            self._log_q_l += -logsumexp(self._log_q_l)
+        self._log_q_l += -logsumexp(self._log_q_l)
 
     def _update_mu(self):
         """
