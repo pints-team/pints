@@ -59,6 +59,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Gamma
         self._gamma = 2.38 / np.sqrt(2 * self._dimension)
+        
+        # Gamma switch to 1 every (below) steps to help find
+        # modes
+        self._gamma_switch = 10
 
         # Normal proposal std.
         self._b = 0.01
