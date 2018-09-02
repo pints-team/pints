@@ -143,7 +143,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(mcmc._gamma_switch_rate, 20)
         self.assertTrue(not mcmc._normal_error)
 
-        self.set_scale_coefficient(1)
+        mcmc.set_scale_coefficient(1)
         mcmc.set_relative_scaling(0)
         self.assertTrue(not mcmc._relative_scaling)
         self.assertTrue(np.array_equal(mcmc._b_star,
@@ -153,14 +153,17 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
                         mcmc._mu * mcmc._b))
 
         self.assertRaisesRegex(
-            ValueError, 'non-negative', mcmc.set_hyper_parameters, [-1, 0.5, 20, 0])
+            ValueError, 'non-negative', mcmc.set_hyper_parameters,
+            [-1, 0.5, 20, 0])
 
         self.assertRaisesRegex(
-            ValueError, 'non-negative', mcmc.set_hyper_parameters, [1, -0.5, 20, 0])
-        
+            ValueError, 'non-negative', mcmc.set_hyper_parameters,
+            [1, -0.5, 20, 0])
+
         self.assertRaisesRegex(
-            ValueError, 'integer', mcmc.set_hyper_parameters, [1, 0.5, 20.5, 0])
-        
+            ValueError, 'integer', mcmc.set_hyper_parameters,
+            [1, 0.5, 20.5, 0])
+
         self.assertRaisesRegex(
             ValueError, 'exceed 1', mcmc.set_hyper_parameters, [1, 0.5, 0, 0])
 
