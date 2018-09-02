@@ -117,8 +117,6 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         for i in range(self._mixture_components):
             self._mu.append(a_temp + epsilon_mu[i])
             self._sigma.append(a_temp_sigma + self._epsilon_sigma[i])
-        # self._sigma = [10 * np.identity(self._dimension) for i in range(self._mixture_components)]
-        self._mu = [np.array([2, 2]),np.array([16, 12]),np.array([24, 24])]
 
         # Initialise lambda vector
         self._log_lambda = np.zeros(self._mixture_components)
@@ -129,8 +127,6 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         # Initialise log_q_l
         self._log_q_l = np.log(np.repeat(1.0 / self._mixture_components,
                                          self._mixture_components))
-        
-        self._zz = 0
 
     def set_mixture_components(self, mixture_components):
         """
@@ -224,30 +220,6 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         alpha_t+1^k = alpha_t^k + gamma_t+1 * 1(Z_t+1==k?) * 
                              (alpha_k(theta_t, Y_t+1) - alpha_t^k)
         """
-        # Only update Zth component
-        # print(np.exp(self._log_q_l))
-        # print(self._mu)
-        # print(self._current)
-        # print(self._sigma)
-        # print(self._w)
-        # print(-1)
-        # print(self._mu)
-        
-        # print(self._current)
-        # print(self._sigma)
-        # print(self._alpha_l[self._Z])
-        # print(self._Z)
-        # print(np.exp(self._log_q_l))
-        # print(self._gamma)
-        # print(-1)
-        
-        if self._Z != self._zz:
-            print("hello")
-            print(np.exp(self._log_q_l))
-            print(self._current)
-            print(self._mu)
-        self._zz = self._Z
-        # print(-1)
         self._alpha_l[self._Z] += (self._gamma *
                                      (self._alpha - self._alpha_l[self._Z]))
 
