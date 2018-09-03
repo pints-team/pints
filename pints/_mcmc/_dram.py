@@ -74,7 +74,8 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
 
     def tell(self, fx):
         """
-        
+        If first proposal, then accept with ordinary
+        Metropolis probability: _alpha_x_y = min(1, )
         """
         # Check if we had a proposal
         if self._proposed is None:
@@ -108,11 +109,11 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         
          # First or second proposal
         if self._first_proposal:
-            self._alpha_x_y = r
+            self._alpha_x_y_log = min(0, r)
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
-            r += (1 - (self._Y1_log_pdf - fx)) - (1 - self._alpha_x_y) 
+            r += (1 - (self._Y1_log_pdf - fx)) - (1 - self._alpha_x_y_log) 
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
