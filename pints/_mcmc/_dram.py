@@ -45,16 +45,9 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
 
         # Propose new point
         if self._proposed is None:
-            # high (risky) proposal width
-            if self._first_proposal:
-                self._proposed = np.random.multivariate_normal(
-                      self._current, np.exp(self._loga) * self._sigma1)
-                self._Y1 = np.copy(self._proposed)
-            # low (risk) proposal width
-            else:
-                self._proposed = np.random.multivariate_normal(
-                      self._current, np.exp(self._loga) * self._sigma2)
-                self._Y2 = np.copy(self._proposed)
+            self._proposed = np.random.multivariate_normal(
+                                self._current, np.exp(self._loga) * self._sigma[self._proposal_count])
+            self._Y[self._proposal_count] = np.copy(self._proposed)
             # Set as read-only
             self._proposed.setflags(write=False)
 
@@ -66,19 +59,37 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
         super(DramMCMC, self)._initialise()
-        # First proposal
-        self._first_proposal = True
-        self._Y1 = 0
-        self._Y2 = 0
-        self._Y1_log_pdf = float('-Inf')
+
+        self._kernels = 2
+        self._Y = [None] * self._kernels
+        self._Y_log_pdf = np.repeat(float('-Inf'), self._kernels)
+        self._proposal_count = 0
+        self._adapt_kernel = np.repeat(True, self._kernels)
         
-        # Replace these with vectored variable
-        self._adapt_kernel1 = True
-        self._adapt_kernel2 = True
-        self._mu1 = np.copy(self._mu)
-        self._mu2 = np.copy(self._mu)
-        self._sigma1 = 100 * np.copy(self._sigma)
-        self._sigma2 = np.copy(self._sigma)
+        # Set kernels
+        v_mu = np.copy(self._mu)
+        self._mu = [v_mu for i in range(self._kernels)]
+        self._sigma_scale = np.array([100, 1])
+        m_sigma = np.copy(self._sigma)
+        self._sigma = [self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
+        
+    def set_sigma_scale(self, minK, maxK):
+        """
+        Set the scale of initial covariance matrix
+        multipliers for each of the kernels:
+        (minK,...,maxK) where the gradations are
+        uniform on the log10 scale.
+        This means that the covariance matrices are:
+        maxK * sigma0,..., MinK * sigma0
+        where n can be modified by `set_kernels`.
+        """
+        if a_min > a_max:
+            raise ValueError('Maximum kernel multiplier must ' +
+                             'exceed minimum.')
+        a_min=np.log10(minK)
+        a_max=np.log10(maxK)
+        self._sigma_scale = 10**np.linspace(a_min, a_max, self._kernels)
+        self._sigma = [self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
 
     def tell(self, fx):
         """
@@ -116,15 +127,15 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         r_log = fx - self._current_log_pdf
 
          # First proposal?
-        if self._first_proposal:
+        if self._proposal_count == 0:
             self._alpha_x_y_log = min(0, r_log)
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
             r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) - 
                       np.log(1 -np.exp(self._alpha_x_y_log)) +
-                      scipy.stats.multivariate_normal.logpdf(x=self._Y1,mean=self._Y2,cov=self._sigma2,allow_singular=True) -
-                      scipy.stats.multivariate_normal.logpdf(x=self._Y2,mean=self._Y1,cov=self._sigma2,allow_singular=True))
+                      scipy.stats.multivariate_normal.logpdf(x=self._Y[0],mean=self._Y[1],cov=self._sigma[1],allow_singular=True) -
+                      scipy.stats.multivariate_normal.logpdf(x=self._Y[1],mean=self._Y[0],cov=self._sigma[1],allow_singular=True))
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
@@ -155,11 +166,11 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         # Return new point for chain
         if accepted == 0:
             # rejected first proposal
-            if self._first_proposal:
-                self._first_proposal = False
+            if self._proposal_count == 0:
+                self._proposal_count += 1
                 return None
             else:
-                self._first_proposal = True
+                self._proposal_count = 0
         # if accepted or failed on second try
         return self._current
         
@@ -170,12 +181,10 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         will be able to be swapped with another routine), if
         adaptation is turned on
         """
-        if self._first_proposal:
-            if self._adapt_kernel1:
-                self._mu1 = (1 - self._gamma) * self._mu1 + self._gamma * self._current
-        else:
-            if self._adapt_kernel2:
-                self._mu2 = (1 - self._gamma) * self._mu2 + self._gamma * self._current
+        if self._adapt_kernel[self._proposal_count]:
+            self._mu[self._proposal_count] = ((1 - self._gamma) *
+                                               self._mu[self._proposal_count] +
+                                               self._gamma * self._current)
 
     def _update_sigma(self):
         """
@@ -184,12 +193,8 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         will be able to be swapped with another routine), if
         adaptation is turned on
         """
-        if self._first_proposal:
-            if self._adapt_kernel1:
-                dsigm = np.reshape(self._current - self._mu1, (self._dimension, 1))
-                self._sigma1 = ((1 - self._gamma) * self._sigma1 + self._gamma * np.dot(dsigm, dsigm.T))
-        else:
-            if self._adapt_kernel2:
-                dsigm = np.reshape(self._current - self._mu2, (self._dimension, 1))
-                self._sigma2 = ((1 - self._gamma) * self._sigma2 + self._gamma * np.dot(dsigm, dsigm.T))
+        if self._adapt_kernel:
+              dsigm = np.reshape(self._current - self._mu[self._proposal_count], (self._dimension, 1))
+              self._sigma[self._proposal_count] = ((1 - self._gamma) * self._sigma[self._proposal_count] +
+                                                  self._gamma * np.dot(dsigm, dsigm.T))
                 
