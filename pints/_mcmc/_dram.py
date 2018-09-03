@@ -112,8 +112,10 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
-            r_log += (logsumexp([1, -(self._Y1_log_pdf - fx)]) -
-                  logsumexp([1, -self._alpha_x_y_log]))
+            r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) - 
+                      np.log(1 -np.exp(self._alpha_x_y_log)))
+            # (logsumexp([1, -(self._Y1_log_pdf - fx)]) -
+            #       logsumexp([1, -self._alpha_x_y_log]))
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
