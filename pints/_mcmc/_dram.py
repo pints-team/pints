@@ -61,18 +61,18 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         """
         super(DramMCMC, self)._initialise()
 
-        self._kernels = 1
+        self._kernels = 2
         self._Y = [None] * self._kernels
         self._Y_log_pdf = np.repeat(float('-Inf'), self._kernels)
         self._proposal_count = 0
         self._adapt_kernel = np.repeat(True, self._kernels)
-        self._gamma = np.repeat(1, self._kernels)
+        self._gamma = np.repeat(1.0, self._kernels)
         self._eta = np.repeat(np.copy(self._eta), self._kernels)
 
         # Set kernels
         v_mu = np.copy(self._mu)
         self._mu = [v_mu for i in range(self._kernels)]
-        self._sigma_scale = np.array([100, 1])
+        self._sigma_scale = np.array([1, 1])
         m_sigma = np.copy(self._sigma)
         self._sigma = [self._sigma_scale[i] * m_sigma
                        for i in range(self._kernels)]
@@ -161,8 +161,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         a_count = np.copy(self._proposal_count)
         if self._adaptive:
             # Set gamma based on number of adaptive iterations
-            self._gamma[a_count] = (self._adaptations **
-                                    -self._eta[a_count])
+            self._gamma[a_count] = (self._adaptations**-self._eta[a_count])
             self._adaptations += 1
 
             # Update mu, log acceptance rate, and covariance matrix
