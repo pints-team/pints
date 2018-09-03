@@ -65,14 +65,14 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         self._Y_log_pdf = np.repeat(float('-Inf'), self._kernels)
         self._proposal_count = 0
         self._adapt_kernel = np.repeat(True, self._kernels)
-        
+
         # Set kernels
         v_mu = np.copy(self._mu)
         self._mu = [v_mu for i in range(self._kernels)]
         self._sigma_scale = np.array([100, 1])
         m_sigma = np.copy(self._sigma)
         self._sigma = [self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
-        
+
     def set_sigma_scale(self, minK, maxK):
         """
         Set the scale of initial covariance matrix
@@ -132,7 +132,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
-            r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) - 
+            r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) -
                       np.log(1 -np.exp(self._alpha_x_y_log)) +
                       scipy.stats.multivariate_normal.logpdf(x=self._Y[0],mean=self._Y[1],cov=self._sigma[1],allow_singular=True) -
                       scipy.stats.multivariate_normal.logpdf(x=self._Y[1],mean=self._Y[0],cov=self._sigma[1],allow_singular=True))
@@ -173,7 +173,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
                 self._proposal_count = 0
         # if accepted or failed on second try
         return self._current
-        
+
     def _update_mu(self):
         """
         Updates the means of the various kernels being used,
@@ -197,4 +197,3 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
               dsigm = np.reshape(self._current - self._mu[self._proposal_count], (self._dimension, 1))
               self._sigma[self._proposal_count] = ((1 - self._gamma) * self._sigma[self._proposal_count] +
                                                   self._gamma * np.dot(dsigm, dsigm.T))
-                
