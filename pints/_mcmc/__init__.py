@@ -423,13 +423,31 @@ class MCMCSampling(object):
 
             # Calculate scores
             fxs = evaluator.evaluate(xs)
-
+            
+            a_none = False
             # Perform iteration(s)
             if self._single_chain:
                 samples = np.array([
                     s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+                for i, sample in enumerate(samples):
+                    if sample is None:
+                        a_none = True
+                        while sample is None:
+                            xss = [np.array(self._samplers[i].ask())]
+                            fxss = evaluator.evaluate(xss)
+                            sample = self._samplers[i].tell(fxss[0])
+                    samples[i] = sample
             else:
                 samples = self._samplers[0].tell(fxs)
+            
+            # convert lists to numpy array in case of None
+            samples = np.array(samples)
+            if a_none:
+                samples_temp = np.zeros((len(samples), self._dimension))
+                for i, sample in enumerate(samples):
+                    samples_temp[i, :] = samples[i]
+                samples = samples_temp
+            
             chains.append(samples)
 
             # Update evaluation count
