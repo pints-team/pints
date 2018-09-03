@@ -60,14 +60,17 @@ class DramMCMC(pints.SingleChainMCMC):
 
         # Propose new point
         if self._proposed is None:
-
-            # Note: Normal distribution is symmetric
-            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
-            #  distribution term from the acceptance criterion
-            # if self._reject_first_proposal:
-            self._proposed = np.random.multivariate_normal(
+            # high (risky) proposal width
+            if self._first_proposal:
+                self._proposed = np.random.multivariate_normal(
                       self._current, np.exp(self._loga) * self._sigma)
-
+                self._first_proposal = True
+                self._Y1 = np.copy(self._proposed)
+            # low (risk) proposal width
+            else:
+                self._proposed = np.random.multivariate_normal(
+                      self._current, np.exp(self._loga) * self._sigma)
+                self._Y2 = np.copy(self._proposed)
             # Set as read-only
             self._proposed.setflags(write=False)
 
@@ -89,7 +92,7 @@ class DramMCMC(pints.SingleChainMCMC):
         # Set initial mu and sigma
         self._mu = np.array(self._x0, copy=True)
         self._sigma = np.array(self._sigma0, copy=True)
-        self._sigma_large = np.array(10 * self._sigma0, copy=True)
+        # self._sigma_large = np.array(10 * self._sigma0, copy=True)
 
         # Adaptation
         self._loga = 0
@@ -101,6 +104,12 @@ class DramMCMC(pints.SingleChainMCMC):
 
         # Update sampler state
         self._running = True
+        
+        # First proposal
+        self._first_proposal = True
+        self._Y1 = 0
+        self._Y2 = 0
+        self._Y1_log_pdf = float('-Inf')
 
     def in_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
@@ -157,9 +166,19 @@ class DramMCMC(pints.SingleChainMCMC):
 
         # Check if the proposed point can be accepted
         accepted = 0
+        r = fx - self._current_log_pdf
+        
+         # First or second proposal
+        if self._first_proposal:
+            self._alpha_x_y = r
+            self._Y1_log_pdf = fx
+        else:
+            # modify according to eqn. (2)
+            r += (1 - (self._Y1_log_pdf - fx)) - (1 - self._alpha_x_y) 
+
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < fx - self._current_log_pdf:
+            if u < r:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
@@ -187,10 +206,13 @@ class DramMCMC(pints.SingleChainMCMC):
         self._iterations += 1
 
         # Return new point for chain
-        if np.random.rand() > 0.5:
-            return None
-        else:
-            return self._current
+        if accepted == 0:
+            # rejected first proposal
+            if not self._first_proposal:
+                self._first_proposal = False
+                return None
+        # if accepted or failed on second try
+        return self._current
 
     def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
