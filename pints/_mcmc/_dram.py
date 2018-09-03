@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class DramMCMC(pints.SingleChainMCMC):
+class DramMCMC(pints.AdaptiveCovarianceMCMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1].
 
@@ -27,36 +27,20 @@ class DramMCMC(pints.SingleChainMCMC):
     [2] An adaptive Metropolis algorithm
     Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
 
-    *Extends:* :class:`SingleChainMCMC`
+    *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
         super(DramMCMC, self).__init__(x0, sigma0)
 
-        # Set initial state
-        self._running = False
-
-        # Current point and proposed point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = None
-
-        # Default settings
-        self.set_target_acceptance_rate()
-
-        # Adaptive mode: disabled during initial phase
-        self._adaptive = False
-
-    def acceptance_rate(self):
-        """
-        Returns the current (measured) acceptance rate.
-        """
-        return self._acceptance
-
     def ask(self):
-        """ See :meth:`SingleChainMCMC.ask()`. """
-        # Initialise on first call
-        if not self._running:
-            self._initialise()
+        """
+        If first proposal from a position, return
+        a proposal with an ambitious (i.e. large)
+        proposal width; if first is rejected
+        then return a proposal from a conservative
+        kernel (i.e. with low width)
+        """
+        super(DramMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -79,65 +63,19 @@ class DramMCMC(pints.SingleChainMCMC):
 
     def _initialise(self):
         """
-        Initialises the routine before the first iteration.
+        See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        if self._running:
-            raise RuntimeError('Already initialised.')
-
-        # Propose x0 as first point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = self._x0
-
-        # Set initial mu and sigma
-        self._mu = np.array(self._x0, copy=True)
-        self._sigma = np.array(self._sigma0, copy=True)
-        # self._sigma_large = np.array(10 * self._sigma0, copy=True)
-
-        # Adaptation
-        self._loga = 0
-        self._adaptations = 2
-
-        # Acceptance rate monitoring
-        self._iterations = 0
-        self._acceptance = 0
-
-        # Update sampler state
-        self._running = True
-        
+        super(DramMCMC, self)._initialise()
         # First proposal
         self._first_proposal = True
         self._Y1 = 0
         self._Y2 = 0
         self._Y1_log_pdf = float('-Inf')
 
-    def in_initial_phase(self):
-        """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
-        return not self._adaptive
-
-    def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init()`. """
-        logger.add_float('Accept.')
-
-    def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write()`. """
-        logger.log(self._acceptance)
-
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Delayed Acceptance Metropolis MCMC'
-
-    def needs_initial_phase(self):
-        """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
-        return True
-
-    def set_initial_phase(self, initial_phase):
-        """ See :meth:`pints.MCMCSampler.set_initial_phase()`. """
-        # No adaptation during initial phase
-        self._adaptive = not bool(initial_phase)
-
     def tell(self, fx):
-        """ See :meth:`pints.SingleChainMCMC.tell()`. """
+        """
+        
+        """
         # Check if we had a proposal
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
