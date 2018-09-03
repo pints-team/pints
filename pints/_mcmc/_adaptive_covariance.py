@@ -78,11 +78,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Update sampler state
         self._running = True
-        
+
         # Localised AM
         self._localised = False
         self._initial_fit = True
-    
+
     def set_eta(self, eta):
         """
         Updates eta which controls the rate of
@@ -142,7 +142,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
             # Clear proposal
             self._proposed = None
-            
+
             # Set alpha prob to zero
             self._alpha = 0
 
@@ -154,13 +154,13 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         r = fx - self._current_log_pdf
         self._X = self._current
         self._Y = self._proposed
-        
+
         # Localised vs others
         if self._localised:
             r = r + self._ratio_q()
-        
+
         self._alpha = np.minimum(1, np.exp(r))
-        
+
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < r:
@@ -187,7 +187,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
                 self._update_sigma()
 
         # Update acceptance rate (only used for output!)
-        self._acceptance = ((self._iterations * self._acceptance + self._accepted) /
+        self._acceptance = ((self._iterations * self._acceptance +
+                            self._accepted) /
                             (self._iterations + 1))
 
         # Increase iteration count
@@ -207,7 +208,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Note that this default is overidden in some of the methods
         """
         dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-        self._sigma = ((1 - self._gamma) * self._sigma + self._gamma * np.dot(dsigm, dsigm.T))
+        self._sigma = ((1 - self._gamma) * self._sigma +
+                       self._gamma * np.dot(dsigm, dsigm.T))
 
     def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
@@ -247,5 +249,3 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Returns the target acceptance rate.
         """
         return self._target_acceptance
-        
-
