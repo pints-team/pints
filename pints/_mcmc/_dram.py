@@ -10,7 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-
+from scipy.misc import logsumexp
 
 class DramMCMC(pints.AdaptiveCovarianceMCMC):
     """
@@ -105,19 +105,20 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
 
         # Check if the proposed point can be accepted
         accepted = 0
-        r = fx - self._current_log_pdf
-        
+        r_log = fx - self._current_log_pdf
+
          # First or second proposal
         if self._first_proposal:
-            self._alpha_x_y_log = min(0, r)
+            self._alpha_x_y_log = min(0, r_log)
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
-            r += (1 - (self._Y1_log_pdf - fx)) - (1 - self._alpha_x_y_log) 
+            r += (logsumexp([1, -(self._Y1_log_pdf - fx)]) -
+                  logsumexp([1, -self._alpha_x_y_log])) 
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < r:
+            if u < r_log:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
@@ -127,15 +128,12 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         # Adapt covariance matrix
         if self._adaptive:
             # Set gamma based on number of adaptive iterations
-            gamma = self._adaptations ** -0.6
+            self._gamma = self._adaptations ** -self._eta
             self._adaptations += 1
 
             # Update mu, log acceptance rate, and covariance matrix
-            self._mu = (1 - gamma) * self._mu + gamma * self._current
-            self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-            self._sigma = (
-                (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
+            self._update_mu()
+            self._update_sigma()
 
         # Update acceptance rate (only used for output!)
         self._acceptance = ((self._iterations * self._acceptance + accepted) /
@@ -152,43 +150,3 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
                 return None
         # if accepted or failed on second try
         return self._current
-
-    def replace(self, x, fx):
-        """ See :meth:`pints.SingleChainMCMC.replace()`. """
-        # Must already be running
-        if not self._running:
-            raise RuntimeError(
-                'Replace can only be used when already running.')
-
-        # Must be after tell, before ask
-        if self._proposed is not None:
-            raise RuntimeError(
-                'Replace can only be called after tell / before ask.')
-
-        # Check values
-        x = pints.vector(x)
-        if not len(x) == len(self._current):
-            raise ValueError('Dimension mismatch in `x`.')
-        fx = float(fx)
-
-        # Store
-        self._current = x
-        self._current_log_pdf = fx
-
-    def set_target_acceptance_rate(self, rate=0.234):
-        """
-        Sets the target acceptance rate.
-        """
-        rate = float(rate)
-        if rate <= 0:
-            raise ValueError('Target acceptance rate must be greater than 0.')
-        elif rate > 1:
-            raise ValueError('Target acceptance rate cannot exceed 1.')
-        self._target_acceptance = rate
-
-    def target_acceptance_rate(self):
-        """
-        Returns the target acceptance rate.
-        """
-        return self._target_acceptance
-
