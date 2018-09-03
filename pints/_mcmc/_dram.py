@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 from scipy.misc import logsumexp
+import scipy
 
 class DramMCMC(pints.AdaptiveCovarianceMCMC):
     """
@@ -114,14 +115,16 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         accepted = 0
         r_log = fx - self._current_log_pdf
 
-         # First or second proposal
+         # First proposal?
         if self._first_proposal:
             self._alpha_x_y_log = min(0, r_log)
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
             r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) - 
-                      np.log(1 -np.exp(self._alpha_x_y_log)))
+                      np.log(1 -np.exp(self._alpha_x_y_log)) +
+                      scipy.stats.multivariate_normal.logpdf(x=self._Y1,mean=self._Y2,cov=self._sigma2,allow_singular=True) -
+                      scipy.stats.multivariate_normal.logpdf(x=self._Y2,mean=self._Y1,cov=self._sigma2,allow_singular=True))
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
@@ -182,9 +185,6 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         adaptation is turned on
         """
         if self._first_proposal:
-            print(-1)
-            print(self._sigma1)
-            print(self._sigma2)
             if self._adapt_kernel1:
                 dsigm = np.reshape(self._current - self._mu1, (self._dimension, 1))
                 self._sigma1 = ((1 - self._gamma) * self._sigma1 + self._gamma * np.dot(dsigm, dsigm.T))
