@@ -48,7 +48,6 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             if self._first_proposal:
                 self._proposed = np.random.multivariate_normal(
                       self._current, np.exp(self._loga) * self._sigma)
-                self._first_proposal = True
                 self._Y1 = np.copy(self._proposed)
             # low (risk) proposal width
             else:
@@ -113,8 +112,8 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (2)
-            r += (logsumexp([1, -(self._Y1_log_pdf - fx)]) -
-                  logsumexp([1, -self._alpha_x_y_log])) 
+            r_log += (logsumexp([1, -(self._Y1_log_pdf - fx)]) -
+                  logsumexp([1, -self._alpha_x_y_log]))
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
@@ -145,7 +144,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         # Return new point for chain
         if accepted == 0:
             # rejected first proposal
-            if not self._first_proposal:
+            if self._first_proposal:
                 self._first_proposal = False
                 return None
         # if accepted or failed on second try
