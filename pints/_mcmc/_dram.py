@@ -193,7 +193,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         will be able to be swapped with another routine), if
         adaptation is turned on
         """
-        if self._adapt_kernel:
+        if self._adapt_kernel[self._proposal_count]:
               dsigm = np.reshape(self._current - self._mu[self._proposal_count], (self._dimension, 1))
               self._sigma[self._proposal_count] = ((1 - self._gamma) * self._sigma[self._proposal_count] +
                                                   self._gamma * np.dot(dsigm, dsigm.T))
