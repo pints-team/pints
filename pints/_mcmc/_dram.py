@@ -47,12 +47,12 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             # high (risky) proposal width
             if self._first_proposal:
                 self._proposed = np.random.multivariate_normal(
-                      self._current, np.exp(self._loga) * self._sigma)
+                      self._current, np.exp(self._loga) * self._sigma1)
                 self._Y1 = np.copy(self._proposed)
             # low (risk) proposal width
             else:
                 self._proposed = np.random.multivariate_normal(
-                      self._current, np.exp(self._loga) * self._sigma)
+                      self._current, np.exp(self._loga) * self._sigma2)
                 self._Y2 = np.copy(self._proposed)
             # Set as read-only
             self._proposed.setflags(write=False)
@@ -70,6 +70,14 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         self._Y1 = 0
         self._Y2 = 0
         self._Y1_log_pdf = float('-Inf')
+        
+        # Replace these with vectored variable
+        self._adapt_kernel1 = True
+        self._adapt_kernel2 = True
+        self._mu1 = np.copy(self._mu)
+        self._mu2 = np.copy(self._mu)
+        self._sigma1 = 100 * np.copy(self._sigma)
+        self._sigma2 = np.copy(self._sigma)
 
     def tell(self, fx):
         """
@@ -147,5 +155,41 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
             if self._first_proposal:
                 self._first_proposal = False
                 return None
+            else:
+                self._first_proposal = True
         # if accepted or failed on second try
         return self._current
+        
+    def _update_mu(self):
+        """
+        Updates the means of the various kernels being used,
+        according to adaptive Metropolis routine (later this
+        will be able to be swapped with another routine), if
+        adaptation is turned on
+        """
+        if self._first_proposal:
+            if self._adapt_kernel1:
+                self._mu1 = (1 - self._gamma) * self._mu1 + self._gamma * self._current
+        else:
+            if self._adapt_kernel2:
+                self._mu2 = (1 - self._gamma) * self._mu2 + self._gamma * self._current
+
+    def _update_sigma(self):
+        """
+        Updates the covariance matrices of the various kernels being used,
+        according to adaptive Metropolis routine (later this
+        will be able to be swapped with another routine), if
+        adaptation is turned on
+        """
+        if self._first_proposal:
+            print(-1)
+            print(self._sigma1)
+            print(self._sigma2)
+            if self._adapt_kernel1:
+                dsigm = np.reshape(self._current - self._mu1, (self._dimension, 1))
+                self._sigma1 = ((1 - self._gamma) * self._sigma1 + self._gamma * np.dot(dsigm, dsigm.T))
+        else:
+            if self._adapt_kernel2:
+                dsigm = np.reshape(self._current - self._mu2, (self._dimension, 1))
+                self._sigma2 = ((1 - self._gamma) * self._sigma2 + self._gamma * np.dot(dsigm, dsigm.T))
+                
