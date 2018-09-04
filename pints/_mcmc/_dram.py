@@ -129,28 +129,11 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
 
         # Check if the proposed point can be accepted
         accepted = 0
-        r_log = fx - self._current_log_pdf
-
-        # First proposal?
-        if self._proposal_count == 0:
-            self._alpha_x_y_log = min(0, r_log)
-            self._Y1_log_pdf = fx
-        else:
-            # modify according to eqn. (2)
-            r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) -
-                      np.log(1 - np.exp(self._alpha_x_y_log)) +
-                      stats.multivariate_normal.logpdf(x=self._Y[0],
-                                                       mean=self._Y[1],
-                                                       cov=self._sigma[1],
-                                                       allow_singular=True) -
-                      stats.multivariate_normal.logpdf(x=self._Y[1],
-                                                       mean=self._Y[0],
-                                                       cov=self._sigma[1],
-                                                       allow_singular=True))
+        self._calculate_r_log(fx)
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < r_log:
+            if u < self._r_log:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
@@ -215,3 +198,26 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
                                     self._sigma[a_count] +
                                     self._gamma[a_count] *
                                     np.dot(dsigm, dsigm.T))
+
+    def _calculate_r_log(self, fx):
+        """
+        Calculates value of logged acceptance ratio (eq. 3 in Haario et al.)
+        """
+        self._r_log = fx - self._current_log_pdf
+
+        # First proposal?
+        if self._proposal_count == 0:
+            self._alpha_x_y_log = min(0, self._r_log)
+            self._Y1_log_pdf = fx
+        else:
+            # modify according to eqn. (3)
+            self._r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) -
+                  np.log(1 - np.exp(self._alpha_x_y_log)) +
+                  stats.multivariate_normal.logpdf(x=self._Y[0],
+                                                   mean=self._Y[1],
+                                                   cov=self._sigma[1],
+                                                   allow_singular=True) -
+                  stats.multivariate_normal.logpdf(x=self._Y[1],
+                                                   mean=self._Y[0],
+                                                   cov=self._sigma[1],
+                                                   allow_singular=True))
