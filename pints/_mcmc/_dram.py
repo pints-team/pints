@@ -203,20 +203,37 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         """
         Calculates value of logged acceptance ratio (eq. 3 in Haario et al.)
         """
-        self._r_log = fx - self._current_log_pdf
-        self._Y_log_pdf[self._proposal_count] = fx
-        # First proposal?
-        if self._proposal_count == 0:
-            self._alpha_x_y_log = min(0, self._r_log)
-        else:
-            # modify according to eqn. (3)
-            self._r_log += (np.log(1 - np.exp((self._Y_log_pdf[0] - fx))) -
-                  np.log(1 - np.exp(self._alpha_x_y_log)) +
-                  stats.multivariate_normal.logpdf(x=self._Y[0],
-                                                   mean=self._Y[1],
-                                                   cov=self._sigma[0],
-                                                   allow_singular=True) -
-                  stats.multivariate_normal.logpdf(x=self._current,
-                                                   mean=self._Y[0],
-                                                   cov=self._sigma[0],
-                                                   allow_singular=True))
+        c = self._proposal_count
+        temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
+        temp_log_Y = np.concatenate([[self._current_log_pdf],
+                                     self._Y_log_pdf[0:(c + 1)]])
+        self._r_log = self._calculate_alpha(c, temp_Y,
+                                            temp_log_Y)
+
+    def _calculate_alpha(self, n, Y, log_Y):
+        """
+        Calculates alpha expression necessary in eq. 3 of Haario et al. for
+        determining accept/reject
+        """
+        alpha = log_Y[n + 1] - log_Y[0]
+        if n == 0:
+            return alpha
+        Y_rev = Y[::-1]
+        log_Y_rev = log_Y[::-1]
+        for i in range(n):
+            alpha += (stats.multivariate_normal.logpdf(
+                      x=Y[n - i - 1],
+                      mean=Y[n],
+                      cov=self._sigma[i],
+                      allow_singular=True) -
+                      stats.multivariate_normal.logpdf(
+                      x=Y[i],
+                      mean=self._current,
+                      cov=self._sigma[i],
+                      allow_singular=True) +
+                      (1 - self._calculate_alpha(i, Y_rev[0:(i + 2)],
+                                                 log_Y_rev[0:(i + 2)])) -
+                      (1 - self._calculate_alpha(i, Y[0:(i + 2)],
+                                                 log_Y[0:(i + 2)]))
+                      )
+        return alpha
