@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.stats as stats
+import math
 
 
 class DramMCMC(pints.AdaptiveCovarianceMCMC):
@@ -218,7 +219,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         """
         alpha_log = log_Y[n + 1] - log_Y[0]
         if n == 0:
-            return alpha_log
+            return min(0, alpha_log)
         Y_rev = Y[::-1]
         log_Y_rev = log_Y[::-1]
         for i in range(n):
