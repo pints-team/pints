@@ -61,7 +61,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         """
         super(DramMCMC, self)._initialise()
 
-        self._kernels = 1
+        self._kernels = 2
         self._Y = [None] * self._kernels
         self._Y_log_pdf = np.zeros(self._kernels)
         self._proposal_count = 0
