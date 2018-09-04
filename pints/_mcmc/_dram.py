@@ -63,7 +63,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
 
         self._kernels = 2
         self._Y = [None] * self._kernels
-        self._Y_log_pdf = np.repeat(float('-Inf'), self._kernels)
+        self._Y_log_pdf = np.zeros(self._kernels)
         self._proposal_count = 0
         self._adapt_kernel = np.repeat(True, self._kernels)
         self._gamma = np.repeat(1.0, self._kernels)
@@ -204,20 +204,19 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         Calculates value of logged acceptance ratio (eq. 3 in Haario et al.)
         """
         self._r_log = fx - self._current_log_pdf
-
+        self._Y_log_pdf[self._proposal_count] = fx
         # First proposal?
         if self._proposal_count == 0:
             self._alpha_x_y_log = min(0, self._r_log)
-            self._Y1_log_pdf = fx
         else:
             # modify according to eqn. (3)
-            self._r_log += (np.log(1 - np.exp((self._Y1_log_pdf - fx))) -
+            self._r_log += (np.log(1 - np.exp((self._Y_log_pdf[0] - fx))) -
                   np.log(1 - np.exp(self._alpha_x_y_log)) +
                   stats.multivariate_normal.logpdf(x=self._Y[0],
                                                    mean=self._Y[1],
-                                                   cov=self._sigma[1],
+                                                   cov=self._sigma[0],
                                                    allow_singular=True) -
-                  stats.multivariate_normal.logpdf(x=self._Y[1],
+                  stats.multivariate_normal.logpdf(x=self._current,
                                                    mean=self._Y[0],
-                                                   cov=self._sigma[1],
+                                                   cov=self._sigma[0],
                                                    allow_singular=True))
