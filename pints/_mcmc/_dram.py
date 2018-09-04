@@ -231,10 +231,10 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
                           mean=self._current,
                           cov=self._sigma[i],
                           allow_singular=True) +
-                          (1 - self._calculate_alpha_log(i, Y_rev[0:(i + 2)],
-                                                         log_Y_rev[0:(i + 2)]))
+                          np.log(1 - np.exp(self._calculate_alpha_log(i, Y_rev[0:(i + 2)],
+                                                         log_Y_rev[0:(i + 2)])))
                           -
-                          (1 - self._calculate_alpha_log(i, Y[0:(i + 2)],
-                                                         log_Y[0:(i + 2)]))
+                          np.log(1 - np.exp(self._calculate_alpha_log(i, Y[0:(i + 2)],
+                                                         log_Y[0:(i + 2)])))
                           )
         return min(0, alpha_log)
