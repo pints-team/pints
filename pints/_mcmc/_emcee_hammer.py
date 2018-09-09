@@ -14,14 +14,14 @@ import numpy as np
 
 class EmceeHammerMCMC(pints.MultiChainMCMC):
     """
-    Uses the differential evolution algorithm described in 
+    Uses the differential evolution algorithm described in
     Algorithm 2 in [1].
-    
+
     For k in 1:N:
     - Draw a walker X_j at random from the complementary
         ensemble (i.e. the group of chains not including k)
         without replacement.
-        
+
     - Sample z ~ g(z), (see below).
 
     - Set ``Y = X_j(t) + z[X_k(t) - X_j(t)]``.
@@ -38,7 +38,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     N = number of chains (walkers).
 
     [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg,
-    Dustin Lang, Jonathan Goodman, 2013, arXiv, 
+    Dustin Lang, Jonathan Goodman, 2013, arXiv,
     https://arxiv.org/pdf/1202.3665.pdf
     """
 
@@ -56,7 +56,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._current = None
         self._current_logpdf = None
         self._proposed = None
-        
+
         # Hyper parameter
         self._a = 2
 
@@ -65,20 +65,20 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Initialise on first call
         if not self._running:
             self._initialise()
-        
+
         # Propose new points
         if len(self._remaining) == 0:
             self._remaining = np.arange(self._chains)
         self._k = self._remaining[0]
         self._remaining = np.delete(self._remaining, 0)
-        
+
         # pick j from the complementary ensemble
         j = np.random.randint(self._chains)
         while j == self._k:
             j = np.random.randint(self._chains)
         X_j = self._current[j]
         X_k = self._current[self._k]
-        
+
         # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a],
         # 0 otherwise
         r = np.random.rand()
@@ -102,7 +102,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._current = None
         self._current_log_pdfs = None
         self._proposed = self._x0
-        
+
         # a range
         self._remaining = np.arange(self._chains)
 
@@ -139,8 +139,9 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             return self._current
 
         r_log = np.log(np.random.rand())
-        q = ((self._chains - 1) * np.log(self._Z)  + proposed_log_pdfs[self._k] -
-                self._current_log_pdfs[self._k])
+        q = ((self._chains - 1) * np.log(self._Z) +
+             proposed_log_pdfs[self._k] -
+             self._current_log_pdfs[self._k])
 
         if q >= r_log:
             self._current[self._k] = self._proposed
