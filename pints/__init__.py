@@ -168,6 +168,7 @@ from ._mcmc._adaptive_covariance_am_global_component import AdaptiveCovarianceAM
 from ._mcmc._adaptive_covariance_localised import AdaptiveCovarianceLocalisedMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
+from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._dram import DramMCMC

@@ -441,12 +441,13 @@ class MCMCSampling(object):
                 samples = self._samplers[0].tell(fxs)
             
             # convert lists to numpy array in case of None
-            samples = np.array(samples)
-            if a_none:
-                samples_temp = np.zeros((len(samples), self._dimension))
-                for i, sample in enumerate(samples):
-                    samples_temp[i, :] = samples[i]
-                samples = samples_temp
+            if self._single_chain:
+                samples = np.array(samples)
+                if a_none:
+                    samples_temp = np.zeros((len(samples), self._dimension))
+                    for i, sample in enumerate(samples):
+                        samples_temp[i, :] = samples[i]
+                    samples = samples_temp
             
             chains.append(samples)
 
