@@ -171,6 +171,7 @@ from ._mcmc._dream import DreamMCMC
 from ._nested import NestedSampler
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
+from ._nested._galilean_mc import GalileanMC
 
 
 #
