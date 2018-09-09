@@ -46,7 +46,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         super(EmceeHammerMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
-        if self._chains < 10:
+        if self._chains < 3:
             raise ValueError('Need at least 3 chains.')
 
         # Set initial state
