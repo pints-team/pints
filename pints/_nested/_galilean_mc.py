@@ -230,4 +230,15 @@ class GalileanMC(pints.NestedSampler):
     def _derivative(self, x):
         """
         Calculates an approximate gradient via finite differences
+        using a central differencing scheme
         """
+        epsilon = 10**(-5)
+        v_gradient = np.zeros(self._dimension)
+        for i in range(self._dimension):
+            x_temp_upper = np.copy(x)
+            x_temp_upper[i] += epsilon
+            x_temp_lower = np.copy(x)
+            x_temp_lower[i] -= epsilon
+            v_gradient[i] = (self._log_likelihood[x_temp_upper] -
+                             self._log_likelihood[x_temp_lower]) / (2 * epsilon)
+        return v_gradient
