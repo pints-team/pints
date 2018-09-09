@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
+class EmceeHammerMCMC(pints.MultiChainMCMC):
     """
     Uses the differential evolution algorithm described in 
     Algorithm 2 in [1].
@@ -43,7 +43,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     """
 
     def __init__(self, chains, x0, sigma0=None):
-        super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)
+        super(EmceeHammerMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
         if self._chains < 10:
@@ -120,7 +120,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
 
         # Ensure proposed_log_pdfs are numpy array
-        proposed_log_pdfs = np.array(fx
+        proposed_log_pdfs = np.array(fx)
 
         # First points?
         if self._current is None:
