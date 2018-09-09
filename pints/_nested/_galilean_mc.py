@@ -48,7 +48,24 @@ class GalileanMC(pints.NestedSampler):
 
         # Total number of likelihood evaluations made
         self._n_evals = 0
+        
+        # By default use random updates
+        self._random_propose = True
+        self._mu = None
+        self._sigma = None
 
+    def set_random_propose(self, random_ind, mu=None, sigma=None):
+        """
+        Sets the method used for proposing velocity. If
+        random_ind is true (the default) then use an identity
+        matrix
+        """
+        random_ind = bool(random_ind)
+        if not random_ind:
+            self._mu = mu
+            self._sigma = sigma
+        self._random_propose = random_ind
+    
     def active_points_rate(self):
         """
         Returns the number of active points that will be used in next run.
@@ -232,7 +249,7 @@ class GalileanMC(pints.NestedSampler):
         Calculates an approximate gradient via finite differences
         using a central differencing scheme
         """
-        epsilon = 10**(-5)
+        epsilon = 10**(-8)
         v_gradient = np.zeros(self._dimension)
         for i in range(self._dimension):
             x_temp_upper = np.copy(x)
@@ -242,3 +259,41 @@ class GalileanMC(pints.NestedSampler):
             v_gradient[i] = (self._log_likelihood[x_temp_upper] -
                              self._log_likelihood[x_temp_lower]) / (2 * epsilon)
         return v_gradient
+  
+    def _propose_velocity(self):
+        """
+        Proposes a velocity to generate new active particle
+        in parameter space
+        """
+        if self._random_propose = True:
+            velocity = np.random.multivariate_normal(
+              np.zeros(self._dimension), np.identity(self._dimension)
+              )
+        else:
+            velocity = np.random.multivariate_normal(
+              np.zeros(self._dimension), self._sigma
+              )
+        return velocity
+
+    def _propose_and_reflect(self):
+        """
+        Chooses a point at random from the active point
+        set, then proposes a new velocity. If the
+        new location has a likelihood which exceeds
+        the old, then accept it; otherwise do a reflecting
+        operation to generate a new proposal which
+        is either accepted or rejected. If this 2nd proposal
+        is rejected then return null.
+        """
+        velocity = self._propose_velocity()
+        proposed = x + velocity
+        if self._log_likelihood(proposed) > self._running_log_likelihood:
+            return proposed
+        else:
+            n = self._unit_normal(velocity)
+            velocity = ##
+            proposed = x + velocity
+            if self._log_likelihood(proposed) > self._running_log_likelihood:
+                return proposed
+            else:
+                return None
