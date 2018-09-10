@@ -52,6 +52,11 @@ class NestedSampler(object):
         self._log_filename = None
         self._log_csv = False
 
+        # By default do serial evaluation
+        self._parallel = False
+        self._n_workers = 1
+        self.set_parallel()
+
         # Parameters common to all routines
         # Target acceptance rate
         self._active_points = 1000
@@ -87,6 +92,34 @@ class NestedSampler(object):
         :meth:`set_posterior_samples()`).
         """
         return self._posterior_samples
+
+    def set_parallel(self, parallel=False):
+        """
+        Enables/disables parallel evaluation.
+
+        If ``parallel=True``, the method will run using a number of worker
+        processes equal to the detected cpu core count. The number of workers
+        can be set explicitly by setting ``parallel`` to an integer greater
+        than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
+        """
+        if parallel is True:
+            self._parallel = True
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
+        elif parallel >= 1:
+            self._parallel = True
+            self._n_workers = int(parallel)
+        else:
+            self._parallel = False
+            self._n_workers = 1
+
+    def parallel(self):
+        """
+        Returns the number of parallel worker processes this routine will be
+        run on, or ``False`` if parallelisation is disabled.
+        """
+        return self._n_workers if self._parallel else False
 
     def run(self):
         """
@@ -191,14 +224,16 @@ class NestedSampler(object):
             self._m_inactive[i, :] = self._m_active[a_min_index, :]
 
             # Use some method to propose new samples
-            self._proposed = self._ask()
-            log_likelihood = evaluator.evaluate(self._proposed)
+            self._proposed = self.ask()
+
+            # Evaluate their fit
+            log_likelihood = evaluator.evaluate([self._proposed])[0]
 
             # Until log-likelihood exceeds current threshold keep drawing
             # samples
-            while self._tell(log_likelihood) is None:
-                self._proposed = self._ask()
-                log_likelihood = evaluator.evaluate(self._proposed)
+            while self.tell(log_likelihood) is None:
+                self._proposed = self.ask()
+                log_likelihood = evaluator.evaluate([self._proposed])[0]
                 self._n_evals += 1
 
             self._m_active[a_min_index, :] = np.concatenate(
@@ -239,13 +274,13 @@ class NestedSampler(object):
 
         return m_posterior_samples, self._log_Z
 
-    def _ask(self):
+    def ask(self):
         """
         Proposes new point at which to evaluate log-likelihood
         """
         raise NotImplementedError
 
-    def _tell(self, fx):
+    def tell(self, fx):
         """
         Whether to accept point if its likelihood exceeds the current
         minimum threshold

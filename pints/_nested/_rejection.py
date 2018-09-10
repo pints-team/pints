@@ -32,12 +32,6 @@ class NestedRejectionSampler(pints.NestedSampler):
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
     """
-    def __init__(self, log_likelihood, log_prior):
-        super(NestedRejectionSampler, self).__init__(log_likelihood, log_prior)
-
-    def run(self):
-        """ See :meth:`pints.NestedSampler.run()`. """
-        super(NestedRejectionSampler, self).run()
 
     def ask(self):
         """
