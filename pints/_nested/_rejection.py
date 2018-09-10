@@ -38,3 +38,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         Proposes a new point by sampling from the prior
         """
         return self._log_prior.sample()[0]
+
+    def name(self):
+        """ See :meth:`pints.NestedSampler.name()`. """
+        return 'Nested Rejection Sampler'

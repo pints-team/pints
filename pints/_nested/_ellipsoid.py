@@ -213,3 +213,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             ) + cent
 
         return pnts
+
+    def name(self):
+        """ See :meth:`pints.NestedSampler.name()`. """
+        return 'Nested Ellipsoidal Rejection Sampler'

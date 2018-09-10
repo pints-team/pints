@@ -156,7 +156,7 @@ class NestedSampler(object):
 
             if self._log_to_screen:
                 # Show current settings
-                print('Running nested rejection sampling')
+                print('Running ' + self._name())
                 print('Number of active points: ' + str(self._active_points))
                 print('Total number of iterations: ' + str(self._iterations))
                 print('Total number of posterior samples: ' + str(
@@ -405,3 +405,7 @@ class NestedSampler(object):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
+
+    def name(self):
+        """ Name of sampler """
+        raise NotImplementedError
