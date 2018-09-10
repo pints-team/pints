@@ -39,3 +39,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         return self._log_prior.sample()[0]
 
+    def name(self):
+        """ See :meth:`pints.NestedSampler.name()`. """
+        return 'Nested Rejection Sampler'
+
