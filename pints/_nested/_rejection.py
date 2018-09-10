@@ -45,3 +45,4 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         Proposes a new point by sampling from the prior
         """
+        return self._log_prior.sample()[0]
