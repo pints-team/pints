@@ -68,7 +68,7 @@ class NestedSampler(object):
         # Convergence criterion in log-evidence
         self._diff_log_Z = 0.5
 
-    def active_points_rate(self):
+    def active_points(self):
         """
         Returns the number of active points that will be used in next run.
         """
@@ -255,6 +255,15 @@ class NestedSampler(object):
         else:
             return self._proposed
 
+    def set_active_points(self, active_points):
+        """
+        Sets the number of active points for the next run.
+        """
+        active_points = int(active_points)
+        if active_points <= 5:
+            raise ValueError('Number of active points must be greater than 5.')
+        self._active_points = active_points
+
     def set_log_to_file(self, filename=None, csv=False):
         """
         Enables logging to file when a filename is passed in, disables it if
@@ -276,3 +285,23 @@ class NestedSampler(object):
         Enables or disables logging to screen.
         """
         self._log_to_screen = True if enabled else False
+
+    def set_iterations(self, iterations):
+        """
+        Sets the total number of iterations to be performed in the next run.
+        """
+        iterations = int(iterations)
+        if iterations < 0:
+            raise ValueError('Number of iterations cannot be negative.')
+        self._iterations = iterations
+
+    def set_posterior_samples(self, posterior_samples):
+        """
+        Sets the number of posterior samples to generate from points proposed
+        by the nested sampling algorithm.
+        """
+        posterior_samples = int(posterior_samples)
+        if posterior_samples < 1:
+            raise ValueError(
+                'Number of posterior samples must be greater than zero.')
+        self._posterior_samples = posterior_samples
