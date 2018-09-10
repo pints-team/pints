@@ -122,11 +122,11 @@ class GalileanMC(pints.NestedSampler):
         d = self._dimension
 
         # Generate initial random points by sampling from the prior
-        m_active = np.zeros((self._active_points, d + 1))
+        self._m_active = np.zeros((self._active_points, d + 1))
         m_initial = self._log_prior.sample(self._active_points)
         for i in range(0, self._active_points):
             # Calculate likelihood
-            m_active[i, d] = self._log_likelihood(m_initial[i, :])
+            self._m_active[i, d] = self._log_likelihood(m_initial[i, :])
             self._n_evals += 1
 
             # Show progress
@@ -139,7 +139,7 @@ class GalileanMC(pints.NestedSampler):
                     next_message = message_interval * (
                         1 + i // message_interval)
 
-        m_active[:, :-1] = m_initial
+        self._m_active[:, :-1] = m_initial
 
         # store all inactive points, along with their respective
         # log-likelihoods (hence, d+1)
@@ -158,22 +158,31 @@ class GalileanMC(pints.NestedSampler):
         # Run
         i_message = self._active_points - 1
         for i in range(0, self._iterations):
-            a_running_log_likelihood = np.min(m_active[:, d])
-            a_min_index = np.argmin(m_active[:, d])
+            self._running_log_likelihood = np.min(self._m_active[:, d])
+            a_min_index = np.argmin(self._m_active[:, d])
             X[i + 1] = np.exp(-(i + 1) / self._active_points)
-            w[i] = X[i] - X[i + 1]
-            v_log_Z[i] = a_running_log_likelihood
-            m_inactive[i, :] = m_active[a_min_index, :]
+            w[i] = 0.5 * (X[i - 1] - X[i + 1])
+            v_log_Z[i] = self._running_log_likelihood
+            m_inactive[i, :] = self._m_active[a_min_index, :]
 
             # Independently samples params from the prior until
             # log_likelihood(params) > threshold.
-            # Note a_running_log_likelihood can be -inf, so while is never run
-            proposed = self._propose_and_reflect()
+            # Note self._running_log_likelihood can be -inf, so while is never run
+            proposed, log_likelihood = self._propose_and_reflect()
             while proposed is None:
-                proposed = self._propose_and_reflect()
+                proposed, log_likelihood = self._propose_and_reflect()
             self._n_evals += 1
-            m_active[a_min_index, :] = np.concatenate(
+            self._m_active[a_min_index, :] = np.concatenate(
                 (proposed, np.array([log_likelihood])))
+
+            # convergence criterion in log evidence
+            if i > 5:
+                v_temp = np.concatenate((v_log_Z[0:(i-1)],[np.max(self._m_active[:, d])]))
+                w_temp = np.concatenate((w[0:(i-1)],[X[i]]))
+                diff = (logsumexp(v_log_Z[0:(i-1)],b=w[0:(i-1)]) -
+                  logsumexp(v_temp,b=w_temp))
+                if diff < 0.5:
+                    break
 
             # Show progress
             if logging:
@@ -187,10 +196,10 @@ class GalileanMC(pints.NestedSampler):
                         next_message = message_interval * (
                             1 + i_message // message_interval)
 
-        v_log_Z[self._iterations] = logsumexp(m_active[:, d])
+        v_log_Z[self._iterations] = logsumexp(self._m_active[:, d])
         w[self._iterations:] = float(X[self._iterations]) / float(
             self._active_points)
-        m_samples_all = np.vstack((m_inactive, m_active))
+        m_samples_all = np.vstack((m_inactive, self._m_active))
         log_Z = logsumexp(v_log_Z, b=w[0:(self._iterations + 1)])
 
         vP = np.exp(m_samples_all[:, d] - log_Z) * w
@@ -243,8 +252,8 @@ class GalileanMC(pints.NestedSampler):
             x_temp_upper[i] += epsilon
             x_temp_lower = np.copy(x)
             x_temp_lower[i] -= epsilon
-            v_gradient[i] = (self._log_likelihood[x_temp_upper] -
-                             self._log_likelihood[x_temp_lower]) / (2 * epsilon)
+            v_gradient[i] = (self._log_likelihood(x_temp_upper) -
+                             self._log_likelihood(x_temp_lower) / (2 * epsilon))
         return v_gradient
 
     def _propose_velocity(self):
@@ -252,7 +261,7 @@ class GalileanMC(pints.NestedSampler):
         Proposes a velocity to generate new active particle
         in parameter space
         """
-        if self._random_propose = True:
+        if self._random_propose:
             velocity = np.random.multivariate_normal(
               np.zeros(self._dimension), np.identity(self._dimension)
               )
@@ -272,17 +281,20 @@ class GalileanMC(pints.NestedSampler):
         is either accepted or rejected. If this 2nd proposal
         is rejected then return null.
         """
+        ind = np.random.randint(self._active_points)
+        x = self._m_active[ind, 0:self._dimension]
         velocity = self._propose_velocity()
         proposed = x + velocity
-        if self._log_likelihood(proposed) > self._running_log_likelihood:
-            return proposed
+        log_likelihood = self._log_likelihood(proposed)
+        if log_likelihood > self._running_log_likelihood:
+            return proposed, log_likelihood
         else:
-            n = self._unit_normal(proposed)
             proposed = self._reflect(proposed, velocity)
-            if self._log_likelihood(proposed) > self._running_log_likelihood:
-                return proposed
+            log_likelihood = self._log_likelihood(proposed)
+            if log_likelihood > self._running_log_likelihood:
+                return proposed, log_likelihood
             else:
-                return None
+                return None, None
 
     def _reflect(self, x, v):
         """
