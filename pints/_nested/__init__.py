@@ -73,7 +73,7 @@ class NestedSampler(object):
         # Convergence criterion in log-evidence
         self._diff_log_Z = 0.5
 
-    def active_points(self):
+    def n_active_points(self):
         """
         Returns the number of active points that will be used in next run.
         """
@@ -86,7 +86,7 @@ class NestedSampler(object):
         """
         return self._iterations
 
-    def posterior_samples(self):
+    def n_posterior_samples(self):
         """
         Returns the number of posterior samples that will be returned (see
         :meth:`set_posterior_samples()`).
@@ -252,28 +252,75 @@ class NestedSampler(object):
                         next_message = message_interval * (
                             1 + i_message // message_interval)
 
+        # Calculate log_evidence
+        self._marginal_log_likelihood()
+
+        # Draw samples from posterior
+        n = self._posterior_samples
+        self._m_posterior_samples = self.sample_from_posterior(n)
+
+        return self._m_posterior_samples
+
+    def sample_from_posterior(self, posterior_samples):
+        """
+        Draws posterior samples based on nested sampling run
+        """
+        if posterior_samples < 1:
+            raise ValueError('Number of posterior samples must be positive.')
+
+        # Calculate probabilities (can this be used to calculate effective
+        # sample size as in importance sampling?) of each particle
+        vP = np.exp(self._m_samples_all[:, self._dimension]
+                    - self._log_Z) * self._w
+
+        # Draw posterior samples
+        m_theta = self._m_samples_all[:, :-1]
+        vIndex = np.random.choice(
+            range(0, self._iterations + self._active_points),
+            posterior_samples, p=vP)
+
+        m_posterior_samples = m_theta[vIndex, :]
+        return m_posterior_samples
+
+    def posterior_samples(self):
+        """
+        Returns posterior samples generated during run of nested
+        sampling object
+        """
+        return self._m_posterior_samples
+
+    def _marginal_log_likelihood(self):
+        """
+        Calculates the marginal likelihood
+        """
         # Include active particles in sample
-        self._v_log_Z[self._iterations] = logsumexp(self._m_active[:, d])
+        self._v_log_Z[self._iterations] = logsumexp(self._m_active[:,
+                                                    self._dimension])
         self._w[self._iterations:] = float(self._X[self._iterations]) / float(
             self._active_points)
-        m_samples_all = np.vstack((self._m_inactive, self._m_active))
+        self._m_samples_all = np.vstack((self._m_inactive, self._m_active))
 
         # Determine log evidence
         self._log_Z = logsumexp(self._v_log_Z,
                                 b=self._w[0:(self._iterations + 1)])
 
-        # Calculate probabilities (can this be used to calculate effective
-        # sample size as in importance sampling?) of each particle
-        vP = np.exp(m_samples_all[:, d] - self._log_Z) * self._w
+    def marginal_log_likelihood(self):
+        """
+        Returns marginal log_likelihood from nested sampling run
+        """
+        return self._log_Z
 
-        # Draw posterior samples
-        m_theta = m_samples_all[:, :-1]
-        vIndex = np.random.choice(
-            range(0, self._iterations + self._active_points),
-            self._posterior_samples, p=vP)
-        m_posterior_samples = m_theta[vIndex, :]
+    def active_points(self):
+        """
+        Returns the active points from nested sampling run
+        """
+        return self._m_active
 
-        return m_posterior_samples, self._log_Z
+    def inactive_points(self):
+        """
+        Returns the inactive points from nested sampling run
+        """
+        return self._m_inactive
 
     def ask(self):
         """
@@ -294,7 +341,7 @@ class NestedSampler(object):
             self._first_proposal = True
             return self._proposed
 
-    def set_active_points(self, active_points):
+    def set_n_active_points(self, active_points):
         """
         Sets the number of active points for the next run.
         """
@@ -334,7 +381,7 @@ class NestedSampler(object):
             raise ValueError('Number of iterations cannot be negative.')
         self._iterations = iterations
 
-    def set_posterior_samples(self, posterior_samples):
+    def set_n_posterior_samples(self, posterior_samples):
         """
         Sets the number of posterior samples to generate from points proposed
         by the nested sampling algorithm.
