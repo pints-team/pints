@@ -156,7 +156,7 @@ class NestedSampler(object):
 
             if self._log_to_screen:
                 # Show current settings
-                print('Running ' + self._name())
+                print('Running ' + self.name())
                 print('Number of active points: ' + str(self._active_points))
                 print('Total number of iterations: ' + str(self._iterations))
                 print('Total number of posterior samples: ' + str(
