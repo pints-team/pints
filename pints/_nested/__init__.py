@@ -288,8 +288,10 @@ class NestedSampler(object):
         """
         self._n_evals += 1
         if fx < self._running_log_likelihood:
+            self._first_proposal = not self._first_proposal
             return None
         else:
+            self._first_proposal = True
             return self._proposed
 
     def set_active_points(self, active_points):
