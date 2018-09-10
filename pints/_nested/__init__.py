@@ -215,6 +215,7 @@ class NestedSampler(object):
         # Run!
         i_message = self._active_points - 1
         for i in range(0, self._iterations):
+            self._i = i
             # Update threshold and various quantities
             self._running_log_likelihood = np.min(self._m_active[:, d])
             a_min_index = np.argmin(self._m_active[:, d])
