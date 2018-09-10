@@ -40,55 +40,10 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def run(self):
         """ See :meth:`pints.NestedSampler.run()`. """
-        super(NestedRejectionSampler)
+        super(NestedRejectionSampler, self).run()
 
-    def set_active_points_rate(self, active_points):
+    def ask(self):
         """
-        Sets the number of active points for the next run.
-        """
-        active_points = int(active_points)
-        if active_points <= 5:
-            raise ValueError('Number of active points must be greater than 5.')
-        self._active_points = active_points
-
-    def n_hyper_parameters(self):
-        """
-        Returns the number of hyper-parameters for this method (see
-        :class:`TunableMethod`).
-        """
-        return 1
-
-    def set_hyper_parameters(self, x):
-        """
-        Sets the hyper-parameters for the method with the given vector of
-        values (see :class:`TunableMethod`).
-
-        Hyper-parameter vector is: ``[active_points_rate]``
-
-        Arguments:
-
-        ``x`` an array of length ``n_hyper_parameters`` used to set the
-              hyper-parameters
+        Proposes a new point by sampling from the prior
         """
 
-        self.set_active_points_rate(x[0])
-
-    def set_iterations(self, iterations):
-        """
-        Sets the total number of iterations to be performed in the next run.
-        """
-        iterations = int(iterations)
-        if iterations < 0:
-            raise ValueError('Number of iterations cannot be negative.')
-        self._iterations = iterations
-
-    def set_posterior_samples(self, posterior_samples):
-        """
-        Sets the number of posterior samples to generate from points proposed
-        by the nested sampling algorithm.
-        """
-        posterior_samples = int(posterior_samples)
-        if posterior_samples < 1:
-            raise ValueError(
-                'Number of posterior samples must be greater than zero.')
-        self._posterior_samples = posterior_samples
