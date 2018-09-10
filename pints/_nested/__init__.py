@@ -289,6 +289,13 @@ class NestedSampler(object):
         """
         return self._m_posterior_samples
 
+    def prior_space(self):
+        """
+        Returns a vector of X samples which approximates the proportion
+        of prior space compressed
+        """
+        return self._X
+
     def _marginal_log_likelihood(self):
         """
         Calculates the marginal likelihood
