@@ -315,13 +315,20 @@ class NestedSampler(pints.TunableMethod):
         """
         Returns the active points from nested sampling run
         """
-        return self._m_active
+        return self._m_active[:, :-1]
 
     def inactive_points(self):
         """
         Returns the inactive points from nested sampling run
         """
-        return self._m_inactive
+        return self._m_inactive[:, :-1]
+
+    def log_likelihood_vector(self):
+        """
+        Returns vector of log likelihoods for each of the
+        stacked [m_active, m_inactive] points
+        """
+        return self._m_samples_all[:, -1]
 
     def ask(self):
         """
