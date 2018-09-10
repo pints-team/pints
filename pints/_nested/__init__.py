@@ -248,7 +248,8 @@ class NestedSampler(pints.TunableMethod):
 
     def _tell(self, fx):
         """
-        Whether to accept point or not
+        Whether to accept point if its likelihood exceeds the current
+        minimum threshold
         """
         self._n_evals += 1
         if fx < self._running_log_likelihood:
