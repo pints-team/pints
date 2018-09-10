@@ -38,7 +38,7 @@ class GalileanMC(pints.NestedSampler):
 
         # Total number of likelihood evaluations made
         self._n_evals = 0
-        
+
         # By default use random updates
         self._random_propose = True
         self._mu = None
@@ -55,7 +55,7 @@ class GalileanMC(pints.NestedSampler):
             self._mu = mu
             self._sigma = sigma
         self._random_propose = random_ind
-    
+
     def active_points_rate(self):
         """
         Returns the number of active points that will be used in next run.
@@ -230,7 +230,7 @@ class GalileanMC(pints.NestedSampler):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
-        
+
     def _derivative(self, x):
         """
         Calculates an approximate gradient via finite differences
@@ -246,7 +246,7 @@ class GalileanMC(pints.NestedSampler):
             v_gradient[i] = (self._log_likelihood[x_temp_upper] -
                              self._log_likelihood[x_temp_lower]) / (2 * epsilon)
         return v_gradient
-  
+
     def _propose_velocity(self):
         """
         Proposes a velocity to generate new active particle
@@ -277,10 +277,22 @@ class GalileanMC(pints.NestedSampler):
         if self._log_likelihood(proposed) > self._running_log_likelihood:
             return proposed
         else:
-            n = self._unit_normal(velocity)
-            velocity = ##
-            proposed = x + velocity
+            n = self._unit_normal(proposed)
+            proposed = self._reflect(proposed, velocity)
             if self._log_likelihood(proposed) > self._running_log_likelihood:
                 return proposed
             else:
                 return None
+
+    def _reflect(self, x, v):
+        """
+        Calculates an approximate finite difference approximation
+        of the derivative of the likelihood at x and uses it to construct
+        a unit normal vector with which to reflect particle
+        """
+        grad = self._derivative(x)
+        n = grad / np.sum(grad)
+        # new velocity
+        v1 = v - 2 * np.dot(n, v)
+        x1 = x + v1
+        return x1
