@@ -227,7 +227,7 @@ class NestedSampler(pints.TunableMethod):
         self._v_log_Z = np.zeros(self._iterations + 1)
 
         # Run!
-        self._X[0] = 1 - np.exp(-1.0 / self._active_points)
+        self._X[0] = 1.0
         i_message = self._active_points - 1
         for i in range(0, self._iterations):
             self._i = i
@@ -238,7 +238,7 @@ class NestedSampler(pints.TunableMethod):
             if i > 0:
                 self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
             else:
-                self._w[i] = 
+                self._w[i] = self._X[i] - self._X[i + 1]
             self._v_log_Z[i] = self._running_log_likelihood
             self._m_inactive[i, :] = self._m_active[a_min_index, :]
 
