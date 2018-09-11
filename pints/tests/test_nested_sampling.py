@@ -337,7 +337,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
-        self.assertEqual(lines[3], 'Enlargement factor: 1.5')
+        self.assertEqual(lines[3], 'Enlargement factor: 1.1')
         self.assertEqual(lines[4], 'Total number of posterior samples: 2')
         self.assertEqual(lines[5], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
