@@ -226,6 +226,7 @@ class NestedSampler(object):
         self._v_log_Z = np.zeros(self._iterations + 1)
 
         # Run!
+        self._X[0] = 1 - np.exp(-1.0 / self._active_points)
         i_message = self._active_points - 1
         for i in range(0, self._iterations):
             self._i = i
@@ -233,7 +234,10 @@ class NestedSampler(object):
             self._running_log_likelihood = np.min(self._m_active[:, d])
             a_min_index = np.argmin(self._m_active[:, d])
             self._X[i + 1] = np.exp(-(i + 1) / self._active_points)
-            self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
+            if i > 0:
+                self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
+            else:
+                self._w[i] = 
             self._v_log_Z[i] = self._running_log_likelihood
             self._m_inactive[i, :] = self._m_active[a_min_index, :]
 
