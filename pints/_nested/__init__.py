@@ -309,14 +309,14 @@ class NestedSampler(pints.TunableMethod):
 
         # Calculate probabilities (can this be used to calculate effective
         # sample size as in importance sampling?) of each particle
-        vP = np.exp(self._m_samples_all[:, self._dimension]
-                    - self._log_Z) * self._w
+        self._vP = np.exp(self._m_samples_all[:, self._dimension]
+                          - self._log_Z) * self._w
 
         # Draw posterior samples
         m_theta = self._m_samples_all[:, :-1]
         vIndex = np.random.choice(
             range(0, self._iterations + self._active_points),
-            posterior_samples, p=vP)
+            size=posterior_samples, p=self._vP)
 
         m_posterior_samples = m_theta[vIndex, :]
         return m_posterior_samples
@@ -461,3 +461,16 @@ class NestedSampler(pints.TunableMethod):
     def name(self):
         """ Name of sampler """
         raise NotImplementedError
+
+    def effective_sample_size(self):
+        """
+        Calculates the effective sample size of posterior samples from a
+        nested sampling run using the formula,
+        ESS = exp(-sum_i=1^m p_i log p_i),
+        in other words, the information.
+        From here: https://www.cosmos.esa.int/documents/1371789/1544987/
+        5-nested-sampling.pdf/c0280ec4-68e3-98ce-e5c4-1a554ed61242
+        """
+        self._log_vP = (self._m_samples_all[:, self._dimension]
+                        - self._log_Z + np.log(self._w))
+        return np.exp(-np.sum(self._vP * self._log_vP))
