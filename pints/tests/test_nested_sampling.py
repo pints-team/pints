@@ -64,11 +64,11 @@ class TestNestedRejectionSampler(unittest.TestCase):
 
         sampler = pints.NestedRejectionSampler(
             self.log_likelihood, self.log_prior)
-        sampler.set_posterior_samples(10)
+        sampler.set_n_posterior_samples(10)
         sampler.set_iterations(50)
-        sampler.set_active_points_rate(50)
+        sampler.set_n_active_points(50)
         sampler.set_log_to_screen(False)
-        samples, margin = sampler.run()
+        samples = sampler.run()
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
 
@@ -99,21 +99,21 @@ class TestNestedRejectionSampler(unittest.TestCase):
         with StreamCapture() as c:
             sampler = pints.NestedRejectionSampler(
                 self.log_likelihood, self.log_prior)
-            sampler.set_posterior_samples(2)
+            sampler.set_n_posterior_samples(2)
             sampler.set_iterations(10)
-            sampler.set_active_points_rate(10)
+            sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
-            samples, margin = sampler.run()
+            samples = sampler.run()
         self.assertEqual(c.text(), '')
 
         # Log to screen
         with StreamCapture() as c:
             sampler = pints.NestedRejectionSampler(
                 self.log_likelihood, self.log_prior)
-            sampler.set_posterior_samples(2)
+            sampler.set_n_posterior_samples(2)
             sampler.set_iterations(20)
-            sampler.set_active_points_rate(10)
+            sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
@@ -134,9 +134,9 @@ class TestNestedRejectionSampler(unittest.TestCase):
                 filename = d.path('test.txt')
                 sampler = pints.NestedRejectionSampler(
                     self.log_likelihood, self.log_prior)
-                sampler.set_posterior_samples(2)
+                sampler.set_n_posterior_samples(2)
                 sampler.set_iterations(10)
-                sampler.set_active_points_rate(10)
+                sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
                 samples, margin = sampler.run()
@@ -155,13 +155,13 @@ class TestNestedRejectionSampler(unittest.TestCase):
         """
         sampler = pints.NestedRejectionSampler(
             self.log_likelihood, self.log_prior)
-        sampler.set_posterior_samples(2)
+        sampler.set_n_posterior_samples(2)
         sampler.set_iterations(10)
-        sampler.set_active_points_rate(10)
+        sampler.set_n_active_points(10)
         sampler.set_log_to_screen(False)
         sampler.run()
 
-        sampler.set_posterior_samples(10)
+        sampler.set_n_posterior_samples(10)
         self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
 
     def test_hyper_params(self):
@@ -190,20 +190,21 @@ class TestNestedRejectionSampler(unittest.TestCase):
             ValueError, 'negative', sampler.set_iterations, -1)
 
         # Active points rate
-        x = sampler.active_points_rate() + 1
-        self.assertNotEqual(sampler.active_points_rate(), x)
-        sampler.set_active_points_rate(x)
-        self.assertEqual(sampler.active_points_rate(), x)
+        x = sampler.n_active_points() + 1
+        self.assertNotEqual(sampler.n_active_points(), x)
+        sampler.set_n_active_points(x)
+        self.assertEqual(sampler.n_active_points(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than 5', sampler.set_active_points_rate, 5)
+            ValueError, 'greater than 5', sampler.set_n_active_points, 5)
 
         # Posterior samples
         x = sampler.posterior_samples() + 1
         self.assertNotEqual(sampler.posterior_samples(), x)
-        sampler.set_posterior_samples(x)
+        sampler.set_n_posterior_samples(x)
         self.assertEqual(sampler.posterior_samples(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than zero', sampler.set_posterior_samples, 0)
+            ValueError, 'greater than zero',
+            sampler.set_n_posterior_samples, 0)
 
 
 class TestNestedEllipsoidSampler(unittest.TestCase):
@@ -265,10 +266,10 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
 
         sampler = pints.NestedEllipsoidSampler(
             self.log_likelihood, self.log_prior)
-        sampler.set_posterior_samples(10)
+        sampler.set_n_posterior_samples(10)
         sampler.set_rejection_samples(20)
         sampler.set_iterations(50)
-        sampler.set_active_points_rate(50)
+        sampler.set_n_active_points(50)
         sampler.set_log_to_screen(False)
         samples, margin = sampler.run()
         # Check output: Note n returned samples = n posterior samples
@@ -280,16 +281,16 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         """
         sampler = pints.NestedEllipsoidSampler(
             self.log_likelihood, self.log_prior)
-        sampler.set_posterior_samples(2)
+        sampler.set_n_posterior_samples(2)
         sampler.set_rejection_samples(5)
         sampler.set_iterations(10)
-        sampler.set_active_points_rate(10)
+        sampler.set_n_active_points(10)
         sampler.set_log_to_screen(False)
         sampler.run()
 
-        sampler.set_posterior_samples(10)
+        sampler.set_n_posterior_samples(10)
         self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
-        sampler.set_posterior_samples(2)
+        sampler.set_n_posterior_samples(2)
         sampler.set_iterations(4)
         self.assertRaisesRegex(
             ValueError, 'exceed number of iterations', sampler.run)
@@ -313,10 +314,10 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         with StreamCapture() as c:
             sampler = pints.NestedEllipsoidSampler(
                 self.log_likelihood, self.log_prior)
-            sampler.set_posterior_samples(2)
+            sampler.set_n_posterior_samples(2)
             sampler.set_rejection_samples(5)
             sampler.set_iterations(10)
-            sampler.set_active_points_rate(10)
+            sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
@@ -326,10 +327,10 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         with StreamCapture() as c:
             sampler = pints.NestedEllipsoidSampler(
                 self.log_likelihood, self.log_prior)
-            sampler.set_posterior_samples(2)
+            sampler.set_n_posterior_samples(2)
             sampler.set_rejection_samples(5)
             sampler.set_iterations(20)
-            sampler.set_active_points_rate(10)
+            sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples, margin = sampler.run()
@@ -351,10 +352,10 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                 filename = d.path('test.txt')
                 sampler = pints.NestedEllipsoidSampler(
                     self.log_likelihood, self.log_prior)
-                sampler.set_posterior_samples(2)
+                sampler.set_n_posterior_samples(2)
                 sampler.set_rejection_samples(5)
                 sampler.set_iterations(10)
-                sampler.set_active_points_rate(10)
+                sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
                 samples, margin = sampler.run()
@@ -383,20 +384,21 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             ValueError, 'negative', sampler.set_iterations, -1)
 
         # Active points rate
-        x = sampler.active_points_rate() + 1
-        self.assertNotEqual(sampler.active_points_rate(), x)
-        sampler.set_active_points_rate(x)
-        self.assertEqual(sampler.active_points_rate(), x)
+        x = sampler.n_active_points() + 1
+        self.assertNotEqual(sampler.n_active_points(), x)
+        sampler.set_n_active_points(x)
+        self.assertEqual(sampler.n_active_points(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than 5', sampler.set_active_points_rate, 5)
+            ValueError, 'greater than 5', sampler.set_n_active_points, 5)
 
         # Posterior samples
         x = sampler.posterior_samples() + 1
         self.assertNotEqual(sampler.posterior_samples(), x)
-        sampler.set_posterior_samples(x)
+        sampler.set_n_posterior_samples(x)
         self.assertEqual(sampler.posterior_samples(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than zero', sampler.set_posterior_samples, 0)
+            ValueError, 'greater than zero',
+            sampler.set_n_posterior_samples, 0)
 
         # Rejection samples
         x = sampler.rejection_samples() + 1
