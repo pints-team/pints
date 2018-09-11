@@ -84,6 +84,7 @@ class GalileanMC(pints.NestedSampler):
                 self._log_likelihood(x_temp_upper) -
                 self._log_likelihood(x_temp_lower) / (2 * self._epsilon)
             )
+            self._n_evals += 2
         return v_gradient
 
     def _propose_velocity(self):
@@ -113,3 +114,7 @@ class GalileanMC(pints.NestedSampler):
         v1 = v - 2 * np.dot(n, v)
         x1 = x + v1
         return x1
+
+    def name(self):
+        """ See :meth:`pints.NestedSampler.name()`. """
+        return 'Galilean Monte Carlo (nested) sampler'
