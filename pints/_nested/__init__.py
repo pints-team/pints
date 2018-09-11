@@ -399,7 +399,7 @@ class NestedSampler(object):
         minimum threshold
         """
         self._n_evals += 1
-        if fx < self._running_log_likelihood:
+        if np.isnan(fx) or fx < self._running_log_likelihood:
             self._first_proposal = not self._first_proposal
             return None
         else:
