@@ -71,7 +71,19 @@ class NestedSampler(object):
         self._n_evals = 0
 
         # Convergence criterion in log-evidence
-        self._diff_log_Z = 0.5
+        self._marginal_log_likelihood_threshold = 0.5
+
+        # Initial marginal difference
+        self._diff = np.float('-Inf')
+
+    def set_marginal_log_likelihood_threshold(self, threshold):
+        """
+        Sets criterion for determining convergence in estimate of marginal
+        log likelihood which leads to early termination of the algorithm
+        """
+        if threshold <= 0:
+            raise ValueError('Convergence threshold must be positive.')
+        self._marginal_log_likelihood_threshold = threshold
 
     def n_active_points(self):
         """
@@ -174,6 +186,7 @@ class NestedSampler(object):
             logger.add_counter('Eval.', max_value=self._iterations * 10)
             #TODO: Add other informative fields ?
             logger.add_time('Time m:s')
+            logger.add_float('Delta_log(z)')
 
         # Problem dimension
         d = self._dimension
@@ -189,7 +202,7 @@ class NestedSampler(object):
             # Show progress
             if logging and i >= next_message:
                 # Log state
-                logger.log(0, self._n_evals, timer.time())
+                logger.log(0, self._n_evals, timer.time(), self._diff)
 
                 # Choose next logging point
                 if i > message_warm_up:
@@ -240,20 +253,45 @@ class NestedSampler(object):
             self._m_active[a_min_index, :] = np.concatenate(
                 (self._proposed, np.array([log_likelihood])))
 
+            # Check whether within convergence threshold
+            if i > 2:
+                v_temp = np.concatenate((self._v_log_Z[0:(i - 1)],
+                                        [np.max(self._m_active[:, d])]))
+                w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
+                self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
+                                        b=self._w[0:(i - 1)]) -
+                              logsumexp(v_temp, b=w_temp))
+                if (np.abs(self._diff) <
+                   self._marginal_log_likelihood_threshold):
+                    if self._log_to_screen:
+                        print('Convergence obtained with Delta_z = ' +
+                              str(self._diff))
+
+                    # shorten arrays according to current iteration
+                    self._iterations = i
+                    self._v_log_Z = self._v_log_Z[0:(self._iterations + 1)]
+                    self._w = self._w[0:(self._active_points +
+                                         self._iterations)]
+                    self._X = self._X[0:(self._iterations + 1)]
+                    self._m_inactive = self._m_inactive[0:self._iterations, :]
+                    break
+
             # Show progress
             if logging:
                 i_message += 1
                 if i_message >= next_message:
                     # Log state
-                    logger.log(i_message, self._n_evals, timer.time())
+                    logger.log(i_message, self._n_evals, timer.time(),
+                               self._diff)
 
                     # Choose next logging point
                     if i_message > message_warm_up:
                         next_message = message_interval * (
                             1 + i_message // message_interval)
 
-        # Calculate log_evidence
-        self._marginal_log_likelihood()
+        # Calculate log_evidence and uncertainty
+        self._log_Z = self.marginal_log_likelihood()
+        self._log_Z_sd = self.marginal_log_likelihood_standard_deviation()
 
         # Draw samples from posterior
         n = self._posterior_samples
@@ -296,9 +334,9 @@ class NestedSampler(object):
         """
         return self._X
 
-    def _marginal_log_likelihood(self):
+    def marginal_log_likelihood(self):
         """
-        Calculates the marginal likelihood
+        Calculates the marginal log likelihood of nested sampling run
         """
         # Include active particles in sample
         self._v_log_Z[self._iterations] = logsumexp(self._m_active[:,
@@ -308,14 +346,27 @@ class NestedSampler(object):
         self._m_samples_all = np.vstack((self._m_inactive, self._m_active))
 
         # Determine log evidence
-        self._log_Z = logsumexp(self._v_log_Z,
-                                b=self._w[0:(self._iterations + 1)])
+        log_Z = logsumexp(self._v_log_Z,
+                          b=self._w[0:(self._iterations + 1)])
+        self._log_Z_called = True
+        return log_Z
 
-    def marginal_log_likelihood(self):
+    def marginal_log_likelihood_standard_deviation(self):
         """
-        Returns marginal log_likelihood from nested sampling run
+        Calculates standard deviation in marginal log likelihood as in [1]
+
+        [1] "Multimodan nested sampling: an efficient and robust alternative
+        to Markov chain Monte Carlo methods for astronomical data analyses",
+        F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
         """
-        return self._log_Z
+        if not self._log_Z_called:
+            self._marginal_log_likelihood()
+        log_L_minus_Z = self._v_log_Z - self._log_Z
+        log_Z_sd = logsumexp(log_L_minus_Z,
+                             b=self._w[0:(self._iterations + 1)] *
+                             log_L_minus_Z)
+        log_Z_sd = np.sqrt(log_Z_sd / self._active_points)
+        return log_Z_sd
 
     def active_points(self):
         """
