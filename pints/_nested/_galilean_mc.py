@@ -117,4 +117,4 @@ class GalileanMC(pints.NestedSampler):
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Galilean Monte Carlo (nested) sampler'
+        return 'Galilean Monte Carlo (Nested) sampler'

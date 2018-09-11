@@ -41,4 +41,4 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Nested Rejection Sampler'
+        return 'Nested Rejection sampler'

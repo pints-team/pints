@@ -115,7 +115,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
-            samples, margin = sampler.run()
+            samples = sampler.run()
         lines = c.text().splitlines()
         self.assertEqual(lines[0], 'Running nested rejection sampling')
         self.assertEqual(lines[1], 'Number of active points: 10')
@@ -138,7 +138,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
                 sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
-                samples, margin = sampler.run()
+                samples = sampler.run()
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
@@ -259,7 +259,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         sampler.set_iterations(50)
         sampler.set_n_active_points(50)
         sampler.set_log_to_screen(False)
-        samples, margin = sampler.run()
+        samples = sampler.run()
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
 
@@ -280,8 +280,6 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
         sampler.set_n_posterior_samples(2)
         sampler.set_iterations(4)
-        self.assertRaisesRegex(
-            ValueError, 'exceed number of iterations', sampler.run)
 
     def test_logging(self):
         """ Tests logging to screen and file. """
@@ -296,7 +294,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
-            samples, margin = sampler.run()
+            samples = sampler.run()
         self.assertEqual(c.text(), '')
 
         # Log to screen
@@ -309,9 +307,10 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
-            samples, margin = sampler.run()
+            samples = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(lines[0], 'Running nested rejection sampling')
+        self.assertEqual(lines[0], 'Running Nested Ellipsoidal Rejection ' +
+                                   'sampler')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Enlargement factor: 1.1')
@@ -334,7 +333,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                 sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
-                samples, margin = sampler.run()
+                samples = sampler.run()
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
@@ -368,21 +367,13 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             ValueError, 'greater than 5', sampler.set_n_active_points, 5)
 
         # Posterior samples
-        x = sampler.posterior_samples() + 1
-        self.assertNotEqual(sampler.posterior_samples(), x)
+        x = sampler.n_posterior_samples() + 1
+        self.assertNotEqual(sampler.n_posterior_samples(), x)
         sampler.set_n_posterior_samples(x)
-        self.assertEqual(sampler.posterior_samples(), x)
+        self.assertEqual(sampler.n_posterior_samples(), x)
         self.assertRaisesRegex(
             ValueError, 'greater than zero',
             sampler.set_n_posterior_samples, 0)
-
-        # Rejection samples
-        x = sampler.rejection_samples() + 1
-        self.assertNotEqual(sampler.rejection_samples(), x)
-        sampler.set_rejection_samples(x)
-        self.assertEqual(sampler.rejection_samples(), x)
-        self.assertRaisesRegex(
-            ValueError, 'negative', sampler.set_rejection_samples, -1)
 
         # Enlargement factor
         x = sampler.enlargement_factor() * 2
