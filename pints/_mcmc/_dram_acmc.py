@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-class DramMCMC(pints.AdaptiveCovarianceMCMC):
+class DramACMC(pints.AdaptiveCovarianceMCMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1].
 
@@ -31,7 +31,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(DramMCMC, self).__init__(x0, sigma0)
+        super(DramACMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """
@@ -41,7 +41,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         then return a proposal from a conservative
         kernel (i.e. with low width)
         """
-        super(DramMCMC, self).ask()
+        super(DramACMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -59,7 +59,7 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(DramMCMC, self)._initialise()
+        super(DramACMC, self)._initialise()
 
         self._kernels = 2
         self._Y = [None] * self._kernels
@@ -74,8 +74,8 @@ class DramMCMC(pints.AdaptiveCovarianceMCMC):
         self._mu = [v_mu for i in range(self._kernels)]
         self._sigma_scale = np.array([1, 1])
         m_sigma = np.copy(self._sigma)
-        self._sigma = [self._sigma_scale[i] * m_sigma
-                       for i in range(self._kernels)]
+        self._sigma = [
+            self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
 
     def set_sigma_scale(self, minK, maxK):
         """

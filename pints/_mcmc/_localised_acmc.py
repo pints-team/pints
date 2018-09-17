@@ -14,25 +14,25 @@ import scipy
 from scipy.misc import logsumexp
 
 
-class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
+class Localised_ACMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 7 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
     in the paper). Note think there is a mistake in this algorithm
     in calculating the ratio. It shoud be q(k|X_t) / p(k|Y_t+1)
     rather than the reverse; otherwise the algorithm doesn't work.
-    
+
     This algorthm has n possible proposal distributions, where the
     different proposals are chosen dependent on location in parameter
     space.
-    
+
     Algorithm:
-    
+
     Based on initial unadaptive samples, fit Gaussian mixture model
     to samples and obtain w^n, mu^n and sigma^n
-    
+
     Initialise lambda^1:n
-    
+
     For iteration t = 0:n_iter:
       - Sample Z_t+1 ~ categorical(q_weight(1, theta_t), q_weight(2, theta_t),..., q_weight(n, theta_t))
       - Sample Y_t+1 ~ N(theta_t, lambda_t^Z_t+1 sigma_t^Z_t+1)
@@ -40,15 +40,15 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         otherwise theta_t+1 = theta_t
       - Update mu^1:n, sigma^1:n, w^1:n and lambda^1:n as shown below
     endfor
-    
+
     w^1:n are the weights of the different normals in fitting
     q(theta) = sum_i=1^n w^k N(theta|mu^k, sigma^k) to samples;
     q_weight(theta|kk) = w^k N(theta|mu^k, sigma^k) / q(theta).
     alpha_t^k = min(1, [p(Y_t+1|data) * q_weight(Y_t+1|k) /
                [p(Y_t+1|data) *q_weight(theta_t|k)]);
-    
+
     The update steps are as follows,
-    
+
     for k in 1:n
         - Calculate Q = q(theta_t+1|k)
         - mu_t+1^k = mu_t^k + gamma_t+1 * Q * (X_t+1 - mu_t^k)
@@ -67,20 +67,26 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceLocalisedMCMC, self).__init__(x0, sigma0)
+        super(Localised_ACMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(AdaptiveCovarianceLocalisedMCMC, self).ask()
+        super(Localised_ACMC, self).ask()
+
         # Propose new point
         if self._proposed is None:
             # Sample Z from categorical distribution over q
-            self._Z = np.random.choice(self._mixture_components,
-                                       size=1, p=np.exp(self._log_q_l).tolist())[0]
+            self._Z = np.random.choice(
+                self._mixture_components,
+               size=1,
+               p=np.exp(self._log_q_l).tolist()
+            )[0]
+
             # choose proposed value from Zth proposal distribution
-            self._proposed = np.random.multivariate_normal(self._current,
-                                                           np.exp(self._log_lambda[self._Z])
-                                                           * self._sigma[self._Z])
+            self._proposed = np.random.multivariate_normal(
+                self._current,
+                np.exp(self._log_lambda[self._Z]) * self._sigma[self._Z])
+
             # Set as read-only
             self._proposed.setflags(write=False)
 
@@ -91,10 +97,11 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(AdaptiveCovarianceLocalisedMCMC, self)._initialise()
+        super(Localised_ACMC, self)._initialise()
+
         self._localised = True
         self._mixture_components = 3
-        
+
         # Initialise weights
         self._w = np.repeat(1.0 / self._mixture_components,
                             self._mixture_components)
@@ -120,10 +127,10 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
 
         # Initialise lambda vector
         self._log_lambda = np.zeros(self._mixture_components)
-        
+
         # Initialise running expected acceptance probabilities
         self._alpha_l = np.zeros(self._mixture_components)
-        
+
         # Initialise log_q_l
         self._log_q_l = np.log(np.repeat(1.0 / self._mixture_components,
                                          self._mixture_components))
@@ -144,10 +151,10 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
         super(AdaptiveCovarianceLocalisedMCMC, self).tell(fx)
-        
+
         # Return new point for chain
         return self._current
-        
+
     def _fit_gaussian_mixture(self):
         """
         Fits a Gaussian mixture distribution by updating
@@ -161,7 +168,7 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         self._update_w()
         self._update_lambda()
         self._update_alpha()
-        
+
     def _update_log_q(self):
         """
         Updates log q values representing weights of Gaussian mixture
@@ -213,11 +220,11 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         # Only update Zth component
         self._log_lambda[self._Z] += (self._gamma *
                                      (self._alpha - self._target_acceptance))
-      
+
     def _update_alpha(self):
         """
         Updates running acceptance probabilities according to,
-        alpha_t+1^k = alpha_t^k + gamma_t+1 * 1(Z_t+1==k?) * 
+        alpha_t+1^k = alpha_t^k + gamma_t+1 * 1(Z_t+1==k?) *
                              (alpha_k(theta_t, Y_t+1) - alpha_t^k)
         """
         self._alpha_l[self._Z] += (self._gamma *
@@ -230,11 +237,11 @@ class AdaptiveCovarianceLocalisedMCMC(pints.AdaptiveCovarianceMCMC):
         q_numerator = []
         q_denominator = []
         for i in range(self._mixture_components):
-            q_numerator.append(np.log(self._w[i]) + 
+            q_numerator.append(np.log(self._w[i]) +
               scipy.stats.multivariate_normal.logpdf(self._Y,
                                                 self._mu[i],
                                                 self._sigma[i],allow_singular=True))
-            q_denominator.append(np.log(self._w[i]) + 
+            q_denominator.append(np.log(self._w[i]) +
               scipy.stats.multivariate_normal.logpdf(self._X,
                                                 self._mu[i],
                                                 self._sigma[i],allow_singular=True))

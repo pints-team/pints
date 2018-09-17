@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
+class RemiACMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive covariance MCMC, as described in [1, 2].
 
@@ -30,11 +30,12 @@ class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceRemiMCMC, self).__init__(x0, sigma0)
+        super(RemiACMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(AdaptiveCovarianceRemiMCMC, self).ask()
+        super(RemiACMC, self).ask()
+
         # Propose new point
         if self._proposed is None:
 
@@ -53,17 +54,19 @@ class AdaptiveCovarianceRemiMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(AdaptiveCovarianceRemiMCMC, self)._initialise()
-        
+        super(RemiACMC, self)._initialise()
+
         # log adaptation
         self._loga = 0
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(AdaptiveCovarianceRemiMCMC, self).tell(fx)
+        super(RemiACMC, self).tell(fx)
+
         # Update log acceptance
         if self._adaptive:
             self._loga += self._gamma * (self._accepted - self._target_acceptance)
+
         # Return new point for chain
         return self._current
 

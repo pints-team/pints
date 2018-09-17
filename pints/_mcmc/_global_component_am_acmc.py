@@ -12,13 +12,13 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
+class GlobalComponentAM_ACMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 6 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
     in the paper). The algorithm we use is actually a mixture of Algorithm 6
     and Algorithm 4, as is suggested in the text in [1].
-    
+
     Initialises mu0 and sigma0 used in componentwise proposal N(mu0, lambda * sigma0)
 
     For iteration t = 0:n_iter:
@@ -60,11 +60,12 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).__init__(x0, sigma0)
+        super(GlobalComponentAM_ACMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).ask()
+        super(GlobalComponentAM_ACMC, self).ask()
+
         # Propose new point
         if self._proposed is None:
             if self._iter_count % self._am_global_rate == 0:
@@ -90,13 +91,13 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(AdaptiveCovarianceAMGlobalComponentMCMC, self)._initialise()
+        super(GlobalComponentAM_ACMC, self)._initialise()
         self._log_lambda_scalar = 0
         self._log_lambda_vector = np.zeros(self._dimension)
         self._am_global_rate = 10
         self._iter_count = 0
         self._Z = np.zeros(self._dimension)
-    
+
     def set_am_global_rate(self, am_global_rate):
         """
         Sets number of steps between each global am update
@@ -111,8 +112,8 @@ class AdaptiveCovarianceAMGlobalComponentMCMC(pints.AdaptiveCovarianceMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(AdaptiveCovarianceAMGlobalComponentMCMC, self).tell(fx)
-        
+        super(GlobalComponentAM_ACMC, self).tell(fx)
+
         if self._iter_count % self._am_global_rate == 0:
             self._log_lambda_scalar += self._gamma * (self._alpha - self._target_acceptance)
         else:
