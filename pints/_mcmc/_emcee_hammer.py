@@ -14,28 +14,26 @@ import numpy as np
 
 class EmceeHammerMCMC(pints.MultiChainMCMC):
     """
-    Uses the differential evolution algorithm described in
-    Algorithm 2 in [1].
+    Uses the differential evolution algorithm "emcee: the MCMC hammer",
+    described in Algorithm 2 in [1].
 
-    For k in 1:N:
-    - Draw a walker X_j at random from the complementary
-        ensemble (i.e. the group of chains not including k)
-        without replacement.
+    For ``k`` in ``1:N``:
+    - Draw a walker ``X_j`` at random from the "complementary ensemble" (the
+      group of chains not including ``k``) without replacement.
 
-    - Sample z ~ g(z), (see below).
+    - Sample ``z ~ g(z)``, (see below).
 
     - Set ``Y = X_j(t) + z[X_k(t) - X_j(t)]``.
 
-    - Set ``q = z^{N-1} p(Y) / p(X_k(t))``.
+    - Set ``q = z^{N - 1} p(Y) / p(X_k(t))``.
 
-    - Sample r ~ U(0,1).
+    - Sample ``r ~ U(0, 1)``.
 
-    - if r <= q: X_k(t+1) = Y,
-      else: X_k(t+1) = X_k(t).
+    - If ``r <= q``, set ``X_k(t + 1)`` equal to ``Y``, if not use ``X_k(t)``.
 
-    where g(z) is proportional to 1 / sqrt(z) if z is in [1 / a, a],
-    or 0, otherwise, where a is a parameter set a priori (default is 2);
-    N = number of chains (walkers).
+    Here, ``N`` is the number of chains (or walkers), and ``g(z)`` is
+    proportional to ``1 / sqrt(z)`` if ``z`` is in  ``[1 / a, a]`` or to 0,
+    otherwise (where ``a`` is a parameter with default value ``2``).
 
     [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg,
     Dustin Lang, Jonathan Goodman, 2013, arXiv,
@@ -57,8 +55,15 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._current_logpdf = None
         self._proposed = None
 
-        # Hyper parameter
+        # See docstring above
         self._a = 2
+
+    def a(self):
+        """
+        Returns the coefficient ``a`` used in updating the position of each
+        chain.
+        """
+        return self._a
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -72,18 +77,17 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._k = self._remaining[0]
         self._remaining = np.delete(self._remaining, 0)
 
-        # pick j from the complementary ensemble
-        j = np.random.randint(self._chains)
-        while j == self._k:
-            j = np.random.randint(self._chains)
-        X_j = self._current[j]
-        X_k = self._current[self._k]
+        # Pick j from the complementary ensemble
+        j = np.random.randint(self._chains - 1)
+        if j >= self._k:
+            j += 1
+        x_j = self._current[j]
+        x_k = self._current[self._k]
 
-        # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a],
-        # 0 otherwise
+        # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a], 0 otherwise
         r = np.random.rand()
-        self._Z = ((1 + (self._a - 1) * r)**2) / self._a
-        self._proposed = X_j + self._Z * (X_k - X_j)
+        self._z = ((1 + r * (self._a - 1))**2) / self._a
+        self._proposed = x_j + self._z * (x_k - x_j)
 
         # Set as read only
         self._proposed.setflags(write=False)
@@ -139,9 +143,9 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             return self._current
 
         r_log = np.log(np.random.rand())
-        q = ((self._chains - 1) * np.log(self._Z) +
-             proposed_log_pdfs[self._k] -
-             self._current_log_pdfs[self._k])
+        q = ((self._chains - 1) * np.log(self._z)
+            + proposed_log_pdfs[self._k]
+            - self._current_log_pdfs[self._k])
 
         if q >= r_log:
             self._current[self._k] = self._proposed
@@ -155,8 +159,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
     def set_a(self, a):
         """
-        Sets the coefficient ``a`` used in updating the position of each
-        chain.
+        Sets the coefficient ``a`` used in updating the position of each chain.
         """
         a = float(a)
         if a <= 0:

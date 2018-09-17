@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the population MCMC routine.
+# Tests the basic methods of the differential evolution MCMC method.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,12 +15,16 @@ import pints.toy as toy
 
 from shared import StreamCapture
 
-debug = False
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestPopulationMCMC(unittest.TestCase):
+class TestEmceeHammerMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the Emcee Hammer MCMC routine.
+    Tests the basic methods of the differential evolution MCMC method.
     """
 
     @classmethod
@@ -60,29 +64,84 @@ class TestPopulationMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create mcmc
-        num_chains = 10
-        xs = [self.real_parameters * (1 + 0.1 * np.random.rand()) for i in range(num_chains)]
-        mcmc = pints.EmceeHammerMCMC(xs)
+        xs = [
+            self.real_parameters * 1.1,
+            self.real_parameters * 1.05,
+            self.real_parameters * 0.9,
+            self.real_parameters * 0.95,
+        ]
+        mcmc = pints.EmceeHammerMCMC(4, xs)
 
         # Perform short run
-        chain = []
+        chains = []
         for i in range(100):
-            x = mcmc.ask()
-            fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
-            chain.append(sample)
-        chain = np.array(chain)
-        self.assertEqual(chain.shape[0], 100)
-        self.assertEqual(chain.shape[1], len(x0))
+            xs = mcmc.ask()
+            fxs = [self.log_posterior(x) for x in xs]
+            samples = mcmc.tell(fxs)
+            if i >= 50:
+                chains.append(samples)
+        chains = np.array(chains)
+        self.assertEqual(chains.shape[0], 50)
+        self.assertEqual(chains.shape[1], len(xs))
+        self.assertEqual(chains.shape[2], len(xs[0]))
 
-    def test_errors(self):
+    def test_flow(self):
 
-        mcmc = pints.PopulationMCMC(self.real_parameters)
-        self.assertRaises(ValueError, mcmc.set_a, -1)
+        # Test we have at least 3 chains
+        n = 2
+        x0 = [self.real_parameters] * n
+        self.assertRaises(ValueError, pints.EmceeHammerMCMC, n, x0)
+
+        # Test initial proposal is first point
+        n = 3
+        x0 = [self.real_parameters] * n
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+        self.assertTrue(mcmc.ask() is mcmc._x0)
+
+        # Double initialisation
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+        mcmc.ask()
+        self.assertRaises(RuntimeError, mcmc._initialise)
+
+        # Tell without ask
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0)
+
+        # Repeated asks should return same point
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+        # Get into accepting state
+        for i in range(100):
+            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
+        x = mcmc.ask()
+        for i in range(10):
+            self.assertTrue(x is mcmc.ask())
+
+        # Repeated tells should fail
+        mcmc.tell([1, 1, 1])
+        self.assertRaises(RuntimeError, mcmc.tell, [1, 1, 1])
+
+        # Bad starting point
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+        mcmc.ask()
+        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+
+    def test_set_hyper_parameters(self):
+        """
+        Tests the hyper-parameter interface for this optimiser.
+        """
+        n = 3
+        x0 = [self.real_parameters] * n
+        mcmc = pints.EmceeHammerMCMC(n, x0)
+
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0])
-        mcmc.set_hyper_parameters([1])
-        self.assertEqual(mcmc._a, 1)
+
+        mcmc.set_hyper_parameters([2.1])
+        self.assertEqual(mcmc.a(), 2.1)
+
+        self.assertRaisesRegex(
+            ValueError, 'positive', mcmc.set_hyper_parameters, [-1])
+        self.assertRaisesRegex(
+            ValueError, 'positive', mcmc.set_hyper_parameters, [0])
 
     def test_logging(self):
         """
@@ -95,15 +154,8 @@ class TestPopulationMCMC(unittest.TestCase):
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
-        self.assertIn('Emcee Hammer MCMC', text)
-        self.assertIn(' i    ', text)
-        self.assertIn(' j    ', text)
-        self.assertIn(' Ex. ', text)
+        self.assertIn('Differential Evolution MCMC', text)
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
