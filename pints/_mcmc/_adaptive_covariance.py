@@ -1,5 +1,5 @@
 #
-# Adaptive covariance MCMC method
+# Base class for Adaptive covariance MCMC methods
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -14,10 +14,11 @@ import numpy as np
 
 class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     """
-    Adaptive covariance MCMC general class covering a range of
-    methods where the covariance matrix is adapted in MCMC runs.
-    In all cases self._adaptations ^ -eta is used to control decay
-    of adaptation
+    Base class for single chain MCMC methods that adapt a covariance matrix
+    when running, in order to control the acceptance rate.
+
+    In all cases ``self._adaptations ^ -eta`` is used to control decay of
+    adaptation
 
     *Extends:* :class:`SingleChainMCMC`
     """
@@ -85,9 +86,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
     def set_eta(self, eta):
         """
-        Updates eta which controls the rate of
-        adaptation decay by self._adaptations ^ -eta, where
-        eta > 0 to ensure asymptotic ergodicity
+        Updates ``eta`` which controls the rate of adaptation decay
+        ``adaptations**(-eta)``, where ``eta > 0`` to ensure asymptotic
+        ergodicity.
         """
         if eta <= 0:
             raise ValueError('eta should be greater than zero')
@@ -105,10 +106,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
 
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Adaptive covariance MCMC'
-
     def needs_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return True
@@ -120,6 +117,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
+
         # Check if we had a proposal
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
@@ -143,7 +141,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Clear proposal
             self._proposed = None
 
-            # Set alpha prob to zero
+            # Set alpha probability to zero
             self._alpha = 0
 
             # Return first point for chain
@@ -155,7 +153,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         self._X = self._current
         self._Y = self._proposed
 
-        # Localised vs others
+        # For localised methods, update r
         if self._localised:
             r = r + self._ratio_q()
 
@@ -187,9 +185,9 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
                 self._update_sigma()
 
         # Update acceptance rate (only used for output!)
-        self._acceptance = ((self._iterations * self._acceptance +
-                            self._accepted) /
-                            (self._iterations + 1))
+        self._acceptance = (
+            (self._iterations * self._acceptance + self._accepted)
+            / (self._iterations + 1))
 
         # Increase iteration count
         self._iterations += 1
