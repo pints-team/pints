@@ -72,22 +72,26 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             self._initialise()
 
         # Propose new points
-        if len(self._remaining) == 0:
-            self._remaining = np.arange(self._chains)
-        self._k = self._remaining[0]
-        self._remaining = np.delete(self._remaining, 0)
+        if self._proposed is None:
 
-        # Pick j from the complementary ensemble
-        j = np.random.randint(self._chains - 1)
-        if j >= self._k:
-            j += 1
-        x_j = self._current[j]
-        x_k = self._current[self._k]
+            # Cycle through chains
+            #TODO Do this without lists TODO
+            if len(self._remaining) == 0:
+                self._remaining = np.arange(self._chains)
+            self._k = self._remaining[0]
+            self._remaining = np.delete(self._remaining, 0)
 
-        # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a], 0 otherwise
-        r = np.random.rand()
-        self._z = ((1 + r * (self._a - 1))**2) / self._a
-        self._proposed = x_j + self._z * (x_k - x_j)
+            # Pick j from the complementary ensemble
+            j = np.random.randint(self._chains - 1)
+            if j >= self._k:
+                j += 1
+            x_j = self._current[j]
+            x_k = self._current[self._k]
+
+            # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a], 0 otherwise
+            r = np.random.rand()
+            self._z = ((1 + r * (self._a - 1))**2) / self._a
+            self._proposed = x_j + self._z * (x_k - x_j)
 
         # Set as read only
         self._proposed.setflags(write=False)
@@ -142,13 +146,22 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             # Return first samples for chains
             return self._current
 
+        # Perform iteration
+        next = np.array(self._current, copy=True)
+        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
+
+        # Update only one of the chains #TODO WHY NOT ALL? WHAT's HAPPENING HERE?
         r_log = np.log(np.random.rand())
         q = ((self._chains - 1) * np.log(self._z)
             + proposed_log_pdfs[self._k]
             - self._current_log_pdfs[self._k])
 
+        #TODO REWRITE AS MATRIX OPERATION? SEE DIFF EV MCMCMC
         if q >= r_log:
-            self._current[self._k] = self._proposed
+            next[self._k] = self._proposed
+            next_log_pdfs[self._k] = self._proposed_log_pdfs[self._k]
+            self._current = next
+            self._current_log_pdfs = next_log_pdfs
 
         # Clear proposal
         self._proposed = None
