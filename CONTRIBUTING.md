@@ -201,9 +201,9 @@ Next, open a browser, and navigate to your local pints directory (by typing the 
 
 Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) stored in the [examples directory](examples). Which features are "major" is of course wholy subjective, so please discuss on GitHub first!
 
-All example notebooks should be listed in [examples/README.md]. Please follow the (naming and writing) style of existing notebooks where possible.
+All example notebooks should be listed in [examples/README.md](https://github.com/pints-team/pints/examples/README.md). Please follow the (naming and writing) style of existing notebooks where possible.
 
-
+Where possible, notebooks are tested daily. A list of slow notebooks (which time-out and fail tests) is maintained in `.slow-books`, these notebooks will be excluded from daily testing.
 
 
 ## Infrastructure
@@ -251,7 +251,7 @@ Configuration files:
 .travis.yaml
 ```
 
-Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks.
+Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks. Notebooks listed in `.slow-books` are excluded from these tests.
 
 ### Appveyor
 
