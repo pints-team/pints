@@ -253,9 +253,22 @@ Configuration files:
 
 Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks.
 
+### Appveyor
+
+Windows testing is done using [appveyor](http://appveyor.com/), tests are published on https://ci.appveyor.com/project/MichaelClerx/pints.
+
+Configuration files:
+
+```
+.appveyor.yml
+```
+
+See ([here](https://www.appveyor.com/docs/appveyor-yml/)) for the syntax.
+
+
 ### Codecov
 
-Code coverage (how much of our code is actually seen by the unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on https://codecov.io/gh/pints-team/pints.
+Code coverage (how much of our code is actually seen by the (linux) unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on https://codecov.io/gh/pints-team/pints.
 
 Configuration files:
 
