@@ -37,7 +37,7 @@ setup(
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
         # Should not be imported
-        'matplotlib>=1.5',
+        'matplotlib>=1.5, <3',
     ],
     extras_require={
         'docs': [
