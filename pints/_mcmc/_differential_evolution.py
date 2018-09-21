@@ -118,10 +118,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_normal_error(self, normal_error):
         """
-        If true sets the error process to be a normal
-        error, N(0, b*); if false, it uses a uniform error
-        U(-b*, b*); where b* = b if absolute scaling used
-        and b* = mu * b if relative used instead
+        If true sets the error process to be a normal error, N(0, b*);
+        if false, it uses a uniform error U(-b*, b*);
+        where b* = b if absolute scaling used and b* = mu * b if
+        relative used instead
         """
         normal_error = bool(normal_error)
         self._normal_error = normal_error
@@ -175,7 +175,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         relative_scaling = bool(relative_scaling)
         self._relative_scaling = relative_scaling
-        self._initialise()
+        if self._relative_scaling:
+            self._b_star = self._mu * self._b
+        else:
+            self._b_star = np.repeat(self._b, self._dimension)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -231,7 +234,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_scale_coefficient(self, b):
         """
-        Sets the scale coefficient ``b`` of error process used in updating
+        Sets the scale coefficient ``b`` of the error process used in updating
         the position of each chain.
         """
         b = float(b)
@@ -255,7 +258,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[gamma, normal_scale_coefficient]``.
+        The hyper-parameter vector is ``[gamma, normal_scale_coefficient,
+        gamma_switch_rate, normal_error]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
