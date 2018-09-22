@@ -12,31 +12,36 @@ import pints
 import numpy as np
 
 
-class ComponentAM_ACMC(pints.AdaptiveCovarianceMCMC):
+class ComponentwiseACMCMC(pints.AdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 5 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified
     in the paper). The algorithm we use is actually a mixture of Algorithm 5
     and Algorithm 4, as is suggested in the text in [1].
 
-    Initialises mu0 and sigma0 used in componentwise proposal N(mu0, lambda * sigma0)
+    Initialises mu0 and sigma0 used in componentwise proposal
+    N(mu0, lambda * sigma0).
     For iteration t = 0:n_iter:
 
       if mod(t, self._am_global_rate == 0)
         - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
-        - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        - Update log lambda_t+1^scalar = log lambda_t^scalar + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
+        - Calculate alpha(theta_t, Y_t+1) =
+            min(1, p(Y_t+1|data) / p(theta_t|data))
+        - Update log lambda_t+1^scalar = log lambda_t^scalar +
+                gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
       else:
         - Sample component k ~ discrete-uniform(1,...,self._dimension)
         - Sample Y_t+1 ~ theta_t +  e_k * N(theta_t, lambda_t^k * sigma0_kk)
-        - Calculate alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        - Update log lambda_t+1^k = log lambda_t^k + gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
-
+        - Calculate alpha(theta_t, Y_t+1) =
+                                        min(1, p(Y_t+1|data) / p(theta_t|data))
+        - Update log lambda_t+1^k = log lambda_t^k +
+                gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
       endif
       - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
         theta_t+1 = theta_t
       - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
-      - Update sigma_t+1 = sigma_t + gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
+      - Update sigma_t+1 = sigma_t +
+                gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
     endfor
 
     where e_k is a vector of zeros apart from the kth entry which equals 1;
@@ -51,11 +56,11 @@ class ComponentAM_ACMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(ComponentAM_ACMC, self).__init__(x0, sigma0)
+        super(ComponentwiseACMCMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(ComponentAM_ACMC, self).ask()
+        super(ComponentwiseACMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -87,7 +92,7 @@ class ComponentAM_ACMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(ComponentAM_ACMC, self)._initialise()
+        super(ComponentwiseACMCMC, self)._initialise()
         self._log_lambda_scalar = 0
         self._log_lambda_vector = np.zeros(self._dimension)
         self._am_global_rate = 10
@@ -99,21 +104,24 @@ class ComponentAM_ACMC(pints.AdaptiveCovarianceMCMC):
         Sets number of steps between each global am update
         """
         if am_global_rate < 1:
-          raise ValueError('Number of steps between global am updates' +
-                           ' must exceed 1.')
+            raise ValueError('Number of steps between global am updates' +
+                             ' must exceed 1.')
         if not isinstance(am_global_rate, int):
-          raise ValueError('Number of steps between global am updates' +
-                           ' must be an integer.')
+            raise ValueError('Number of steps between global am updates' +
+                             ' must be an integer.')
         self._am_global_rate = am_global_rate
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(ComponentAM_ACMC, self).tell(fx)
+        super(ComponentwiseACMCMC, self).tell(fx)
 
         if self._iter_count % self._am_global_rate == 0:
-            self._log_lambda_scalar += self._gamma * (self._alpha - self._target_acceptance)
+            self._log_lambda_scalar += (self._gamma *
+                                        (self._alpha -
+                                         self._target_acceptance))
         else:
-            self._log_lambda_vector[self._k] += self._gamma * (self._alpha - self._target_acceptance)
+            self._log_lambda_vector[self._k] += (
+                self._gamma * (self._alpha - self._target_acceptance))
         self._iter_count += 1
 
         # Return new point for chain

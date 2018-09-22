@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-class DramACMC(pints.AdaptiveCovarianceMCMC):
+class DramACMCMC(pints.AdaptiveCovarianceMCMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1].
 
@@ -31,7 +31,7 @@ class DramACMC(pints.AdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(DramACMC, self).__init__(x0, sigma0)
+        super(DramACMCMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """
@@ -41,7 +41,7 @@ class DramACMC(pints.AdaptiveCovarianceMCMC):
         then return a proposal from a conservative
         kernel (i.e. with low width)
         """
-        super(DramACMC, self).ask()
+        super(DramACMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -59,7 +59,7 @@ class DramACMC(pints.AdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(DramACMC, self)._initialise()
+        super(DramACMCMC, self)._initialise()
 
         self._kernels = 2
         self._Y = [None] * self._kernels
@@ -222,20 +222,20 @@ class DramACMC(pints.AdaptiveCovarianceMCMC):
         Y_rev = Y[::-1]
         log_Y_rev = log_Y[::-1]
         for i in range(n):
-            alpha_log += (stats.multivariate_normal.logpdf(
-                          x=Y[n - i - 1],
-                          mean=Y[n],
-                          cov=self._sigma[i],
-                          allow_singular=True) -
-                          stats.multivariate_normal.logpdf(
-                          x=Y[i],
-                          mean=self._current,
-                          cov=self._sigma[i],
-                          allow_singular=True) +
-                          np.log(1 - np.exp(self._calculate_alpha_log(i, Y_rev[0:(i + 2)],
-                                                         log_Y_rev[0:(i + 2)])))
-                          -
-                          np.log(1 - np.exp(self._calculate_alpha_log(i, Y[0:(i + 2)],
-                                                         log_Y[0:(i + 2)])))
-                          )
+            alpha_log += (
+                stats.multivariate_normal.logpdf(
+                    x=Y[n - i - 1],
+                    mean=Y[n],
+                    cov=self._sigma[i],
+                    allow_singular=True) -
+                stats.multivariate_normal.logpdf(
+                    x=Y[i],
+                    mean=self._current,
+                    cov=self._sigma[i],
+                    allow_singular=True) +
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, Y[0:(i + 2)], log_Y[0:(i + 2)])))
+            )
         return min(0, alpha_log)
