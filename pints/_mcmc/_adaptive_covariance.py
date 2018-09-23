@@ -183,16 +183,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         covariance matrix of proposals. Note that this default is overidden in
         some of the methods
         """
-        self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
+        raise NotImplementedError
 
     def _update_sigma(self):
         """
         Updates the covariance matrix used to generate proposals.
         Note that this default is overidden in some of the methods
         """
-        dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-        self._sigma = ((1 - self._gamma) * self._sigma +
-                       self._gamma * np.dot(dsigm, dsigm.T))
+        raise NotImplementedError
 
     def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """

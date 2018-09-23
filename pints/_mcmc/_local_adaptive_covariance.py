@@ -17,7 +17,8 @@ import scipy
 class LocalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
     """
     Base class for single chain MCMC methods that adapt a covariance matrix
-    when running, in order to control the acceptance rate.
+    when running, in order to control the acceptance rate. This class is for
+    those ACMCMC algorithms that update a local proposal kernel.
 
     In all cases ``self._adaptations ^ -eta`` is used to control decay of
     adaptation

@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class ComponentwiseACMCMC(pints.AdaptiveCovarianceMCMC):
+class ComponentwiseACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 5 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified

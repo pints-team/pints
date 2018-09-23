@@ -158,20 +158,18 @@ from ._mcmc import (
     MCMCSampling,
     mcmc_sample,
 )
-from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
-from ._mcmc._adaptive_covariance_remi import AdaptiveCovarianceRemiMCMC
-from ._mcmc._adaptive_covariance_am import AdaptiveCovarianceAMMCMC
-from ._mcmc._adaptive_covariance_rao_blackwell import AdaptiveCovarianceRaoBlackWellMCMC
-from ._mcmc._adaptive_covariance_am_global_adaptive import AdaptiveCovarianceAMGlobalAdaptiveMCMC
-from ._mcmc._adaptive_covariance_am_component import AdaptiveCovarianceAMComponentMCMC
-from ._mcmc._adaptive_covariance_am_global_component import AdaptiveCovarianceAMGlobalComponentMCMC
-from ._mcmc._adaptive_covariance_localised import AdaptiveCovarianceLocalisedMCMC
+from ._mcmc._acmcmc import ACMCMC
+from ._mcmc._remi_acmcmc import RemiACMCMC
+from ._mcmc._rao_blackwell_acmcmc import RaoBlackWellACMCMC
+from ._mcmc._global_acmcmc import GlobalACMCMC
+from ._mcmc._componentwise_acmcmc import ComponentwiseACMCMC
+from ._mcmc._local_acmcmc import LocalACMCMC
+from ._mcmc._dram_acmcmc import DramACMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._dream import DreamMCMC
-from ._mcmc._dram import DramMCMC
 
 
 #

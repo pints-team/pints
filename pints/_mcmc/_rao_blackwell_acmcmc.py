@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class RaoBlackWellACMCMC(pints.AdaptiveCovarianceMCMC):
+class RaoBlackWellACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 3 in [1],
     (with gamma = self._adaptations ** -eta which isn't specified

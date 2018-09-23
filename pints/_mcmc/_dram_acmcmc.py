@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-class DramACMCMC(pints.AdaptiveCovarianceMCMC):
+class DramACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1].
 

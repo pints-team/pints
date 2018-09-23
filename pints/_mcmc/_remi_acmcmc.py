@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class RemiACMCMC(pints.AdaptiveCovarianceMCMC):
+class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive covariance MCMC, as described in [1, 2].
 
