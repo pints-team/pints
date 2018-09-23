@@ -48,9 +48,10 @@ class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Propose new point
         if self._proposed is None:
             self._proposed = (
-            np.random.multivariate_normal(self._current,
-                                          ((np.exp(self._log_lambda) *
-                                            self._sigma)))
+                np.random.multivariate_normal(self._current,
+                                              ((np.exp(self._log_lambda) *
+                                               self._sigma)))
+            )
 
             # Set as read-only
             self._proposed.setflags(write=False)
@@ -69,8 +70,8 @@ class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
         super(GlobalACMCMC, self).tell(fx)
 
-        self._log_lambda += self._gamma *
-                                        (self._alpha - self._target_acceptance)
+        self._log_lambda += (self._gamma *
+                             (self._alpha - self._target_acceptance))
 
         # Return new point for chain
         return self._current

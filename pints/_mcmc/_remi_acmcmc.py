@@ -67,7 +67,7 @@ class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Update log acceptance
         if self._adaptive:
             self._loga += (self._gamma *
-                           (self._accepted - self._target_acceptance)
+                           (self._accepted - self._target_acceptance))
 
         # Return new point for chain
         return self._current
