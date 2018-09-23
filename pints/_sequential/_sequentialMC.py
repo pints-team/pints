@@ -23,8 +23,8 @@ class SMC(pints.SMCSampler):
     [1] "Sequential Monte Carlo Samplers", Del Moral et al. 2006,
     Journal of the Royal Statistical Society. Series B.
     """
-    def __init__(self, log_posterior, x0, sigma0=None, log_prior=None):
-        super(SMC, self).__init__(log_posterior, x0, sigma0, log_prior)
+    def __init__(self, log_posterior, x0, sigma0=None):
+        super(SMC, self).__init__(log_posterior, x0, sigma0)
 
         # Number of particles
         self._particles = 1000
@@ -176,7 +176,7 @@ class SMC(pints.SMCSampler):
                 self._schedule[i + 1])
             weights_old = weights_new
             m_samples[:, :, i + 1] = samples_new
-
+        self._weights = weights_new
         return m_samples[:, :, -1]
 
     def _tempered_distribution(self, x, beta):
@@ -249,11 +249,17 @@ class SMC(pints.SMCSampler):
 
         return samples_new
 
-    def _ess(self, weights):
+    def ess(self):
         """
         Calculates the effective sample size.
         """
-        return 1.0 / np.sum(weights**2)
+        return 1.0 / np.sum(self._weights**2)
+
+    def weights(self):
+        """
+        Returns weights from last run of SMC.
+        """
+        return self._weights
 
     def _resample(self, weights, samples):
         """
@@ -280,7 +286,8 @@ class SMC(pints.SMCSampler):
         Undertakes steps 2 and 3 from algorithm 3.1.1. in Del Moral et al.
         (2006) except allow multiple MCMC steps per temperature if desired.
         """
-        if self._ess(weights_old) < self._ess_threshold:
+        self._weights = weights_old
+        if self.ess() < self._ess_threshold:
             resamples, weights_new = self._resample(weights_old, samples_old)
         else:
             resamples, weights_new = samples_old, weights_old
@@ -299,4 +306,3 @@ class SMC(pints.SMCSampler):
             samples_new, weights_discard = self._resample(
                 weights_new, samples_new)
         return samples_new, weights_new
-

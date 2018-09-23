@@ -10,7 +10,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy import stats
 
 
 class SMCSampler(object):
@@ -24,7 +23,7 @@ class SMCSampler(object):
         space.
 
     """
-    def __init__(self, log_posterior, x0, sigma0=None, log_prior=None):
+    def __init__(self, log_posterior, x0, sigma0=None):
 
         # Store log_likelihood and log_prior
         if not isinstance(log_posterior, pints.LogPDF):
@@ -59,14 +58,12 @@ class SMCSampler(object):
         # Get dimension
         self._dimension = self._log_posterior.n_parameters()
 
-        if log_prior is None:
-            norm = stats.multivariate_normal(mean=self._x0, cov=self._sigma0)
-            self._log_prior = norm.logpdf
+        if not isinstance(log_posterior, pints.LogPosterior):
+            lower = np.repeat(-100, self._dimension)
+            upper = np.repeat(+100, self._dimension)
+            self._log_prior = pints.UniformLogPrior(lower, upper)
         else:
-            if not isinstance(log_prior, pints.LogPrior):
-                raise ValueError(
-                    'Given prior function must extend pints.LogPrior.')
-            self._log_prior = log_prior
+            self._log_prior = self._log_posterior._log_prior
 
         # Print info to console
         self._verbose = True
@@ -77,4 +74,3 @@ class SMCSampler(object):
         samples.
         """
         raise NotImplementedError
-
