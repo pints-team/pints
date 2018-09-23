@@ -20,13 +20,8 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     Using a covariance matrix, that is tuned so that the acceptance rate of the
     MCMC steps converges to a user specified value.
 
-    [1] Uncertainty and variability in models of the cardiac action potential:
-    Can we build trustworthy models?
-    Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
-    Mirams (2015) Journal of Molecular and Cellular Cardiology
-
-    [2] An adaptive Metropolis algorithm
-    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
+    [1] DRAM: Efficient adaptive MCMC, Haario et al. Statistics and computing
+    16.4 (2006): 339-354.
 
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
