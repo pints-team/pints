@@ -265,10 +265,7 @@ class SMC(pints.SMCSampler):
         Returns samples according to the weights vector from the multinomial
         distribution.
         """
-        # print(weights[0:10])
-        # print(samples[0:10])
         selected = np.random.multinomial(self._particles, weights)
-        # print(selected)
         new_samples = np.zeros((self._particles, self._dimension))
         a_start = 0
         a_end = 0
@@ -305,6 +302,6 @@ class SMC(pints.SMCSampler):
         # Either resample again or don't: algorithm 3.1.1. due to the form of
         # L used (eqn. 30 and 31) resample again
         if self._resample_end_2_3:
-            samples_new, weights_new = self._resample(
+            samples_new, weights_discard = self._resample(
                 weights_new, samples_new)
         return samples_new, weights_new
