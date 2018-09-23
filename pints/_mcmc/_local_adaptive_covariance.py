@@ -27,6 +27,8 @@ class LocalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
     """
     def __init__(self, x0, sigma0=None):
         super(LocalAdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
+        # Localised AM
+        self._initial_fit = True
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -35,6 +37,28 @@ class LocalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(LocalAdaptiveCovarianceMCMC, self).tell(fx)
+
+        self._r += self._ratio_q()
+
+        self._alpha = np.minimum(1, np.exp(self._r))
+
+        if np.isfinite(fx):
+            u = np.log(np.random.uniform(0, 1))
+            if u < self._r:
+                self._accepted = 1
+                self._current = self._proposed
+                self._current_log_pdf = fx
+
+        # Clear proposal
+        self._proposed = None
+
+        # Update acceptance rate (only used for output!)
+        self._acceptance = (
+            (self._iterations * self._acceptance + self._accepted)
+            / (self._iterations + 1))
+
+        # Increase iteration count
+        self._iterations += 1
 
         # Adapt covariance matrix
         if self._adaptive:

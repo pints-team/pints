@@ -34,12 +34,23 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(GlobalAdaptiveCovarianceMCMC, self).tell(fx)
 
+        self._alpha = np.minimum(1, np.exp(self._r))
+
+        if np.isfinite(fx):
+            u = np.log(np.random.uniform(0, 1))
+            if u < self._r:
+                self._accepted = 1
+                self._current = self._proposed
+                self._current_log_pdf = fx
+
+        # Clear proposal
+        self._proposed = None
+
         # Adapt covariance matrix
         if self._adaptive:
             # Set gamma based on number of adaptive iterations
             self._gamma = self._adaptations ** -self._eta
             self._adaptations += 1
-
             self._update_mu()
             self._update_sigma()
         return self._current

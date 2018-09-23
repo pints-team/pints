@@ -80,10 +80,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Update sampler state
         self._running = True
 
-        # Localised AM
-        self._localised = False
-        self._initial_fit = True
-
     def set_eta(self, eta):
         """
         Updates ``eta`` which controls the rate of adaptation decay
@@ -144,38 +140,17 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Set alpha probability to zero
             self._alpha = 0
 
+            # Set r to zero
+            self._r = float('-Inf')
+
             # Return first point for chain
             return self._current
 
         # Check if the proposed point can be accepted
         self._accepted = 0
-        r = fx - self._current_log_pdf
+        self._r = fx - self._current_log_pdf
         self._X = self._current
         self._Y = self._proposed
-
-        # For localised methods, update r
-        if self._localised:
-            r = r + self._ratio_q()
-
-        self._alpha = np.minimum(1, np.exp(r))
-
-        if np.isfinite(fx):
-            u = np.log(np.random.uniform(0, 1))
-            if u < r:
-                self._accepted = 1
-                self._current = self._proposed
-                self._current_log_pdf = fx
-
-        # Clear proposal
-        self._proposed = None
-
-        # Update acceptance rate (only used for output!)
-        self._acceptance = (
-            (self._iterations * self._acceptance + self._accepted)
-            / (self._iterations + 1))
-
-        # Increase iteration count
-        self._iterations += 1
 
     def _update_mu(self):
         """
