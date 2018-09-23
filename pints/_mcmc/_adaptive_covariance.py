@@ -169,21 +169,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Clear proposal
         self._proposed = None
 
-        # Adapt covariance matrix
-        if self._adaptive:
-            # Set gamma based on number of adaptive iterations
-            self._gamma = self._adaptations ** -self._eta
-            self._adaptations += 1
-
-            # For localised AM
-            if self._localised:
-                self._fit_gaussian_mixture()
-                self._initial_fit = False
-            else:
-                # Update mu and covariance matrix
-                self._update_mu()
-                self._update_sigma()
-
         # Update acceptance rate (only used for output!)
         self._acceptance = (
             (self._iterations * self._acceptance + self._accepted)
