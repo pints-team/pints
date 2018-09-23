@@ -35,26 +35,6 @@ class LocalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`SingleChainMCMC.ask()`. """
         super(LocalAdaptiveCovarianceMCMC, self).ask()
 
-        # Propose new point
-        if self._proposed is None:
-            # Sample Z from categorical distribution over q
-            self._Z = np.random.choice(
-                self._mixture_components,
-                size=1,
-                p=np.exp(self._log_q_l).tolist()
-            )[0]
-
-            # choose proposed value from Zth proposal distribution
-            self._proposed = np.random.multivariate_normal(
-                self._current,
-                np.exp(self._log_lambda[self._Z]) * self._sigma[self._Z])
-
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
-
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(LocalAdaptiveCovarianceMCMC, self).tell(fx)
