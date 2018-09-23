@@ -67,7 +67,9 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Set kernels
         v_mu = np.copy(self._mu)
         self._mu = [v_mu for i in range(self._kernels)]
-        self._sigma_scale = np.array([1, 1])
+        a_min = np.log10(1)
+        a_max = np.log10(1000)
+        self._sigma_scale = 10**np.linspace(a_min, a_max, self._kernels)
         m_sigma = np.copy(self._sigma)
         self._sigma = [
             self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
@@ -213,20 +215,20 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         """
         alpha_log = log_Y[n + 1] - log_Y[0]
         if n == 0:
-            return alpha_log
+            return min(0, alpha_log)
         Y_rev = Y[::-1]
         log_Y_rev = log_Y[::-1]
         for i in range(n):
             alpha_log += (
                 stats.multivariate_normal.logpdf(
                     x=Y[n - i - 1],
-                    mean=Y[n],
-                    cov=self._sigma[i],
+                    mean=Y[n + 1],
+                    cov=self._sigma[n],
                     allow_singular=True) -
                 stats.multivariate_normal.logpdf(
                     x=Y[i],
                     mean=self._current,
-                    cov=self._sigma[i],
+                    cov=self._sigma[0],
                     allow_singular=True) +
                 np.log(1 - np.exp(self._calculate_alpha_log(
                     i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
