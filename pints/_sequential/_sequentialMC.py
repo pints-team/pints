@@ -203,7 +203,7 @@ class SMC(pints.SMCSampler):
         al. (2006).
         """
         w_tilde_value = self._w_tilde(x_old, x_new, beta_old, beta_new)
-        return w_old + w_tilde_value
+        return np.log(w_old) + w_tilde_value
 
     def _new_weights(
             self, w_old, samples_old, samples_new, beta_old, beta_new):
@@ -235,10 +235,9 @@ class SMC(pints.SMCSampler):
             "Zero elements appearing in proposals matrix."
         samples_new = np.zeros((self._particles, self._dimension))
         for i in range(0, self._particles):
-            r = np.exp(
-                self._tempered_distribution(proposed[i], beta)
-                - self._tempered_distribution(samples[i], beta))
-            if r <= np.random.uniform(size=1):
+            r = (self._tempered_distribution(proposed[i], beta)
+                 - self._tempered_distribution(samples[i], beta))
+            if r <= np.log(np.random.uniform(0, 1)):
                 samples_new[i] = samples[i]
             else:
                 samples_new[i] = proposed[i]
@@ -266,7 +265,10 @@ class SMC(pints.SMCSampler):
         Returns samples according to the weights vector from the multinomial
         distribution.
         """
+        # print(weights[0:10])
+        # print(samples[0:10])
         selected = np.random.multinomial(self._particles, weights)
+        # print(selected)
         new_samples = np.zeros((self._particles, self._dimension))
         a_start = 0
         a_end = 0
@@ -303,6 +305,6 @@ class SMC(pints.SMCSampler):
         # Either resample again or don't: algorithm 3.1.1. due to the form of
         # L used (eqn. 30 and 31) resample again
         if self._resample_end_2_3:
-            samples_new, weights_discard = self._resample(
+            samples_new, weights_new = self._resample(
                 weights_new, samples_new)
         return samples_new, weights_new
