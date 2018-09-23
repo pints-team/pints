@@ -134,6 +134,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._iterations += 1
 
+            # Initialise X and Y
+            self._X = np.copy(self._proposed)
+            self._Y = np.copy(self._proposed)
+
             # Clear proposal
             self._proposed = None
 
