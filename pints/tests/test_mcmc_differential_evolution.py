@@ -178,7 +178,8 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             [1, 0.5, 20.5, 0, 0])
 
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', mcmc.set_hyper_parameters, [1, 0.5, 0, 0, 0])
+            ValueError, 'exceed 1', mcmc.set_hyper_parameters,
+            [1, 0.5, 0, 0, 0])
 
     def test_logging(self):
         """
