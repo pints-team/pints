@@ -345,10 +345,16 @@ class SMCSampler(object):
             self._new_weights(self._schedule[i], self._current_beta)
 
             # # Conditional resampling step
-            if self._resample_end_2_3:
-                self._samples, weights_discard, self._samples_log_pdf = (
-                    self._resample()
-                )
+            if i != (self._iterations - 2):
+                if self._resample_end_2_3:
+                    self._samples, self._weights, self._samples_log_pdf = (
+                        self._resample()
+                    )
+            else:
+                if self._resample_end_2_3:
+                    self._samples, weights_discard, self._samples_log_pdf = (
+                        self._resample()
+                    )
 
             # Show progress
             if logging:
