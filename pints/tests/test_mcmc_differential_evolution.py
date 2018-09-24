@@ -127,6 +127,18 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
+        # Use uniform error
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc.set_normal_error(False)
+        for i in range(10):
+            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
+
+        # Use absolute scaling
+        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc.set_relative_scaling(False)
+        for i in range(10):
+            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
+
     def test_set_hyper_parameters(self):
         """
         Tests the hyper-parameter interface for this optimiser.
@@ -147,10 +159,10 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         mcmc.set_relative_scaling(0)
         self.assertTrue(not mcmc._relative_scaling)
         self.assertTrue(np.array_equal(mcmc._b_star,
-                        np.repeat(mcmc._b, mcmc._dimension)))
+                                       np.repeat(mcmc._b, mcmc._dimension)))
         mcmc.set_relative_scaling(1)
         self.assertTrue(np.array_equal(mcmc._b_star,
-                        mcmc._mu * mcmc._b))
+                                       mcmc._mu * mcmc._b))
 
         self.assertRaisesRegex(
             ValueError, 'non-negative', mcmc.set_hyper_parameters,
