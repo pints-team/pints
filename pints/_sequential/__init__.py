@@ -290,8 +290,8 @@ class SMCSampler(object):
             self._current_beta = self._schedule[i + 1]
 
             # If ESS < threshold then resample to avoid degeneracies
-            # if self.ess() < self._ess_threshold:
-            #     self._samples, self._weights = self._resample()
+            if self.ess() < self._ess_threshold:
+                self._samples, self._weights = self._resample()
 
             # Store old samples
             self._samples_old = np.copy(self._samples)
@@ -337,8 +337,8 @@ class SMCSampler(object):
             self._new_weights(self._schedule[i])
 
             # Conditional resampling step
-            # if self._resample_end_2_3:
-            #     self._samples, weights_discard = self._resample()
+            if self._resample_end_2_3:
+                self._samples, weights_discard = self._resample()
 
             # Show progress
             if logging:
