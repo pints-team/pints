@@ -71,6 +71,7 @@ class SMCSampler(object):
         self._log_filename = None
         self._log_csv = False
         self.set_log_rate()
+        self._evaluations = 0
 
         # Parallelisation
         self._parallel = False
@@ -123,6 +124,7 @@ class SMCSampler(object):
                 (1 - self._schedule[1]) * log_prior_pdf -
                 log_prior_pdf
             )
+            self._evaluations += 1
         self._weights = np.exp(self._weights - logsumexp(self._weights))
 
     def set_particles(self, particles):
@@ -210,6 +212,7 @@ class SMCSampler(object):
 
             # Store
             self._schedule = schedule
+        self._iterations = len(self._schedule)
 
     def ask(self):
         """
@@ -236,13 +239,13 @@ class SMCSampler(object):
             # Use at most n_workers workers
             n_workers = min(self._n_workers, self._chains)
             evaluator = pints.ParallelEvaluator(
-                self._log_likelihood, n_workers=n_workers)
+                self._log_posterior, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._log_likelihood)
+            evaluator = pints.SequentialEvaluator(self._log_posterior)
 
         # Set up progress reporting
         next_message = 0
-        message_warm_up = 3
+        message_warm_up = 0
         message_interval = 20
 
         # Start logging
@@ -272,11 +275,12 @@ class SMCSampler(object):
                 logger.set_filename(self._log_filename, csv=self._log_csv)
 
             # Add fields to log
-            logger.add_counter('Iter.', max_value=self._iterations)
-            logger.add_counter('Eval.', max_value=self._iterations * 10)
+            logger.add_float('Temperature')
+            logger.add_counter('Eval.', max_value=len(self._schedule) *
+                               self._particles)
             #TODO: Add other informative fields ?
             logger.add_time('Time m:s')
-            logger.add_float('Temperature')
+
             i_message = 1
 
         # Run!
@@ -318,7 +322,7 @@ class SMCSampler(object):
                         (self._current_log_pdf -
                          (1 - self._current_beta) * f_prior)
                     )
-
+                    self._evaluations += 1
             # Update weights
             self._new_weights(self._schedule[i])
 
@@ -331,15 +335,13 @@ class SMCSampler(object):
                 i_message += 1
                 if i_message >= next_message:
                     # Log state
-                    logger.log(i_message, self._n_evals, timer.time(),
-                               1 - self._current_beta)
+                    logger.log(1 - self._current_beta, self._evaluations,
+                               timer.time())
 
                     # Choose next logging point
                     if i_message > message_warm_up:
                         next_message = message_interval * (
                             1 + i_message // message_interval)
-
-        return self._samples
 
     def _tempered_distribution(self, fx, f_prior, beta):
         """
@@ -452,3 +454,24 @@ class SMCSampler(object):
         Enables or disables logging to screen.
         """
         self._log_to_screen = True if enabled else False
+
+    def set_parallel(self, parallel=False):
+        """
+        Enables/disables parallel evaluation.
+
+        If ``parallel=True``, the method will run using a number of worker
+        processes equal to the detected cpu core count. The number of workers
+        can be set explicitly by setting ``parallel`` to an integer greater
+        than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
+        """
+        if parallel is True:
+            self._parallel = True
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
+        elif parallel >= 1:
+            self._parallel = True
+            self._n_workers = int(parallel)
+        else:
+            self._parallel = False
+            self._n_workers = 1
