@@ -147,13 +147,14 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         x0 = [self.real_parameters] * n
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 4)
+        self.assertEqual(mcmc.n_hyper_parameters(), 5)
 
-        mcmc.set_hyper_parameters([0.5, 0.6, 20, 0])
+        mcmc.set_hyper_parameters([0.5, 0.6, 20, 0, 0])
         self.assertEqual(mcmc._gamma, 0.5)
         self.assertEqual(mcmc._b, 0.6)
         self.assertEqual(mcmc._gamma_switch_rate, 20)
         self.assertTrue(not mcmc._normal_error)
+        self.assertTrue(not mcmc._relative_scaling)
 
         mcmc.set_scale_coefficient(1)
         mcmc.set_relative_scaling(0)
@@ -166,18 +167,18 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
         self.assertRaisesRegex(
             ValueError, 'non-negative', mcmc.set_hyper_parameters,
-            [-1, 0.5, 20, 0])
+            [-1, 0.5, 20, 0, 0])
 
         self.assertRaisesRegex(
             ValueError, 'non-negative', mcmc.set_hyper_parameters,
-            [1, -0.5, 20, 0])
+            [1, -0.5, 20, 0, 0])
 
         self.assertRaisesRegex(
             ValueError, 'integer', mcmc.set_hyper_parameters,
-            [1, 0.5, 20.5, 0])
+            [1, 0.5, 20.5, 0, 0])
 
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', mcmc.set_hyper_parameters, [1, 0.5, 0, 0])
+            ValueError, 'exceed 1', mcmc.set_hyper_parameters, [1, 0.5, 0, 0, 0])
 
     def test_logging(self):
         """
