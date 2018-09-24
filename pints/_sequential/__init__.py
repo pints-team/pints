@@ -82,13 +82,12 @@ class SMCSampler(object):
         self._mu = self._x0
         self._sigma = self._sigma0
         self._method = pints.AdaptiveCovarianceMCMC
+        self._needs_initial_phase = True
+        self._in_initial_phase = True
         self._chain = self._method(self._x0, self._sigma0)
 
         # Initial phase (needed for e.g. adaptive covariance)
-        self._initial_phase_iterations = 0
-        # self._needs_initial_phase = self._method.needs_initial_phase()
-        # if self._needs_initial_phase:
-        #     self.set_initial_phase_iterations()
+        self._chain.set_initial_phase(self._in_initial_phase)
 
         # Temperature schedule
         self._schedule = None
@@ -107,6 +106,12 @@ class SMCSampler(object):
 
         # Set number of MCMC steps to do for each distribution
         self._kernel_samples = 1
+
+    def in_initial_phase(self):
+        """
+        See :meth:`MCMCSampling.in_initial_phase()`.
+        """
+        return self._in_initial_phase
 
     def _initialise(self):
         """
@@ -332,7 +337,7 @@ class SMCSampler(object):
                     )
 
                     self._evaluations += 1
-
+                print(self._chain._sigma)
             # Store old samples
             self._samples_old = np.copy(self._samples)
             self._samples_log_pdf_old = np.copy(self._samples_log_pdf)
