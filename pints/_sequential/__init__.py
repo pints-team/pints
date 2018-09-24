@@ -246,7 +246,7 @@ class SMCSampler(object):
         # Set up progress reporting
         next_message = 0
         message_warm_up = 0
-        message_interval = 20
+        message_interval = 1
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
@@ -289,8 +289,8 @@ class SMCSampler(object):
             self._current_beta = self._schedule[i + 1]
 
             # If ESS < threshold then resample to avoid degeneracies
-            if self.ess() < self._ess_threshold:
-                self._samples, self._weights = self._resample()
+            # if self.ess() < self._ess_threshold:
+            #     self._samples, self._weights = self._resample()
 
             # Store old samples
             self._samples_old = np.copy(self._samples)
@@ -299,6 +299,7 @@ class SMCSampler(object):
             for j in range(self._particles):
                 for k in range(self._kernel_samples):
                     self._current = self._samples[j]
+                    self._chain._current = self._current
                     # Use some method to propose new samples
                     self._proposed = self.ask()
 
@@ -315,6 +316,8 @@ class SMCSampler(object):
                         f_prior_current,
                         self._current_beta)
 
+                    self._chain._proposed = self._proposed
+                    self._chain._current_log_pdf = self._current_log_pdf
                     self._samples[j] = self.tell(
                         self._tempered_distribution(fx,
                                                     f_prior,
@@ -328,8 +331,7 @@ class SMCSampler(object):
                          (1 - self._current_beta) * f_prior)
                     )
                     self._evaluations += 1
-            print(self._current_beta)
-            print(self._samples)
+            print(self._chain._sigma)
             # Update weights
             self._new_weights(self._schedule[i])
 
