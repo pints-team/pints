@@ -276,6 +276,8 @@ class SMCSampler(object):
             logger.add_counter('Eval.', max_value=self._iterations * 10)
             #TODO: Add other informative fields ?
             logger.add_time('Time m:s')
+            logger.add_float('Temperature')
+            i_message = 1
 
         # Run!
         for i in range(0, self._iterations - 1):
@@ -329,7 +331,8 @@ class SMCSampler(object):
                 i_message += 1
                 if i_message >= next_message:
                     # Log state
-                    logger.log(i_message, self._n_evals, timer.time())
+                    logger.log(i_message, self._n_evals, timer.time(),
+                               1 - self._current_beta)
 
                     # Choose next logging point
                     if i_message > message_warm_up:
