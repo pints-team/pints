@@ -291,7 +291,9 @@ class SMCSampler(object):
 
             # If ESS < threshold then resample to avoid degeneracies
             if self.ess() < self._ess_threshold:
-                self._samples, self._weights = self._resample()
+                self._samples, self._weights, self._samples_log_pdf = (
+                    self._resample()
+                )
 
             for j in range(self._particles):
                 for k in range(self._kernel_samples):
