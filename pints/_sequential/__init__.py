@@ -83,12 +83,12 @@ class SMCSampler(object):
         self._sigma = self._sigma0
         self._method = pints.AdaptiveCovarianceMCMC
         self._needs_initial_phase = True
-        self._in_initial_phase = True
+        self._in_initial_phase = False
         self._chain = self._method(self._x0, self._sigma0)
 
         # Initial phase (needed for e.g. adaptive covariance)
         self._chain.set_initial_phase(self._in_initial_phase)
-        print(self._chain._initial_phase_iterations)
+        # print(self._chain._initial_phase_iterations)
 
         # Temperature schedule
         self._schedule = None
@@ -338,7 +338,6 @@ class SMCSampler(object):
                     )
 
                     self._evaluations += 1
-                print(self._chain._sigma)
             # Store old samples
             self._samples_old = np.copy(self._samples)
             self._samples_log_pdf_old = np.copy(self._samples_log_pdf)
