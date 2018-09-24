@@ -27,3 +27,10 @@ class SMC(pints.SMCSampler):
     def run(self):
         """ See :meth:`SMCSampler`. """
         super(SMC, self).run()
+        return self._samples
+
+    def name(self):
+        """
+        Returns name of sampler
+        """
+        return "Sequential Monte Carlo"
