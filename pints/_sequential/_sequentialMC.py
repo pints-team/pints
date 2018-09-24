@@ -29,19 +29,6 @@ class SMC(pints.SMCSampler):
     def run(self):
         """ See :meth:`SMCSampler`. """
 
-        # Starting parameters
-        samples = np.random.multivariate_normal(
-            mean=mu, cov=sigma, size=self._particles)
-
-        # Starting weights
-        weights = np.zeros(self._particles)
-        for i in range(0, self._particles):
-            weights[i] = (
-                self._tempered_distribution(samples[i], self._schedule[1])
-                - self._tempered_distribution(samples[i], 0.0)
-            )
-        weights = np.exp(weights - logsumexp(weights))
-
         # Iterate steps 2 and 3 in Del Moral 3.1.1.
         num_iterates = len(self._schedule)
         m_samples = np.zeros((self._particles, self._dimension, num_iterates))
@@ -102,25 +89,6 @@ class SMC(pints.SMCSampler):
         """
         return self._weights
 
-    def _resample(self, weights, samples):
-        """
-        Returns samples according to the weights vector from the multinomial
-        distribution.
-        """
-        selected = np.random.multinomial(self._particles, weights)
-        new_samples = np.zeros((self._particles, self._dimension))
-        a_start = 0
-        a_end = 0
-        for i in range(0, self._particles):
-            a_end = a_end + selected[i]
-            new_samples[a_start:a_end, :] = samples[i]
-            a_start = a_start + selected[i]
-
-        assert \
-            np.count_nonzero(new_samples == 0) == 0, \
-            "Zero elements appearing in samples matrix."
-
-        return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
     def _steps_2_and_3(self, samples_old, weights_old, beta_old, beta_new):
         """
