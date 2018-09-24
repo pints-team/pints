@@ -186,7 +186,7 @@ class SMCSampler(object):
                     'A schedule must contain at least two temperatures.')
 
             # Set a temperature schedule that is uniform on log(T)
-            a_max = 0
+            a_max = np.log(1)
             a_min = np.log(0.0001)
             #diff = (a_max - a_min) / schedule
             log_schedule = np.linspace(a_min, a_max, schedule)
@@ -309,7 +309,12 @@ class SMCSampler(object):
                     f_prior = self._log_prior(self._proposed)
 
                     # Use tell from adaptive covariance MCMC
-                    self._current_log_pdf = np.copy(self._samples_log_pdf[j])
+                    f_prior_current = self._log_prior(self._current)
+                    self._current_log_pdf = self._tempered_distribution(
+                        self._samples_log_pdf[j],
+                        f_prior_current,
+                        self._current_beta)
+
                     self._samples[j] = self.tell(
                         self._tempered_distribution(fx,
                                                     f_prior,
@@ -323,13 +328,14 @@ class SMCSampler(object):
                          (1 - self._current_beta) * f_prior)
                     )
                     self._evaluations += 1
+            print(self._current_beta)
+            print(self._samples)
             # Update weights
             self._new_weights(self._schedule[i])
-            print(self._chain._sigma)
 
             # Conditional resampling step
-            if self._resample_end_2_3:
-                self._samples, weights_discard = self._resample()
+            # if self._resample_end_2_3:
+            #     self._samples, weights_discard = self._resample()
 
             # Show progress
             if logging:
