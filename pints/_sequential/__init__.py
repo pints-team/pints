@@ -290,17 +290,13 @@ class SMCSampler(object):
             self._current_beta = self._schedule[i + 1]
 
             # If ESS < threshold then resample to avoid degeneracies
-            # if self.ess() < self._ess_threshold:
-            #     self._samples, self._weights = self._resample()
-
-            # Store old samples
-            self._samples_old = np.copy(self._samples)
-            self._samples_log_pdf_old = np.copy(self._samples_log_pdf)
+            if self.ess() < self._ess_threshold:
+                self._samples, self._weights = self._resample()
 
             for j in range(self._particles):
                 for k in range(self._kernel_samples):
-                    self._current = self._samples[j]
-                    self._chain._current = self._current
+                    self._current = np.copy(self._samples[j])
+                    self._chain._current = np.copy(self._current)
                     # Use some method to propose new samples
                     self._proposed = self.ask()
 
@@ -317,28 +313,35 @@ class SMCSampler(object):
                         f_prior_current,
                         self._current_beta)
 
-                    self._chain._proposed = self._proposed
-                    self._chain._current_log_pdf = self._current_log_pdf
+                    self._chain._proposed = np.copy(self._proposed)
+                    self._chain._current_log_pdf = np.copy(
+                        self._current_log_pdf)
                     self._samples[j] = self.tell(
                         self._tempered_distribution(fx,
                                                     f_prior,
                                                     self._current_beta)
                     )
-
                     # translate _current_log_pdf back into posterior pdf value
                     self._samples_log_pdf[j] = (
                         (1.0 / self._current_beta) *
                         (self._chain._current_log_pdf -
-                         (1 - self._current_beta) * f_prior)
+                         (1 - self._current_beta) *
+                         self._log_prior(self._samples[j]))
                     )
-                    self._evaluations += 1
-            # print(self._chain._sigma)
-            # Update weights
-            self._new_weights(self._schedule[i])
 
-            # Conditional resampling step
+                    self._evaluations += 1
+
+            # Store old samples
+            self._samples_old = np.copy(self._samples)
+            self._samples_log_pdf_old = np.copy(self._samples_log_pdf)
+            # Update weights
+            self._new_weights(self._schedule[i], self._current_beta)
+
+            # # Conditional resampling step
             if self._resample_end_2_3:
-                self._samples, weights_discard = self._resample()
+                self._samples, weights_discard, self._samples_log_pdf = (
+                    self._resample()
+                )
 
             # Show progress
             if logging:
@@ -366,39 +369,41 @@ class SMCSampler(object):
         """
         selected = np.random.multinomial(self._particles, self._weights)
         new_samples = np.zeros((self._particles, self._dimension))
+        new_log_prob = np.zeros(self._particles)
         a_start = 0
         a_end = 0
         for i in range(0, self._particles):
             a_end = a_end + selected[i]
             new_samples[a_start:a_end, :] = self._samples[i]
+            new_log_prob[a_start:a_end] = self._samples_log_pdf[i]
             a_start = a_start + selected[i]
 
         assert \
             np.count_nonzero(new_samples == 0) == 0, \
             "Zero elements appearing in samples matrix."
 
-        return new_samples, np.repeat(1.0 / self._particles, self._particles)
+        return (new_samples, np.repeat(1.0 / self._particles, self._particles),
+                new_log_prob)
 
-    def _w_tilde(self, fx_old, f_prior_old, beta_old):
+    def _w_tilde(self, fx_old, f_prior_old, beta_old, beta_new):
         """
         Calculates the log unnormalised incremental weight as per eq. (31) in
         Del Moral.
         """
         return (
-            self._tempered_distribution(fx_old, f_prior_old,
-                                        self._current_beta)
+            self._tempered_distribution(fx_old, f_prior_old, beta_new)
             - self._tempered_distribution(fx_old, f_prior_old, beta_old)
         )
 
-    def _new_weight(self, w_old, fx_old, f_prior_old, beta_old):
+    def _new_weight(self, w_old, fx_old, f_prior_old, beta_old, beta_new):
         """
         Calculates the log new weights as per algorithm 3.1.1. in Del Moral et
         al. (2006).
         """
-        w_tilde_value = self._w_tilde(fx_old, f_prior_old, beta_old)
-        return w_old + w_tilde_value
+        w_tilde_value = self._w_tilde(fx_old, f_prior_old, beta_old, beta_new)
+        return np.log(w_old) + w_tilde_value
 
-    def _new_weights(self, beta_old):
+    def _new_weights(self, beta_old, beta_new):
         """
         Calculates the new weights as per algorithm 3.1.1 in Del Moral et al.
         (2006).
@@ -407,7 +412,8 @@ class SMCSampler(object):
             fx_old = self._samples_log_pdf_old[i]
             f_prior_old = self._log_prior(self._samples_old[i])
             self._weights[i] = self._new_weight(w, fx_old,
-                                                f_prior_old, beta_old)
+                                                f_prior_old,
+                                                beta_old, beta_new)
         self._weights = np.exp(self._weights - logsumexp(self._weights))
 
     def ess(self):
