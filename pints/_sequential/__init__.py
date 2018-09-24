@@ -88,6 +88,7 @@ class SMCSampler(object):
 
         # Initial phase (needed for e.g. adaptive covariance)
         self._chain.set_initial_phase(self._in_initial_phase)
+        print(self._chain._initial_phase_iterations)
 
         # Temperature schedule
         self._schedule = None
