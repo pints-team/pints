@@ -396,7 +396,7 @@ class SMCSampler(object):
         al. (2006).
         """
         w_tilde_value = self._w_tilde(fx_old, f_prior_old, beta_old)
-        return np.log(w_old) + w_tilde_value
+        return w_old + w_tilde_value
 
     def _new_weights(self, beta_old):
         """
