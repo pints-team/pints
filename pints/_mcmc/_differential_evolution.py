@@ -257,12 +257,12 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 4
+        return 5
 
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[gamma, normal_scale_coefficient,
-        gamma_switch_rate, normal_error]``.
+        gamma_switch_rate, normal_error, relative_scaling]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
@@ -270,6 +270,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self.set_scale_coefficient(x[1])
         self.set_gamma_switch_rate(x[2])
         self.set_normal_error(x[3])
+        self.set_relative_scaling(x[4])
 
 
 def r_draw(i, num_chains):
