@@ -10,6 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import logging
 
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
@@ -45,6 +46,12 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._chains < 3:
             raise ValueError('Need at least 3 chains.')
 
+        # Warn user against using too few chains
+        if self._chains < 1.5 * self._dimension:
+            log = logging.getLogger(__name__)
+            log.warning('This method should be run with n_chains >= ' +
+                        '1.5 * n_parameters')
+
         # Set initial state
         self._running = False
 
@@ -60,8 +67,21 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Gamma
         self._gamma = 2.38 / np.sqrt(2 * self._dimension)
 
-        # Normal proposal std.
-        self._b = 0.01
+        # Gamma switch to 1 every (below) steps to help find
+        # modes
+        self._gamma_switch_rate = 10
+
+        # Error scale width
+        self._b = 0.001
+
+        # Mean used for scaling error process
+        self._mu = np.mean(self._x0, axis=0)
+
+        # Normal error vs uniform
+        self._normal_error = True
+
+        # Relative scaling
+        self._relative_scaling = True
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -69,23 +89,45 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if not self._running:
             self._initialise()
 
+        # set gamma to 1
+        if self._iter_count % self._gamma_switch_rate == 0:
+            self._gamma = 1
+        self._iter_count += 1
+
         # Propose new points
         if self._proposed is None:
             self._proposed = np.zeros(self._current.shape)
             for j in range(self._chains):
+                if self._normal_error:
+                    error = np.random.normal(0, self._b_star, self._mu.shape)
+                else:
+                    error = np.random.uniform(-self._b_star, self._b_star,
+                                              self._mu.shape)
                 r1, r2 = r_draw(j, self._chains)
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
-                    + np.random.normal(
-                        0, np.abs(self._b * self._mu), self._mu.shape)
+                    + error
                 )
+
+            # reset gamma
+            self._gamma = 2.38 / np.sqrt(2 * self._dimension)
 
             # Set as read only
             self._proposed.setflags(write=False)
 
         # Return proposed points
         return self._proposed
+
+    def set_normal_error(self, normal_error):
+        """
+        If true sets the error process to be a normal error, N(0, b*);
+        if false, it uses a uniform error U(-b*, b*);
+        where b* = b if absolute scaling used and b* = mu * b if
+        relative used instead
+        """
+        normal_error = bool(normal_error)
+        self._normal_error = normal_error
 
     def _initialise(self):
         """
@@ -103,8 +145,43 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # TODO: Should this be a user setting?
         self._mu = np.mean(self._x0, axis=0)
 
+        # Use relative or absolute scaling of error process
+        if self._relative_scaling:
+            self._b_star = self._mu * self._b
+        else:
+            self._b_star = np.repeat(self._b, self._dimension)
+
+        # Gamma set to 1 counter
+        self._iter_count = 0
+
         # Update sampler state
         self._running = True
+
+    def set_gamma_switch_rate(self, gamma_switch_rate):
+        """
+        Sets the number of steps between iterations where
+        gamma is set to 1 (then reset immediately afterwards)
+        """
+        if gamma_switch_rate < 1:
+            raise ValueError('The interval number of steps between ' +
+                             ' gamma=1 iterations must exceed 1.')
+        if not isinstance(gamma_switch_rate, int):
+            raise ValueError('The interval number of steps between ' +
+                             ' gamma=1 iterations must be an integer.')
+        self._gamma_switch_rate = gamma_switch_rate
+
+    def set_relative_scaling(self, relative_scaling):
+        """
+        Sets whether to use an error process whose standard deviation
+        scales relatively (scale = self._mu * self_b) or absolutely
+        (scale = self._b in all dimensions)
+        """
+        relative_scaling = bool(relative_scaling)
+        self._relative_scaling = relative_scaling
+        if self._relative_scaling:
+            self._b_star = self._mu * self._b
+        else:
+            self._b_star = np.repeat(self._b, self._dimension)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -158,14 +235,14 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._current.setflags(write=False)
         return self._current
 
-    def set_normal_scale_coefficient(self, b):
+    def set_scale_coefficient(self, b):
         """
-        Sets the normal scale coefficient ``b`` used in updating the position
-        of each chain.
+        Sets the scale coefficient ``b`` of the error process used in updating
+        the position of each chain.
         """
         b = float(b)
         if b < 0:
-            raise ValueError('Normal scale coefficient must be non-negative.')
+            raise ValueError('Scale coefficient must be non-negative.')
         self._b = b
 
     def set_gamma(self, gamma):
@@ -180,16 +257,20 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 5
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[gamma, normal_scale_coefficient]``.
+        The hyper-parameter vector is ``[gamma, normal_scale_coefficient,
+        gamma_switch_rate, normal_error, relative_scaling]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_gamma(x[0])
-        self.set_normal_scale_coefficient(x[1])
+        self.set_scale_coefficient(x[1])
+        self.set_gamma_switch_rate(x[2])
+        self.set_normal_error(x[3])
+        self.set_relative_scaling(x[4])
 
 
 def r_draw(i, num_chains):
