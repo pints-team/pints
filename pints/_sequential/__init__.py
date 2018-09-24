@@ -325,6 +325,7 @@ class SMCSampler(object):
                     self._evaluations += 1
             # Update weights
             self._new_weights(self._schedule[i])
+            print(self._chain._sigma)
 
             # Conditional resampling step
             if self._resample_end_2_3:
