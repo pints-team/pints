@@ -133,6 +133,7 @@ class SMCSampler(object):
         """
         if particles < 10:
             raise ValueError('Must have more than 10 particles in SMC.')
+        self._particles = particles
         self._initialise()
 
     def set_resample_end_2_3(self, resample_end_2_3):
