@@ -328,11 +328,11 @@ class SMCSampler(object):
                     # translate _current_log_pdf back into posterior pdf value
                     self._samples_log_pdf[j] = (
                         (1.0 / self._current_beta) *
-                        (self._current_log_pdf -
+                        (self._chain._current_log_pdf -
                          (1 - self._current_beta) * f_prior)
                     )
                     self._evaluations += 1
-            print(self._chain._sigma)
+            # print(self._chain._sigma)
             # Update weights
             self._new_weights(self._schedule[i])
 
