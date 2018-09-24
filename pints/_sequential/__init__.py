@@ -123,6 +123,7 @@ class SMCSampler(object):
                 (1 - self._schedule[1]) * log_prior_pdf -
                 log_prior_pdf
             )
+        self._weights = np.exp(self._weights - logsumexp(self._weights))
 
     def set_particles(self, particles):
         """
@@ -223,7 +224,7 @@ class SMCSampler(object):
         ``fx`` of the point previously specified by ``ask``. Returns the next
         sample in the chain.
         """
-        raise NotImplementedError
+        return self._chain.tell(fx)
 
     def run(self):
         """
@@ -281,30 +282,36 @@ class SMCSampler(object):
             # Set current temperature
             self._current_temperature = self._schedule[i + 1]
 
+            # If ESS < threshold then resample to avoid degeneracies
+            if self.ess() < self._ess_threshold:
+                self._samples, self._weights = self._resample()
+
             for j in range(self._particles):
-                self._current = self._samples[j]
-                # Use some method to propose new samples
-                self._proposed = self.ask()
 
-                # Evaluate their fit
-                fx = evaluator.evaluate([self._proposed])[0]
+                for k in range(self._kernel_samples):
+                    self._current = self._samples[j]
+                    # Use some method to propose new samples
+                    self._proposed = self.ask()
 
-                # prior evaluation
-                log_prior_pdf = self._log_prior(self._proposed)
+                    # Evaluate their fit
+                    fx = evaluator.evaluate([self._proposed])[0]
 
-                # Use tell from adaptive covariance MCMC
-                self._current_log_pdf = self._samples_log_pdf[j]
-                self._samples[j] = self.tell(
-                    self._current_temperature * fx +
-                    (1 - self._current_temperature) * log_prior_pdf
-                )
+                    # prior evaluation
+                    log_prior_pdf = self._log_prior(self._proposed)
 
-                # translate _current_log_pdf back into posterior pdf value
-                self._samples_log_pdf[j] = (
-                    (1.0 / self._current_temperature) *
-                    (self._current_log_pdf -
-                     (1 - self._current_temperature) * log_prior_pdf)
-                )
+                    # Use tell from adaptive covariance MCMC
+                    self._current_log_pdf = self._samples_log_pdf[j]
+                    self._samples[j] = self.tell(
+                        self._current_temperature * fx +
+                        (1 - self._current_temperature) * log_prior_pdf
+                    )
+
+                    # translate _current_log_pdf back into posterior pdf value
+                    self._samples_log_pdf[j] = (
+                        (1.0 / self._current_temperature) *
+                        (self._current_log_pdf -
+                         (1 - self._current_temperature) * log_prior_pdf)
+                    )
 
             # Show progress
             if logging:
@@ -328,13 +335,25 @@ class SMCSampler(object):
 
         return self._m_posterior_samples
 
-    def _tempered_distribution(self, x, beta):
+    def _resample(self):
         """
-        Returns the tempered log-pdf:
-        ``beta * log pi(x) + (1 - beta) * log prior(x)``
-        If not explicitly given prior is assumed to be multivariate normal.
+        Returns samples according to the weights vector from the multinomial
+        distribution.
         """
-        return beta * self._log_posterior(x) + (1 - beta) * self._log_prior(x)
+        selected = np.random.multinomial(self._particles, self._weights)
+        new_samples = np.zeros((self._particles, self._dimension))
+        a_start = 0
+        a_end = 0
+        for i in range(0, self._particles):
+            a_end = a_end + selected[i]
+            new_samples[a_start:a_end, :] = self._samples[i]
+            a_start = a_start + selected[i]
+
+        assert \
+            np.count_nonzero(new_samples == 0) == 0, \
+            "Zero elements appearing in samples matrix."
+
+        return new_samples, np.repeat(1.0 / self._particles, self._particles)
 
     def _w_tilde(self, x_old, x_new, beta_old, beta_new):
         """
