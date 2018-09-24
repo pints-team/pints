@@ -409,3 +409,46 @@ class SMCSampler(object):
         Returns weights from last run of SMC.
         """
         return self._weights
+
+    def set_log_rate(self, rate=20, warm_up=3):
+        """
+        Changes the frequency with which messages are logged.
+
+        Arguments:
+
+        ``rate``
+            A log message will be shown every ``rate`` iterations.
+        ``warm_up``
+            A log message will be shown every iteration, for the first
+            ``warm_up`` iterations.
+
+        """
+        rate = int(rate)
+        if rate < 1:
+            raise ValueError('Rate must be greater than zero.')
+        warm_up = max(0, int(warm_up))
+
+        self._message_rate = rate
+        self._message_warm_up = warm_up
+
+    def set_log_to_file(self, filename=None, csv=False):
+        """
+        Enables logging to file when a filename is passed in, disables it if
+        ``filename`` is ``False`` or ``None``.
+
+        The argument ``csv`` can be set to ``True`` to write the file in comma
+        separated value (CSV) format. By default, the file contents will be
+        similar to the output on screen.
+        """
+        if filename:
+            self._log_filename = str(filename)
+            self._log_csv = True if csv else False
+        else:
+            self._log_filename = None
+            self._log_csv = False
+
+    def set_log_to_screen(self, enabled):
+        """
+        Enables or disables logging to screen.
+        """
+        self._log_to_screen = True if enabled else False
