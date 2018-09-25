@@ -27,4 +27,4 @@ from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa
 from ._simple_egg_box import SimpleEggBoxLogPDF                     # noqa
 from ._sir_model import SIRModel                                    # noqa
 from ._twisted_gaussian_banana import TwistedGaussianLogPDF         # noqa
-
+from ._cone import ConeLogPDF                                       # noqa
