@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the multimodal normal distribution.
+# Tests the cone distribution.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -40,11 +40,24 @@ class TestConeLogPDF(unittest.TestCase):
         f1 = f(np.repeat(1, 10))
         self.assertTrue(f1, -1.7782794100389228)
 
+        # Test CDF function
+        f = pints.toy.ConeLogPDF()
+        self.assertEqual(f.CDF(1.0), 0.26424111765711533)
+        self.assertEqual(f.CDF(2.5), 0.71270250481635422)
+        f = pints.toy.ConeLogPDF(3, 2)
+        self.assertEqual(f.CDF(1.0), 0.42759329552912018)
+        self.assertRaises(ValueError, f.CDF, -1)
+
+        # Test sample function
+        x = f.sample(10)
+        self.assertEqual(len(x), 10)
+        f = pints.toy.ConeLogPDF(2, 2)
+        self.assertTrue(np.max(f.sample(1000)) < 10)
+        self.assertRaises(ValueError, f.sample, 0)
+
         # Bad constructors
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 0, 1)
-        self.assertRaises(
-            ValueError, pints.toy.ConeLogPDF, 1.5, 1)
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 1, 0)
         self.assertRaises(
