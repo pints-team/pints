@@ -70,3 +70,38 @@ class ConeLogPDF(pints.LogPDF):
         return ((scipy.special.gamma((2 + self._n_parameters) / self._beta) /
                 scipy.special.gamma(self._n_parameters / self._beta)) -
                 self.mean_normed()**2)
+
+    def CDF(self, x):
+        """
+        Returns the cumulative density function in terms of |x|
+        """
+        n = self._n_parameters
+        beta = self._beta
+        if x == 0:
+            return 0
+        else:
+            return (-(x**n) * ((x**beta)**(-(n / beta))) *
+                    scipy.special.gammaincc(n / beta, x**beta) + 1)
+
+    def sample(self, n_samples):
+        """
+        Generates samples from the underlying distribution.
+        """
+        n = self._n_parameters
+        # determine empirical inverse-CDF
+        x_max = scipy.optimize.minimize(lambda x: (
+            np.abs((self.CDF(x) - 1))), 8)['x'][0] * 10
+        x_range = np.linspace(0, x_max, 100)
+        cdf = [self.CDF(x) for x in x_range]
+        f = scipy.interpolate.interp1d(cdf, x_range)
+
+        # do inverse-transform sampling to obtain independent r samples
+        u = np.random.rand(n_samples)
+        r = f(u)
+
+        # for each value of r select a value uniformly at random on
+        # hypersphere of that radius
+        X_norm = np.random.normal(size=(n_samples, n))
+        lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
+        x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
+        return np.array(x_unit)
