@@ -87,7 +87,7 @@ class ConeLogPDF(pints.LogPDF):
 
     def sample(self, n_samples):
         """
-        Generates samples from the underlying distribution.
+        Generates independent samples from the underlying distribution.
         """
         n_samples = int(n_samples)
         if n_samples < 1:
