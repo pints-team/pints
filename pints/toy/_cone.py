@@ -1,5 +1,5 @@
 #
-# Unimodal Normal/Gaussian toy log pdf.
+# Cone toy log pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -37,9 +37,8 @@ class ConeLogPDF(pints.LogPDF):
     def __init__(self, dimensions=2, beta=1):
         if dimensions < 1:
             raise ValueError('Dimensions must not be less than 1.')
-        if not isinstance(dimensions, int):
-            raise ValueError('Dimensions must be integer.')
-        self._n_parameters = dimensions
+        self._n_parameters = int(dimensions)
+        beta = float(beta)
         if beta <= 0:
             raise ValueError('beta must be positive.')
         self._beta = beta
@@ -75,6 +74,9 @@ class ConeLogPDF(pints.LogPDF):
         """
         Returns the cumulative density function in terms of |x|
         """
+        x = float(x)
+        if x < 0:
+            raise ValueError('Normed distance must be non-negative.')
         n = self._n_parameters
         beta = self._beta
         if x == 0:
@@ -87,6 +89,10 @@ class ConeLogPDF(pints.LogPDF):
         """
         Generates samples from the underlying distribution.
         """
+        n_samples = int(n_samples)
+        if n_samples < 1:
+            raise ValueError('Number of samples must be greater than or ' +
+                             'equal to 1.')
         n = self._n_parameters
         # determine empirical inverse-CDF
         x_max = scipy.optimize.minimize(lambda x: (
