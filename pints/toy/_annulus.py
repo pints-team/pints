@@ -56,6 +56,18 @@ class AnnulusLogPDF(pints.LogPDF):
         return scipy.stats.norm.logpdf(np.linalg.norm(x),
                                        self._r0, self._sigma)
 
+    def r0(self):
+        """
+        Returns r0
+        """
+        return self._r0
+
+    def sigma(self):
+        """
+        Returns sigma
+        """
+        return self._sigma
+
     def n_parameters(self):
         return self._n_parameters
 
