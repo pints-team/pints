@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the cone distribution.
+# Tests the annulus distribution.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -15,53 +15,55 @@ import numpy as np
 
 class TestAnnulusLogPDF(unittest.TestCase):
     """
-    Tests the cone log-pdf toy problems.
+    Tests the annulus log-pdf toy problems.
     """
     def test_default(self):
 
         # Default settings
-        f = pints.toy.ConeLogPDF()
+        f = pints.toy.AnnulusLogPDF()
         self.assertEqual(f.n_parameters(), 2)
-        self.assertEqual(f.beta(), 1)
+        self.assertEqual(f.r0(), 10)
+        self.assertEqual(f.sigma(), 1)
         f1 = f([1, 1])
-        f2 = f([0, 0])
+        f2 = f([10, 0])
         self.assertTrue(np.isscalar(f1))
         self.assertTrue(np.isscalar(f2))
-        self.assertEqual(f1, -1.4142135623730951)
-        self.assertEqual(f.mean_normed(), 2.0)
-        self.assertEqual(f.var_normed(), 2.0)
+        self.assertEqual(f1, -37.776802909473716)
+        self.assertEqual(f2, -0.91893853320467267)
+        self.assertEqual(f.mean_normed(), 10.099999999999991)
+        self.assertEqual(f.var_normed(), 0.99000000000020805)
+        self.assertEqual(f.moment_normed(3), 1060.3)
+        a_mean = f.mean()
+        self.assertEqual(a_mean[0], 0)
+        self.assertEqual(a_mean[1], 0)
 
         # Change dimensions and beta
-        f = pints.toy.ConeLogPDF(10, 0.5)
+        f = pints.toy.AnnulusLogPDF(10, 15, 0.5)
         self.assertEqual(f.n_parameters(), 10)
-        self.assertEqual(f.beta(), 0.5)
-        self.assertEqual(f.mean_normed(), 420.0)
-        self.assertEqual(f.var_normed(), 36120.0)
-        f1 = f(np.repeat(1, 10))
-        self.assertTrue(f1, -1.7782794100389228)
-
-        # Test CDF function
-        f = pints.toy.ConeLogPDF()
-        self.assertEqual(f.CDF(1.0), 0.26424111765711533)
-        self.assertEqual(f.CDF(2.5), 0.71270250481635422)
-        f = pints.toy.ConeLogPDF(3, 2)
-        self.assertEqual(f.CDF(1.0), 0.42759329552912018)
-        self.assertRaises(ValueError, f.CDF, -1)
+        self.assertEqual(f.mean_normed(), 15.148688458505298)
+        self.assertEqual(f.var_normed(), 0.24756486472776373)
+        self.assertEqual(f.moment_normed(5), 806385.71374340181)
 
         # Test sample function
         x = f.sample(10)
         self.assertEqual(len(x), 10)
-        f = pints.toy.ConeLogPDF(2, 2)
-        self.assertTrue(np.max(f.sample(1000)) < 10)
+        f = pints.toy.AnnulusLogPDF()
+        self.assertTrue(np.max(f.sample(1000)) < 100)
         self.assertRaises(ValueError, f.sample, 0)
+        f = pints.toy.AnnulusLogPDF()
+        samples = f.sample(100000)
+        self.assertTrue(np.abs(np.mean(samples)) < 0.1)
+
+        # Test _reject_sample_r
+        self.assertTrue(f._reject_sample_r() > 0)
 
         # Bad constructors
         self.assertRaises(
-            ValueError, pints.toy.ConeLogPDF, 0, 1)
+            ValueError, pints.toy.AnnulusLogPDF, 0, 1, 1)
         self.assertRaises(
-            ValueError, pints.toy.ConeLogPDF, 1, 0)
+            ValueError, pints.toy.AnnulusLogPDF, 1, 0, 1)
         self.assertRaises(
-            ValueError, pints.toy.ConeLogPDF, 3, -1)
+            ValueError, pints.toy.AnnulusLogPDF, 3, 1, -1)
 
 
 if __name__ == '__main__':
