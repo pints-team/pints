@@ -40,9 +40,9 @@ class TestAnnulusLogPDF(unittest.TestCase):
         # Change dimensions and beta
         f = pints.toy.AnnulusLogPDF(10, 15, 0.5)
         self.assertEqual(f.n_parameters(), 10)
-        self.assertEqual(f.mean_normed(), 15.148688458505298)
-        self.assertEqual(f.var_normed(), 0.24756486472776373)
-        self.assertEqual(f.moment_normed(5), 806385.71374340181)
+        self.assertAlmostEqual(f.mean_normed(), 15.148688458505298)
+        self.assertAlmostEqual(f.var_normed(), 0.24756486472776373)
+        self.assertAlmostEqual(f.moment_normed(5), 806385.71374340181)
 
         # Test sample function
         x = f.sample(10)
