@@ -147,7 +147,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Use relative or absolute scaling of error process
         if self._relative_scaling:
-            self._b_star = self._mu * self._b
+            self._b_star = np.abs(self._mu * self._b)
         else:
             self._b_star = np.repeat(self._b, self._dimension)
 
