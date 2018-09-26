@@ -18,11 +18,9 @@ class AnnulusLogPDF(pints.LogPDF):
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
-        f(x|r_0, \sigma) \propto e^{-(|x|-r_0)**2 / {2\sigma**2}}
+        f(x|r_0, \sigma) \propto e^{-(|x|-r_0)^2 / {2\sigma^2}}
 
-    where x is a d-dimensional real, and |x| is the Euclidean norm. The mean
-    and variance that are returned relate to expectations on |x| not the
-    multidimensional x.
+    where x is a d-dimensional real, and |x| is the Euclidean norm.
 
     This distribution is roughly a one-dimensional normal distribution centred
     on r0, that is smeared over the surface of a hypersphere of the same
@@ -31,7 +29,7 @@ class AnnulusLogPDF(pints.LogPDF):
     Arguments:
 
     ``dimensions``
-        The dimensionality of the cone.
+        The dimensionality of the space.
     ``r0``
         The radius of the hypersphere and is approximately the mean normed
         distance from the origin.
@@ -87,6 +85,12 @@ class AnnulusLogPDF(pints.LogPDF):
                        scipy.special.hyp1f1(1 - 0.5 * n,
                        1.5, -r0**2 / (2 * sigma**2)))
         return front * first_parenthesis / denominator
+
+    def mean(self):
+        """
+        Returns mean of distribution
+        """
+        return np.zeros(self._n_parameters)
 
     def mean_normed(self):
         """
