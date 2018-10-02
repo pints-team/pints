@@ -57,9 +57,9 @@ from ._logger import Logger, Loggable
 from ._log_pdfs import (
     LogPDF,
     LogPrior,
-    LogLikelihood,
     LogPosterior,
     ProblemLogLikelihood,
+    SumOfIndependentLogPDFs,
 )
 
 #
@@ -84,7 +84,6 @@ from ._log_likelihoods import (
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     CauchyLogLikelihood,
-    SumOfIndependentLogLikelihoods,
 )
 
 #

@@ -259,89 +259,11 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         """
         See :meth:`LogPDF.evaluateS1()`.
 
-        *This method only works if the underlying :class:`LogLikelihood`
-        object implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        *This method only works if the underlying :class:`LogPDF` object
+        implements the optional method :meth:`LogPDF.evaluateS1()`!*
         """
         a, b = self._log_likelihood.evaluateS1(x)
         return self._f * a, self._f * np.asarray(b)
-
-
-class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
-    """
-    Calculates a sum of :class:`LogLikelihood` objects, all defined on the same
-    parameter space.
-
-    This is useful for e.g. Bayesian inference using a single model evaluated
-    on two **independent** data sets ``D`` and ``E``. In this case,
-
-    .. math::
-        f(\\theta|D,E) &= \\frac{f(D, E|\\theta)f(\\theta)}{f(D, E)} \\\\
-                       &= \\frac{f(D|\\theta)f(E|\\theta)f(\\theta)}{f(D, E)}
-
-    Arguments:
-
-    ``log_likelihoods``
-        A sequence of :class:`LogLikelihood` objects.
-
-    Example::
-
-        log_likelihood = pints.SumOfIndependentLogLikelihoods([
-            pints.UnknownNoiseLogLikelihood(problem1),
-            pints.UnknownNoiseLogLikelihood(problem2),
-        ])
-
-    *Extends:* :class:`LogLikelihood`
-    """
-    def __init__(self, log_likelihoods):
-        super(SumOfIndependentLogLikelihoods, self).__init__()
-
-        # Check input arguments
-        if len(log_likelihoods) < 2:
-            raise ValueError(
-                'SumOfIndependentLogLikelihoods requires at least two log'
-                ' likelihoods.')
-        for i, e in enumerate(log_likelihoods):
-            if not isinstance(e, pints.LogLikelihood):
-                raise ValueError(
-                    'All objects passed to SumOfIndependentLogLikelihoods must'
-                    ' be instances of pints.LogLikelihood (failed on argument '
-                    + str(i) + ').')
-        self._log_likelihoods = list(log_likelihoods)
-
-        # Get and check dimension
-        i = iter(self._log_likelihoods)
-        self._n_parameters = next(i).n_parameters()
-        for e in i:
-            if e.n_parameters() != self._n_parameters:
-                raise ValueError(
-                    'All log-likelihoods passed to'
-                    ' SumOfIndependentLogLikelihoods must have same'
-                    ' dimension.')
-
-    def __call__(self, x):
-        total = 0
-        for e in self._log_likelihoods:
-            total += e(x)
-        return total
-
-    def evaluateS1(self, x):
-        """
-        See :meth:`LogPDF.evaluateS1()`.
-
-        *This method only works if all the underlying :class:`LogLikelihood`
-        objects implement the optional method :meth:`LogPDF.evaluateS1()`!*
-        """
-        total = 0
-        dtotal = np.zeros(self._n_parameters)
-        for e in self._log_likelihoods:
-            a, b = e.evaluateS1(x)
-            total += a
-            dtotal += np.asarray(b)
-        return total, dtotal
-
-    def n_parameters(self):
-        """ See :meth:`LogPDF.n_parameters()`. """
-        return self._n_parameters
 
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
