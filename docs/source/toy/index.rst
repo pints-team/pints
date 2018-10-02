@@ -9,7 +9,9 @@ examples.
 
 .. toctree::
 
+    annulus_logpdf
     beeler_reuter_ap_model
+    cone_logpdf
     constant_model
     fitzhugh_nagumo_model
     goodwin_oscillator_model
