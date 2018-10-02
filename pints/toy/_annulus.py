@@ -15,15 +15,15 @@ import scipy
 
 class AnnulusLogPDF(pints.LogPDF):
     """
-    Toy distribution based on a d-dimensional distribution of the form,
+    Toy distribution based on a d-dimensional distribution of the form
 
     .. math::
         f(x|r_0, \sigma) \propto e^{-(|x|-r_0)^2 / {2\sigma^2}}
 
-    where x is a d-dimensional real, and |x| is the Euclidean norm.
+    where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm.
 
     This distribution is roughly a one-dimensional normal distribution centred
-    on r0, that is smeared over the surface of a hypersphere of the same
+    on ``r0``, that is smeared over the surface of a hypersphere of the same
     radius. In two dimensions, the density looks like a circular annulus.
 
     Arguments:
@@ -43,28 +43,30 @@ class AnnulusLogPDF(pints.LogPDF):
         if dimensions < 1:
             raise ValueError('Dimensions must not be less than 1.')
         self._n_parameters = int(dimensions)
+
         r0 = float(r0)
         if r0 <= 0:
             raise ValueError('r0 must be positive.')
         self._r0 = r0
+
         sigma = float(sigma)
         if sigma <= 0:
             raise ValueError('sigma must be positive.')
         self._sigma = sigma
 
     def __call__(self, x):
-        return scipy.stats.norm.logpdf(np.linalg.norm(x),
-                                       self._r0, self._sigma)
+        return scipy.stats.norm.logpdf(
+            np.linalg.norm(x), self._r0, self._sigma)
 
     def r0(self):
         """
-        Returns r0
+        Returns ``r0``.
         """
         return self._r0
 
     def sigma(self):
         """
-        Returns sigma
+        Returns ``sigma``
         """
         return self._sigma
 
@@ -73,49 +75,46 @@ class AnnulusLogPDF(pints.LogPDF):
 
     def moment_normed(self, order):
         """
-        Returns a given moment of the normed distance from the origin
+        Returns a given moment of the normed distance from the origin.
         """
         n = self._n_parameters
-        alpha = order
-        r0 = self._r0
-        sigma = self._sigma
-        front = 2**(2 - 0.5 * n + 0.5 * (-4 + n + alpha)) * (
-            np.exp(-r0**2 / (2 * sigma**2)) * sigma**(alpha))
-        first_parenthesis = (np.sqrt(2) * sigma *
-                             scipy.special.gamma(0.5 * (n + alpha)) *
-                             scipy.special.hyp1f1(0.5 * (n + alpha),
-                                                  0.5,
-                                                  r0**2 / (2 * sigma**2)) +
-                             2 * r0 *
-                             scipy.special.gamma(0.5 * (1 + n + alpha)) *
-                             scipy.special.hyp1f1(0.5 * (1 + n + alpha),
-                                                  1.5, r0**2 / (2 * sigma**2)))
-        denominator = (np.sqrt(2) * sigma * scipy.special.gamma(0.5 * n) *
-                       scipy.special.hyp1f1(0.5 * (1 - n),
-                                            0.5, -r0**2 / (2 * sigma**2)) +
-                       2 * r0 * scipy.special.gamma(0.5 * (1 + n)) *
-                       scipy.special.hyp1f1(1 - 0.5 * n,
-                       1.5, -r0**2 / (2 * sigma**2)))
-        return front * first_parenthesis / denominator
+        r = self._r0
+        a = order
+        s = self._sigma
+
+        g1 = scipy.special.gamma(0.5 * (n + a))
+        g2 = scipy.special.gamma(0.5 * (1 + n + a))
+        g3 = scipy.special.gamma(0.5 * n)
+        g4 = scipy.special.gamma(0.5 * (1 + n))
+
+        h1 = scipy.special.hyp1f1(0.5 * (n + a), 0.5, r**2 / (2 * s**2))
+        h2 = scipy.special.hyp1f1(0.5 * (1 + n + a), 1.5, r**2 / (2 * s**2))
+        h3 = scipy.special.hyp1f1(0.5 * (1 - n), 0.5, -r**2 / (2 * s**2))
+        h4 = scipy.special.hyp1f1(1 - 0.5 * n, 1.5, -r**2 / (2 * s**2))
+
+        m = 2**(2 - 0.5 * n + 0.5 * (-4 + n + a))
+        m *= np.exp(-r**2 / (2 * s**2)) * s**a
+        m *= (np.sqrt(2) * s * g1 * h1 + 2 * r * g2 * h2)
+        m /= (np.sqrt(2) * s * g3 * h3 + 2 * r * g4 * h4)
+        return m
 
     def mean(self):
         """
-        Returns mean of distribution
+        Returns the mean of this distribution.
         """
         return np.zeros(self._n_parameters)
 
     def mean_normed(self):
         """
-        Returns the mean of the normed distance from the origin
+        Returns the mean of the normed distance from the origin.
         """
         return self.moment_normed(1)
 
     def var_normed(self):
         """
-        Returns the variance of the normed distance from the origin
+        Returns the variance of the normed distance from the origin.
         """
-        a_mean = self.moment_normed(1)
-        return self.moment_normed(2) - a_mean**2
+        return self.moment_normed(2) - self.moment_normed(1)**2
 
     def sample(self, n_samples):
         """
@@ -125,20 +124,23 @@ class AnnulusLogPDF(pints.LogPDF):
         if n_samples < 1:
             raise ValueError('Number of samples must be greater than or ' +
                              'equal to 1.')
-        # first sample values of r
-        r = [self._reject_sample_r() for i in range(n_samples)]
-        r = np.array(r)
+
+        # First sample values of r
+        r = self._reject_sample(n_samples)
+
         # uniformly sample X s.t. their normed distance is r0
         X_norm = np.random.normal(size=(n_samples, self._n_parameters))
         lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
         x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
         return np.array(x_unit)
 
-    def _reject_sample_r(self):
+    def _reject_sample(self, n_samples):
         """
-        Generates a non-negative independent sample of r
+        Generates non-negative independent samples.
         """
-        r = np.random.normal(loc=self._r0, scale=self._sigma, size=1)
-        while r < 0:
-            r = np.random.normal(loc=self._r0, scale=self._sigma, size=1)
+        r = np.ones(n_samples) * -1
+        f = r < 0
+        while np.any(f):
+            r = np.random.normal(self._r0, self._sigma, size=np.sum(f))
+            f = r < 0
         return r
