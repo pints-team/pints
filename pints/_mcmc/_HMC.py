@@ -55,25 +55,32 @@ class HMC(pints.SingleChainMCMC):
 
         # Set initial state
         self._running = False
+        self._ready_for_tell = False
 
-        # Current point and proposed point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = None
+        # Current point in the Markov chain
+        self._current = None            # Aka current_q in the chapter
+        self._current_log_pdf = None    # Aka U(current_q)
+        self._current_gradient = None
+        self._current_momentum = None   # Aka current_p
+
+        # Current point in the leapfrog iterations
+        self._momentum = None       # Aka p in the chapter
+        self._position = None       # Aka q in the chapter
+        self._gradient = None       # Aka grad_U(q) in the chapter
 
         # Iterations, acceptance monitoring, and leapfrog iterations
-        self._iterations = 0
-        self._acceptance = 0
-        self._leapfrog_iteration = -1
+        self._mcmc_iteration = 0
+        self._mcmc_acceptance = 0
+        self._frog_iteration = 0
+
+        # Default number of leapfrog iterations
+        self._n_frog_iterations = 20
 
         # Default scale for momentum proposals
         self._momentum_sigma = np.identity(self._dimension)
 
         # Default integration step size for leapfrog algorithm
-        self._epsilon = 0.2
-
-        # Default number of leapfrog steps
-        self._leapfrog_steps = 20
+        self._step_size = 0.2
 
         # Default masses
         self._mass = np.ones(self._dimension)
@@ -84,100 +91,76 @@ class HMC(pints.SingleChainMCMC):
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
+        # Check ask/tell pattern
+        if self._ready_for_tell:
+            raise RuntimeError('Ask() called when expecting call to tell().')
+
         # Initialise on first call
         if not self._running:
-            self._initialise()
+            self._running = True
 
-        # Propose new point
-        if self._proposed is None:  #TODO Change to _asked_point or something
+        # Notes:
+        #  Ask is responsible for updating the position, which is the point
+        #   returned to the user
+        #  Tell is then responsible for updating the momentum, which uses the
+        #   gradient at this new point
+        #  The MCMC step happens in tell, and does not require any new
+        #   information (it uses the log_pdf and gradient of the final point
+        #   in the leapfrog run).
 
-            if self._leapfrog_iteration < 0:
-                # Sample initial momentum
-                q = self._current
-                p = np.random.multivariate_normal(
-                    np.zeros(self._dimension), self._momentum_sigma)
-                self._current_p = p
+        # Very first iteration
+        if self._current is None:
 
-                # Leapfrog algorithm
-                #TODO Move to tell
-                p = p - self._epsilon * grad_U(q) / 2
+            # Ask for the pdf and gradient of x0
+            self._ready_for_tell = True
+            return np.array(self._x0, copy=True)
 
-                #TODO Update leapfrog iteration in tell()
+        # First iteration of a run of leapfrog iterations
+        if self._frog_iteration == 0:
 
-            elif self._leapfrog_iteration < self._leapfrog_steps:
+            # Sample random momentum for current point
+            self._current_momentum = np.random.multivariate_normal(
+                np.zeros(self._dimension), self._momentum_sigma)
 
-                # Make a full step for the position
-                q = q + self._epsilon * p
+            # First leapfrog position is the current sample in the chain
+            self._position = np.array(self._current, copy=True)
+            self._gradient = np.array(self._current_gradient, copy=True)
+            self._momentum = np.array(self._current_momentum, copy=True)
 
-                # Make a full step for the momentum, except at end of
-                # trajectory
-                if(i != self._leapfrog_steps):
-                    #TODO Move to tell
-                    p = p - self._epsilon * grad_U(q)
+            # Perform a half-step before starting iteration 0 below
+            self._momentum -= self._step_size * self._gradient * 0.5
 
-            else:
-                #TODO Update this
-                self._proposed = q
-                # Make a half step for momentum at the end.
-                p = p - self._epsilon * grad_U(q) / 2
+        # Perform a leapfrog step for the position
+        self._position += self._step_size * self._gradient
 
-                # Negate momentum at end of trajectory to make the proposal
-                # symmetric
-                self._proposed_p = -p
-
-                # Set as read-only
-                self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
-
-    def epsilon(self):
-        """
-        Returns the step size for the leapfrog algorithm.
-        """
-        return self._epsilon
-
-    def _initialise(self):
-        """
-        Initialises the routine before the first iteration.
-        """
-        if self._running:
-            raise RuntimeError('Already initialised.')
-
-        # Propose x0 as first point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = self._x0
-
-        # Acceptance rate monitoring
-        self._iterations = 0
-        self._acceptance = 0
-
-        # Set initial momentum proposals to None
-        self._current_p = None
-        self._proposed_p = None
-
-        # Create a vector of divergent iterations
-        self._divergent = np.asarray([], dtype='int')
-
-        # Update sampler state
-        self._running = True
+        # Ask for the pdf and gradient of the current leapfrog position
+        # Using this, the leapfrog step for the momentum is performed in tell()
+        self._ready_for_tell = True
+        return np.array(self._position, copy=True)
 
     def leapfrog_steps(self):
         """
         Returns the number of leapfrog steps to carry out for each iteration.
         """
-        return self._leapfrog_steps
+        return self._n_leapfrog_iterations
+
+    def leapfrog_step_size(self):
+        """
+        Returns the step size for the leapfrog algorithm.
+        """
+        return self._step_size
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
+        logger.add_int('iMCMC')
+        logger.add_int('iFrog')
         logger.add_float('Accept.')
-        #TODO Add leapfrog iteration
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
+        logger.log(self._mcmc_iteration)
+        logger.log(self._leapfrog_iteration)
         logger.log(self._acceptance)
-        #TODO Add leapfrog iteration
 
     def momentum_sigma(self):
         """
@@ -194,30 +177,31 @@ class HMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 
-    def set_epsilon(self, epsilon):
-        """
-        Sets the step size for the leapfrog algorithm.
-        """
-        if epsilon <= 0:
-            raise ValueError(
-                'Step size for leapfrog algorithm must be greater than zero.')
-        self._epsilon = epsilon
-
     def set_leapfrog_steps(self, steps):
         """
         Sets the number of leapfrog steps to carry out for each iteration.
         """
-        if not isinstance(steps, int):
-            raise TypeError('Number of steps must be an integer.')
+        steps = int(steps)
         if steps < 1:
             raise ValueError('Number of steps must exceed 0.')
-        self._leapfrog_steps = steps
+        self._n_leapfrog_iterations = steps
+
+    def set_leapfrog_step_size(self, step_size):
+        """
+        Sets the step size for the leapfrog algorithm.
+        """
+        step_size = float(step_size)
+        if step_size <= 0:
+            raise ValueError(
+                'Step size for leapfrog algorithm must be greater than zero.')
+        self._step_size = step_size
 
     def set_momentum_sigma(self, momentum_sigma):
         """
         Sets the standard deviation for the multivariate normal distribution
         used to propose new momentum values.
         """
+        # Check shape
         if momentum_sigma.shape != (self._dimension, self._dimension):
             raise ValueError(
                 'Multivariate normal for momentum proposals must have shape ('
@@ -229,60 +213,97 @@ class HMC(pints.SingleChainMCMC):
                 'Multivariate normal for momentum proposals must be positive'
                 ' definite.')
 
-        self._momentum_sigma = momentum_sigma
+        # Store (copy first, to prevent modification)
+        self._momentum_sigma = np.array(momentum_sigma, copy=True)
 
-    def tell(self, fx):
+    def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
-        # Check if we had a proposal
-        if self._proposed is None:
+        if not self._ready_for_tell:
             raise RuntimeError('Tell called before proposal was set.')
+        self._ready_for_tell = False
 
-        # Ensure fx is a float
-        fx = float(fx)
+        # Unpack reply
+        log_pdf, gradient = reply
+        log_pdf = float(log_pdf)
+        assert(gradient.shape == (self._dimension, ))
 
-        # First point?
+        # Very first call
         if self._current is None:
-            if not np.isfinite(fx):
+
+            # Check first point is somewhere sensible
+            if not np.isfinite(log_pdf):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
 
-            # Accept
-            self._current = self._proposed
-            self._current_log_pdf = fx
+            # Set current sample, logpdf, and gradient
+            self._current = self._x0
+            self._current_log_pdf = log_pdf
+            self._current_gradient = gradient
 
             # Increase iteration count
-            self._iterations += 1
+            self._mcmc_iteration += 1
 
-            # Clear proposal
-            self._proposed = None
+            # Mark current as read-only, so it can be safely returned
+            self._current.setflags(write=False)
 
-            # Return first point for chain
+            # Return first point in chain
             return self._current
 
-        current_K = np.sum(self._current_p**2 / (2 * self._mass))
-        proposed_K = np.sum(self._proposed_p**2 / (2 * self._mass))
+        # Set gradient of current leapfrog position
+        self._gradient = gradient
 
-        # Check for divergent iterations by testing whether the Hamiltonian
-        # difference is above a threshold
-        test = fx + proposed_K - (self._current_log_pdf + current_K)
-        if test > self._hamiltonian_threshold:
-            self._divergent = np.append(self._divergent, self._iterations)
-
-        # Accept or reject the state at end of trajectory, returning either the
-        # position at the end of the trajectory or the initial position
-        r = np.exp(self._current_log_pdf - fx + current_K - proposed_K)
-        if np.random.rand() < r:
-            accepted = 1
-            self._current = self._proposed
-            self._current_log_pdf = fx
+        # Perform a leapfrog step for the momentum
+        # Keeping in mind the last step of each run is a half-step
+        if self._frog_iteration == self._frog_iterations - 1:
+            self._momentum -= self._step_size * self._gradient * 0.5
         else:
-            accepted = 0
+            self._momentum -= self._step_size * self._gradient
+
+        # Update leapfrog step count
+        self._frog_iteration += 1
+
+        # Unless this is the final leapfrog iteration, we should return None to
+        # indicate there is no new sample for the chain
+        if self._frog_iteration < self._n_frog_iterations:
+            return None
+
+        # Leapfrog iterations finished! Perform MCMC step
+
+        # Negate momentum to make the proposal symmetric
+        self._momentum = -self._momentum
+
+        # Evaluate potential and kinetic energies at start and end of
+        # leapfrog trajectory
+        current_U = self._current_log_pdf
+        current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
+        proposed_U = log_pdf
+        proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+
+        # Accept/reject
+        accept = 0
+        r = np.exp(current_U - proposed_U + current_K - proposed_K)
+        if np.random.uniform(0, 1) < r:
+            # Accept
+            accept = 1
+            self._current = self._position
+            self._current_logpdf = log_pdf
+            self._current_gradient = gradient
+
+            # Mark current as read-only, so it can be safely returned
+            self._current.setflags(write=False)
+
+        # Reset leapfrog mechanism
+        self._momentum = self._position = self._gradient = None
+        self._leapfrog_iteration = 0
+
+        # Update MCMC iteration count
+        self._mcmc_iteration += 1
 
         # Update acceptance rate (only used for output!)
-        self._iterations += 1
-        self._acceptance = ((self._iterations * self._acceptance + accepted) /
-                            (self._iterations + 1))
+        self._acceptance = (
+            (self._mcmc_iterations * self._acceptance + accept) /
+            (self._mcmc_iterations + 1))
 
-        # Return current position
+        # Return current position as next sample in the chain
         return self._current
 
