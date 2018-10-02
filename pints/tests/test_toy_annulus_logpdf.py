@@ -32,7 +32,7 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertAlmostEqual(f2, -0.91893853320467267)
         self.assertAlmostEqual(f.mean_normed(), 10.099999999999993)
         self.assertAlmostEqual(f.var_normed(), 0.99000000000020805)
-        self.assertEqual(f.moment_normed(3), 1060.3)
+        self.assertAlmostEqual(f.moment_normed(3), 1060.3)
         a_mean = f.mean()
         self.assertEqual(a_mean[0], 0)
         self.assertEqual(a_mean[1], 0)
