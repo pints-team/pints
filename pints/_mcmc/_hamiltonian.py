@@ -1,5 +1,5 @@
 #
-# Hamiltonian Monte Carlo method
+# Hamiltonian MCMC method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class HMC(pints.SingleChainMCMC):
+class HamiltonianMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
@@ -50,8 +50,8 @@ class HMC(pints.SingleChainMCMC):
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
 
     """
-    def __init__(self, x0, log_pdf, sigma0=None):
-        super(HMC, self).__init__(x0, sigma0)
+    def __init__(self, x0, sigma0=None):
+        super(HamiltonianMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -76,18 +76,20 @@ class HMC(pints.SingleChainMCMC):
         # Default number of leapfrog iterations
         self._n_frog_iterations = 20
 
-        # Default scale for momentum proposals
-        self._momentum_sigma = np.identity(self._dimension)
-
         # Default integration step size for leapfrog algorithm
         self._step_size = 0.2
 
         # Default masses
         self._mass = np.ones(self._dimension)
 
+        # Divergence checking
+
+        # Create a vector of divergent iterations
+        #self._divergent = np.asarray([], dtype='int')
+
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
-        self._hamiltonian_threshold = 10**3
+        #self._hamiltonian_threshold = 10**3
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -120,7 +122,7 @@ class HMC(pints.SingleChainMCMC):
 
             # Sample random momentum for current point
             self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._dimension), self._momentum_sigma)
+                np.zeros(self._dimension), self._sigma0)
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -142,7 +144,7 @@ class HMC(pints.SingleChainMCMC):
         """
         Returns the number of leapfrog steps to carry out for each iteration.
         """
-        return self._n_leapfrog_iterations
+        return self._n_frog_iterations
 
     def leapfrog_step_size(self):
         """
@@ -159,19 +161,12 @@ class HMC(pints.SingleChainMCMC):
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._mcmc_iteration)
-        logger.log(self._leapfrog_iteration)
-        logger.log(self._acceptance)
-
-    def momentum_sigma(self):
-        """
-        Sets the standard deviation for the multivariate normal distribution
-        used to propose new momentum values.
-        """
-        return np.array(self._momentum_sigma, copy=True)
+        logger.log(self._frog_iteration)
+        logger.log(self._mcmc_acceptance)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Hamiltonian Monte Carlo'
+        return 'Hamiltonian MCMC'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
@@ -184,7 +179,7 @@ class HMC(pints.SingleChainMCMC):
         steps = int(steps)
         if steps < 1:
             raise ValueError('Number of steps must exceed 0.')
-        self._n_leapfrog_iterations = steps
+        self._n_frog_iterations = steps
 
     def set_leapfrog_step_size(self, step_size):
         """
@@ -195,26 +190,6 @@ class HMC(pints.SingleChainMCMC):
             raise ValueError(
                 'Step size for leapfrog algorithm must be greater than zero.')
         self._step_size = step_size
-
-    def set_momentum_sigma(self, momentum_sigma):
-        """
-        Sets the standard deviation for the multivariate normal distribution
-        used to propose new momentum values.
-        """
-        # Check shape
-        if momentum_sigma.shape != (self._dimension, self._dimension):
-            raise ValueError(
-                'Multivariate normal for momentum proposals must have shape ('
-                + str(self._dimension) + ', ' + str(self._dimension) + ').')
-
-        # Check if positive definite
-        if not np.all(np.linalg.eigvals(momentum_sigma) > 0):
-            raise ValueError(
-                'Multivariate normal for momentum proposals must be positive'
-                ' definite.')
-
-        # Store (copy first, to prevent modification)
-        self._momentum_sigma = np.array(momentum_sigma, copy=True)
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -252,20 +227,18 @@ class HMC(pints.SingleChainMCMC):
         # Set gradient of current leapfrog position
         self._gradient = gradient
 
-        # Perform a leapfrog step for the momentum
-        # Keeping in mind the last step of each run is a half-step
-        if self._frog_iteration == self._frog_iterations - 1:
-            self._momentum -= self._step_size * self._gradient * 0.5
-        else:
-            self._momentum -= self._step_size * self._gradient
-
-        # Update leapfrog step count
+        # Update the leapfrog iteration count
         self._frog_iteration += 1
 
-        # Unless this is the final leapfrog iteration, we should return None to
-        # indicate there is no new sample for the chain
+        # Not the last iteration? Then perform a leapfrog step and return
         if self._frog_iteration < self._n_frog_iterations:
+            self._momentum -= self._step_size * self._gradient
+
+            # Return None to indicate there is no new sample for the chain
             return None
+
+        # Final leapfrog iteration: only do half a step
+        self._momentum -= self._step_size * self._gradient * 0.5
 
         # Leapfrog iterations finished! Perform MCMC step
 
@@ -278,6 +251,12 @@ class HMC(pints.SingleChainMCMC):
         current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
         proposed_U = log_pdf
         proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+
+        # Check for divergent iterations by testing whether the
+        # Hamiltonian difference is above a threshold
+        #div = fx + proposed_K - (self._current_log_pdf + current_K)
+        #if div > self._hamiltonian_threshold:
+        #   self._divergent = np.append(self._divergent, self._iterations)
 
         # Accept/reject
         accept = 0
@@ -294,15 +273,15 @@ class HMC(pints.SingleChainMCMC):
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
-        self._leapfrog_iteration = 0
+        self._frog_iteration = 0
 
         # Update MCMC iteration count
         self._mcmc_iteration += 1
 
         # Update acceptance rate (only used for output!)
-        self._acceptance = (
-            (self._mcmc_iterations * self._acceptance + accept) /
-            (self._mcmc_iterations + 1))
+        self._mcmc_acceptance = (
+            (self._mcmc_iteration * self._mcmc_acceptance + accept) /
+            (self._mcmc_iteration + 1))
 
         # Return current position as next sample in the chain
         return self._current

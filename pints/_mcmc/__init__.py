@@ -115,6 +115,8 @@ class SingleChainMCMC(MCMCSampler):
         Returns either the next sample in the chain, or ``None`` to indicate
         that no new sample should be added to the chain (this is used to
         implement methods that require multiple evaluations per iteration).
+        Note that, if one chain returns ``None``, all chains should return
+        ``None``.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
@@ -322,7 +324,7 @@ class MCMCSampling(object):
         self._needs_sensitivities = self._samplers[0].needs_sensitivities()
 
         # Initial phase (needed for e.g. adaptive covariance)
-        self._initial_phase_iterations = 0
+        self._initial_phase_iterations = None
         self._needs_initial_phase = self._samplers[0].needs_initial_phase()
         if self._needs_initial_phase:
             self.set_initial_phase_iterations()
@@ -453,8 +455,9 @@ class MCMCSampling(object):
         running = True
         while running:
             # Initial phase
-            if (self._needs_initial_phase and
-                    iteration == self._initial_phase_iterations):
+            # Note: self._initial_phase_iterations is None when no initial
+            # phase is needed
+            if iteration == self._initial_phase_iterations:
                 for sampler in self._samplers:
                     sampler.set_initial_phase(False)
                 if self._log_to_screen:
@@ -473,11 +476,22 @@ class MCMCSampling(object):
             if self._single_chain:
                 samples = np.array([
                     s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+
+                new_samples = [x is not None for x in samples]
+                if all(new_samples):
+                    new_samples = True
+                elif any(new_samples):
+                    raise RuntimeError(
+                        'Both `None` and new sample returned from single chain'
+                        ' MCMC methods.')
+                else:
+                    new_samples = False
             else:
                 samples = self._samplers[0].tell(fxs)
+                new_samples = samples is not None
 
             # Add new samples to the chains
-            if samples is not None:
+            if new_samples:
                 chains.append(samples)
 
             # Update evaluation count
