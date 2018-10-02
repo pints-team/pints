@@ -27,7 +27,7 @@ class TestConeLogPDF(unittest.TestCase):
         f2 = f([0, 0])
         self.assertTrue(np.isscalar(f1))
         self.assertTrue(np.isscalar(f2))
-        self.assertEqual(f1, -1.4142135623730951)
+        self.assertAlmostEqual(f1, -1.4142135623730951)
         self.assertEqual(f.mean_normed(), 2.0)
         self.assertEqual(f.var_normed(), 2.0)
 
@@ -38,14 +38,14 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertEqual(f.mean_normed(), 420.0)
         self.assertEqual(f.var_normed(), 36120.0)
         f1 = f(np.repeat(1, 10))
-        self.assertTrue(f1, -1.7782794100389228)
+        self.assertAlmostEqual(f1, -1.7782794100389228)
 
         # Test CDF function
         f = pints.toy.ConeLogPDF()
-        self.assertEqual(f.CDF(1.0), 0.26424111765711533)
-        self.assertEqual(f.CDF(2.5), 0.71270250481635422)
+        self.assertAlmostEqual(f.CDF(1.0), 0.26424111765711533)
+        self.assertAlmostEqual(f.CDF(2.5), 0.71270250481635422)
         f = pints.toy.ConeLogPDF(3, 2)
-        self.assertEqual(f.CDF(1.0), 0.42759329552912018)
+        self.assertAlmostEqual(f.CDF(1.0), 0.42759329552912018)
         self.assertRaises(ValueError, f.CDF, -1)
 
         # Test sample function
