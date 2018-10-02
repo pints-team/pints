@@ -18,19 +18,20 @@ class ConeLogPDF(pints.LogPDF):
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
-        f(x) \propto e^{-|x|^\beta}
 
-    where x is a d-dimensional real, and |x| is the Euclidean norm. The mean
-    and variance that are returned relate to expectations on |x| not the
-    multidimensional x.
+        f(x) \propto e^{-|x|^\\beta}
+
+    where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm. The
+    mean and variance that are returned relate to expectations on ``|x|`` not
+    the multidimensional ``x``.
 
     Arguments:
 
     ``dimensions``
         The dimensionality of the cone.
     ``beta``
-        The power to which |x| is raised in the exponential term, which must be
-        positive.
+        The power to which ``|x|`` is raised in the exponential term, which
+        must be positive.
 
     *Extends:* :class:`pints.LogPDF`.
     """
@@ -59,20 +60,21 @@ class ConeLogPDF(pints.LogPDF):
         """
         Returns the mean of the normed distance from the origin
         """
-        return (scipy.special.gamma((1 + self._n_parameters) / self._beta) /
-                scipy.special.gamma(self._n_parameters / self._beta))
+        g1 = scipy.special.gamma((1 + self._n_parameters) / self._beta)
+        g2 = scipy.special.gamma(self._n_parameters / self._beta)
+        return g1 / g2
 
     def var_normed(self):
         """
         Returns the variance of the normed distance from the origin
         """
-        return ((scipy.special.gamma((2 + self._n_parameters) / self._beta) /
-                scipy.special.gamma(self._n_parameters / self._beta)) -
-                self.mean_normed()**2)
+        g1 = scipy.special.gamma((2 + self._n_parameters) / self._beta)
+        g2 = scipy.special.gamma(self._n_parameters / self._beta)
+        return g1 / g2 - self.mean_normed()**2
 
     def CDF(self, x):
         """
-        Returns the cumulative density function in terms of |x|
+        Returns the cumulative density function in terms of ``|x|``.
         """
         x = float(x)
         if x < 0:
@@ -91,23 +93,25 @@ class ConeLogPDF(pints.LogPDF):
         """
         n_samples = int(n_samples)
         if n_samples < 1:
-            raise ValueError('Number of samples must be greater than or ' +
-                             'equal to 1.')
+            raise ValueError(
+                'Number of samples must be greater than or equal to 1.')
         n = self._n_parameters
-        # determine empirical inverse-CDF
+
+        # Determine empirical inverse-CDF
         x_max = scipy.optimize.minimize(lambda x: (
             np.abs((self.CDF(x) - 1))), 8)['x'][0] * 10
         x_range = np.linspace(0, x_max, 100)
         cdf = [self.CDF(x) for x in x_range]
         f = scipy.interpolate.interp1d(cdf, x_range)
 
-        # do inverse-transform sampling to obtain independent r samples
+        # Do inverse-transform sampling to obtain independent r samples
         u = np.random.rand(n_samples)
         r = f(u)
 
-        # for each value of r select a value uniformly at random on
+        # For each value of r select a value uniformly at random on
         # hypersphere of that radius
         X_norm = np.random.normal(size=(n_samples, n))
         lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
         x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
         return np.array(x_unit)
+

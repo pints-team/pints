@@ -55,7 +55,7 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertTrue(np.abs(np.mean(samples)) < 0.1)
 
         # Test _reject_sample_r
-        self.assertTrue(f._reject_sample_r() > 0)
+        self.assertTrue(np.all(f._reject_sample(100) > 0))
 
         # Bad constructors
         self.assertRaises(
