@@ -1,5 +1,5 @@
 #
-# Log-likelihood functions
+# Main Log PDF functions
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -8,6 +8,8 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+
+import numpy as np
 
 
 class LogPDF(object):
@@ -31,7 +33,7 @@ class LogPDF(object):
         The returned data has the shape ``(L, L')`` where ``L`` is a scalar
         value and ``L'`` is a sequence of length ``n_parameters``.
 
-        Note that the derivative returned is of the loglikelihood, so
+        Note that the derivative returned is of the log-pdf, so
         ``L' = d/dp log(f(p))``, evaluated at ``p=x``.
 
         *This is an optional method that is not always implemented.*
@@ -71,15 +73,7 @@ class LogPrior(LogPDF):
         raise NotImplementedError
 
 
-class LogLikelihood(LogPDF):
-    """
-    Represents a log-likelihood defined on a parameter space.
-
-    *Extends:* :class:`LogPDF`
-    """
-
-
-class ProblemLogLikelihood(LogLikelihood):
+class ProblemLogLikelihood(LogPDF):
     """
     Represents a log-likelihood on a problem's parameter space, used to
     indicate the likelihood of an observed (fixed) time-series given a
@@ -90,10 +84,10 @@ class ProblemLogLikelihood(LogLikelihood):
     ``problem``
         The time-series problem this log-likelihood is defined for.
 
-    *Extends:* :class:`LogLikelihood`
+    *Extends:* :class:`LogPDF`
     """
     def __init__(self, problem):
-        super(LogLikelihood, self).__init__()
+        super(ProblemLogLikelihood, self).__init__()
         self._problem = problem
         # Cache some problem variables
         self._values = problem.values()
@@ -107,17 +101,17 @@ class ProblemLogLikelihood(LogLikelihood):
 
 class LogPosterior(LogPDF):
     """
-    Represents the sum of a :class:`LogLikelihood` and a :class:`LogPrior`
-    defined on the same parameter space.
+    Represents the sum of a :class:`LogPDF` and a :class:`LogPrior` defined on
+    the same parameter space.
 
     As an optimisation, if the :class:`LogPrior` evaluates as `-inf` for a
-    particular point in parameter space, the corresponding
-    :class:`LogLikelihood` won't be evaluated.
+    particular point in parameter space, the corresponding :class:`LogPDF` will
+    not be evaluated.
 
     Arguments:
 
     ``log_likelihood``
-        A :class:`LogLikelihood`, defined on the same parameter space.
+        A :class:`LogPDF`, defined on the same parameter space.
     ``log_prior``
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
@@ -131,9 +125,9 @@ class LogPosterior(LogPDF):
         if not isinstance(log_prior, LogPrior):
             raise ValueError(
                 'Given prior must extend pints.LogPrior.')
-        if not isinstance(log_likelihood, LogLikelihood):
+        if not isinstance(log_likelihood, LogPDF):
             raise ValueError(
-                'Given log_likelihood must extend pints.LogLikelihood.')
+                'Given log_likelihood must extend pints.LogPDF.')
 
         # Check dimensions
         self._n_parameters = log_prior.n_parameters()
@@ -163,7 +157,7 @@ class LogPosterior(LogPDF):
         The returned data has the shape ``(L, L')`` where ``L`` is a scalar
         value and ``L'`` is a sequence of length ``n_parameters``.
 
-        *This method only works if the underlying :class:`LogLikelihood` and
+        *This method only works if the underlying :class:`LogPDF` and
         :class:`LogPrior` implement the optional method
         :meth:`LogPDF.evaluateS1()`!*
         """
@@ -171,6 +165,82 @@ class LogPosterior(LogPDF):
         a, da = self._log_prior.evaluateS1(x)
         b, db = self._log_likelihood.evaluateS1(x)
         return a + b, da + db
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
+class SumOfIndependentLogPDFs(LogPDF):
+    """
+    Calculates a sum of :class:`LogPDF` objects, all defined on the same
+    parameter space.
+
+    This is useful for e.g. Bayesian inference using a single model evaluated
+    on two **independent** data sets ``D`` and ``E``. In this case,
+
+    .. math::
+        f(\\theta|D,E) &= \\frac{f(D, E|\\theta)f(\\theta)}{f(D, E)} \\\\
+                       &= \\frac{f(D|\\theta)f(E|\\theta)f(\\theta)}{f(D, E)}
+
+    Arguments:
+
+    ``log_likelihoods``
+        A sequence of :class:`LogPDF` objects.
+
+    Example::
+
+        log_likelihood = pints.SumOfIndependentLogPDFs([
+            pints.UnknownNoiseLogLikelihood(problem1),
+            pints.UnknownNoiseLogLikelihood(problem2),
+        ])
+
+    *Extends:* :class:`LogPDF`
+    """
+    def __init__(self, log_likelihoods):
+        super(SumOfIndependentLogPDFs, self).__init__()
+
+        # Check input arguments
+        if len(log_likelihoods) < 2:
+            raise ValueError(
+                'SumOfIndependentPdfs requires at least two log-pdfs.')
+        for i, e in enumerate(log_likelihoods):
+            if not isinstance(e, LogPDF):
+                raise ValueError(
+                    'All objects passed to SumOfIndependentLogPDFs must'
+                    ' be instances of pints.LogPDF (failed on argument '
+                    + str(i) + ').')
+        self._log_likelihoods = list(log_likelihoods)
+
+        # Get and check dimension
+        i = iter(self._log_likelihoods)
+        self._n_parameters = next(i).n_parameters()
+        for e in i:
+            if e.n_parameters() != self._n_parameters:
+                raise ValueError(
+                    'All log-likelihoods passed to'
+                    ' SumOfIndependentLogPDFs must have same dimension.')
+
+    def __call__(self, x):
+        total = 0
+        for e in self._log_likelihoods:
+            total += e(x)
+        return total
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`LogPDF.evaluateS1()`.
+
+        *This method only works if all the underlying :class:`LogPDF` objects
+        implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        total = 0
+        dtotal = np.zeros(self._n_parameters)
+        for e in self._log_likelihoods:
+            a, b = e.evaluateS1(x)
+            total += a
+            dtotal += np.asarray(b)
+        return total, dtotal
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """

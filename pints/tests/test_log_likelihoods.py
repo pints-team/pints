@@ -339,7 +339,7 @@ class TestLogLikelihood(unittest.TestCase):
         # Check if we get the right output
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
-    def test_sum_of_independent_log_likelihoods(self):
+    def test_sum_of_independent_log_pdfs(self):
 
         # Test single output
         model = pints.toy.LogisticModel()
@@ -351,7 +351,7 @@ class TestLogLikelihood(unittest.TestCase):
 
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         l2 = pints.UnknownNoiseLogLikelihood(problem)
-        ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
+        ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
         self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
 
@@ -363,19 +363,19 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertTrue(np.all(3 * dy1 == dy))
 
         # Wrong number of arguments
-        self.assertRaises(TypeError, pints.SumOfIndependentLogLikelihoods)
+        self.assertRaises(TypeError, pints.SumOfIndependentLogPDFs)
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, [l1])
+            ValueError, pints.SumOfIndependentLogPDFs, [l1])
 
         # Wrong types
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, [l1, 1])
+            ValueError, pints.SumOfIndependentLogPDFs, [l1, 1])
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, [problem, l1])
+            ValueError, pints.SumOfIndependentLogPDFs, [problem, l1])
 
         # Mismatching dimensions
         self.assertRaises(
-            ValueError, pints.SumOfIndependentLogLikelihoods, [l1, l2])
+            ValueError, pints.SumOfIndependentLogPDFs, [l1, l2])
 
         # Test multi-output
         model = pints.toy.FitzhughNagumoModel()
@@ -387,7 +387,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         sigma = 0.01
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
-        ll = pints.SumOfIndependentLogLikelihoods([l1, l1, l1])
+        ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
         self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
 

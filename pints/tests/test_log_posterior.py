@@ -52,10 +52,10 @@ class TestLogPosterior(unittest.TestCase):
         y2, dy2 = loglikelihood.evaluateS1(x)
         self.assertTrue(np.all(dy == dy1 + dy2))
 
-        # First arg must be LogLikelihood
-        self.assertRaises(ValueError, pints.LogPosterior, logprior, logprior)
+        # First arg must be a LogPDF
+        self.assertRaises(ValueError, pints.LogPosterior, 'hello', logprior)
 
-        # Second arg must be LogPrior
+        # Second arg must be a LogPrior
         self.assertRaises(
             ValueError, pints.LogPosterior, loglikelihood, loglikelihood)
 
