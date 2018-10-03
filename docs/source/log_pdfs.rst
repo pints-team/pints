@@ -1,5 +1,5 @@
 ********
-Log-pdfs
+Log-PDFs
 ********
 
 .. module:: pints
@@ -19,9 +19,9 @@ Example::
 
 .. autoclass:: LogPrior
 
-.. autoclass:: LogLikelihood
-
 .. autoclass:: LogPosterior
 
 .. autoclass:: ProblemLogLikelihood
+
+.. autoclass:: SumOfIndependentLogPDFs
 
