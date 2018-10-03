@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 
 import pints
-import pints.toy as toy
+import pints.toy
 
 from shared import StreamCapture
 
@@ -23,44 +23,18 @@ class TestHamiltonianMCMC(unittest.TestCase):
     Tests the basic methods of the Hamiltonian MCMC routine.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """ Prepare a problem for testing. """
-
-        # Create toy model
-        cls.model = toy.LogisticModel()
-        cls.real_parameters = np.array([0.015, 500])
-        cls.times = np.linspace(0, 1000, 1000)
-        cls.values = cls.model.simulate(cls.real_parameters, cls.times)
-
-        # Add noise
-        cls.noise = 10
-        cls.values += np.random.normal(0, cls.noise, cls.values.shape)
-
-        # Create an object with links to the model and time series
-        cls.problem = pints.SingleOutputProblem(
-            cls.model, cls.times, cls.values)
-
-        # Create a uniform prior over the parameters
-        cls.log_prior = pints.UniformLogPrior([0.01, 400], [0.02, 600])
-
-        # Create an estimated sigma
-        cls.sigma = [0.001, 10]
-
-        # Create a log likelihood
-        cls.log_likelihood = pints.KnownNoiseLogLikelihood(
-            cls.problem, cls.noise)
-
-        # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        cls.log_posterior = pints.LogPosterior(
-            cls.log_likelihood, cls.log_prior)
-
     def test_method(self):
 
+        # Create log pdf
+        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+
         # Create mcmc
-        x0 = self.real_parameters * 1.1
-        mcmc = pints.HamiltonianMCMC(x0, self.sigma)
-        mcmc.set_leapfrog_step_size(0.01)
+        x0 = np.array([2, 2])
+        sigma = [[3, 0], [0, 3]]
+        mcmc = pints.HamiltonianMCMC(x0, sigma)
+
+        # This method needs sensitivities
+        self.assertTrue(mcmc.needs_sensitivities())
 
         # Set number of leapfrog steps
         ifrog = 10
@@ -70,7 +44,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         chain = []
         for i in range(100 * ifrog):
             x = mcmc.ask()
-            fx, gr = self.log_posterior.evaluateS1(x)
+            fx, gr = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, gr))
             if i >= 50 * ifrog and sample is not None:
                 chain.append(sample)
@@ -82,17 +56,67 @@ class TestHamiltonianMCMC(unittest.TestCase):
         """
         Test logging includes name and custom fields.
         """
-        x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
-            self.log_posterior, 3, x, method=pints.HamiltonianMCMC)
+        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        x0 = [np.array([2, 2]), np.array([8, 8])]
+
+        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.HamiltonianMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
+
         self.assertIn('Hamiltonian MCMC', text)
-        self.assertIn(' iMCMC', text)
-        self.assertIn(' iFrog', text)
         self.assertIn(' Accept.', text)
+
+    def test_flow(self):
+
+        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        x0 = np.array([2, 2])
+
+        # Test initial proposal is first point
+        mcmc = pints.HamiltonianMCMC(x0)
+        self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
+
+        # Repeated asks
+        self.assertRaises(RuntimeError, mcmc.ask)
+
+        # Tell without ask
+        mcmc = pints.HamiltonianMCMC(x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0)
+
+        # Repeated tells should fail
+        x = mcmc.ask()
+        mcmc.tell(log_pdf.evaluateS1(x))
+        self.assertRaises(RuntimeError, mcmc.tell, log_pdf.evaluateS1(x))
+
+        # Bad starting point
+        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(
+            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+
+    def test_set_hyper_parameters(self):
+        """
+        Tests the parameter interface for this sampler.
+        """
+        x0 = np.array([2, 2])
+        mcmc = pints.HamiltonianMCMC(x0)
+
+        # Test leapfrog parameters
+        n = mcmc.leapfrog_steps()
+        d = mcmc.leapfrog_step_size()
+        self.assertIsInstance(n, int)
+        self.assertIsInstance(d, float)
+        mcmc.set_leapfrog_steps(n + 1)
+        self.assertEqual(mcmc.leapfrog_steps(), n + 1)
+        mcmc.set_leapfrog_step_size(d * 0.5)
+        self.assertEqual(mcmc.leapfrog_step_size(), d * 0.5)
+        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
+
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+        mcmc.set_hyper_parameters([n + 2, d * 2])
+        self.assertEqual(mcmc.leapfrog_steps(), n + 2)
+        self.assertEqual(mcmc.leapfrog_step_size(), d * 2)
 
 
 if __name__ == '__main__':
