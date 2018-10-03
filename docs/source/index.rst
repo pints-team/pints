@@ -61,7 +61,7 @@ Sampling
    - Differential evolution methods
 
      - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
-     - DREAM
+     - :class:`DreamMCMC`, works on any :class:`LogPDF`.
      - emcee (MCMC Hammer)
 
 #. :class:`Nested sampling<NestedSampler>`
