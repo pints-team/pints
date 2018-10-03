@@ -77,7 +77,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._n_frog_iterations = 20
 
         # Default integration step size for leapfrog algorithm
-        self._step_size = 0.2
+        self._step_size = None
+        self.set_leapfrog_step_size(0.2)
 
         # Default masses
         self._mass = np.ones(self._dimension)
@@ -121,8 +122,10 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         if self._frog_iteration == 0:
 
             # Sample random momentum for current point
+            #self._current_momentum = np.random.multivariate_normal(
+            #    np.zeros(self._dimension), self._sigma0)
             self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._dimension), self._sigma0)
+                np.zeros(self._dimension), np.eye(self._dimension))
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -202,6 +205,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         log_pdf = float(log_pdf)
         assert(gradient.shape == (self._dimension, ))
 
+        print(gradient)
+
         # Very first call
         if self._current is None:
 
@@ -243,33 +248,38 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # Leapfrog iterations finished! Perform MCMC step
 
         # Negate momentum to make the proposal symmetric
+        #TODO: Since we square the momentum, and then never touch it again,
+        # is this step really necessary??
         self._momentum = -self._momentum
 
-        # Evaluate potential and kinetic energies at start and end of
-        # leapfrog trajectory
-        current_U = self._current_log_pdf
-        current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
-        proposed_U = log_pdf
-        proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
-
-        # Check for divergent iterations by testing whether the
-        # Hamiltonian difference is above a threshold
-        #div = fx + proposed_K - (self._current_log_pdf + current_K)
-        #if div > self._hamiltonian_threshold:
-        #   self._divergent = np.append(self._divergent, self._iterations)
-
-        # Accept/reject
+        # Before starting accept/reject procedure, check if the leapfrog
+        # procedure has led to a finite momentum and logpdf. If not, reject.
         accept = 0
-        r = np.exp(current_U - proposed_U + current_K - proposed_K)
-        if np.random.uniform(0, 1) < r:
-            # Accept
-            accept = 1
-            self._current = self._position
-            self._current_logpdf = log_pdf
-            self._current_gradient = gradient
+        if np.isfinite(log_pdf) and np.all(np.isfinite(self._momentum)):
 
-            # Mark current as read-only, so it can be safely returned
-            self._current.setflags(write=False)
+            # Evaluate potential and kinetic energies at start and end of
+            # leapfrog trajectory
+            current_U = self._current_log_pdf
+            current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
+            proposed_U = log_pdf
+            proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+
+            # Check for divergent iterations by testing whether the
+            # Hamiltonian difference is above a threshold
+            #div = fx + proposed_K - (self._current_log_pdf + current_K)
+            #if div > self._hamiltonian_threshold:
+            #   self._divergent = np.append(self._divergent, self._iterations)
+
+            # Accept/reject
+            r = np.exp(current_U - proposed_U + current_K - proposed_K)
+            if np.random.uniform(0, 1) < r:
+                accept = 1
+                self._current = self._position
+                self._current_logpdf = log_pdf
+                self._current_gradient = gradient
+
+                # Mark current as read-only, so it can be safely returned
+                self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
