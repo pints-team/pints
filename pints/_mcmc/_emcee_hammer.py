@@ -65,7 +65,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
-        # Initialise on first call
+        # Initialise on first call (will set first proposal)
         if not self._running:
             self._initialise()
 
@@ -175,7 +175,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     def scale(self):
         """
         Returns the scale coefficient ``a`` used in updating the position of
-        each chain.
+        the chains.
         """
         return self._a
 
