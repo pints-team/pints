@@ -44,6 +44,9 @@ class TestHamiltonianMCMC(unittest.TestCase):
         # Create a uniform prior over the parameters
         cls.log_prior = pints.UniformLogPrior([0.01, 400], [0.02, 600])
 
+        # Create an estimated sigma
+        cls.sigma = [0.001, 10]
+
         # Create a log likelihood
         cls.log_likelihood = pints.KnownNoiseLogLikelihood(
             cls.problem, cls.noise)
@@ -56,7 +59,8 @@ class TestHamiltonianMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.HamiltonianMCMC(x0, self.sigma)
+        mcmc.set_leapfrog_step_size(0.01)
 
         # Set number of leapfrog steps
         ifrog = 10
