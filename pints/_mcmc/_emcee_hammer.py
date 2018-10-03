@@ -18,6 +18,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     described in Algorithm 2 in [1].
 
     For ``k`` in ``1:N``:
+
     - Draw a walker ``X_j`` at random from the "complementary ensemble" (the
       group of chains not including ``k``) without replacement.
 
