@@ -472,37 +472,33 @@ class MCMCSampling(object):
             # Calculate scores
             fxs = evaluator.evaluate(xs)
 
+            # Update evaluation count
+            evaluations += len(fxs)
+
             # Update chains
+            intermediate_step = False
             if self._single_chain:
                 samples = np.array([
                     s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
 
-                new_samples = [x is not None for x in samples]
-                if all(new_samples):
-                    new_samples = True
-                elif any(new_samples):
-                    raise RuntimeError(
-                        'Both `None` and new sample returned from single chain'
-                        ' MCMC methods.')
-                else:
-                    new_samples = False
+                none_found = [x is None for x in samples]
+                if any(none_found):
+                    # Can't mix None w. samples
+                    assert(all(none_found))
+                    intermediate_step = True
             else:
                 samples = self._samplers[0].tell(fxs)
-                new_samples = samples is not None
-
-            # Add new samples to the chains
-            if new_samples:
-                chains.append(samples)
-
-            # Update evaluation count
-            evaluations += len(fxs)
+                intermediate_step = samples is None
 
             # If no new samples were added, then no MCMC iteration was
             # performed, and so the iteration count shouldn't be updated,
             # logging shouldn't be triggered, and stopping criteria shouldn't
             # be checked
-            if samples is None:
+            if intermediate_step:
                 continue
+
+            # Add new samples to the chains
+            chains.append(samples)
 
             # Show progress
             if logging and iteration >= next_message:
