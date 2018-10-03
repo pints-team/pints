@@ -213,8 +213,13 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
                 'Length of `ref_parameters` must be same as number of'
                 ' parameters.')
 
-    # Set up figure, plot first samples
-    fig, axes = plt.subplots(n_param, 1, figsize=(6, 2 * n_param))
+    # Set up figure
+    fig, axes = plt.subplots(
+        n_param, 1, figsize=(6, 2 * n_param),
+        squeeze = False,    # Tell matlab to always return a 2d axes object
+    )
+
+    # Plot first samples
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
@@ -293,8 +298,15 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
                 'Length of `ref_parameters` must be same as number of'
                 ' parameters.')
 
-    # Set up figure, plot first samples
-    fig, axes = plt.subplots(n_param, 2, figsize=(12, 2 * n_param))
+    # Set up figure
+    fig, axes = plt.subplots(
+        n_param, 2, figsize=(12, 2 * n_param),
+
+        # Tell matplotlib to return 2d, even if n_param is 1
+        squeeze=False,
+    )
+
+    # Plot first samples
     for i in range(n_param):
         ymin_all, ymax_all = np.inf, -np.inf
         for j_list, samples_j in enumerate(samples):
