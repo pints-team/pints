@@ -50,21 +50,17 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Set initial state
         self._running = False
 
-        # Current points and proposed points
+        # Current samples and proposed log_pdfs
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdfs = None
+
+        # Single proposed point!
+        #TODO: Update this class to algorithm 3
         self._proposed = None
 
-        # See docstring above
+        # Scale parameter (see docstring above)
         self._a = None
-        self.set_a(2.0)
-
-    def a(self):
-        """
-        Returns the coefficient ``a`` used in updating the position of each
-        chain.
-        """
-        return self._a
+        self.set_scale(2.0)
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -93,6 +89,10 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             r = np.random.rand()
             self._z = ((1 + r * (self._a - 1))**2) / self._a
             self._proposed = x_j + self._z * (x_k - x_j)
+
+            # Ensure proposed is array of samples (with length 1)
+            #TODO Switch to algorithm 3
+            self._proposed = np.array([self._proposed])
 
         # Set as read only
         self._proposed.setflags(write=False)
@@ -128,18 +128,19 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
-        # Ensure proposed_log_pdfs are numpy array
-        proposed_log_pdfs = np.array(fx)
+        # Ensure proposed_log_pdf is numpy array
+        proposed_log_pdf = np.array(fx)
 
         # First points?
         if self._current is None:
-            if not np.all(np.isfinite(proposed_log_pdfs)):
+            if not np.all(np.isfinite(proposed_log_pdf)):
                 raise ValueError(
                     'Initial points for MCMC must have finite logpdf.')
 
             # Accept
+            # NOTE: FIRST STEP PROPOSED IS MULTIPLE POINTS
             self._current = self._proposed
-            self._current_log_pdfs = proposed_log_pdfs
+            self._current_log_pdfs = proposed_log_pdf
 
             # Clear proposal
             self._proposed = None
@@ -151,16 +152,15 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         next = np.array(self._current, copy=True)
         next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
 
-        # Update only one of the chains #TODO WHY NOT ALL? WHAT's HAPPENING HERE?
+        # Update the selected chain
+        #TODO Switch to algorithm 3, doing 2 sets of chains per iteration
         r_log = np.log(np.random.rand())
-        q = ((self._chains - 1) * np.log(self._z)
-            + proposed_log_pdfs[self._k]
-            - self._current_log_pdfs[self._k])
-
-        #TODO REWRITE AS MATRIX OPERATION? SEE DIFF EV MCMCMC
+        q = (
+            (self._chains - 1) * np.log(self._z)
+            + proposed_log_pdf - self._current_log_pdfs[self._k])
         if q >= r_log:
-            next[self._k] = self._proposed
-            next_log_pdfs[self._k] = self._proposed_log_pdfs[self._k]
+            next[self._k] = self._proposed[0]
+            next_log_pdfs[self._k] = proposed_log_pdf
             self._current = next
             self._current_log_pdfs = next_log_pdfs
 
@@ -171,14 +171,22 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._current.setflags(write=False)
         return self._current
 
-    def set_a(self, a):
+    def scale(self):
         """
-        Sets the coefficient ``a`` used in updating the position of each chain.
+        Returns the scale coefficient ``a`` used in updating the position of
+        each chain.
         """
-        a = float(a)
-        if a <= 0:
-            raise ValueError('The a parameter must be positive.')
-        self._a = a
+        return self._a
+
+    def set_scale(self, scale):
+        """
+        Sets the scale coefficient ``a`` used in updating the position of the
+        chains.
+        """
+        scale = float(scale)
+        if scale <= 0:
+            raise ValueError('The scale parameter must be positive.')
+        self._a = scale
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
@@ -186,8 +194,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[a]``.
+        The hyper-parameter vector is ``[scale]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_a(x[0])
+        self.set_scale(x[0])

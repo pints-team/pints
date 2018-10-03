@@ -139,7 +139,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
     def test_set_hyper_parameters(self):
         """
-        Tests the hyper-parameter interface for this optimiser.
+        Tests the hyper-parameter interface for this sampler.
         """
         n = 3
         x0 = [self.real_parameters] * n
