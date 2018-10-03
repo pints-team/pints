@@ -59,7 +59,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
         # Current point in the Markov chain
         self._current = None            # Aka current_q in the chapter
-        self._current_log_pdf = None    # Aka U(current_q)
+        self._current_energy = None     # Aka U(current_q) = -log_pdf
         self._current_gradient = None
         self._current_momentum = None   # Aka current_p
 
@@ -123,9 +123,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
             # Sample random momentum for current point
             #self._current_momentum = np.random.multivariate_normal(
-            #    np.zeros(self._dimension), self._sigma0)
+            #    np.zeros(self._dimension), np.eye(self._dimension))
             self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._dimension), np.eye(self._dimension))
+                np.zeros(self._dimension), self._sigma0)
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -158,13 +158,11 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_int('iMCMC')
-        logger.add_int('iFrog')
         logger.add_float('Accept.')
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._mcmc_iteration)
-        logger.log(self._frog_iteration)
         logger.log(self._mcmc_acceptance)
 
     def name(self):
@@ -201,23 +199,29 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
 
         # Unpack reply
-        log_pdf, gradient = reply
-        log_pdf = float(log_pdf)
+        energy, gradient = reply
+
+        # Energy = -log_pdf, so flip both signs!
+        energy = -energy
+        gradient = -gradient
+
+        # Quick check of given formats
+        energy = float(energy)
         assert(gradient.shape == (self._dimension, ))
 
-        print(gradient)
+        print(energy, gradient)
 
         # Very first call
         if self._current is None:
 
             # Check first point is somewhere sensible
-            if not np.isfinite(log_pdf):
+            if not np.isfinite(energy):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
 
-            # Set current sample, logpdf, and gradient
+            # Set current sample, energy, and gradient
             self._current = self._x0
-            self._current_log_pdf = log_pdf
+            self._current_energy = energy
             self._current_gradient = gradient
 
             # Increase iteration count
@@ -252,34 +256,30 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # is this step really necessary??
         self._momentum = -self._momentum
 
-        # Before starting accept/reject procedure, check if the leapfrog
-        # procedure has led to a finite momentum and logpdf. If not, reject.
+        # Evaluate potential and kinetic energies at start and end of
+        # leapfrog trajectory
+        current_U = self._current_energy
+        current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
+        proposed_U = energy
+        proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+
+        # Check for divergent iterations by testing whether the
+        # Hamiltonian difference is above a threshold
+        #div = fx + proposed_K - (self._current_energy + current_K)
+        #if div > self._hamiltonian_threshold:
+        #   self._divergent = np.append(self._divergent, self._iterations)
+
+        # Accept/reject
         accept = 0
-        if np.isfinite(log_pdf) and np.all(np.isfinite(self._momentum)):
+        r = np.exp(current_U - proposed_U + current_K - proposed_K)
+        if np.random.uniform(0, 1) < r:
+            accept = 1
+            self._current = self._position
+            self._current_energy = energy
+            self._current_gradient = gradient
 
-            # Evaluate potential and kinetic energies at start and end of
-            # leapfrog trajectory
-            current_U = self._current_log_pdf
-            current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
-            proposed_U = log_pdf
-            proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
-
-            # Check for divergent iterations by testing whether the
-            # Hamiltonian difference is above a threshold
-            #div = fx + proposed_K - (self._current_log_pdf + current_K)
-            #if div > self._hamiltonian_threshold:
-            #   self._divergent = np.append(self._divergent, self._iterations)
-
-            # Accept/reject
-            r = np.exp(current_U - proposed_U + current_K - proposed_K)
-            if np.random.uniform(0, 1) < r:
-                accept = 1
-                self._current = self._position
-                self._current_logpdf = log_pdf
-                self._current_gradient = gradient
-
-                # Mark current as read-only, so it can be safely returned
-                self._current.setflags(write=False)
+            # Mark current as read-only, so it can be safely returned
+            self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
