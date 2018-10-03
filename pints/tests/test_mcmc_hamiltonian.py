@@ -107,8 +107,11 @@ class TestHamiltonianMCMC(unittest.TestCase):
         d = mcmc.leapfrog_step_size()
         self.assertIsInstance(n, int)
         self.assertIsInstance(d, float)
+
         mcmc.set_leapfrog_steps(n + 1)
         self.assertEqual(mcmc.leapfrog_steps(), n + 1)
+        self.assertRaises(ValueError, mcmc.set_leapfrog_steps, 0)
+
         mcmc.set_leapfrog_step_size(d * 0.5)
         self.assertEqual(mcmc.leapfrog_step_size(), d * 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
