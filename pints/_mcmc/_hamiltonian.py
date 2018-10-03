@@ -133,7 +133,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             self._momentum -= self._step_size * self._gradient * 0.5
 
         # Perform a leapfrog step for the position
-        self._position += self._step_size * self._gradient
+        self._position += self._step_size * self._momentum
 
         # Ask for the pdf and gradient of the current leapfrog position
         # Using this, the leapfrog step for the momentum is performed in tell()
