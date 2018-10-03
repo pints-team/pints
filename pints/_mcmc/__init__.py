@@ -202,6 +202,23 @@ class MCMCSampling(object):
     Samples from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
     (MCMC) method.
 
+    The method to use (either a :class:`SingleChainMCMC` class or a
+    :class:`MultiChainMCMC` class) is specified at runtime. For example::
+
+        mcmc = pints.MCMCSampling(
+            log_pdf, 3, x0, method=pints.AdaptiveCovarianceMCMC)
+
+    Properties related to the number if iterations, parallelisation, and
+    logging can be set directly on the ``MCMCSampling`` object, e.g.::
+
+        mcmc.set_max_iterations(1000)
+
+    Sampler specific properties must be set on the internal samplers
+    themselves, e.g.::
+
+        for sampler in mcmc.samplers():
+            sampler.set_target_acceptance_rate(0.2)
+
     Arguments:
 
     ``log_pdf``
@@ -485,20 +502,27 @@ class MCMCSampling(object):
 
     def sampler(self):
         """
-        For multi-chain methods, this returns the single underlying sampler.
-        For single-chain methods, this raises an RuntimeError.
+        Returns the underlying :class:`MultiChainMCMC` object, or raises an
+        error if :class:`SingleChainMCMC` objects are being used.
+
+        See also: :meth:`samplers()`.
         """
         if self._single_chain:
             raise RuntimeError(
-                'The `sampler` method is not supported for single-sampler'
-                ' methods.')
+                'The method MCMCSampling.sampler() is only supported when a'
+                ' MultiChainMCMC is selected. Please use'
+                ' MCMCSampling.samplers() instead, to obtain a list of all'
+                ' internal SingleChainMCMC instances.')
         return self._samplers[0]
 
     def samplers(self):
         """
-        Returns the underlying array of samplers. The length of the array will
-        either be the number of chains, or one for samplers that sample
-        multiple chains
+        Returns a list containing the underlying sampler objects.
+
+        If a :class:`SingleChainMCMC` method was selected, this will be a list
+        containing as many :class:`SingleChainMCMC` objects as the number of
+        chains. If a :class:`MultiChainMCMC` method was selected, this will be
+        a list containing a single :class:`MultiChainMCMC` instance.
         """
         return self._samplers
 
