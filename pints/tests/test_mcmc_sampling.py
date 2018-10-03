@@ -361,8 +361,8 @@ class TestMCMCSampling(unittest.TestCase):
                 self.assertEqual(len(lines), len(LOG_FILE))
             self.assertEqual(capture.text(), '')
 
-        # Invalid log rate
-        self.assertRaises(ValueError, mcmc.set_log_rate, 0)
+        # Invalid log interval
+        self.assertRaises(ValueError, mcmc.set_log_interval, 0)
 
     def test_initial_phase(self):
 

@@ -299,7 +299,7 @@ class MCMCSampling(object):
         self._log_to_screen = True
         self._log_filename = None
         self._log_csv = False
-        self.set_log_rate()
+        self.set_log_interval()
 
         # Parallelisation
         self._parallel = False
@@ -464,8 +464,8 @@ class MCMCSampling(object):
                 if iteration < self._message_warm_up:
                     next_message = iteration + 1
                 else:
-                    next_message = self._message_rate * (
-                        1 + iteration // self._message_rate)
+                    next_message = self._message_interval * (
+                        1 + iteration // self._message_interval)
 
             # Update iteration count
             iteration += 1
@@ -545,25 +545,25 @@ class MCMCSampling(object):
                 'Number of initial-phase iterations cannot be negative.')
         self._initial_phase_iterations = iterations
 
-    def set_log_rate(self, rate=20, warm_up=3):
+    def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
 
         Arguments:
 
-        ``rate``
-            A log message will be shown every ``rate`` iterations.
+        ``interval``
+            A log message will be shown every ``iters`` iterations.
         ``warm_up``
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
 
         """
-        rate = int(rate)
-        if rate < 1:
-            raise ValueError('Rate must be greater than zero.')
+        iters = int(iters)
+        if iters < 1:
+            raise ValueError('Interval must be greater than zero.')
         warm_up = max(0, int(warm_up))
 
-        self._message_rate = rate
+        self._message_interval = iters
         self._message_warm_up = warm_up
 
     def set_log_to_file(self, filename=None, csv=False):
