@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the differential evolution MCMC method.
+# Tests the basic functionality of the EmceeHammerMCMC method.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -24,7 +24,7 @@ except AttributeError:
 
 class TestEmceeHammerMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the differential evolution MCMC method.
+    Tests the basic functionality of the Emcee Hammer MCMC method.
     """
 
     @classmethod
@@ -127,7 +127,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
 
     def test_set_hyper_parameters(self):
         """
-        Tests the hyper-parameter interface for this optimiser.
+        Tests the parameter and hyper-parameter interfaces for this sampler.
         """
         n = 3
         x0 = [self.real_parameters] * n
@@ -135,8 +135,9 @@ class TestEmceeHammerMCMC(unittest.TestCase):
 
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
 
-        mcmc.set_hyper_parameters([2.1])
-        self.assertEqual(mcmc.a(), 2.1)
+        a = mcmc.a() + 0.1
+        mcmc.set_hyper_parameters([a])
+        self.assertEqual(mcmc.a(), a)
 
         self.assertRaisesRegex(
             ValueError, 'positive', mcmc.set_hyper_parameters, [-1])
@@ -154,7 +155,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
-        self.assertIn('Differential Evolution MCMC', text)
+        self.assertIn('Emcee Hammer MCMC', text)
 
 
 if __name__ == '__main__':

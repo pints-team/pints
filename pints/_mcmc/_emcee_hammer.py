@@ -56,7 +56,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         self._proposed = None
 
         # See docstring above
-        self._a = 2
+        self._a = None
+        self.set_a(2.0)
 
     def a(self):
         """
