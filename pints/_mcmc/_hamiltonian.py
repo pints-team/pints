@@ -209,8 +209,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         energy = float(energy)
         assert(gradient.shape == (self._dimension, ))
 
-        print(energy, gradient)
-
         # Very first call
         if self._current is None:
 
@@ -256,30 +254,34 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # is this step really necessary??
         self._momentum = -self._momentum
 
-        # Evaluate potential and kinetic energies at start and end of
-        # leapfrog trajectory
-        current_U = self._current_energy
-        current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
-        proposed_U = energy
-        proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
-
-        # Check for divergent iterations by testing whether the
-        # Hamiltonian difference is above a threshold
-        #div = fx + proposed_K - (self._current_energy + current_K)
-        #if div > self._hamiltonian_threshold:
-        #   self._divergent = np.append(self._divergent, self._iterations)
-
-        # Accept/reject
+        # Before starting accept/reject procedure, check if the leapfrog
+        # procedure has led to a finite momentum and logpdf. If not, reject.
         accept = 0
-        r = np.exp(current_U - proposed_U + current_K - proposed_K)
-        if np.random.uniform(0, 1) < r:
-            accept = 1
-            self._current = self._position
-            self._current_energy = energy
-            self._current_gradient = gradient
+        if np.isfinite(energy) and np.all(np.isfinite(self._momentum)):
 
-            # Mark current as read-only, so it can be safely returned
-            self._current.setflags(write=False)
+            # Evaluate potential and kinetic energies at start and end of
+            # leapfrog trajectory
+            current_U = self._current_energy
+            current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
+            proposed_U = energy
+            proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+
+            # Check for divergent iterations by testing whether the
+            # Hamiltonian difference is above a threshold
+            #div = fx + proposed_K - (self._current_energy + current_K)
+            #if div > self._hamiltonian_threshold:
+            #   self._divergent = np.append(self._divergent, self._iterations)
+
+            # Accept/reject
+            r = np.exp(current_U - proposed_U + current_K - proposed_K)
+            if np.random.uniform(0, 1) < r:
+                accept = 1
+                self._current = self._position
+                self._current_energy = energy
+                self._current_gradient = gradient
+
+                # Mark current as read-only, so it can be safely returned
+                self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
