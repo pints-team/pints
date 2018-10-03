@@ -64,13 +64,13 @@ class TestEmceeHammerMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create mcmc
-        xs = [
+        x0s = [
             self.real_parameters * 1.1,
             self.real_parameters * 1.05,
             self.real_parameters * 0.9,
             self.real_parameters * 0.95,
         ]
-        mcmc = pints.EmceeHammerMCMC(4, xs)
+        mcmc = pints.EmceeHammerMCMC(4, x0s)
 
         # Perform short run
         chains = []
@@ -81,9 +81,10 @@ class TestEmceeHammerMCMC(unittest.TestCase):
             if i >= 50:
                 chains.append(samples)
         chains = np.array(chains)
+
         self.assertEqual(chains.shape[0], 50)
-        self.assertEqual(chains.shape[1], len(xs))
-        self.assertEqual(chains.shape[2], len(xs[0]))
+        self.assertEqual(chains.shape[1], len(x0s))
+        self.assertEqual(chains.shape[2], len(x0s[0]))
 
     def test_flow(self):
 
@@ -117,8 +118,8 @@ class TestEmceeHammerMCMC(unittest.TestCase):
             self.assertTrue(x is mcmc.ask())
 
         # Repeated tells should fail
-        mcmc.tell([1, 1, 1])
-        self.assertRaises(RuntimeError, mcmc.tell, [1, 1, 1])
+        mcmc.tell([1])
+        self.assertRaises(RuntimeError, mcmc.tell, [1])
 
         # Bad starting point
         mcmc = pints.EmceeHammerMCMC(n, x0)
@@ -135,9 +136,9 @@ class TestEmceeHammerMCMC(unittest.TestCase):
 
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
 
-        a = mcmc.a() + 0.1
-        mcmc.set_hyper_parameters([a])
-        self.assertEqual(mcmc.a(), a)
+        scale = mcmc.scale() + 0.1
+        mcmc.set_hyper_parameters([scale])
+        self.assertEqual(mcmc.scale(), scale)
 
         self.assertRaisesRegex(
             ValueError, 'positive', mcmc.set_hyper_parameters, [-1])
