@@ -223,8 +223,8 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            axes[i].set_xlabel('Parameter ' + str(i + 1))
-            axes[i].set_ylabel('Frequency')
+            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
                 xmax = np.max(samples_j[:, i])
@@ -234,22 +234,22 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
                 xmax = np.percentile(samples_j[:, i],
                                      50 + n_percentiles / 2.)
             xbins = np.linspace(xmin, xmax, bins)
-            axes[i].hist(samples_j[:, i], bins=xbins, alpha=alpha,
+            axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
                          label='Samples ' + str(1 + j_list))
 
         # Add reference parameters if given
         if ref_parameters is not None:
             # For histogram subplot
-            ymin_tv, ymax_tv = axes[i].get_ylim()
-            axes[i].plot(
+            ymin_tv, ymax_tv = axes[i, 0].get_ylim()
+            axes[i, 0].plot(
                 [ref_parameters[i], ref_parameters[i]],
                 [0.0, ymax_tv],
                 '--', c='k')
     if n_list > 1:
-        axes[0].legend()
+        axes[0, 0].legend()
 
     plt.tight_layout()
-    return fig, axes
+    return fig, axes[:, 0]
 
 
 def trace(samples, ref_parameters=None, n_percentiles=None):
