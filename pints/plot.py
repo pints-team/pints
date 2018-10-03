@@ -216,7 +216,7 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
     # Set up figure
     fig, axes = plt.subplots(
         n_param, 1, figsize=(6, 2 * n_param),
-        squeeze = False,    # Tell matlab to always return a 2d axes object
+        squeeze=False,    # Tell matlab to always return a 2d axes object
     )
 
     # Plot first samples
@@ -234,8 +234,9 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
                 xmax = np.percentile(samples_j[:, i],
                                      50 + n_percentiles / 2.)
             xbins = np.linspace(xmin, xmax, bins)
-            axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
-                         label='Samples ' + str(1 + j_list))
+            axes[i, 0].hist(
+                samples_j[:, i], bins=xbins, alpha=alpha,
+                label='Samples ' + str(1 + j_list))
 
         # Add reference parameters if given
         if ref_parameters is not None:
