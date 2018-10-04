@@ -2,7 +2,7 @@
 # Sub-module containing sequential MC inference routines
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2018, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -22,6 +22,14 @@ class SMCSampler(object):
     ``log_posterior``
         A :class:`LogPosterior` function that evaluates points in the parameter
         space.
+
+
+
+
+    #TODO REMAINING ARGUMENTS
+
+
+
 
     """
     def __init__(self, log_posterior, x0, sigma0=None):
