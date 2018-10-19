@@ -1,5 +1,5 @@
 [![travis](https://travis-ci.org/pints-team/pints.svg?branch=master)](https://travis-ci.org/pints-team/pints)
-[![appveyor](https://ci.appveyor.com/api/projects/status/k8xvn7md0pte2gsi?svg=true)](https://ci.appveyor.com/project/MichaelClerx/pints)
+[![appveyor](https://ci.appveyor.com/api/projects/status/k8xvn7md0pte2gsi/branch/master?svg=true)](https://ci.appveyor.com/project/MichaelClerx/pints/branch/master)
 [![functional](https://github.com/pints-team/functional-testing-results/blob/master/badge.svg)](https://github.com/pints-team/functional-testing-results)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/master/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples)
@@ -16,7 +16,7 @@ To use a model with Pints, you need to make sure it extends the [ForwardModel](h
 
 ```
 n_parameters() --> Returns the dimension of the parameter space.
-        
+
 simulate(parameters, times) --> Returns a vector of model evaluations at
                                 the given times, using the given parameters
 ```
