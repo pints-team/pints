@@ -24,3 +24,10 @@ ignore=
     # This is now actually advised in pep8
     W503,
 
+    # Line break after binary operator
+    W504,
+
+    # Invalid escape sequence
+    # These happen all the time in latex parts of docstrings,
+    # e.g. \sigma
+    W605,
