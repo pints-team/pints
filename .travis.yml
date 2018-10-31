@@ -65,6 +65,7 @@ install:
   - if [[ $PINTS_DOCS == true ]]; then pip install -r requirements-docs.txt; fi;
   - if [[ $PINTS_STYLE == true ]]; then pip install -r requirements-dev.txt; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then pip install -r requirements-dev.txt; fi;
+  - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
 
 before_script:
 - python --version
