@@ -41,7 +41,7 @@ class TestNoise(unittest.TestCase):
         self.assertRaises(ValueError, pn.independent, -1, clean.shape)
 
         # Shape must be a nice shape (handled by numpy)
-        self.assertRaises(TypeError, pn.independent, 0, 'hello')
+        self.assertRaises(TypeError, pn.independent, 1, 'hello')
 
     def test_ar1(self):
 

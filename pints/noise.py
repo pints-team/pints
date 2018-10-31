@@ -29,8 +29,8 @@ def independent(sigma, shape):
         noisy_values = values + noise.independent(5, values.shape)
 
     """
-    # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
 
+    # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
     return np.random.normal(0, sigma, shape)
 
 
