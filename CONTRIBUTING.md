@@ -241,6 +241,12 @@ Note that these files must be kept in sync with
 
 The requirements files link to each other, so that calling `$ pip install -r requirements-dev.txt` will install everything listed in `requirements.txt` and `requirements-docs.txt` as well.
 
+It's always worth using an up-to-date version of pip. On older systems especially, having an up-to-date pip will prevent all kinds of version incompatibility issues:
+
+```
+$ pip install --upgrade pip
+```
+
 ### Travis CI
 
 All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on https://travis-ci.org/pints-team/pints.

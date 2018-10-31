@@ -29,8 +29,8 @@ def independent(sigma, shape):
         noisy_values = values + noise.independent(5, values.shape)
 
     """
-    # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
 
+    # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
     return np.random.normal(0, sigma, shape)
 
 
@@ -75,7 +75,11 @@ def ar1(rho, sigma, n):
         return np.array([])
 
     # Generate noise
-    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n)
+    s = sigma * np.sqrt(1 - rho**2)
+    if s == 0:
+        v = np.zeros(n)
+    else:
+        v = np.random.normal(0, s, n)
     v[0] = np.random.rand()
     for t in range(1, n):
         v[t] += rho * v[t - 1]
