@@ -14,9 +14,7 @@ import os
 import sys
 import argparse
 import unittest
-import nbconvert
 import subprocess
-from traitlets.config import Config
 
 
 def run_unit_tests(executable=None):
@@ -172,6 +170,7 @@ def test_notebook(path, executable='python'):
     """
     Tests a single notebook, exists if it doesn't finish.
     """
+    import nbconvert
     import pints
     b = pints.Timer()
     print('Test ' + path + ' ... ', end='')
@@ -222,6 +221,9 @@ def export_notebook(ipath, opath):
     """
     Exports the notebook at `ipath` to a python file at `opath`.
     """
+    import nbconvert
+    from traitlets.config import Config
+
     # Create nbconvert configuration to ignore text cells
     c = Config()
     c.TemplateExporter.exclude_markdown = True
