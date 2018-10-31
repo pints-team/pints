@@ -34,7 +34,13 @@ You'll need the following requirements:
 - Python 2.7 or Python 3.4+
 - Python libraries: `cma` `numpy` `matplotlib` `scipy`
 
-These will be installed automatically if you go to the directory you downloaded pints to, and run
+These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:
+
+```
+$ pip install --upgrade pip
+```
+
+Then navigate to the path where you downloaded Pints to, and install both Pints and its dependencies by typing:
 
 ```
 $ pip install .
