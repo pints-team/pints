@@ -11,6 +11,10 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
+        - python: "2.7.6"
+          env:
+            - PINTS_UNIT=true
+          if: type != cron
         - python: "3.4"
           env:
             - PINTS_UNIT=true
@@ -50,11 +54,17 @@ matrix:
         - python: "3.6"
           if: type == cron
 
-# command to install dependencies
+# Install dependencies
+# Note: Use pip (not apt-get) for Python dependencies
+# Note: Only install normal dependencies for unit tests; these should be tested
+#       without the packages from -dev and -doc!
 install:
+  - pip install --upgrade pip
   - pip install .
-  - pip install -r requirements-dev.txt
-  - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
+  - pip install -r requirements.txt
+  - if [[ $PINTS_DOCS == true ]]; then pip install -r requirements-docs.txt; fi;
+  - if [[ $PINTS_STYLE == true ]]; then pip install -r requirements-dev.txt; fi;
+  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then pip install -r requirements-dev.txt; fi;
 
 before_script:
 - python --version
