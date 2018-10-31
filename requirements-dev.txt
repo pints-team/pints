@@ -2,3 +2,5 @@
 -r requirements-docs.txt
 flake8>=3
 jupyter
+nbconvert
+traitlets
