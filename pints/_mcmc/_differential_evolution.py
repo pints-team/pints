@@ -270,7 +270,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self.set_scale_coefficient(x[1])
         try:
             int_x2 = int(x[2])
-        except ValueError:
+        except (ValueError, TypeError):
             raise ValueError('The interval number of steps between ' +
                              'gamma=1 iterations must be convertable ' +
                              'to an integer.')
