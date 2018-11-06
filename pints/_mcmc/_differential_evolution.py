@@ -164,7 +164,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         if gamma_switch_rate < 1:
             raise ValueError('The interval number of steps between ' +
-                             ' gamma=1 iterations must exceed 1.')
+                             ' gamma=1 iterations must equal or exceed 1.')
         if not isinstance(gamma_switch_rate, int):
             raise ValueError('The interval number of steps between ' +
                              ' gamma=1 iterations must be an integer.')
