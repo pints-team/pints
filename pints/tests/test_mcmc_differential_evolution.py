@@ -173,9 +173,8 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             ValueError, 'non-negative', mcmc.set_hyper_parameters,
             [1, -0.5, 20, 0, 0])
 
-        self.assertRaisesRegex(
-            ValueError, 'integer', mcmc.set_hyper_parameters,
-            [1, 0.5, 20.5, 0, 0])
+        mcmc.set_hyper_parameters([0.5, 0.6, 20.2, 0, 0])
+        self.assertEqual(mcmc._gamma_switch_rate, 20)
 
         self.assertRaisesRegex(
             ValueError, 'exceed 1', mcmc.set_hyper_parameters,
