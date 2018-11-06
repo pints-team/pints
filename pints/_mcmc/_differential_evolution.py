@@ -164,7 +164,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         if gamma_switch_rate < 1:
             raise ValueError('The interval number of steps between ' +
-                             ' gamma=1 iterations must exceed 1.')
+                             ' gamma=1 iterations must equal or exceed 1.')
         if not isinstance(gamma_switch_rate, int):
             raise ValueError('The interval number of steps between ' +
                              ' gamma=1 iterations must be an integer.')
@@ -268,7 +268,13 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """
         self.set_gamma(x[0])
         self.set_scale_coefficient(x[1])
-        self.set_gamma_switch_rate(x[2])
+        try:
+            int_x2 = int(x[2])
+        except (ValueError, TypeError):
+            raise ValueError('The interval number of steps between ' +
+                             'gamma=1 iterations must be convertable ' +
+                             'to an integer.')
+        self.set_gamma_switch_rate(int_x2)
         self.set_normal_error(x[3])
         self.set_relative_scaling(x[4])
 
