@@ -186,6 +186,9 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         # test implicit conversion to int
         mcmc.set_hyper_parameters([0.5, 0.6, 20.2, 0, 0])
         self.assertEqual(mcmc._gamma_switch_rate, 20)
+        self.assertRaisesRegex(
+            ValueError, 'convertable to an integer',
+            mcmc.set_hyper_parameters, (0.5, 0.6, 'sdf', 0, 0))
 
     def test_logging(self):
         """
