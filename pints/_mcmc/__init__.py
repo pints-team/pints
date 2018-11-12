@@ -8,6 +8,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import os
 import pints
 import numpy as np
 
@@ -80,7 +81,7 @@ class SingleChainMCMC(MCMCSampler):
         # Check initial position
         self._x0 = pints.vector(x0)
 
-        # Get dimension
+        # Get number of parameters
         self._dimension = len(self._x0)
 
         # Check initial standard deviation
@@ -174,7 +175,7 @@ class MultiChainMCMC(MCMCSampler):
         self._x0 = np.array([pints.vector(x) for x in x0])
         self._x0.setflags(write=False)
 
-        # Get dimension
+        # Get number of parameters
         self._dimension = len(self._x0[0])
 
         # Check initial points all have correct dimension
@@ -275,7 +276,7 @@ class MCMCSampling(object):
             raise ValueError('Given function must extend pints.LogPDF')
         self._log_pdf = log_pdf
 
-        # Get dimension
+        # Get number of parameters
         self._dimension = self._log_pdf.n_parameters()
 
         # Check number of chains
@@ -334,6 +335,9 @@ class MCMCSampling(object):
         self._log_filename = None
         self._log_csv = False
         self.set_log_interval()
+
+        # Writing chains to disk
+        self._chain_files = None
 
         # Parallelisation
         self._parallel = False
@@ -415,6 +419,18 @@ class MCMCSampling(object):
             for sampler in self._samplers:
                 sampler.set_initial_phase(True)
 
+        # Write chains to disk
+        chain_loggers = []
+        if self._chain_files:
+            for filename in self._chain_files:
+                cl = pints.Logger()
+                cl.set_stream(None)
+                cl.set_filename(filename, True)
+                for k in range(self._dimension):
+                    cl.add_float('p' + str(k))
+                #cl.add_float('log_pdf')
+                chain_loggers.append(cl)
+
         # Set up progress reporting
         next_message = 0
 
@@ -429,6 +445,9 @@ class MCMCSampling(object):
                           ' worker processess.')
                 else:
                     print('Running in sequential mode.')
+                if self._chain_files:
+                    print(
+                        'Writing chains to ' + self._chain_files[0] + ' etc.')
 
             # Set up logger
             logger = pints.Logger()
@@ -499,6 +518,10 @@ class MCMCSampling(object):
 
             # Add new samples to the chains
             chains.append(samples)
+
+            # Write samples to disk
+            for k, chain_logger in enumerate(chain_loggers):
+                chain_logger.log(*samples[k])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -593,6 +616,29 @@ class MCMCSampling(object):
                 'Number of initial-phase iterations cannot be negative.')
         self._initial_phase_iterations = iterations
 
+    def set_chain_files(self, filename=None):
+        """
+        Write samples to disk as they are generated.
+
+        A CSV file will be generated for each chain, with a name based on
+        ``filename``. For example, given ``filename=chain.csv`` and 3 chains,
+        the files ``chain_0.csv``, ``chain_1.csv``, and ``chain_2.csv`` will be
+        created. To disable this feature, use ``filename=None``.
+
+        The created file will be a CSV file with a header
+        ``"p0","p1","p2",...`` followed by a sample on every line.
+        """
+        # Write samples and LogPDFs to disk as they are generated.
+        # ``"p0","p1","p2",...,"logpdf"`` followed by a sample and a LogPDF on
+        if filename:
+            filename = str(filename)
+            parts = os.path.splitext(filename)
+            self._chain_files = [
+                parts[0] + '_' + str(i) + parts[1]
+                for i in range(self._dimension)]
+        else:
+            self._chain_files = None
+
     def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
@@ -616,8 +662,8 @@ class MCMCSampling(object):
 
     def set_log_to_file(self, filename=None, csv=False):
         """
-        Enables logging to file when a filename is passed in, disables it if
-        ``filename`` is ``False`` or ``None``.
+        Enables progress logging to file when a filename is passed in, disables
+        it if ``filename`` is ``False`` or ``None``.
 
         The argument ``csv`` can be set to ``True`` to write the file in comma
         separated value (CSV) format. By default, the file contents will be
@@ -632,7 +678,7 @@ class MCMCSampling(object):
 
     def set_log_to_screen(self, enabled):
         """
-        Enables or disables logging to screen.
+        Enables or disables logging progress to screen.
         """
         self._log_to_screen = True if enabled else False
 
