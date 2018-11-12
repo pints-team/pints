@@ -420,55 +420,64 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
-        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_screen(True)
         mcmc.set_log_to_file(False)
 
-        with TemporaryDirectory() as d:
-            path = d.path('chain.csv')
-            p0 = d.path('chain_0.csv')
-            p1 = d.path('chain_1.csv')
-            p2 = d.path('chain_2.csv')
+        # Test writing chains to disk
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                path = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
 
-            # Test files aren't created before mcmc runs
-            mcmc.set_chain_files(path)
-            self.assertFalse(os.path.exists(path))
-            self.assertFalse(os.path.exists(p0))
-            self.assertFalse(os.path.exists(p1))
-            self.assertFalse(os.path.exists(p2))
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_files(path)
+                self.assertFalse(os.path.exists(path))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
 
-            # Test files are created afterwards
-            chains1 = mcmc.run()
-            self.assertFalse(os.path.exists(path))
-            self.assertTrue(os.path.exists(p0))
-            self.assertTrue(os.path.exists(p1))
-            self.assertTrue(os.path.exists(p2))
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(path))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
 
-            # Test files contains the correct chains
-            import pints.io as io
-            chains2 = np.array(io.load_samples(path, nchains))
-            self.assertTrue(np.all(chains1 == chains2))
+                # Test files contains the correct chains
+                import pints.io as io
+                chains2 = np.array(io.load_samples(path, nchains))
+                self.assertTrue(np.all(chains1 == chains2))
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
 
         # Test logging can be disabled again
-        with TemporaryDirectory() as d:
-            path = d.path('chain.csv')
-            p0 = d.path('chain_0.csv')
-            p1 = d.path('chain_1.csv')
-            p2 = d.path('chain_2.csv')
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                path = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
 
-            # Test files aren't created before mcmc runs
-            mcmc.set_chain_files(path)
-            self.assertFalse(os.path.exists(path))
-            self.assertFalse(os.path.exists(p0))
-            self.assertFalse(os.path.exists(p1))
-            self.assertFalse(os.path.exists(p2))
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_files(path)
+                self.assertFalse(os.path.exists(path))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
 
-            # Test files are not created afterwards
-            mcmc.set_chain_files(None)
-            mcmc.run()
-            self.assertFalse(os.path.exists(path))
-            self.assertFalse(os.path.exists(p0))
-            self.assertFalse(os.path.exists(p1))
-            self.assertFalse(os.path.exists(p2))
+                # Test files are not created afterwards
+                mcmc.set_chain_files(None)
+                mcmc.run()
+                self.assertFalse(os.path.exists(path))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+            text = c.text()
+            self.assertNotIn('Writing chains to', text)
+            self.assertNotIn('chain_0.csv', text)
 
 
 if __name__ == '__main__':
