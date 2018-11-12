@@ -7,6 +7,7 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+import os
 import pints
 import pints.toy
 import unittest
@@ -406,6 +407,68 @@ class TestMCMCSampling(unittest.TestCase):
         mcmc.run()
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.in_initial_phase())
+
+    def test_live_chain_files(self):
+
+        np.random.seed(1)
+        xs = []
+        for i in range(3):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(np.array(self.real_parameters) * f)
+        nchains = len(xs)
+
+        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_file(False)
+
+        with TemporaryDirectory() as d:
+            path = d.path('chain.csv')
+            p0 = d.path('chain_0.csv')
+            p1 = d.path('chain_1.csv')
+            p2 = d.path('chain_2.csv')
+
+            # Test files aren't created before mcmc runs
+            mcmc.set_chain_files(path)
+            self.assertFalse(os.path.exists(path))
+            self.assertFalse(os.path.exists(p0))
+            self.assertFalse(os.path.exists(p1))
+            self.assertFalse(os.path.exists(p2))
+
+            # Test files are created afterwards
+            chains1 = mcmc.run()
+            self.assertFalse(os.path.exists(path))
+            self.assertTrue(os.path.exists(p0))
+            self.assertTrue(os.path.exists(p1))
+            self.assertTrue(os.path.exists(p2))
+
+            # Test files contains the correct chains
+            import pints.io as io
+            chains2 = np.array(io.load_samples(path, nchains))
+            self.assertTrue(np.all(chains1 == chains2))
+
+        # Test logging can be disabled again
+        with TemporaryDirectory() as d:
+            path = d.path('chain.csv')
+            p0 = d.path('chain_0.csv')
+            p1 = d.path('chain_1.csv')
+            p2 = d.path('chain_2.csv')
+
+            # Test files aren't created before mcmc runs
+            mcmc.set_chain_files(path)
+            self.assertFalse(os.path.exists(path))
+            self.assertFalse(os.path.exists(p0))
+            self.assertFalse(os.path.exists(p1))
+            self.assertFalse(os.path.exists(p2))
+
+            # Test files are not created afterwards
+            mcmc.set_chain_files(None)
+            mcmc.run()
+            self.assertFalse(os.path.exists(path))
+            self.assertFalse(os.path.exists(p0))
+            self.assertFalse(os.path.exists(p1))
+            self.assertFalse(os.path.exists(p2))
 
 
 if __name__ == '__main__':
