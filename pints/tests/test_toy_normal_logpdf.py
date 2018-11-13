@@ -47,10 +47,10 @@ class TestNormalLogPDF(unittest.TestCase):
         # Ensure consistent output
         np.random.seed(1)
 
-        # Create banana LogPDFs
+        # Create LogPDFs
         d = 3
         mean = np.array([3, -3.0, 0])
-        sigma = np.array([[1, 0, 1], [0, 1, 0], [0, 0, 1.0]])
+        sigma = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1.0]])
         log_pdf1 = pints.toy.NormalLogPDF(mean, sigma)
         log_pdf2 = pints.toy.NormalLogPDF(mean + 0.1, sigma)
         log_pdf3 = pints.toy.NormalLogPDF(mean - 0.2, sigma / 2)
@@ -89,6 +89,35 @@ class TestNormalLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
+
+    def test_normal_sensitivity(self):
+        """
+        Tests that the gradient of the log pdf is correct
+        for a few specific examples, and that the log pdf
+        returned is correct.
+        """
+        # 1d normal
+        f1 = pints.toy.NormalLogPDF([0], [1])
+        L, dL = f1.evaluateS1([2])
+        self.assertAlmostEqual(L, -2.918938533204673)
+        self.assertEqual(dL[0], -2)
+
+        # 2d normal
+        f2_1 = pints.toy.NormalLogPDF([0, 0], [[1, 0], [0, 1]])
+        L, dL = f2_1.evaluateS1([2, 1])
+        self.assertAlmostEqual(L, -4.337877066409345)
+        self.assertTrue(np.array_equal(dL, [-2, -1]))
+
+        f2_2 = pints.toy.NormalLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
+        L, dL = f2_2.evaluateS1([-2.5, 1.5])
+
+        # 3d normal
+        f3 = pints.toy.NormalLogPDF([1, 2, 3], [[2, 0, 0],
+                                                [0, 2, 0],
+                                                [0, 0, 2]])
+        L, dL = f3.evaluateS1([0.5, -5, -3])
+        self.assertAlmostEqual(L, -25.10903637045394)
+        self.assertTrue(np.array_equal(dL, [0.25, 3.5, 3.0]))
 
 
 if __name__ == '__main__':
