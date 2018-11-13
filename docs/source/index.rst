@@ -83,7 +83,7 @@ Sampling
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPosterior`)
 
    - MALA
-   - HMC
+   - :class:`HamiltonianMCMC`
    - NUTS
 
 #. Differential geometric methods (Need Hessian of :class:`LogPosterior`)

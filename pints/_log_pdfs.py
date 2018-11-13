@@ -30,8 +30,8 @@ class LogPDF(object):
         Evaluates this LogPDF, and returns the result plus the partial
         derivatives of the result with respect to the parameters.
 
-        The returned data has the shape ``(L, L')`` where ``L`` is a scalar
-        value and ``L'`` is a sequence of length ``n_parameters``.
+        The returned data is a tuple ``(L, L')`` where ``L`` is a scalar value
+        and ``L'`` is a sequence of length ``n_parameters``.
 
         Note that the derivative returned is of the log-pdf, so
         ``L' = d/dp log(f(p))``, evaluated at ``p=x``.

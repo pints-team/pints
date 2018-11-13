@@ -51,6 +51,13 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated logpdf.
+        """
+        return False
+
 
 class SingleChainMCMC(MCMCSampler):
     """
@@ -96,15 +103,25 @@ class SingleChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a position in the search space to evaluate.
+        Returns a parameter vector to evaluate the logpdf for.
         """
         raise NotImplementedError
 
     def tell(self, fx):
         """
-        Performs an iteration of the MCMC algorithm, using the evaluation
-        ``fx`` of the point previously specified by ``ask``. Returns the next
-        sample in the chain.
+        Performs an iteration of the MCMC algorithm, using the logpdf
+        evaluation ``fx`` of the point previously specified by ``ask``.
+
+        Returns either the next sample in the chain, or ``None`` to indicate
+        that no new sample should be added to the chain (this is used to
+        implement methods that require multiple evaluations per iteration).
+        Note that, if one chain returns ``None``, all chains should return
+        ``None``.
+
+        For methods that require sensitivities (see
+        :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
+        ``(log_pdf, sensitivities)``, containing the values returned by
+        :meth:`pints.LogPdf.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -184,15 +201,23 @@ class MultiChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a sequence of positions in the search space to evaluate.
+        Returns a sequence of parameter vectors to evaluate a LogPDF for.
         """
         raise NotImplementedError
 
     def tell(self, fxs):
         """
         Performs an iteration of the MCMC algorithm, using the evaluations
-        ``fxs`` of the points previously specified by ``ask``. Returns the next
-        samples in the chains.
+        ``fxs`` of the points previously specified by ``ask``.
+
+        Returns either the next sample in the chain, or ``None`` to indicate
+        that no new sample should be added to the chain (this is used to
+        implement methods that require multiple evaluations per iteration).
+
+        For methods that require sensitivities (see
+        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
+        ``(log_pdfs, sensitivities)``, containing the values returned by
+        :meth:`pints.LogPdf.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -295,6 +320,15 @@ class MCMCSampling(object):
             self._n_samplers = 1
             self._samplers = [method(self._chains, x0, sigma0)]
 
+        # Check if sensitivities are required
+        self._needs_sensitivities = self._samplers[0].needs_sensitivities()
+
+        # Initial phase (needed for e.g. adaptive covariance)
+        self._initial_phase_iterations = None
+        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
+        if self._needs_initial_phase:
+            self.set_initial_phase_iterations()
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -305,12 +339,6 @@ class MCMCSampling(object):
         self._parallel = False
         self._n_workers = 1
         self.set_parallel()
-
-        # Initial phase (needed for e.g. adaptive covariance)
-        self._initial_phase_iterations = 0
-        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
-        if self._needs_initial_phase:
-            self.set_initial_phase_iterations()
 
         #
         # Stopping criteria
@@ -369,14 +397,18 @@ class MCMCSampling(object):
         iteration = 0
         evaluations = 0
 
+        # Choose method to evaluate
+        f = self._log_pdf
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+
         # Create evaluator object
         if self._parallel:
             # Use at most n_workers workers
             n_workers = min(self._n_workers, self._chains)
-            evaluator = pints.ParallelEvaluator(
-                self._log_pdf, n_workers=n_workers)
+            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._log_pdf)
+            evaluator = pints.SequentialEvaluator(f)
 
         # Initial phase
         if self._needs_initial_phase:
@@ -416,8 +448,6 @@ class MCMCSampling(object):
 
         # Create chains
         # TODO Pre-allocate?
-        # TODO Thinning
-        # TODO Advanced logging
         chains = []
 
         # Start sampling
@@ -425,8 +455,9 @@ class MCMCSampling(object):
         running = True
         while running:
             # Initial phase
-            if (self._needs_initial_phase and
-                    iteration == self._initial_phase_iterations):
+            # Note: self._initial_phase_iterations is None when no initial
+            # phase is needed
+            if iteration == self._initial_phase_iterations:
                 for sampler in self._samplers:
                     sampler.set_initial_phase(False)
                 if self._log_to_screen:
@@ -441,16 +472,33 @@ class MCMCSampling(object):
             # Calculate scores
             fxs = evaluator.evaluate(xs)
 
-            # Perform iteration(s)
+            # Update evaluation count
+            evaluations += len(fxs)
+
+            # Update chains
+            intermediate_step = False
             if self._single_chain:
                 samples = np.array([
                     s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+
+                none_found = [x is None for x in samples]
+                if any(none_found):
+                    # Can't mix None w. samples
+                    assert(all(none_found))
+                    intermediate_step = True
             else:
                 samples = self._samplers[0].tell(fxs)
-            chains.append(samples)
+                intermediate_step = samples is None
 
-            # Update evaluation count
-            evaluations += len(fxs)
+            # If no new samples were added, then no MCMC iteration was
+            # performed, and so the iteration count shouldn't be updated,
+            # logging shouldn't be triggered, and stopping criteria shouldn't
+            # be checked
+            if intermediate_step:
+                continue
+
+            # Add new samples to the chains
+            chains.append(samples)
 
             # Show progress
             if logging and iteration >= next_message:
