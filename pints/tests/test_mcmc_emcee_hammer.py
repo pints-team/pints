@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the differential evolution MCMC method.
+# Tests the basic functionality of the EmceeHammerMCMC method.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -22,9 +22,9 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestDifferentialEvolutionMCMC(unittest.TestCase):
+class TestEmceeHammerMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the differential evolution MCMC method.
+    Tests the basic functionality of the Emcee Hammer MCMC method.
     """
 
     @classmethod
@@ -64,13 +64,13 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create mcmc
-        xs = [
+        x0s = [
             self.real_parameters * 1.1,
             self.real_parameters * 1.05,
             self.real_parameters * 0.9,
             self.real_parameters * 0.95,
         ]
-        mcmc = pints.DifferentialEvolutionMCMC(4, xs)
+        mcmc = pints.EmceeHammerMCMC(4, x0s)
 
         # Perform short run
         chains = []
@@ -81,34 +81,35 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             if i >= 50:
                 chains.append(samples)
         chains = np.array(chains)
+
         self.assertEqual(chains.shape[0], 50)
-        self.assertEqual(chains.shape[1], len(xs))
-        self.assertEqual(chains.shape[2], len(xs[0]))
+        self.assertEqual(chains.shape[1], len(x0s))
+        self.assertEqual(chains.shape[2], len(x0s[0]))
 
     def test_flow(self):
 
         # Test we have at least 3 chains
         n = 2
         x0 = [self.real_parameters] * n
-        self.assertRaises(ValueError, pints.DifferentialEvolutionMCMC, n, x0)
+        self.assertRaises(ValueError, pints.EmceeHammerMCMC, n, x0)
 
         # Test initial proposal is first point
         n = 3
         x0 = [self.real_parameters] * n
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
         self.assertTrue(mcmc.ask() is mcmc._x0)
 
         # Double initialisation
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
         mcmc.ask()
         self.assertRaises(RuntimeError, mcmc._initialise)
 
         # Tell without ask
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Repeated asks should return same point
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
         # Get into accepting state
         for i in range(100):
             mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
@@ -117,76 +118,32 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             self.assertTrue(x is mcmc.ask())
 
         # Repeated tells should fail
-        mcmc.tell([1, 1, 1])
-        self.assertRaises(RuntimeError, mcmc.tell, [1, 1, 1])
+        mcmc.tell([1])
+        self.assertRaises(RuntimeError, mcmc.tell, [1])
 
         # Bad starting point
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
-        # Use uniform error
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
-        mcmc.set_normal_error(False)
-        for i in range(10):
-            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
-
-        # Use absolute scaling
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
-        mcmc.set_relative_scaling(False)
-        for i in range(10):
-            mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
-
     def test_set_hyper_parameters(self):
         """
-        Tests the hyper-parameter interface for this sampler.
+        Tests the parameter and hyper-parameter interfaces for this sampler.
         """
         n = 3
         x0 = [self.real_parameters] * n
-        mcmc = pints.DifferentialEvolutionMCMC(n, x0)
+        mcmc = pints.EmceeHammerMCMC(n, x0)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 5)
+        self.assertEqual(mcmc.n_hyper_parameters(), 1)
 
-        mcmc.set_hyper_parameters([0.5, 0.6, 20, 0, 0])
-        self.assertEqual(mcmc._gamma, 0.5)
-        self.assertEqual(mcmc._b, 0.6)
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
-        self.assertTrue(not mcmc._normal_error)
-        self.assertTrue(not mcmc._relative_scaling)
+        scale = mcmc.scale() + 0.1
+        mcmc.set_hyper_parameters([scale])
+        self.assertEqual(mcmc.scale(), scale)
 
-        mcmc.set_gamma(0.5)
-        self.assertEqual(mcmc._gamma, 0.5)
-        self.assertRaisesRegex(ValueError,
-                               'non-negative', mcmc.set_gamma, -1)
-
-        mcmc.set_scale_coefficient(1)
-        self.assertTrue(not mcmc._relative_scaling)
-        self.assertRaisesRegex(ValueError,
-                               'non-negative', mcmc.set_scale_coefficient, -1)
-
-        mcmc.set_gamma_switch_rate(11)
-        self.assertEqual(mcmc._gamma_switch_rate, 11)
         self.assertRaisesRegex(
-            ValueError, 'integer', mcmc.set_gamma_switch_rate, 11.5)
+            ValueError, 'positive', mcmc.set_hyper_parameters, [-1])
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', mcmc.set_gamma_switch_rate, 0)
-
-        mcmc.set_normal_error(False)
-        self.assertTrue(not mcmc._normal_error)
-
-        mcmc.set_relative_scaling(0)
-        self.assertTrue(np.array_equal(mcmc._b_star,
-                                       np.repeat(mcmc._b, mcmc._dimension)))
-        mcmc.set_relative_scaling(1)
-        self.assertTrue(np.array_equal(mcmc._b_star,
-                                       mcmc._mu * mcmc._b))
-
-        # test implicit conversion to int
-        mcmc.set_hyper_parameters([0.5, 0.6, 20.2, 0, 0])
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
-        self.assertRaisesRegex(
-            ValueError, 'convertable to an integer',
-            mcmc.set_hyper_parameters, (0.5, 0.6, 'sdf', 0, 0))
+            ValueError, 'positive', mcmc.set_hyper_parameters, [0])
 
     def test_logging(self):
         """
@@ -194,12 +151,12 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         """
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCSampling(
-            self.log_posterior, 3, x, method=pints.DifferentialEvolutionMCMC)
+            self.log_posterior, 3, x, method=pints.EmceeHammerMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
-        self.assertIn('Differential Evolution MCMC', text)
+        self.assertIn('Emcee Hammer MCMC', text)
 
 
 if __name__ == '__main__':

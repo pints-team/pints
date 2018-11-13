@@ -62,7 +62,7 @@ Sampling
 
      - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
      - :class:`DreamMCMC`, works on any :class:`LogPDF`.
-     - emcee (MCMC Hammer)
+     - :class:`EmceeHameerMCMC`, works on any :class:`LogPDF`.
 
 #. :class:`Nested sampling<NestedSampler>`
 
