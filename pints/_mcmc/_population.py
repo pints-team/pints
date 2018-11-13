@@ -20,9 +20,8 @@ class PopulationMCMC(pints.SingleChainMCMC):
     MCMC (simulated tempering) routine described in algorithm 1 in [1].
 
     This method uses several chains internally, but only a single one is
-    updated per iteration, and only a single one is returned at the end
-    (composed of samples from several internal chains), hence this method is
-    classified here as a single chain MCMC method.
+    updated per iteration, and only a single one is returned at the end, hence
+    this method is classified here as a single chain MCMC method.
 
     The algorithm goes through the following steps (after initialising ``N``
     internal chains):
