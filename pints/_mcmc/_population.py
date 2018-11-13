@@ -19,8 +19,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
     Creates a chain of samples from a target distribution, using the population
     MCMC (simulated tempering) routine described in algorithm 1 in [1].
 
+    This method uses several chains internally, but only a single one is
+    updated per iteration, and only a single one is returned at the end, hence
+    this method is classified here as a single chain MCMC method.
+
     The algorithm goes through the following steps (after initialising ``N``
-    chains):
+    internal chains):
 
     1. Mutation: randomly select chain ``i`` and update the chain using a
     Markov kernel that admits ``p_i`` as its invariant distribution.
