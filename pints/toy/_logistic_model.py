@@ -58,7 +58,8 @@ class LogisticModel(pints.ForwardModelS1, pints.ToyModel):
             raise ValueError('Negative times are not allowed.')
         if self._p0 == 0 or k < 0:
             if sensitivities:
-                return np.zeros(times.shape), np.zeros((len(times), len(parameters)))
+                return np.zeros(times.shape), \
+                    np.zeros((len(times), len(parameters)))
             else:
                 return np.zeros(times.shape)
 
