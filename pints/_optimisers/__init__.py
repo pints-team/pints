@@ -278,6 +278,7 @@ class Optimisation(object):
         self._log_to_screen = True
         self._log_filename = None
         self._log_csv = False
+        self.set_log_interval()
 
         # Parallelisation
         self._parallel = False
@@ -373,8 +374,6 @@ class Optimisation(object):
 
         # Set up progress reporting
         next_message = 0
-        message_warm_up = 3
-        message_interval = 20
 
         # Start logging
         logging = self._log_to_screen or self._log_filename
@@ -461,11 +460,11 @@ class Optimisation(object):
                     logger.log(timer.time())
 
                     # Choose next logging point
-                    if iteration < message_warm_up:
+                    if iteration < self._message_warm_up:
                         next_message = iteration + 1
                     else:
-                        next_message = message_interval * (
-                            1 + iteration // message_interval)
+                        next_message = self._message_interval * (
+                            1 + iteration // self._message_interval)
 
                 # Update iteration count
                 iteration += 1
@@ -523,6 +522,27 @@ class Optimisation(object):
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
+
+    def set_log_interval(self, iters=20, warm_up=3):
+        """
+        Changes the frequency with which messages are logged.
+
+        Arguments:
+
+        ``interval``
+            A log message will be shown every ``iters`` iterations.
+        ``warm_up``
+            A log message will be shown every iteration, for the first
+            ``warm_up`` iterations.
+
+        """
+        iters = int(iters)
+        if iters < 1:
+            raise ValueError('Interval must be greater than zero.')
+        warm_up = max(0, int(warm_up))
+
+        self._message_interval = iters
+        self._message_warm_up = warm_up
 
     def set_log_to_file(self, filename=None, csv=False):
         """
@@ -795,6 +815,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
 
 class _CurveFitError(pints.ErrorMeasure):
     """ Error measure for :meth:`curve_fit()`. """
+
     def __init__(self, function, dimension, x, y):
         self.f = function
         self.d = dimension
@@ -899,6 +920,7 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
 
 class _FminError(pints.ErrorMeasure):
     """ Error measure for :meth:`fmin()`. """
+
     def __init__(self, f, d):
         self.f = f
         self.d = d
@@ -912,6 +934,7 @@ class _FminError(pints.ErrorMeasure):
 
 class _FminErrorWithArgs(pints.ErrorMeasure):
     """ Error measure for :meth:`fmin()` for functions with args. """
+
     def __init__(self, f, d, args):
         self.f = f
         self.d = d
@@ -922,4 +945,3 @@ class _FminErrorWithArgs(pints.ErrorMeasure):
 
     def __call__(self, x):
         return self.f(x, *self.args)
-
