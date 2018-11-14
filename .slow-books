@@ -1,5 +1,6 @@
 # Slow notebooks
 sampling-ellipsoidal-nested-rejection-sampling.ipynb
+sampling-hamiltonian-mcmc.ipynb
 toy-model-beeler-reuter-ap.ipynb
 toy-model-fitzhugh-nagumo
 toy-model-goodwin-oscillator
