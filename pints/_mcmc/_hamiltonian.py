@@ -122,10 +122,12 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         if self._frog_iteration == 0:
 
             # Sample random momentum for current point
-            #self._current_momentum = np.random.multivariate_normal(
-            #    np.zeros(self._dimension), np.eye(self._dimension))
             self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._dimension), self._sigma0)
+                np.zeros(self._dimension), np.eye(self._dimension))
+
+            # Using sigma0 sounds like it makes sense, but doesn't work:
+            #self._current_momentum = np.random.multivariate_normal(
+            #    np.zeros(self._dimension), self._sigma0)
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
