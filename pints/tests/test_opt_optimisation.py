@@ -28,6 +28,7 @@ class TestXNES(unittest.TestCase):
     """
     Tests shared optimisation properties.
     """
+
     def setUp(self):
         """ Called before every test """
         np.random.seed(1)
@@ -58,6 +59,40 @@ class TestXNES(unittest.TestCase):
         with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of iterations', c.text())
+
+    def test_logging(self):
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.Optimisation(r, x, s, b, method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_log_interval(3)
+        opt.set_max_iterations(10)
+        self.assertEqual(opt.max_iterations(), 10)
+        with StreamCapture() as c:
+            opt.run()
+
+            log_should_be = (
+                'Maximising LogPDF\n'
+                'using Exponential Natural Evolution Strategy (xNES)\n'
+                'Running in sequential mode.\n'
+                'Population size: 6\n'
+                'Iter. Eval. Best      Time m:s\n'
+                '0     6     -1.837877   0:00.0\n'
+                '1     12    -1.837877   0:00.0\n'
+                '2     18    -1.837877   0:00.0\n'
+                '3     24    -1.837877   0:00.0\n'
+                '6     42    -1.837877   0:00.0\n'
+                '9     60    -1.837877   0:00.0\n'
+                '10    60    -1.837877   0:00.0\n'
+                'Halting: Maximum number of iterations (10) reached.\n'
+            )
+            self.assertEqual(log_should_be, c.text())
+
+        # Invalid log interval
+        self.assertRaises(ValueError, opt.set_log_interval, 0)
 
     def test_stopping_max_unchanged(self):
         """ Runs an optimisation with the max_unchanged stopping criterion. """
