@@ -25,8 +25,11 @@ class TestLogistic(unittest.TestCase):
         parameters = [1, 5]
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
-        for v in values:
-            self.assertEqual(v, 0)
+        self.assertTrue(np.all(values == np.zeros(4)))
+
+        values, sensitivities = model.simulateS1(parameters, times)
+        self.assertTrue(np.all(values == np.zeros(4)))
+        self.assertTrue(np.all(sensitivities == np.zeros((4, 2))))
 
     def test_start_with_two(self):
         # Run small simulation
@@ -59,6 +62,9 @@ class TestLogistic(unittest.TestCase):
         parameters = [1, -1]
         values = model.simulate(parameters, times)
         self.assertTrue(np.all(values == np.zeros(4)))
+        values, sensitivities = model.simulateS1(parameters, times)
+        self.assertTrue(np.all(values == np.zeros(4)))
+        self.assertTrue(np.all(sensitivities == np.zeros((4, 2))))
 
     def test_errors(self):
 
