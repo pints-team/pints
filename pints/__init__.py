@@ -23,6 +23,11 @@ if sys.version_info[0] < 3:
 # Expose pints version
 #
 def version(formatted=False):
+    """
+    Returns the version number, as a 3-part integer (major, minor, revision).
+    If ``formatted=True``, it returns a string formatted version (for example
+    "Pints 1.0.0").
+    """
     if formatted:
         return 'Pints ' + VERSION
     else:

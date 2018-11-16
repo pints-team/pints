@@ -4,6 +4,9 @@ Core classes and methods
 
 .. module:: pints
 
+.. autofunction:: version
+
+
 Forward model
 *************
 
