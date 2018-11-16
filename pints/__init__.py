@@ -7,6 +7,15 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+"""
+Pints: A Python Package for Picking Probable Parameters.
+
+This module provides several optimisation and sampling methods that can be
+applied to find the parameters of a model (typically a time series model) that
+are most likely given an experimental data set.
+"""
+
+
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import sys
