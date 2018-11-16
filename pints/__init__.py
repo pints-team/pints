@@ -12,7 +12,7 @@ Pints: Probabilistic Inference on Noisy Time Series.
 
 This module provides several optimisation and sampling methods that can be
 applied to find the parameters of a model (typically a time series model) that
-are most likely given an experimental data set.
+are most likely, given an experimental data set.
 """
 
 
