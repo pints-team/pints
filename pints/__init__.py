@@ -8,7 +8,7 @@
 #  software package.
 #
 """
-Pints: A Python Package for Picking Probable Parameters.
+Pints: Probabilistic Inference on Noisy Time Series.
 
 This module provides several optimisation and sampling methods that can be
 applied to find the parameters of a model (typically a time series model) that
