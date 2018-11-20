@@ -32,6 +32,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
+    .. note::
+        This sampler requires a number of chains $n \ge 3$, and
+        recommends $n \ge 1.5 d$
+
     *Extends:* :class:`MultiChainMCMC`
 
     [1] "A Markov Chain Monte Carlo version of the genetic algorithm
