@@ -336,8 +336,9 @@ class MCMCSampling(object):
         self._log_csv = False
         self.set_log_interval()
 
-        # Writing chains to disk
+        # Writing chains and evaluations to disk
         self._chain_files = None
+        self._evaluation_files = None
 
         # Parallelisation
         self._parallel = False
@@ -428,8 +429,21 @@ class MCMCSampling(object):
                 cl.set_filename(filename, True)
                 for k in range(self._dimension):
                     cl.add_float('p' + str(k))
-                #cl.add_float('log_pdf')
                 chain_loggers.append(cl)
+
+        # Write evaluations to disk
+        eval_loggers = []
+        if self._evaluation_files:
+            # Set up loggers
+            for filename in self._evaluation_files:
+                cl = pints.Logger()
+                cl.set_stream(None)
+                cl.set_filename(filename, True)
+                cl.add_float('logpdf')
+                eval_loggers.append(cl)
+
+            # Store last accepted log-pdf, per chain
+            current_evals = np.zeros(self._chains)
 
         # Set up progress reporting
         next_message = 0
@@ -489,6 +503,7 @@ class MCMCSampling(object):
                 xs = self._samplers[0].ask()
 
             # Calculate scores
+            #TODO: Separate out Bayesian prior and likelihood
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
@@ -522,6 +537,13 @@ class MCMCSampling(object):
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
                 chain_logger.log(*samples[k])
+
+            # Write evaluations to disk
+            if self._evaluation_files:
+                for k, eval_logger in enumerate(eval_loggers):
+                    if np.all(xs[k] == samples[k]):
+                        current_evals[k] = fxs[k]
+                    eval_logger.log(current_evals[k])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -616,29 +638,6 @@ class MCMCSampling(object):
                 'Number of initial-phase iterations cannot be negative.')
         self._initial_phase_iterations = iterations
 
-    def set_chain_files(self, filename=None):
-        """
-        Write samples to disk as they are generated.
-
-        A CSV file will be generated for each chain, with a name based on
-        ``filename``. For example, given ``filename=chain.csv`` and 3 chains,
-        the files ``chain_0.csv``, ``chain_1.csv``, and ``chain_2.csv`` will be
-        created. To disable this feature, use ``filename=None``.
-
-        The created file will be a CSV file with a header
-        ``"p0","p1","p2",...`` followed by a sample on every line.
-        """
-        # Write samples and LogPDFs to disk as they are generated.
-        # ``"p0","p1","p2",...,"logpdf"`` followed by a sample and a LogPDF on
-        if filename:
-            filename = str(filename)
-            parts = os.path.splitext(filename)
-            self._chain_files = [
-                parts[0] + '_' + str(i) + parts[1]
-                for i in range(self._dimension)]
-        else:
-            self._chain_files = None
-
     def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
@@ -696,6 +695,44 @@ class MCMCSampling(object):
                 raise ValueError(
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
+
+    def set_output_files(self, chain_file=None, evaluation_file=None):
+        """
+        Write chains and/or evaluations to disk as they are generated.
+
+        If ``chain_file`` is specified, a CSV file will be created for each
+        chain to which samples will be written as they are accepted. To disable
+        logging of chains, set ``chain_file=None``.
+
+        Filenames for each chain file will be derived from ``chain_file``, e.g.
+        if ``chain_file='chain.csv'`` and there are 2 chains, then the files
+        ``chain_0.csv`` and ``chain_1.csv`` will be created. Each CSV file will
+        start with a header (e.g. ``"p0","p1","p2",...``) and contain a sample
+        on each subsequent line.
+
+        If ``evaluation_file`` is specified, a CSV file will be created for
+        each chain to which :class:`LogPDF` evaluations will be written for
+        every accepted sample. To disable this feature, set
+        ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
+        :class:`LogPosterior`,
+
+        Filenames for each evaluation file will be derived from
+        ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
+        are 2 chains, then the files ``evals_0.csv`` and ``evals_1.csv`` will
+        be created. Each CSV file will start with a header (e.g.
+        ``"logposterior","loglikelihood","logprior"``) and contain the
+        evaluations for i-th accepted sample on the i-th subsequent line.
+        """
+        self._chain_files = self._evaluation_files = None
+
+        d = self._dimension
+        if chain_file:
+            b, e = os.path.splitext(str(chain_file))
+            self._chain_files = [b + '_' + str(i) + e for i in range(d)]
+
+        if evaluation_file:
+            b, e = os.path.splitext(str(evaluation_file))
+            self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
 
     def set_parallel(self, parallel=False):
         """
