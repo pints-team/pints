@@ -122,7 +122,7 @@ def run_notebook_tests(skip_slow_books=False, executable='python'):
                 if not line.endswith('.ipynb'):
                     line = line + '.ipynb'
                 if not os.path.isfile(line):
-                    raise Exception('Slow notebook note found: ' + line)
+                    raise Exception('Slow notebook not found: ' + line)
                 ignore_list.append(line)
 
     # Scan and run
