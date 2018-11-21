@@ -434,16 +434,30 @@ class MCMCSampling(object):
         # Write evaluations to disk
         eval_loggers = []
         if self._evaluation_files:
+            # Bayesian inference on a log-posterior? Then separate out the
+            # prior so we can calculate the loglikelihood
+            prior = None
+            if isinstance(self._log_pdf, pints.LogPosterior):
+                prior = self._log_pdf.log_prior()
+
             # Set up loggers
             for filename in self._evaluation_files:
                 cl = pints.Logger()
                 cl.set_stream(None)
                 cl.set_filename(filename, True)
-                cl.add_float('logpdf')
+                if prior:
+                    # Logposterior in first column, to be consistent with the
+                    # non-bayesian case
+                    cl.add_float('logposterior')
+                    cl.add_float('loglikelihood')
+                    cl.add_float('logprior')
+                else:
+                    cl.add_float('logpdf')
                 eval_loggers.append(cl)
 
-            # Store last accepted log-pdf, per chain
-            current_evals = np.zeros(self._chains)
+            # Store last accepted logpdf, per chain
+            current_logpdf = np.zeros(self._chains)
+            current_prior = np.zeros(self._chains)
 
         # Set up progress reporting
         next_message = 0
@@ -462,6 +476,10 @@ class MCMCSampling(object):
                 if self._chain_files:
                     print(
                         'Writing chains to ' + self._chain_files[0] + ' etc.')
+                if self._evaluation_files:
+                    print(
+                        'Writing evaluations to ' + self._evaluation_files[0]
+                        + ' etc.')
 
             # Set up logger
             logger = pints.Logger()
@@ -502,8 +520,7 @@ class MCMCSampling(object):
             else:
                 xs = self._samplers[0].ask()
 
-            # Calculate scores
-            #TODO: Separate out Bayesian prior and likelihood
+            # Calculate logpdfs
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
@@ -542,8 +559,13 @@ class MCMCSampling(object):
             if self._evaluation_files:
                 for k, eval_logger in enumerate(eval_loggers):
                     if np.all(xs[k] == samples[k]):
-                        current_evals[k] = fxs[k]
-                    eval_logger.log(current_evals[k])
+                        current_logpdf[k] = fxs[k]
+                        if prior is not None:
+                            current_prior[k] = prior(xs[k])
+                    eval_logger.log(current_logpdf[k])
+                    if prior is not None:
+                        eval_logger.log(current_logpdf[k] - current_prior[k])
+                        eval_logger.log(current_prior[k])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -696,7 +718,7 @@ class MCMCSampling(object):
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
 
-    def set_output_files(self, chain_file=None, evaluation_file=None):
+    def set_output_files(self, chain_file, evaluation_file):
         """
         Write chains and/or evaluations to disk as they are generated.
 
