@@ -410,7 +410,7 @@ class TestMCMCSampling(unittest.TestCase):
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.in_initial_phase())
 
-    def test_live_chain_files(self):
+    def test_live_chain_and_eval_logging(self):
 
         np.random.seed(1)
         xs = []
@@ -438,7 +438,8 @@ class TestMCMCSampling(unittest.TestCase):
                 p5 = d.path('evals_2.csv')
 
                 # Test files aren't created before mcmc runs
-                mcmc.set_output_files(cpath, None)
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_evaluation_filename(None)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -489,7 +490,8 @@ class TestMCMCSampling(unittest.TestCase):
                 p5 = d.path('evals_2.csv')
 
                 # Test files aren't created before mcmc runs
-                mcmc.set_output_files(None, epath)
+                mcmc.set_chain_filename(None)
+                mcmc.set_evaluation_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -548,7 +550,8 @@ class TestMCMCSampling(unittest.TestCase):
                 p5 = d.path('evals_2.csv')
 
                 # Test files aren't created before mcmc runs
-                mcmc.set_output_files(cpath, epath)
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_evaluation_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -611,7 +614,8 @@ class TestMCMCSampling(unittest.TestCase):
                 p5 = d.path('evals_2.csv')
 
                 # Test files aren't created before mcmc runs
-                mcmc.set_output_files(cpath, epath)
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_evaluation_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -671,7 +675,8 @@ class TestMCMCSampling(unittest.TestCase):
                 p5 = d.path('evals_2.csv')
 
                 # Test files aren't created before mcmc runs
-                mcmc.set_output_files(cpath, epath)
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_evaluation_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -682,7 +687,8 @@ class TestMCMCSampling(unittest.TestCase):
                 self.assertFalse(os.path.exists(p5))
 
                 # Test files are not created afterwards
-                mcmc.set_output_files(None, None)
+                mcmc.set_chain_filename(None)
+                mcmc.set_evaluation_filename(None)
                 mcmc.run()
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))

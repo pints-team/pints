@@ -651,6 +651,51 @@ class MCMCSampling(object):
         """
         return self._samplers
 
+    def set_chain_filename(self, chain_file):
+        """
+        Write chains to disk as they are generated.
+
+        If a ``chain_file`` is specified, a CSV file will be created for each
+        chain, to which samples will be written as they are accepted. To
+        disable logging of chains, set ``chain_file=None``.
+
+        Filenames for each chain file will be derived from ``chain_file``, e.g.
+        if ``chain_file='chain.csv'`` and there are 2 chains, then the files
+        ``chain_0.csv`` and ``chain_1.csv`` will be created. Each CSV file will
+        start with a header (e.g. ``"p0","p1","p2",...``) and contain a sample
+        on each subsequent line.
+        """
+
+        d = self._dimension
+        self._chain_files = None
+        if chain_file:
+            b, e = os.path.splitext(str(chain_file))
+            self._chain_files = [b + '_' + str(i) + e for i in range(d)]
+
+    def set_evaluation_filename(self, evaluation_file):
+        """
+        Write :class:`LogPDF` evaluations to disk as they are generated.
+
+        If an ``evaluation_file`` is specified, a CSV file will be created for
+        each chain, to which :class:`LogPDF` evaluations will be written for
+        every accepted sample. To disable this feature, set
+        ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
+        :class:`LogPosterior`,
+
+        Filenames for each evaluation file will be derived from
+        ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
+        are 2 chains, then the files ``evals_0.csv`` and ``evals_1.csv`` will
+        be created. Each CSV file will start with a header (e.g.
+        ``"logposterior","loglikelihood","logprior"``) and contain the
+        evaluations for i-th accepted sample on the i-th subsequent line.
+        """
+
+        d = self._dimension
+        self._evaluation_files = None
+        if evaluation_file:
+            b, e = os.path.splitext(str(evaluation_file))
+            self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
+
     def set_initial_phase_iterations(self, iterations=200):
         """
         For methods that require an initial phase (e.g. an adaptation-free
@@ -727,44 +772,6 @@ class MCMCSampling(object):
                 raise ValueError(
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
-
-    def set_output_files(self, chain_file, evaluation_file):
-        """
-        Write chains and/or evaluations to disk as they are generated.
-
-        If ``chain_file`` is specified, a CSV file will be created for each
-        chain to which samples will be written as they are accepted. To disable
-        logging of chains, set ``chain_file=None``.
-
-        Filenames for each chain file will be derived from ``chain_file``, e.g.
-        if ``chain_file='chain.csv'`` and there are 2 chains, then the files
-        ``chain_0.csv`` and ``chain_1.csv`` will be created. Each CSV file will
-        start with a header (e.g. ``"p0","p1","p2",...``) and contain a sample
-        on each subsequent line.
-
-        If ``evaluation_file`` is specified, a CSV file will be created for
-        each chain to which :class:`LogPDF` evaluations will be written for
-        every accepted sample. To disable this feature, set
-        ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
-        :class:`LogPosterior`,
-
-        Filenames for each evaluation file will be derived from
-        ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
-        are 2 chains, then the files ``evals_0.csv`` and ``evals_1.csv`` will
-        be created. Each CSV file will start with a header (e.g.
-        ``"logposterior","loglikelihood","logprior"``) and contain the
-        evaluations for i-th accepted sample on the i-th subsequent line.
-        """
-        self._chain_files = self._evaluation_files = None
-
-        d = self._dimension
-        if chain_file:
-            b, e = os.path.splitext(str(chain_file))
-            self._chain_files = [b + '_' + str(i) + e for i in range(d)]
-
-        if evaluation_file:
-            b, e = os.path.splitext(str(evaluation_file))
-            self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
 
     def set_parallel(self, parallel=False):
         """
