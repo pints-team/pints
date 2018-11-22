@@ -439,7 +439,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
-                mcmc.set_evaluation_filename(None)
+                mcmc.set_log_pdf_filename(None)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -491,7 +491,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(None)
-                mcmc.set_evaluation_filename(epath)
+                mcmc.set_log_pdf_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -551,7 +551,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
-                mcmc.set_evaluation_filename(epath)
+                mcmc.set_log_pdf_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -615,7 +615,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
-                mcmc.set_evaluation_filename(epath)
+                mcmc.set_log_pdf_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -676,7 +676,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
-                mcmc.set_evaluation_filename(epath)
+                mcmc.set_log_pdf_filename(epath)
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
                 self.assertFalse(os.path.exists(p0))
@@ -688,7 +688,7 @@ class TestMCMCSampling(unittest.TestCase):
 
                 # Test files are not created afterwards
                 mcmc.set_chain_filename(None)
-                mcmc.set_evaluation_filename(None)
+                mcmc.set_log_pdf_filename(None)
                 mcmc.run()
                 self.assertFalse(os.path.exists(cpath))
                 self.assertFalse(os.path.exists(epath))
