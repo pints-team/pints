@@ -672,7 +672,7 @@ class MCMCSampling(object):
             b, e = os.path.splitext(str(chain_file))
             self._chain_files = [b + '_' + str(i) + e for i in range(d)]
 
-    def set_evaluation_filename(self, evaluation_file):
+    def set_log_pdf_filename(self, log_pdf_file):
         """
         Write :class:`LogPDF` evaluations to disk as they are generated.
 
@@ -680,7 +680,8 @@ class MCMCSampling(object):
         each chain, to which :class:`LogPDF` evaluations will be written for
         every accepted sample. To disable this feature, set
         ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
-        :class:`LogPosterior`,
+        :class:`LogPosterior`, the individual likelihood and prior will also
+        be stored.
 
         Filenames for each evaluation file will be derived from
         ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
@@ -692,8 +693,8 @@ class MCMCSampling(object):
 
         d = self._dimension
         self._evaluation_files = None
-        if evaluation_file:
-            b, e = os.path.splitext(str(evaluation_file))
+        if log_pdf_file:
+            b, e = os.path.splitext(str(log_pdf_file))
             self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
 
     def set_initial_phase_iterations(self, iterations=200):
