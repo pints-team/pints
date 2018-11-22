@@ -666,7 +666,7 @@ class MCMCSampling(object):
         on each subsequent line.
         """
 
-        d = self._dimension
+        d = self._chains
         self._chain_files = None
         if chain_file:
             b, e = os.path.splitext(str(chain_file))
@@ -691,7 +691,7 @@ class MCMCSampling(object):
         evaluations for i-th accepted sample on the i-th subsequent line.
         """
 
-        d = self._dimension
+        d = self._chains
         self._evaluation_files = None
         if log_pdf_file:
             b, e = os.path.splitext(str(log_pdf_file))
