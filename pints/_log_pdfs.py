@@ -166,6 +166,14 @@ class LogPosterior(LogPDF):
         b, db = self._log_likelihood.evaluateS1(x)
         return a + b, da + db
 
+    def log_likelihood(self):
+        """ Returns the :class:`LogLikelihood` used by this posterior. """
+        return self._log_likelihood
+
+    def log_prior(self):
+        """ Returns the :class:`LogPrior` used by this posterior. """
+        return self._log_prior
+
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters

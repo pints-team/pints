@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the LogPosterior class
+# Tests the log_posterior class
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -14,7 +14,7 @@ import pints.toy
 import numpy as np
 
 
-class TestLogPosterior(unittest.TestCase):
+class Testlog_posterior(unittest.TestCase):
 
     def test_log_posterior(self):
 
@@ -26,42 +26,46 @@ class TestLogPosterior(unittest.TestCase):
         times = np.linspace(0, 1000, 100)
         values = model.simulate(real_parameters, times)
         problem = pints.SingleOutputProblem(model, times, values)
-        loglikelihood = pints.KnownNoiseLogLikelihood(problem, sigma)
+        log_likelihood = pints.KnownNoiseLogLikelihood(problem, sigma)
 
         # Create a prior
-        logprior = pints.UniformLogPrior([0, 0], [1, 1000])
+        log_prior = pints.UniformLogPrior([0, 0], [1, 1000])
 
         # Test
-        p = pints.LogPosterior(loglikelihood, logprior)
-        self.assertEqual(p(x), loglikelihood(x) + logprior(x))
+        p = pints.LogPosterior(log_likelihood, log_prior)
+        self.assertEqual(p(x), log_likelihood(x) + log_prior(x))
         y = [-1, 500]
-        self.assertEqual(logprior(y), -float('inf'))
+        self.assertEqual(log_prior(y), -float('inf'))
         self.assertEqual(p(y), -float('inf'))
-        self.assertEqual(p(y), logprior(y))
+        self.assertEqual(p(y), log_prior(y))
 
         # Test derivatives
-        logprior = pints.ComposedLogPrior(
+        log_prior = pints.ComposedLogPrior(
             pints.NormalLogPrior(0.015, 0.3),
             pints.NormalLogPrior(500, 100))
-        logposterior = pints.LogPosterior(loglikelihood, logprior)
+        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
         x = [0.013, 540]
-        y, dy = logposterior.evaluateS1(x)
-        self.assertEqual(y, logposterior(x))
+        y, dy = log_posterior.evaluateS1(x)
+        self.assertEqual(y, log_posterior(x))
         self.assertEqual(dy.shape, (2, ))
-        y1, dy1 = logprior.evaluateS1(x)
-        y2, dy2 = loglikelihood.evaluateS1(x)
+        y1, dy1 = log_prior.evaluateS1(x)
+        y2, dy2 = log_likelihood.evaluateS1(x)
         self.assertTrue(np.all(dy == dy1 + dy2))
 
-        # First arg must be a LogPDF
-        self.assertRaises(ValueError, pints.LogPosterior, 'hello', logprior)
+        # Test getting the prior and likelihood back again
+        self.assertIs(log_posterior.log_prior(), log_prior)
+        self.assertIs(log_posterior.log_likelihood(), log_likelihood)
 
-        # Second arg must be a LogPrior
+        # First arg must be a LogPDF
+        self.assertRaises(ValueError, pints.LogPosterior, 'hello', log_prior)
+
+        # Second arg must be a log_prior
         self.assertRaises(
-            ValueError, pints.LogPosterior, loglikelihood, loglikelihood)
+            ValueError, pints.LogPosterior, log_likelihood, log_likelihood)
 
         # Prior and likelihood must have same dimension
         self.assertRaises(
-            ValueError, pints.LogPosterior, loglikelihood,
+            ValueError, pints.LogPosterior, log_likelihood,
             pints.NormalLogPrior(0.015, 0.3))
 
 
