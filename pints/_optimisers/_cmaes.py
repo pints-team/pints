@@ -8,8 +8,9 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+import logging
 import numpy as np
+import pints
 
 
 class CMAES(pints.PopulationBasedOptimiser):
@@ -39,6 +40,9 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Best solution found
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
+
+        # Python logger
+        self._logger = logging.getLogger(__name__)
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -157,8 +161,14 @@ class CMAES(pints.PopulationBasedOptimiser):
         # "||xmean||^2<ftarget"
         # callback: User callback triggered stop
         stop = self._es.stop()
-        if 'tolconditioncov' in stop:
-            return 'Ill-conditioned covariance matrix.'
+        if stop:
+            if 'tolconditioncov' in stop:
+                return 'Ill-conditioned covariance matrix.'
+
+            self._logger.debug(
+                'CMA-ES stopping condition(s) reached: ' +
+                '; '.join([str(x) for x in stop.keys()]))
+
         return False
 
     def _suggested_population_size(self):
