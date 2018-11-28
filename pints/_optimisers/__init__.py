@@ -31,6 +31,39 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
 
+    The ask-and-tell interface allows a user to have fine-grained control over
+    an optimisation, and implement custom parallelisation, logging, stopping
+    criteria etc. Users who don't need this functionality can use optimisers
+    via the :class:`Optimisation` class instead.
+
+    An optimisation with ask-and-tell, proceeds roughly as follows::
+
+        optimiser = MyOptimiser()
+        running = True
+        while running:
+            # Get points
+            xs = optimiser.ask()
+
+            # Calculate scores
+            # At this point, code to parallelise evaluation can be added in
+            fs = [f(x) for x in xs]
+
+            # Perform iteration
+            optimiser.tell(fs)
+
+            # Check stopping criteria
+            # At this point, custom stopping criteria can be added in
+            if optimiser.fbest() < threshold:
+                running = False
+
+            # Check for optimiser issues
+            if optimiser.stop():
+                running = False
+
+            # At this point, code to visualise or benchmark optimiser behaviour
+            # could be added in, for example by plotting `xs` in the parameter
+            # space.
+
     All optimisers implement the :class:`pints.Loggable` and
     :class:`pints.TunableMethod` interfaces.
     """
@@ -500,6 +533,7 @@ class Optimisation(object):
                 if error:
                     running = False
                     halt_message = ('Halting: ' + str(error))
+
         except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # Unexpected end!
             # Show last result and exit
