@@ -569,10 +569,10 @@ class Optimisation(object):
     def set_max_iterations(self, iterations=10000):
         """
         Adds a stopping criterion, allowing the routine to halt after the
-        given number of `iterations`.
+        given number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
-        `set_max_iterations(None)`.
+        ``set_max_iterations(None)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -584,11 +584,11 @@ class Optimisation(object):
     def set_max_unchanged_iterations(self, iterations=200, threshold=1e-11):
         """
         Adds a stopping criterion, allowing the routine to halt if the
-        objective function doesn't change by more than `threshold` for the
-        given number of `iterations`.
+        objective function doesn't change by more than ``threshold`` for the
+        given number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
-        `set_max_unchanged_iterations(None)`.
+        ``set_max_unchanged_iterations(None)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -627,11 +627,11 @@ class Optimisation(object):
     def set_threshold(self, threshold):
         """
         Adds a stopping criterion, allowing the routine to halt once the
-        objective function goes below a set `threshold`.
+        objective function goes below a set ``threshold``.
 
         This criterion is disabled by default, but can be enabled by calling
-        this method with a valid `threshold`. To disable it, use
-        `set_treshold(None)`.
+        this method with a valid ``threshold``. To disable it, use
+        ``set_treshold(None)``.
         """
         if threshold is None:
             self._threshold = None
