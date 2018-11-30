@@ -31,6 +31,42 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     ``boundaries=None``
         An optional set of boundaries on the parameter space.
 
+    Optimisation using "ask-and-tell" proceed by the user repeatedly "asking"
+    the optimiser for points, and then "telling" it the function evaluations at
+    those points. This allows a user to have fine-grained control over an
+    optimisation, and implement custom parallelisation, logging, stopping
+    criteria etc. Users who don't need this functionality can use optimisers
+    via the :class:`Optimisation` class instead.
+
+    An optimisation with ask-and-tell, proceeds roughly as follows::
+
+        optimiser = MyOptimiser()
+        running = True
+        while running:
+            # Ask for points to evaluate
+            xs = optimiser.ask()
+
+            # Evaluate the score function or pdf at these points
+            # At this point, code to parallelise evaluation can be added in
+            fs = [f(x) for x in xs]
+
+            # Tell the optimiser the evaluations; allowing it to update its
+            # internal state.
+            optimiser.tell(fs)
+
+            # Check stopping criteria
+            # At this point, custom stopping criteria can be added in
+            if optimiser.fbest() < threshold:
+                running = False
+
+            # Check for optimiser issues
+            if optimiser.stop():
+                running = False
+
+            # At this point, code to visualise or benchmark optimiser behaviour
+            # could be added in, for example by plotting `xs` in the parameter
+            # space.
+
     All optimisers implement the :class:`pints.Loggable` and
     :class:`pints.TunableMethod` interfaces.
     """
@@ -500,6 +536,7 @@ class Optimisation(object):
                 if error:
                     running = False
                     halt_message = ('Halting: ' + str(error))
+
         except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # Unexpected end!
             # Show last result and exit
