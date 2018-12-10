@@ -253,6 +253,12 @@ class Optimisation(object):
     def __init__(
             self, function, x0, sigma0=None, boundaries=None, method=None):
 
+        # Convert x0 to vector
+        # This converts e.g. (1, 7) shapes to (7, ), giving users a bit more
+        # freedom with the exact shape passed in. For example, to allow the
+        # output of LogPrior.sample(1) to be passed in.
+        x0 = pints.vector(x0)
+
         # Check dimension of x0 against function
         if function.n_parameters() != len(x0):
             raise ValueError(
