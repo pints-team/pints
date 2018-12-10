@@ -37,8 +37,11 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
 
     def __init__(self, x0, sigma0=None, boundaries=None):
 
+        # Convert and store initial position
+        self._x0 = pints.vector(x0)
+
         # Get dimension
-        self._dimension = len(x0)
+        self._dimension = len(self._x0)
         if self._dimension < 1:
             raise ValueError('Problem dimension must be greater than zero.')
 
@@ -49,8 +52,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
-        # Store initial position
-        self._x0 = pints.vector(x0)
+        # Check initial position is within boundaries
         if self._boundaries:
             if not self._boundaries.check(self._x0):
                 raise ValueError(
