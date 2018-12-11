@@ -225,7 +225,7 @@ multiprocessing.html#all-platforms>`_ for details).
             if w.exitcode is not None:  # pragma: no cover
                 w.join()
                 cleaned += 1
-                del(self._workers[k])
+                del(self._workers[k], w)
         if cleaned:     # pragma: no cover
             gc.collect()
         return cleaned
@@ -348,9 +348,6 @@ multiprocessing.html#all-platforms>`_ for details).
                 w.join()
         self._workers = []
 
-        # Free memory
-        gc.collect()
-
         # Clear queues
         def clear(q):
             items = []
@@ -370,6 +367,9 @@ multiprocessing.html#all-platforms>`_ for details).
         self._results = multiprocessing.Queue()
         self._errors = multiprocessing.Queue()
         self._error = multiprocessing.Event()
+
+        # Free memory
+        gc.collect()
 
         # Return errors
         return errors
