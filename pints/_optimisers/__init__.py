@@ -73,8 +73,11 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
 
     def __init__(self, x0, sigma0=None, boundaries=None):
 
+        # Convert and store initial position
+        self._x0 = pints.vector(x0)
+
         # Get dimension
-        self._dimension = len(x0)
+        self._dimension = len(self._x0)
         if self._dimension < 1:
             raise ValueError('Problem dimension must be greater than zero.')
 
@@ -85,8 +88,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
-        # Store initial position
-        self._x0 = pints.vector(x0)
+        # Check initial position is within boundaries
         if self._boundaries:
             if not self._boundaries.check(self._x0):
                 raise ValueError(
@@ -286,6 +288,12 @@ class Optimisation(object):
 
     def __init__(
             self, function, x0, sigma0=None, boundaries=None, method=None):
+
+        # Convert x0 to vector
+        # This converts e.g. (1, 7) shapes to (7, ), giving users a bit more
+        # freedom with the exact shape passed in. For example, to allow the
+        # output of LogPrior.sample(1) to be passed in.
+        x0 = pints.vector(x0)
 
         # Check dimension of x0 against function
         if function.n_parameters() != len(x0):
