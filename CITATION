@@ -1,0 +1,17 @@
+To cite PINTS in publications, please use:
+
+Clerx, M., Robinson, M., Lambert, B., Lei, C. L., Ghosh, S., Mirams, G. R., & Gavaghan, D. J. (2018).
+Probabilistic Inference on Noisy Time Series (PINTS).
+arXiv preprint arXiv:1812.07388.
+
+https://arxiv.org/abs/1812.07388
+
+A BibTeX entry for LaTeX users is
+
+@article{Clerx2018Pints,
+  title={Probabilistic Inference on Noisy Time Series ({PINTS})},
+  author={Clerx, Michael and Robinson, Martin and Lambert, Ben and Lei, Chon Lok and Ghosh, Sanmitra and Mirams, Gary R and Gavaghan, David J},
+  journal={arXiv preprint arXiv:1812.07388},
+  year={2018}
+}
+
