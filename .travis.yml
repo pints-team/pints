@@ -4,6 +4,11 @@ dist: trusty
 
 language: python
 
+# Only build master and PRs
+branches:
+  only:
+    - master
+
 matrix:
     include:
         # Unit testing on all supported Python versions on Ubuntu
