@@ -612,7 +612,7 @@ def pairwise(samples,
                                          50 + n_percentiles / 2.)
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].set_xlim(xmin, xmax)
-                if use_old_matplotlib:
+                if use_old_matplotlib:  # pragma: no cover
                     axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
                 else:
                     axes[i, j].hist(samples[:, i], bins=xbins, density=True)
