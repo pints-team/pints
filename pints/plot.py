@@ -698,16 +698,13 @@ def pairwise(samples,
                             '--', c='k')
 
                     # Force equal aspect ratio
-                    # See: https://stackoverflow.com/questions/7965743
-                    im = axes[i, j].get_images()
-                    ex = im[0].get_extent()
                     # Matplotlib raises a warning here (on 2.7 at least)
                     # We can't do anything about it, so no other option than
                     # to suppress it at this stage...
                     with warnings.catch_warnings():
                         warnings.simplefilter('ignore', UnicodeWarning)
                         axes[i, j].set_aspect(
-                            abs((ex[1] - ex[0]) / (ex[3] - ex[2])))
+                            abs((xmax - xmin) / (ymax - ymin)))
 
             # Set tick labels
             if i < n_param - 1:
