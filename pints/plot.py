@@ -572,7 +572,13 @@ def pairwise(samples,
 
     Returns a ``matplotlib`` figure object and axes handle.
     """
+    import matplotlib
     import matplotlib.pyplot as plt
+    from distutils.version import LooseVersion
+
+    # Check matplotlib version
+    use_old_matplotlib = LooseVersion(matplotlib.__version__) \
+        < LooseVersion("2.2")
 
     # Check samples size
     try:
@@ -606,7 +612,10 @@ def pairwise(samples,
                                          50 + n_percentiles / 2.)
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].set_xlim(xmin, xmax)
-                axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
+                if use_old_matplotlib:
+                    axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
+                else:
+                    axes[i, j].hist(samples[:, i], bins=xbins, density=True)
 
                 # Add kde plot
                 if kde:
