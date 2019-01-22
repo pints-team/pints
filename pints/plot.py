@@ -586,6 +586,10 @@ def pairwise(samples,
     except ValueError:
         raise ValueError('`samples` must be of shape (n_sample, n_param).')
 
+    # Check number of parameters
+    if n_param < 2:
+        raise ValueError('Number of parameters must be larger than 2.')
+
     # Check reference parameters
     if ref_parameters is not None:
         if len(ref_parameters) != n_param:
