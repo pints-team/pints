@@ -703,8 +703,7 @@ def pairwise(samples,
                     # to suppress it at this stage...
                     with warnings.catch_warnings():
                         warnings.simplefilter('ignore', UnicodeWarning)
-                        axes[i, j].set_aspect(
-                            abs((xmax - xmin) / (ymax - ymin)))
+                        axes[i, j].set_aspect((xmax - xmin) / (ymax - ymin))
 
             # Set tick labels
             if i < n_param - 1:
