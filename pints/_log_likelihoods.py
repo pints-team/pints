@@ -36,6 +36,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
 
@@ -72,12 +73,12 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x)
 
+        # Reshape y and dy, in case we're working with a single-output problem
+        y = y.reshape(self._nt, self._no)
+        dy = dy.reshape(self._nt, self._no, self._np)
+
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
-
-        # Reshape y and r, in case we're working with a single-output problem
-        r = r.reshape(self._nt, self._no)
-        dy = dy.reshape(self._nt, self._no, self._np)
 
         # Calculate log-likelihood
         L = np.sum(self._offset + self._multip * np.sum(r**2, axis=0))
@@ -134,6 +135,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
 
@@ -182,6 +184,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem):
         super(StudentTLogLikelihood, self).__init__(problem)
 
@@ -237,6 +240,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, log_likelihood):
         # Check arguments
         if not isinstance(log_likelihood, pints.ProblemLogLikelihood):
