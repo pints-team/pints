@@ -120,6 +120,15 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(L1, L2)
         self.assertEqual(dL.shape, (2,))
 
+        # Test with MultiOutputProblem
+        problem = pints.MultiOutputProblem(model, times, values)
+        f2 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L3 = f2(x)
+        L4, dL = f2.evaluateS1(x)
+        self.assertEqual(L3, L4)
+        self.assertEqual(L1, L3)
+        self.assertEqual(dL.shape, (2,))
+
         # Test without noise
         values = model.simulate(x, times)
         problem = pints.SingleOutputProblem(model, times, values)
