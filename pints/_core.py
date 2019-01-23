@@ -287,7 +287,9 @@ class MultiOutputProblem(object):
 
         The returned data has shape ``(n_times, n_outputs)``.
         """
-        return self._model.simulate(parameters, self._times)
+        return self._model.simulate(
+            parameters, self._times
+        ).reshape(self._n_times, self._n_outputs)
 
     def evaluateS1(self, parameters):
         """
@@ -301,7 +303,11 @@ class MultiOutputProblem(object):
         *This method only works for problems whose model implements the
         :class:`ForwardModelS1` interface.*
         """
-        return self._model.simulateS1(parameters, self._times)
+        y, ydash = self._model.simulateS1(parameters, self._times)
+        return (
+            y.reshape(self._n_times, self._n_outputs),
+            ydash.reshape(self._n_times, self._n_outputs, self._n_parameters)
+        )
 
     def n_outputs(self):
         """

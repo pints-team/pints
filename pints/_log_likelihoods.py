@@ -73,8 +73,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x)
 
-        # Reshape y and dy, in case we're working with a single-output problem
-        y = y.reshape(self._nt, self._no)
+        # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._np)
 
         # Note: Must be (data - simulation), sign now matters!
