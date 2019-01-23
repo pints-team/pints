@@ -224,7 +224,7 @@ class SingleOutputProblem(object):
         """
         Returns this problem's times.
 
-        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        The returned value is a read-only NumPy array of shape ``(n_times, )``,
         where ``n_times`` is the number of time points.
         """
         return self._times
@@ -233,7 +233,7 @@ class SingleOutputProblem(object):
         """
         Returns this problem's values.
 
-        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        The returned value is a read-only NumPy array of shape ``(n_times, )``,
         where ``n_times`` is the number of time points.
         """
         return self._values
@@ -336,7 +336,7 @@ class MultiOutputProblem(object):
         """
         Returns this problem's times.
 
-        The returned value is a read-only numpy array of shape
+        The returned value is a read-only NumPy array of shape
         ``(n_times, n_outputs)``, where ``n_times`` is the number of time
         points and ``n_outputs`` is the number of outputs.
         """
@@ -346,7 +346,7 @@ class MultiOutputProblem(object):
         """
         Returns this problem's values.
 
-        The returned value is a read-only numpy array of shape
+        The returned value is a read-only NumPy array of shape
         ``(n_times, n_outputs)``, where ``n_times`` is the number of time
         points and ``n_outputs`` is the number of outputs.
         """
