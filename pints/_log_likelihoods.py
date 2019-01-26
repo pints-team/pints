@@ -36,6 +36,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem, sigma):
         super(KnownNoiseLogLikelihood, self).__init__(problem)
 
@@ -134,6 +135,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem):
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
 
@@ -182,6 +184,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, problem):
         super(StudentTLogLikelihood, self).__init__(problem)
 
@@ -237,6 +240,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
+
     def __init__(self, log_likelihood):
         # Check arguments
         if not isinstance(log_likelihood, pints.ProblemLogLikelihood):
@@ -324,3 +328,52 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
             - n * np.log(sigma)
             - np.sum(np.log(1 + (error / sigma)**2), axis=0)
         )
+
+
+class AR1LogLikelihood(pints.ProblemLogLikelihood):
+    """
+    Calculates a log-likelihood assuming AR1 noise model
+
+    .. math::
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
+            -\\frac{N}{2}\log{2\pi}
+            -N\log{\sigma}
+            -\\frac{1}{2\sigma^2}
+                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
+
+    where
+
+    .. math::
+        \\epsilon_i = x_i - f_i(\\theta)
+
+
+    Arguments:
+
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem two parameters is added, for a multi-output
+        problem 2 * ``n_outputs`` parameters are added.
+
+    *Extends:* :class:`ProblemLogLikelihood`
+    """
+
+    def __init__(self, problem):
+        super(AR1LogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)-1
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + 2*self._no
+
+        # Pre-calculate parts
+        self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        sigma = np.asarray(x[-2*self._no:-self._no])
+        rho = np.asarray(x[-self._no:])
+        error = self._values - self._problem.evaluate(x[:-self._no])
+        autocorr_error = error[1:] - rho*error[:-1]
+        return np.sum(- self._logn - self._nt * np.log(sigma)
+                      - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
