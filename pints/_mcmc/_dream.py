@@ -407,7 +407,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         Sets the maximum number of other chains' positions to use to determine
         the next sampler position. ``delta_max`` must be in the range
-        [1, nchains-2].
+        ``[1, nchains - 2]``.
         """
         delta_max = int(delta_max)
         if delta_max > (self._chains - 2):
@@ -420,10 +420,10 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_CR(self, CR):
         """
         Sets the probability of crossover occurring if constant crossover mode
-        is enabled. CR is a probability and so must be in the range [0,1].
+        is enabled. CR is a probability and so must be in the range ``[0, 1]``.
         """
         if CR < 0 or CR > 1:
-            raise ValueError('CR is a probability and so must be in [0,1].')
+            raise ValueError('CR is a probability and so must be in [0, 1].')
         self._CR = CR
 
     def set_nCR(self, nCR):
