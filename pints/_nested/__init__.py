@@ -16,6 +16,102 @@ from scipy.misc import logsumexp
 class NestedSampler(pints.TunableMethod):
     """
     Abstract base class for nested samplers.
+    """
+    def __init__(self, log_prior):
+        # Store function
+        if not isinstance(log_prior, pints.LogPrior):
+            raise ValueError('Given log_prior must extend pints.LogPrior')
+        self._log_prior = log_prior
+        self._running_log_likelihood = -float('Inf')
+        self._proposed = None
+
+        # Initialise active point containers
+        self._n_active_points = 1000
+        self._dimension = self._log_prior.n_parameters()
+        self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
+
+    def name(self):
+        """ Name of sampler """
+        raise NotImplementedError
+
+    def ask(self):
+        """
+        Proposes new point at which to evaluate log-likelihood
+        """
+        raise NotImplementedError
+
+    def tell(self, fx):
+        """
+        Whether to accept point if its likelihood exceeds the current
+        minimum threshold
+        """
+        if np.isnan(fx) or fx < self._running_log_likelihood:
+            return None
+        else:
+            return self._proposed
+
+    def in_initial_phase(self):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method returns ``True`` if the
+        method is currently configured to be in its initial phase. For other
+        methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
+    def needs_initial_phase(self):
+        """
+        Returns ``True`` if this method needs an initial phase, for example
+        ellipsoidal nested sampling has a period of running rejection
+        sampling before it starts to fit ellipsoids to points
+        """
+        return False
+
+    def set_initial_phase(self, in_initial_phase):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method toggles the initial phase
+        algorithm. For other methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
+    def _set_running_log_likelihood(self, running_log_likelihood):
+        """
+        Updates the current value of the threshold log-likelihood value
+        """
+        self._running_log_likelihood = running_log_likelihood
+
+    def running_log_likelihood(self):
+        """
+        Returns current value of the threshold log-likelihood value
+        """
+        return self._running_log_likelihood
+
+    def set_n_active_points(self, active_points):
+        """
+        Sets the number of active points for the next run.
+        """
+        active_points = int(active_points)
+        if active_points <= 5:
+            raise ValueError('Number of active points must be greater than 5.')
+        self._n_active_points = active_points
+
+    def n_active_points(self):
+        """
+        Returns the number of active points that will be used in next run.
+        """
+        return self._n_active_points
+
+    def active_points(self):
+        """
+        Returns the active points from nested sampling run
+        """
+        return self._m_active
+
+
+class NestedSampling(object):
+    """
+    Uses nested sampling to sample from a posterior distribution
 
     Arguments:
 
@@ -24,10 +120,9 @@ class NestedSampler(pints.TunableMethod):
         space.
     ``log_prior``
         A :class:`LogPrior` function on the same parameter space.
-
     """
 
-    def __init__(self, log_likelihood, log_prior):
+    def __init__(self, log_likelihood, log_prior, method=None):
 
         # Store log_likelihood and log_prior
         # if not isinstance(log_likelihood, pints.LogLikelihood):
@@ -59,9 +154,6 @@ class NestedSampler(pints.TunableMethod):
         self.set_parallel()
 
         # Parameters common to all routines
-        # Target acceptance rate
-        self._active_points = 1000
-
         # Total number of iterations
         self._iterations = 1000
 
@@ -77,34 +169,20 @@ class NestedSampler(pints.TunableMethod):
         # Initial marginal difference
         self._diff = np.float('-Inf')
 
-    def set_marginal_log_likelihood_threshold(self, threshold):
-        """
-        Sets criterion for determining convergence in estimate of marginal
-        log likelihood which leads to early termination of the algorithm
-        """
-        if threshold <= 0:
-            raise ValueError('Convergence threshold must be positive.')
-        self._marginal_log_likelihood_threshold = threshold
+        # By default use ellipsoidal sampling
+        if method is None:
+            method = pints.NestedEllipsoidSampler
+        else:
+            try:
+                ok = issubclass(method, pints.NestedSampler)
+            except TypeError:   # Not a class
+                ok = False
+            if not ok:
+                raise ValueError(
+                    'Given method must extend pints.NestedSampler.'
+                )
 
-    def n_active_points(self):
-        """
-        Returns the number of active points that will be used in next run.
-        """
-        return self._active_points
-
-    def iterations(self):
-        """
-        Returns the total number of iterations that will be performed in the
-        next run.
-        """
-        return self._iterations
-
-    def n_posterior_samples(self):
-        """
-        Returns the number of posterior samples that will be returned (see
-        :meth:`set_posterior_samples()`).
-        """
-        return self._posterior_samples
+        self._sampler = method(log_prior=self._log_prior)
 
     def set_parallel(self, parallel=False):
         """
@@ -134,6 +212,29 @@ class NestedSampler(pints.TunableMethod):
         """
         return self._n_workers if self._parallel else False
 
+    def set_marginal_log_likelihood_threshold(self, threshold):
+        """
+        Sets criterion for determining convergence in estimate of marginal
+        log likelihood which leads to early termination of the algorithm
+        """
+        if threshold <= 0:
+            raise ValueError('Convergence threshold must be positive.')
+        self._marginal_log_likelihood_threshold = threshold
+
+    def iterations(self):
+        """
+        Returns the total number of iterations that will be performed in the
+        next run.
+        """
+        return self._iterations
+
+    def n_posterior_samples(self):
+        """
+        Returns the number of posterior samples that will be returned (see
+        :meth:`set_posterior_samples()`).
+        """
+        return self._posterior_samples
+
     def run(self):
         """
         Runs the nested sampling routine and returns a tuple of the
@@ -150,7 +251,8 @@ class NestedSampler(pints.TunableMethod):
             evaluator = pints.SequentialEvaluator(self._log_likelihood)
 
         # Check if settings are sensible
-        max_post = 0.25 * (self._iterations + self._active_points)
+        n_active_points = self._sampler.n_active_points()
+        max_post = 0.25 * (self._iterations + n_active_points)
         if self._posterior_samples > max_post:
             raise ValueError(
                 'Number of posterior samples must not exceed 0.25 times (the'
@@ -169,8 +271,8 @@ class NestedSampler(pints.TunableMethod):
 
             if self._log_to_screen:
                 # Show current settings
-                print('Running ' + self.name())
-                print('Number of active points: ' + str(self._active_points))
+                print('Running ' + self._sampler.name())
+                print('Number of active points: ' + str(n_active_points))
                 print('Total number of iterations: ' + str(self._iterations))
                 print('Total number of posterior samples: ' + str(
                     self._posterior_samples))
@@ -189,15 +291,12 @@ class NestedSampler(pints.TunableMethod):
             logger.add_time('Time m:s')
             logger.add_float('Delta_log(z)')
 
-        # Problem dimension
         d = self._dimension
-
-        # Generate initial random points by sampling from the prior
-        self._m_active = np.zeros((self._active_points, d + 1))
-        m_initial = self._log_prior.sample(self._active_points)
-        for i in range(0, self._active_points):
+        m_active = self._sampler.active_points()
+        m_initial = self._log_prior.sample(n_active_points)
+        for i in range(0, n_active_points):
             # Calculate likelihood
-            self._m_active[i, d] = self._log_likelihood(m_initial[i, :])
+            m_active[i, d] = self._log_likelihood(m_initial[i, :])
             self._n_evals += 1
 
             # Show progress
@@ -210,14 +309,14 @@ class NestedSampler(pints.TunableMethod):
                     next_message = message_interval * (
                         1 + i // message_interval)
 
-        self._m_active[:, :-1] = m_initial
+        m_active[:, :-1] = m_initial
 
         # store all inactive points, along with their respective
         # log-likelihoods (hence, d+1)
         self._m_inactive = np.zeros((self._iterations, d + 1))
 
         # store weights
-        self._w = np.zeros(self._active_points + self._iterations)
+        self._w = np.zeros(n_active_points + self._iterations)
 
         # store X values (defined in [1])
         self._X = np.zeros(self._iterations + 1)
@@ -228,40 +327,42 @@ class NestedSampler(pints.TunableMethod):
 
         # Run!
         self._X[0] = 1.0
-        i_message = self._active_points - 1
+        i_message = n_active_points - 1
         for i in range(0, self._iterations):
             self._i = i
             # Update threshold and various quantities
-            self._running_log_likelihood = np.min(self._m_active[:, d])
-            a_min_index = np.argmin(self._m_active[:, d])
-            self._X[i + 1] = np.exp(-(i + 1) / self._active_points)
+            self._sampler._set_running_log_likelihood(
+                np.min(m_active[:, d])
+            )
+            a_min_index = np.argmin(m_active[:, d])
+            self._X[i + 1] = np.exp(-(i + 1) / n_active_points)
             if i > 0:
                 self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
             else:
                 self._w[i] = self._X[i] - self._X[i + 1]
-            self._v_log_Z[i] = self._running_log_likelihood
-            self._m_inactive[i, :] = self._m_active[a_min_index, :]
+            self._v_log_Z[i] = self._sampler.running_log_likelihood()
+            self._m_inactive[i, :] = m_active[a_min_index, :]
 
             # Use some method to propose new samples
-            self._proposed = self.ask()
+            proposed = self._sampler.ask()
 
             # Evaluate their fit
-            log_likelihood = evaluator.evaluate([self._proposed])[0]
+            log_likelihood = evaluator.evaluate([proposed])[0]
 
             # Until log-likelihood exceeds current threshold keep drawing
             # samples
-            while self.tell(log_likelihood) is None:
-                self._proposed = self.ask()
-                log_likelihood = evaluator.evaluate([self._proposed])[0]
+            while self._sampler.tell(log_likelihood) is None:
+                proposed = self._sampler.ask()
+                log_likelihood = evaluator.evaluate([proposed])[0]
                 self._n_evals += 1
 
-            self._m_active[a_min_index, :] = np.concatenate(
-                (self._proposed, np.array([log_likelihood])))
+            m_active[a_min_index, :] = np.concatenate(
+                (proposed, np.array([log_likelihood])))
 
             # Check whether within convergence threshold
             if i > 2:
                 v_temp = np.concatenate((self._v_log_Z[0:(i - 1)],
-                                        [np.max(self._m_active[:, d])]))
+                                        [np.max(m_active[:, d])]))
                 w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
                 self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
                                         b=self._w[0:(i - 1)]) -
@@ -275,8 +376,7 @@ class NestedSampler(pints.TunableMethod):
                     # shorten arrays according to current iteration
                     self._iterations = i
                     self._v_log_Z = self._v_log_Z[0:(self._iterations + 1)]
-                    self._w = self._w[0:(self._active_points +
-                                         self._iterations)]
+                    self._w = self._w[0:(n_active_points + self._iterations)]
                     self._X = self._X[0:(self._iterations + 1)]
                     self._m_inactive = self._m_inactive[0:self._iterations, :]
                     break
@@ -319,7 +419,7 @@ class NestedSampler(pints.TunableMethod):
         # Draw posterior samples
         m_theta = self._m_samples_all[:, :-1]
         vIndex = np.random.choice(
-            range(0, self._iterations + self._active_points),
+            range(0, self._iterations + self._sampler.n_active_points()),
             size=posterior_samples, p=self._vP)
 
         m_posterior_samples = m_theta[vIndex, :]
@@ -344,11 +444,12 @@ class NestedSampler(pints.TunableMethod):
         Calculates the marginal log likelihood of nested sampling run
         """
         # Include active particles in sample
-        self._v_log_Z[self._iterations] = logsumexp(self._m_active[:,
+        m_active = self._sampler.active_points()
+        self._v_log_Z[self._iterations] = logsumexp(m_active[:,
                                                     self._dimension])
         self._w[self._iterations:] = float(self._X[self._iterations]) / float(
-            self._active_points)
-        self._m_samples_all = np.vstack((self._m_inactive, self._m_active))
+            self._sampler.n_active_points())
+        self._m_samples_all = np.vstack((self._m_inactive, m_active))
 
         # Determine log evidence
         log_Z = logsumexp(self._v_log_Z,
@@ -370,20 +471,8 @@ class NestedSampler(pints.TunableMethod):
         log_Z_sd = logsumexp(log_L_minus_Z,
                              b=self._w[0:(self._iterations + 1)] *
                              log_L_minus_Z)
-        log_Z_sd = np.sqrt(log_Z_sd / self._active_points)
+        log_Z_sd = np.sqrt(log_Z_sd / self._sampler.n_active_points())
         return log_Z_sd
-
-    def active_points(self):
-        """
-        Returns the active points from nested sampling run
-        """
-        return self._m_active[:, :-1]
-
-    def inactive_points(self):
-        """
-        Returns the inactive points from nested sampling run
-        """
-        return self._m_inactive[:, :-1]
 
     def log_likelihood_vector(self):
         """
@@ -391,34 +480,6 @@ class NestedSampler(pints.TunableMethod):
         stacked [m_active, m_inactive] points
         """
         return self._m_samples_all[:, -1]
-
-    def ask(self):
-        """
-        Proposes new point at which to evaluate log-likelihood
-        """
-        raise NotImplementedError
-
-    def tell(self, fx):
-        """
-        Whether to accept point if its likelihood exceeds the current
-        minimum threshold
-        """
-        self._n_evals += 1
-        if np.isnan(fx) or fx < self._running_log_likelihood:
-            self._first_proposal = not self._first_proposal
-            return None
-        else:
-            self._first_proposal = True
-            return self._proposed
-
-    def set_n_active_points(self, active_points):
-        """
-        Sets the number of active points for the next run.
-        """
-        active_points = int(active_points)
-        if active_points <= 5:
-            raise ValueError('Number of active points must be greater than 5.')
-        self._active_points = active_points
 
     def set_log_to_file(self, filename=None, csv=False):
         """
@@ -461,10 +522,6 @@ class NestedSampler(pints.TunableMethod):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
-
-    def name(self):
-        """ Name of sampler """
-        raise NotImplementedError
 
     def effective_sample_size(self):
         """

@@ -32,21 +32,33 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
     """
 
-    def __init__(self, log_likelihood, log_prior):
-        super(NestedEllipsoidSampler, self).__init__(log_likelihood, log_prior)
-
-        # Number of nested rejection samples before starting ellipsoidal
-        # sampling
-        self._rejection_samples = 0
-        self.set_rejection_samples()
+    def __init__(self, log_prior):
+        super(NestedEllipsoidSampler, self).__init__(log_prior)
 
         # Gaps between updating ellipsoid
-        self._ellipsoid_update_gap = 0
         self.set_ellipsoid_update_gap()
 
         # Enlargement factor for ellipsoid
-        self._enlargement_factor = 0
         self.set_enlargement_factor()
+
+        # Initial phase of rejection sampling
+        # Number of nested rejection samples before starting ellipsoidal
+        # sampling
+        self.set_rejection_samples()
+        self.set_initial_phase(True)
+        self._iter_count = 0
+
+    def set_initial_phase(self, in_initial_phase):
+        """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
+        self._rejection_phase = bool(in_initial_phase)
+
+    def needs_initial_phase(self):
+        """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
+        return True
+
+    def in_initial_phase(self):
+        """ See :meth:`pints.NestedSampler.in_initial_phase()`. """
+        return self._rejection_phase
 
     def ellipsoid_update_gap(self):
         """
@@ -76,30 +88,28 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         points are drawn from within an ellipse (needs to be in uniform
         sampling regime)
         """
-        i = self._i
-
-        # If reach end of rejection samples, then determine bounding
-        # ellipsoid
+        i = self._iter_count
         if (i + 1) % self._rejection_samples == 0:
+            self._rejection_phase = False
+            # determine bounding ellipsoid
             self._A, self._centroid = self._minimum_volume_ellipsoid(
                 self._m_active[:, :self._dimension]
             )
-        elif i > self._rejection_samples:
+
+        if self._rejection_phase:
+            self._proposed = self._log_prior.sample()[0]
+        else:
+            # update bounding ellipsoid if sufficient samples taken
             if ((i + 1 - self._rejection_samples)
                     % self._ellipsoid_update_gap == 0):
                 self._A, self._centroid = self._minimum_volume_ellipsoid(
                     self._m_active[:, :self._dimension])
-
-        if i < self._rejection_samples:
-            # Start off with rejection sampling, while this is still very
-            # efficient.
-            proposed = self._log_prior.sample()[0]
-        else:
-            # After a number of samples, switch to ellipsoid sampling.
-            proposed = self._reject_ellipsoid_sample(
+            # propose by sampling within ellipsoid
+            self._proposed = self._reject_ellipsoid_sample(
                 self._enlargement_factor, self._A, self._centroid)
 
-        return proposed
+        self._iter_count += 1
+        return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):
         """
@@ -112,7 +122,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
-    def set_rejection_samples(self, rejection_samples=1000):
+    def set_rejection_samples(self, rejection_samples=200):
         """
         Sets the number of rejection samples to take, which will be assigned
         weights and ultimately produce a set of posterior samples.
@@ -121,7 +131,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Must have non-negative rejection samples.')
         self._rejection_samples = rejection_samples
 
-    def set_ellipsoid_update_gap(self, ellipsoid_update_gap=20):
+    def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
         """
         Sets the frequency with which the minimum volume ellipsoid is
         re-estimated as part of the nested rejection sampling algorithm. A
