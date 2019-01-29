@@ -63,6 +63,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     2009, Vrugt et al.,
     International Journal of Nonlinear Sciences and Numerical Simulation.
     """
+
     def __init__(self, chains, x0, sigma0=None):
         super(DreamMCMC, self).__init__(chains, x0, sigma0)
 
@@ -205,13 +206,13 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
-        #logger.add_float('Accept.')
-        #TODO
+        # logger.add_float('Accept.')
+        # TODO
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
-        #logger.log(self._acceptance)
-        #TODO
+        # logger.log(self._acceptance)
+        # TODO
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -432,10 +433,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         if nCR < 2:
             raise ValueError(
                 'Length of discrete crossover distribution must exceed 1.')
-        if not isinstance(nCR, int):
-            raise ValueError(
-                'Length of discrete crossover distribution must be a integer.')
-        self._nCR = nCR
+        self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):
         """
