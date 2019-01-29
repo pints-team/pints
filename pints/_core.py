@@ -366,6 +366,12 @@ class TunableMethod(object):
     this interface provides a generic way to set the hyper-parameters, which
     allows the user to, for example, use an optimiser to tune the
     hyper-parameters of the method.
+
+    Note that the `set_hyper_parameters` function takes an array of parameters,
+    which might be of the same type (e.g. a numpy array). So derived classes
+    should not raise any errors if individual hyper parameters are set using the
+    wrong type (e.g. float rather than int), but should instead implicitly
+    convert the argument to the correct type.
     """
 
     def n_hyper_parameters(self):
