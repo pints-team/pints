@@ -534,3 +534,15 @@ class NestedSampling(object):
         self._log_vP = (self._m_samples_all[:, self._dimension]
                         - self._log_Z + np.log(self._w))
         return np.exp(-np.sum(self._vP * self._log_vP))
+
+    def inactive_points(self):
+        """
+        Returns the inactive points from nested sampling
+        """
+        return self._m_inactive
+
+    def active_points(self):
+        """
+        Returns the active points from nested sampling
+        """
+        return self._sampler.active_points()
