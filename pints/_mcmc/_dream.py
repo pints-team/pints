@@ -380,14 +380,14 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_constant_crossover(self, enabled):
         """
-        Enables/disables constant-crossover mode.
+        Enables/disables constant-crossover mode (must be bool).
         """
         self._constant_crossover = True if enabled else False
 
     def set_b_star(self, b_star):
         """
         Sets b*, which determines the weight given to other chains' positions
-        in determining new positions.
+        in determining new positions (must be non-negative).
         """
         if b_star < 0:
             raise ValueError('b* must be non-negative.')
@@ -397,7 +397,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         Sets ``p_g`` which is the probability of choosing a higher ``gamma``
         versus regular (a higher ``gamma`` means that other chains are given
-        more weight).
+        more weight). ``p_g`` must be in the range [0, 1].
         """
         if p_g < 0 or p_g > 1:
             raise ValueError('p_g must be in the range [0, 1].')
@@ -406,7 +406,8 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_delta_max(self, delta_max):
         """
         Sets the maximum number of other chains' positions to use to determine
-        the next sampler position.
+        the next sampler position. ``delta_max`` must be in the range
+        ``[1, nchains - 2]``.
         """
         delta_max = int(delta_max)
         if delta_max > (self._chains - 2):
@@ -420,24 +421,22 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_CR(self, CR):
         """
         Sets the probability of crossover occurring if constant crossover mode
-        is enabled.
+        is enabled. CR is a probability and so must be in the range ``[0, 1]``.
         """
         if CR < 0 or CR > 1:
-            raise ValueError('CR is a probability and so must be in [0,1].')
+            raise ValueError('CR is a probability and so must be in [0, 1].')
         self._CR = CR
 
     def set_nCR(self, nCR):
         """
         Sets the size of the discrete crossover probability distribution (only
-        used if constant crossover mode is disabled).
+        used if constant crossover mode is disabled). ``nCR`` must be greater
+        than or equal to 2.
         """
         if nCR < 2:
             raise ValueError(
-                'Length of discrete crossover distribution must exceed 2.')
-        if not isinstance(nCR, int):
-            raise ValueError(
-                'Length of discrete crossover distribution must be a integer.')
-        self._nCR = nCR
+                'Length of discrete crossover distribution must exceed 1.')
+        self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):
         """
