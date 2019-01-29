@@ -412,7 +412,8 @@ class DreamMCMC(pints.MultiChainMCMC):
         delta_max = int(delta_max)
         if delta_max > (self._chains - 2):
             raise ValueError(
-                'delta_max must be less than available other chains.')
+                'delta_max must be less than or equal to the number of chains '
+                'minus 2.')
         if delta_max < 1:
             raise ValueError('delta_max must be at least 1.')
         self._delta_max = delta_max
@@ -434,7 +435,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         if nCR < 2:
             raise ValueError(
-                'Length of discrete crossover distribution must exceed 1.')
+                'Length of discrete crossover distribution must be 2 or greater.')
         self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):
