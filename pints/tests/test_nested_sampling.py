@@ -163,6 +163,15 @@ class TestNestedRejectionSampler(unittest.TestCase):
         sampler.set_posterior_samples(10)
         self.assertRaisesRegex(ValueError, 'exceed 0.25', sampler.run)
 
+    def test_hyper_params(self):
+        """
+        Tests the hyper parameter interface is working.
+        """
+        sampler = pints.NestedRejectionSampler(
+            self.log_likelihood, self.log_prior)
+        sampler.set_hyper_parameters([6])
+        self.assertEqual(sampler.active_points_rate(), 6)
+
     def test_getters_and_setters(self):
         """
         Tests various get() and set() methods.
