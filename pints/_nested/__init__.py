@@ -11,7 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 
 
-class NestedSampler(object):
+class NestedSampler(pints.TunableMethod):
     """
     Abstract base class for nested samplers.
 
@@ -24,10 +24,11 @@ class NestedSampler(object):
         A :class:`LogPrior` function on the same parameter space.
 
     """
+
     def __init__(self, log_likelihood, log_prior):
 
         # Store log_likelihood and log_prior
-        #if not isinstance(log_likelihood, pints.LogLikelihood):
+        # if not isinstance(log_likelihood, pints.LogLikelihood):
         if not isinstance(log_likelihood, pints.LogPDF):
             raise ValueError(
                 'Given log_likelihood must extend pints.LogLikelihood')
@@ -78,4 +79,3 @@ class NestedSampler(object):
         Enables or disables logging to screen.
         """
         self._log_to_screen = True if enabled else False
-
