@@ -108,6 +108,18 @@ class TestPlot(unittest.TestCase):
         mcmc.set_log_to_screen(False)
         self.samples2 = mcmc.run()
 
+        # Create toy model (single-output, single-parameter)
+        self.real_parameters3 = [0]
+        self.log_posterior3 = toy.NormalLogPDF(self.real_parameters3, [1])
+
+        # Run MCMC
+        self.x03 = [[1], [-2], [3]]
+        mcmc = pints.MCMCSampling(self.log_posterior3, 3, self.x03,
+                                  method=pints.AdaptiveCovarianceMCMC)
+        mcmc.set_max_iterations(300)  # make it as small as possible
+        mcmc.set_log_to_screen(False)
+        self.samples3 = mcmc.run()
+
     def test_function(self):
         """
         Tests the function function.
@@ -389,6 +401,14 @@ class TestPlot(unittest.TestCase):
             ValueError, 'Length of \`ref_parameters\` must be same as number'
             ' of parameters\.', pints.plot.pairwise,
             few_samples, ref_parameters=[self.real_parameters[0]]
+        )
+
+        # Test single parameter
+        few_samples3 = self.samples3[0][::30, :]
+        # Check this is invalid
+        self.assertRaisesRegexp(
+            ValueError, 'Number of parameters must be larger than 2\.',
+            pints.plot.pairwise, few_samples3
         )
 
 
