@@ -328,7 +328,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         values (see :class:`TunableMethod`).
 
         Hyper-parameter vector is:
-            [active_points_rate, ellipsoid_update_gap, enlargement_factor]
+            ``[active_points_rate, ellipsoid_update_gap, enlargement_factor]``
 
         Arguments:
 
