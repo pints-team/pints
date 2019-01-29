@@ -26,7 +26,7 @@ class NestedSampler(pints.TunableMethod):
         self._proposed = None
 
         # Initialise active point containers
-        self._n_active_points = 1000
+        self._n_active_points = 400
         self._dimension = self._log_prior.n_parameters()
         self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
 
