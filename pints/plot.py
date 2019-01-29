@@ -545,11 +545,12 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
 def pairwise(samples,
              kde=False,
+             heatmap=False,
              opacity=None,
              ref_parameters=None,
              n_percentiles=None):
     """
-    Takes a markov chain or list of `samples` and creates a set of pairwise
+    Takes a markov chain or list of ``samples`` and creates a set of pairwise
     scatterplots for all parameters (p1 versus p2, p1 versus p3, p2 versus p3,
     etc.).
 
@@ -565,7 +566,10 @@ def pairwise(samples,
         is the number of parameters.
     ``kde``
         (Optional) Set to ``True`` to use kernel-density estimation for the
-        histograms and scatter plots.
+        histograms and scatter plots. Cannot use together with ``heatmap``.
+    ``heatmap``
+        (Optional) Set to ``True`` to plot heatmap for the pairwise plots.
+        Cannot use together with ``kde``.
     ``opacity``
         (Optional) When ``kde=False``, this value can be used to manually set
         the opacity of the points in the scatter plots.
@@ -586,6 +590,10 @@ def pairwise(samples,
     # Check matplotlib version
     use_old_matplotlib = LooseVersion(matplotlib.__version__) \
         < LooseVersion("2.2")
+
+    # Check options kde and heatmap
+    if kde and heatmap:
+        raise ValueError('Cannot use `kde` and `heatmap` together.')
 
     # Check samples size
     try:
@@ -663,7 +671,7 @@ def pairwise(samples,
                 axes[i, j].set_xlim(xmin, xmax)
                 axes[i, j].set_ylim(ymin, ymax)
 
-                if not kde:
+                if not kde and not heatmap:
                     # Create scatter plot
 
                     # Determine point opacity
@@ -677,18 +685,7 @@ def pairwise(samples,
                     # Scatter points
                     axes[i, j].scatter(
                         samples[:, j], samples[:, i], alpha=opacity, s=0.1)
-
-                    # Add reference parameters if given
-                    if ref_parameters is not None:
-                        axes[i, j].plot(
-                            [ref_parameters[j], ref_parameters[j]],
-                            [ymin, ymax],
-                            '--', c='k')
-                        axes[i, j].plot(
-                            [xmin, xmax],
-                            [ref_parameters[i], ref_parameters[i]],
-                            '--', c='k')
-                else:
+                elif kde:
                     # Create a KDE-based plot
 
                     # Plot values
@@ -707,16 +704,23 @@ def pairwise(samples,
                     axes[i, j].contourf(xx, yy, f, cmap='Blues')
                     axes[i, j].contour(xx, yy, f, colors='k')
 
-                    # Add reference parameters if given
-                    if ref_parameters is not None:
-                        axes[i, j].plot(
-                            [ref_parameters[j], ref_parameters[j]],
-                            [ymin, ymax],
-                            '--', c='k')
-                        axes[i, j].plot(
-                            [xmin, xmax],
-                            [ref_parameters[i], ref_parameters[i]],
-                            '--', c='k')
+                    # Force equal aspect ratio
+                    # Matplotlib raises a warning here (on 2.7 at least)
+                    # We can't do anything about it, so no other option than
+                    # to suppress it at this stage...
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', UnicodeWarning)
+                        axes[i, j].set_aspect((xmax - xmin) / (ymax - ymin))
+                elif heatmap:
+                    # Create a heatmap-based plot
+
+                    # Create bins
+                    xbins = np.linspace(xmin, xmax, bins)
+                    ybins = np.linspace(ymin, ymax, bins)
+
+                    # Plot heatmap
+                    axes[i, j].hist2d(samples[:, j], samples[:, i],
+                                      bins=(xbins, ybins), cmap=plt.cm.Blues)
 
                     # Force equal aspect ratio
                     # Matplotlib raises a warning here (on 2.7 at least)
@@ -725,6 +729,17 @@ def pairwise(samples,
                     with warnings.catch_warnings():
                         warnings.simplefilter('ignore', UnicodeWarning)
                         axes[i, j].set_aspect((xmax - xmin) / (ymax - ymin))
+
+                # Add reference parameters if given
+                if ref_parameters is not None:
+                    axes[i, j].plot(
+                        [ref_parameters[j], ref_parameters[j]],
+                        [ymin, ymax],
+                        '--', c='k')
+                    axes[i, j].plot(
+                        [xmin, xmax],
+                        [ref_parameters[i], ref_parameters[i]],
+                        '--', c='k')
 
             # Set tick labels
             if i < n_param - 1:
