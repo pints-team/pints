@@ -111,6 +111,8 @@ class TestPlot(unittest.TestCase):
         # Create toy model (single-output, single-parameter)
         self.real_parameters3 = [0]
         self.log_posterior3 = toy.NormalLogPDF(self.real_parameters3, [1])
+        self.lower3 = [-3]
+        self.upper3 = [3]
 
         # Run MCMC
         self.x03 = [[1], [-2], [3]]
@@ -132,13 +134,13 @@ class TestPlot(unittest.TestCase):
                             self.lower, self.upper)
         # Check invalid lower bound
         self.assertRaisesRegexp(
-            ValueError, 'Lower bounds must have same dimension as function\.',
+            ValueError, 'Lower bounds must have same n_param as function\.',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower[:-1], self.upper
         )
         # Check invalid upper bound
         self.assertRaisesRegexp(
-            ValueError, 'Upper bounds must have same dimension as function\.',
+            ValueError, 'Upper bounds must have same n_param as function\.',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower, self.upper[:-1]
         )
@@ -154,9 +156,9 @@ class TestPlot(unittest.TestCase):
             self.real_parameters
         )
 
-        # Check invalid dimension input
+        # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Given point \`x\` must have same dimension as ' +
+            ValueError, 'Given point \`x\` must have same n_param as ' +
             'function\.', pints.plot.function, self.log_posterior,
             list(self.real_parameters) + [0]
         )
@@ -167,6 +169,12 @@ class TestPlot(unittest.TestCase):
             pints.plot.function, self.log_posterior,
             self.real_parameters, evaluations=-1
         )
+
+        # Test it works with single parameter
+        pints.plot.function(self.log_posterior3, self.real_parameters3)
+        # Test bounds as well
+        pints.plot.function(self.log_posterior3, self.real_parameters3,
+                            self.lower3, self.upper3)
 
     def test_function_between_points(self):
         """
@@ -203,9 +211,9 @@ class TestPlot(unittest.TestCase):
             self.real_parameters * 0.8
         )
 
-        # Check invalid dimension input
+        # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Both points must have the same dimension as the ' +
+            ValueError, 'Both points must have the same n_param as the ' +
             'given function\.', pints.plot.function_between_points,
             self.log_posterior,
             list(self.real_parameters) + [0],
@@ -231,6 +239,11 @@ class TestPlot(unittest.TestCase):
             self.real_parameters * 0.8,
             evaluations=-1
         )
+
+        # Test it works with single parameter
+        pints.plot.function_between_points(self.log_posterior3,
+                                           self.lower3,
+                                           self.upper3)
 
     def test_histogram(self):
         """
@@ -263,6 +276,12 @@ class TestPlot(unittest.TestCase):
             self.samples, [self.real_parameters[0]]
         )
 
+        # Test it works with single parameter
+        few_samples3 = self.samples3[:, ::10, :]
+        pints.plot.histogram(few_samples3)
+        pints.plot.histogram(few_samples3,
+                             ref_parameters=self.real_parameters3)
+
     def test_trace(self):
         """
         Tests the trace function.
@@ -292,6 +311,12 @@ class TestPlot(unittest.TestCase):
             self.samples, [self.real_parameters[0]]
         )
 
+        # Test it works with single parameter
+        few_samples3 = self.samples3[:, ::10, :]
+        pints.plot.trace(few_samples3)
+        pints.plot.trace(few_samples3,
+                         ref_parameters=self.real_parameters3)
+
     def test_autocorrelation(self):
         """
         Tests the autocorrelation function.
@@ -304,6 +329,9 @@ class TestPlot(unittest.TestCase):
             ValueError, '\`samples\` must be of shape \(n_sample\,'
             ' n_param\)\.', pints.plot.autocorrelation, self.samples
         )
+
+        # Test it works with single parameter
+        pints.plot.autocorrelation(self.samples3[0], max_lags=20)
 
     def test_series(self):
         """
