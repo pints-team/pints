@@ -169,6 +169,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
         """
         sampler = pints.NestedRejectionSampler(
             self.log_likelihood, self.log_prior)
+        self.assertEqual(sampler.n_hyper_parameters(), 1)
         sampler.set_hyper_parameters([6])
         self.assertEqual(sampler.active_points_rate(), 6)
 
@@ -297,6 +298,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         """
         sampler = pints.NestedEllipsoidSampler(
             self.log_likelihood, self.log_prior)
+        self.assertEqual(sampler.n_hyper_parameters(), 3)
         sampler.set_hyper_parameters([6, 2, 3])
         self.assertEqual(sampler.active_points_rate(), 6)
         self.assertEqual(sampler.ellipsoid_update_gap(), 2)
