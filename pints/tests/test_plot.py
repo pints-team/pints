@@ -134,13 +134,15 @@ class TestPlot(unittest.TestCase):
                             self.lower, self.upper)
         # Check invalid lower bound
         self.assertRaisesRegexp(
-            ValueError, 'Lower bounds must have same n_param as function\.',
+            ValueError,
+            'Lower bounds must have same number of parameters as function\.',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower[:-1], self.upper
         )
         # Check invalid upper bound
         self.assertRaisesRegexp(
-            ValueError, 'Upper bounds must have same n_param as function\.',
+            ValueError,
+            'Upper bounds must have same number of parameters as function\.',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower, self.upper[:-1]
         )
@@ -158,8 +160,8 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Given point \`x\` must have same n_param as ' +
-            'function\.', pints.plot.function, self.log_posterior,
+            ValueError, 'Given point \`x\` must have same number of parameters'
+            + ' as function\.', pints.plot.function, self.log_posterior,
             list(self.real_parameters) + [0]
         )
 
@@ -213,8 +215,8 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Both points must have the same n_param as the ' +
-            'given function\.', pints.plot.function_between_points,
+            ValueError, 'Both points must have the same number of parameters'
+            + ' as the given function\.', pints.plot.function_between_points,
             self.log_posterior,
             list(self.real_parameters) + [0],
             self.real_parameters * 0.8
@@ -327,7 +329,7 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_param\)\.', pints.plot.autocorrelation, self.samples
+            ' n_parameters\)\.', pints.plot.autocorrelation, self.samples
         )
 
         # Test it works with single parameter
@@ -353,7 +355,7 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_param\)\.', pints.plot.series, self.samples, self.problem
+            ' n_parameters\)\.', pints.plot.series, self.samples, self.problem
         )
 
         # Check reference parameters gives no error
@@ -383,7 +385,8 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_param\)\.', pints.plot.series, self.samples2, self.problem2
+            ' n_parameters\)\.', pints.plot.series, self.samples2,
+            self.problem2
         )
 
         # Check reference parameters gives no error
@@ -421,7 +424,7 @@ class TestPlot(unittest.TestCase):
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_param\)\.', pints.plot.pairwise, self.samples
+            ' n_parameters\)\.', pints.plot.pairwise, self.samples
         )
 
         # Check invalid ref_parameter input

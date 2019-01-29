@@ -38,7 +38,7 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     """
     import matplotlib.pyplot as plt
 
-    # Check function get n_param
+    # Check function and get n_parameters
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
             'Given function must be pints.LogPDF or pints.ErrorMeasure.')
@@ -48,7 +48,7 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     x = pints.vector(x)
     if len(x) != n_param:
         raise ValueError(
-            'Given point `x` must have same n_param as function.')
+            'Given point `x` must have same number of parameters as function.')
 
     # Check boundaries
     if lower is None:
@@ -58,8 +58,8 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     else:
         lower = pints.vector(lower)
         if len(lower) != n_param:
-            raise ValueError(
-                'Lower bounds must have same n_param as function.')
+            raise ValueError('Lower bounds must have same number of'
+                             + ' parameters as function.')
     if upper is None:
         # Guess boundaries based on point x
         upper = x * 1.05
@@ -67,8 +67,8 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     else:
         upper = pints.vector(upper)
         if len(upper) != n_param:
-            raise ValueError(
-                'Upper bounds must have same n_param as function.')
+            raise ValueError('Upper bounds must have same number of'
+                             + ' parameters as function.')
 
     # Check number of evaluations
     evaluations = int(evaluations)
@@ -123,7 +123,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     """
     import matplotlib.pyplot as plt
 
-    # Check function get n_param
+    # Check function and get n_parameters
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
         raise ValueError(
             'Given function must be pints.LogPDF or pints.ErrorMeasure.')
@@ -133,8 +133,8 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     point_1 = pints.vector(point_1)
     point_2 = pints.vector(point_2)
     if not (len(point_1) == len(point_2) == n_param):
-        raise ValueError(
-            'Both points must have the same n_param as the given function.')
+        raise ValueError('Both points must have the same number of parameters'
+                         + ' as the given function.')
 
     # Check padding
     padding = float(padding)
@@ -179,9 +179,9 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
 
     ``samples``
         A list of lists of samples, with shape
-        ``(n_lists, n_samples, n_param)``, where ``n_lists`` is the number of
-        lists of samples, ``n_samples`` is the number of samples in one list \
-        and ``n_param`` is the number of parameters.
+        ``(n_lists, n_samples, n_parameters)``, where ``n_lists`` is the
+        number of lists of samples, ``n_samples`` is the number of samples in
+        one list and ``n_parameters`` is the number of parameters.
     ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
@@ -265,9 +265,9 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
 
     ``samples``
         A list of lists of samples, with shape
-        ``(n_lists, n_samples, n_param)``, where ``n_lists`` is the number of
-        lists of samples, ``n_samples`` is the number of samples in one list
-        and ``n_param`` is the number of parameters.
+        ``(n_lists, n_samples, n_parameters)``, where ``n_lists`` is the
+        number of lists of samples, ``n_samples`` is the number of samples in
+        one list and ``n_parameters`` is the number of parameters.
     ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
@@ -368,9 +368,9 @@ def autocorrelation(samples, max_lags=100):
     Arguments:
 
     ``samples``
-        A list of samples, with shape ``(n_samples, n_param)``, where
-        ``n_samples`` is the number of samples in the list and ``n_param`` is
-        the number of parameters.
+        A list of samples, with shape ``(n_samples, n_parameters)``, where
+        ``n_samples`` is the number of samples in the list and ``n_parameters``
+        is the number of parameters.
     ``max_lags``
         (Optional) The maximum autocorrelation lag to plot.
 
@@ -382,7 +382,8 @@ def autocorrelation(samples, max_lags=100):
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param).')
+        raise ValueError('`samples` must be of shape (n_sample,'
+                         + ' n_parameters).')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     if n_param == 1:
@@ -414,16 +415,16 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     Arguments:
 
     ``samples``
-        A list of samples, with shape `(n_samples, n_param)`, where
-        `n_samples` is the number of samples in the list and `n_param` is
-        the number of parameters.
+        A list of samples, with shape ``(n_samples, n_parameters)``, where
+        `n_samples` is the number of samples in the list and ``n_parameters``
+        is the number of parameters.
     ``problem``
-        A :class:`pints.SingleOutputProblem` or
-        :class:`pints.MultiOutputProblem` of a n_parameters equal to or greater
-        than the ``n_param`` of the `samples`. Any extra parameters present
-        in the chain but not accepted by the ``SingleOutputProblem`` or
-        ``MultiOutputProblem`` (for example parameters added by a noise model)
-        will be ignored.
+        A :class:``pints.SingleOutputProblem`` or
+        :class:``pints.MultiOutputProblem`` of a n_parameters equal to or
+        greater than the ``n_parameters`` of the `samples`. Any extra
+        parameters present in the chain but not accepted by the
+        ``SingleOutputProblem`` or ``MultiOutputProblem`` (for example
+        parameters added by a noise model) will be ignored.
     ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
@@ -442,7 +443,8 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param).')
+        raise ValueError('`samples` must be of shape (n_sample,'
+                         + ' n_parameters).')
 
     # Get problem n_parameters
     n_parameters = problem.n_parameters()
@@ -558,9 +560,9 @@ def pairwise(samples,
     Arguments:
 
     ``samples``
-        A list of samples, with shape ``(n_samples, n_param)``, where
-        ``n_samples`` is the number of samples in the list and ``n_param`` is
-        the number of parameters.
+        A list of samples, with shape ``(n_samples, n_parameters)``, where
+        ``n_samples`` is the number of samples in the list and ``n_parameters``
+        is the number of parameters.
     ``kde``
         (Optional) Set to ``True`` to use kernel-density estimation for the
         histograms and scatter plots.
@@ -589,7 +591,8 @@ def pairwise(samples,
     try:
         n_sample, n_param = samples.shape
     except ValueError:
-        raise ValueError('`samples` must be of shape (n_sample, n_param).')
+        raise ValueError('`samples` must be of shape (n_sample,'
+                         + ' n_parameters).')
 
     # Check number of parameters
     if n_param < 2:
