@@ -101,6 +101,23 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
+        # known noise value checks
+        model = pints.toy.ConstantModel(1)
+        times = np.linspace(0, 10, 10)
+        values = model.simulate([2], times)
+        org_values = np.arange(10) / 5.0
+        problem = pints.SingleOutputProblem(model, times, org_values)
+        log_likelihood = pints.KnownNoiseLogLikelihood(problem, 1.5)
+        self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
+        l, dl = log_likelihood.evaluateS1([3])
+        self.assertAlmostEqual(l, -23.777369746461702)
+        self.assertAlmostEqual(dl[0], -9.3333333333333321)
+
+        # unknown noise value checks
+        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood([-3, 1.5]), -47.777369746461702)
+
+
     def test_known_noise_single_S1(self):
         """
         Simple tests for single known noise log-likelihood with sensitivities.
