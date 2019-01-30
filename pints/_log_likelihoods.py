@@ -154,6 +154,35 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        sigma = float(np.asarray(x[-self._no:]))
+
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x[:-self._no])
+
+        # Reshape dy, in case we're working with a single-output problem
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - 1)
+
+        # Note: Must be (data - simulation), sign now matters!
+        r = self._values - y
+
+        # Calculate log-likelihood
+        L = np.sum(-self._logn - self._nt * np.log(sigma)
+                   - (1.0 / (2 * sigma**2)) * np.sum(r**2, axis=0))
+
+        # Calculate derivatives in the model parameters
+        dL = np.sum(
+            (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
+
+        # Calculate derivative wrt sigma
+        dsigma = np.sum(-self._nt / sigma +
+                        sigma**(-3.0) * np.sum(r**2, axis=0))
+        dL = np.concatenate((dL, np.array([dsigma])))
+
+        # Return
+        return L, dL
+
 
 class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     """
