@@ -30,6 +30,12 @@ class NestedSampler(pints.TunableMethod):
         self._dimension = self._log_prior.n_parameters()
         self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
 
+    def needs_sensitivities(self):
+        """
+        Determines whether sampler uses sensitivities of the solution
+        """
+        raise self._needs_sensitivities
+
     def name(self):
         """ Name of sampler """
         raise NotImplementedError
@@ -183,6 +189,8 @@ class NestedSampling(object):
                 )
 
         self._sampler = method(log_prior=self._log_prior)
+        # Check if sensitivities are required
+        self._needs_sensitivities = self._sampler.needs_sensitivities()
 
     def set_parallel(self, parallel=False):
         """

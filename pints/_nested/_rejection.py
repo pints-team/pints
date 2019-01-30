@@ -32,6 +32,10 @@ class NestedRejectionSampler(pints.NestedSampler):
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
     """
+    def __init__(self, log_prior):
+        super(NestedRejectionSampler, self).__init__(log_prior)
+
+        self._needs_sensitivities = False
 
     def ask(self):
         """
