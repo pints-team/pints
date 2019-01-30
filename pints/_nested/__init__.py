@@ -240,14 +240,19 @@ class NestedSampling(object):
         posterior samples and an estimate of the marginal likelihood.
         """
 
+        # Choose method to evaluate
+        f = self._log_likelihood
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+
         # Create evaluator object
         if self._parallel:
             # Use at most n_workers workers
             n_workers = min(self._n_workers, self._chains)
             evaluator = pints.ParallelEvaluator(
-                self._log_likelihood, n_workers=n_workers)
+                f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._log_likelihood)
+            evaluator = pints.SequentialEvaluator(f)
 
         # Check if settings are sensible
         n_active_points = self._sampler.n_active_points()
