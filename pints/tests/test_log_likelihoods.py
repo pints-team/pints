@@ -117,6 +117,17 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
         self.assertAlmostEqual(log_likelihood([-3, 1.5]), -47.777369746461702)
 
+        # unknown noise check sensitivity
+        model = pints.toy.ConstantModel(1)
+        times = np.linspace(0, 10, 10)
+        values = model.simulate([2], times)
+        org_values = np.arange(10) / 5.0
+        problem = pints.SingleOutputProblem(model, times, org_values)
+        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        l, dl = log_likelihood.evaluateS1([7, 2.0])
+        self.assertAlmostEqual(l, -63.04585713764618)
+        self.assertAlmostEqual(dl[0], -15.25)
+        self.assertAlmostEqual(dl[1], 41.925000000000004)
 
     def test_known_noise_single_S1(self):
         """

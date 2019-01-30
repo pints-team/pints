@@ -168,7 +168,8 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         r = self._values - y
 
         # Calculate log-likelihood
-        L = np.sum(-self._logn - (1.0 / (2 * sigma**2)) * np.sum(r**2, axis=0))
+        L = np.sum(-self._logn - self._nt * np.log(sigma)
+                   - (1.0 / (2 * sigma**2)) * np.sum(r**2, axis=0))
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
