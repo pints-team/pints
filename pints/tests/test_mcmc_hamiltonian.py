@@ -125,7 +125,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(mcmc.epsilon(), 0.4)
         self.assertRaises(ValueError, mcmc.set_epsilon, -0.1)
         mcmc.set_leapfrog_step_size(1)
-        self.assertEqual(len(mcmc.scaled_epsilon(), 2))
+        self.assertEqual(len(mcmc.scaled_epsilon()), 2)
         self.assertEqual(mcmc.scaled_epsilon()[0], 0.4)
         self.assertEqual(len(mcmc.divergent_iterations()), 0)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, [1, 2, 3])
