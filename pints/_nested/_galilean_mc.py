@@ -29,19 +29,13 @@ class GalileanMC(pints.NestedSampler):
     the gradient (specifically, central differences), but will later be
     changed to allow a user to pass sensitivities
     """
-    def __init__(self, log_likelihood, log_prior):
-        super(GalileanMC, self).__init__(log_likelihood, log_prior)
+    def __init__(self, log_prior):
+        super(GalileanMC, self).__init__(log_prior)
 
-        # By default use random updates
         self._random_propose = True
         self._mu = None
         self._sigma = None
-
         self._first_proposal = True
-
-        # Derivative length
-        self._epsilon = 10**(-8)
-
         self._needs_sensitivities = True
 
     def set_random_propose(self, random_ind, mu=None, sigma=None):
@@ -69,25 +63,8 @@ class GalileanMC(pints.NestedSampler):
             self._x = self._x + self._velocity
         else:
             self._x = self._reflect(self._x, self._velocity)
+            self._first_proposal = True
         return self._x
-
-    def _derivative(self, x):
-        """
-        Calculates an approximate gradient via finite differences
-        using a central differencing scheme
-        """
-        v_gradient = np.zeros(self._dimension)
-        for i in range(self._dimension):
-            x_temp_upper = np.copy(x)
-            x_temp_upper[i] += self._epsilon
-            x_temp_lower = np.copy(x)
-            x_temp_lower[i] -= self._epsilon
-            v_gradient[i] = (
-                self._log_likelihood(x_temp_upper) -
-                self._log_likelihood(x_temp_lower) / (2 * self._epsilon)
-            )
-            self._n_evals += 2
-        return v_gradient
 
     def _propose_velocity(self):
         """
@@ -110,8 +87,7 @@ class GalileanMC(pints.NestedSampler):
         of the derivative of the likelihood at x and uses it to construct
         a unit normal vector with which to reflect particle
         """
-        grad = self._derivative(x)
-        n = grad / np.sum(grad)
+        n = self._grad / np.sum(self._grad)
         # new velocity
         v1 = v - 2 * np.dot(n, v)
         x1 = x + v1
@@ -120,3 +96,16 @@ class GalileanMC(pints.NestedSampler):
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
         return 'Galilean Monte Carlo (Nested) sampler'
+
+    def tell(self, reply):
+        """ See :meth:`pints.NestedSampler.tell()`. """
+        fx, grad = reply
+        if self._first_proposal:
+            self._first_proposal = False
+            if np.isnan(fx) or fx < self._running_log_likelihood:
+                return None
+            else:
+                return self._proposed
+        else:
+            self._grad = grad
+            return None
