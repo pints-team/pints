@@ -47,6 +47,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         self.set_initial_phase(True)
         self._iter_count = 0
 
+        self._needs_sensitivities = False
+
     def set_initial_phase(self, in_initial_phase):
         """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
         self._rejection_phase = bool(in_initial_phase)

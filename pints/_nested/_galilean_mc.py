@@ -42,6 +42,8 @@ class GalileanMC(pints.NestedSampler):
         # Derivative length
         self._epsilon = 10**(-8)
 
+        self._needs_sensitivities = True
+
     def set_random_propose(self, random_ind, mu=None, sigma=None):
         """
         Sets the method used for proposing velocity. If
