@@ -33,6 +33,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
     arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
     """
+
     def __init__(self, log_likelihood, log_prior):
         super(NestedEllipsoidSampler, self).__init__(log_likelihood, log_prior)
 
@@ -153,7 +154,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             # Add fields to log
             logger.add_counter('Iter.', max_value=self._iterations)
             logger.add_counter('Eval.', max_value=self._iterations * 10)
-            #TODO: Add other informative fields ?
+            # TODO: Add other informative fields ?
             logger.add_time('Time m:s')
 
         # Problem dimension
@@ -314,6 +315,31 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
+    def n_hyper_parameters(self):
+        """
+        Returns the number of hyper-parameters for this method (see
+        :class:`TunableMethod`).
+        """
+        return 3
+
+    def set_hyper_parameters(self, x):
+        """
+        Sets the hyper-parameters for the method with the given vector of
+        values (see :class:`TunableMethod`).
+
+        Hyper-parameter vector is:
+            ``[active_points_rate, ellipsoid_update_gap, enlargement_factor]``
+
+        Arguments:
+
+        ``x`` an array of length ``n_hyper_parameters`` used to set the
+              hyper-parameters
+        """
+
+        self.set_active_points_rate(x[0])
+        self.set_ellipsoid_update_gap(x[1])
+        self.set_enlargement_factor(x[2])
+
     def _minimum_volume_ellipsoid(self, points, tol=0.001):
         """
         Finds the ellipse equation in "center form":
@@ -429,7 +455,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         return pnts
 
 
-#TODO: THIS METHOD IS NEVER USED
+# TODO: THIS METHOD IS NEVER USED
 '''
 def _reject_ellipsoid_sample(
         threshold, log_likelihood, m_samples_previous, enlargement_factor):
