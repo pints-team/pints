@@ -112,15 +112,14 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_steps(), n + 1)
         self.assertRaises(ValueError, mcmc.set_leapfrog_steps, 0)
 
-        mcmc.set_leapfrog_step_size(d * 0.5)
-        self.assertEqual(mcmc.leapfrog_step_size()[0], d * 0.5)
+        mcmc.set_leapfrog_step_size(0.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
 
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([n + 2, d * 2])
+        mcmc.set_hyper_parameters([n + 2, 2])
         self.assertEqual(mcmc.leapfrog_steps(), n + 2)
-        self.assertEqual(mcmc.leapfrog_step_size()[0], d * 2)
-        self.assertEqual(mcmc.leapfrog_step_size(), 2)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
 
         mcmc.set_epsilon(0.4)
         self.assertEqual(mcmc.epsilon(), 0.4)
@@ -130,6 +129,10 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(self.scaled_epsilon()[0], 0.4)
         self.assertEqual(len(self.divergent_iterations()), 0)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, [1, 2, 3])
+
+        mcmc.set_leapfrog_step_size([1.5, 3])
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
 
 if __name__ == '__main__':
