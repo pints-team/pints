@@ -82,13 +82,12 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self.set_leapfrog_step_size(np.diag(self._sigma0))
 
         # Divergence checking
-
         # Create a vector of divergent iterations
-        #self._divergent = np.asarray([], dtype='int')
+        self._divergent = np.asarray([], dtype='int')
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
-        #self._hamiltonian_threshold = 10**3
+        self._hamiltonian_threshold = 10**3
 
     def set_epsilon(self, epsilon):
         """
@@ -98,6 +97,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         if epsilon <= 0:
             raise ValueError('epsilon must be positive for leapfrog algorithm')
         self._epsilon = epsilon
+        self._set_scaled_epsilon()
 
     def epsilon(self):
         """
@@ -225,6 +225,12 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._step_size = step_size
         self._set_scaled_epsilon()
 
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations
+        """
+        return self._divergent
+
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         if not self._ready_for_tell:
@@ -294,20 +300,22 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
-            #div = fx + proposed_K - (self._current_energy + current_K)
-            #if div > self._hamiltonian_threshold:
-            #   self._divergent = np.append(self._divergent, self._iterations)
+            div = proposed_U + proposed_K - (self._current_energy + current_K)
+            if np.abs(div) > self._hamiltonian_threshold:
+                self._divergent = np.append(self._divergent, self._iterations)
+                accept = 1
 
             # Accept/reject
-            r = np.exp(current_U - proposed_U + current_K - proposed_K)
-            if np.random.uniform(0, 1) < r:
-                accept = 1
-                self._current = self._position
-                self._current_energy = energy
-                self._current_gradient = gradient
+            else:
+                r = np.exp(current_U - proposed_U + current_K - proposed_K)
+                if np.random.uniform(0, 1) < r:
+                    accept = 1
+                    self._current = self._position
+                    self._current_energy = energy
+                    self._current_gradient = gradient
 
-                # Mark current as read-only, so it can be safely returned
-                self._current.setflags(write=False)
+                    # Mark current as read-only, so it can be safely returned
+                    self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
