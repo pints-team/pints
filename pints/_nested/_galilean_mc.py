@@ -24,10 +24,8 @@ class GalileanMC(pints.NestedSampler):
     and the proposed location x' = x + v, where v ~ N(0,Sigma).
     The point is accepted if and only if its log-likelihood is higher than
     the threshold. If it is not, then a new location is given by
-    x'' = x' + v', where v'= v - 2 * n.v, where n=grad(log_L).
-    By default, this method uses a finite difference scheme to approximate
-    the gradient (specifically, central differences), but will later be
-    changed to allow a user to pass sensitivities
+    x'' = x' + v', where v'= v - 2 * n.v, where n=grad(log_L) evaluated
+    at x'. 
     """
     def __init__(self, log_prior):
         super(GalileanMC, self).__init__(log_prior)
