@@ -45,6 +45,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         q_i(t + epsilon) = q_i(t) + epsilon dq_i(t)/dt
                          = q_i(t) + epsilon p_i(t) / m_i.
 
+    In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
+    [1], since we allow different epsilon according to dimension.
+
     [1] MCMC using Hamiltonian dynamics
     Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
