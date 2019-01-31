@@ -59,11 +59,32 @@ class TestNestedRejectionSampler(unittest.TestCase):
         cls.log_likelihood = pints.GaussianKnownSigmaLogLikelihood(
             problem, cls.noise)
 
-    def test_quick_run(self):
-        """ Test a single run. """
+    def test_setup_and_parameters_nested_sampler(self):
+        """ Test setup of nested sampler"""
 
-        sampler = pints.NestedRejectionSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampler(self.log_prior)
+
+        # Test initial constructors
+        self.assertEqual(sampler._running_log_likelihood, -float('Inf'))
+        self.assertEqual(sampler._proposed, None)
+        self.assertEqual(sampler.n_active_points, 400)
+        self.assertEqual(sampler._dimension, 2)
+        self.assertEqual(sampler._m_active.shape, (self._n_active_points,
+                                                   self._dimension + 1))
+
+        # Test functions
+        self.assertTrue(not sampler.needs_sensitivities())
+        self.assertEqual(sampler.name(), 'Nested Rejection sampler')
+        proposed = sampler.ask()
+        self.assertTrue(len(proposed), 2)
+        self.assertEqual(proposed, sampler._proposed)
+        fx = self.log_likelihood(proposed)
+        self.assertEqual(sampler.tell(fx), self._proposed)
+
+    def test_setup_and_parameters_nested_sampling(self):
+        """ Test setup of nested sampling """
+        sampler = pints.NestedSampling(self.log_likelihood, self.log_prior,
+                                       method=pints.NestedRejectionSampler)
         sampler.set_n_posterior_samples(10)
         sampler.set_iterations(50)
         sampler.set_n_active_points(50)
