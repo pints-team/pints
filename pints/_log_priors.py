@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy
+import scipy.special
 import scipy.stats
 
 
@@ -165,7 +166,63 @@ class NormalLogPrior(pints.LogPrior):
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
 
 
-class StudentTLogPrior():
+class BetaLogPrior(pints.LogPrior):
+    """
+    Defines a beta (log) prior with given shape parameters ``a`` and ``b``.
+
+    For example: ``p = BetaLogPrior(5, 1)`` for a shape parameters ``a=5`` and
+    ``b=1``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, a, b):
+        # Parse input arguments
+        self._a = float(a)
+        self._b = float(b)
+
+        # Validate inputs
+        if self._a <= 0:
+            raise ValueError('Shape parameter alpha must be positive')
+        if self._b <= 0:
+            raise ValueError('Shape parameter beta must be positive')
+
+        # Cache constant
+        self._log_beta = scipy.special.betaln(self._a, self._b)
+
+    def __call__(self, x):
+        if x < 0.0 or x > 1.0:
+            return -float('inf')
+        else:
+            return scipy.special.xlogy(self._a - 1.0,
+                                       x) + scipy.special.xlog1py(
+                self._b - 1.0, -x) - self._log_beta
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+
+        # Account for pathological edges
+        if x == 0.0:
+            x = np.nextafter(0.0, 1.0)
+        elif x == 1.0:
+            x = np.nextafter(1.0, 0.0)
+
+        if x < 0.0 or x > 1.0:
+            return value, np.asarray([0.])
+        else:
+            deriv = (self._a - 1.) / x - (self._b - 1.) / (1. - x)
+            return value, np.asarray([deriv])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.beta(self._a, self._b, size=(n, 1))
+
+
+class StudentTLogPrior(pints.LogPrior):
     """
     Defines a 1-d Student-t (log) prior with a given ``location``,
     ``degrees of freedom``,  and ``scale``.
@@ -220,7 +277,7 @@ class StudentTLogPrior():
                                  scale=self._scale, size=n)
 
 
-class CauchyLogPrior():
+class CauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
 
@@ -275,7 +332,7 @@ class CauchyLogPrior():
         return self._t.rvs(n)
 
 
-class HalfCauchyLogPrior():
+class HalfCauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
