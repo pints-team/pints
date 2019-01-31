@@ -199,7 +199,6 @@ from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._nested import (NestedSampler, NestedSampling)
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
-from ._nested._galilean_mc import GalileanMC
 
 
 #

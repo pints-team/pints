@@ -34,7 +34,7 @@ class NestedSampler(pints.TunableMethod):
         """
         Determines whether sampler uses sensitivities of the solution
         """
-        raise self._needs_sensitivities
+        return self._needs_sensitivities
 
     def name(self):
         """ Name of sampler """
