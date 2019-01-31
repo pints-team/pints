@@ -11,6 +11,7 @@ from __future__ import division
 import unittest
 import pints
 import numpy as np
+import scipy.stats
 
 
 class TestPrior(unittest.TestCase):
@@ -416,6 +417,63 @@ class TestPrior(unittest.TestCase):
         v_samples = p1.sample(n)
         self.assertEqual(len(v_samples), n)
         self.assertTrue(np.all(v_samples > 0))
+
+    def test_beta_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.BetaLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.BetaLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.BetaLogPrior, -2, 2)
+
+        p1 = pints.BetaLogPrior(0.123, 2.34)
+        p2 = pints.BetaLogPrior(3.45, 4.56)
+
+        points = [-2., 0.001, 0.1, 0.3, 0.5, 0.7, 0.9, 0.999, 2.]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = np.asarray(point)
+            self.assertAlmostEqual(
+                scipy.stats.beta.logpdf(np.asarray(to_test), 0.123, 2.34),
+                p1(to_test),
+                places=9)
+            self.assertAlmostEqual(
+                scipy.stats.beta.logpdf(np.asarray(to_test), 3.45, 4.56),
+                p2(to_test),
+                places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -878.341341341342, -10.25888888888889,
+                     -4.837619047619048,
+                     -4.434, -5.719523809523809, -14.37444444444445,
+                     -1340.877877877876,
+                     0.]
+
+        p2_derivs = [0., 2446.436436436437, 20.54444444444445,
+                     3.080952380952382,
+                     -2.219999999999999, -8.36666666666666, -32.87777777777778,
+                     -3557.547547547544, 0.]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+    def test_beta_prior_sampling(self):
+        # Just returns samples from the scipy beta distribution so no utility
+        # in verifying shape params - just check it's working as expected
+        p1 = pints.BetaLogPrior(0.123, 2.34)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 10000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
 
 
 if __name__ == '__main__':
