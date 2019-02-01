@@ -58,7 +58,7 @@ class NestedSampler(pints.TunableMethod):
             self._m_active[self._min_index, :] = np.concatenate(
                 (self._proposed, np.array([fx])))
             self._min_index = np.argmin(self._m_active[:, self._dimension])
-            self._sampler._set_running_log_likelihood(
+            self._set_running_log_likelihood(
                 np.min(self._m_active[:, self._dimension])
             )
             return self._proposed
