@@ -29,6 +29,7 @@ class NestedSampler(pints.TunableMethod):
         self._n_active_points = 400
         self._dimension = self._log_prior.n_parameters()
         self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
+        self._min_index = None
 
     def needs_sensitivities(self):
         """
@@ -54,6 +55,10 @@ class NestedSampler(pints.TunableMethod):
         if np.isnan(fx) or fx < self._running_log_likelihood:
             return None
         else:
+            # update min log-likelihood value
+            self._min_index = np.argmin(self._m_active[:, self._dimension])
+            self._m_active[self._a_min_index, :] = np.concatenate(
+                (self._proposed, np.array([fx])))
             return self._proposed
 
     def in_initial_phase(self):
@@ -113,6 +118,18 @@ class NestedSampler(pints.TunableMethod):
         Returns the active points from nested sampling run
         """
         return self._m_active
+
+    def initialise_active_points(self, m_initial, v_fx):
+        """
+        Sets initial active points matrix
+        """
+        for i, fx in enumerate(v_fx):
+            self._m_active[i, self._dimension] = fx
+        self._m_active[:, :-1] = m_initial
+
+    def min_index(self):
+        """ Returns index of sample with lowest log-likelihood """
+        return self._min_index
 
 
 class NestedSampling(object):
@@ -307,9 +324,10 @@ class NestedSampling(object):
         d = self._dimension
         m_active = self._sampler.active_points()
         m_initial = self._log_prior.sample(n_active_points)
+        v_fx = np.zeros(n_active_points)
         for i in range(0, n_active_points):
             # Calculate likelihood
-            m_active[i, d] = self._log_likelihood(m_initial[i, :])
+            v_fx[i] = evaluator(m_initial[i, :])
             self._n_evals += 1
 
             # Show progress
@@ -322,7 +340,7 @@ class NestedSampling(object):
                     next_message = message_interval * (
                         1 + i // message_interval)
 
-        m_active[:, :-1] = m_initial
+        self._sampler.initialise_active_points(m_initial, v_fx)
 
         # store all inactive points, along with their respective
         # log-likelihoods (hence, d+1)
@@ -345,9 +363,9 @@ class NestedSampling(object):
             self._i = i
             # Update threshold and various quantities
             self._sampler._set_running_log_likelihood(
-                np.min(m_active[:, d])
+                np.min(self._sampler._m_active[:, d])
             )
-            a_min_index = np.argmin(m_active[:, d])
+            a_min_index = self.min_index()
             self._X[i + 1] = np.exp(-(i + 1) / n_active_points)
             if i > 0:
                 self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
@@ -368,9 +386,6 @@ class NestedSampling(object):
                 proposed = self._sampler.ask()
                 log_likelihood = evaluator.evaluate([proposed])[0]
                 self._n_evals += 1
-
-            m_active[a_min_index, :] = np.concatenate(
-                (proposed, np.array([log_likelihood])))
 
             # Check whether within convergence threshold
             if i > 2:
