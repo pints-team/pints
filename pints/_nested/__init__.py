@@ -55,10 +55,9 @@ class NestedSampler(pints.TunableMethod):
         if np.isnan(fx) or fx < self._running_log_likelihood:
             return None
         else:
-            # update min log-likelihood value
-            self._min_index = np.argmin(self._m_active[:, self._dimension])
             self._m_active[self._min_index, :] = np.concatenate(
                 (self._proposed, np.array([fx])))
+            self._min_index = np.argmin(self._m_active[:, self._dimension])
             return self._proposed
 
     def in_initial_phase(self):
