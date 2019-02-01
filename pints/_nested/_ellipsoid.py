@@ -146,31 +146,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
-    def n_hyper_parameters(self):
-        """
-        Returns the number of hyper-parameters for this method (see
-        :class:`TunableMethod`).
-        """
-        return 3
-
-    def set_hyper_parameters(self, x):
-        """
-        Sets the hyper-parameters for the method with the given vector of
-        values (see :class:`TunableMethod`).
-
-        Hyper-parameter vector is:
-            ``[active_points_rate, ellipsoid_update_gap, enlargement_factor]``
-
-        Arguments:
-
-        ``x`` an array of length ``n_hyper_parameters`` used to set the
-              hyper-parameters
-        """
-
-        self.set_active_points_rate(x[0])
-        self.set_ellipsoid_update_gap(x[1])
-        self.set_enlargement_factor(x[2])
-
     def _minimum_volume_ellipsoid(self, points, tol=0.0):
         """
         Finds an approximate minimum bounding ellipse in "center form":
@@ -245,4 +220,20 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
         return 'Nested Ellipsoidal Rejection Sampler'
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 4
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[# active points, # rejection samples,
+        enlargement factor, ellipsoid update gap]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_n_active_points(x[0])
+        self.set_rejection_samples(x[1])
+        self.set_enlargement_factor(x[2])
+        self.set_ellipsoid_update_gap(x[3])
 

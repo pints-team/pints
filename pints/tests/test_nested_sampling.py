@@ -62,7 +62,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
     def test_setup_and_parameters_nested_sampler(self):
         """ Test setup of nested sampler"""
 
-        sampler = pints.NestedSampler(self.log_prior)
+        sampler = pints.NestedRejectionSampler(self.log_prior)
 
         # Test initial constructors
         self.assertEqual(sampler._running_log_likelihood, -float('Inf'))
@@ -70,7 +70,8 @@ class TestNestedRejectionSampler(unittest.TestCase):
         self.assertEqual(sampler._n_active_points, 400)
         self.assertEqual(sampler._dimension, 2)
         self.assertSequenceEqual(sampler._m_active.shape,
-                                 (self._n_active_points, self._dimension + 1))
+                                 (sampler._n_active_points,
+                                  sampler._dimension + 1))
         self.assertEqual(sampler._min_index, None)
 
         # Test functions
@@ -122,9 +123,11 @@ class TestNestedRejectionSampler(unittest.TestCase):
         """ Test setup of nested sampling """
         sampler = pints.NestedSampling(self.log_likelihood, self.log_prior,
                                        method=pints.NestedRejectionSampler)
+        self.assertTrue(not sampler.parallel())
+
         sampler.set_n_posterior_samples(10)
         sampler.set_iterations(50)
-        sampler.set_n_active_points(50)
+        sampler._sampler.set_n_active_points(50)
         sampler.set_log_to_screen(False)
         samples = sampler.run()
         # Check output: Note n returned samples = n posterior samples
@@ -133,33 +136,28 @@ class TestNestedRejectionSampler(unittest.TestCase):
     def test_construction_errors(self):
         """ Tests if invalid constructor calls are picked up. """
 
-        # First arg must be a log likelihood
-        self.assertRaisesRegex(
-            ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedRejectionSampler, 'hello', self.log_prior)
-
         # First arg must be a log prior
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPrior',
-            pints.NestedRejectionSampler,
-            self.log_likelihood, self.log_likelihood)
+            pints.NestedRejectionSampler, self.log_likelihood)
 
         # Both must have same number of parameters
         log_prior = pints.UniformLogPrior([0.01, 400, 1], [0.02, 600, 3])
         self.assertRaisesRegex(
             ValueError, 'same number of parameters',
-            pints.NestedRejectionSampler, self.log_likelihood, log_prior)
+            pints.NestedSampling, self.log_likelihood, log_prior)
 
     def test_logging(self):
         """ Tests logging to screen and file. """
 
         # No logging
         with StreamCapture() as c:
-            sampler = pints.NestedRejectionSampler(
-                self.log_likelihood, self.log_prior)
+            sampler = pints.NestedSampling(
+                self.log_likelihood, self.log_prior,
+                method=pints.NestedRejectionSampler)
             sampler.set_n_posterior_samples(2)
             sampler.set_iterations(10)
-            sampler.set_n_active_points(10)
+            sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
             samples = sampler.run()
@@ -167,11 +165,12 @@ class TestNestedRejectionSampler(unittest.TestCase):
 
         # Log to screen
         with StreamCapture() as c:
-            sampler = pints.NestedRejectionSampler(
-                self.log_likelihood, self.log_prior)
+            sampler = pints.NestedSampling(
+                self.log_likelihood, self.log_prior,
+                method=pints.NestedRejectionSampler)
             sampler.set_n_posterior_samples(2)
             sampler.set_iterations(20)
-            sampler.set_n_active_points(10)
+            sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples = sampler.run()
@@ -190,11 +189,12 @@ class TestNestedRejectionSampler(unittest.TestCase):
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
-                sampler = pints.NestedRejectionSampler(
-                    self.log_likelihood, self.log_prior)
+                sampler = pints.NestedSampling(
+                    self.log_likelihood, self.log_prior,
+                    method=pints.NestedRejectionSampler)
                 sampler.set_n_posterior_samples(2)
                 sampler.set_iterations(10)
-                sampler.set_n_active_points(10)
+                sampler._sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
                 samples = sampler.run()
@@ -211,11 +211,12 @@ class TestNestedRejectionSampler(unittest.TestCase):
         """
         Tests the settings check at the start of a run.
         """
-        sampler = pints.NestedRejectionSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampling(
+            self.log_likelihood, self.log_prior,
+            method=pints.NestedRejectionSampler)
         sampler.set_n_posterior_samples(2)
         sampler.set_iterations(10)
-        sampler.set_n_active_points(10)
+        sampler._sampler.set_n_active_points(10)
         sampler.set_log_to_screen(False)
         sampler.run()
 
@@ -226,18 +227,18 @@ class TestNestedRejectionSampler(unittest.TestCase):
         """
         Tests the hyper parameter interface is working.
         """
-        sampler = pints.NestedRejectionSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedRejectionSampler(self.log_prior)
         self.assertEqual(sampler.n_hyper_parameters(), 1)
         sampler.set_hyper_parameters([6])
-        self.assertEqual(sampler.active_points_rate(), 6)
+        self.assertEqual(sampler.n_active_points(), 6)
 
     def test_getters_and_setters(self):
         """
         Tests various get() and set() methods.
         """
-        sampler = pints.NestedRejectionSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampling(
+            self.log_likelihood, self.log_prior,
+            method=pints.NestedRejectionSampler)
 
         # Iterations
         x = sampler.iterations() + 1
@@ -248,18 +249,19 @@ class TestNestedRejectionSampler(unittest.TestCase):
             ValueError, 'negative', sampler.set_iterations, -1)
 
         # Active points rate
-        x = sampler.n_active_points() + 1
-        self.assertNotEqual(sampler.n_active_points(), x)
-        sampler.set_n_active_points(x)
-        self.assertEqual(sampler.n_active_points(), x)
+        x = sampler._sampler.n_active_points() + 1
+        self.assertNotEqual(sampler._sampler.n_active_points(), x)
+        sampler._sampler.set_n_active_points(x)
+        self.assertEqual(sampler._sampler.n_active_points(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than 5', sampler.set_n_active_points, 5)
+            ValueError, 'greater than 5',
+            sampler._sampler.set_n_active_points, 5)
 
         # Posterior samples
-        x = sampler.posterior_samples() + 1
-        self.assertNotEqual(sampler.posterior_samples(), x)
+        x = sampler.n_posterior_samples() + 1
+        self.assertNotEqual(sampler.n_posterior_samples(), x)
         sampler.set_n_posterior_samples(x)
-        self.assertEqual(sampler.posterior_samples(), x)
+        self.assertEqual(sampler.n_posterior_samples(), x)
         self.assertRaisesRegex(
             ValueError, 'greater than zero',
             sampler.set_n_posterior_samples, 0)
@@ -302,32 +304,27 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
     def test_construction_errors(self):
         """ Tests if invalid constructor calls are picked up. """
 
-        # First arg must be a log likelihood
+        # First arg must be a log prior
         self.assertRaisesRegex(
-            ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedEllipsoidSampler, 'hiya', self.log_prior)
+            ValueError, 'must extend pints.LogPrior',
+            pints.NestedEllipsoidSampler, 'hiya')
 
         # First arg must be a log prior
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPrior',
             pints.NestedEllipsoidSampler,
-            self.log_likelihood, self.log_likelihood)
-
-        # Both must have same number of parameters
-        log_prior = pints.UniformLogPrior([0.01, 400, 1], [0.02, 600, 3])
-        self.assertRaisesRegex(
-            ValueError, 'same number of parameters',
-            pints.NestedEllipsoidSampler, self.log_likelihood, log_prior)
+            self.log_likelihood)
 
     def test_quick(self):
         """ Test a single run. """
 
-        sampler = pints.NestedEllipsoidSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampling(
+            self.log_likelihood, self.log_prior,
+            method=pints.NestedEllipsoidSampler)
         sampler.set_n_posterior_samples(10)
-        sampler.set_rejection_samples(20)
+        sampler._sampler.set_rejection_samples(20)
         sampler.set_iterations(50)
-        sampler.set_n_active_points(50)
+        sampler._sampler.set_n_active_points(50)
         sampler.set_log_to_screen(False)
         samples = sampler.run()
         # Check output: Note n returned samples = n posterior samples
@@ -337,12 +334,13 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         """
         Tests the settings check at the start of a run.
         """
-        sampler = pints.NestedEllipsoidSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampling(
+            self.log_likelihood, self.log_prior,
+            method=pints.NestedEllipsoidSampler)
         sampler.set_n_posterior_samples(2)
-        sampler.set_rejection_samples(5)
+        sampler._sampler.set_rejection_samples(5)
         sampler.set_iterations(10)
-        sampler.set_n_active_points(10)
+        sampler._sampler.set_n_active_points(10)
         sampler.set_log_to_screen(False)
         sampler.run()
 
@@ -355,25 +353,26 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         """
         Tests the hyper parameter interface is working.
         """
-        sampler = pints.NestedEllipsoidSampler(
-            self.log_likelihood, self.log_prior)
-        self.assertEqual(sampler.n_hyper_parameters(), 3)
-        sampler.set_hyper_parameters([6, 2, 3])
-        self.assertEqual(sampler.active_points_rate(), 6)
-        self.assertEqual(sampler.ellipsoid_update_gap(), 2)
-        self.assertEqual(sampler.enlargement_factor(), 3)
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        self.assertEqual(sampler.n_hyper_parameters(), 4)
+        sampler.set_hyper_parameters([550, 1000, 1.2, 20])
+        self.assertEqual(sampler.n_active_points(), 550)
+        self.assertEqual(sampler.rejection_samples(), 1000)
+        self.assertEqual(sampler.ellipsoid_update_gap(), 20)
+        self.assertEqual(sampler.enlargement_factor(), 1.2)
 
     def test_logging(self):
         """ Tests logging to screen and file. """
 
         # No logging
         with StreamCapture() as c:
-            sampler = pints.NestedEllipsoidSampler(
-                self.log_likelihood, self.log_prior)
+            sampler = pints.NestedSampling(
+                self.log_likelihood, self.log_prior,
+                method=pints.NestedEllipsoidSampler)
             sampler.set_n_posterior_samples(2)
-            sampler.set_rejection_samples(5)
+            sampler._sampler.set_rejection_samples(5)
             sampler.set_iterations(10)
-            sampler.set_n_active_points(10)
+            sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
             samples = sampler.run()
@@ -381,12 +380,13 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
 
         # Log to screen
         with StreamCapture() as c:
-            sampler = pints.NestedEllipsoidSampler(
-                self.log_likelihood, self.log_prior)
+            sampler = pints.NestedSampling(
+                self.log_likelihood, self.log_prior,
+                method=pints.NestedEllipsoidSampler)
             sampler.set_n_posterior_samples(2)
-            sampler.set_rejection_samples(5)
+            sampler._sampler.set_rejection_samples(5)
             sampler.set_iterations(20)
-            sampler.set_n_active_points(10)
+            sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
             samples = sampler.run()
@@ -395,9 +395,8 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                                    'sampler')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
-        self.assertEqual(lines[3], 'Enlargement factor: 1.1')
-        self.assertEqual(lines[4], 'Total number of posterior samples: 2')
-        self.assertEqual(lines[5], 'Iter. Eval. Time m:s')
+        self.assertEqual(lines[3], 'Total number of posterior samples: 2')
+        self.assertEqual(lines[4], 'Iter. Eval. Time m:s')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[6:]:
             self.assertTrue(pattern.match(line))
@@ -407,12 +406,13 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
-                sampler = pints.NestedEllipsoidSampler(
-                    self.log_likelihood, self.log_prior)
+                pints.NestedSampling(
+                    self.log_likelihood, self.log_prior,
+                    method=pints.NestedEllipsoidSampler)
                 sampler.set_n_posterior_samples(2)
-                sampler.set_rejection_samples(5)
+                sampler._sampler.set_rejection_samples(5)
                 sampler.set_iterations(10)
-                sampler.set_n_active_points(10)
+                sampler._sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
                 samples = sampler.run()
@@ -429,8 +429,9 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         """
         Tests various get() and set() methods.
         """
-        sampler = pints.NestedEllipsoidSampler(
-            self.log_likelihood, self.log_prior)
+        sampler = pints.NestedSampling(
+            self.log_likelihood, self.log_prior,
+            method=pints.NestedEllipsoidSampler)
 
         # Iterations
         x = sampler.iterations() + 1
@@ -441,16 +442,15 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             ValueError, 'negative', sampler.set_iterations, -1)
 
         # Active points rate
-        x = sampler.n_active_points() + 1
-        self.assertNotEqual(sampler.n_active_points(), x)
-        sampler.set_n_active_points(x)
-        self.assertEqual(sampler.n_active_points(), x)
+        x = sampler._sampler.n_active_points() + 1
+        sampler._sampler.set_n_active_points(x)
+        self.assertEqual(sampler._sampler.n_active_points(), x)
         self.assertRaisesRegex(
-            ValueError, 'greater than 5', sampler.set_n_active_points, 5)
+            ValueError, 'greater than 5',
+            sampler._sampler.set_n_active_points, 5)
 
         # Posterior samples
         x = sampler.n_posterior_samples() + 1
-        self.assertNotEqual(sampler.n_posterior_samples(), x)
         sampler.set_n_posterior_samples(x)
         self.assertEqual(sampler.n_posterior_samples(), x)
         self.assertRaisesRegex(
@@ -458,24 +458,28 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler.set_n_posterior_samples, 0)
 
         # Enlargement factor
-        x = sampler.enlargement_factor() * 2
-        self.assertNotEqual(sampler.enlargement_factor(), x)
-        sampler.set_enlargement_factor(x)
-        self.assertEqual(sampler.enlargement_factor(), x)
+        x = sampler._sampler.enlargement_factor() * 2
+        self.assertNotEqual(sampler._sampler.enlargement_factor(), x)
+        sampler._sampler.set_enlargement_factor(x)
+        self.assertEqual(sampler._sampler.enlargement_factor(), x)
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', sampler.set_enlargement_factor, 0.5)
+            ValueError, 'exceed 1',
+            sampler._sampler.set_enlargement_factor, 0.5)
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', sampler.set_enlargement_factor, 1)
+            ValueError, 'exceed 1',
+            sampler._sampler.set_enlargement_factor, 1)
 
         # Ellipsoid update gap
-        x = sampler.ellipsoid_update_gap() * 2
-        self.assertNotEqual(sampler.ellipsoid_update_gap(), x)
-        sampler.set_ellipsoid_update_gap(x)
-        self.assertEqual(sampler.ellipsoid_update_gap(), x)
+        x = sampler._sampler.ellipsoid_update_gap() * 2
+        self.assertNotEqual(sampler._sampler.ellipsoid_update_gap(), x)
+        sampler._sampler.set_ellipsoid_update_gap(x)
+        self.assertEqual(sampler._sampler.ellipsoid_update_gap(), x)
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', sampler.set_ellipsoid_update_gap, 0.5)
+            ValueError, 'exceed 1',
+            sampler._sampler.set_ellipsoid_update_gap, 0.5)
         self.assertRaisesRegex(
-            ValueError, 'exceed 1', sampler.set_ellipsoid_update_gap, 1)
+            ValueError, 'exceed 1',
+            sampler._sampler.set_ellipsoid_update_gap, 1)
 
 
 if __name__ == '__main__':

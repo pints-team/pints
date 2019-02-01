@@ -108,6 +108,7 @@ class NestedSampler(pints.TunableMethod):
         if active_points <= 5:
             raise ValueError('Number of active points must be greater than 5.')
         self._n_active_points = active_points
+        self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
 
     def n_active_points(self):
         """
@@ -135,6 +136,16 @@ class NestedSampler(pints.TunableMethod):
     def min_index(self):
         """ Returns index of sample with lowest log-likelihood """
         return self._min_index
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        raise NotImplementedError
+
+    def set_hyper_parameters(self, x):
+        """
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        raise NotImplementedError
 
 
 class NestedSampling(object):

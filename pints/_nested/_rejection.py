@@ -44,6 +44,21 @@ class NestedRejectionSampler(pints.NestedSampler):
         self._proposed = self._log_prior.sample()[0]
         return self._proposed
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[# active points,
+                                         # rejection samples,
+                                         enlargement_factor,
+                                         ellipsoid update gap]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_n_active_points(x[0])
+
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
         return 'Nested Rejection Sampler'
