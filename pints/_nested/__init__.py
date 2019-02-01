@@ -58,6 +58,9 @@ class NestedSampler(pints.TunableMethod):
             self._m_active[self._min_index, :] = np.concatenate(
                 (self._proposed, np.array([fx])))
             self._min_index = np.argmin(self._m_active[:, self._dimension])
+            self._sampler._set_running_log_likelihood(
+                np.min(self._m_active[:, self._dimension])
+            )
             return self._proposed
 
     def in_initial_phase(self):
@@ -126,6 +129,8 @@ class NestedSampler(pints.TunableMethod):
             self._m_active[i, self._dimension] = fx
         self._m_active[:, :-1] = m_initial
         self._min_index = np.argmin(self._m_active[:, self._dimension])
+        self._set_running_log_likelihood(
+            self._m_active[self._min_index, self._dimension])
 
     def min_index(self):
         """ Returns index of sample with lowest log-likelihood """
@@ -360,10 +365,6 @@ class NestedSampling(object):
         i_message = n_active_points - 1
         for i in range(0, self._iterations):
             self._i = i
-            # Update threshold and various quantities
-            self._sampler._set_running_log_likelihood(
-                np.min(self._sampler._m_active[:, d])
-            )
             a_min_index = self._sampler.min_index()
             self._X[i + 1] = np.exp(-(i + 1) / n_active_points)
             if i > 0:

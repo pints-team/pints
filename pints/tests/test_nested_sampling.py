@@ -67,14 +67,30 @@ class TestNestedRejectionSampler(unittest.TestCase):
         # Test initial constructors
         self.assertEqual(sampler._running_log_likelihood, -float('Inf'))
         self.assertEqual(sampler._proposed, None)
-        self.assertEqual(sampler.n_active_points, 400)
+        self.assertEqual(sampler._n_active_points, 400)
         self.assertEqual(sampler._dimension, 2)
-        self.assertEqual(sampler._m_active.shape, (self._n_active_points,
-                                                   self._dimension + 1))
+        self.assertSequenceEqual(sampler._m_active.shape,
+                                 (self._n_active_points, self._dimension + 1))
+        self.assertEqual(sampler._min_index, None)
 
         # Test functions
         self.assertTrue(not sampler.needs_sensitivities())
         self.assertEqual(sampler.name(), 'Nested Rejection sampler')
+
+        # Generate initial points by sampling from prior
+        n_active_points = sampler.n_active_points()
+        m_initial = sampler._log_prior.sample(n_active_points)
+        v_fx = np.zeros(sampler.n_active_points(n_active_points))
+        for i in range(n_active_points):
+            v_fx[i] = self.log_likelihood(m_initial)
+        sampler.initialise_active_points(m_initial, v_fx)
+        self.assertTrue(sampler.min_index(), not None)
+        m_active = sampler.active_point()
+        self.assertSequenceEqual(m_active.shape,
+                                 (n_active_points, self._dimension + 1))
+        self.assertEqual(np.sum(m_active[:, self._dimension]), np.sum(v_fx))
+        self.assertEqual(np.sum(m_active[:, 0]), np.sum(m_initial[:, 0]))
+
         proposed = sampler.ask()
         self.assertTrue(len(proposed), 2)
         self.assertEqual(proposed, sampler._proposed)
