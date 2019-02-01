@@ -57,7 +57,7 @@ class NestedSampler(pints.TunableMethod):
         else:
             # update min log-likelihood value
             self._min_index = np.argmin(self._m_active[:, self._dimension])
-            self._m_active[self._a_min_index, :] = np.concatenate(
+            self._m_active[self._min_index, :] = np.concatenate(
                 (self._proposed, np.array([fx])))
             return self._proposed
 
@@ -126,6 +126,7 @@ class NestedSampler(pints.TunableMethod):
         for i, fx in enumerate(v_fx):
             self._m_active[i, self._dimension] = fx
         self._m_active[:, :-1] = m_initial
+        self._min_index = np.argmin(self._m_active[:, self._dimension])
 
     def min_index(self):
         """ Returns index of sample with lowest log-likelihood """
@@ -322,12 +323,11 @@ class NestedSampling(object):
             logger.add_float('Delta_log(z)')
 
         d = self._dimension
-        m_active = self._sampler.active_points()
         m_initial = self._log_prior.sample(n_active_points)
         v_fx = np.zeros(n_active_points)
         for i in range(0, n_active_points):
             # Calculate likelihood
-            v_fx[i] = evaluator(m_initial[i, :])
+            v_fx[i] = evaluator.evaluate([m_initial[i, :]])[0]
             self._n_evals += 1
 
             # Show progress
@@ -365,14 +365,14 @@ class NestedSampling(object):
             self._sampler._set_running_log_likelihood(
                 np.min(self._sampler._m_active[:, d])
             )
-            a_min_index = self.min_index()
+            a_min_index = self._sampler.min_index()
             self._X[i + 1] = np.exp(-(i + 1) / n_active_points)
             if i > 0:
                 self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
             else:
                 self._w[i] = self._X[i] - self._X[i + 1]
             self._v_log_Z[i] = self._sampler.running_log_likelihood()
-            self._m_inactive[i, :] = m_active[a_min_index, :]
+            self._m_inactive[i, :] = self._sampler._m_active[a_min_index, :]
 
             # Use some method to propose new samples
             proposed = self._sampler.ask()
@@ -389,8 +389,9 @@ class NestedSampling(object):
 
             # Check whether within convergence threshold
             if i > 2:
-                v_temp = np.concatenate((self._v_log_Z[0:(i - 1)],
-                                        [np.max(m_active[:, d])]))
+                v_temp = np.concatenate((
+                    self._v_log_Z[0:(i - 1)],
+                    [np.max(self._sampler._m_active[:, d])]))
                 w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
                 self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
                                         b=self._w[0:(i - 1)]) -
