@@ -162,7 +162,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
-            samples = sampler.run()
+            sampler.run()
         self.assertEqual(c.text(), '')
 
         # Log to screen
@@ -175,7 +175,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
-            samples = sampler.run()
+            sampler.run()
         lines = c.text().splitlines()
         self.assertEqual(lines[0], 'Running Nested Rejection sampler')
         self.assertEqual(lines[1], 'Number of active points: 10')
@@ -377,7 +377,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(False)
             sampler.set_log_to_file(False)
-            samples = sampler.run()
+            sampler.run()
         self.assertEqual(c.text(), '')
 
         # Log to screen
@@ -391,7 +391,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             sampler._sampler.set_n_active_points(10)
             sampler.set_log_to_screen(True)
             sampler.set_log_to_file(False)
-            samples = sampler.run()
+            sampler.run()
         lines = c.text().splitlines()
         self.assertEqual(lines[0], 'Running Nested Ellipsoidal Rejection ' +
                                    'sampler')
@@ -417,7 +417,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                 sampler._sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
-                samples = sampler.run()
+                sampler.run()
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
