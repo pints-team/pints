@@ -83,38 +83,40 @@ class TestNestedRejectionSampler(unittest.TestCase):
         m_initial = sampler._log_prior.sample(n_active_points)
         v_fx = np.zeros(n_active_points)
         for i in range(n_active_points):
-            v_fx[i] = self.log_likelihood(m_initial)
+            v_fx[i] = self.log_likelihood(m_initial[i])
         sampler.initialise_active_points(m_initial, v_fx)
         self.assertTrue(sampler.min_index(), not None)
-        m_active = sampler.active_point()
+        m_active = sampler.active_points()
         self.assertSequenceEqual(m_active.shape,
-                                 (n_active_points, self._dimension + 1))
-        self.assertEqual(np.sum(m_active[:, self._dimension]), np.sum(v_fx))
+                                 (n_active_points, sampler._dimension + 1))
+        self.assertEqual(np.sum(m_active[:, sampler._dimension]), np.sum(v_fx))
         self.assertEqual(np.sum(m_active[:, 0]), np.sum(m_initial[:, 0]))
-        self.assertEqual(sampler.running_log_likelihood(), v_fx)
+        self.assertEqual(sampler.running_log_likelihood(), np.min(v_fx))
 
         proposed = sampler.ask()
         self.assertTrue(len(proposed), 2)
-        self.assertEqual(proposed, sampler._proposed)
+        self.assertSequenceEqual(proposed.tolist(), sampler._proposed.tolist())
         fx = self.log_likelihood(proposed)
         if fx < sampler.running_log_likelihood():
             self.assertEqual(sampler.tell(fx), None)
         else:
-            self.assertEqual(sampler.tell(fx), self._proposed)
+            self.assertSequenceEqual(sampler.tell(fx).tolist(),
+                                     sampler._proposed[1].tolist())
 
         self.assertEqual(sampler.tell(float('nan')), None)
         self.assertEqual(sampler.tell(-float('Inf')), None)
 
         # force a value that tell will accept
-        self._proposed = [0.015, 500]
+        sampler._proposed = [0.015, 500]
         init_log_likelihood = sampler.running_log_likelihood()
         a_min_index = sampler.min_index()
         fx = self.log_likelihood(sampler._proposed)
         proposed = sampler.tell(fx)
         m_active = sampler.active_points()
-        self.assertEqual(sampler._proposed, proposed)
-        self.assertSequenceEqual(m_active[:, a_min_index],
-                                 np.concatenate((proposed, np.array([fx]))))
+        self.assertSequenceEqual(sampler._proposed, proposed)
+        self.assertSequenceEqual(m_active[a_min_index, :].tolist(),
+                                 np.concatenate((proposed,
+                                                 np.array([fx]))).tolist())
         self.assertTrue(sampler.running_log_likelihood() > init_log_likelihood)
 
         self.assertTrue(not sampler.needs_initial_phase())
@@ -175,11 +177,11 @@ class TestNestedRejectionSampler(unittest.TestCase):
             sampler.set_log_to_file(False)
             samples = sampler.run()
         lines = c.text().splitlines()
-        self.assertEqual(lines[0], 'Running nested rejection sampling')
+        self.assertEqual(lines[0], 'Running Nested Rejection sampler')
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Total number of posterior samples: 2')
-        self.assertEqual(lines[4], 'Iter. Eval. Time m:s')
+        self.assertEqual(lines[4], 'Iter. Eval. Time m:s Delta_log(z)')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
@@ -202,7 +204,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
         self.assertEqual(len(lines), 6)
-        self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
+        self.assertEqual(lines[0], 'Iter. Eval. Time m:s Delta_log(z)')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
@@ -396,11 +398,11 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertEqual(lines[1], 'Number of active points: 10')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Total number of posterior samples: 2')
-        self.assertEqual(lines[4], 'Iter. Eval. Time m:s')
+        self.assertEqual(lines[4], 'Iter. Eval. Time m:s Delta_log(z)')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[6:]:
             self.assertTrue(pattern.match(line))
-        self.assertEqual(len(lines), 12)
+        self.assertEqual(len(lines), 11)
 
         # Log to file
         with StreamCapture() as c:
@@ -420,7 +422,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
         self.assertEqual(len(lines), 6)
-        self.assertEqual(lines[0], 'Iter. Eval. Time m:s')
+        self.assertEqual(lines[0], 'Iter. Eval. Time m:s Delta_log(z)')
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
