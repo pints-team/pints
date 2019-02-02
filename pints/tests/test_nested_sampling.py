@@ -199,7 +199,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
                 sampler._sampler.set_n_active_points(10)
                 sampler.set_log_to_screen(False)
                 sampler.set_log_to_file(filename)
-                samples = sampler.run()
+                sampler.run()
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
