@@ -50,10 +50,7 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[# active points,
-                                         # rejection samples,
-                                         enlargement_factor,
-                                         ellipsoid update gap]``.
+        The hyper-parameter vector is ``[# active points]``
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
