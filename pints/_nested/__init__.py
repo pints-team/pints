@@ -190,6 +190,9 @@ class NestedSampling(object):
         self._log_filename = None
         self._log_csv = False
 
+        # acceptance rate
+        self._acceptance_rate = None
+
         # By default do serial evaluation
         self._parallel = False
         self._n_workers = 1
@@ -352,7 +355,8 @@ class NestedSampling(object):
             # Show progress
             if logging and i >= next_message:
                 # Log state
-                logger.log(0, self._n_evals, timer.time(), self._diff, 1.0)
+                logger.log(0, self._n_evals, timer.time(), self._diff,
+                           float(1.0))
 
                 # Choose next logging point
                 if i > message_warm_up:
@@ -378,6 +382,7 @@ class NestedSampling(object):
         # Run!
         self._X[0] = 1.0
         i_message = n_active_points - 1
+        n_tries = 0
         for i in range(0, self._iterations):
             self._i = i
             a_min_index = self._sampler.min_index()
@@ -397,10 +402,12 @@ class NestedSampling(object):
 
             # Until log-likelihood exceeds current threshold keep drawing
             # samples
+            n_tries += 1
             while self._sampler.tell(log_likelihood) is None:
                 proposed = self._sampler.ask()
                 log_likelihood = evaluator.evaluate([proposed])[0]
                 self._n_evals += 1
+                n_tries += 1
 
             # Check whether within convergence threshold
             if i > 2:
@@ -432,13 +439,14 @@ class NestedSampling(object):
                     # Log state
                     logger.log(i_message, self._n_evals, timer.time(),
                                self._diff,
-                               float(self._n_evals /
-                                     self._sampler._accept_count))
+                               float((i + 1) / n_tries))
 
                     # Choose next logging point
                     if i_message > message_warm_up:
                         next_message = message_interval * (
                             1 + i_message // message_interval)
+        # acceptance rate
+        self._acceptance_rate = float(self._iterations / n_tries)
 
         # Calculate log_evidence and uncertainty
         self._log_Z = self.marginal_log_likelihood()
@@ -477,6 +485,12 @@ class NestedSampling(object):
         sampling object
         """
         return self._m_posterior_samples
+
+    def acceptance_rate(self):
+        """
+        Returns acceptance rate from nested sampling run
+        """
+        return self._acceptance_rate
 
     def prior_space(self):
         """
