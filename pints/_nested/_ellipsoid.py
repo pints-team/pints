@@ -46,9 +46,40 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # sampling
         self.set_rejection_samples()
         self.set_initial_phase(True)
-        self._iter_count = 0
 
         self._needs_sensitivities = False
+
+        # Dynamically vary the enlargement factor
+        self._dynamic_enlargement_factor = False
+        self._alpha = 1
+
+    def set_dynamic_enlargement_factor(self, dynamic_enlargement_factor):
+        """
+        Sets dynamic enlargement factor
+        """
+        self._dynamic_enlargement_factor = bool(dynamic_enlargement_factor)
+
+    def dynamic_enlargement_factor(self):
+        """
+        Returns dynamic enlargement factor
+        """
+        return self._dynamic_enlargement_factor
+
+    def set_alpha(self, alpha):
+        """
+        Sets alpha which controls rate of decline of enlargement factor
+        with iteration
+        """
+        if alpha < 0 or alpha > 1:
+            raise ValueError('alpha must be between 0 and 1')
+        self._alpha = alpha
+
+    def alpha(self):
+        """
+        Returns alpha which controls rate of decline of enlargement factor
+        with iteration
+        """
+        return self._alpha
 
     def set_initial_phase(self, in_initial_phase):
         """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
@@ -90,7 +121,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         points are drawn from within an ellipse (needs to be in uniform
         sampling regime)
         """
-        i = self._iter_count
+        i = self._accept_count
         if (i + 1) % self._rejection_samples == 0:
             self._rejection_phase = False
             # determine bounding ellipsoid
@@ -106,11 +137,15 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                     % self._ellipsoid_update_gap == 0):
                 self._A, self._centroid = self._minimum_volume_ellipsoid(
                     self._m_active[:, :self._dimension])
+            # From Feroz-Hobson (2008) below eq. (14)
+            if self._dynamic_enlargement_factor:
+                self._enlargement_factor *= (
+                    np.exp(-(i + 1) / self._n_active_points)**self._alpha
+                )
             # propose by sampling within ellipsoid
             self._proposed = self._reject_ellipsoid_sample(
                 self._enlargement_factor, self._A, self._centroid)
 
-        self._iter_count += 1
         return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):

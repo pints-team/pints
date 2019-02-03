@@ -31,6 +31,8 @@ class NestedSampler(pints.TunableMethod):
         self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
         self._min_index = None
 
+        self._accept_count = 0
+
     def needs_sensitivities(self):
         """
         Determines whether sampler uses sensitivities of the solution
@@ -61,6 +63,7 @@ class NestedSampler(pints.TunableMethod):
             self._set_running_log_likelihood(
                 np.min(self._m_active[:, self._dimension])
             )
+            self._accept_count += 1
             return self._proposed
 
     def in_initial_phase(self):
@@ -336,6 +339,7 @@ class NestedSampling(object):
             #TODO: Add other informative fields ?
             logger.add_time('Time m:s')
             logger.add_float('Delta_log(z)')
+            logger.add_float('Acceptance rate')
 
         d = self._dimension
         m_initial = self._log_prior.sample(n_active_points)
@@ -348,7 +352,7 @@ class NestedSampling(object):
             # Show progress
             if logging and i >= next_message:
                 # Log state
-                logger.log(0, self._n_evals, timer.time(), self._diff)
+                logger.log(0, self._n_evals, timer.time(), self._diff, 1.0)
 
                 # Choose next logging point
                 if i > message_warm_up:
@@ -427,7 +431,9 @@ class NestedSampling(object):
                 if i_message >= next_message:
                     # Log state
                     logger.log(i_message, self._n_evals, timer.time(),
-                               self._diff)
+                               self._diff,
+                               float(self._n_evals /
+                                     self._sampler._accept_count))
 
                     # Choose next logging point
                     if i_message > message_warm_up:
