@@ -45,6 +45,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         q_i(t + epsilon) = q_i(t) + epsilon dq_i(t)/dt
                          = q_i(t) + epsilon p_i(t) / m_i.
 
+    In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
+    [1], since we allow different epsilon according to dimension.
+
     [1] MCMC using Hamiltonian dynamics
     Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
@@ -77,20 +80,47 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._n_frog_iterations = 20
 
         # Default integration step size for leapfrog algorithm
+        self._epsilon = 0.1
         self._step_size = None
-        self.set_leapfrog_step_size(0.2)
-
-        # Default masses
-        self._mass = np.ones(self._dimension)
+        self.set_leapfrog_step_size(np.diag(self._sigma0))
 
         # Divergence checking
-
         # Create a vector of divergent iterations
-        #self._divergent = np.asarray([], dtype='int')
+        self._divergent = np.asarray([], dtype='int')
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
-        #self._hamiltonian_threshold = 10**3
+        self._hamiltonian_threshold = 10**3
+
+    def set_epsilon(self, epsilon):
+        """
+        Sets epsilon for the leapfrog algorithm
+        """
+        epsilon = float(epsilon)
+        if epsilon <= 0:
+            raise ValueError('epsilon must be positive for leapfrog algorithm')
+        self._epsilon = epsilon
+        self._set_scaled_epsilon()
+
+    def epsilon(self):
+        """
+        Returns epsilon used in leapfrog algorithm
+        """
+        return self._epsilon
+
+    def scaled_epsilon(self):
+        """
+        Returns scaled epsilon used in leapfrog algorithm
+        """
+        return self._scaled_epsilon
+
+    def _set_scaled_epsilon(self):
+        """
+        Rescales epsilon along the dimensions of step_size
+        """
+        self._scaled_epsilon = np.zeros(self._dimension)
+        for i in range(self._dimension):
+            self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -121,13 +151,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # First iteration of a run of leapfrog iterations
         if self._frog_iteration == 0:
 
-            # Sample random momentum for current point
+            # Sample random momentum for current point using identity cov
             self._current_momentum = np.random.multivariate_normal(
                 np.zeros(self._dimension), np.eye(self._dimension))
-
-            # Using sigma0 sounds like it makes sense, but doesn't work:
-            #self._current_momentum = np.random.multivariate_normal(
-            #    np.zeros(self._dimension), self._sigma0)
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -135,10 +161,10 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             self._momentum = np.array(self._current_momentum, copy=True)
 
             # Perform a half-step before starting iteration 0 below
-            self._momentum -= self._step_size * self._gradient * 0.5
+            self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
         # Perform a leapfrog step for the position
-        self._position += self._step_size * self._momentum
+        self._position += self._scaled_epsilon * self._momentum
 
         # Ask for the pdf and gradient of the current leapfrog position
         # Using this, the leapfrog step for the momentum is performed in tell()
@@ -186,11 +212,27 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """
         Sets the step size for the leapfrog algorithm.
         """
-        step_size = float(step_size)
-        if step_size <= 0:
+        a = np.atleast_1d(step_size)
+        if len(a[a < 0]) > 0:
             raise ValueError(
-                'Step size for leapfrog algorithm must be greater than zero.')
+                'Step size for leapfrog algorithm must' +
+                'be greater than zero.'
+            )
+        if len(a) == 1:
+            step_size = np.repeat(step_size, self._dimension)
+        elif not len(step_size) == self._dimension:
+            raise ValueError(
+                'Step size should either be of length 1 or equal to the' +
+                'number of parameters'
+            )
         self._step_size = step_size
+        self._set_scaled_epsilon()
+
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations
+        """
+        return self._divergent
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -239,20 +281,13 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
         # Not the last iteration? Then perform a leapfrog step and return
         if self._frog_iteration < self._n_frog_iterations:
-            self._momentum -= self._step_size * self._gradient
+            self._momentum -= self._scaled_epsilon * self._gradient
 
             # Return None to indicate there is no new sample for the chain
             return None
 
         # Final leapfrog iteration: only do half a step
-        self._momentum -= self._step_size * self._gradient * 0.5
-
-        # Leapfrog iterations finished! Perform MCMC step
-
-        # Negate momentum to make the proposal symmetric
-        #TODO: Since we square the momentum, and then never touch it again,
-        # is this step really necessary??
-        self._momentum = -self._momentum
+        self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
         # Before starting accept/reject procedure, check if the leapfrog
         # procedure has led to a finite momentum and logpdf. If not, reject.
@@ -262,26 +297,28 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
             current_U = self._current_energy
-            current_K = np.sum(self._current_momentum**2 / (2 * self._mass))
+            current_K = np.sum(self._current_momentum**2 / 2)
             proposed_U = energy
-            proposed_K = np.sum(self._momentum**2 / (2 * self._mass))
+            proposed_K = np.sum(self._momentum**2 / 2)
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
-            #div = fx + proposed_K - (self._current_energy + current_K)
-            #if div > self._hamiltonian_threshold:
-            #   self._divergent = np.append(self._divergent, self._iterations)
+            div = proposed_U + proposed_K - (self._current_energy + current_K)
+            if np.abs(div) > self._hamiltonian_threshold:  # pragma: no cover
+                self._divergent = np.append(self._divergent, self._iterations)
+                accept = 1
 
             # Accept/reject
-            r = np.exp(current_U - proposed_U + current_K - proposed_K)
-            if np.random.uniform(0, 1) < r:
-                accept = 1
-                self._current = self._position
-                self._current_energy = energy
-                self._current_gradient = gradient
+            else:
+                r = np.exp(current_U - proposed_U + current_K - proposed_K)
+                if np.random.uniform(0, 1) < r:
+                    accept = 1
+                    self._current = self._position
+                    self._current_energy = energy
+                    self._current_gradient = gradient
 
-                # Mark current as read-only, so it can be safely returned
-                self._current.setflags(write=False)
+                    # Mark current as read-only, so it can be safely returned
+                    self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
