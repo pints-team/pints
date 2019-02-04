@@ -304,7 +304,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
             div = proposed_U + proposed_K - (self._current_energy + current_K)
-            if np.abs(div) > self._hamiltonian_threshold:
+            if np.abs(div) > self._hamiltonian_threshold: # pragma: no cover
                 self._divergent = np.append(self._divergent, self._iterations)
                 accept = 1
 
