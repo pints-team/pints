@@ -47,6 +47,8 @@ setup(
         'dev': [
             'flake8>=3',            # For code style checking
             'jupyter',              # For documentation and testing
+            'nbconvert',
+            'traitlets',
         ],
     },
 )
