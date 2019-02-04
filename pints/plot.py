@@ -569,10 +569,11 @@ def pairwise(samples,
         histograms and scatter plots. Cannot use together with ``heatmap``.
     ``heatmap``
         (Optional) Set to ``True`` to plot heatmap for the pairwise plots.
-        Cannot use together with ``kde``.
+        Cannot be used together with ``kde``.
     ``opacity``
-        (Optional) When ``kde=False``, this value can be used to manually set
-        the opacity of the points in the scatter plots.
+        (Optional) This value can be used to manually set the opacity of the
+        points in the scatter plots (when ``kde=False`` and ``heatmap=False``
+        only).
     ``ref_parameters``
         (Optional) A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
