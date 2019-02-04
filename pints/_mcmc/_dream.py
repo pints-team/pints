@@ -436,7 +436,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         if nCR < 2:
             raise ValueError(
                 'Length of discrete crossover distribution must be 2 or'
-                + ' greater.')
+                ' greater.')
         self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):
