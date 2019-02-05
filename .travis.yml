@@ -64,7 +64,7 @@ matrix:
 # Note: Only install normal dependencies for unit tests; these should be tested
 #       without the packages from -dev and -doc!
 install:
-  - pip install --upgrade pipo
+  - pip install --upgrade pip
   - pip install .
   - if [[ $PINTS_DOCS == true ]]; then pip install .[docs]; fi;
   - if [[ $PINTS_STYLE == true ]]; then pip install .[dev]; fi;
