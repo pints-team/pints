@@ -103,6 +103,17 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
             np.log(np.linalg.det(s1)) -
             self._n_parameters)
 
+    def suggested_bounds(self):
+        """
+        Returns suggested boundaries for prior (typically used in performance
+        testing)
+        """
+        # maximum variance in one dimension is n_parameters, so use
+        # 3 times sqrt of this as prior bounds
+        magnitude = 3 * np.sqrt(self.n_parameters())
+        bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
+        return np.transpose(bounds).tolist()
+
     def sample(self, n_samples):
         """
         Generates independent samples from the underlying distribution.

@@ -67,6 +67,18 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         self.assertEqual(f([1, 2]), scipy.stats.multivariate_normal.logpdf(
             [1, 2], mean, cov))
 
+        # check suggested bounds
+        f = pints.toy.HighDimensionalNormalLogPDF(dimension=2)
+        bounds = f.suggested_bounds()
+        magnitude = 3 * np.sqrt(2.0)
+        bounds1 = np.tile([-magnitude, magnitude], (2, 1))
+        bounds1 = np.transpose(bounds).tolist()
+        self.assertTrue(np.array_equal(bounds, bounds1))
+
+        f = pints.toy.HighDimensionalNormalLogPDF()
+        bounds = f.suggested_bounds()
+        self.assertTrue(bounds[0][0], np.sqrt(20) * 3.0)
+
         # Test errors
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalNormalLogPDF, 0)
