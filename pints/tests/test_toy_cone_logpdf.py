@@ -63,6 +63,20 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 3, -1)
 
+        # Test bounds
+        f = pints.toy.ConeLogPDF()
+        bounds = f.suggested_bounds()
+        self.assertTrue(np.array_equal([[-25.0, -25.0], [25.0, 25.0]],
+                                       bounds))
+        beta = 3
+        dimensions = 4
+        f = pints.toy.ConeLogPDF(beta=beta, dimensions=dimensions)
+        magnitude = 25 * (1.0 / beta)**(1.0 / (dimensions - 1))
+        bounds = np.tile([-magnitude, magnitude], (dimensions, 1))
+        self.assertEqual(bounds[0][0], -magnitude)
+        self.assertEqual(bounds[1][0], magnitude)
+        self.assertTrue(np.array_equal(np.array(bounds).shape, [2, 4]))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
