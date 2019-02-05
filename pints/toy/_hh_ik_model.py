@@ -109,18 +109,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         self._voltages = np.repeat(self._v_step, 2)
         self._voltages[1::2] = self._v_hold
 
-    def _protocol(self, time):
-        """
-        Returns the voltage at the given time, according to the embedded
-        voltage step protocol.
-        """
-        i = int(time / self._t_both)
-        if i < 0 or i >= self._n_steps:
-            return self._v_hold
-        if time - i * self._t_both >= self._t_hold:
-            return self._v_step[i]
-        return self._v_hold
-
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
