@@ -65,6 +65,23 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.AnnulusLogPDF, 3, 1, -1)
 
+        # Test suggested bounds
+        f = pints.toy.AnnulusLogPDF()
+        bounds = f.suggested_bounds()
+        self.assertTrue(np.array_equal([[-16.5, -16.5], [16.5, 16.5]],
+                                       bounds))
+        r0 = 25
+        dimensions = 5
+        sigma = 20
+        f = pints.toy.AnnulusLogPDF(dimensions=dimensions,
+                                    r0=r0,
+                                    sigma=sigma)
+        bounds = f.suggested_bounds()
+        r0_magnitude = (r0 + sigma) * (1.5**(1.0 / (dimensions - 1.0)))
+        self.assertEqual(bounds[0][0], -r0_magnitude)
+        self.assertEqual(bounds[1][0], r0_magnitude)
+        self.assertTrue(np.array_equal(np.array(bounds).shape, [2, 5]))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
