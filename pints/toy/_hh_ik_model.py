@@ -137,7 +137,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
 
         # Iterate over the step, fill in the output arrays
         v = self._v_hold
-        t_last = -1
+        t_last = 0
         n_last = self._n0
         for i, t_next in enumerate(self._events):
             index = (t_last <= times) * (times < t_next)
