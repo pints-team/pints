@@ -377,7 +377,30 @@ class MCMCController(object):
         self._max_iterations = None
         self.set_max_iterations()
 
-        # TODO: Add more stopping criteria
+        self.set_log_likelihood_storage(False)
+
+    def set_log_likelihood_storage(self, store=False):
+        """
+        Sets whether or not to store log-likelihood for each posterior sample
+        """
+        self._log_likelihood_storage = bool(store)
+        if self._log_likelihood_storage:
+            self._stored_log_likelihood = []
+        else:
+            self._stored_log_likelihood = None
+
+    def log_likelihood_storage(self):
+        """
+        Returns whether the log-likelihood is being stored for each
+        posterior sample
+        """
+        return self._log_likelihood_storage
+
+    def stored_log_likelihood(self):
+        """
+        Returns log-likelihood stored for each posterior sample
+        """
+        return self._stored_log_likelihood
 
     def initial_phase_iterations(self):
         """
@@ -574,6 +597,17 @@ class MCMCController(object):
             # Add new samples to the chains
             chains.append(samples)
 
+            if self._log_likelihood_storage:
+                log_prior = self._log_pdf.log_prior()
+                if self._single_chain:
+                    log_like = np.array(
+                        [(s._current_log_pdf - log_prior(samples[i]))
+                            for i, s in enumerate(self._samplers)])
+                else:
+                    log_like = fxs - log_prior(samples)
+
+                self._stored_log_likelihood.append(log_like)
+
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
                 chain_logger.log(*samples[k])
@@ -634,6 +668,9 @@ class MCMCController(object):
         #  [chain, iteration, parameter]
         chains = np.array(chains)
         chains = chains.swapaxes(0, 1)
+
+        if self._log_likelihood_storage:
+            self._stored_log_likelihood = np.array(self._stored_log_likelihood)
 
         # Return generated chains
         return chains
