@@ -95,7 +95,8 @@ def arma11(rho, theta, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma')``,
 
-    and ``sigma' = sigma * sqrt((1 - rho^2) / (1 + theta * (1 + rho)))``.
+    and ``sigma' =
+        sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
     """
     if np.absolute(rho) >= 1:
         raise ValueError(
@@ -106,6 +107,9 @@ def arma11(rho, theta, sigma, n):
     if np.abs(theta) >= 1:
         raise ValueError('theta must be less than 1 so the process is ' +
                          'invertible.')
+    if np.abs(theta) > 1.0:
+        raise ValueError('absolute value of theta must be less than 1 ' +
+                         'so that the process is invertible.')
     n = int(n)
     if n < 0:
         raise ValueError('Length of signal cannot be negative.')
@@ -113,7 +117,7 @@ def arma11(rho, theta, sigma, n):
         return np.array([])
 
     # Generate noise
-    s = sigma * np.sqrt((1 - rho**2) / (1 + theta * (1 + rho)))
+    s = sigma * np.sqrt((1 - rho**2) / (1 + 2 * theta * rho + theta**2))
     v = np.random.normal(0, s, n)
     e = np.zeros(n)
     e[0] = v[0]
@@ -171,7 +175,8 @@ def arma11_unity(rho, theta, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma')``,
 
-    and ``sigma' = sigma * sqrt((1 - rho^2) / (1 + theta * (1 + rho)))``
+    and ``sigma' =
+        sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
 
     ``rho``
         Determines the long-run persistence of the noise (see :meth:`ar1`).
@@ -199,14 +204,18 @@ def arma11_unity(rho, theta, sigma, n):
             ' explosive).')
     if sigma < 0:
         raise ValueError('Standard deviation cannot be negative.')
-
+    if np.abs(theta) > 1.0:
+        raise ValueError('absolute value of theta must be less than 1 ' +
+                         'so that the process is invertible.')
     n = int(n)
     if n < 1:
         raise ValueError('Must supply at least one value.')
 
     # Generate noise
-    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n + 1)
-    v[0] = 1
-    for t in range(1, n + 1):
-        v[t] += (1 - rho) + rho * v[t - 1]
-    return v[1:]
+    s = sigma * np.sqrt((1 - rho**2) / (1 + 2 * theta * rho + theta**2))
+    v = np.random.normal(0, s, n + 1)
+    e = np.zeros(n)
+    e[0] = v[1]
+    for i in range(1, n):
+        e[i] = (1 - rho) + rho * e[i - 1] + v[i] + theta * v[i - 1]
+    return e
