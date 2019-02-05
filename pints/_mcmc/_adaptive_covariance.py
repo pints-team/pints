@@ -2,7 +2,7 @@
 # Adaptive covariance MCMC method
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -174,7 +174,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Update mu, log acceptance rate, and covariance matrix
             self._mu = (1 - gamma) * self._mu + gamma * self._current
             self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
+            dsigm = np.reshape(
+                self._current - self._mu, (self._n_parameters, 1))
             self._sigma = (
                 (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
 

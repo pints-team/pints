@@ -2,7 +2,7 @@
 # Dream MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -125,7 +125,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Select initial proposal for chain j
                 delta = int(np.random.choice(self._delta_max, 1)[0] + 1)
                 if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                    gamma = 2.38 / np.sqrt(2 * delta * self._n_parameters)
                 else:
                     gamma = 1.0
 
@@ -140,7 +140,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
                 self._proposed[j] += dX + np.random.normal(
                     loc=0, scale=np.abs(self._b * self._mu),
-                    size=self._dimension)
+                    size=self._n_parameters)
 
                 # Set crossover probability
                 if self._constant_crossover:
@@ -153,7 +153,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                     self._L[self._m[j]] += 1
 
                 # Randomly set elements of proposal to back original
-                for d in range(self._dimension):
+                for d in range(self._n_parameters):
                     if 1 - CR > np.random.rand():
                         self._proposed[j][d] = self._current[j][d]
 
@@ -283,7 +283,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Update CR distribution
                 delta = (next - self._current)**2
                 for j in range(self._chains):
-                    for d in range(0, self._dimension):
+                    for d in range(0, self._n_parameters):
                         self._delta[self._m[j]] += (
                             delta[j][d] / max(self._variance[j][d], 1e-11))
 
