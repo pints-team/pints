@@ -40,7 +40,7 @@ def ar1(rho, sigma, n):
     vector of simulated data.
 
     The generated noise follows the distribution
-    ``e(t) ~ rho * e(t - 1) + v(t)``,
+    ``e(t) = rho * e(t - 1) + v(t)``,
 
     where ``v(t) ~ iid N(0, sigma * sqrt(1 - rho^2))``.
 
@@ -91,7 +91,7 @@ def arma11(rho, theta, sigma, n):
     """
     Generates an ARMA(1,1) error process of the form:
 
-    ``e(t) ~ rho * e(t - 1) + v(t) + theta * v[t-1]``,
+    ``e(t) = (1 - rho) + rho * e(t - 1) + v(t) + theta * v[t-1]``,
 
     where ``v(t) ~ iid N(0, sigma')``,
 
@@ -130,6 +130,55 @@ def ar1_unity(rho, sigma, n):
     ``rho``
         Determines the magnitude of the noise (see :meth:`ar1`). Must be less
         than or equal to 1.
+    ``sigma``
+        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
+        Must be greater than 0.
+    ``n``
+        The length of the signal. (Only single time-series are supported.)
+
+    Returns an array of length ``n`` containing the generated noise.
+
+    Example::
+
+        values = model.simulate(parameters, times)
+        noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
+
+    """
+    if np.absolute(rho) > 1:
+        raise ValueError(
+            'Rho must be less than 1 in magnitude (otherwise the process is'
+            ' explosive).')
+    if sigma < 0:
+        raise ValueError('Standard deviation cannot be negative.')
+
+    n = int(n)
+    if n < 1:
+        raise ValueError('Must supply at least one value.')
+
+    # Generate noise
+    v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n + 1)
+    v[0] = 1
+    for t in range(1, n + 1):
+        v[t] += (1 - rho) + rho * v[t - 1]
+    return v[1:]
+
+
+def arma11_unity(rho, theta, sigma, n):
+    """
+    Generates an ARMA(1,1) error process of the form:
+
+    ``e(t) = (1 - rho) + rho * e(t - 1) + v(t) + theta * v[t-1]``,
+
+    where ``v(t) ~ iid N(0, sigma')``,
+
+    and ``sigma' = sigma * sqrt((1 - rho^2) / (1 + theta * (1 + rho)))``
+
+    ``rho``
+        Determines the long-run persistence of the noise (see :meth:`ar1`).
+        Must be less than 1.
+    ``theta``
+        Contributes to first order autocorrelation of noise. Must be less
+        than 1.
     ``sigma``
         The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
         Must be greater than 0.
