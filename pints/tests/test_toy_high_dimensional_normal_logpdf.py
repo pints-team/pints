@@ -79,6 +79,16 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         bounds = f.suggested_bounds()
         self.assertTrue(bounds[0][0], np.sqrt(20) * 3.0)
 
+        # Test kl_divergence() errors - need to think of value-based test
+        n = 1000
+        d = self.n_parameters()
+        samples1 = f.sample(n)
+        self.assertEqual(samples1.shape, (n, d))
+        x = np.ones((n, d + 1))
+        self.assertRaises(ValueError, f.kl_divergence, x)
+        x = np.ones((n, d, 2))
+        self.assertRaises(ValueError, f.kl_divergence, x)
+
         # Test errors
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalNormalLogPDF, 0)
