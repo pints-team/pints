@@ -11,6 +11,7 @@ import pints
 import pints.toy
 import unittest
 import numpy as np
+import scipy.stats
 
 
 class TestHighDimensionalNormalLogPDF(unittest.TestCase):
@@ -40,11 +41,37 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         self.assertTrue(np.isscalar(f1))
         self.assertTrue(np.isscalar(f2))
         self.assertTrue(f1 > f2)
-        # Note: thorough testing of stats is done by scipy!
+
+        # default
+        f = pints.toy.HighDimensionalNormalLogPDF()
+        self.assertEqual(f.n_parameters(), 20)
+        self.assertEqual(f.rho(), 0.5)
+
+        # change rho
+        f = pints.toy.HighDimensionalNormalLogPDF(rho=-0.9)
+        self.assertEqual(f.n_parameters(), 20)
+        self.assertEqual(f.rho(), -0.9)
+
+        # change both
+        f = pints.toy.HighDimensionalNormalLogPDF(dimension=15,
+                                                  rho=0.9)
+        self.assertEqual(f.n_parameters(), 15)
+        self.assertEqual(f.rho(), 0.9)
+
+        # For 2d case check value versus Scipy (in case we change to
+        # implementing via something other than Scipy)
+        f = pints.toy.HighDimensionalNormalLogPDF(dimension=2)
+        cov = [[1.0, np.sqrt(1.0 / 2.0)],
+               [np.sqrt(1.0 / 2.0), 2.0]]
+        mean = np.zeros(2)
+        self.assertEqual(f([1, 2]), scipy.stats.multivariate_normal.logpdf(
+            [1, 2], mean, cov))
 
         # Test errors
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalNormalLogPDF, 0)
+        self.assertRaises(
+            ValueError, pints.toy.HighDimensionalNormalLogPDF, 2, 2)
 
 
 if __name__ == '__main__':
