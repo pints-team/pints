@@ -2,7 +2,7 @@
 # Particle swarm optimisation (PSO).
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -133,8 +133,8 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial velocities
         for i in range(self._population_size):
-            self._vs.append(
-                1e-1 * self._sigma0 * np.random.uniform(0, 1, self._dimension))
+            self._vs.append(1e-1 * self._sigma0 *
+                            np.random.uniform(0, 1, self._n_parameters))
 
         # Set initial scores and local best
         for i in range(self._population_size):
@@ -230,7 +230,7 @@ class PSO(pints.PopulationBasedOptimiser):
 
     def _suggested_population_size(self):
         """ See :meth:`Optimiser._suggested_population_size(). """
-        return 4 + int(3 * np.log(self._dimension))
+        return 4 + int(3 * np.log(self._n_parameters))
 
     def tell(self, fx):
         """ See :meth:`Optimiser.tell()`. """
@@ -253,8 +253,8 @@ class PSO(pints.PopulationBasedOptimiser):
                 self._pl[i] = np.array(self._xs[i], copy=True)
 
             # Calculate "velocity"
-            al = np.random.uniform(0, self._almax, self._dimension)
-            ag = np.random.uniform(0, self._agmax, self._dimension)
+            al = np.random.uniform(0, self._almax, self._n_parameters)
+            ag = np.random.uniform(0, self._agmax, self._n_parameters)
             self._vs[i] += (
                 al * (self._pl[i] - self._xs[i]) +
                 ag * (self._pg - self._xs[i]))

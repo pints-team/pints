@@ -2,7 +2,7 @@
 # Sub-module containing nested samplers
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -40,8 +40,8 @@ class NestedSampler(pints.TunableMethod):
         self._log_prior = log_prior
 
         # Get dimension
-        self._dimension = self._log_likelihood.n_parameters()
-        if self._dimension != self._log_prior.n_parameters():
+        self._n_parameters = self._log_likelihood.n_parameters()
+        if self._n_parameters != self._log_prior.n_parameters():
             raise ValueError(
                 'Given log_likelihood and log_prior must have same number of'
                 ' parameters.')
