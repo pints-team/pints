@@ -133,8 +133,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
-        # Ensure proposed_log_pdf is read-only numpy array
-        proposed_log_pdf = np.copy(fx)
+        # Ensure proposed_log_pdf is a numpy array
+        proposed_log_pdf = np.array(fx, copy=True)
 
         # First points?
         if self._current is None:

@@ -110,8 +110,8 @@ class SingleChainMCMC(MCMCSampler):
 
     def current_log_pdf(self):
         """
-        Returns the log pdf value of the current point (i.e. the most recent
-        point returned by :meth:`tell()`.
+        Returns the log pdf value of the current point (i.e. of the most
+        recent point returned by :meth:`tell()`).
         """
         raise NotImplementedError
 
@@ -215,8 +215,8 @@ class MultiChainMCMC(MCMCSampler):
 
     def current_log_pdfs(self):
         """
-        Returns the log pdf values of the current points (i.e. the most recent
-        points returned by :meth:`tell()`.
+        Returns the log pdf values of the current points (i.e. of the most
+        recent points returned by :meth:`tell()`).
         """
         raise NotImplementedError
 
@@ -558,8 +558,7 @@ class MCMCSampling(object):
 
                 none_found = [x is None for x in samples]
                 if any(none_found):
-                    # Can't mix None w. samples
-                    assert(all(none_found))
+                    assert(all(none_found))     # Can't mix None w. samples
                     intermediate_step = True
             else:
                 samples = self._samplers[0].tell(fxs)
