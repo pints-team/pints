@@ -44,6 +44,13 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         return False
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated logpdf.
+        """
+        return False
+
     def set_initial_phase(self, in_initial_phase):
         """
         For methods that need an initial phase (see
@@ -51,13 +58,6 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         algorithm. For other methods a ``NotImplementedError`` is returned.
         """
         raise NotImplementedError
-
-    def needs_sensitivities(self):
-        """
-        Returns ``True`` if this methods needs sensitivities to be passed in to
-        ``tell`` along with the evaluated logpdf.
-        """
-        return False
 
 
 class SingleChainMCMC(MCMCSampler):
@@ -105,6 +105,13 @@ class SingleChainMCMC(MCMCSampler):
     def ask(self):
         """
         Returns a parameter vector to evaluate the logpdf for.
+        """
+        raise NotImplementedError
+
+    def current_log_pdf(self):
+        """
+        Returns the log pdf value of the current point (i.e. the most recent
+        point returned by :meth:`tell()`.
         """
         raise NotImplementedError
 
@@ -203,6 +210,13 @@ class MultiChainMCMC(MCMCSampler):
     def ask(self):
         """
         Returns a sequence of parameter vectors to evaluate a LogPDF for.
+        """
+        raise NotImplementedError
+
+    def current_log_pdfs(self):
+        """
+        Returns the log pdf values of the current points (i.e. the most recent
+        points returned by :meth:`tell()`.
         """
         raise NotImplementedError
 

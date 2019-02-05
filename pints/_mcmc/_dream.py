@@ -76,7 +76,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
         # Current points and proposed points
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdfs = None
         self._proposed = None
 
         #
@@ -163,6 +163,10 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
+    def current_log_pdfs(self):
+        """ See :meth:`MultiChainMCMC._log_init()`. """
+        return self._current_log_pdfs
+
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -243,7 +247,8 @@ class DreamMCMC(pints.MultiChainMCMC):
 
             # Accept
             self._current = self._proposed
-            self._current_log_pdfs = proposed_log_pdfs
+            self._current_log_pdfs = np.copy(proposed_log_pdfs)
+            self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
             self._proposed = None
@@ -252,8 +257,8 @@ class DreamMCMC(pints.MultiChainMCMC):
             return self._current
 
         # Perform iteration
-        next = np.array(self._current, copy=True)
-        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
+        next = np.copy(self._current)
+        next_log_pdfs = np.copy(self._current_log_pdfs)
 
         # Sample uniform numbers
         u = np.log(np.random.uniform(size=self._chains))
@@ -300,6 +305,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Update (part 2)
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None

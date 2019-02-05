@@ -123,6 +123,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
+    def current_log_pdfs(self):
+        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
+        return self._current_log_pdfs
+
     def set_normal_error(self, normal_error):
         """
         If true sets the error process to be a normal error, N(0, b*);
@@ -209,6 +213,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             # Accept
             self._current = self._proposed
             self._current_log_pdfs = proposed_log_pdfs
+            self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
             self._proposed = None
@@ -231,6 +236,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
