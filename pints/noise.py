@@ -40,16 +40,17 @@ def ar1(rho, sigma, n):
     vector of simulated data.
 
     The generated noise follows the distribution
-    ``e(t) ~ rho * e(t - 1) + v(t)``, where ``v(t) ~ iid N(0, sigma)``.
+    ``e(t) ~ rho * e(t - 1) + v(t)``,
+
+    where ``v(t) ~ iid N(0, sigma * sqrt(1 - rho^2))``.
 
     Arguments:
 
     ``rho``
-        Determines the magnitude of the noise (see above). Must be less than or
-        equal to 1.
+        Determines the magnitude of the noise (see above). Must be less than 1.
     ``sigma``
-        The standard deviation of ``v(t)`` (see above). Must be greater than
-        zero.
+        The marginal standard deviation of ``e(t)`` (see above).
+        Must be greater than zero.
     ``n``
         The length of the signal. (Only single time-series are supported.)
 
@@ -58,15 +59,15 @@ def ar1(rho, sigma, n):
     Example::
 
         values = model.simulate(parameters, times)
-        noisy_values = values + noise.ar1(5, len(values))
+        noisy_values = values + noise.ar1(0.9, 5, len(values))
 
     """
-    if np.absolute(rho) > 1:
+    if np.absolute(rho) >= 1:
         raise ValueError(
-            'Magnitude of rho cannot be greater than 1 (otherwise the process'
-            ' is explosive).')
-    if sigma < 0:
-        raise ValueError('Standard deviation cannot be negative.')
+            'Magnitude of rho must be less than 1 (otherwise the process'
+            ' is non-stationary).')
+    if sigma <= 0:
+        raise ValueError('Standard deviation must be positive.')
 
     n = int(n)
     if n < 0:
@@ -86,6 +87,41 @@ def ar1(rho, sigma, n):
     return v
 
 
+def arma11(rho, theta, sigma, n):
+    """
+    Generates an ARMA(1,1) error process of the form:
+
+    ``e(t) ~ rho * e(t - 1) + v(t) + theta * v[t-1]``,
+
+    where ``v(t) ~ iid N(0, sigma')``,
+
+    and ``sigma' = sigma * sqrt((1 - rho^2) / (1 + theta * (1 + rho)))``.
+    """
+    if np.absolute(rho) >= 1:
+        raise ValueError(
+            'Magnitude of rho must be less than 1 (otherwise the process'
+            ' is non-stationary).')
+    if sigma <= 0:
+        raise ValueError('Standard deviation must be positive.')
+    if np.abs(theta) >= 1:
+        raise ValueError('theta must be less than 1 so the process is ' +
+                         'invertible.')
+    n = int(n)
+    if n < 0:
+        raise ValueError('Length of signal cannot be negative.')
+    elif n == 0:
+        return np.array([])
+
+    # Generate noise
+    s = sigma * np.sqrt((1 - rho**2) / (1 + theta * (1 + rho)))
+    v = np.random.normal(0, s, n)
+    e = np.zeros(n)
+    e[0] = v[0]
+    for i in range(1, n):
+        e[i] = rho * e[i - 1] + v[i] + theta * v[i - 1]
+    return e
+
+
 def ar1_unity(rho, sigma, n):
     """
     Generates noise following an autoregressive order 1 process of mean 1, that
@@ -95,8 +131,8 @@ def ar1_unity(rho, sigma, n):
         Determines the magnitude of the noise (see :meth:`ar1`). Must be less
         than or equal to 1.
     ``sigma``
-        The standard deviation of ``v(t)`` (see :meth:`ar`). Must be zero or
-        greater.
+        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
+        Must be greater than 0.
     ``n``
         The length of the signal. (Only single time-series are supported.)
 
@@ -105,7 +141,7 @@ def ar1_unity(rho, sigma, n):
     Example::
 
         values = model.simulate(parameters, times)
-        noisy_values = values * noise.ar1_unity(0.5, 1, len(values))
+        noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
     if np.absolute(rho) > 1:
@@ -125,4 +161,3 @@ def ar1_unity(rho, sigma, n):
     for t in range(1, n + 1):
         v[t] += (1 - rho) + rho * v[t - 1]
     return v[1:]
-
