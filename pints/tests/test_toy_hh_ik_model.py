@@ -28,11 +28,10 @@ class TestHodgkinHuxleyIKModel(unittest.TestCase):
         self.assertEqual(len(times), len(values))
         folded = model.fold(times, values)
         self.assertEqual(len(folded), 12)
+
         # Test duration
         self.assertEqual(model.suggested_duration(), 1200)
-        # Test protocol out of bounds
-        self.assertEqual(model._protocol(-1), -75)
-        self.assertEqual(model._protocol(9999), -75)
+
         # Test initial condition out of bounds
         self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKModel, 0)
         self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKModel, 1)
