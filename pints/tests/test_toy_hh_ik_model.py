@@ -36,6 +36,9 @@ class TestHodgkinHuxleyIKModel(unittest.TestCase):
         self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKModel, 0)
         self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKModel, 1)
 
+        # Test time out of bounds
+        self.assertRaises(ValueError, model.simulate, p0, [-1, 0, 1])
+
 
 if __name__ == '__main__':
     unittest.main()
