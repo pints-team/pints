@@ -2,7 +2,7 @@
 # Sub-module containing MCMC inference routines
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -82,7 +82,7 @@ class SingleChainMCMC(MCMCSampler):
         self._x0 = pints.vector(x0)
 
         # Get number of parameters
-        self._dimension = len(self._x0)
+        self._n_parameters = len(self._x0)
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -93,14 +93,14 @@ class SingleChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0)
-            if np.product(self._sigma0.shape) == self._dimension:
+            if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
-                self._sigma0 = self._sigma0.reshape((self._dimension,))
+                self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
             else:
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
-                    (self._dimension, self._dimension))
+                    (self._n_parameters, self._n_parameters))
 
     def ask(self):
         """
@@ -176,10 +176,10 @@ class MultiChainMCMC(MCMCSampler):
         self._x0.setflags(write=False)
 
         # Get number of parameters
-        self._dimension = len(self._x0[0])
+        self._n_parameters = len(self._x0[0])
 
         # Check initial points all have correct dimension
-        if not all([len(x) == self._dimension for x in self._x0]):
+        if not all([len(x) == self._n_parameters for x in self._x0]):
             raise ValueError('All initial points must have same dimension.')
 
         # Check initial standard deviation
@@ -191,14 +191,14 @@ class MultiChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._dimension:
+            if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
-                self._sigma0 = self._sigma0.reshape((self._dimension,))
+                self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
             else:
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
-                    (self._dimension, self._dimension))
+                    (self._n_parameters, self._n_parameters))
 
     def ask(self):
         """
@@ -287,7 +287,7 @@ class MCMCSampling(object):
         self._log_pdf = log_pdf
 
         # Get number of parameters
-        self._dimension = self._log_pdf.n_parameters()
+        self._n_parameters = self._log_pdf.n_parameters()
 
         # Check number of chains
         self._chains = int(chains)
@@ -299,7 +299,7 @@ class MCMCSampling(object):
             raise ValueError(
                 'Number of initial positions must be equal to number of'
                 ' chains.')
-        if not all([len(x) == self._dimension for x in x0]):
+        if not all([len(x) == self._n_parameters for x in x0]):
             raise ValueError(
                 'All initial positions must have the same dimension as the'
                 ' given LogPDF.')
@@ -437,7 +437,7 @@ class MCMCSampling(object):
                 cl = pints.Logger()
                 cl.set_stream(None)
                 cl.set_filename(filename, True)
-                for k in range(self._dimension):
+                for k in range(self._n_parameters):
                     cl.add_float('p' + str(k))
                 chain_loggers.append(cl)
 

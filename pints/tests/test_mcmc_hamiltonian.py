@@ -3,7 +3,7 @@
 # Tests the basic methods of the Hamiltonian MCMC routine.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -106,7 +106,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         n = mcmc.leapfrog_steps()
         d = mcmc.leapfrog_step_size()
         self.assertIsInstance(n, int)
-        self.assertTrue(len(d) == mcmc._dimension)
+        self.assertTrue(len(d) == mcmc._n_parameters)
 
         mcmc.set_leapfrog_steps(n + 1)
         self.assertEqual(mcmc.leapfrog_steps(), n + 1)

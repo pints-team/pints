@@ -2,7 +2,7 @@
 # Nested ellipsoidal sampler implementation.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -158,7 +158,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             logger.add_time('Time m:s')
 
         # Problem dimension
-        d = self._dimension
+        d = self._n_parameters
 
         # Generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
