@@ -17,6 +17,7 @@ class TestNormalLogPDF(unittest.TestCase):
     """
     Tests the normal logpdf toy distribution.
     """
+
     def test_normal_logpdf(self):
         """
         Test NormalLogPDF basics.
@@ -33,6 +34,11 @@ class TestNormalLogPDF(unittest.TestCase):
         f = pints.toy.NormalLogPDF(x, y)
         self.assertEqual(f.n_parameters(), len(x))
         self.assertTrue(np.isscalar(f(x)))
+
+        # test default
+        f = pints.toy.NormalLogPDF()
+        self.assertEqual(f.n_parameters(), 2)
+        self.assertTrue(np.isscalar(f([0, 0])))
 
         # Test errors
         self.assertRaises(
