@@ -85,6 +85,9 @@ class TestPopulationMCMC(unittest.TestCase):
                 self.assertFalse(mcmc.in_initial_phase())
             if i >= 50:
                 chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))

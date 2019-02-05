@@ -34,7 +34,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Current point and proposed point
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdf = None
         self._proposed = None
 
     def acceptance_rate(self):
@@ -111,7 +111,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         if self._current is None:
             if not np.isfinite(fx):
                 raise ValueError(
-                    'Initial point for MCMC must have finite logpdf.')
+                    'Initial point for MCMC must have finite log_pdf.')
 
             # Accept
             self._current = self._proposed

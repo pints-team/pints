@@ -61,7 +61,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Current points and proposed points
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdfs = None
         self._proposed = None
 
         #

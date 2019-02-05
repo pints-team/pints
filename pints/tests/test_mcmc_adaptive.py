@@ -78,6 +78,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
             if i >= 50:
                 chain.append(sample)
             rate.append(mcmc.acceptance_rate())
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
         chain = np.array(chain)
         rate = np.array(rate)
         self.assertEqual(chain.shape[0], 50)
