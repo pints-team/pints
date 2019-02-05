@@ -412,6 +412,17 @@ class TestPlot(unittest.TestCase):
         pints.plot.pairwise(few_samples, kde=True,
                             ref_parameters=self.real_parameters)
 
+        # Test heatmap gives no error
+        pints.plot.pairwise(few_samples, heatmap=True,
+                            ref_parameters=self.real_parameters)
+
+        # Check kde and heatmap error
+        self.assertRaisesRegexp(
+            ValueError, 'Cannot use \`kde\` and \`heatmap\` together\.',
+            pints.plot.pairwise, self.samples,
+            kde=True, heatmap=True
+        )
+
         # Test opacity gives no error
         pints.plot.pairwise(few_samples, opacity=0.2)
 
