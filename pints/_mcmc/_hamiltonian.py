@@ -2,7 +2,7 @@
 # Hamiltonian MCMC method
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -118,8 +118,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """
         Rescales epsilon along the dimensions of step_size
         """
-        self._scaled_epsilon = np.zeros(self._dimension)
-        for i in range(self._dimension):
+        self._scaled_epsilon = np.zeros(self._n_parameters)
+        for i in range(self._n_parameters):
             self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
 
     def ask(self):
@@ -153,7 +153,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
             # Sample random momentum for current point using identity cov
             self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._dimension), np.eye(self._dimension))
+                np.zeros(self._n_parameters), np.eye(self._n_parameters))
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -219,8 +219,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
                 'be greater than zero.'
             )
         if len(a) == 1:
-            step_size = np.repeat(step_size, self._dimension)
-        elif not len(step_size) == self._dimension:
+            step_size = np.repeat(step_size, self._n_parameters)
+        elif not len(step_size) == self._n_parameters:
             raise ValueError(
                 'Step size should either be of length 1 or equal to the' +
                 'number of parameters'
@@ -249,7 +249,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
         # Quick check of given formats
         energy = float(energy)
-        assert(gradient.shape == (self._dimension, ))
+        assert(gradient.shape == (self._n_parameters, ))
 
         # Very first call
         if self._current is None:

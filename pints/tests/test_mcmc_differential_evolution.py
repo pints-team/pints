@@ -3,7 +3,7 @@
 # Tests the basic methods of the differential evolution MCMC method.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -176,7 +176,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
         mcmc.set_relative_scaling(0)
         self.assertTrue(np.array_equal(mcmc._b_star,
-                                       np.repeat(mcmc._b, mcmc._dimension)))
+                                       np.repeat(mcmc._b, mcmc._n_parameters)))
         mcmc.set_relative_scaling(1)
         self.assertTrue(np.array_equal(mcmc._b_star,
                                        mcmc._mu * mcmc._b))
