@@ -124,3 +124,11 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         x[:, 1] -= self._b * (x[:, 0] ** 2 - self._V)
         return x
 
+    def suggested_bounds(self):
+        """
+        Returns suggested boundaries for prior (typically used in performance
+        testing)
+        """
+        # based on independent sampling think the following hard bounds are ok
+        bounds = [[-50, 50], [-100, 100]]
+        return np.transpose(bounds).tolist()

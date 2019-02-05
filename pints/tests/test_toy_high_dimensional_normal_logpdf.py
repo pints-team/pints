@@ -72,7 +72,7 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         bounds = f.suggested_bounds()
         magnitude = 3 * np.sqrt(2.0)
         bounds1 = np.tile([-magnitude, magnitude], (2, 1))
-        bounds1 = np.transpose(bounds).tolist()
+        bounds1 = np.transpose(bounds1).tolist()
         self.assertTrue(np.array_equal(bounds, bounds1))
 
         f = pints.toy.HighDimensionalNormalLogPDF()
