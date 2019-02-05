@@ -31,7 +31,7 @@ class NormalLogPDF(pints.LogPDF):
     *Extends:* :class:`pints.LogPDF`.
     """
 
-    def __init__(self, mean=0, sigma=1):
+    def __init__(self, mean=[0, 0], sigma=[1, 1]):
 
         # Copy and convert
         mean = np.array(mean, copy=True)
