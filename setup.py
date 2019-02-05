@@ -36,7 +36,6 @@ setup(
         # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
-        # Should not be imported
         'matplotlib>=1.5',
     ],
     extras_require={
