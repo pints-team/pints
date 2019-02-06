@@ -2,7 +2,7 @@
 
 changeName()
 {
-  grep -rl "$1" ./pints/* | xargs perl -i -pe"s/$1/$2/g"
+  grep -rl "$1" ./pints/* ./examples/* | xargs perl -i -pe"s/$1/$2/g"
 }
 
 
