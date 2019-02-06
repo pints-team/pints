@@ -33,7 +33,6 @@ import guzzle_sphinx_theme
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
 ]
