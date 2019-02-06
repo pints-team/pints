@@ -439,6 +439,28 @@ class TestLogLikelihood(unittest.TestCase):
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
 
+    def test_ar1(self):
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([1.0, -10.7, 15.5])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood([0, 0.5, 5]),
+                               -19.706737485492436)
+
+    def test_arma11(self):
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3, 4])
+        model.simulate(parameters, times)
+        values = np.asarray([3, -4.5, 10.5, 0.3])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood([0, 0.9, -0.4, 1]),
+                               -171.53031588534171)
+
 
 if __name__ == '__main__':
     unittest.main()
