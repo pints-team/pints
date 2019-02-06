@@ -15,9 +15,9 @@ import scipy.special
 
 class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming independent normally-distributed noise
-    at each time point, using a known value for the standard deviation (sigma)
-    of that noise:
+    Calculates a log-likelihood assuming independent Gaussian noise at each
+    time point, using a known value for the standard deviation (sigma) of that
+    noise:
 
     .. math::
         \log{L(\\theta | \sigma,\\boldsymbol{x})} =
@@ -92,9 +92,9 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
 
 class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming independent normally-distributed noise
-    at each time point, and adds a parameter representing the standard
-    deviation (sigma) of the noise on each output.
+    Calculates a log-likelihood assuming independent Gaussian noise at each
+    time point, and adds a parameter representing the standard deviation
+    (sigma) of the noise on each output.
 
     For a noise level of ``sigma``, the likelihood becomes:
 

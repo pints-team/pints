@@ -15,7 +15,7 @@ import numpy as np
 
 class TestGaussianLogPDF(unittest.TestCase):
     """
-    Tests the normal logpdf toy distribution.
+    Tests the Gaussian logpdf toy distribution.
     """
 
     def test_gaussian_logpdf(self):
@@ -98,19 +98,19 @@ class TestGaussianLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
-    def test_normal_sensitivity(self):
+    def test_gaussian_sensitivity(self):
         """
         Tests that the gradient of the log pdf is correct
         for a few specific examples, and that the log pdf
         returned is correct.
         """
-        # 1d normal
+        # 1d Gaussian
         f1 = pints.toy.GaussianLogPDF([0], [1])
         L, dL = f1.evaluateS1([2])
         self.assertAlmostEqual(L, -2.918938533204673)
         self.assertEqual(dL[0], -2)
 
-        # 2d normal
+        # 2d Gaussian
         f2_1 = pints.toy.GaussianLogPDF([0, 0], [[1, 0], [0, 1]])
         L, dL = f2_1.evaluateS1([2, 1])
         self.assertAlmostEqual(L, -4.337877066409345)
@@ -119,7 +119,7 @@ class TestGaussianLogPDF(unittest.TestCase):
         f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
         L, dL = f2_2.evaluateS1([-2.5, 1.5])
 
-        # 3d normal
+        # 3d Gaussian
         f3 = pints.toy.GaussianLogPDF([1, 2, 3], [[2, 0, 0],
                                                   [0, 2, 0],
                                                   [0, 0, 2]])

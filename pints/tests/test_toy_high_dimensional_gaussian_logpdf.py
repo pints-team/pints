@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the high-dimensional normal log-pdf toy problem.
+# Tests the high-dimensional Gaussian log-pdf toy problem.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -15,7 +15,7 @@ import numpy as np
 
 class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
     """
-    Tests the high-dimensional normal log-pdf toy problem.
+    Tests the high-dimensional Gaussian log-pdf toy problem.
     """
     def test_high_dimensional_log_pdf(self):
 

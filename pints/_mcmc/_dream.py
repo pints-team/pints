@@ -83,7 +83,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Default settings
         #
 
-        # Normal proposal std.
+        # Gaussian proposal std.
         self._b = 0.01
 
         # b* distribution for e ~ U(-b*, b*)
@@ -316,7 +316,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def b(self):
         """
-        Returns the normal scale coefficient used in updating the position of
+        Returns the Gaussian scale coefficient used in updating the position of
         each chain.
         """
         return self._b
@@ -377,11 +377,12 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_b(self, b):
         """
-        Sets the normal scale coefficient used in updating the position of each
-        chain (must be non-negative).
+        Sets the Gaussian scale coefficient used in updating the position of
+        each chain (must be non-negative).
         """
         if b < 0:
-            raise ValueError('normal scale coefficient must be non-negative.')
+            raise ValueError(
+                'Gaussian scale coefficient must be non-negative.')
         self._b = b
 
     def set_constant_crossover(self, enabled):

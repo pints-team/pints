@@ -73,8 +73,6 @@ class GaussianLogPDF(pints.LogPDF):
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
 
-        # Calculate the Kullback-Leibler divergence between the given samples
-        # and this multivariate normal distribution underlying.
         # From wikipedia:
         #
         # k = dimension of distribution

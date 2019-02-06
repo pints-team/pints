@@ -17,7 +17,6 @@ Example::
 
 .. autoclass:: ARMA11LogLikelihood
 
-
 .. autoclass:: CauchyLogLikelihood
 
 .. autoclass:: GaussianKnownSigmaLogLikelihood
