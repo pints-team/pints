@@ -170,7 +170,7 @@ from ._mcmc import (
     MCMCSampler,
     SingleChainMCMC,
     MultiChainMCMC,
-    MCMCSampling,
+    MCMCController,
     mcmc_sample,
 )
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC

@@ -12,6 +12,7 @@ changeName()
 #   find . | grep "$1" | xargs sed -i "s/$1/$2/g"
 # }
 
+<<<<<<< HEAD
 # uses homebrew package rename to change file names: brew install rename
 rename -vs normal gaussian ./pints/tests/* ./pints/* ./pints/toy/*
 
@@ -27,4 +28,7 @@ changeName multimodal_normal multimodal_gaussian
 changeName high_dimensional_normal high_dimensional_gaussian
 changeName normal_logpdf gaussian_logpdf
 changeName '_normal ' '_gaussian '
+=======
+changeName MCMCSampling MCMCController
+>>>>>>> Changed MCMCSampling to MCMCController
 
