@@ -449,10 +449,13 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        rho = np.asarray(x[-3 * self._no:-self._no])
+        rho = np.asarray(x[-3 * self._no:-2 * self._no])
         phi = np.asarray(x[-2 * self._no:-self._no])
-        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
-        error = self._values - self._problem.evaluate(x[:-2 * self._no])
+        sigma = (
+            np.asarray(x[-self._no:]) *
+            np.sqrt((1.0 - rho**2) / (1.0 + 2.0 * phi * rho + phi**2))
+        )
+        error = self._values - self._problem.evaluate(x[:-3 * self._no])
         v = error[1:] - rho * error[:-1]
         autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
