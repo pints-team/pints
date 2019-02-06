@@ -93,8 +93,8 @@ def arma11(rho, theta, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma')``,
 
-    and ``sigma' =
-        sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
+    and
+    ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
     """
     if np.absolute(rho) >= 1:
         raise ValueError(
@@ -171,8 +171,8 @@ def arma11_unity(rho, theta, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma')``,
 
-    and ``sigma' =
-        sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
+    and 
+    ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
 
     ``rho``
         Determines the long-run persistence of the noise (see :meth:`ar1`).
