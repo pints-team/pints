@@ -15,7 +15,7 @@ import scipy.stats
 
 class SimpleEggBoxLogPDF(pints.LogPDF):
     """
-    Two-dimensional multimodal Normal distribution, with four more-or-less
+    Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
 
     Arguments:

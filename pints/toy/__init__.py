@@ -16,11 +16,11 @@ from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
 from ._hes1_michaelis_menten import Hes1Model                       # noqa
 from ._hh_ik_model import HodgkinHuxleyIKModel                      # noqa
-from ._high_dimensional_normal import HighDimensionalNormalLogPDF   # noqa
+from ._high_dimensional_gaussian import HighDimensionalGaussianLogPDF   # noqa
 from ._logistic_model import LogisticModel                          # noqa
 from ._lotka_volterra_model import LotkaVolterraModel               # noqa
-from ._multimodal_normal import MultimodalNormalLogPDF              # noqa
-from ._normal import NormalLogPDF                                   # noqa
+from ._multimodal_gaussian import MultimodalGaussianLogPDF              # noqa
+from ._gaussian import GaussianLogPDF                                   # noqa
 from ._parabola import ParabolicError                               # noqa
 from ._repressilator_model import RepressilatorModel                # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa

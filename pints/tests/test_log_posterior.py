@@ -26,7 +26,7 @@ class Testlog_posterior(unittest.TestCase):
         times = np.linspace(0, 1000, 100)
         values = model.simulate(real_parameters, times)
         problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.KnownNoiseLogLikelihood(problem, sigma)
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
 
         # Create a prior
         log_prior = pints.UniformLogPrior([0, 0], [1, 1000])
@@ -41,8 +41,8 @@ class Testlog_posterior(unittest.TestCase):
 
         # Test derivatives
         log_prior = pints.ComposedLogPrior(
-            pints.NormalLogPrior(0.015, 0.3),
-            pints.NormalLogPrior(500, 100))
+            pints.GaussianLogPrior(0.015, 0.3),
+            pints.GaussianLogPrior(500, 100))
         log_posterior = pints.LogPosterior(log_likelihood, log_prior)
         x = [0.013, 540]
         y, dy = log_posterior.evaluateS1(x)
@@ -66,7 +66,7 @@ class Testlog_posterior(unittest.TestCase):
         # Prior and likelihood must have same dimension
         self.assertRaises(
             ValueError, pints.LogPosterior, log_likelihood,
-            pints.NormalLogPrior(0.015, 0.3))
+            pints.GaussianLogPrior(0.015, 0.3))
 
 
 if __name__ == '__main__':

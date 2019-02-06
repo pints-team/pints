@@ -13,7 +13,7 @@ import numpy as np
 import scipy.special
 
 
-class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
+class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, using a known value for the standard deviation (sigma)
@@ -38,7 +38,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, sigma):
-        super(KnownNoiseLogLikelihood, self).__init__(problem)
+        super(GaussianKnownSigmaLogLikelihood, self).__init__(problem)
 
         # Store counts
         self._no = problem.n_outputs()
@@ -90,7 +90,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
         return L, dL
 
 
-class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
+class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood assuming independent normally-distributed noise
     at each time point, and adds a parameter representing the standard
@@ -136,7 +136,7 @@ class UnknownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(UnknownNoiseLogLikelihood, self).__init__(problem)
+        super(GaussianLogLikelihood, self).__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)

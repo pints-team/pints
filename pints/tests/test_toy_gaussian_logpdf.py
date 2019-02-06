@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the Normal logpdf toy distribution.
+# Tests the Gaussian logpdf toy distribution.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2018, University of Oxford.
@@ -13,25 +13,25 @@ import unittest
 import numpy as np
 
 
-class TestNormalLogPDF(unittest.TestCase):
+class TestGaussianLogPDF(unittest.TestCase):
     """
     Tests the normal logpdf toy distribution.
     """
 
-    def test_normal_logpdf(self):
+    def test_gaussian_logpdf(self):
         """
-        Test NormalLogPDF basics.
+        Test GaussianLogPDF basics.
         """
         # Test basics
         x = [1, 2, 3]
         y = [1, 1, 1]
-        f = pints.toy.NormalLogPDF(x, y)
+        f = pints.toy.GaussianLogPDF(x, y)
         self.assertEqual(f.n_parameters(), len(x))
         self.assertTrue(np.isscalar(f(x)))
 
         x = [1, 2, 3]
         y = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-        f = pints.toy.NormalLogPDF(x, y)
+        f = pints.toy.GaussianLogPDF(x, y)
         self.assertEqual(f.n_parameters(), len(x))
         self.assertTrue(np.isscalar(f(x)))
 
@@ -44,13 +44,13 @@ class TestNormalLogPDF(unittest.TestCase):
 
         # Test errors
         self.assertRaises(
-            ValueError, pints.toy.NormalLogPDF, [1, 2, 3], [[1, 2], [3, 4]])
+            ValueError, pints.toy.GaussianLogPDF, [1, 2, 3], [[1, 2], [3, 4]])
         self.assertRaises(
-            ValueError, pints.toy.NormalLogPDF, [1, 2, 3], [1, 2, 3, 4])
+            ValueError, pints.toy.GaussianLogPDF, [1, 2, 3], [1, 2, 3, 4])
 
     def test_sampling_and_kl_divergence(self):
         """
-        Test NormalLogPDF.kl_divergence() and .sample().
+        Test GaussianLogPDF.kl_divergence() and .sample().
         """
         # Ensure consistent output
         np.random.seed(1)
@@ -59,9 +59,9 @@ class TestNormalLogPDF(unittest.TestCase):
         d = 3
         mean = np.array([3, -3.0, 0])
         sigma = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1.0]])
-        log_pdf1 = pints.toy.NormalLogPDF(mean, sigma)
-        log_pdf2 = pints.toy.NormalLogPDF(mean + 0.1, sigma)
-        log_pdf3 = pints.toy.NormalLogPDF(mean - 0.2, sigma / 2)
+        log_pdf1 = pints.toy.GaussianLogPDF(mean, sigma)
+        log_pdf2 = pints.toy.GaussianLogPDF(mean + 0.1, sigma)
+        log_pdf3 = pints.toy.GaussianLogPDF(mean - 0.2, sigma / 2)
 
         # Sample from each
         n = 10000
@@ -105,24 +105,24 @@ class TestNormalLogPDF(unittest.TestCase):
         returned is correct.
         """
         # 1d normal
-        f1 = pints.toy.NormalLogPDF([0], [1])
+        f1 = pints.toy.GaussianLogPDF([0], [1])
         L, dL = f1.evaluateS1([2])
         self.assertAlmostEqual(L, -2.918938533204673)
         self.assertEqual(dL[0], -2)
 
         # 2d normal
-        f2_1 = pints.toy.NormalLogPDF([0, 0], [[1, 0], [0, 1]])
+        f2_1 = pints.toy.GaussianLogPDF([0, 0], [[1, 0], [0, 1]])
         L, dL = f2_1.evaluateS1([2, 1])
         self.assertAlmostEqual(L, -4.337877066409345)
         self.assertTrue(np.array_equal(dL, [-2, -1]))
 
-        f2_2 = pints.toy.NormalLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
+        f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
         L, dL = f2_2.evaluateS1([-2.5, 1.5])
 
         # 3d normal
-        f3 = pints.toy.NormalLogPDF([1, 2, 3], [[2, 0, 0],
-                                                [0, 2, 0],
-                                                [0, 0, 2]])
+        f3 = pints.toy.GaussianLogPDF([1, 2, 3], [[2, 0, 0],
+                                                  [0, 2, 0],
+                                                  [0, 0, 2]])
         L, dL = f3.evaluateS1([0.5, -5, -3])
         self.assertAlmostEqual(L, -25.10903637045394)
         self.assertTrue(np.array_equal(dL, [0.25, 3.5, 3.0]))

@@ -18,7 +18,7 @@ class TestPrior(unittest.TestCase):
     def test_normal_prior(self):
         mean = 10
         std = 2
-        p = pints.NormalLogPrior(mean, std)
+        p = pints.GaussianLogPrior(mean, std)
 
         n = 10000
         r = 6 * np.sqrt(std)
@@ -40,10 +40,10 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(dy.shape, (1, ))
         self.assertEqual(dy[0], (mean - x[0]) / std**2)
 
-        p = pints.NormalLogPrior(-1, 4.5)
+        p = pints.GaussianLogPrior(-1, 4.5)
         x = [3.75]
         self.assertAlmostEqual(p(x), -2.9801146954130457)
-        p = pints.NormalLogPrior(10.4, 0.5)
+        p = pints.GaussianLogPrior(10.4, 0.5)
         x = [5.5]
         y, dy = p.evaluateS1(x)
         self.assertAlmostEqual(y, -48.245791352644737)
@@ -52,7 +52,7 @@ class TestPrior(unittest.TestCase):
     def test_normal_prior_sampling(self):
         mean = 10
         std = 2
-        p = pints.NormalLogPrior(mean, std)
+        p = pints.GaussianLogPrior(mean, std)
 
         d = 1
         n = 1
@@ -64,7 +64,7 @@ class TestPrior(unittest.TestCase):
 
         # Very roughly check distribution (main checks are in numpy!)
         np.random.seed(1)
-        p = pints.NormalLogPrior(mean, std)
+        p = pints.GaussianLogPrior(mean, std)
         x = p.sample(10000)
         self.assertTrue(np.abs(mean - x.mean(axis=0)) < 0.1)
         self.assertTrue(np.abs(std - x.std(axis=0)) < 0.01)
@@ -75,11 +75,11 @@ class TestPrior(unittest.TestCase):
 
         m1 = 10
         c1 = 2
-        p1 = pints.NormalLogPrior(m1, c1)
+        p1 = pints.GaussianLogPrior(m1, c1)
 
         m2 = -50
         c2 = 100
-        p2 = pints.NormalLogPrior(m2, c2)
+        p2 = pints.GaussianLogPrior(m2, c2)
 
         p = pints.ComposedLogPrior(p1, p2)
 
@@ -97,7 +97,7 @@ class TestPrior(unittest.TestCase):
 
         # Test effect of increasing covariance
         p = [pints.ComposedLogPrior(
-            p1, pints.NormalLogPrior(m2, c)) for c in range(1, 10)]
+            p1, pints.GaussianLogPrior(m2, c)) for c in range(1, 10)]
         p = [f([m1, m2]) for f in p]
         self.assertTrue(np.all(p[:-1] > p[1:]))
 
@@ -120,10 +120,10 @@ class TestPrior(unittest.TestCase):
 
         m1 = 10
         c1 = 2
-        p1 = pints.NormalLogPrior(m1, c1)
+        p1 = pints.GaussianLogPrior(m1, c1)
         m2 = -50
         c2 = 100
-        p2 = pints.NormalLogPrior(m2, c2)
+        p2 = pints.GaussianLogPrior(m2, c2)
         p = pints.ComposedLogPrior(p1, p2)
 
         p = pints.ComposedLogPrior(p1, p2)
@@ -136,7 +136,7 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(x.shape, (n, d))
         p = pints.ComposedLogPrior(
             p1,
-            pints.MultivariateNormalLogPrior([0, 1, 2], np.diag([2, 4, 6])),
+            pints.MultivariateGaussianLogPrior([0, 1, 2], np.diag([2, 4, 6])),
             p2,
             p2,
         )
@@ -273,14 +273,14 @@ class TestPrior(unittest.TestCase):
 
         # Input must be a matrix
         self.assertRaises(
-            ValueError, pints.MultivariateNormalLogPrior, mean, covariance)
+            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
         covariance = [1]
         self.assertRaises(
-            ValueError, pints.MultivariateNormalLogPrior, mean, covariance)
+            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
 
         # Basic test
         covariance = [[1]]
-        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
         p([0])
         p([-1])
         p([11])
@@ -288,21 +288,21 @@ class TestPrior(unittest.TestCase):
         # 5d tests
         mean = [1, 2, 3, 4, 5]
         covariance = np.diag(mean)
-        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
         self.assertRaises(ValueError, p, [1, 2, 3])
         p([1, 2, 3, 4, 5])
         p([-1, 2, -3, 4, -5])
 
         # Test errors
         self.assertRaises(
-            ValueError, pints.MultivariateNormalLogPrior, [1, 2],
+            ValueError, pints.MultivariateGaussianLogPrior, [1, 2],
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
     def test_multivariate_normal_sampling(self):
         d = 1
         mean = 2
         covariance = [[1]]
-        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
 
         n = 1
         x = p.sample(n)
@@ -315,7 +315,7 @@ class TestPrior(unittest.TestCase):
         d = 5
         mean = np.array([1, 2, 3, 4, 5])
         covariance = np.diag(mean)
-        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
         n = 1
         x = p.sample(n)
         self.assertEqual(x.shape, (n, d))
@@ -325,7 +325,7 @@ class TestPrior(unittest.TestCase):
 
         # Roughly check distribution (main checks are in numpy!)
         np.random.seed(1)
-        p = pints.MultivariateNormalLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
         x = p.sample(10000)
         self.assertTrue(np.all(np.abs(mean - x.mean(axis=0)) < 0.1))
         self.assertTrue(np.all(

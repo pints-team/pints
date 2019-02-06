@@ -55,7 +55,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         )
 
         # Create a log likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(

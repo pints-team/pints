@@ -1,8 +1,8 @@
 *******************
-Normal distribution
+Gaussian distribution
 *******************
 
 .. module:: pints.toy
 
-.. autoclass:: NormalLogPDF
+.. autoclass:: GaussianLogPDF
 

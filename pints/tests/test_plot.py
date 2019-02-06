@@ -53,7 +53,7 @@ class TestPlot(unittest.TestCase):
         )
 
         # Create a log likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
+        self.log_likelihood = pints.GaussianLogLikelihood(self.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
@@ -89,8 +89,9 @@ class TestPlot(unittest.TestCase):
         # variable
         self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
         # Create a log likelihood
-        self.log_likelihood2 = pints.KnownNoiseLogLikelihood(self.problem2,
-                                                             self.noise2)
+        self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
+            self.problem2,
+            self.noise2)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior2 = pints.LogPosterior(
@@ -110,7 +111,7 @@ class TestPlot(unittest.TestCase):
 
         # Create toy model (single-output, single-parameter)
         self.real_parameters3 = [0]
-        self.log_posterior3 = toy.NormalLogPDF(self.real_parameters3, [1])
+        self.log_posterior3 = toy.GaussianLogPDF(self.real_parameters3, [1])
         self.lower3 = [-3]
         self.upper3 = [3]
 

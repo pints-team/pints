@@ -86,14 +86,14 @@ class ComposedLogPrior(pints.LogPrior):
         return output
 
 
-class MultivariateNormalLogPrior(pints.LogPrior):
+class MultivariateGaussianLogPrior(pints.LogPrior):
     """
     Defines a multivariate normal (log)prior with a given ``mean`` and
     ``covariance`` matrix.
 
     For example::
 
-        p = MultivariateNormalLogPrior(
+        p = MultivariateGaussianLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
     *Extends:* :class:`LogPrior`
@@ -129,13 +129,13 @@ class MultivariateNormalLogPrior(pints.LogPrior):
             self._mean, self._covariance, size=n)
 
 
-class NormalLogPrior(pints.LogPrior):
+class GaussianLogPrior(pints.LogPrior):
     """
     Defines a 1-d normal (log) prior with a given ``mean`` and
     ``standard_deviation``.
 
-    For example: ``p = NormalLogPrior(0, 1)`` for a mean of ``0`` and standard
-    deviation of ``1``.
+    For example: ``p = GaussianLogPrior(0, 1)`` for a mean of ``0`` and
+    standard deviation of ``1``.
 
     *Extends:* :class:`LogPrior`
     """

@@ -9,7 +9,7 @@ Bayesian inference.
 
 Example::
 
-    p = pints.NormalLogPrior(mean=0, variance=1)
+    p = pints.GaussianLogPrior(mean=0, variance=1)
     x = p(0.1)
 
 .. autoclass:: CauchyLogPrior
@@ -18,9 +18,9 @@ Example::
 
 .. autoclass:: HalfCauchyLogPrior
 
-.. autoclass:: MultivariateNormalLogPrior
+.. autoclass:: MultivariateGaussianLogPrior
 
-.. autoclass:: NormalLogPrior
+.. autoclass:: GaussianLogPrior
 
 .. autoclass:: StudentTLogPrior
 
