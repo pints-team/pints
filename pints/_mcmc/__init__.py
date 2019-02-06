@@ -808,6 +808,19 @@ class MCMCController(object):
             self._parallel = False
             self._n_workers = 1
 
+class MCMCSampling(MCMCController):
+    """ Deprecated alias for :class:`MCMCController`. """
+
+    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+        # Deprecated on 2019-02-06
+        import logging
+        logging.basicConfig()
+        log = logging.getLogger(__name__)
+        log.warning(
+            'The class `pints.MCMCSampling` is deprecated.'
+            ' Please use `pints.MCMCController` instead.')
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
     """
