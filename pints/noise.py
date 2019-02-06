@@ -70,10 +70,8 @@ def ar1(rho, sigma, n):
         raise ValueError('Standard deviation must be positive.')
 
     n = int(n)
-    if n < 0:
-        raise ValueError('Length of signal cannot be negative.')
-    elif n == 0:
-        return np.array([])
+    if n < 1:
+        raise ValueError('Must supply at least one value.')
 
     # Generate noise
     s = sigma * np.sqrt(1 - rho**2)
@@ -111,10 +109,8 @@ def arma11(rho, theta, sigma, n):
         raise ValueError('absolute value of theta must be less than 1 ' +
                          'so that the process is invertible.')
     n = int(n)
-    if n < 0:
-        raise ValueError('Length of signal cannot be negative.')
-    elif n == 0:
-        return np.array([])
+    if n < 1:
+        raise ValueError('Must supply at least one value.')
 
     # Generate noise
     s = sigma * np.sqrt((1 - rho**2) / (1 + 2 * theta * rho + theta**2))
@@ -148,12 +144,12 @@ def ar1_unity(rho, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
-    if np.absolute(rho) > 1:
+    if np.absolute(rho) >= 1:
         raise ValueError(
             'Rho must be less than 1 in magnitude (otherwise the process is'
-            ' explosive).')
-    if sigma < 0:
-        raise ValueError('Standard deviation cannot be negative.')
+            ' non-stationary).')
+    if sigma <= 0:
+        raise ValueError('Standard deviation must be positive.')
 
     n = int(n)
     if n < 1:
@@ -198,12 +194,12 @@ def arma11_unity(rho, theta, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
-    if np.absolute(rho) > 1:
+    if np.absolute(rho) >= 1:
         raise ValueError(
             'Rho must be less than 1 in magnitude (otherwise the process is'
             ' explosive).')
-    if sigma < 0:
-        raise ValueError('Standard deviation cannot be negative.')
+    if sigma <= 0:
+        raise ValueError('Standard deviation must be positive.')
     if np.abs(theta) > 1.0:
         raise ValueError('absolute value of theta must be less than 1 ' +
                          'so that the process is invertible.')
