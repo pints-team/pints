@@ -48,10 +48,10 @@ class TestPrior(unittest.TestCase):
         y, dy = p.evaluateS1(x)
         self.assertAlmostEqual(y, -48.245791352644737)
         self.assertEqual(dy, 19.6)
-        
+
         # Test deprecated alias
         p = pints.NormalLogPrior(mean, std)
-        self.assertIsInstance(p, pints.GaussianLogPrior) 
+        self.assertIsInstance(p, pints.GaussianLogPrior)
 
     def test_normal_prior_sampling(self):
         mean = 10
