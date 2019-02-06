@@ -54,8 +54,8 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(len(pn.ar1(0.1, 1, 100)), 100)
 
         # Magnitude of rho must be less than 1
-        pn.ar1(1, 5, 10)
-        pn.ar1(-1, 5, 10)
+        pn.ar1(0.9, 5, 10)
+        pn.ar1(-0.9, 5, 10)
         self.assertRaises(ValueError, pn.ar1, 1.1, 5, 10)
         self.assertRaises(ValueError, pn.ar1, -1.1, 5, 10)
 
@@ -64,8 +64,8 @@ class TestNoise(unittest.TestCase):
         self.assertRaises(ValueError, pn.ar1, 0.5, -5, 10)
 
         # N cannot be negative
-        pn.ar1(0.5, 5, 0)
-        self.assertRaises(ValueError, pn.ar1, 0.5, 5, -1)
+        pn.ar1(0.5, 5, 1)
+        self.assertRaises(ValueError, pn.ar1, 0.5, 5, 0)
 
         # Test noise properties
         self.assertTrue(np.abs(np.std(pn.ar1(0.99, 1, 1000)) -
@@ -76,7 +76,7 @@ class TestNoise(unittest.TestCase):
 
     def test_ar1_unity(self):
 
-        # Simle test
+        # Simple test
         clean = np.asarray([1.3, 2, 3, 10, 15, 8])
         noisy = clean + pn.ar1_unity(0.5, 5.0, len(clean))
         self.assertFalse(np.all(clean == noisy))
@@ -85,8 +85,8 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(len(pn.ar1_unity(0.1, 1, 100)), 100)
 
         # Magnitude of rho must be less than 1
-        pn.ar1(1, 5, 10)
-        pn.ar1(-1, 5, 10)
+        pn.ar1(0.9, 5, 10)
+        pn.ar1(-0.5, 5, 10)
         self.assertRaises(ValueError, pn.ar1_unity, 1.1, 5, 10)
         self.assertRaises(ValueError, pn.ar1_unity, -1.1, 5, 10)
 
@@ -95,13 +95,39 @@ class TestNoise(unittest.TestCase):
         self.assertRaises(ValueError, pn.ar1_unity, 0.5, -5, 10)
 
         # N cannot be negative
-        pn.ar1(0.5, 5, 0)
-        self.assertRaises(ValueError, pn.ar1_unity, 0.5, 5, -1)
+        pn.ar1(0.5, 5, 1)
+        self.assertRaises(ValueError, pn.ar1_unity, 0.5, 5, 0)
 
         # Test noise properties
         self.assertTrue(np.abs(np.std(pn.ar1_unity(0.9, 1, 10000)) -
                                np.std(pn.ar1_unity(0.50, 1, 10000))) < 2)
         self.assertTrue(np.abs(np.mean(pn.ar1_unity(-0.5, 1, 10000)) - 1) < 2)
+
+    def test_arma11(self):
+
+        # test construction errors
+        self.assertRaises(ValueError, pn.arma11, -1, 0.5, 5, 100)
+        self.assertRaises(ValueError, pn.arma11, 0.4, 1.1, 5, 100)
+        self.assertRaises(ValueError, pn.arma11, -0.4, -0.3, 0, 100)
+        self.assertRaises(ValueError, pn.arma11, -0.4, -0.3, 0, -1)
+
+        # test values
+        samples = pn.arma11(0.5, 0.5, 5, 10000)
+        self.assertTrue(np.mean(samples) < 1)
+        self.assertTrue(np.abs(np.std(samples) - 5) < 1)
+
+    def test_arma11_unity(self):
+
+        # test construction errors
+        self.assertRaises(ValueError, pn.arma11_unity, -1, 0.5, 5, 100)
+        self.assertRaises(ValueError, pn.arma11_unity, 0.4, 1.1, 5, 100)
+        self.assertRaises(ValueError, pn.arma11_unity, -0.4, -0.3, 0, 100)
+        self.assertRaises(ValueError, pn.arma11_unity, -0.4, -0.3, 0, -1)
+
+        # test values
+        samples = pn.arma11_unity(0.5, 0.5, 5, 10000)
+        self.assertTrue(np.abs(np.mean(samples) - 1) < 1)
+        self.assertTrue(np.abs(np.std(samples) - 5) < 1)
 
 
 if __name__ == '__main__':
