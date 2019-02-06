@@ -171,7 +171,7 @@ def arma11_unity(rho, theta, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma')``,
 
-    and 
+    and
     ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
 
     ``rho``
