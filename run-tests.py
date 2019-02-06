@@ -105,6 +105,35 @@ def run_doctests():
         sys.exit(ret)
 
 
+def run_doccover():
+    """
+    Checks if the documentation can be built, runs any doctests (currently not
+    used).
+    """
+    print('Checking if docs can be built.')
+    p = subprocess.Popen([
+        'sphinx-build',
+        '-b',
+        'coverage',
+        'docs/source',
+        'docs/build/html',
+        '-W',
+    ])
+    try:
+        ret = p.wait()
+    except KeyboardInterrupt:
+        try:
+            p.terminate()
+        except OSError:
+            pass
+        p.wait()
+        print('')
+        sys.exit(1)
+    if ret != 0:
+        print('FAILED')
+        sys.exit(ret)
+
+
 def run_notebook_tests(skip_slow_books=False, executable='python'):
     """
     Runs Jupyter notebook tests. Exits if they fail.
@@ -294,6 +323,11 @@ if __name__ == '__main__':
         action='store_true',
         help='Run any doctests, check if docs can be built',
     )
+    parser.add_argument(
+        '--doccover',
+        action='store_true',
+        help='Checks if the documentation cover is up to scratch',
+    )
     # Combined test sets
     parser.add_argument(
         '--quick',
@@ -323,6 +357,9 @@ if __name__ == '__main__':
     if args.doctest:
         has_run = True
         run_doctests()
+    if args.doccover:
+        has_run = True
+        run_doccover()
     # Notebook tests
     if args.allbooks:
         has_run = True
@@ -339,6 +376,7 @@ if __name__ == '__main__':
         run_flake8()
         run_unit_tests('python')
         run_doctests()
+        run_doccover()
     # Help
     if not has_run:
         parser.print_help()
