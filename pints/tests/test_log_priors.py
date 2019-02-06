@@ -15,7 +15,7 @@ import numpy as np
 
 class TestPrior(unittest.TestCase):
 
-    def test_normal_prior(self):
+    def test_gaussian_prior(self):
         mean = 10
         std = 2
         p = pints.GaussianLogPrior(mean, std)
@@ -48,6 +48,10 @@ class TestPrior(unittest.TestCase):
         y, dy = p.evaluateS1(x)
         self.assertAlmostEqual(y, -48.245791352644737)
         self.assertEqual(dy, 19.6)
+        
+        # Test deprecated alias
+        p = pints.NormalLogPrior(mean, std)
+        self.assertIsInstance(p, pints.GaussianLogPrior) 
 
     def test_normal_prior_sampling(self):
         mean = 10

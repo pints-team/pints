@@ -85,6 +85,7 @@ from ._log_priors import (
     GaussianLogPrior,
     HalfCauchyLogPrior,
     MultivariateGaussianLogPrior,
+    NormalLogPrior,
     StudentTLogPrior,
     UniformLogPrior,
 )
@@ -98,8 +99,10 @@ from ._log_likelihoods import (
     CauchyLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
+    KnownNoiseLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
+    UnknownNoiseLogLikelihood,
 )
 
 #

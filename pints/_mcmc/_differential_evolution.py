@@ -129,10 +129,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_gaussian_error(self, gaussian_error):
         """
-        If true sets the error process to be a gaussian error, N(0, b*);
-        if false, it uses a uniform error U(-b*, b*);
-        where b* = b if absolute scaling used and b* = mu * b if
-        relative used instead
+        If ``True`` sets the error process to be a gaussian error,
+        ``N(0, b*)``; if ``False``, it uses a uniform error ``U(-b*, b*)``;
+        where ``b* = b`` if absolute scaling used and ``b* = mu * b`` if
+        relative scaling is used instead.
         """
         gaussian_error = bool(gaussian_error)
         self._gaussian_error = gaussian_error
