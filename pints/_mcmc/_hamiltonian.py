@@ -171,6 +171,10 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._position, copy=True)
 
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return -self._current_energy
+
     def leapfrog_steps(self):
         """
         Returns the number of leapfrog steps to carry out for each iteration.
