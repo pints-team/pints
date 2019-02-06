@@ -14,6 +14,61 @@ import scipy
 import scipy.stats
 
 
+class CauchyLogPrior():
+    """
+    Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
+
+    For example, to create a prior centered around 0 and a scale of 5, use::
+
+        p = pints.CauchyLogPrior(0, 5)
+
+    Arguments:
+
+    ``location``
+        The center of the distribution.
+    ``scale``
+        The scale of the distribution.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, location, scale):
+        # Test inputs
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        # Cauchy is Student-t with 1 df
+        self._df = 1
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = 0.5 * (1.0 + self._df)
+        self._log_df = np.log(self._df)
+        self._log_scale = np.log(self._scale)
+        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+        # Cache scipy stats object
+        self._t = scipy.stats.t(
+            df=self._df, loc=self._location, scale=self._scale)
+
+    def __call__(self, x):
+        return (
+            self._first * (
+                self._log_df - np.log(
+                    self._df + ((x[0] - self._location) / self._scale)**2))
+            - 0.5 * self._log_df - self._log_scale - self._log_beta
+        )
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return self._t.rvs(n)
+
+
 class ComposedLogPrior(pints.LogPrior):
     """
     N-dimensional LogPrior composed of one or more other Ni-dimensional
@@ -86,49 +141,6 @@ class ComposedLogPrior(pints.LogPrior):
         return output
 
 
-class MultivariateGaussianLogPrior(pints.LogPrior):
-    """
-    Defines a multivariate Gaussian (log)prior with a given ``mean`` and
-    ``covariance`` matrix.
-
-    For example::
-
-        p = MultivariateGaussianLogPrior(
-                np.array([0, 0]), np.array([[1, 0],[0, 1]]))
-
-    *Extends:* :class:`LogPrior`
-    """
-    def __init__(self, mean, covariance):
-        # Check input
-        mean = pints.vector(mean)
-        covariance = np.array(covariance, copy=True)
-        covariance.setflags(write=False)
-        if covariance.ndim != 2:
-            raise ValueError('Given covariance must be a matrix.')
-        if not (mean.shape[0] == covariance.shape[0] == covariance.shape[1]):
-            raise ValueError('Sizes of mean and covariance do not match.')
-
-        # Store
-        self._mean = mean
-        self._covariance = covariance
-        self._n_parameters = mean.shape[0]
-
-    def __call__(self, x):
-        return np.log(
-            scipy.stats.multivariate_normal.pdf(
-                x, mean=self._mean, cov=self._covariance))
-
-    def n_parameters(self):
-        """ See :meth:`LogPrior.n_parameters()`. """
-        return self._n_parameters
-
-    def sample(self, n=1):
-        """ See :meth:`LogPrior.call()`. """
-        # Note: size=n returns shape (n, d)
-        return np.random.multivariate_normal(
-            self._mean, self._covariance, size=n)
-
-
 class GaussianLogPrior(pints.LogPrior):
     """
     Defines a 1-d Gaussian (log) prior with a given ``mean`` and
@@ -163,116 +175,6 @@ class GaussianLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
-
-
-class StudentTLogPrior():
-    """
-    Defines a 1-d Student-t (log) prior with a given ``location``,
-    ``degrees of freedom``,  and ``scale``.
-
-    For example, to create a prior centered around 0 with 3 degrees of freedom
-    and a scale of 1, use::
-
-        p = pints.StudentTLogPrior(0, 3, 1)
-
-    Arguments:
-
-    ``location``
-        The center of the distribution.
-    ``df``
-        The number of degrees of freedom of the distribution.
-    ``scale``
-        The scale of the distribution.
-
-    *Extends:* :class:`LogPrior`
-    """
-    def __init__(self, location, df, scale):
-        # Test inputs
-        if float(df) <= 0:
-            raise ValueError('Degrees of freedom must be positive')
-        if float(scale) <= 0:
-            raise ValueError('Scale must be positive')
-
-        # Parse input arguments
-        self._df = float(df)
-        self._location = float(location)
-        self._scale = float(scale)
-
-        # Cache constants
-        self._first = 0.5 * (1.0 + self._df)
-        self._log_df = np.log(self._df)
-        self._log_scale = np.log(self._scale)
-        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
-
-    def __call__(self, x):
-        return self._first * (self._log_df -
-                              np.log(self._df + ((x[0] - self._location)
-                                                 / self._scale)**2)) \
-            - 0.5 * self._log_df - self._log_scale - self._log_beta
-
-    def n_parameters(self):
-        """ See :meth:`LogPrior.n_parameters()`. """
-        return 1
-
-    def sample(self, n=1):
-        """ See :meth:`LogPrior.sample()`. """
-        return scipy.stats.t.rvs(df=self._df, loc=self._location,
-                                 scale=self._scale, size=n)
-
-
-class CauchyLogPrior():
-    """
-    Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
-
-    For example, to create a prior centered around 0 and a scale of 5, use::
-
-        p = pints.CauchyLogPrior(0, 5)
-
-    Arguments:
-
-    ``location``
-        The center of the distribution.
-    ``scale``
-        The scale of the distribution.
-
-    *Extends:* :class:`LogPrior`
-    """
-    def __init__(self, location, scale):
-        # Test inputs
-        if float(scale) <= 0:
-            raise ValueError('Scale must be positive')
-
-        # Parse input arguments
-        # Cauchy is Student-t with 1 df
-        self._df = 1
-        self._location = float(location)
-        self._scale = float(scale)
-
-        # Cache constants
-        self._first = 0.5 * (1.0 + self._df)
-        self._log_df = np.log(self._df)
-        self._log_scale = np.log(self._scale)
-        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
-
-        # Cache scipy stats object
-        self._t = scipy.stats.t(
-            df=self._df, loc=self._location, scale=self._scale)
-
-    def __call__(self, x):
-        return (
-            self._first * (
-                self._log_df - np.log(
-                    self._df + ((x[0] - self._location) / self._scale)**2))
-            - 0.5 * self._log_df - self._log_scale - self._log_beta
-        )
-
-    def n_parameters(self):
-        """ See :meth:`LogPrior.n_parameters()`. """
-        return 1
-
-    def sample(self, n=1):
-        """ See :meth:`LogPrior.sample()`. """
-        return self._t.rvs(n)
 
 
 class HalfCauchyLogPrior():
@@ -338,6 +240,118 @@ class HalfCauchyLogPrior():
             resample = samples <= 0
             n_resample = np.sum(resample)
         return samples
+
+
+class MultivariateGaussianLogPrior(pints.LogPrior):
+    """
+    Defines a multivariate Gaussian (log)prior with a given ``mean`` and
+    ``covariance`` matrix.
+
+    For example::
+
+        p = MultivariateGaussianLogPrior(
+                np.array([0, 0]), np.array([[1, 0],[0, 1]]))
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, mean, covariance):
+        # Check input
+        mean = pints.vector(mean)
+        covariance = np.array(covariance, copy=True)
+        covariance.setflags(write=False)
+        if covariance.ndim != 2:
+            raise ValueError('Given covariance must be a matrix.')
+        if not (mean.shape[0] == covariance.shape[0] == covariance.shape[1]):
+            raise ValueError('Sizes of mean and covariance do not match.')
+
+        # Store
+        self._mean = mean
+        self._covariance = covariance
+        self._n_parameters = mean.shape[0]
+
+    def __call__(self, x):
+        return np.log(
+            scipy.stats.multivariate_normal.pdf(
+                x, mean=self._mean, cov=self._covariance))
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return self._n_parameters
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.call()`. """
+        # Note: size=n returns shape (n, d)
+        return np.random.multivariate_normal(
+            self._mean, self._covariance, size=n)
+
+
+class NormalLogPrior(GaussianLogPrior):
+    """ Deprecated alias of :class:`GaussianLogPrior`. """
+    
+    def __init__(self, mean, standard_deviation):
+        # Deprecated on 2019-02-06
+        import logging
+        logging.basicConfig()
+        log = logging.getLogger(__name__)
+        log.warning(
+            'The class `pints.NormalLogPrior` is deprecated.'
+            ' Please use `pints.GaussianLogPrior` instead.')
+        super(NormalLogPrior, self).__init__(mean, standard_deviation)
+
+
+class StudentTLogPrior():
+    """
+    Defines a 1-d Student-t (log) prior with a given ``location``,
+    ``degrees of freedom``,  and ``scale``.
+
+    For example, to create a prior centered around 0 with 3 degrees of freedom
+    and a scale of 1, use::
+
+        p = pints.StudentTLogPrior(0, 3, 1)
+
+    Arguments:
+
+    ``location``
+        The center of the distribution.
+    ``df``
+        The number of degrees of freedom of the distribution.
+    ``scale``
+        The scale of the distribution.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, location, df, scale):
+        # Test inputs
+        if float(df) <= 0:
+            raise ValueError('Degrees of freedom must be positive')
+        if float(scale) <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Parse input arguments
+        self._df = float(df)
+        self._location = float(location)
+        self._scale = float(scale)
+
+        # Cache constants
+        self._first = 0.5 * (1.0 + self._df)
+        self._log_df = np.log(self._df)
+        self._log_scale = np.log(self._scale)
+        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+    def __call__(self, x):
+        return self._first * (self._log_df -
+                              np.log(self._df + ((x[0] - self._location)
+                                                 / self._scale)**2)) \
+            - 0.5 * self._log_df - self._log_scale - self._log_beta
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.t.rvs(df=self._df, loc=self._location,
+                                 scale=self._scale, size=n)
 
 
 class UniformLogPrior(pints.LogPrior):

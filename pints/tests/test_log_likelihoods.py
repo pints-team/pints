@@ -78,7 +78,8 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
-    def test_known_and_unknown_noise_single(self):
+
+    def test_gaussian_log_likelihoods_single_output(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
         """
@@ -129,9 +130,17 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dl[0], -15.25)
         self.assertAlmostEqual(dl[1], 41.925000000000004)
 
-    def test_known_noise_single_S1(self):
+        # Test deprecated aliases
+        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
+        
+        l2 = pints.UnknownNoiseLogLikelihood(problem)
+        self.assertIsInstance(l2, pints.GaussianLogLikelihood)
+
+    def test_known_noise_gaussian_single_S1(self):
         """
-        Simple tests for single known noise log-likelihood with sensitivities.
+        Simple tests for single known noise Gaussian log-likelihood with 
+        sensitivities.
         """
         model = pints.toy.LogisticModel()
         x = [0.015, 500]
@@ -296,9 +305,10 @@ class TestLogLikelihood(unittest.TestCase):
             log_likelihood(parameters + [13, 8, 13.5, 10.5]),
             -49.51182454195375)
 
-    def test_known_and_unknown_noise_multi(self):
+    def test_gaussian_noise_multi(self):
         """
-        Multi-output test for known/unknown noise log-likelihood methods
+        Multi-output test for known/unknown Gaussian noise log-likelihood 
+        methods.
         """
         model = pints.toy.FitzhughNagumoModel()
         parameters = [0.5, 0.5, 0.5]
@@ -331,7 +341,7 @@ class TestLogLikelihood(unittest.TestCase):
             ValueError, pints.GaussianKnownSigmaLogLikelihood, problem,
             [1, 2, -3])
 
-    def test_known_noise_single_and_multi(self):
+    def test_known_noise_gaussian_single_and_multi(self):
         """
         Tests the output of single-series against multi-series known noise
         log-likelihoods.
@@ -449,8 +459,8 @@ class TestLogLikelihood(unittest.TestCase):
         values = np.asarray([1.0, -10.7, 15.5])
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.AR1LogLikelihood(problem)
-        self.assertAlmostEqual(log_likelihood([0, 0.5, 5]),
-                               -19.706737485492436)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.5, 5]), -19.706737485492436)
 
     def test_arma11(self):
         model = pints.toy.ConstantModel(1)
@@ -460,8 +470,8 @@ class TestLogLikelihood(unittest.TestCase):
         values = np.asarray([3, -4.5, 10.5, 0.3])
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.ARMA11LogLikelihood(problem)
-        self.assertAlmostEqual(log_likelihood([0, 0.9, -0.4, 1]),
-                               -171.53031588534171)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
 
 
 if __name__ == '__main__':
