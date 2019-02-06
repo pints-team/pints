@@ -67,7 +67,7 @@ class LogPrior(LogPDF):
         is the requested number of samples, and ``d`` is the dimension of the
         prior.
 
-        Note: This method is optional, in the sense that only a subsets of
+        Note: This method is optional, in the sense that only a subset of
         inference methods require it.
         """
         raise NotImplementedError
