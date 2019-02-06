@@ -6,4 +6,4 @@ Running an MCMC routine
 
 .. autofunction:: mcmc_sample
 
-.. autoclass:: MCMCSampling
+.. autoclass:: MCMCController

@@ -196,7 +196,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         Test logging includes name and custom fields.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DifferentialEvolutionMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:

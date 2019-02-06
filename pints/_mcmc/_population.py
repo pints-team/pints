@@ -107,7 +107,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
     def in_initial_phase(self):
         """
-        See :meth:`MCMCSampling.in_initial_phase()`.
+        See :meth:`MCMCController.in_initial_phase()`.
         """
         return self._in_initial_phase
 
@@ -174,7 +174,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
     def set_initial_phase(self, phase):
         """
-        See :meth:`MCMCSampling.set_initial_phase()`.
+        See :meth:`MCMCController.set_initial_phase()`.
         """
         self._in_initial_phase = bool(phase)
         if self._running:

@@ -152,7 +152,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         Test logging includes name and acceptance rate.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
