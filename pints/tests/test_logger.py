@@ -58,7 +58,7 @@ class TestLogger(unittest.TestCase):
     Tests the Logger class.
     """
     def test_logger(self):
-        # Gaussian use, all data at once
+        # Normal use, all data at once
         with StreamCapture() as c:
             # Test logger with no fields
             log = pints.Logger()
@@ -87,7 +87,7 @@ class TestLogger(unittest.TestCase):
         self.assertRaises(RuntimeError, log.set_filename, 'a')
         self.assertRaises(RuntimeError, log.set_stream, sys.stdout)
 
-        # Gaussian use, all data at once, plus extra bit
+        # Normal use, all data at once, plus extra bit
         with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
@@ -102,7 +102,7 @@ class TestLogger(unittest.TestCase):
             log.log(1, 2, 3)    # not enough for more output!
         self.assertOutput(expected=out1, returned=c.text())
 
-        # Gaussian use, data row by row
+        # Normal use, data row by row
         with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)
@@ -119,7 +119,7 @@ class TestLogger(unittest.TestCase):
                 log.log(*data[i * n:(i + 1) * n])
         self.assertOutput(expected=out1, returned=c.text())
 
-        # Gaussian use, data field by field
+        # Normal use, data field by field
         with StreamCapture() as c:
             log = pints.Logger()
             log.add_counter('#', width=2)

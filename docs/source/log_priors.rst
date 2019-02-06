@@ -16,11 +16,11 @@ Example::
 
 .. autoclass:: ComposedLogPrior
 
+.. autoclass:: GaussianLogPrior
+
 .. autoclass:: HalfCauchyLogPrior
 
 .. autoclass:: MultivariateGaussianLogPrior
-
-.. autoclass:: GaussianLogPrior
 
 .. autoclass:: StudentTLogPrior
 
