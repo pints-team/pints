@@ -495,13 +495,13 @@ class MCMCController(object):
                 chain_loggers.append(cl)
 
         # Write evaluations to disk
+        prior = None
+        if isinstance(self._log_pdf, pints.LogPosterior):
+            prior = self._log_pdf.log_prior()
         eval_loggers = []
         if self._evaluation_files:
             # Bayesian inference on a log-posterior? Then separate out the
             # prior so we can calculate the loglikelihood
-            prior = None
-            if isinstance(self._log_pdf, pints.LogPosterior):
-                prior = self._log_pdf.log_prior()
 
             # Set up loggers
             for filename in self._evaluation_files:
