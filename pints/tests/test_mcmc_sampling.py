@@ -3,7 +3,7 @@
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -342,7 +342,11 @@ class TestMCMCSampling(unittest.TestCase):
         lines = capture.text().splitlines()
         for i, line in enumerate(lines):
             self.assertLess(i, len(LOG_SCREEN))
-            self.assertEqual(line, LOG_SCREEN[i])
+            # Chop off time bit before comparison
+            if LOG_SCREEN[i][-6:] == '0:00.0':
+                self.assertEqual(line[:-6], LOG_SCREEN[i][:-6])
+            else:
+                self.assertEqual(line, LOG_SCREEN[i])
         self.assertEqual(len(lines), len(LOG_SCREEN))
 
         # With output to file
@@ -360,7 +364,12 @@ class TestMCMCSampling(unittest.TestCase):
                     lines = f.read().splitlines()
                 for i, line in enumerate(lines):
                     self.assertLess(i, len(LOG_FILE))
-                    self.assertEqual(line, LOG_FILE[i])
+                    # Chop off time bit before comparison
+                    if LOG_FILE[i][-6:] == '0:00.0':
+                        self.assertEqual(line[:-6], LOG_FILE[i][:-6])
+                    else:
+                        self.assertEqual(line, LOG_FILE[i])
+                    self.assertEqual(line[:-6], LOG_FILE[i][:-6])
                 self.assertEqual(len(lines), len(LOG_FILE))
             self.assertEqual(capture.text(), '')
 
