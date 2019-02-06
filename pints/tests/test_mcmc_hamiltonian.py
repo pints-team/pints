@@ -48,6 +48,9 @@ class TestHamiltonianMCMC(unittest.TestCase):
             sample = mcmc.tell((fx, gr))
             if i >= 50 * ifrog and sample is not None:
                 chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))

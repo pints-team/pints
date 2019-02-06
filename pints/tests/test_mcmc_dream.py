@@ -92,6 +92,9 @@ class TestDreamMCMC(unittest.TestCase):
                 mcmc.set_initial_phase(False)
             if i >= 50:
                 chains.append(samples)
+            if np.all(samples == xs):
+                self.assertTrue(np.all(mcmc.current_log_pdfs() == fxs))
+
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
