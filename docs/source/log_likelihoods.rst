@@ -23,3 +23,7 @@ Example::
 
 .. autoclass:: UnknownNoiseLogLikelihood
 
+.. autoclass:: AR1LogLikelihood
+
+.. autoclass:: ARMA11LogLikelihood
+
