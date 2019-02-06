@@ -16,7 +16,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
     Metropolis Random Walk MCMC, as described in [1].
 
-    Standard Metropolis using multivariate Gaussian distribution as proposal
+    Standard Metropolis using multivariate Normal distribution as proposal
     step, also known as Metropolis Random Walk MCMC.
 
     *Extends:* :class:`SingleChainMCMC`
@@ -51,7 +51,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Propose new point
         if self._proposed is None:
-            # Note: Gaussian distribution is symmetric
+            # Note: Normal distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
             self._proposed = np.random.multivariate_normal(

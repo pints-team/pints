@@ -3,7 +3,7 @@
 # Tests the Pints plot methods.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -90,8 +90,7 @@ class TestPlot(unittest.TestCase):
         self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
         # Create a log likelihood
         self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
-            self.problem2,
-            self.noise2)
+            self.problem2, self.noise2)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior2 = pints.LogPosterior(

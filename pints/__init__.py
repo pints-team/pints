@@ -3,7 +3,7 @@
 # Provides access to all shared functionality (optimisation, mcmc, etc.).
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -80,26 +80,26 @@ from ._log_pdfs import (
 # Log-priors
 #
 from ._log_priors import (
-    ComposedLogPrior,
-    MultivariateGaussianLogPrior,
-    GaussianLogPrior,
-    UniformLogPrior,
-    StudentTLogPrior,
     CauchyLogPrior,
+    ComposedLogPrior,
+    GaussianLogPrior,
     HalfCauchyLogPrior,
+    MultivariateGaussianLogPrior,
+    StudentTLogPrior,
+    UniformLogPrior,
 )
 
 #
 # Log-likelihoods
 #
 from ._log_likelihoods import (
+    AR1LogLikelihood,
+    ARMA11LogLikelihood,
+    CauchyLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
-    CauchyLogLikelihood,
-    AR1LogLikelihood,
-    ARMA11LogLikelihood
 )
 
 #
@@ -139,13 +139,13 @@ from ._evaluation import (
 # Optimisation
 #
 from ._optimisers import (
+    curve_fit,
+    fmin,
+    Optimisation,
+    optimise,
     Optimiser,
     PopulationBasedOptimiser,
     TriangleWaveTransform,
-    Optimisation,
-    optimise,
-    fmin,
-    curve_fit,
 )
 from ._optimisers._cmaes import CMAES
 from ._optimisers._pso import PSO
@@ -167,11 +167,12 @@ from ._diagnostics import (
 #  MCMC
 #
 from ._mcmc import (
-    MCMCSampler,
-    SingleChainMCMC,
-    MultiChainMCMC,
-    MCMCController,
     mcmc_sample,
+    MCMCController,
+    MCMCSampler,
+    MCMCSampling,
+    MultiChainMCMC,
+    SingleChainMCMC,
 )
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC

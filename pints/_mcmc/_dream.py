@@ -83,7 +83,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Default settings
         #
 
-        # Gaussian proposal std.
+        # Normal proposal std.
         self._b = 0.01
 
         # b* distribution for e ~ U(-b*, b*)

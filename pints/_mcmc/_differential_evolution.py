@@ -81,7 +81,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Mean used for scaling error process
         self._mu = np.mean(self._x0, axis=0)
 
-        # Gaussian error vs uniform
+        # Normal error vs uniform
         self._normal_error = True
 
         # Relative scaling

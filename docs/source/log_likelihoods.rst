@@ -13,17 +13,18 @@ Example::
     x = [1, 2, 3]
     fx = logpdf(x)
 
+.. autoclass:: AR1LogLikelihood
+
+.. autoclass:: ARMA11LogLikelihood
+
+
 .. autoclass:: CauchyLogLikelihood
 
 .. autoclass:: GaussianKnownSigmaLogLikelihood
 
+.. autoclass:: GaussianLogLikelihood
+
 .. autoclass:: ScaledLogLikelihood
 
 .. autoclass:: StudentTLogLikelihood
-
-.. autoclass:: GaussianLogLikelihood
-
-.. autoclass:: AR1LogLikelihood
-
-.. autoclass:: ARMA11LogLikelihood
 
