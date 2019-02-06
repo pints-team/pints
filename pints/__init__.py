@@ -98,6 +98,8 @@ from ._log_likelihoods import (
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     CauchyLogLikelihood,
+    AR1LogLikelihood,
+    ARMA11LogLikelihood
 )
 
 #
