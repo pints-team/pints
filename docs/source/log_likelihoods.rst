@@ -9,19 +9,19 @@ and can calculate a log-likelihood based on some time-series :class:`Problem`.
 
 Example::
 
-    logpdf = pints.UnknownNoiseLogLikelihood(problem)
+    logpdf = pints.GaussianLogLikelihood(problem)
     x = [1, 2, 3]
     fx = logpdf(x)
 
 .. autoclass:: CauchyLogLikelihood
 
-.. autoclass:: KnownNoiseLogLikelihood
+.. autoclass:: GaussianKnownSigmaLogLikelihood
 
 .. autoclass:: ScaledLogLikelihood
 
 .. autoclass:: StudentTLogLikelihood
 
-.. autoclass:: UnknownNoiseLogLikelihood
+.. autoclass:: GaussianLogLikelihood
 
 .. autoclass:: AR1LogLikelihood
 

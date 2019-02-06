@@ -81,8 +81,8 @@ from ._log_pdfs import (
 #
 from ._log_priors import (
     ComposedLogPrior,
-    MultivariateNormalLogPrior,
-    NormalLogPrior,
+    MultivariateGaussianLogPrior,
+    GaussianLogPrior,
     UniformLogPrior,
     StudentTLogPrior,
     CauchyLogPrior,
@@ -93,8 +93,8 @@ from ._log_priors import (
 # Log-likelihoods
 #
 from ._log_likelihoods import (
-    KnownNoiseLogLikelihood,
-    UnknownNoiseLogLikelihood,
+    GaussianKnownSigmaLogLikelihood,
+    GaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     CauchyLogLikelihood,

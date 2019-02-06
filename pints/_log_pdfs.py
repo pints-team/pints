@@ -199,8 +199,8 @@ class SumOfIndependentLogPDFs(LogPDF):
     Example::
 
         log_likelihood = pints.SumOfIndependentLogPDFs([
-            pints.UnknownNoiseLogLikelihood(problem1),
-            pints.UnknownNoiseLogLikelihood(problem2),
+            pints.GaussianLogLikelihood(problem1),
+            pints.GaussianLogLikelihood(problem2),
         ])
 
     *Extends:* :class:`LogPDF`

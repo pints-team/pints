@@ -1,5 +1,5 @@
 #
-# Unimodal Normal/Gaussian toy log pdf.
+# Unimodal Gaussian/Gaussian toy log pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017, University of Oxford.
@@ -14,9 +14,9 @@ import numpy as np
 import scipy.stats
 
 
-class NormalLogPDF(pints.LogPDF):
+class GaussianLogPDF(pints.LogPDF):
     """
-    Toy distribution based on a multivariate (unimodal) Normal/Gaussian
+    Toy distribution based on a multivariate (unimodal) Gaussian/Gaussian
     distribution.
 
     Arguments:

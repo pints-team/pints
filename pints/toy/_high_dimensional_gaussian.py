@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats
 
 
-class HighDimensionalNormalLogPDF(pints.LogPDF):
+class HighDimensionalGaussianLogPDF(pints.LogPDF):
     """
     High-dimensional multivariate normal log pdf, with tricky off-diagonal
     covariances.

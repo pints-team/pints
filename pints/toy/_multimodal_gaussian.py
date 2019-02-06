@@ -13,9 +13,9 @@ import numpy as np
 import scipy.stats
 
 
-class MultimodalNormalLogPDF(pints.LogPDF):
+class MultimodalGaussianLogPDF(pints.LogPDF):
     """
-    Multimodal (un-normalised) multivariate Normal distribution.
+    Multimodal (un-normalised) multivariate Gaussian distribution.
 
     By default, the distribution is on a 2-dimensional space, with modes at
     at ``(0, 0)`` and ``(10, 10)`` with independent unit covariance matrices.
@@ -23,13 +23,13 @@ class MultimodalNormalLogPDF(pints.LogPDF):
     Examples::
 
         # Default 2d, bimodal
-        f = pints.toy.MultimodalNormalLogPDF()
+        f = pints.toy.MultimodalGaussianLogPDF()
 
         # 3d bimodal
-        f = pints.toy.MultimodalNormalLogPDF([[0, 1, 2], [10, 10, 10]])
+        f = pints.toy.MultimodalGaussianLogPDF([[0, 1, 2], [10, 10, 10]])
 
         # 2d with 3 modes
-        f = pints.toy.MultimodalNormalLogPDF([[0, 0], [5, 5], [5, 0]])
+        f = pints.toy.MultimodalGaussianLogPDF([[0, 0], [5, 5], [5, 0]])
 
     Arguments:
 
