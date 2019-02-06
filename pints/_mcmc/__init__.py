@@ -395,6 +395,19 @@ class MCMCController(object):
         else:
             self._stored_log_likelihood = None
 
+    def log_likelihood_storage(self):
+        """
+        Returns whether the log-likelihood is being stored for each
+        posterior sample
+        """
+        return self._log_likelihood_storage
+
+    def stored_log_likelihood(self):
+        """
+        Returns log-likelihood stored for each posterior sample
+        """
+        return self._stored_log_likelihood
+
     def set_log_density_storage(self, store=False):
         """
         Sets whether or not to store log-density for each sample from the pdf
