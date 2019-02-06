@@ -3,7 +3,7 @@
 # Tests the basic methods of the seqential Monte Carlo routines.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -40,10 +40,10 @@ class TestSMC(unittest.TestCase):
         """ Test a single run. """
         n = 100
         d = 2
-        sampler = pints.SMC(self.log_pdf, self.x0, self.sigma0, self.log_prior)
+        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0, self.sigma0)
         sampler.set_temperature_schedule(3)
-        sampler.set_particles(n)
-        sampler.set_kernel_samples(3)
+        sampler.set_n_particles(n)
+        sampler.set_n_kernel_samples(3)
         samples = sampler.run()
 
         # Check output has desired shape
@@ -51,26 +51,26 @@ class TestSMC(unittest.TestCase):
 
         # Check creation with sigma vector
         sigma0 = np.array([2, 2])
-        sampler = pints.SMC(self.log_pdf, self.x0, sigma0, self.log_prior)
+        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0, sigma0)
         sampler.set_temperature_schedule(3)
-        sampler.set_particles(n)
-        sampler.set_kernel_samples(3)
+        sampler.set_n_particles(n)
+        sampler.set_n_kernel_samples(3)
         samples = sampler.run()
         self.assertEqual(samples.shape, (n, d))
 
         # Check creation without sigma
-        sampler = pints.SMC(self.log_pdf, self.x0, log_prior=self.log_prior)
+        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0)
         sampler.set_temperature_schedule(3)
-        sampler.set_particles(n)
-        sampler.set_kernel_samples(3)
+        sampler.set_n_particles(n)
+        sampler.set_n_kernel_samples(3)
         samples = sampler.run()
         self.assertEqual(samples.shape, (n, d))
 
         # Check creation without log_prior
-        sampler = pints.SMC(self.log_pdf, self.x0)
+        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0)
         sampler.set_temperature_schedule(3)
-        sampler.set_particles(n)
-        sampler.set_kernel_samples(3)
+        sampler.set_n_particles(n)
+        sampler.set_n_kernel_samples(3)
         samples = sampler.run()
         self.assertEqual(samples.shape, (n, d))
 
@@ -80,12 +80,12 @@ class TestSMC(unittest.TestCase):
         # First arg must be a LogPDF
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPDF',
-            pints.SMC, 'hello', self.x0)
+            pints.SMC, 'hello', self.log_prior, self.x0)
 
         # Log prior must be a LogPrior
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPrior',
-            pints.SMC, self.log_pdf, self.x0, log_prior=12)
+            pints.SMC, self.log_pdf, 12, self.x0)
 
     '''
     def test_logging(self):
