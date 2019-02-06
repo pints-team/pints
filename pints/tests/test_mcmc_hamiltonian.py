@@ -3,7 +3,7 @@
 # Tests the basic methods of the Hamiltonian MCMC routine.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -106,20 +106,33 @@ class TestHamiltonianMCMC(unittest.TestCase):
         n = mcmc.leapfrog_steps()
         d = mcmc.leapfrog_step_size()
         self.assertIsInstance(n, int)
-        self.assertIsInstance(d, float)
+        self.assertTrue(len(d) == mcmc._n_parameters)
 
         mcmc.set_leapfrog_steps(n + 1)
         self.assertEqual(mcmc.leapfrog_steps(), n + 1)
         self.assertRaises(ValueError, mcmc.set_leapfrog_steps, 0)
 
-        mcmc.set_leapfrog_step_size(d * 0.5)
-        self.assertEqual(mcmc.leapfrog_step_size(), d * 0.5)
+        mcmc.set_leapfrog_step_size(0.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
 
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([n + 2, d * 2])
+        mcmc.set_hyper_parameters([n + 2, 2])
         self.assertEqual(mcmc.leapfrog_steps(), n + 2)
-        self.assertEqual(mcmc.leapfrog_step_size(), d * 2)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+
+        mcmc.set_epsilon(0.4)
+        self.assertEqual(mcmc.epsilon(), 0.4)
+        self.assertRaises(ValueError, mcmc.set_epsilon, -0.1)
+        mcmc.set_leapfrog_step_size(1)
+        self.assertEqual(len(mcmc.scaled_epsilon()), 2)
+        self.assertEqual(mcmc.scaled_epsilon()[0], 0.4)
+        self.assertEqual(len(mcmc.divergent_iterations()), 0)
+        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, [1, 2, 3])
+
+        mcmc.set_leapfrog_step_size([1.5, 3])
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
 
 if __name__ == '__main__':

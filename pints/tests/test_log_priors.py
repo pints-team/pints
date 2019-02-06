@@ -40,6 +40,15 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(dy.shape, (1, ))
         self.assertEqual(dy[0], (mean - x[0]) / std**2)
 
+        p = pints.NormalLogPrior(-1, 4.5)
+        x = [3.75]
+        self.assertAlmostEqual(p(x), -2.9801146954130457)
+        p = pints.NormalLogPrior(10.4, 0.5)
+        x = [5.5]
+        y, dy = p.evaluateS1(x)
+        self.assertAlmostEqual(y, -48.245791352644737)
+        self.assertEqual(dy, 19.6)
+
     def test_normal_prior_sampling(self):
         mean = 10
         std = 2

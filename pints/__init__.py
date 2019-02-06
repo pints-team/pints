@@ -23,8 +23,8 @@ import sys
 #
 # Version info: Remember to keep this in sync with setup.py!
 #
-VERSION_INT = 0, 1, 1
-VERSION = '.'.join([str(x) for x in VERSION_INT])
+__version_int__ = 0, 1, 1
+__version__ = '.'.join([str(x) for x in __version_int__])
 if sys.version_info[0] < 3:
     del(x)  # Before Python3, list comprehension iterators leaked
 
@@ -38,9 +38,9 @@ def version(formatted=False):
     "Pints 1.0.0").
     """
     if formatted:
-        return 'Pints ' + VERSION
+        return 'Pints ' + __version__
     else:
-        return VERSION_INT
+        return __version_int__
 
 
 #

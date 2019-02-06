@@ -2,7 +2,7 @@
 # Differential evolution MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -51,7 +51,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('Need at least 3 chains.')
 
         # Warn user against using too few chains
-        if self._chains < 1.5 * self._dimension:
+        if self._chains < 1.5 * self._n_parameters:
             log = logging.getLogger(__name__)
             log.warning('This method should be run with n_chains >= ' +
                         '1.5 * n_parameters')
@@ -69,7 +69,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         #
 
         # Gamma
-        self._gamma = 2.38 / np.sqrt(2 * self._dimension)
+        self._gamma = 2.38 / np.sqrt(2 * self._n_parameters)
 
         # Gamma switch to 1 every (below) steps to help find
         # modes
@@ -115,7 +115,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 )
 
             # reset gamma
-            self._gamma = 2.38 / np.sqrt(2 * self._dimension)
+            self._gamma = 2.38 / np.sqrt(2 * self._n_parameters)
 
             # Set as read only
             self._proposed.setflags(write=False)
@@ -153,7 +153,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._relative_scaling:
             self._b_star = np.abs(self._mu * self._b)
         else:
-            self._b_star = np.repeat(self._b, self._dimension)
+            self._b_star = np.repeat(self._b, self._n_parameters)
 
         # Gamma set to 1 counter
         self._iter_count = 0
@@ -185,7 +185,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._relative_scaling:
             self._b_star = self._mu * self._b
         else:
-            self._b_star = np.repeat(self._b, self._dimension)
+            self._b_star = np.repeat(self._b, self._n_parameters)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """

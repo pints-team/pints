@@ -209,7 +209,9 @@ class TestDreamMCMC(unittest.TestCase):
         mcmc.set_nCR(x)
         self.assertEqual(mcmc.nCR(), 4)
         self.assertRaises(ValueError, mcmc.set_nCR, 1)
-        self.assertRaises(ValueError, mcmc.set_nCR, 2.5)
+        # should implicitly convert floats to int
+        mcmc.set_nCR(2.1)
+        self.assertEqual(mcmc.nCR(), 2)
 
         mcmc.set_hyper_parameters([0.50, 1.25, 0.45, 1,
                                    0, 1, 0.32, 5])

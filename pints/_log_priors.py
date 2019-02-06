@@ -145,7 +145,7 @@ class NormalLogPrior(pints.LogPrior):
         self._sigma = float(standard_deviation)
 
         # Cache constants
-        self._offset = 1 / np.sqrt(2 * np.pi * self._sigma ** 2)
+        self._offset = np.log(1 / np.sqrt(2 * np.pi * self._sigma ** 2))
         self._factor = 1 / (2 * self._sigma ** 2)
         self._factor2 = 1 / self._sigma**2
 
@@ -395,4 +395,3 @@ class UniformLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return self._boundaries.sample(n)
-

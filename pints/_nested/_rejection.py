@@ -2,7 +2,7 @@
 # Nested rejection sampler implementation.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -34,6 +34,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
     """
+
     def __init__(self, log_likelihood, log_prior):
         super(NestedRejectionSampler, self).__init__(log_likelihood, log_prior)
 
@@ -108,11 +109,11 @@ class NestedRejectionSampler(pints.NestedSampler):
             # Add fields to log
             logger.add_counter('Iter.', max_value=self._iterations)
             logger.add_counter('Eval.', max_value=self._iterations * 10)
-            #TODO: Add other informative fields ?
+            # TODO: Add other informative fields ?
             logger.add_time('Time m:s')
 
         # Problem dimension
-        d = self._dimension
+        d = self._n_parameters
 
         # Generate initial random points by sampling from the prior
         m_active = np.zeros((self._active_points, d + 1))
@@ -207,6 +208,28 @@ class NestedRejectionSampler(pints.NestedSampler):
             raise ValueError('Number of active points must be greater than 5.')
         self._active_points = active_points
 
+    def n_hyper_parameters(self):
+        """
+        Returns the number of hyper-parameters for this method (see
+        :class:`TunableMethod`).
+        """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        Sets the hyper-parameters for the method with the given vector of
+        values (see :class:`TunableMethod`).
+
+        Hyper-parameter vector is: ``[active_points_rate]``
+
+        Arguments:
+
+        ``x`` an array of length ``n_hyper_parameters`` used to set the
+              hyper-parameters
+        """
+
+        self.set_active_points_rate(x[0])
+
     def set_iterations(self, iterations):
         """
         Sets the total number of iterations to be performed in the next run.
@@ -226,4 +249,3 @@ class NestedRejectionSampler(pints.NestedSampler):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
-
