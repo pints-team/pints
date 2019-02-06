@@ -439,7 +439,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         super(ARMA11LogLikelihood, self).__init__(problem)
 
         # Get number of times, number of outputs
-        self._nt = len(self._times) - 1
+        self._nt = len(self._times) - 2
         self._no = problem.n_outputs()
 
         # Add parameters to problem
