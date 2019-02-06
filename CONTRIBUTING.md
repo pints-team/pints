@@ -267,6 +267,12 @@ Configuration files:
 
 Documentation is built using https://readthedocs.org/ and published on http://pints.readthedocs.io/.
 
+Configuration files:
+
+```
+.requirements-docs.txt
+```
+
 ### Binder
 
 Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples.
