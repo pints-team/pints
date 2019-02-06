@@ -2,7 +2,7 @@
 # Dream MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -63,6 +63,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     2009, Vrugt et al.,
     International Journal of Nonlinear Sciences and Numerical Simulation.
     """
+
     def __init__(self, chains, x0, sigma0=None):
         super(DreamMCMC, self).__init__(chains, x0, sigma0)
 
@@ -124,7 +125,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Select initial proposal for chain j
                 delta = int(np.random.choice(self._delta_max, 1)[0] + 1)
                 if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                    gamma = 2.38 / np.sqrt(2 * delta * self._n_parameters)
                 else:
                     gamma = 1.0
 
@@ -139,7 +140,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
                 self._proposed[j] += dX + np.random.normal(
                     loc=0, scale=np.abs(self._b * self._mu),
-                    size=self._dimension)
+                    size=self._n_parameters)
 
                 # Set crossover probability
                 if self._constant_crossover:
@@ -152,7 +153,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                     self._L[self._m[j]] += 1
 
                 # Randomly set elements of proposal to back original
-                for d in range(self._dimension):
+                for d in range(self._n_parameters):
                     if 1 - CR > np.random.rand():
                         self._proposed[j][d] = self._current[j][d]
 
@@ -205,13 +206,13 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
-        #logger.add_float('Accept.')
-        #TODO
+        # logger.add_float('Accept.')
+        # TODO
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
-        #logger.log(self._acceptance)
-        #TODO
+        # logger.log(self._acceptance)
+        # TODO
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -282,7 +283,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Update CR distribution
                 delta = (next - self._current)**2
                 for j in range(self._chains):
-                    for d in range(0, self._dimension):
+                    for d in range(0, self._n_parameters):
                         self._delta[self._m[j]] += (
                             delta[j][d] / max(self._variance[j][d], 1e-11))
 
@@ -379,14 +380,14 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_constant_crossover(self, enabled):
         """
-        Enables/disables constant-crossover mode.
+        Enables/disables constant-crossover mode (must be bool).
         """
         self._constant_crossover = True if enabled else False
 
     def set_b_star(self, b_star):
         """
         Sets b*, which determines the weight given to other chains' positions
-        in determining new positions.
+        in determining new positions (must be non-negative).
         """
         if b_star < 0:
             raise ValueError('b* must be non-negative.')
@@ -396,7 +397,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         Sets ``p_g`` which is the probability of choosing a higher ``gamma``
         versus regular (a higher ``gamma`` means that other chains are given
-        more weight).
+        more weight). ``p_g`` must be in the range [0, 1].
         """
         if p_g < 0 or p_g > 1:
             raise ValueError('p_g must be in the range [0, 1].')
@@ -405,12 +406,14 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_delta_max(self, delta_max):
         """
         Sets the maximum number of other chains' positions to use to determine
-        the next sampler position.
+        the next sampler position. ``delta_max`` must be in the range
+        ``[1, nchains - 2]``.
         """
         delta_max = int(delta_max)
         if delta_max > (self._chains - 2):
             raise ValueError(
-                'delta_max must be less than available other chains.')
+                'delta_max must be less than or equal to the number of chains '
+                'minus 2.')
         if delta_max < 1:
             raise ValueError('delta_max must be at least 1.')
         self._delta_max = delta_max
@@ -418,24 +421,23 @@ class DreamMCMC(pints.MultiChainMCMC):
     def set_CR(self, CR):
         """
         Sets the probability of crossover occurring if constant crossover mode
-        is enabled.
+        is enabled. CR is a probability and so must be in the range ``[0, 1]``.
         """
         if CR < 0 or CR > 1:
-            raise ValueError('CR is a probability and so must be in [0,1].')
+            raise ValueError('CR is a probability and so must be in [0, 1].')
         self._CR = CR
 
     def set_nCR(self, nCR):
         """
         Sets the size of the discrete crossover probability distribution (only
-        used if constant crossover mode is disabled).
+        used if constant crossover mode is disabled). ``nCR`` must be greater
+        than or equal to 2.
         """
         if nCR < 2:
             raise ValueError(
-                'Length of discrete crossover distribution must exceed 1.')
-        if not isinstance(nCR, int):
-            raise ValueError(
-                'Length of discrete crossover distribution must be a integer.')
-        self._nCR = nCR
+                'Length of discrete crossover distribution must be 2 or'
+                ' greater.')
+        self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):
         """

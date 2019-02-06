@@ -48,11 +48,9 @@ class ForwardModel(object):
 
         Returns:
 
-        A numpy array of length ``len(times)`` representing the values of the
-        model at the given ``times``.
-
-        Note: For efficiency, both ``parameters`` and ``times`` will be passed
-        in as read-only numpy arrays.
+        A sequence of length ``n_times`` (for single output problems) or a
+        NumPy array of shape ``(n_times, n_outputs)`` (for multi-output
+        problems), representing the values of the model at the given ``times``.
         """
         raise NotImplementedError
 
@@ -180,22 +178,28 @@ class SingleOutputProblem(object):
     def evaluate(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
-        values.
+        values as a NumPy array of shape ``(n_times,)``.
         """
-        return self._model.simulate(parameters, self._times)
+        y = np.asarray(self._model.simulate(parameters, self._times))
+        return y.reshape((self._n_times,))
 
     def evaluateS1(self, parameters):
         """
         Runs a simulation with first-order sensitivity calculation, returning
         the simulated values and derivatives.
 
-        The returned data is a tuple ``(y, y')``, where ``y`` is a sequence of
-        length ``n_times``, while ``y'`` has shape ``(n_times, n_parameters)``.
+        The returned data is a tuple of NumPy arrays ``(y, y')``, where ``y``
+        has shape ``(self._n_times,)`` while ``y'`` has shape
+        ``(n_times, n_parameters)``.
 
-        *This method only works for problems whose model implements the
+        *This method only works for problems with a model that implements the
         :class:`ForwardModelS1` interface.*
         """
-        return self._model.simulateS1(parameters, self._times)
+        y, dy = self._model.simulateS1(parameters, self._times)
+        return (
+            np.asarray(y).reshape((self._n_times,)),
+            np.asarray(dy).reshape((self._n_times, self._n_parameters))
+        )
 
     def n_outputs(self):
         """
@@ -220,7 +224,7 @@ class SingleOutputProblem(object):
         """
         Returns this problem's times.
 
-        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        The returned value is a read-only NumPy array of shape ``(n_times, )``,
         where ``n_times`` is the number of time points.
         """
         return self._times
@@ -229,7 +233,7 @@ class SingleOutputProblem(object):
         """
         Returns this problem's values.
 
-        The returned value is a read-only numpy array of shape ``(n_times, )``,
+        The returned value is a read-only NumPy array of shape ``(n_times, )``,
         where ``n_times`` is the number of time points.
         """
         return self._values
@@ -285,23 +289,29 @@ class MultiOutputProblem(object):
         Runs a simulation using the given parameters, returning the simulated
         values.
 
-        The returned data has shape ``(n_times, n_outputs)``.
+        The returned data is a NumPy array with shape ``(n_times, n_outputs)``.
         """
-        return self._model.simulate(parameters, self._times)
+        y = np.asarray(self._model.simulate(parameters, self._times))
+        return y.reshape(self._n_times, self._n_outputs)
 
     def evaluateS1(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
         values.
 
-        The returned data is a tuple ``(y, y')``, where ``y`` has shape
-        ``(n_times, n_outputs)``, while ``y'`` has shape
+        The returned data is a tuple of NumPy arrays ``(y, y')``, where ``y``
+        has shape ``(n_times, n_outputs)``, while ``y'`` has shape
         ``(n_times, n_outputs, n_parameters)``.
 
         *This method only works for problems whose model implements the
         :class:`ForwardModelS1` interface.*
         """
-        return self._model.simulateS1(parameters, self._times)
+        y, dy = self._model.simulateS1(parameters, self._times)
+        return (
+            np.asarray(y).reshape(self._n_times, self._n_outputs),
+            np.asarray(dy).reshape(
+                self._n_times, self._n_outputs, self._n_parameters)
+        )
 
     def n_outputs(self):
         """
@@ -326,7 +336,7 @@ class MultiOutputProblem(object):
         """
         Returns this problem's times.
 
-        The returned value is a read-only numpy array of shape
+        The returned value is a read-only NumPy array of shape
         ``(n_times, n_outputs)``, where ``n_times`` is the number of time
         points and ``n_outputs`` is the number of outputs.
         """
@@ -336,7 +346,7 @@ class MultiOutputProblem(object):
         """
         Returns this problem's values.
 
-        The returned value is a read-only numpy array of shape
+        The returned value is a read-only NumPy array of shape
         ``(n_times, n_outputs)``, where ``n_times`` is the number of time
         points and ``n_outputs`` is the number of outputs.
         """
@@ -356,6 +366,12 @@ class TunableMethod(object):
     this interface provides a generic way to set the hyper-parameters, which
     allows the user to, for example, use an optimiser to tune the
     hyper-parameters of the method.
+
+    Note that the `set_hyper_parameters` function takes an array of parameters,
+    which might be of the same type (e.g. a numpy array). So derived classes
+    should not raise any errors if individual hyper parameters are set using
+    the wrong type (e.g. float rather than int), but should instead implicitly
+    convert the argument to the correct type.
     """
 
     def n_hyper_parameters(self):

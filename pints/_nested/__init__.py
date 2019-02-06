@@ -2,7 +2,7 @@
 # Sub-module containing nested samplers
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -11,7 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 
 
-class NestedSampler(object):
+class NestedSampler(pints.TunableMethod):
     """
     Abstract base class for nested samplers.
 
@@ -24,10 +24,11 @@ class NestedSampler(object):
         A :class:`LogPrior` function on the same parameter space.
 
     """
+
     def __init__(self, log_likelihood, log_prior):
 
         # Store log_likelihood and log_prior
-        #if not isinstance(log_likelihood, pints.LogLikelihood):
+        # if not isinstance(log_likelihood, pints.LogLikelihood):
         if not isinstance(log_likelihood, pints.LogPDF):
             raise ValueError(
                 'Given log_likelihood must extend pints.LogLikelihood')
@@ -39,8 +40,8 @@ class NestedSampler(object):
         self._log_prior = log_prior
 
         # Get dimension
-        self._dimension = self._log_likelihood.n_parameters()
-        if self._dimension != self._log_prior.n_parameters():
+        self._n_parameters = self._log_likelihood.n_parameters()
+        if self._n_parameters != self._log_prior.n_parameters():
             raise ValueError(
                 'Given log_likelihood and log_prior must have same number of'
                 ' parameters.')
@@ -78,4 +79,3 @@ class NestedSampler(object):
         Enables or disables logging to screen.
         """
         self._log_to_screen = True if enabled else False
-

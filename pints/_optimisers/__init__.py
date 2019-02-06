@@ -2,7 +2,7 @@
 # Sub-module containing several optimisation routines
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -77,14 +77,14 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         self._x0 = pints.vector(x0)
 
         # Get dimension
-        self._dimension = len(self._x0)
-        if self._dimension < 1:
+        self._n_parameters = len(self._x0)
+        if self._n_parameters < 1:
             raise ValueError('Problem dimension must be greater than zero.')
 
         # Store boundaries
         self._boundaries = boundaries
         if self._boundaries:
-            if self._boundaries.n_parameters() != self._dimension:
+            if self._boundaries.n_parameters() != self._n_parameters:
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
@@ -116,16 +116,16 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
             if sigma0 <= 0:
                 raise ValueError(
                     'Initial standard deviation must be greater than zero.')
-            self._sigma0 = np.ones(self._dimension) * sigma0
+            self._sigma0 = np.ones(self._n_parameters) * sigma0
             self._sigma0.setflags(write=False)
 
         else:
             # Vector given
             self._sigma0 = pints.vector(sigma0)
-            if len(self._sigma0) != self._dimension:
+            if len(self._sigma0) != self._n_parameters:
                 raise ValueError(
                     'Initial standard deviation must be None, scalar, or have'
-                    ' dimension ' + str(self._dimension) + '.')
+                    ' dimension ' + str(self._n_parameters) + '.')
             if np.any(self._sigma0 <= 0):
                 raise ValueError(
                     'Initial standard deviations must be greater than zero.')

@@ -101,6 +101,34 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
 
+        # known noise value checks
+        model = pints.toy.ConstantModel(1)
+        times = np.linspace(0, 10, 10)
+        values = model.simulate([2], times)
+        org_values = np.arange(10) / 5.0
+        problem = pints.SingleOutputProblem(model, times, org_values)
+        log_likelihood = pints.KnownNoiseLogLikelihood(problem, 1.5)
+        self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
+        l, dl = log_likelihood.evaluateS1([3])
+        self.assertAlmostEqual(l, -23.777369746461702)
+        self.assertAlmostEqual(dl[0], -9.3333333333333321)
+
+        # unknown noise value checks
+        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        self.assertAlmostEqual(log_likelihood([-3, 1.5]), -47.777369746461702)
+
+        # unknown noise check sensitivity
+        model = pints.toy.ConstantModel(1)
+        times = np.linspace(0, 10, 10)
+        values = model.simulate([2], times)
+        org_values = np.arange(10) / 5.0
+        problem = pints.SingleOutputProblem(model, times, org_values)
+        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        l, dl = log_likelihood.evaluateS1([7, 2.0])
+        self.assertAlmostEqual(l, -63.04585713764618)
+        self.assertAlmostEqual(dl[0], -15.25)
+        self.assertAlmostEqual(dl[1], 41.925000000000004)
+
     def test_known_noise_single_S1(self):
         """
         Simple tests for single known noise log-likelihood with sensitivities.
@@ -118,6 +146,15 @@ class TestLogLikelihood(unittest.TestCase):
         L1 = f(x)
         L2, dL = f.evaluateS1(x)
         self.assertEqual(L1, L2)
+        self.assertEqual(dL.shape, (2,))
+
+        # Test with MultiOutputProblem
+        problem = pints.MultiOutputProblem(model, times, values)
+        f2 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        L3 = f2(x)
+        L4, dL = f2.evaluateS1(x)
+        self.assertEqual(L3, L4)
+        self.assertEqual(L1, L3)
         self.assertEqual(dL.shape, (2,))
 
         # Test without noise
