@@ -381,11 +381,16 @@ class MCMCController(object):
 
     def set_log_likelihood_storage(self, store=False):
         """
-        Sets whether or not to store log-likelihood for each posterior sample
+        Sets whether or not to store log-likelihood for each posterior sample.
+        Only applicable for Bayesian problems.
         """
         self._log_likelihood_storage = bool(store)
         if self._log_likelihood_storage:
-            self._stored_log_likelihood = []
+            if not isinstance(self._log_pdf, pints.LogPosterior):
+                raise ValueError('log_pdf must be of type pints.LogPosterior' +
+                                 ' to store log-likelihood')
+            else:
+                self._stored_log_likelihood = []
         else:
             self._stored_log_likelihood = None
 
@@ -597,16 +602,17 @@ class MCMCController(object):
             # Add new samples to the chains
             chains.append(samples)
 
-            if self._log_likelihood_storage:
-                log_prior = self._log_pdf.log_prior()
-                if self._single_chain:
-                    log_like = np.array(
-                        [(s._current_log_pdf - log_prior(samples[i]))
-                            for i, s in enumerate(self._samplers)])
-                else:
-                    log_like = fxs - log_prior(samples)
+            if prior is not None:
+                if self._log_likelihood_storage:
+                    log_prior = self._log_pdf.log_prior()
+                    if self._single_chain:
+                        log_like = np.array(
+                            [(s._current_log_pdf - log_prior(samples[i]))
+                                for i, s in enumerate(self._samplers)])
+                    else:
+                        log_like = fxs - log_prior(samples)
 
-                self._stored_log_likelihood.append(log_like)
+                    self._stored_log_likelihood.append(log_like)
 
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):

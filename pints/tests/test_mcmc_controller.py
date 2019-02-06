@@ -825,6 +825,13 @@ class TestMCMCController(unittest.TestCase):
         mcmc.run()
         self.assertTrue(not np.array_equal(mcmc.stored_log_likelihood(), []))
 
+        # log_pdf not log_posterior should not allow log-likelihood logging
+        log_pdf = pints.toy.RosenbrockLogPDF()
+        x0 = np.random.uniform([-2, -0.5], [3, 3], size=(4, 2))
+        mcmc = pints.MCMCSampling(log_pdf, 4, x0,
+                                  method=pints.AdaptiveCovarianceMCMC)
+        self.assertRaises(ValueError, mcmc.set_log_likelihood_storage, True)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
