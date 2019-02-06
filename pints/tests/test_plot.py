@@ -65,8 +65,7 @@ class TestPlot(unittest.TestCase):
             self.real_parameters * 0.9,
             self.real_parameters * 1.05
         ]
-        mcmc = pints.MCMCController(self.log_posterior, 3, self.x0,
-                                    method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior, 3, self.x0)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples = mcmc.run()
@@ -102,8 +101,7 @@ class TestPlot(unittest.TestCase):
             self.real_parameters2 * 0.9,
             self.real_parameters2 * 1.05
         ]
-        mcmc = pints.MCMCController(self.log_posterior2, 3, self.x02,
-                                    method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior2, 3, self.x02)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples2 = mcmc.run()
@@ -116,8 +114,7 @@ class TestPlot(unittest.TestCase):
 
         # Run MCMC
         self.x03 = [[1], [-2], [3]]
-        mcmc = pints.MCMCController(self.log_posterior3, 3, self.x03,
-                                    method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior3, 3, self.x03)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples3 = mcmc.run()

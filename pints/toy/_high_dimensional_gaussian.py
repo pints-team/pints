@@ -1,5 +1,5 @@
 #
-# High-dimensional normal log-pdf.
+# High-dimensional Gaussian log-pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -15,7 +15,7 @@ import scipy.stats
 
 class HighDimensionalGaussianLogPDF(pints.LogPDF):
     """
-    High-dimensional multivariate normal log pdf, with tricky off-diagonal
+    High-dimensional multivariate Gaussian log pdf, with tricky off-diagonal
     covariances.
 
     *Extends:* :class:`pints.LogPDF`.

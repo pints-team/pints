@@ -1,6 +1,6 @@
-******************************
-Multimodal normal distribution
-******************************
+********************************
+Multimodal Gaussian distribution
+********************************
 
 .. module:: pints.toy
 

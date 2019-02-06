@@ -62,8 +62,8 @@ class TestHamiltonianMCMC(unittest.TestCase):
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
-        mcmc = pints.MCMCController(log_pdf, 2, x0,
-                                    method=pints.HamiltonianMCMC)
+        mcmc = pints.MCMCController(
+            log_pdf, 2, x0, method=pints.HamiltonianMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()

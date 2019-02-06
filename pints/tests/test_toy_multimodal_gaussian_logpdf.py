@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the multimodal normal distribution.
+# Tests the multimodal Gaussian distribution.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.

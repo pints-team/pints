@@ -88,7 +88,7 @@ class ComposedLogPrior(pints.LogPrior):
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
     """
-    Defines a multivariate normal (log)prior with a given ``mean`` and
+    Defines a multivariate Gaussian (log)prior with a given ``mean`` and
     ``covariance`` matrix.
 
     For example::
@@ -131,7 +131,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
 class GaussianLogPrior(pints.LogPrior):
     """
-    Defines a 1-d normal (log) prior with a given ``mean`` and
+    Defines a 1-d Gaussian (log) prior with a given ``mean`` and
     ``standard_deviation``.
 
     For example: ``p = GaussianLogPrior(0, 1)`` for a mean of ``0`` and
