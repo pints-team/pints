@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the XNES optimiser.
+# Tests the pints.Optimisation class
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -24,7 +24,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestXNES(unittest.TestCase):
+class TestOptimisation(unittest.TestCase):
     """
     Tests shared optimisation properties.
     """
@@ -73,23 +73,28 @@ class TestXNES(unittest.TestCase):
         self.assertEqual(opt.max_iterations(), 10)
         with StreamCapture() as c:
             opt.run()
-
-            log_should_be = (
-                'Maximising LogPDF\n'
-                'using Exponential Natural Evolution Strategy (xNES)\n'
-                'Running in sequential mode.\n'
-                'Population size: 6\n'
-                'Iter. Eval. Best      Time m:s\n'
-                '0     6     -1.837877   0:00.0\n'
-                '1     12    -1.837877   0:00.0\n'
-                '2     18    -1.837877   0:00.0\n'
-                '3     24    -1.837877   0:00.0\n'
-                '6     42    -1.837877   0:00.0\n'
-                '9     60    -1.837877   0:00.0\n'
-                '10    60    -1.837877   0:00.0\n'
-                'Halting: Maximum number of iterations (10) reached.\n'
-            )
-            self.assertEqual(log_should_be, c.text())
+            log_should_be = [
+                'Maximising LogPDF',
+                'using Exponential Natural Evolution Strategy (xNES)',
+                'Running in sequential mode.',
+                'Population size: 6',
+                'Iter. Eval. Best      Time m:s',
+                '0     6     -1.837877   0:00.0',
+                '1     12    -1.837877   0:00.0',
+                '2     18    -1.837877   0:00.0',
+                '3     24    -1.837877   0:00.0',
+                '6     42    -1.837877   0:00.0',
+                '9     60    -1.837877   0:00.0',
+                '10    60    -1.837877   0:00.0',
+                'Halting: Maximum number of iterations (10) reached.',
+            ]
+            lines = c.text().splitlines()
+            self.assertEqual(len(lines), len(log_should_be))
+            for i, line in enumerate(log_should_be):
+                if line[-6:] == '0:00.0':
+                    self.assertEqual(line[:-6], lines[i][:-6])
+                else:
+                    self.assertEqual(line, lines[i])
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
