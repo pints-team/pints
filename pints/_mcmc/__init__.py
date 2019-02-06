@@ -808,6 +808,7 @@ class MCMCController(object):
             self._parallel = False
             self._n_workers = 1
 
+
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 

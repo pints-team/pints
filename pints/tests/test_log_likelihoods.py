@@ -78,7 +78,6 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
-
     def test_gaussian_log_likelihoods_single_output(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
@@ -133,13 +132,13 @@ class TestLogLikelihood(unittest.TestCase):
         # Test deprecated aliases
         l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
         self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
-        
+
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertIsInstance(l2, pints.GaussianLogLikelihood)
 
     def test_known_noise_gaussian_single_S1(self):
         """
-        Simple tests for single known noise Gaussian log-likelihood with 
+        Simple tests for single known noise Gaussian log-likelihood with
         sensitivities.
         """
         model = pints.toy.LogisticModel()
@@ -307,7 +306,7 @@ class TestLogLikelihood(unittest.TestCase):
 
     def test_gaussian_noise_multi(self):
         """
-        Multi-output test for known/unknown Gaussian noise log-likelihood 
+        Multi-output test for known/unknown Gaussian noise log-likelihood
         methods.
         """
         model = pints.toy.FitzhughNagumoModel()

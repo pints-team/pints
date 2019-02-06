@@ -287,7 +287,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
 class NormalLogPrior(GaussianLogPrior):
     """ Deprecated alias of :class:`GaussianLogPrior`. """
-    
+
     def __init__(self, mean, standard_deviation):
         # Deprecated on 2019-02-06
         import logging

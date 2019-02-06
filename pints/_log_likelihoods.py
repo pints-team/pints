@@ -350,7 +350,7 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
 class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
     """ Deprecated alias of :class:`GaussianKnownSigmaLogLikelihood`. """
-    
+
     def __init__(self, problem, sigma):
         # Deprecated on 2019-02-06
         import logging
@@ -490,5 +490,4 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-
 
