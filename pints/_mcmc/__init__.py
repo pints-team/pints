@@ -378,11 +378,12 @@ class MCMCController(object):
         self.set_max_iterations()
 
         self.set_log_likelihood_storage(False)
+        self.set_log_density_storage(False)
 
     def set_log_likelihood_storage(self, store=False):
         """
         Sets whether or not to store log-likelihood for each posterior sample.
-        Only applicable for Bayesian problems.
+        Only applicable for Bayesian problems
         """
         self._log_likelihood_storage = bool(store)
         if self._log_likelihood_storage:
@@ -394,18 +395,28 @@ class MCMCController(object):
         else:
             self._stored_log_likelihood = None
 
-    def log_likelihood_storage(self):
+    def set_log_density_storage(self, store=False):
         """
-        Returns whether the log-likelihood is being stored for each
-        posterior sample
+        Sets whether or not to store log-density for each sample from the pdf
         """
-        return self._log_likelihood_storage
+        self._log_density_storage = bool(store)
+        if self._log_density_storage:
+            self._stored_log_density = []
+        else:
+            self._stored_log_density = None
 
-    def stored_log_likelihood(self):
+    def log_density_storage(self):
         """
-        Returns log-likelihood stored for each posterior sample
+        Returns whether the log-density is being stored for each
+        sample from the pdf
         """
-        return self._stored_log_likelihood
+        return self._log_density_storage
+
+    def stored_log_density(self):
+        """
+        Returns log-density stored for each posterior sample
+        """
+        return self._stored_log_density
 
     def initial_phase_iterations(self):
         """
@@ -613,6 +624,16 @@ class MCMCController(object):
                         log_like = fxs - log_prior(samples)
 
                     self._stored_log_likelihood.append(log_like)
+
+            if self._log_density_storage:
+                if self._single_chain:
+                    log_density = np.array(
+                        [s._current_log_pdf
+                            for i, s in enumerate(self._samplers)])
+                else:
+                    log_density = fxs
+
+                self._stored_log_density.append(log_density)
 
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
