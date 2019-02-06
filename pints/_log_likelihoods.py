@@ -379,8 +379,8 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem two parameters is added, for a multi-output
-        problem 2 * ``n_outputs`` parameters are added.
+        single-output problem two parameters are added (rho, sigma),
+        for a multi-output problem 2 * ``n_outputs`` parameters are added.
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
@@ -389,19 +389,71 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         super(AR1LogLikelihood, self).__init__(problem)
 
         # Get number of times, number of outputs
-        self._nt = len(self._times)-1
+        self._nt = len(self._times) - 1
         self._no = problem.n_outputs()
 
         # Add parameters to problem
-        self._n_parameters = problem.n_parameters() + 2*self._no
+        self._n_parameters = problem.n_parameters() + 2 * self._no
 
         # Pre-calculate parts
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        sigma = np.asarray(x[-2*self._no:-self._no])
-        rho = np.asarray(x[-self._no:])
-        error = self._values - self._problem.evaluate(x[:-self._no])
-        autocorr_error = error[1:] - rho*error[:-1]
+        rho = np.asarray(x[-2 * self._no:-self._no])
+        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
+        error = self._values - self._problem.evaluate(x[:-2 * self._no])
+        autocorr_error = error[1:] - rho * error[:-1]
+        return np.sum(- self._logn - self._nt * np.log(sigma)
+                      - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
+
+
+class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
+    """
+    Calculates a log-likelihood assuming AR1 noise model
+
+    .. math::
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
+            -\\frac{N}{2}\log{2\pi}
+            -N\log{\sigma}
+            -\\frac{1}{2\sigma^2}
+                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} -
+                              \\phi \\nu(t-1))^2}
+
+    where
+
+    .. math::
+        \\epsilon_i = x_i - f_i(\\theta)
+
+
+    Arguments:
+
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem three parameters are added (rho, phi, sigma),
+        for a multi-output problem 3 * ``n_outputs`` parameters are added.
+
+    *Extends:* :class:`ProblemLogLikelihood`
+    """
+
+    def __init__(self, problem):
+        super(ARMA11LogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times) - 1
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + 3 * self._no
+
+        # Pre-calculate parts
+        self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        rho = np.asarray(x[-3 * self._no:-self._no])
+        phi = np.asarray(x[-2 * self._no:-self._no])
+        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
+        error = self._values - self._problem.evaluate(x[:-2 * self._no])
+        v = error[1:] - rho * error[:-1]
+        autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
