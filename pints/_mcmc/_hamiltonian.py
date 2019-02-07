@@ -197,7 +197,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Hamiltonian MCMC'
+        return 'Hamiltonian Monte Carlo'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
