@@ -147,7 +147,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Propose new point
         if self._proposed is None:
             self._forward_mu = self._current + (self._step_size**2 / 2.0) * (
-                self._current_gradient
+                np.matmul(self._sigma0, self._current_gradient)
             )
             self._proposed = np.random.multivariate_normal(
                 self._forward_mu, self._step_size**2 * self._sigma0)
@@ -196,8 +196,14 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Calculate alpha
         self._proposed_gradient = -log_gradient
         self._backward_mu = self._proposed + (self._step_size**2 / 2.0) * (
-            self._proposed_gradient
+            np.matmul(self._sigma0, self._proposed_gradient)
         )
+        # print(self._proposed)
+        # print(self._sigma0)
+        # print(self._proposed_gradient)
+        # print(self._current)
+        # print(self._current_gradient)
+        # print(-1)
         self._backward_q = scipy.stats.multivariate_normal.logpdf(
             self._current, self._backward_mu, self._step_size**2 * (
                 self._sigma0
@@ -205,12 +211,18 @@ class MALAMCMC(pints.SingleChainMCMC):
         )
         alpha = fx + self._backward_q - (
             self._current_log_pdf + self._forward_q)
+        # print(alpha)
+        # print(fx)
+        # print(self._backward_q)
+        # print(self._current_log_pdf)
+        # print(self._forward_q)
+        # print(-1)
 
         # Check if the proposed point can be accepted
         accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < alpha:
+            if alpha > u:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
