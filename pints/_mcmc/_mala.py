@@ -84,6 +84,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._current = None
         self._current_log_pdf = None
         self._proposed = None
+        self.set_step_size()
 
     def _initialise(self):
         """
@@ -105,7 +106,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._running = True
 
         # Initialise step size
-        self.set_step_size()
         self._forward_mu = None
         self._backward_mu = None
         self._current_gradient = None
@@ -154,7 +154,7 @@ class MALAMCMC(pints.SingleChainMCMC):
 
             self._forward_q = scipy.stats.multivariate_normal.logpdf(
                 self._proposed, self._forward_mu, self._step_size**2 * (
-                    self._current_gradient
+                    self._sigma0
                 )
             )
 
@@ -182,7 +182,7 @@ class MALAMCMC(pints.SingleChainMCMC):
             # Accept
             self._current = self._proposed
             self._current_log_pdf = fx
-            self._current_gradient = log_gradient
+            self._current_gradient = -log_gradient
 
             # Increase iteration count
             self._iterations += 1
@@ -194,13 +194,13 @@ class MALAMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Calculate alpha
-        self._proposed_gradient = log_gradient
+        self._proposed_gradient = -log_gradient
         self._backward_mu = self._proposed + (self._step_size**2 / 2.0) * (
             self._proposed_gradient
         )
         self._backward_q = scipy.stats.multivariate_normal.logpdf(
             self._current, self._backward_mu, self._step_size**2 * (
-                self._proposed_gradient
+                self._sigma0
             )
         )
         alpha = fx + self._backward_q - (
