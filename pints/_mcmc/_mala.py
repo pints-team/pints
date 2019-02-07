@@ -113,6 +113,10 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._forward_q = None
         self._backward_q = None
 
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
+
     def set_step_size(self, step_size=0.1):
         """
         Sets step size used to propose new points. Must exceed 0.
