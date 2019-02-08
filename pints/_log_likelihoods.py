@@ -2,7 +2,7 @@
 # Log-likelihood functions
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -20,7 +20,7 @@ class KnownNoiseLogLikelihood(pints.ProblemLogLikelihood):
     of that noise:
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
+        \log{L(\\theta | \sigma,\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
