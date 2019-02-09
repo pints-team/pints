@@ -18,7 +18,7 @@ from shared import StreamCapture
 debug = False
 
 
-class TestHamiltonianMCMC(unittest.TestCase):
+class TestMALAMCMC(unittest.TestCase):
     """
     Tests the basic methods of the Hamiltonian MCMC routine.
     """
@@ -31,22 +31,18 @@ class TestHamiltonianMCMC(unittest.TestCase):
         # Create mcmc
         x0 = np.array([2, 2])
         sigma = [[3, 0], [0, 3]]
-        mcmc = pints.HamiltonianMCMC(x0, sigma)
+        mcmc = pints.MALAMCMC(x0, sigma)
 
         # This method needs sensitivities
         self.assertTrue(mcmc.needs_sensitivities())
 
-        # Set number of leapfrog steps
-        ifrog = 10
-        mcmc.set_leapfrog_steps(ifrog)
-
         # Perform short run
         chain = []
-        for i in range(100 * ifrog):
+        for i in range(100):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, gr))
-            if i >= 50 * ifrog and sample is not None:
+            if i >= 50 and sample is not None:
                 chain.append(sample)
             if np.all(sample == x):
                 self.assertEqual(mcmc.current_log_pdf(), fx)
@@ -62,13 +58,14 @@ class TestHamiltonianMCMC(unittest.TestCase):
         log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
-        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.HamiltonianMCMC)
+        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.MALAMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
 
-        self.assertIn('Hamiltonian Monte Carlo', text)
+        self.assertIn('Metropolis-Adjusted Langevin Algorithm (MALA)',
+                      text)
         self.assertIn(' Accept.', text)
 
     def test_flow(self):
@@ -77,14 +74,14 @@ class TestHamiltonianMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.MALAMCMC(x0)
         self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
 
         # Repeated asks
         self.assertRaises(RuntimeError, mcmc.ask)
 
         # Tell without ask
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.MALAMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Repeated tells should fail
@@ -93,7 +90,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, log_pdf.evaluateS1(x))
 
         # Bad starting point
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.MALAMCMC(x0)
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
@@ -103,21 +100,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         Tests the parameter interface for this sampler.
         """
         x0 = np.array([2, 2])
-        mcmc = pints.HamiltonianMCMC(x0)
-
-        # Test leapfrog parameters
-        n = mcmc.leapfrog_steps()
-        d = mcmc.leapfrog_step_size()
-        self.assertIsInstance(n, int)
-        self.assertTrue(len(d) == mcmc._n_parameters)
-
-        mcmc.set_leapfrog_steps(n + 1)
-        self.assertEqual(mcmc.leapfrog_steps(), n + 1)
-        self.assertRaises(ValueError, mcmc.set_leapfrog_steps, 0)
-
-        mcmc.set_leapfrog_step_size(0.5)
-        self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
-        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
+        mcmc = pints.MALAMCMC(x0)
 
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
         mcmc.set_hyper_parameters([n + 2, 2])
