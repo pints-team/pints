@@ -101,24 +101,32 @@ class TestMALAMCMC(unittest.TestCase):
         """
         x0 = np.array([2, 2])
         mcmc = pints.MALAMCMC(x0)
+        self.assertEqual(mcmc.step_size(), 0.1)
+        self.assertTrue(np.array_equal(
+                        mcmc.scale_vector(),
+                        np.diag(mcmc._sigma0))
+                        )
+        self.assertTrue(np.array_equal(mcmc.epsilon(),
+                        0.1 * np.diag(mcmc._sigma0)))
 
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([n + 2, 2])
-        self.assertEqual(mcmc.leapfrog_steps(), n + 2)
-        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+        mcmc.set_hyper_parameters([0.5, [3, 2]])
+        self.assertEqual(mcmc.step_size(), 0.5)
+        self.assertTrue(np.array_equal(mcmc.scale_vector(), [3, 2]))
+        self.assertTrue(np.array_equal(mcmc.epsilon(), [1.5, 1]))
 
-        mcmc.set_epsilon(0.4)
-        self.assertEqual(mcmc.epsilon(), 0.4)
-        self.assertRaises(ValueError, mcmc.set_epsilon, -0.1)
-        mcmc.set_leapfrog_step_size(1)
-        self.assertEqual(len(mcmc.scaled_epsilon()), 2)
-        self.assertEqual(mcmc.scaled_epsilon()[0], 0.4)
-        self.assertEqual(len(mcmc.divergent_iterations()), 0)
-        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, [1, 2, 3])
+        mcmc._step_size = 5
+        mcmc._scale_vector = np.array([3, 7])
+        mcmc.set_epsilon()
+        self.assertTrue(np.array_equal(mcmc.epsilon(), [15, 35]))
+        mcmc.set_epsilon([0.4, 0.5])
+        self.assertTrue(np.array_equal(mcmc.epsilon(), [0.4, 0.5]))
 
-        mcmc.set_leapfrog_step_size([1.5, 3])
-        self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
-        self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
+        self.assertRaises(ValueError, mcmc.set_step_size, 0.0)
+        self.assertRaises(ValueError, mcmc.set_scale_vector, 1.0)
+        self.assertRaises(ValueError, mcmc.set_scale_vector, [1.0, -2])
+        self.assertRaises(ValueError, mcmc.set_epsilon, 3.0)
+        self.assertRaises(ValueError, mcmc.set_epsilon, [-2.0, 1])
 
 
 if __name__ == '__main__':
