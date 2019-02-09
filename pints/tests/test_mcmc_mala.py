@@ -53,6 +53,7 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertTrue(mcmc.acceptance_rate() >= 0.0 and
                         mcmc.acceptance_rate() <= 1.0)
 
+        mcmc._proposed = [1, 3]
         self.assertRaises(RuntimeError, mcmc.tell, (fx, gr))
 
     def test_logging(self):
