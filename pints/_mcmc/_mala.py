@@ -67,6 +67,8 @@ class MALAMCMC(pints.SingleChainMCMC):
     leading to :math:`q(\\theta_2|\\theta_1) =
         \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon M)`.
 
+    where :math:`\\sqrt{M}` is given by the initial value of `sigma0`.
+
     *Extends:* :class:`SingleChainMCMC`
 
     [1] Girolami, M. and Calderhead, B., 2011. Riemann manifold langevin and
@@ -204,14 +206,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         )
         alpha = fx + self._backward_q - (
             self._current_log_pdf + self._forward_q)
-        # print(self._current)
-        # print(self._proposed)
-        # print(alpha)
-        # print(fx)
-        # print(self._backward_q)
-        # print(self._current_log_pdf)
-        # print(self._forward_q)
-        # print(-1)
 
         # Check if the proposed point can be accepted
         accepted = 0
