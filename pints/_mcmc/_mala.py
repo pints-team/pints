@@ -61,13 +61,14 @@ class MALAMCMC(pints.SingleChainMCMC):
     degrees of freedom in each dimension.
 
     .. math::
-        \\theta^* = \\theta_t + \\epsilon^2 M 1/2 \\nabla \\;
-            \\text{log} \\pi(\\theta_t) + \\epsilon M^{1/2} z
+        \\theta^* = \\theta_t + \\epsilon'^2 1/2 \\nabla \\;
+            \\text{log} \\pi(\\theta_t) + \\epsilon' z
 
     leading to :math:`q(\\theta_2|\\theta_1) =
-        \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon M)`.
+        \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon')`.
 
-    where :math:`\\sqrt{M}` is given by the initial value of `sigma0`.
+    where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial
+    value of `sigma0`.
 
     *Extends:* :class:`SingleChainMCMC`
 
@@ -81,12 +82,16 @@ class MALAMCMC(pints.SingleChainMCMC):
 
         # Set initial state
         self._running = False
+        self._ready_for_tell = False
 
         # Current point and proposed point
         self._current = None
         self._current_log_pdf = None
         self._proposed = None
-        self.set_step_size()
+
+        # hyper parameters
+        self._epsilon = None
+        self._step_size = 0.1
         self.set_scale_vector(np.diag(self._sigma0))
 
     def _initialise(self):
@@ -122,22 +127,50 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def set_step_size(self, step_size=0.1):
         """
-        Sets step size used to propose new points. Must exceed 0.
+        Sets step size used to propose new points. Must exceed 0
         """
         step_size = float(step_size)
         if step_size <= 0:
-            raise ValueError('Step size must exceed 0.')
+            raise ValueError('Step size must exceed 0')
         self._step_size = step_size
+        self.set_epsilon()
 
     def set_scale_vector(self, scale_vector):
         """
-        Sets vector used to scale step size for proposals
+        Sets vector used to scale step size for pr
         """
-        if not len(scale_vector) == self._n_parameters:
+        a = np.atleast_1d(scale_vector)
+        if not len(a) == self._n_parameters:
             raise ValueError('Dimensions of scale vector must be same as ' +
                              'number of parameters')
-        self._scale_vector = scale_vector
-        self._step_size = self._scale_vector * self._step_size
+        for element in scale_vector:
+            if element <= 0:
+                raise ValueError('Elements of scale vector must exceed 0')
+        self._scale_vector = np.array(scale_vector)
+        self.set_epsilon()
+
+    def set_epsilon(self, epsilon=None):
+        """
+        Sets epsilon which is the effective step size used in proposals.
+        If epsilon not specified, then epsilon = sigma0 * scale_vector
+        """
+        if epsilon is None:
+            self._epsilon = self._step_size * self._scale_vector
+        else:
+            a = np.atleast_1d(epsilon)
+            if not len(a) == self._n_parameters:
+                raise ValueError('Dimensions of epsilon must be same as ' +
+                                 'number of parameters')
+            for element in epsilon:
+                if element <= 0:
+                    raise ValueError('Elements of epsilon must exceed 0')
+            self._epsilon = np.array(epsilon)
+
+    def epsilon(self):
+        """
+        Returns epsilon which is the effective step size used in proposals
+        """
+        return self._epsilon
 
     def scale_vector(self):
         """
@@ -153,7 +186,7 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def acceptance_rate(self):
         """
-        Returns the current (measured) acceptance rate.
+        Returns the current (measured) acceptance rate
         """
         return self._acceptance
 
@@ -163,22 +196,26 @@ class MALAMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._initialise()
 
+        if self._ready_for_tell:
+            raise RuntimeError('Ask() called when expecting call to tell().')
+
         # Propose new point
         if self._proposed is None:
-            self._forward_mu = self._current + (self._step_size**2 / 2.0) * (
+            self._forward_mu = self._current + (self._epsilon**2 / 2.0) * (
                 self._current_gradient)
             self._proposed = np.random.multivariate_normal(
                 self._forward_mu,
-                self._step_size**2 * np.diag(np.ones(self._n_parameters)))
+                self._epsilon**2 * np.diag(np.ones(self._n_parameters)))
 
             self._forward_q = scipy.stats.multivariate_normal.logpdf(
                 self._proposed, self._forward_mu,
-                self._step_size**2 * np.diag(np.ones(self._n_parameters))
+                self._epsilon**2 * np.diag(np.ones(self._n_parameters))
             )
 
             # Set as read-only
             self._proposed.setflags(write=False)
 
+        self._ready_for_tell = True
         # Return proposed point
         return self._proposed
 
@@ -187,6 +224,9 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Check if we had a proposal
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
+        if not self._ready_for_tell:
+            raise RuntimeError('Tell called before proposal was set.')
+        self._ready_for_tell = False
 
         # Ensure fx is a float
         fx, log_gradient = reply
@@ -214,10 +254,10 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Calculate alpha
         self._proposed_gradient = -log_gradient
         self._backward_mu = self._proposed + (
-            (self._step_size**2 / 2.0) * self._proposed_gradient
+            (self._epsilon**2 / 2.0) * self._proposed_gradient
         )
         self._backward_q = scipy.stats.multivariate_normal.logpdf(
-            self._current, self._backward_mu, self._step_size**2 * (
+            self._current, self._backward_mu, self._epsilon**2 * (
                 np.diag(np.ones(self._n_parameters))
             )
         )
@@ -271,6 +311,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         """
         The hyper-parameter vector is ``[step_size,
                                          scale_vector]``.
+        The effective step size (epsilon) is step_size * scale_vector.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
