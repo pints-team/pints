@@ -87,6 +87,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._proposed = None
         self.set_step_size()
+        self.set_scale_vector(np.diag(self._sigma0))
 
     def _initialise(self):
         """
@@ -126,7 +127,23 @@ class MALAMCMC(pints.SingleChainMCMC):
         step_size = float(step_size)
         if step_size <= 0:
             raise ValueError('Step size must exceed 0.')
-        self._step_size = step_size * np.diag(self._sigma0)
+        self._step_size = step_size
+
+    def set_scale_vector(self, scale_vector):
+        """
+        Sets vector used to scale step size for proposals
+        """
+        if not len(scale_vector) == self._n_parameters:
+            raise ValueError('Dimensions of scale vector must be same as ' +
+                             'number of parameters')
+        self._scale_vector = scale_vector
+        self._step_size = self._scale_vector * self._step_size
+
+    def scale_vector(self):
+        """
+        Returns vector used to scale step size for proposals
+        """
+        return self._scale_vector
 
     def step_size(self):
         """
@@ -245,3 +262,16 @@ class MALAMCMC(pints.SingleChainMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Metropolis-Adjusted Langevin Algorithm (MALA)'
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_leapfrog_steps(x[0])
+        self.set_leapfrog_step_size(x[1])
