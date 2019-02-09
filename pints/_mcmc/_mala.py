@@ -265,13 +265,14 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+        return 2
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
+        The hyper-parameter vector is ``[step_size,
+                                         scale_vector]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_leapfrog_steps(x[0])
-        self.set_leapfrog_step_size(x[1])
+        self.set_step_size(x[0])
+        self.set_scale_vector(x[1])
