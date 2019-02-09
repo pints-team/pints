@@ -50,6 +50,10 @@ class TestMALAMCMC(unittest.TestCase):
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
+        self.assertTrue(mcmc.acceptance_rate() >= 0.0 and
+                        mcmc.acceptance_rate() <= 1.0)
+
+        self.assertRaises(RuntimeError, mcmc.tell, (fx, gr))
 
     def test_logging(self):
         """
@@ -94,6 +98,11 @@ class TestMALAMCMC(unittest.TestCase):
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+
+        # Test initialisation twice
+        mcmc = pints.MALAMCMC(x0)
+        mcmc._running = True
+        self.assertRaises(RuntimeError, mcmc._initialise)
 
     def test_set_hyper_parameters(self):
         """
