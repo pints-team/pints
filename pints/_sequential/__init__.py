@@ -13,7 +13,7 @@ import pints
 import numpy as np
 
 
-class SMCSampler(object):
+class SMCSampler(pints.Loggable, pints.TunableMethod):
     """
     Abstract base class for Sequential Monte Carlo (SMC) samplers.
 
@@ -46,6 +46,7 @@ class SMCSampler(object):
         self._n_parameters = log_prior.n_parameters()
 
         # Don't check sigma0, will be handled by internal MCMC objects!
+        self._sigma0 = sigma0
 
         # Internal state
         self._running = False
@@ -55,9 +56,10 @@ class SMCSampler(object):
 
         # Temperature schedule
         self._schedule = None
-        self.set_schedule()
+        self.set_temperature_schedule()
 
         # Number of MCMC steps per temperature
+        self._n_mcmc_steps = 1
 
     def ask(self):
         """
@@ -81,7 +83,7 @@ class SMCSampler(object):
         """
         Returns the number of kernel samples to perform per temperature.
         """
-        return self._n_kernel_samples
+        return self._n_mcmc_steps
 
     def n_particles(self):
         """
@@ -91,7 +93,7 @@ class SMCSampler(object):
 
     def set_n_kernel_samples(self, n):  # TODO CHANGE NAME?
         """
-        Sets the number of MCMC samples to run for each temperature.
+        Sets the number of MCMC steps to take for each temperature.
         """
         if self._running:
             raise RuntimeError(
@@ -100,7 +102,7 @@ class SMCSampler(object):
         n = int(n)
         if n < 1:
             raise ValueError('Number of samples per temperature must be >= 1.')
-        self._n_mcmc_samples = n
+        self._n_mcmc_steps = n
 
     def set_n_particles(self, n):
         """
@@ -240,6 +242,9 @@ class SMCController(object):
         # Create sampler
         self._sampler = method(log_prior, sigma0)
 
+        # Controller state
+        self._has_run = False
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -254,8 +259,6 @@ class SMCController(object):
         self._n_workers = 1
         #self.set_parallel()    #TODO
 
-        # Controller state
-        self._has_run = False
 
     '''
     def parallel(self):
@@ -283,7 +286,7 @@ class SMCController(object):
 
         # Number of samples, number of iterations
         n_particles = self._sampler.n_particles()
-        n_mcmc_steps = self._sampler.n_mcmc_steps()
+        n_mcmc_steps = self._sampler.n_kernel_samples()
         n_temperatures = self._sampler.n_temperatures()
         n_iter = (1 + (n_temperatures - 1) * n_mcmc_steps)
 
@@ -298,7 +301,7 @@ class SMCController(object):
                 print('Total number of particles: ' + str(n_particles))
                 print('Number of temperatures: ' + str(n_temperatures))
                 print('Number of MCMC steps at each temperature: '
-                      + str(self.n_mcmc_steps))
+                      + str(n_mcmc_steps))
                 #if self._resample_end_2_3:
                 #    print('Resampling at end of each iteration')
                 #else:
@@ -359,8 +362,7 @@ class SMCController(object):
         # Return generated samples
         return samples
 
-    '''
-    def set_log_interval(self, iters=20, warm_up=3):
+    def set_log_interval(self, iters=1, warm_up=3):
         """
         Changes the frequency with which messages are logged.
 
@@ -412,6 +414,7 @@ class SMCController(object):
 
         self._log_to_screen = True if enabled else False
 
+    '''
     def set_parallel(self, parallel=False):
         """
         Enables/disables parallel evaluation.
