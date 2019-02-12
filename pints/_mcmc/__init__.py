@@ -47,7 +47,7 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
     def needs_sensitivities(self):
         """
         Returns ``True`` if this methods needs sensitivities to be passed in to
-        ``tell`` along with the evaluated logpdf.
+        ``tell`` along with the evaluated log_pdf.
         """
         return False
 
@@ -104,7 +104,7 @@ class SingleChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a parameter vector to evaluate the logpdf for.
+        Returns a parameter vector to evaluate the log_pdf for.
         """
         raise NotImplementedError
 
@@ -117,7 +117,7 @@ class SingleChainMCMC(MCMCSampler):
 
     def tell(self, fx):
         """
-        Performs an iteration of the MCMC algorithm, using the logpdf
+        Performs an iteration of the MCMC algorithm, using the log_pdf
         evaluation ``fx`` of the point previously specified by ``ask``.
 
         Returns either the next sample in the chain, or ``None`` to indicate
@@ -158,7 +158,7 @@ class MultiChainMCMC(MCMCSampler):
         for chain ``i``.
     ``sigma0=None``
         An optional initial covariance matrix, i.e., a guess of the covariance
-        in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
+        in a LogPDF around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
@@ -282,7 +282,7 @@ class MCMCController(object):
         for chain ``i``.
     ``sigma0=None``
         An optional initial covariance matrix, i.e., a guess of the covariance
-        in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
+        in a LogPDF around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
@@ -364,6 +364,12 @@ class MCMCController(object):
         self._chain_files = None
         self._evaluation_files = None
 
+        # Storing evaluated log pdfs and log likelihoods
+        self._log_likelihood_storage = False
+        self._log_density_storage = False
+        self._stored_log_likelihoods = None
+        self._stored_log_densities = None
+
         # Parallelisation
         self._parallel = False
         self._n_workers = 1
@@ -377,47 +383,6 @@ class MCMCController(object):
         self._max_iterations = None
         self.set_max_iterations()
 
-        self.set_log_likelihood_storage(False)
-        self.set_log_density_storage(False)
-
-    def set_log_likelihood_storage(self, store=False):
-        """
-        Sets whether or not to store log-likelihood for each posterior sample.
-        Only applicable for Bayesian problems
-        """
-        self._log_likelihood_storage = bool(store)
-        if self._log_likelihood_storage:
-            if not isinstance(self._log_pdf, pints.LogPosterior):
-                raise ValueError('log_pdf must be of type pints.LogPosterior' +
-                                 ' to store log-likelihood')
-            else:
-                self._stored_log_likelihood = []
-        else:
-            self._stored_log_likelihood = None
-
-    def log_likelihood_storage(self):
-        """
-        Returns whether the log-likelihood is being stored for each
-        posterior sample
-        """
-        return self._log_likelihood_storage
-
-    def stored_log_likelihood(self):
-        """
-        Returns log-likelihood stored for each posterior sample
-        """
-        return self._stored_log_likelihood
-
-    def set_log_density_storage(self, store=False):
-        """
-        Sets whether or not to store log-density for each sample from the pdf
-        """
-        self._log_density_storage = bool(store)
-        if self._log_density_storage:
-            self._stored_log_density = []
-        else:
-            self._stored_log_density = None
-
     def log_density_storage(self):
         """
         Returns whether the log-density is being stored for each
@@ -425,11 +390,12 @@ class MCMCController(object):
         """
         return self._log_density_storage
 
-    def stored_log_density(self):
+    def log_likelihood_storage(self):
         """
-        Returns log-density stored for each posterior sample
+        Returns whether the log-likelihood is being stored for each
+        posterior sample
         """
-        return self._stored_log_density
+        return self._log_likelihood_storage
 
     def initial_phase_iterations(self):
         """
@@ -507,33 +473,47 @@ class MCMCController(object):
                     cl.add_float('p' + str(k))
                 chain_loggers.append(cl)
 
+        # Keep track of current log_pdf and prior?
+        track_evals = False
+
+        # Store pdfs in memory
+        if self._log_density_storage:
+            track_evals = True
+            current_pdf = np.zeros(self._chains)
+            self._stored_log_densities = []
+
+        # Store likelihoods in memory
+        if self._log_likelihood_storage:
+            track_evals = True
+            current_likelihood = np.zeros(self._chains)
+            current_prior = np.zeros(self._chains)
+            self._stored_log_likelihoods = []
+
         # Write evaluations to disk
-        prior = None
-        if isinstance(self._log_pdf, pints.LogPosterior):
-            prior = self._log_pdf.log_prior()
         eval_loggers = []
         if self._evaluation_files:
-            # Bayesian inference on a log-posterior? Then separate out the
-            # prior so we can calculate the loglikelihood
+            track_evals = True
 
             # Set up loggers
             for filename in self._evaluation_files:
                 cl = pints.Logger()
                 cl.set_stream(None)
                 cl.set_filename(filename, True)
-                if prior:
+                if isinstance(self._log_pdf, pints.LogPosterior):
                     # Logposterior in first column, to be consistent with the
                     # non-bayesian case
-                    cl.add_float('logposterior')
-                    cl.add_float('loglikelihood')
-                    cl.add_float('logprior')
+                    cl.add_float('log_posterior')
+                    cl.add_float('log_likelihood')
+                    cl.add_float('log_prior')
                 else:
-                    cl.add_float('logpdf')
+                    cl.add_float('log_pdf')
                 eval_loggers.append(cl)
 
-            # Store last accepted logpdf, per chain
-            current_logpdf = np.zeros(self._chains)
-            current_prior = np.zeros(self._chains)
+        # Bayesian problem and tracking evaluations? Then separate the log
+        # prior for later use
+        prior = None
+        if track_evals and isinstance(self._log_pdf, pints.LogPosterior):
+            prior = self._log_pdf.log_prior()
 
         # Set up progress reporting
         next_message = 0
@@ -596,7 +576,7 @@ class MCMCController(object):
             else:
                 xs = self._samplers[0].ask()
 
-            # Calculate logpdfs
+            # Calculate log_pdfs
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
@@ -626,27 +606,25 @@ class MCMCController(object):
             # Add new samples to the chains
             chains.append(samples)
 
-            if prior is not None:
-                if self._log_likelihood_storage:
-                    log_prior = self._log_pdf.log_prior()
-                    if self._single_chain:
-                        log_like = np.array(
-                            [(s._current_log_pdf - log_prior(samples[i]))
-                                for i, s in enumerate(self._samplers)])
-                    else:
-                        log_like = fxs - log_prior(samples)
-
-                    self._stored_log_likelihood.append(log_like)
-
-            if self._log_density_storage:
+            # Update current pdf and/or likelihood
+            if track_evals:
+                # Update current log pdf
                 if self._single_chain:
-                    log_density = np.array(
-                        [s._current_log_pdf
-                            for i, s in enumerate(self._samplers)])
+                    current_pdf = np.array(
+                        [s.current_log_pdf() for s in self._samplers])
                 else:
-                    log_density = fxs
+                    current_pdf = self._samplers[0].current_log_pdfs()
 
-                self._stored_log_density.append(log_density)
+                # Update current loglikelihood
+                if prior:
+                    current_prior = np.array([prior(x) for x in samples])
+                    current_likelihood = current_pdf - current_prior
+
+            # Store current pdf and or density in memory
+            if self._log_density_storage:
+                self._stored_log_densities.append(current_pdf)
+            if self._log_likelihood_storage:
+                self._stored_log_likelihoods.append(current_likelihood)
 
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
@@ -655,13 +633,9 @@ class MCMCController(object):
             # Write evaluations to disk
             if self._evaluation_files:
                 for k, eval_logger in enumerate(eval_loggers):
-                    if np.all(xs[k] == samples[k]):
-                        current_logpdf[k] = fxs[k]
-                        if prior is not None:
-                            current_prior[k] = prior(xs[k])
-                    eval_logger.log(current_logpdf[k])
+                    eval_logger.log(current_pdf[k])
                     if prior is not None:
-                        eval_logger.log(current_logpdf[k] - current_prior[k])
+                        eval_logger.log(current_likelihood[k])
                         eval_logger.log(current_prior[k])
 
             # Show progress
@@ -709,8 +683,14 @@ class MCMCController(object):
         chains = np.array(chains)
         chains = chains.swapaxes(0, 1)
 
+        # Transpose stored log densities and likelihoods, to get indices
+        #  [chain, iteration]
+        if self._log_density_storage:
+            self._stored_log_densities = np.array(
+                self._stored_log_densities).transpose()
         if self._log_likelihood_storage:
-            self._stored_log_likelihood = np.array(self._stored_log_likelihood)
+            self._stored_log_likelihoods = np.array(
+                self._stored_log_likelihoods).transpose()
 
         # Return generated chains
         return chains
@@ -761,6 +741,25 @@ class MCMCController(object):
         if chain_file:
             b, e = os.path.splitext(str(chain_file))
             self._chain_files = [b + '_' + str(i) + e for i in range(d)]
+
+    def set_log_density_storage(self, store=False):
+        """
+        Sets whether or not to store log-density for each sample from the pdf.
+        """
+        self._log_density_storage = bool(store)
+
+    def set_log_likelihood_storage(self, store=False):
+        """
+        Sets whether or not to store log-likelihood for each posterior sample.
+        Only applicable for Bayesian problems.
+        """
+        self._log_likelihood_storage = False
+        if store:
+            if not isinstance(self._log_pdf, pints.LogPosterior):
+                raise ValueError(
+                    'Log-likelihood storage is only available for Bayesian'
+                    ' problems (i.e. when the LogPDF is a LogPosterior.')
+            self._log_likelihood_storage = True
 
     def set_log_pdf_filename(self, log_pdf_file):
         """
@@ -884,6 +883,18 @@ class MCMCController(object):
         else:
             self._parallel = False
             self._n_workers = 1
+
+    def stored_log_densities(self):
+        """
+        Returns log-density stored for each posterior sample
+        """
+        return self._stored_log_densities
+
+    def stored_log_likelihoods(self):
+        """
+        Returns the log-likelihoods stored for each posterior sample.
+        """
+        return self._stored_log_likelihoods
 
 
 class MCMCSampling(MCMCController):
