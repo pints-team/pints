@@ -6,6 +6,7 @@ Each example was created as a _Jupyter notebook_ (http://jupyter.org/).
 These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
+
 ## Getting started
 - [Optimisation: First example](./optimisation-first-example.ipynb)
 - [Sampling: First example](./sampling-first-example.ipynb)
@@ -13,7 +14,14 @@ relevant code.
 - [Writing a custom LogPDF](./writing-a-logpdf.ipynb)
 - [Writing a custom LogPrior](./writing-a-prior.ipynb)
 
+
 ## Optimisation
+
+- [Optimising a loglikelihood](./optimisation-on-a-loglikelihood.ipynb)
+- [Spotting unidentifiable parameters](./optimisation-spotting-unidentifiable-parameters.ipynb)
+- [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
+- [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
+- [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
 
 ### Particle-based methods
 - [CMA-ES](./optimisation-cmaes.ipynb)
@@ -21,19 +29,17 @@ relevant code.
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
 
-### Further optimisation
-
-- [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
-- [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
-- [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
 
 ## Sampling
 
 ### MCMC without gradients
-- [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
-- [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
+- [Dream MCMC](./sampling-dream-mcmc.ipynb)
+- [Emcee Hammer](./sampling-emcee-hammer.ipynb)
+- [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
+- [Population MCMC](./sampling-population-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
@@ -48,7 +54,9 @@ relevant code.
 ### Further sampling
 
 - [Effective sample size](./sampling-effective-sample-size.ipynb)
+- [Cauchy noise model](./sampling-cauchy-sampling-error.ipynb)
 - [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
+
 
 ## Toy problems
 
@@ -67,6 +75,8 @@ relevant code.
 
 ### Distributions
 
+- [Annulus distribution](./toy-distribution-annulus.ipynb)
+- [Cone distribution](./toy-distribution-cone.ipynb)
 - [Multimodal normal distribution](./toy-distribution-multimodal-normal.ipynb)
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
