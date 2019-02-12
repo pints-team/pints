@@ -222,6 +222,50 @@ class BetaLogPrior(pints.LogPrior):
         return np.random.beta(self._a, self._b, size=(n, 1))
 
 
+class ExponentialLogPrior(pints.LogPrior):
+    """
+    Defines an exponential (log) prior with given rate parameter ``rate`` with
+    pdf f(x|rate) = rate * e^-{rate*x}.
+
+    For example: ``p = ExponentialLogPrior(0.5, 1)`` for a rate ``rate=0.5``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, rate):
+        # Parse input arguments
+        self._rate = float(rate)
+
+        # Validate inputs
+        if self._rate <= 0:
+            raise ValueError('Rate parameter "scale" must be positive')
+
+        # Cache constant
+        self._log_scale = np.log(self._rate)
+
+    def __call__(self, x):
+        if x < 0.0:
+            return -float('inf')
+        else:
+            return self._log_scale - self._rate * x
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+
+        if x < 0.0:
+            return value, np.asarray([0.])
+        else:
+            return value, np.asarray([-self._rate])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.exponential(scale=1. / self._rate, size=(n, 1))
+
+
 class StudentTLogPrior(pints.LogPrior):
     """
     Defines a 1-d Student-t (log) prior with a given ``location``,

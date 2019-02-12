@@ -437,11 +437,11 @@ class TestPrior(unittest.TestCase):
         for point in points:
             to_test = np.asarray(point)
             self.assertAlmostEqual(
-                scipy.stats.beta.logpdf(np.asarray(to_test), 0.123, 2.34),
+                scipy.stats.beta.logpdf(to_test, 0.123, 2.34),
                 p1(to_test),
                 places=9)
             self.assertAlmostEqual(
-                scipy.stats.beta.logpdf(np.asarray(to_test), 3.45, 4.56),
+                scipy.stats.beta.logpdf(to_test, 3.45, 4.56),
                 p2(to_test),
                 places=9)
 
@@ -466,14 +466,71 @@ class TestPrior(unittest.TestCase):
             self.assertAlmostEqual(calc_deriv[0], deriv)
 
     def test_beta_prior_sampling(self):
-        # Just returns samples from the scipy beta distribution so no utility
+        # Just returns samples from the numpy beta distribution so no utility
         # in verifying shape params - just check it's working as expected
         p1 = pints.BetaLogPrior(0.123, 2.34)
         self.assertEqual(len(p1.sample()), 1)
 
-        n = 10000
+        n = 100
         samples1 = p1.sample(n)
         self.assertEqual(len(samples1), n)
+
+    def test_exponential_prior(self):
+
+        # Test input parameter
+        self.assertRaises(ValueError, pints.ExponentialLogPrior, 0.0)
+        self.assertRaises(ValueError, pints.ExponentialLogPrior, -1.0)
+
+        r1 = 0.123
+        r2 = 4.567
+
+        p1 = pints.ExponentialLogPrior(r1)
+        p2 = pints.ExponentialLogPrior(r2)
+
+        points = [-2., 1e-9, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = np.asarray(point)
+            self.assertAlmostEqual(
+                scipy.stats.expon.logpdf(to_test, scale=1. / r1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.expon.logpdf(to_test, scale=1. / r2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -r1, -r1, -r1, -r1]
+
+        p2_derivs = [0., -r2, -r2, -r2, -r2]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+    def test_exponential_prior_sampling(self):
+        # Just returns samples from the numpy exponential distribution, but
+        # because we are parameterising it with rate not shape, we check the
+        # first moment to be sure we're doing the right thing
+        p1 = pints.ExponentialLogPrior(0.25)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 1000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be ~ 1/0.25 = 4, so we check that this is very roughly
+        # the case, but we can be very relaxed as we only check it's not ~0.25
+        mean = np.mean(samples1).item()
+        print(mean)
+        self.assertTrue(3. < mean < 4.)
 
 
 if __name__ == '__main__':
