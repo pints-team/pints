@@ -20,8 +20,8 @@ class TestEasyOptimisation(unittest.TestCase):
         """
         Tests :meth:`pints.fmin()`.
         """
-        # Note: This just wraps around `Optimisation`, so testing done here is
-        # for wrapper code, not main functionality!
+        # Note: This just wraps around `OptimisationController`, so testing
+        # done here is for wrapper code, not main functionality!
 
         # Basic test
         np.random.seed(1)
@@ -52,8 +52,8 @@ class TestEasyOptimisation(unittest.TestCase):
         """
         Tests :meth:`pints.curve_fit()`.
         """
-        # Note: This just wraps around `Optimisation`, so testing done here is
-        # for wrapper code, not main functionality!
+        # Note: This just wraps around `OptimisationController`, so testing
+        # done here is for wrapper code, not main functionality!
         np.random.seed(1)
 
         # Basic test
