@@ -529,8 +529,69 @@ class TestPrior(unittest.TestCase):
         # Mean should be ~ 1/0.25 = 4, so we check that this is very roughly
         # the case, but we can be very relaxed as we only check it's not ~0.25
         mean = np.mean(samples1).item()
-        print(mean)
         self.assertTrue(3. < mean < 4.)
+
+    def test_gamma_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.GammaLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.GammaLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.GammaLogPrior, -2, 2)
+
+        a1 = 0.123
+        a2 = 4.567
+
+        b1 = 2.345
+        b2 = 0.356
+
+        p1 = pints.GammaLogPrior(a1, b1)
+        p2 = pints.GammaLogPrior(a2, b2)
+
+        points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = np.asarray(point)
+            self.assertAlmostEqual(
+                scipy.stats.gamma.logpdf(to_test, a=a1, scale=1. / b1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.gamma.logpdf(to_test, a=a2, scale=1. / b2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -879.345, -11.115, -3.222, -2.70295918367347,
+                     -2.474179555162763]
+
+        p2_derivs = [0., 3566.643999999999, 35.314, 3.211, 1.099918367346939,
+                     0.1694087494476359]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1(point)
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+    def test_gamma_prior_sampling(self):
+        # Just returns samples from the numpy gamma distribution, but because
+        # we are parameterising it with rate not shape, we check the first
+        # moment to be sure we're doing the right thing
+        p1 = pints.GammaLogPrior(5.0, 0.25)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 1000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be ~ 5/0.25 = 20, so we check that this is very roughly
+        # the case, but we can be very relaxed as we only check it's not ~1.25
+        mean = np.mean(samples1).item()
+        self.assertTrue(19. < mean < 20.)
 
 
 if __name__ == '__main__':
