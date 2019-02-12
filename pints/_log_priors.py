@@ -358,16 +358,26 @@ class StudentTLogPrior(pints.LogPrior):
         self._scale = float(scale)
 
         # Cache constants
-        self._first = 0.5 * (1.0 + self._df)
         self._log_df = np.log(self._df)
-        self._log_scale = np.log(self._scale)
-        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+        self._1_sig_sq = 1. / (self._scale * self._scale)
+
+        self._first = 0.5 * (1.0 + self._df)
+
+        self._samp_const = scipy.special.xlogy(-0.5, self._df) - np.log(
+            self._scale) - scipy.special.betaln(0.5 * self._df, 0.5)
+
+        self._deriv_const = (-1. - self._df) * self._1_sig_sq
 
     def __call__(self, x):
-        return self._first * (self._log_df -
-                              np.log(self._df + ((x[0] - self._location)
-                                                 / self._scale)**2)) \
-            - 0.5 * self._log_df - self._log_scale - self._log_beta
+        return self._samp_const + self._first * (self._log_df - np.log(
+            self._df + self._1_sig_sq * (x[0] - self._location) ** 2))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        offset = x[0] - self._location
+        return self(x), np.asarray([offset * self._deriv_const / (
+            self._df + offset * offset * self._1_sig_sq)])
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
