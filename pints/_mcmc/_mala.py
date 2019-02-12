@@ -89,7 +89,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._current_gradient = None
         self._proposed = None
-        self._proposed_gradient = None
 
         # hyper parameters
         self._epsilon = None
