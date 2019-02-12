@@ -266,6 +266,61 @@ class ExponentialLogPrior(pints.LogPrior):
         return np.random.exponential(scale=1. / self._rate, size=(n, 1))
 
 
+class GammaLogPrior(pints.LogPrior):
+    """
+    Defines a gamma (log) prior with given shape parameter ``a`` and rate
+    parameter ``b``, with pdf f(x|a,b)=b^a * x^(a-1) * e^{-bx} / Gamma(a)
+
+    For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
+    rate parameter ``b=1``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, a, b):
+        # Parse input arguments
+        self._a = float(a)
+        self._b = float(b)
+
+        # Validate inputs
+        if self._a <= 0:
+            raise ValueError('Shape parameter alpha must be positive')
+        if self._b <= 0:
+            raise ValueError('Rate parameter beta must be positive')
+
+        # Cache constant
+        self._constant = scipy.special.xlogy(self._a,
+                                             self._b) - scipy.special.gammaln(
+            self._a)
+
+    def __call__(self, x):
+        if x < 0.0:
+            return -float('inf')
+        else:
+            return self._constant + scipy.special.xlogy(self._a - 1.,
+                                                        x) - self._b * x
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+
+        # Account for pathological edge
+        if x == 0.0:
+            x = np.nextafter(0.0, 1.0)
+
+        if x < 0.0:
+            return value, np.asarray([0.])
+        else:
+            return value, np.asarray([(self._a - 1.) / x - self._b])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.gamma(self._a, 1. / self._b, size=(n, 1))
+
+
 class StudentTLogPrior(pints.LogPrior):
     """
     Defines a 1-d Student-t (log) prior with a given ``location``,

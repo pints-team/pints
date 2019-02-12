@@ -85,6 +85,7 @@ from ._log_priors import (
     NormalLogPrior,
     BetaLogPrior,
     ExponentialLogPrior,
+    GammaLogPrior,
     UniformLogPrior,
     StudentTLogPrior,
     CauchyLogPrior,
