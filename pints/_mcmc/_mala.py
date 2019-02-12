@@ -152,7 +152,8 @@ class MALAMCMC(pints.SingleChainMCMC):
     def set_epsilon(self, epsilon=None):
         """
         Sets epsilon, which is the effective step size used in proposals.
-        If epsilon not specified, then epsilon = sigma0 * scale_vector
+        If epsilon not specified, then ``epsilon = sigma0 * scale_vector`` will
+        be used.
         """
         if epsilon is None:
             self._epsilon = self._step_size * self._scale_vector
@@ -168,25 +169,25 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def epsilon(self):
         """
-        Returns epsilon which is the effective step size used in proposals
+        Returns ``epsilon`` which is the effective step size used in proposals.
         """
         return self._epsilon
 
     def scale_vector(self):
         """
-        Returns vector used to scale step size for proposals
+        Returns vector used to scale step size for proposals.
         """
         return self._scale_vector
 
     def step_size(self):
         """
-        Returns step size used to propose new points
+        Returns step size used to propose new points.
         """
         return self._step_size
 
     def acceptance_rate(self):
         """
-        Returns the current (measured) acceptance rate
+        Returns the current (measured) acceptance rate.
         """
         return self._acceptance
 
@@ -313,9 +314,9 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[step_size,
-                                         scale_vector]``.
-        The effective step size (epsilon) is step_size * scale_vector.
+        The hyper-parameter vector is ``[step_size, scale_vector]``.
+
+        The effective step size (``epsilon``) is ``step_size * scale_vector``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
