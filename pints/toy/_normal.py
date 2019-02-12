@@ -30,7 +30,8 @@ class NormalLogPDF(pints.LogPDF):
 
     *Extends:* :class:`pints.LogPDF`.
     """
-    def __init__(self, mean, sigma):
+
+    def __init__(self, mean=[0, 0], sigma=[1, 1]):
 
         # Copy and convert
         mean = np.array(mean, copy=True)
@@ -120,4 +121,3 @@ class NormalLogPDF(pints.LogPDF):
         # derivative wrt x
         dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
         return L, dL
-
