@@ -345,9 +345,48 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, 0)
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, -1)
 
+        loc1 = 0
+        df1 = 2
+        scale1 = 10
+
+        loc2 = 10
+        df2 = 5
+        scale2 = 8
+
+        p1 = pints.StudentTLogPrior(loc1, df1, scale1)
+        p2 = pints.StudentTLogPrior(loc2, df2, scale2)
+
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
+
+        points = [-5., -2., 0., 1., 8.91011]
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.t.logpdf(to_test, df=df1, loc=loc1, scale=scale1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.t.logpdf(to_test, df=df2, loc=loc2, scale=scale2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0.06666666666666668, 0.02941176470588236, 0.,
+                     -0.01492537313432837, -0.0956738760845951]
+
+        p2_derivs = [0.1651376146788991, 0.1551724137931035,
+                     0.1428571428571429, 0.1346633416458853,
+                     0.02035986041216401]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
 
     def test_student_t_prior_sampling(self):
         p1 = pints.StudentTLogPrior(0, 1000, 1)
@@ -437,11 +476,11 @@ class TestPrior(unittest.TestCase):
         for point in points:
             to_test = [point]
             self.assertAlmostEqual(
-                scipy.stats.beta.logpdf(to_test[0], 0.123, 2.34),
+                scipy.stats.beta.logpdf(to_test, 0.123, 2.34),
                 p1(to_test),
                 places=9)
             self.assertAlmostEqual(
-                scipy.stats.beta.logpdf(to_test[0], 3.45, 4.56),
+                scipy.stats.beta.logpdf(to_test, 3.45, 4.56),
                 p2(to_test),
                 places=9)
 
@@ -496,10 +535,10 @@ class TestPrior(unittest.TestCase):
         for point in points:
             to_test = [point]
             self.assertAlmostEqual(
-                scipy.stats.expon.logpdf(to_test[0], scale=1. / r1),
+                scipy.stats.expon.logpdf(to_test, scale=1. / r1),
                 p1(to_test), places=9)
             self.assertAlmostEqual(
-                scipy.stats.expon.logpdf(to_test[0], scale=1. / r2),
+                scipy.stats.expon.logpdf(to_test, scale=1. / r2),
                 p2(to_test), places=9)
 
         # Test derivatives
@@ -556,10 +595,10 @@ class TestPrior(unittest.TestCase):
         for point in points:
             to_test = [point]
             self.assertAlmostEqual(
-                scipy.stats.gamma.logpdf(to_test[0], a=a1, scale=1. / b1),
+                scipy.stats.gamma.logpdf(to_test, a=a1, scale=1. / b1),
                 p1(to_test), places=9)
             self.assertAlmostEqual(
-                scipy.stats.gamma.logpdf(to_test[0], a=a2, scale=1. / b2),
+                scipy.stats.gamma.logpdf(to_test, a=a2, scale=1. / b2),
                 p2(to_test), places=9)
 
         # Test derivatives
