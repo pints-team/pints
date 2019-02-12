@@ -15,8 +15,8 @@ import scipy.stats
 
 class MALAMCMC(pints.SingleChainMCMC):
     """
-    Metropolis-Adjusted Langevin Algorithm (MALA), an MCMC
-    sampler as described in [1].
+    Metropolis-Adjusted Langevin Algorithm (MALA), an MCMC sampler as described
+    in [1].
 
     This method involves simulating Langevin diffusion such that the solution
     to the time evolution equation (the Fokker-Planck PDE) is a stationary
@@ -44,8 +44,8 @@ class MALAMCMC(pints.SingleChainMCMC):
     \\text{log} \\pi(\\theta_t)`.
 
     To correct for first-order integration error that is introduced from
-    discretisation, a Metropolis-Hastings acceptance probability is
-    calculated after a step,
+    discretisation, a Metropolis-Hastings acceptance probability is calculated
+    after a step,
 
     .. math::
         \\alpha = \\frac{\\pi(\\theta^*)q(\\theta_t|\\theta^*)}{\\pi(\\theta^*)
@@ -67,8 +67,8 @@ class MALAMCMC(pints.SingleChainMCMC):
     leading to :math:`q(\\theta_2|\\theta_1) =
         \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon')`.
 
-    where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial
-    value of `sigma0`.
+    where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial value
+    of `sigma0`.
 
     *Extends:* :class:`SingleChainMCMC`
 
@@ -87,12 +87,24 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Current point and proposed point
         self._current = None
         self._current_log_pdf = None
+        self._current_gradient = None
         self._proposed = None
+        self._proposed_gradient = None
 
         # hyper parameters
         self._epsilon = None
         self._step_size = 0.1
         self.set_scale_vector(np.diag(self._sigma0))
+
+        # Acceptance rate monitoring
+        self._iterations = 0
+        self._acceptance = 0
+
+        # Step size
+        self._forward_mu = None
+        self._backward_mu = None
+        self._forward_q = None
+        self._backward_q = None
 
     def _initialise(self):
         """
@@ -106,20 +118,8 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._proposed = self._x0
 
-        # Acceptance rate monitoring
-        self._iterations = 0
-        self._acceptance = 0
-
         # Update sampler state
         self._running = True
-
-        # Initialise step size
-        self._forward_mu = None
-        self._backward_mu = None
-        self._current_gradient = None
-        self._proposed_gradient = None
-        self._forward_q = None
-        self._backward_q = None
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
@@ -127,11 +127,11 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def set_step_size(self, step_size=0.1):
         """
-        Sets step size used to propose new points. Must exceed 0
+        Sets step size used to propose new points. Must exceed 0.
         """
         step_size = float(step_size)
         if step_size <= 0:
-            raise ValueError('Step size must exceed 0')
+            raise ValueError('Step size must exceed 0.')
         self._step_size = step_size
         self.set_epsilon()
 
@@ -141,8 +141,8 @@ class MALAMCMC(pints.SingleChainMCMC):
         """
         a = np.atleast_1d(scale_vector)
         if not len(a) == self._n_parameters:
-            raise ValueError('Dimensions of scale vector must be same as ' +
-                             'number of parameters')
+            raise ValueError('Dimensions of scale vector must be same as '
+                             'number of parameters.')
         for element in scale_vector:
             if element <= 0:
                 raise ValueError('Elements of scale vector must exceed 0')
@@ -151,7 +151,7 @@ class MALAMCMC(pints.SingleChainMCMC):
 
     def set_epsilon(self, epsilon=None):
         """
-        Sets epsilon which is the effective step size used in proposals.
+        Sets epsilon, which is the effective step size used in proposals.
         If epsilon not specified, then epsilon = sigma0 * scale_vector
         """
         if epsilon is None:
@@ -201,8 +201,10 @@ class MALAMCMC(pints.SingleChainMCMC):
 
         # Propose new point
         if self._proposed is None:
+
             self._forward_mu = self._current + (self._epsilon**2 / 2.0) * (
                 self._current_gradient)
+
             self._proposed = np.random.multivariate_normal(
                 self._forward_mu,
                 self._epsilon**2 * np.diag(np.ones(self._n_parameters)))
@@ -216,20 +218,25 @@ class MALAMCMC(pints.SingleChainMCMC):
             self._proposed.setflags(write=False)
 
         self._ready_for_tell = True
+
         # Return proposed point
         return self._proposed
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
+
         # Check if we had a proposal
-        if self._proposed is None:
-            raise RuntimeError('Tell called before proposal was set.')
         if not self._ready_for_tell:
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Ensure fx is a float
+        # Unpack reply
         fx, log_gradient = reply
+
+        # Check reply, copy gradient
+        fx = float(fx)
+        log_gradient = pints.vector(log_gradient)
+        assert(log_gradient.shape == (self._n_parameters, ))
 
         # First point?
         if self._current is None:
@@ -252,15 +259,12 @@ class MALAMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Calculate alpha
-        self._proposed_gradient = -log_gradient
+        proposed_gradient = -log_gradient
         self._backward_mu = self._proposed + (
-            (self._epsilon**2 / 2.0) * self._proposed_gradient
-        )
+            0.5 * self._epsilon**2 * proposed_gradient)
         self._backward_q = scipy.stats.multivariate_normal.logpdf(
-            self._current, self._backward_mu, self._epsilon**2 * (
-                np.diag(np.ones(self._n_parameters))
-            )
-        )
+            self._current, self._backward_mu,
+            self._epsilon**2 * (np.diag(np.ones(self._n_parameters))))
         alpha = fx + self._backward_q - (
             self._current_log_pdf + self._forward_q)
 
