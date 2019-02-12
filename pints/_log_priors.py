@@ -211,8 +211,9 @@ class BetaLogPrior(pints.LogPrior):
         if _x < 0.0 or _x > 1.0:
             return value, np.asarray([0.])
         else:
-            deriv = (self._a - 1.) / _x - (self._b - 1.) / (1. - _x)
-            return value, np.asarray([deriv])
+            # Use np.divide here to better handle possible v small denominators
+            return value, np.asarray([np.divide(self._a - 1., _x) - np.divide(
+                self._b - 1., 1. - _x)])
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -313,7 +314,8 @@ class GammaLogPrior(pints.LogPrior):
         if _x < 0.0:
             return value, np.asarray([0.])
         else:
-            return value, np.asarray([(self._a - 1.) / _x - self._b])
+            # Use np.divide here to better handle possible v small denominators
+            return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """

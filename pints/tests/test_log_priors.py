@@ -504,6 +504,14 @@ class TestPrior(unittest.TestCase):
             calc_val, calc_deriv = p2.evaluateS1([point])
             self.assertAlmostEqual(calc_deriv[0], deriv)
 
+        # Test pathological edge cases
+        p3 = pints.BetaLogPrior(1.0, 1.0)
+        calc_val, calc_deriv = p3.evaluateS1([0.0])
+        self.assertAlmostEqual(calc_deriv[0], 0.0)
+
+        calc_val, calc_deriv = p3.evaluateS1([1.0])
+        self.assertAlmostEqual(calc_deriv[0], 0.0)
+
     def test_beta_prior_sampling(self):
         # Just returns samples from the numpy beta distribution so no utility
         # in verifying shape params - just check it's working as expected
@@ -615,6 +623,11 @@ class TestPrior(unittest.TestCase):
         for point, deriv in zip(points, p2_derivs):
             calc_val, calc_deriv = p2.evaluateS1([point])
             self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        # Test pathological edge case
+        p3 = pints.GammaLogPrior(1.0, 1.0)
+        calc_val, calc_deriv = p3.evaluateS1([0.0])
+        self.assertAlmostEqual(calc_deriv[0], -1.)
 
     def test_gamma_prior_sampling(self):
         # Just returns samples from the numpy gamma distribution, but because
