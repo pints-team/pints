@@ -145,6 +145,7 @@ from ._optimisers import (
     curve_fit,
     fmin,
     Optimisation,
+    OptimisationController,
     optimise,
     Optimiser,
     PopulationBasedOptimiser,

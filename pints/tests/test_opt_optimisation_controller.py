@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the pints.Optimisation class
+# Tests the pints.OptimisationController class
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -24,7 +24,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestOptimisation(unittest.TestCase):
+class TestOptimisationController(unittest.TestCase):
     """
     Tests shared optimisation properties.
     """
@@ -50,7 +50,7 @@ class TestOptimisation(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -65,7 +65,7 @@ class TestOptimisation(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(3)
@@ -105,7 +105,7 @@ class TestOptimisation(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -126,7 +126,7 @@ class TestOptimisation(unittest.TestCase):
         x = np.array([0.008, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -143,7 +143,7 @@ class TestOptimisation(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -155,7 +155,7 @@ class TestOptimisation(unittest.TestCase):
         """
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.01, 1.01])
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
         n = m.population_size()
         m.set_population_size(n + 1)
@@ -177,14 +177,14 @@ class TestOptimisation(unittest.TestCase):
         self.assertRaises(Exception, m.set_population_size, 2)
 
     def test_parallel(self):
-        """ Test parallelised running. """
+        # Test parallelised running.
 
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
         # Run with guessed number of cores
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(debug)
         opt.set_parallel(False)
@@ -195,7 +195,7 @@ class TestOptimisation(unittest.TestCase):
         opt.run()
 
         # Run with explicit number of cores
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(debug)
         opt.set_parallel(1)
@@ -203,6 +203,14 @@ class TestOptimisation(unittest.TestCase):
         self.assertTrue(type(opt.parallel()) == int)
         self.assertEqual(opt.parallel(), 1)
 
+    def test_deprecated_alias(self):
+        # Tests Optimisation()
+        r = pints.toy.RosenbrockError(1, 100)
+        x = np.array([1.1, 1.1])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        self.assertIsInstance(opt, pints.OptimisationController)
+ 
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
