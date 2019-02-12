@@ -699,7 +699,7 @@ class Optimisation(OptimisationController):
     """ Deprecated alias for :class:`OptimisationController`. """
 
     def __init__(
-        self, function, x0, sigma0=None, boundaries=None, method=None):
+            self, function, x0, sigma0=None, boundaries=None, method=None):
         # Deprecated on 2019-02-12
         import logging
         logging.basicConfig()

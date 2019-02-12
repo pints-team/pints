@@ -210,7 +210,7 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         self.assertIsInstance(opt, pints.OptimisationController)
- 
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
