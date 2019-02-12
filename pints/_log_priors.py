@@ -190,27 +190,28 @@ class BetaLogPrior(pints.LogPrior):
         self._log_beta = scipy.special.betaln(self._a, self._b)
 
     def __call__(self, x):
-        if x < 0.0 or x > 1.0:
+        if x[0] < 0.0 or x[0] > 1.0:
             return -float('inf')
         else:
             return scipy.special.xlogy(self._a - 1.0,
-                                       x) + scipy.special.xlog1py(
-                self._b - 1.0, -x) - self._log_beta
+                                       x[0]) + scipy.special.xlog1py(
+                self._b - 1.0, -x[0]) - self._log_beta
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
+        _x = x[0]
 
         # Account for pathological edges
-        if x == 0.0:
-            x = np.nextafter(0.0, 1.0)
-        elif x == 1.0:
-            x = np.nextafter(1.0, 0.0)
+        if _x == 0.0:
+            _x = np.nextafter(0.0, 1.0)
+        elif _x == 1.0:
+            _x = np.nextafter(1.0, 0.0)
 
-        if x < 0.0 or x > 1.0:
+        if _x < 0.0 or _x > 1.0:
             return value, np.asarray([0.])
         else:
-            deriv = (self._a - 1.) / x - (self._b - 1.) / (1. - x)
+            deriv = (self._a - 1.) / _x - (self._b - 1.) / (1. - _x)
             return value, np.asarray([deriv])
 
     def n_parameters(self):
@@ -243,16 +244,16 @@ class ExponentialLogPrior(pints.LogPrior):
         self._log_scale = np.log(self._rate)
 
     def __call__(self, x):
-        if x < 0.0:
+        if x[0] < 0.0:
             return -float('inf')
         else:
-            return self._log_scale - self._rate * x
+            return self._log_scale - self._rate * x[0]
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
 
-        if x < 0.0:
+        if x[0] < 0.0:
             return value, np.asarray([0.])
         else:
             return value, np.asarray([-self._rate])
@@ -293,24 +294,26 @@ class GammaLogPrior(pints.LogPrior):
             self._a)
 
     def __call__(self, x):
-        if x < 0.0:
+        if x[0] < 0.0:
             return -float('inf')
         else:
             return self._constant + scipy.special.xlogy(self._a - 1.,
-                                                        x) - self._b * x
+                                                        x[0]) - self._b * x[0]
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
 
-        # Account for pathological edge
-        if x == 0.0:
-            x = np.nextafter(0.0, 1.0)
+        _x = x[0]
 
-        if x < 0.0:
+        # Account for pathological edge
+        if _x == 0.0:
+            _x = np.nextafter(0.0, 1.0)
+
+        if _x < 0.0:
             return value, np.asarray([0.])
         else:
-            return value, np.asarray([(self._a - 1.) / x - self._b])
+            return value, np.asarray([(self._a - 1.) / _x - self._b])
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
