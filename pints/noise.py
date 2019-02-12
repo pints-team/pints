@@ -62,7 +62,7 @@ def ar1(rho, sigma, n):
         noisy_values = values + noise.ar1(0.9, 5, len(values))
 
     """
-    if np.absolute(rho) >= 1:
+    if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process'
             ' is non-stationary).')
@@ -71,14 +71,11 @@ def ar1(rho, sigma, n):
 
     n = int(n)
     if n < 1:
-        raise ValueError('Must supply at least one value.')
+        raise ValueError('Number of values to generate must be at least one.')
 
     # Generate noise
     s = sigma * np.sqrt(1 - rho**2)
-    if s == 0:
-        v = np.zeros(n)
-    else:
-        v = np.random.normal(0, s, n)
+    v = np.random.normal(0, s, n)
     v[0] = np.random.rand()
     for t in range(1, n):
         v[t] += rho * v[t - 1]
@@ -96,21 +93,19 @@ def arma11(rho, theta, sigma, n):
     and
     ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
     """
-    if np.absolute(rho) >= 1:
+    if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process'
             ' is non-stationary).')
+    if abs(theta) >= 1.0:
+        raise ValueError('Absolute value of theta must be less than 1 ' +
+                         'so that the process is invertible.')
     if sigma <= 0:
         raise ValueError('Standard deviation must be positive.')
-    if np.abs(theta) >= 1:
-        raise ValueError('theta must be less than 1 so the process is ' +
-                         'invertible.')
-    if np.abs(theta) > 1.0:
-        raise ValueError('absolute value of theta must be less than 1 ' +
-                         'so that the process is invertible.')
+
     n = int(n)
     if n < 1:
-        raise ValueError('Must supply at least one value.')
+        raise ValueError('Number of values to generate must be at least one.')
 
     # Generate noise
     s = sigma * np.sqrt((1 - rho**2) / (1 + 2 * theta * rho + theta**2))
@@ -144,16 +139,16 @@ def ar1_unity(rho, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
-    if np.absolute(rho) >= 1:
+    if abs(rho) >= 1:
         raise ValueError(
-            'Rho must be less than 1 in magnitude (otherwise the process is'
+            'Magnitude of rho must be less than 1 (otherwise the process is'
             ' non-stationary).')
     if sigma <= 0:
         raise ValueError('Standard deviation must be positive.')
 
     n = int(n)
     if n < 1:
-        raise ValueError('Must supply at least one value.')
+        raise ValueError('Number of values to generate must be at least one.')
 
     # Generate noise
     v = np.random.normal(0, sigma * np.sqrt(1 - rho**2), n + 1)
@@ -194,18 +189,18 @@ def arma11_unity(rho, theta, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
-    if np.absolute(rho) >= 1:
+    if abs(rho) >= 1:
         raise ValueError(
-            'Rho must be less than 1 in magnitude (otherwise the process is'
+            'Magnitude of rho must be less than 1 (otherwise the process is'
             ' explosive).')
+    if abs(theta) >= 1.0:
+        raise ValueError('Absolute value of theta must be less than 1 ' +
+                         'so that the process is invertible.')
     if sigma <= 0:
         raise ValueError('Standard deviation must be positive.')
-    if np.abs(theta) > 1.0:
-        raise ValueError('absolute value of theta must be less than 1 ' +
-                         'so that the process is invertible.')
     n = int(n)
     if n < 1:
-        raise ValueError('Must supply at least one value.')
+        raise ValueError('Number of values to generate must be at least one.')
 
     # Generate noise
     s = sigma * np.sqrt((1 - rho**2) / (1 + 2 * theta * rho + theta**2))
