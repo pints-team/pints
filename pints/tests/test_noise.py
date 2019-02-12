@@ -45,7 +45,7 @@ class TestNoise(unittest.TestCase):
 
         # Standard deviation cannot be 0 or less (handled by numpy)
         self.assertRaisesRegex(
-            ValueError, 'scale < 0', pn.independent, -1, clean.shape)
+            ValueError, 'scale', pn.independent, -1, clean.shape)
 
         # Shape must be a nice shape (handled by numpy)
         self.assertRaises(TypeError, pn.independent, 1, 'hello')
