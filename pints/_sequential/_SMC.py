@@ -97,7 +97,7 @@ class SMC(pints.SMCSampler):
 
         # Update chains with log pdfs tempered with current beta
         for j, sample in enumerate(self._samples):
-            chain.replace(sample, self._temper(
+            self._chains[j].replace(sample, self._temper(
                 self._log_pdfs[j], self._log_prior(sample), beta))
 
         # Get proposals from MCMC and return
@@ -164,6 +164,10 @@ class SMC(pints.SMCSampler):
                 self._samples[j] = proposed
                 self._log_pdfs[j] = log_pdfs[j]
 
+
+        # Clear proposals
+        self._proposals = None
+
         # Run more mcmc steps before continuing?
         self._i_mcmc += 1
         if self._i_mcmc < self._n_mcmc_steps:
@@ -183,8 +187,8 @@ class SMC(pints.SMCSampler):
 
         # Conditional resampling step
         if self._resample_end_2_3:
-            update_weights = (i != (self._n_iterations - 2))
-            self._resample(update_weights)
+            self._resample(
+                update_weights=(self._i_temp != len(self._schedule) - 2))
 
         # Return copy of current samples
         return np.copy(self._samples)
@@ -233,14 +237,14 @@ class SMC(pints.SMCSampler):
         for i in range(0, self._n_particles):
             a_end = a_end + selected[i]
             new_samples[a_start:a_end, :] = self._samples[i]
-            new_log_prob[a_start:a_end] = self._samples_log_pdf[i]
+            new_log_prob[a_start:a_end] = self._log_pdfs[i]
             a_start = a_start + selected[i]
 
         if np.count_nonzero(new_samples == 0) > 0:
             raise RuntimeError('Zero elements appearing in samples matrix.')
 
         self._samples = new_samples
-        self._samples_log_pdf = new_log_prob
+        self._log_pdfs = new_log_prob
         if update_weights:
             self._weights = np.repeat(1 / self._n_particles, self._n_particles)
 
