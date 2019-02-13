@@ -55,7 +55,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         )
 
         # Create a log likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(
@@ -130,7 +130,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
         # Use uniform error
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
-        mcmc.set_normal_error(False)
+        mcmc.set_gaussian_error(False)
         for i in range(10):
             mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
 
@@ -154,7 +154,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(mcmc._gamma, 0.5)
         self.assertEqual(mcmc._b, 0.6)
         self.assertEqual(mcmc._gamma_switch_rate, 20)
-        self.assertTrue(not mcmc._normal_error)
+        self.assertTrue(not mcmc._gaussian_error)
         self.assertTrue(not mcmc._relative_scaling)
 
         mcmc.set_gamma(0.5)
@@ -174,8 +174,8 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'exceed 1', mcmc.set_gamma_switch_rate, 0)
 
-        mcmc.set_normal_error(False)
-        self.assertTrue(not mcmc._normal_error)
+        mcmc.set_gaussian_error(False)
+        self.assertTrue(not mcmc._gaussian_error)
 
         mcmc.set_relative_scaling(0)
         self.assertTrue(np.array_equal(mcmc._b_star,
@@ -196,7 +196,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         Test logging includes name and custom fields.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DifferentialEvolutionMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:

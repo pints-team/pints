@@ -15,12 +15,12 @@ import scipy.stats
 
 class TwistedGaussianLogPDF(pints.LogPDF):
     """
-    Twisted multivariate normal 'banana' with un-normalised density [1]:
+    Twisted multivariate Gaussian 'banana' with un-normalised density [1]:
 
     .. math::
         p(x_1, x_2, x_3, ..., x_n) \propto \pi(\phi(x_1, x_2, x_2, ..., x_n))
 
-    where pi is the multivariate normal density and
+    where pi is the multivariate Gaussian density and
 
     .. math::
         \phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
@@ -86,7 +86,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
 
         # Calculate the Kullback-Leibler divergence between the given samples
-        # and the multivariate normal distribution underlying this banana.
+        # and the multivariate Gaussian distribution underlying this banana.
         # From wikipedia:
         #
         # k = dimension of distribution
