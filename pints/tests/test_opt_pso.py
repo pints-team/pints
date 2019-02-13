@@ -46,7 +46,7 @@ class TestPSO(unittest.TestCase):
     def test_unbounded(self):
         """ Runs an optimisation without boundaries. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -57,7 +57,7 @@ class TestPSO(unittest.TestCase):
 
         # Rectangular boundaries
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -66,7 +66,7 @@ class TestPSO(unittest.TestCase):
         # Start near edge, to increase chance of out-of-bounds occurring.
         b = CircularBoundaries([0, 0], 1)
         x = [0.99, 0]
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -74,7 +74,7 @@ class TestPSO(unittest.TestCase):
     def test_bounded_and_sigma(self):
         """ Runs an optimisation without boundaries and sigma. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
         #found_parameters, found_solution = opt.run()
         #self.assertTrue(found_solution < 1e-3)
@@ -107,10 +107,10 @@ class TestPSO(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
 
         # No logging
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(False)
         opt.set_log_to_file(False)
@@ -119,7 +119,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(c.text(), '')
 
         # Log to screen - using a LogPDF and parallelisation
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_parallel(2)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(True)
@@ -146,7 +146,7 @@ class TestPSO(unittest.TestCase):
             lines[-1], 'Halting: Maximum number of iterations (10) reached.')
 
         # Log to file
-        opt = pints.Optimisation(r, x, s, b, method=method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_max_iterations(10)
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
@@ -175,7 +175,7 @@ class TestPSO(unittest.TestCase):
         optimisers.
         """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt = opt.optimiser()
 
         # Test basic usage
@@ -227,11 +227,11 @@ class TestPSO(unittest.TestCase):
         # Test invalid dimensions
         r, x, s, b = self.problem()
         self.assertRaisesRegex(
-            ValueError, 'same dimension', pints.Optimisation, r, [1])
+            ValueError, 'same dimension', pints.OptimisationController, r, [1])
 
         # Test invalid method
         self.assertRaisesRegex(
-            ValueError, 'subclass', pints.Optimisation, r, [1, 1],
+            ValueError, 'subclass', pints.OptimisationController, r, [1, 1],
             method=pints.AdaptiveCovarianceMCMC)
 
     def test_set_hyper_parameters(self):
@@ -239,7 +239,7 @@ class TestPSO(unittest.TestCase):
         Tests the hyper-parameter interface for this optimiser.
         """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 2)
         n = m.population_size()

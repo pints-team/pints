@@ -3,7 +3,7 @@
 # Tests the basic functionality of the EmceeHammerMCMC method.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -55,7 +55,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         )
 
         # Create a log likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(
@@ -152,7 +152,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         Test logging includes name and custom fields.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.EmceeHammerMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:

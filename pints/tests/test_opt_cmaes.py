@@ -44,7 +44,7 @@ class TestCMAES(unittest.TestCase):
     def test_unbounded(self):
         """ Runs an optimisation without boundaries. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -56,7 +56,7 @@ class TestCMAES(unittest.TestCase):
 
         # Rectangular boundaries
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -65,7 +65,7 @@ class TestCMAES(unittest.TestCase):
         # Start near edge, to increase chance of out-of-bounds occurring.
         b = CircularBoundaries([0, 0], 1)
         x = [0.99, 0]
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -73,7 +73,7 @@ class TestCMAES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         """ Runs an optimisation without boundaries and sigma. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -109,7 +109,7 @@ class TestCMAES(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         score = pints.SumOfSquaresError(problem)
         x = [3.42, -0.21, 5e6]
-        opt = pints.Optimisation(score, x, method=method)
+        opt = pints.OptimisationController(score, x, method=method)
         with StreamCapture() as c:
             opt.run()
         self.assertTrue('Ill-conditioned covariance matrix' in c.text())
@@ -133,7 +133,7 @@ class TestCMAES(unittest.TestCase):
     def test_is_default(self):
         """ Checks this is the default optimiser. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x)
+        opt = pints.OptimisationController(r, x)
         self.assertIsInstance(opt.optimiser(), method)
 
     def test_hyper_parameter_interface(self):
@@ -141,7 +141,7 @@ class TestCMAES(unittest.TestCase):
         Tests the hyper parameter interface for this optimiser.
         """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 1)
         n = m.population_size() + 2
