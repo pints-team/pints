@@ -37,41 +37,48 @@ class TestSMC(unittest.TestCase):
         cls.sigma0 = [[2, 0], [0, 2]]
 
     def test_quick_run(self):
-        """ Test a single run. """
+
+        # Test with 1 kernel sample
         n = 100
         d = 2
-        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0, self.sigma0)
-        sampler.set_temperature_schedule(3)
-        sampler.set_n_particles(n)
-        sampler.set_n_kernel_samples(3)
-        samples = sampler.run()
+        smc = pints.SMCController(self.log_pdf, self.log_prior, self.sigma0)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(n)
+        smc.sampler().set_n_kernel_samples(1)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
 
         # Check output has desired shape
         self.assertEqual(samples.shape, (n, d))
 
         # Check creation with sigma vector
         sigma0 = np.array([2, 2])
-        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0, sigma0)
-        sampler.set_temperature_schedule(3)
-        sampler.set_n_particles(n)
-        sampler.set_n_kernel_samples(3)
-        samples = sampler.run()
+        smc = pints.SMCController(self.log_pdf, self.log_prior, sigma0)
+
+        # Test with multiple kernel samples
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(n)
+        smc.sampler().set_n_kernel_samples(3)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
         self.assertEqual(samples.shape, (n, d))
 
         # Check creation without sigma
-        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0)
-        sampler.set_temperature_schedule(3)
-        sampler.set_n_particles(n)
-        sampler.set_n_kernel_samples(3)
-        samples = sampler.run()
+        smc = pints.SMCController(self.log_pdf, self.log_prior, self.x0)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(n)
+        smc.sampler().set_n_kernel_samples(3)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
         self.assertEqual(samples.shape, (n, d))
 
         # Check creation without log_prior
-        sampler = pints.SMC(self.log_pdf, self.log_prior, self.x0)
-        sampler.set_temperature_schedule(3)
-        sampler.set_n_particles(n)
-        sampler.set_n_kernel_samples(3)
-        samples = sampler.run()
+        smc = pints.SMCController(self.log_pdf, self.log_prior, self.x0)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(n)
+        smc.sampler().set_n_kernel_samples(3)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
         self.assertEqual(samples.shape, (n, d))
 
     def test_construction_errors(self):
@@ -80,12 +87,12 @@ class TestSMC(unittest.TestCase):
         # First arg must be a LogPDF
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPDF',
-            pints.SMC, 'hello', self.log_prior, self.x0)
+            pints.SMCController, 'hello', self.log_prior, self.sigma0)
 
         # Log prior must be a LogPrior
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogPrior',
-            pints.SMC, self.log_pdf, 12, self.x0)
+            pints.SMCController, self.log_pdf, self.log_pdf, self.sigma0)
 
     '''
     def test_logging(self):

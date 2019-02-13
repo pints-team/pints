@@ -17,7 +17,7 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
     """
     Abstract base class for Sequential Monte Carlo (SMC) samplers.
 
-    This class provides fine-grained control over smc sampling. Users who don't
+    This class provides fine-grained control over SMC sampling. Users who don't
     require this may prefer to use the :class:`SMCController` class instead.
 
     Arguments:
@@ -175,12 +175,6 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
-    def temperature(self):
-        """
-        Returns the current sampler temperature.
-        """
-        raise NotImplementedError
-
 
 class SMCController(object):
     """
@@ -260,14 +254,11 @@ class SMCController(object):
         #self.set_parallel()    #TODO
 
 
-    '''
     def parallel(self):
         """
-        Returns the number of parallel worker processes this routine will be
-        run on, or ``False`` if parallelisation is disabled.
+        Returns ``True`` if this method is set to run in parallel mode.
         """
-        return self._n_workers if self._parallel else False
-    '''
+        return self._parallel
 
     def run(self):
         """
@@ -278,8 +269,16 @@ class SMCController(object):
             raise RuntimeError('A controller can only be run once.')
 
         # Create evaluator object
-        #TODO Parallelisation
-        evaluator = pints.SequentialEvaluator(self._log_pdf)
+        if self._parallel:
+            # Guess number of workers if not explicitly set
+            if self._n_workers is None:
+                self._n_workers = min(
+                    self.sampler()._n_particles,
+                    pints.ParallelEvaluator.cpu_count() * 2)
+
+            evaluator = pints.ParallelEvaluator(self._log_pdf, self._n_workers)
+        else:
+            evaluator = pints.SequentialEvaluator(self._log_pdf)
 
         # Count evaluations
         evaluations = 0
@@ -316,9 +315,8 @@ class SMCController(object):
 
             # Add fields to log
             logger.add_counter('i', max_value=n_temperatures)
-            logger.add_float('Temp.')
             logger.add_counter('Eval.', max_value=n_particles * n_iter)
-            #TODO: LET SAMPLER LOG ITS OWN STUFF
+            self._sampler._log_init(logger)
             logger.add_time('Time m:s')
 
         # Start sampling
@@ -338,12 +336,13 @@ class SMCController(object):
             samples = self._sampler.tell(fxs)
 
             # Show progress
+            logged_current_iteration = False
             if logging and iteration >= next_message:
+                logged_current_iteration = True
 
                 # Log state
-                logger.log(iteration, self._sampler.temperature(), evaluations)
-                #TODO: LET SAMPLER LOG ITS OWN STUFF
-                #self._sampler._log_write(logger)
+                logger.log(iteration, evaluations)
+                self._sampler._log_write(logger)
                 logger.log(timer.time())
 
                 # Choose next logging point
@@ -352,15 +351,21 @@ class SMCController(object):
                 else:
                     next_message = self._message_interval * (
                         1 + iteration // self._message_interval)
+
         # Log final state and show halt message
-        if logging:
-            logger.log(iteration, self._sampler.temperature(), evaluations)
-            #TODO: LET SAMPLER LOG ITS OWN STUFF
-            #self._sampler._log_write(logger)
+        if logging and not logged_current_iteration:
+            logger.log(iteration, evaluations)
+            self._sampler._log_write(logger)
             logger.log(timer.time())
 
         # Return generated samples
         return samples
+
+    def sampler(self):
+        """
+        Provides access to the underlying :class:`SMCSampler` object.
+        """
+        return self._sampler
 
     def set_log_interval(self, iters=1, warm_up=3):
         """
@@ -414,17 +419,15 @@ class SMCController(object):
 
         self._log_to_screen = True if enabled else False
 
-    '''
     def set_parallel(self, parallel=False):
         """
         Enables/disables parallel evaluation.
 
         If ``parallel=True``, the method will run using a number of worker
-        processes equal to the detected cpu core count. The number of workers
-        can be set explicitly by setting ``parallel`` to an integer greater
-        than 0.
-        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
-        ``False``.
+        processes automatically. The number of workers can be set explicitly by
+        setting ``parallel`` to an integer greater than 0.
+        Parallelisation can be disabled by setting ``parallel`` to anything
+        less than 2, or to ``False``.
         """
         if self._has_run:
             raise RuntimeError(
@@ -432,11 +435,11 @@ class SMCController(object):
 
         if parallel is True:
             self._parallel = True
-            self._n_workers = pints.ParallelEvaluator.cpu_count()
-        elif parallel >= 1:
+            self._n_workers = None
+        elif parallel >= 2:
             self._parallel = True
             self._n_workers = int(parallel)
         else:
             self._parallel = False
-            self._n_workers = 1
-    '''
+            self._n_workers = None
+

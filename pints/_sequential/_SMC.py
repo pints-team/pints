@@ -58,7 +58,7 @@ class SMC(pints.SMCSampler):
             raise RuntimeError('Ask called when expecting tell.')
 
         # Too many steps?
-        if self._i_temp >= len(self._schedule) - 1:
+        if self._i_temp >= len(self._schedule):
             raise RuntimeError('Too many iterations in SMC!')
 
         # Initialise
@@ -88,7 +88,8 @@ class SMC(pints.SMCSampler):
             return self._proposals
 
         # Update temperature (1 at first real iteration, then 2, etc.)
-        self._i_temp += 1
+        if self._i_mcmc == 0:
+            self._i_temp += 1
         beta = self._schedule[self._i_temp]
 
         # If ESS < threshold then resample to avoid degeneracies
@@ -164,7 +165,6 @@ class SMC(pints.SMCSampler):
                 self._samples[j] = proposed
                 self._log_pdfs[j] = log_pdfs[j]
 
-
         # Clear proposals
         self._proposals = None
 
@@ -188,7 +188,7 @@ class SMC(pints.SMCSampler):
         # Conditional resampling step
         if self._resample_end_2_3:
             self._resample(
-                update_weights=(self._i_temp != len(self._schedule) - 2))
+                update_weights=(self._i_temp != len(self._schedule) - 1))
 
         # Return copy of current samples
         return np.copy(self._samples)
@@ -212,10 +212,6 @@ class SMC(pints.SMCSampler):
         """
         self._resample_end_2_3 = bool(resample_end_2_3)
 
-    def temperature(self):
-        """ See :meth:`SMCSampler.temperature()`. """
-        return self._schedule[self._i_temp]
-
     def weights(self):
         """
         Returns weights from last run of SMC.
@@ -224,6 +220,14 @@ class SMC(pints.SMCSampler):
             return None
         return np.copy(self._weights)
 
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('Temperature')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        logger.log(1 - self._schedule[max(0, self._i_temp)])
+
     def _resample(self, update_weights=True):
         """
         Resamples (and updates the weights and log_pdfs) according to the
@@ -231,20 +235,22 @@ class SMC(pints.SMCSampler):
         """
         selected = np.random.multinomial(self._n_particles, self._weights)
         new_samples = np.zeros((self._n_particles, self._n_parameters))
-        new_log_prob = np.zeros(self._n_particles)
-        a_start = 0
-        a_end = 0
-        for i in range(0, self._n_particles):
-            a_end = a_end + selected[i]
-            new_samples[a_start:a_end, :] = self._samples[i]
-            new_log_prob[a_start:a_end] = self._log_pdfs[i]
-            a_start = a_start + selected[i]
+        new_log_pdfs = np.zeros(self._n_particles)
+        lo = hi = 0
+        for i, n_selected in enumerate(selected):
+            if n_selected:
+                hi += n_selected
+                new_samples[lo:hi, :] = self._samples[i]
+                new_log_pdfs[lo:hi] = self._log_pdfs[i]
+                lo = hi
+        self._samples = new_samples
+        self._log_pdfs = new_log_pdfs
 
+        #TODO: Can this go?
         if np.count_nonzero(new_samples == 0) > 0:
             raise RuntimeError('Zero elements appearing in samples matrix.')
 
-        self._samples = new_samples
-        self._log_pdfs = new_log_prob
+        # Update weights
         if update_weights:
             self._weights = np.repeat(1 / self._n_particles, self._n_particles)
 
