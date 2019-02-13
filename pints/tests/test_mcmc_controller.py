@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the MCMC Controller.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -778,6 +778,12 @@ class TestMCMCController(unittest.TestCase):
             self.assertIn('chain_0.csv', text)
             self.assertIn('Writing evaluations to', text)
             self.assertIn('evals_0.csv', text)
+
+    def test_deprecated_alias(self):
+
+        mcmc = pints.MCMCSampling(
+            self.log_posterior, 1, [self.real_parameters])
+        self.assertIsInstance(mcmc, pints.MCMCController)
 
 
 if __name__ == '__main__':
