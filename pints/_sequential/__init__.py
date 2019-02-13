@@ -245,14 +245,9 @@ class SMCController(object):
         self._log_csv = False
         self.set_log_interval()
 
-        # Writing to disk
-        #TODO?
-
         # Parallelisation
         self._parallel = False
         self._n_workers = 1
-        #self.set_parallel()    #TODO
-
 
     def parallel(self):
         """
@@ -267,6 +262,7 @@ class SMCController(object):
         """
         if self._has_run:
             raise RuntimeError('A controller can only be run once.')
+        self._has_run = True
 
         # Create evaluator object
         if self._parallel:
@@ -305,6 +301,11 @@ class SMCController(object):
                 #    print('Resampling at end of each iteration')
                 #else:
                 #    print('Not resampling at end of each iteration')
+                if self._parallel:
+                    print('Running in parallel with ' + str(self._n_workers)
+                          + ' worker processes.')
+                else:
+                    print('Running in sequential mode.')
 
             # Set up logger
             logger = pints.Logger()
@@ -314,7 +315,7 @@ class SMCController(object):
                 logger.set_filename(self._log_filename, csv=self._log_csv)
 
             # Add fields to log
-            logger.add_counter('i', max_value=n_temperatures)
+            logger.add_counter('Iter.', max_value=n_temperatures)
             logger.add_counter('Eval.', max_value=n_particles * n_iter)
             self._sampler._log_init(logger)
             logger.add_time('Time m:s')
@@ -381,7 +382,7 @@ class SMCController(object):
 
         """
         if self._has_run:
-            raise RuntimeError('Log interval cannot be changed post-run.')
+            raise RuntimeError('Log interval cannot be changed after run.')
 
         iters = int(iters)
         if iters < 1:
@@ -401,7 +402,7 @@ class SMCController(object):
         similar to the output on screen.
         """
         if self._has_run:
-            raise RuntimeError('Logging cannot be configured post-run.')
+            raise RuntimeError('Logging cannot be configured after run.')
 
         if filename:
             self._log_filename = str(filename)
@@ -415,11 +416,11 @@ class SMCController(object):
         Enables or disables progress logging to screen.
         """
         if self._has_run:
-            raise RuntimeError('Logging cannot be configured post-run.')
+            raise RuntimeError('Logging cannot be configured after run.')
 
         self._log_to_screen = True if enabled else False
 
-    def set_parallel(self, parallel=False):
+    def set_parallel(self, parallel):
         """
         Enables/disables parallel evaluation.
 
@@ -431,7 +432,7 @@ class SMCController(object):
         """
         if self._has_run:
             raise RuntimeError(
-                'Parallelisation cannot be configured post-run.')
+                'Parallelisation cannot be configured after run.')
 
         if parallel is True:
             self._parallel = True

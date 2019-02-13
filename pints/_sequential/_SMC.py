@@ -30,6 +30,9 @@ class SMC(pints.SMCSampler):
         # ESS threshold (default from Del Moral et al.)
         self._ess_threshold = None
 
+        # Keep track of last/current ess
+        self._last_ess = None
+
         # Determines whether to resample particles at end of
         # steps 2 and 3 from Del Moral et al. (2006)
         self._resample_end_2_3 = True
@@ -47,8 +50,9 @@ class SMC(pints.SMCSampler):
         self._chains = None
 
         # Iterations: i_temp (outer loop) and i_mcmc (inner loop)
-        self._i_temp = 0
+        self._i_temp = 1
         self._i_mcmc = 0
+        self._finished = False
 
     def ask(self):
         """ See :meth:`SMCSampler.ask()`. """
@@ -60,6 +64,9 @@ class SMC(pints.SMCSampler):
         # Too many steps?
         if self._i_temp >= len(self._schedule):
             raise RuntimeError('Too many iterations in SMC!')
+
+        # We're up and running now
+        self._running = True
 
         # Initialise
         if self._samples is None:
@@ -87,13 +94,11 @@ class SMC(pints.SMCSampler):
             # Get LogPDF of initial samples via ask/tell
             return self._proposals
 
-        # Update temperature (1 at first real iteration, then 2, etc.)
-        if self._i_mcmc == 0:
-            self._i_temp += 1
+        # Get beta, using next temperature
         beta = self._schedule[self._i_temp]
 
         # If ESS < threshold then resample to avoid degeneracies
-        if 1 / np.sum(self._weights**2) < self._ess_threshold:
+        if self._last_ess < self._ess_threshold:
             self._resample()
 
         # Update chains with log pdfs tempered with current beta
@@ -111,7 +116,7 @@ class SMC(pints.SMCSampler):
         """
         Returns ess from last run of SMC.
         """
-        return 1.0 / np.sum(self._weights**2)
+        return self._last_ess
 
     def name(self):
         """ See :meth:`SMCSampler.name()`. """
@@ -143,6 +148,9 @@ class SMC(pints.SMCSampler):
             priors = np.array([self._log_prior(x) for x in self._samples])
             self._weights = beta * (self._log_pdfs - priors)
             self._weights = np.exp(self._weights - logsumexp(self._weights))
+
+            # Update ess
+            self._last_ess = 1 / np.sum(self._weights**2)
 
             # Store copy of proposals to return
             to_return = self._proposals
@@ -185,10 +193,15 @@ class SMC(pints.SMCSampler):
                 self._schedule[self._i_temp])
         self._weights = np.exp(self._weights - logsumexp(self._weights))
 
+        # Store ess, before resampling
+        self._last_ess = 1 / np.sum(self._weights**2)
+
         # Conditional resampling step
         if self._resample_end_2_3:
-            self._resample(
-                update_weights=(self._i_temp != len(self._schedule) - 1))
+            self._resample()
+
+        # Update temperature step
+        self._i_temp += 1
 
         # Return copy of current samples
         return np.copy(self._samples)
@@ -196,8 +209,14 @@ class SMC(pints.SMCSampler):
     def set_ess_threshold(self, ess_threshold):
         """
         Sets the threshold effective sample size (ESS).
+        Use ``None`` to reset it to a default value.
         """
-        if ess_threshold < 0:
+        if ess_threshold is None:
+            self._ess_threshold = None
+            return
+
+        ess_threshold = int(ess_threshold)
+        if ess_threshold <= 0:
             raise ValueError('ESS must be greater than zero.')
         if ess_threshold > self._n_particles:
             raise ValueError(
@@ -223,12 +242,15 @@ class SMC(pints.SMCSampler):
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Temperature')
+        logger.add_float('ESS')
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
-        logger.log(1 - self._schedule[max(0, self._i_temp)])
+        # Called after tell() has updated i_temp!
+        logger.log(1 - self._schedule[self._i_temp - 1])
+        logger.log(self.ess())
 
-    def _resample(self, update_weights=True):
+    def _resample(self):
         """
         Resamples (and updates the weights and log_pdfs) according to the
         weights vector from the multinomial distribution.
@@ -247,12 +269,11 @@ class SMC(pints.SMCSampler):
         self._log_pdfs = new_log_pdfs
 
         #TODO: Can this go?
-        if np.count_nonzero(new_samples == 0) > 0:
+        if np.count_nonzero(new_samples == 0) > 0:  # pragma: no cover
             raise RuntimeError('Zero elements appearing in samples matrix.')
 
         # Update weights
-        if update_weights:
-            self._weights = np.repeat(1 / self._n_particles, self._n_particles)
+        self._weights = np.repeat(1 / self._n_particles, self._n_particles)
 
     def _temper(self, fx, f_prior, beta):
         """
