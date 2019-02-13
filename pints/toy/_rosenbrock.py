@@ -43,7 +43,8 @@ class RosenbrockError(pints.ErrorMeasure):
 class RosenbrockLogPDF(pints.LogPDF):
     """
     Unnormalised LogPDF based on the Rosenbrock function (see:
-    https://en.wikipedia.org/wiki/Rosenbrock_function):
+    https://en.wikipedia.org/wiki/Rosenbrock_function). This is given by the
+    inverse of the Rosenbrock:
 
     .. math::
         f(x,y) = -log[ (a - x)^2 + b(y - x^2)^2 ]
@@ -66,4 +67,3 @@ class RosenbrockLogPDF(pints.LogPDF):
     def __call__(self, x):
         f = self._f(x)
         return float('inf') if f == 0 else -np.log(f)
-
