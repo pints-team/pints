@@ -36,7 +36,7 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertTrue(np.isscalar(f(x)))
 
         # test default
-        f = pints.toy.NormalLogPDF()
+        f = pints.toy.GaussianLogPDF()
         self.assertEqual(f.n_parameters(), 2)
         self.assertTrue(np.isscalar(f([0, 0])))
         # test value (in case we change front end from Scipy later)
