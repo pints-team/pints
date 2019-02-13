@@ -168,7 +168,8 @@ class NormalLogPrior(pints.LogPrior):
 
 class BetaLogPrior(pints.LogPrior):
     """
-    Defines a beta (log) prior with given shape parameters ``a`` and ``b``.
+    Defines a beta (log) prior with given shape parameters ``a`` and ``b``,
+    with pdf f(x|a,b) = x^{a-1} * (1-x)^{b-1} / Beta(a,b).
 
     For example: ``p = BetaLogPrior(5, 1)`` for a shape parameters ``a=5`` and
     ``b=1``.
