@@ -63,7 +63,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return 2
 
-    def kl_score(self, samples):
+    def kl_divergence(self, samples):
         """
         Calculates a heuristic score for how well a given set of samples
         matches this LogPDF's underlying distribution, based on
@@ -135,3 +135,8 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         np.random.shuffle(x)
         return x
 
+    def distance(self, samples):
+        """
+        Calculates approximate mode-wise KL divergence (see `kl_divergence`)
+        """
+        return kl_divergence(samples)
