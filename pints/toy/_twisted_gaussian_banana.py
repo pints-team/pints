@@ -65,8 +65,8 @@ class TwistedGaussianLogPDF(pints.LogPDF):
 
     def kl_divergence(self, samples):
         """
-        Calculates the Kullback-Leibler divergence between a given list of
-        samples and the distribution underlying this LogPDF.
+        Calculates the approximate Kullback-Leibler divergence between a
+        given list of samples and the distribution underlying this LogPDF.
 
         The returned value is (near) zero for perfect sampling, and then
         increases as the error gets larger.
@@ -75,7 +75,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be 2x2.')
+            raise ValueError('Given samples list must be nx2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
