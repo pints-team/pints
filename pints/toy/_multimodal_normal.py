@@ -90,3 +90,25 @@ class MultimodalNormalLogPDF(pints.LogPDF):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._n_parameters
 
+    def sample(self, n_samples):
+        """
+        Generates independent samples from the underlying distribution.
+        """
+        n_samples = int(n_samples)
+        if n_samples < 1:
+            raise ValueError(
+                'Number of samples must be greater than or equal to 1.')
+
+        samples = np.zeros((n_samples, self._n_parameters))
+        num_modes = len(self._modes)
+        for i in range(n_samples):
+            rand_mode = np.random.choice(num_modes, 1)[0]
+            samples[i, :] = self._vars[rand_mode].rvs(1)
+        return samples
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        
