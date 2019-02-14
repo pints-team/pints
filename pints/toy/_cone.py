@@ -153,6 +153,6 @@ class ConeLogPDF(pints.LogPDF):
         Returns suggested boundaries for prior (typically used in performance
         testing)
         """
-        magnitude = 25 * (1.0 / self._beta)**(1.0 / (self._n_parameters - 1))
+        magnitude = 1000
         bounds = np.tile([-magnitude, magnitude], (self._n_parameters, 1))
         return np.transpose(bounds).tolist()
