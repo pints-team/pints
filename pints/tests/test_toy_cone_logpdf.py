@@ -71,12 +71,12 @@ class TestConeLogPDF(unittest.TestCase):
         # Test bounds
         f = pints.toy.ConeLogPDF()
         bounds = f.suggested_bounds()
-        self.assertTrue(np.array_equal([[-25.0, -25.0], [25.0, 25.0]],
+        self.assertTrue(np.array_equal([[-1000, -1000], [1000, 1000]],
                                        bounds))
         beta = 3
         dimensions = 4
         f = pints.toy.ConeLogPDF(beta=beta, dimensions=dimensions)
-        magnitude = 25 * (1.0 / beta)**(1.0 / (dimensions - 1))
+        magnitude = 1000
         bounds = np.tile([-magnitude, magnitude], (dimensions, 1))
         self.assertEqual(bounds[0][0], -magnitude)
         self.assertEqual(bounds[0][1], magnitude)
