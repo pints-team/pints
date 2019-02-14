@@ -63,6 +63,11 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 3, -1)
 
+        # Bad calls to function
+        f = pints.toy.ConeLogPDF(4, 0.3)
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
         # Test bounds
         f = pints.toy.ConeLogPDF()
         bounds = f.suggested_bounds()
@@ -74,8 +79,43 @@ class TestConeLogPDF(unittest.TestCase):
         magnitude = 25 * (1.0 / beta)**(1.0 / (dimensions - 1))
         bounds = np.tile([-magnitude, magnitude], (dimensions, 1))
         self.assertEqual(bounds[0][0], -magnitude)
-        self.assertEqual(bounds[1][0], magnitude)
-        self.assertTrue(np.array_equal(np.array(bounds).shape, [2, 4]))
+        self.assertEqual(bounds[0][1], magnitude)
+        self.assertTrue(np.array_equal(np.array(bounds).shape, [4, 2]))
+
+        # Test sensitivities
+        f = pints.toy.ConeLogPDF()
+        l, dl = f.evaluateS1([-1, 3])
+        self.assertEqual(len(dl), 2)
+        self.assertEqual(l, -np.sqrt(10))
+        self.assertAlmostEqual(dl[0], np.sqrt(1.0 / 10))
+        self.assertAlmostEqual(dl[1], -3 * np.sqrt(1.0 / 10))
+        f = pints.toy.ConeLogPDF(10, 0.3)
+        xx = [-1, 3, 2, 4, 5, 6, 7, 8, 9, 10]
+        l, dl = f.evaluateS1(xx)
+        self.assertEqual(len(dl), 10)
+        self.assertEqual(l, -np.sqrt(385)**0.3)
+        cons = -(385**(-1 + 0.15)) * 0.3
+        for i, elem in enumerate(dl):
+            self.assertAlmostEqual(elem, cons * xx[i])
+
+        # Check distance function
+        f = pints.toy.ConeLogPDF()
+        x = f.sample(10)
+        self.assertTrue(f.distance(x) > 0)
+        x = np.ones((100, 3))
+        self.assertRaises(ValueError, f.distance, x)
+        x = np.ones((100, 3, 2))
+        self.assertRaises(ValueError, f.distance, x)
+
+        f = pints.toy.ConeLogPDF(5)
+        x = f.sample(10)
+        self.assertTrue(f.distance(x) > 0)
+        x = np.ones((100, 4))
+        self.assertRaises(ValueError, f.distance, x)
+        x = np.ones((100, 6))
+        self.assertRaises(ValueError, f.distance, x)
+        x = np.ones((100, 5, 2))
+        self.assertRaises(ValueError, f.distance, x)
 
 
 if __name__ == '__main__':
