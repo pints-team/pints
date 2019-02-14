@@ -22,7 +22,7 @@ class TestRosenbrock(unittest.TestCase):
         self.assertEqual(f.n_parameters(), 2)
         fx = f([10, 10])
         self.assertTrue(np.isscalar(fx))
-        self.assertTrue(fx > 0)
+        self.assertEqual(fx, 810081)
 
         xopt = f.optimum()
         fopt = f(xopt)
@@ -30,48 +30,37 @@ class TestRosenbrock(unittest.TestCase):
 
         np.random.seed(1)
         for x in np.random.uniform(-5, 5, size=(10, 2)):
-            self.assertTrue(f(x) > fopt)
-
-        f = pints.toy.RosenbrockError(10, 10)
-        self.assertEqual(f.n_parameters(), 2)
-        fx = f([11, 11])
-        self.assertTrue(fx > 0)
-
-        xopt = f.optimum()
-        fopt = f(xopt)
-        self.assertEqual(fopt, 0)
-
-        np.random.seed(1)
-        for x in np.random.uniform(0, 20, size=(10, 2)):
             self.assertTrue(f(x) > fopt)
 
     def test_log_pdf(self):
         f = pints.toy.RosenbrockLogPDF()
         self.assertEqual(f.n_parameters(), 2)
-        fx = f([10, 10])
+        fx = f([0.5, 6.0])
         self.assertTrue(np.isscalar(fx))
-        self.assertTrue(fx < 0)
+        self.assertAlmostEqual(fx, np.log(1.0 / 3307.5))
 
         xopt = f.optimum()
         fopt = f(xopt)
-        self.assertEqual(fopt, float('inf'))
+        self.assertEqual(fopt, 0)
 
-        np.random.seed(1)
-        for x in np.random.uniform(-5, 5, size=(10, 2)):
-            self.assertTrue(f(x) < fopt)
+        # sensitivity test
+        l, dl = f.evaluateS1([3, 4])
 
-        f = pints.toy.RosenbrockLogPDF(10, 10)
-        self.assertEqual(f.n_parameters(), 2)
-        fx = f([11, 11])
-        self.assertTrue(fx < 0)
+        self.assertEqual(l, -np.log(2505))
+        self.assertEqual(len(dl), 2)
+        self.assertEqual(dl[0], float(-6004.0 / 2505.0))
+        self.assertEqual(dl[1], float(200.0 / 501.0))
 
-        xopt = f.optimum()
-        fopt = f(xopt)
-        self.assertEqual(fopt, float('inf'))
+        # suggested bounds and distance measure
+        bounds = f.suggested_bounds()
+        bounds = [[-2, 4], [-1, 12]]
+        bounds = np.transpose(bounds).tolist()
+        self.assertTrue(np.array_equal(bounds, f.suggested_bounds()))
 
-        np.random.seed(1)
-        for x in np.random.uniform(0, 20, size=(10, 2)):
-            self.assertTrue(f(x) < fopt)
+        x = np.ones((100, 3))
+        self.assertRaises(ValueError, f.distance, x)
+        x = np.ones((100, 3, 2))
+        self.assertRaises(ValueError, f.distance, x)
 
 
 if __name__ == '__main__':
