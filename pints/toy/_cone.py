@@ -19,7 +19,7 @@ class ConeLogPDF(pints.LogPDF):
 
     .. math::
 
-        f(x) \propto e^{-|x|^\\beta}
+        f(x) \\propto e^{-|x|^\\beta}
 
     where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm. The
     mean and variance that are returned relate to expectations on ``|x|`` not
@@ -45,6 +45,8 @@ class ConeLogPDF(pints.LogPDF):
         self._beta = beta
 
     def __call__(self, x):
+        if not len(x) == self._n_parameters:
+            raise ValueError('x must be of same dimensions as density')
         return -np.linalg.norm(x)**self._beta
 
     def n_parameters(self):
@@ -55,6 +57,16 @@ class ConeLogPDF(pints.LogPDF):
         Returns the exponent in the pdf
         """
         return self._beta
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        norm = np.linalg.norm(x)**2
+        norm = self._beta * norm**(-1.0 + self._beta / 2.0)
+        dL = np.array([-var * norm for var in x])
+        return L, dL
 
     def mean_normed(self):
         """
@@ -71,6 +83,27 @@ class ConeLogPDF(pints.LogPDF):
         g1 = scipy.special.gamma((2 + self._n_parameters) / self._beta)
         g2 = scipy.special.gamma(self._n_parameters / self._beta)
         return g1 / g2 - self.mean_normed()**2
+
+    def distance(self, samples):
+        """
+        Calculates a measure of normed distance of samples from exact mean and
+        covariance matrix assuming uniform prior with bounds given
+        by `suggested_bounds`
+        """
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be nx2.')
+        if samples.shape[1] != self.n_parameters():
+            raise ValueError(
+                'Given samples must have length ' +
+                str(self.n_parameters()))
+        # calculate normed distance
+        d = map(lambda x: np.linalg.norm(x), samples)
+        diff = (
+            np.abs(self.mean_normed() - np.mean(d)) +
+            np.abs(self.var_normed() - np.var(d))
+        )
+        return diff
 
     def CDF(self, x):
         """
