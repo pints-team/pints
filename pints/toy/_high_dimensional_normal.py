@@ -68,7 +68,7 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be 2x2.')
+            raise ValueError('Given samples list must be nx2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
