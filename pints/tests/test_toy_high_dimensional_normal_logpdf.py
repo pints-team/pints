@@ -48,15 +48,15 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         self.assertEqual(f.rho(), 0.5)
 
         # change rho
-        f = pints.toy.HighDimensionalNormalLogPDF(rho=-0.9)
+        f = pints.toy.HighDimensionalNormalLogPDF(rho=0.9)
         self.assertEqual(f.n_parameters(), 20)
-        self.assertEqual(f.rho(), -0.9)
+        self.assertEqual(f.rho(), 0.9)
 
         # change both
         f = pints.toy.HighDimensionalNormalLogPDF(dimension=15,
-                                                  rho=0.9)
+                                                  rho=0.8)
         self.assertEqual(f.n_parameters(), 15)
-        self.assertEqual(f.rho(), 0.9)
+        self.assertEqual(f.rho(), 0.8)
 
         # For 2d case check value versus Scipy (in case we change to
         # implementing via something other than Scipy)
@@ -79,21 +79,31 @@ class TestHighDimensionalNormalLogPDF(unittest.TestCase):
         bounds = f.suggested_bounds()
         self.assertTrue(bounds[0][0], np.sqrt(20) * 3.0)
 
-        # Test kl_divergence() errors - need to think of value-based test
+        # Test kl_divergence() errors
         n = 1000
-        d = self.n_parameters()
+        d = f.n_parameters()
         samples1 = f.sample(n)
         self.assertEqual(samples1.shape, (n, d))
         x = np.ones((n, d + 1))
         self.assertRaises(ValueError, f.kl_divergence, x)
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
+        self.assertTrue(f.kl_divergence(samples1) > 0)
+        self.assertEqual(f.kl_divergence(samples1), f.distance(samples1))
 
         # Test errors
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalNormalLogPDF, 0)
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalNormalLogPDF, 2, 2)
+        # in order for matrix to be positive definite there are bounds
+        # on the lower value of rho > - 1 / (dims - 1)
+        self.assertRaises(
+            ValueError, pints.toy.HighDimensionalNormalLogPDF, 4, -0.34
+        )
+        self.assertRaises(
+            ValueError, pints.toy.HighDimensionalNormalLogPDF, 11, -0.11
+        )
 
 
 if __name__ == '__main__':
