@@ -82,7 +82,7 @@ class RosenbrockLogPDF(pints.LogPDF):
         y1 = x[1]
         a = self._f._a
         b = self._f._b
-        dx = (-2 * (a - x1) - 4 * b * x1 * (y1 - x1**2)) / (
+        dx = -(-2 * (a - x1) - 4 * b * x1 * (y1 - x1**2)) / (
             1 + (a - x1)**2 + b * (y1 - x1**2)**2
         )
         dy = -2 * b * (y1 - x1**2) / (
@@ -99,6 +99,14 @@ class RosenbrockLogPDF(pints.LogPDF):
         covariance matrix assuming uniform prior with bounds given
         by `suggested_bounds`
         """
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be nx2.')
+        if samples.shape[1] != self._f.n_parameters():
+            raise ValueError(
+                'Given samples must have length ' +
+                str(self._f.n_parameters()))
+
         distance = (
             np.linalg.norm(self._true_mean - np.mean(samples, axis=0)) +
             np.linalg.norm(self._true_cov - np.cov(np.transpose(samples)))
