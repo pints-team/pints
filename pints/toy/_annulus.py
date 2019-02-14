@@ -55,8 +55,22 @@ class AnnulusLogPDF(pints.LogPDF):
         self._sigma = sigma
 
     def __call__(self, x):
+        if not len(x) == self._n_parameters:
+            raise ValueError('x must be of same dimensions as density')
         return scipy.stats.norm.logpdf(
             np.linalg.norm(x), self._r0, self._sigma)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        r = self._r0
+        norm = np.linalg.norm(x)
+        sigma = self._sigma
+        cons = -(norm - r) / (norm * sigma**2)
+        dL = np.array([var * cons for var in x])
+        return L, dL
 
     def r0(self):
         """
@@ -97,6 +111,27 @@ class AnnulusLogPDF(pints.LogPDF):
         m *= (np.sqrt(2) * s * g1 * h1 + 2 * r * g2 * h2)
         m /= (np.sqrt(2) * s * g3 * h3 + 2 * r * g4 * h4)
         return m
+
+    def distance(self, samples):
+        """
+        Calculates a measure of normed distance of samples from exact mean and
+        covariance matrix assuming uniform prior with bounds given
+        by `suggested_bounds`
+        """
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be nx2.')
+        if samples.shape[1] != self.n_parameters():
+            raise ValueError(
+                'Given samples must have length ' +
+                str(self.n_parameters()))
+        # calculate normed distance
+        d = map(lambda x: np.linalg.norm(x), samples)
+        dist = (
+            np.abs(self.mean_normed() - np.mean(d)) +
+            np.abs(self.var_normed() - np.var(d))
+        )
+        return dist
 
     def mean(self):
         """
@@ -152,7 +187,7 @@ class AnnulusLogPDF(pints.LogPDF):
         """
         # in higher dimensions reduce volume as otherwise gets too wide
         r0_magnitude = (self._r0 + self._sigma) * (
-            1.5**(1.0 / (self._n_parameters - 1.0))
+            5**(1.0 / (self._n_parameters - 1.0))
         )
         bounds = np.tile([-r0_magnitude, r0_magnitude],
                          (self._n_parameters, 1))
