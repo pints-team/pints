@@ -25,8 +25,13 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         if self._n_parameters < 1:
             raise ValueError('Dimension must be 1 or greater.')
         rho = float(rho)
-        if np.abs(rho) > 1.0:
-            raise ValueError('rho must be between -1 and 1.')
+        # bounds must satisfy:
+        # https://stats.stackexchange.com/questions/72790/
+        # bound-for-the-correlation-of-three-random-variables
+        if rho > 1.0:
+            raise ValueError('rho must be between -1 / (dims - 1) and 1.')
+        if rho < -float(1.0 / (self._n_parameters - 1)):
+            raise ValueError('rho must be between -1 / (dims - 1) and 1.')
         self._rho = rho
 
         # Construct mean array
@@ -58,8 +63,8 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
 
     def kl_divergence(self, samples):
         """
-        Calculates the Kullback-Leibler divergence between a given list of
-        samples and the distribution underlying this LogPDF.
+        Returns approximate Kullback-Leibler divergence between samples
+        and underlying distribution.
 
         The returned value is (near) zero for perfect sampling, and then
         increases as the error gets larger.
@@ -113,6 +118,13 @@ class HighDimensionalNormalLogPDF(pints.LogPDF):
         magnitude = 3 * np.sqrt(self.n_parameters())
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
         return np.transpose(bounds).tolist()
+
+    def distance(self, samples):
+        """
+        Returns approximate Kullback-Leibler divergence between samples
+        and underlying distribution
+        """
+        return self.kl_divergence(samples)
 
     def sample(self, n_samples):
         """
