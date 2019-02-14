@@ -111,4 +111,4 @@ class MultimodalNormalLogPDF(pints.LogPDF):
         """
         L = self.__call__(x)
 
-        
+        # See page 45 of http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
