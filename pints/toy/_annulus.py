@@ -126,7 +126,7 @@ class AnnulusLogPDF(pints.LogPDF):
                 'Given samples must have length ' +
                 str(self.n_parameters()))
         # calculate normed distance
-        d = map(lambda x: np.linalg.norm(x), samples)
+        d = list(map(lambda x: np.linalg.norm(x), samples))
         dist = (
             np.abs(self.mean_normed() - np.mean(d)) +
             np.abs(self.var_normed() - np.var(d))
