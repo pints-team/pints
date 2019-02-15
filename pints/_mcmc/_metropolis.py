@@ -16,7 +16,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
     Metropolis Random Walk MCMC, as described in [1].
 
-    Standard Metropolis using multivariate Normal distribution as proposal
+    Standard Metropolis using multivariate Gaussian distribution as proposal
     step, also known as Metropolis Random Walk MCMC.
 
     *Extends:* :class:`SingleChainMCMC`
@@ -34,7 +34,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Current point and proposed point
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdf = None
         self._proposed = None
 
     def acceptance_rate(self):
@@ -51,7 +51,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Propose new point
         if self._proposed is None:
-            # Note: Normal distribution is symmetric
+            # Note: Gaussian distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
             self._proposed = np.random.multivariate_normal(
@@ -62,6 +62,10 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
         # Return proposed point
         return self._proposed
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
 
     def _initialise(self):
         """
@@ -107,7 +111,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         if self._current is None:
             if not np.isfinite(fx):
                 raise ValueError(
-                    'Initial point for MCMC must have finite logpdf.')
+                    'Initial point for MCMC must have finite log_pdf.')
 
             # Accept
             self._current = self._proposed

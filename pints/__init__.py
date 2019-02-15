@@ -3,7 +3,7 @@
 # Provides access to all shared functionality (optimisation, mcmc, etc.).
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -23,7 +23,7 @@ import sys
 #
 # Version info: Remember to keep this in sync with setup.py!
 #
-__version_int__ = 0, 1, 1
+__version_int__ = 0, 2, 1
 __version__ = '.'.join([str(x) for x in __version_int__])
 if sys.version_info[0] < 3:
     del(x)  # Before Python3, list comprehension iterators leaked
@@ -80,24 +80,29 @@ from ._log_pdfs import (
 # Log-priors
 #
 from ._log_priors import (
-    ComposedLogPrior,
-    MultivariateNormalLogPrior,
-    NormalLogPrior,
-    UniformLogPrior,
-    StudentTLogPrior,
     CauchyLogPrior,
+    ComposedLogPrior,
+    GaussianLogPrior,
     HalfCauchyLogPrior,
+    MultivariateGaussianLogPrior,
+    NormalLogPrior,
+    StudentTLogPrior,
+    UniformLogPrior,
 )
 
 #
 # Log-likelihoods
 #
 from ._log_likelihoods import (
+    AR1LogLikelihood,
+    ARMA11LogLikelihood,
+    CauchyLogLikelihood,
+    GaussianKnownSigmaLogLikelihood,
+    GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
-    UnknownNoiseLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
-    CauchyLogLikelihood,
+    UnknownNoiseLogLikelihood,
 )
 
 #
@@ -137,13 +142,14 @@ from ._evaluation import (
 # Optimisation
 #
 from ._optimisers import (
+    curve_fit,
+    fmin,
+    Optimisation,
+    OptimisationController,
+    optimise,
     Optimiser,
     PopulationBasedOptimiser,
     TriangleWaveTransform,
-    Optimisation,
-    optimise,
-    fmin,
-    curve_fit,
 )
 from ._optimisers._cmaes import CMAES
 from ._optimisers._pso import PSO
@@ -165,11 +171,12 @@ from ._diagnostics import (
 #  MCMC
 #
 from ._mcmc import (
-    MCMCSampler,
-    SingleChainMCMC,
-    MultiChainMCMC,
-    MCMCSampling,
     mcmc_sample,
+    MCMCController,
+    MCMCSampler,
+    MCMCSampling,
+    MultiChainMCMC,
+    SingleChainMCMC,
 )
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC

@@ -3,7 +3,7 @@
 # Tests the basic methods of the DREAM MCMC method.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -60,7 +60,7 @@ class TestDreamMCMC(unittest.TestCase):
         )
 
         # Create a log likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(
@@ -92,6 +92,9 @@ class TestDreamMCMC(unittest.TestCase):
                 mcmc.set_initial_phase(False)
             if i >= 50:
                 chains.append(samples)
+            if np.all(samples == xs):
+                self.assertTrue(np.all(mcmc.current_log_pdfs() == fxs))
+
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))
@@ -229,7 +232,7 @@ class TestDreamMCMC(unittest.TestCase):
         Test logging includes name and custom fields.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DreamMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:

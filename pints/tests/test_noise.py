@@ -12,6 +12,12 @@ import numpy as np
 
 import pints.noise as pn
 
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestNoise(unittest.TestCase):
     """
@@ -38,7 +44,8 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(noise.shape, (10, 10))
 
         # Standard deviation cannot be 0 or less (handled by numpy)
-        self.assertRaises(ValueError, pn.independent, -1, clean.shape)
+        self.assertRaisesRegex(
+            ValueError, 'scale', pn.independent, -1, clean.shape)
 
         # Shape must be a nice shape (handled by numpy)
         self.assertRaises(TypeError, pn.independent, 1, 'hello')
@@ -54,18 +61,20 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(len(pn.ar1(0.1, 1, 100)), 100)
 
         # Magnitude of rho must be less than 1
-        pn.ar1(1, 5, 10)
-        pn.ar1(-1, 5, 10)
-        self.assertRaises(ValueError, pn.ar1, 1.1, 5, 10)
-        self.assertRaises(ValueError, pn.ar1, -1.1, 5, 10)
+        pn.ar1(0.9, 5, 10)
+        pn.ar1(-0.9, 5, 10)
+        self.assertRaisesRegex(ValueError, 'rho', pn.ar1, 1.1, 5, 10)
+        self.assertRaisesRegex(ValueError, 'rho', pn.ar1, -1.1, 5, 10)
 
         # Sigma cannot be negative
         pn.ar1(0.5, 5, 10)
-        self.assertRaises(ValueError, pn.ar1, 0.5, -5, 10)
+        self.assertRaisesRegex(
+            ValueError, 'Standard deviation', pn.ar1, 0.5, -5, 10)
 
         # N cannot be negative
-        pn.ar1(0.5, 5, 0)
-        self.assertRaises(ValueError, pn.ar1, 0.5, 5, -1)
+        pn.ar1(0.5, 5, 1)
+        self.assertRaisesRegex(
+            ValueError, 'Number of values', pn.ar1, 0.5, 5, 0)
 
         # Test noise properties
         self.assertTrue(np.abs(np.std(pn.ar1(0.99, 1, 1000)) -
@@ -76,7 +85,7 @@ class TestNoise(unittest.TestCase):
 
     def test_ar1_unity(self):
 
-        # Simle test
+        # Simple test
         clean = np.asarray([1.3, 2, 3, 10, 15, 8])
         noisy = clean + pn.ar1_unity(0.5, 5.0, len(clean))
         self.assertFalse(np.all(clean == noisy))
@@ -85,23 +94,59 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(len(pn.ar1_unity(0.1, 1, 100)), 100)
 
         # Magnitude of rho must be less than 1
-        pn.ar1(1, 5, 10)
-        pn.ar1(-1, 5, 10)
-        self.assertRaises(ValueError, pn.ar1_unity, 1.1, 5, 10)
-        self.assertRaises(ValueError, pn.ar1_unity, -1.1, 5, 10)
+        pn.ar1(0.9, 5, 10)
+        pn.ar1(-0.5, 5, 10)
+        self.assertRaisesRegex(ValueError, 'rho', pn.ar1_unity, 1.1, 5, 10)
+        self.assertRaisesRegex(ValueError, 'rho', pn.ar1_unity, -1.1, 5, 10)
 
         # Sigma cannot be negative
         pn.ar1_unity(0.5, 5, 10)
-        self.assertRaises(ValueError, pn.ar1_unity, 0.5, -5, 10)
+        self.assertRaisesRegex(
+            ValueError, 'Standard deviation', pn.ar1_unity, 0.5, -5, 10)
 
         # N cannot be negative
-        pn.ar1(0.5, 5, 0)
-        self.assertRaises(ValueError, pn.ar1_unity, 0.5, 5, -1)
+        pn.ar1(0.5, 5, 1)
+        self.assertRaisesRegex(
+            ValueError, 'Number of values', pn.ar1_unity, 0.5, 5, 0)
 
         # Test noise properties
         self.assertTrue(np.abs(np.std(pn.ar1_unity(0.9, 1, 10000)) -
                                np.std(pn.ar1_unity(0.50, 1, 10000))) < 2)
         self.assertTrue(np.abs(np.mean(pn.ar1_unity(-0.5, 1, 10000)) - 1) < 2)
+
+    def test_arma11(self):
+
+        # Test construction errors
+        self.assertRaisesRegex(
+            ValueError, 'rho', pn.arma11, 1.1, 0.5, 5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'theta', pn.arma11, 0.5, 1.1, 5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'Standard deviation', pn.arma11, 0.5, 0.5, -5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'Number of values', pn.arma11, 0.5, 0.5, 5, -100)
+
+        # test values
+        samples = pn.arma11(0.5, 0.5, 5, 10000)
+        self.assertTrue(np.mean(samples) < 1)
+        self.assertTrue(np.abs(np.std(samples) - 5) < 1)
+
+    def test_arma11_unity(self):
+
+        # Test construction errors
+        self.assertRaisesRegex(
+            ValueError, 'rho', pn.arma11_unity, 1.1, 0.5, 5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'theta', pn.arma11_unity, 0.5, 1.1, 5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'Standard dev', pn.arma11_unity, 0.5, 0.5, -5, 100)
+        self.assertRaisesRegex(
+            ValueError, 'Number of values', pn.arma11_unity, 0.5, 0.5, 5, -100)
+
+        # test values
+        samples = pn.arma11_unity(0.5, 0.5, 5, 10000)
+        self.assertTrue(np.abs(np.mean(samples) - 1) < 1)
+        self.assertTrue(np.abs(np.std(samples) - 5) < 1)
 
 
 if __name__ == '__main__':

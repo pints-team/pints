@@ -61,7 +61,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Propose new point
         if self._proposed is None:
 
-            # Note: Normal distribution is symmetric
+            # Note: Gaussian distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
             self._proposed = np.random.multivariate_normal(
@@ -72,6 +72,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Return proposed point
         return self._proposed
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
 
     def _initialise(self):
         """

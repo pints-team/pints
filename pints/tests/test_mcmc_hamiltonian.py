@@ -26,7 +26,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create log pdf
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
 
         # Create mcmc
         x0 = np.array([2, 2])
@@ -48,6 +48,9 @@ class TestHamiltonianMCMC(unittest.TestCase):
             sample = mcmc.tell((fx, gr))
             if i >= 50 * ifrog and sample is not None:
                 chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
@@ -56,10 +59,11 @@ class TestHamiltonianMCMC(unittest.TestCase):
         """
         Test logging includes name and custom fields.
         """
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
-        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.HamiltonianMCMC)
+        mcmc = pints.MCMCController(
+            log_pdf, 2, x0, method=pints.HamiltonianMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
@@ -70,7 +74,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
 
     def test_flow(self):
 
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point

@@ -101,6 +101,10 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
+    def current_log_pdfs(self):
+        """ See :meth:`MultiChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdfs
+
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -129,8 +133,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
-        # Ensure proposed_log_pdf is numpy array
-        proposed_log_pdf = np.array(fx)
+        # Ensure proposed_log_pdf is a numpy array
+        proposed_log_pdf = np.array(fx, copy=True)
 
         # First points?
         if self._current is None:
@@ -142,6 +146,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             # NOTE: FIRST STEP PROPOSED IS MULTIPLE POINTS
             self._current = self._proposed
             self._current_log_pdfs = proposed_log_pdf
+            self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
             self._proposed = None
@@ -164,6 +169,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             next_log_pdfs[self._k] = proposed_log_pdf
             self._current = next
             self._current_log_pdfs = next_log_pdfs
+            self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None

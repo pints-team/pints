@@ -2,7 +2,7 @@
 # Annulus toy log pdf.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -22,9 +22,9 @@ class AnnulusLogPDF(pints.LogPDF):
 
     where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm.
 
-    This distribution is roughly a one-dimensional normal distribution centred
-    on ``r0``, that is smeared over the surface of a hypersphere of the same
-    radius. In two dimensions, the density looks like a circular annulus.
+    This distribution is roughly a one-dimensional Gaussian distribution
+    centred on ``r0``, that is smeared over the surface of a hypersphere of the
+    same radius. In two dimensions, the density looks like a circular annulus.
 
     Arguments:
 
