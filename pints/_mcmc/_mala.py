@@ -259,7 +259,7 @@ class MALAMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Calculate alpha
-        proposed_gradient = -log_gradient
+        proposed_gradient = log_gradient
         self._backward_mu = self._proposed + (
             0.5 * self._epsilon**2 * proposed_gradient)
         self._backward_q = scipy.stats.multivariate_normal.logpdf(
