@@ -23,7 +23,7 @@ class MALAMCMC(pints.SingleChainMCMC):
     distribution that equals the target density (in Bayesian problems, the
     posterior distribution). The stochastic differential equation (SDE) given
     below ensures that if :math:`u(\\theta, 0) = \\pi(\\theta)`,
-    then ``\\partial u / \\partial t = 0``,
+    then :math:`\\partial u / \\partial t = 0`,
 
     .. math::
         \\mathrm{d}\\Theta_t = 1/2 \\nabla \\; \\text{log} \\pi(\\Theta_t)
@@ -52,7 +52,7 @@ class MALAMCMC(pints.SingleChainMCMC):
             q(\\theta^*|\\theta_t)}
 
     where :math:`q(\\theta_2|\\theta_1) =
-        \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon I)` and
+    \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon I)` and
     :math:`\\theta^*` is accepted with probability
     :math:`\\text{min}(1, \\alpha)`.
 
@@ -65,7 +65,7 @@ class MALAMCMC(pints.SingleChainMCMC):
             \\text{log} \\pi(\\theta_t) + \\epsilon' z
 
     leading to :math:`q(\\theta_2|\\theta_1) =
-        \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon')`.
+    \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon')`.
 
     where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial value
     of `sigma0`.
