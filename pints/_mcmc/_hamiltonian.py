@@ -197,7 +197,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Hamiltonian MCMC'
+        return 'Hamiltonian Monte Carlo'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
@@ -247,13 +247,14 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # Unpack reply
         energy, gradient = reply
 
+        # Check reply, copy gradient
+        energy = float(energy)
+        gradient = pints.vector(gradient)
+        assert(gradient.shape == (self._n_parameters, ))
+
         # Energy = -log_pdf, so flip both signs!
         energy = -energy
         gradient = -gradient
-
-        # Quick check of given formats
-        energy = float(energy)
-        assert(gradient.shape == (self._n_parameters, ))
 
         # Very first call
         if self._current is None:
