@@ -26,7 +26,7 @@ class TestMALAMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create log pdf
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
 
         # Create mcmc
         x0 = np.array([2, 2])
@@ -60,7 +60,7 @@ class TestMALAMCMC(unittest.TestCase):
         """
         Test logging includes name and custom fields.
         """
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
         mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.MALAMCMC)
@@ -75,7 +75,7 @@ class TestMALAMCMC(unittest.TestCase):
 
     def test_flow(self):
 
-        log_pdf = pints.toy.NormalLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
