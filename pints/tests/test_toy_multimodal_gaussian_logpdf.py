@@ -166,6 +166,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.kl_divergence, x)
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
+        self.assertRaises(ValueError, f.sample, 0)
 
 
 if __name__ == '__main__':

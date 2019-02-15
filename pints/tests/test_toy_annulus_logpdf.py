@@ -48,6 +48,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         x = f.sample(10)
         self.assertEqual(len(x), 10)
         f = pints.toy.AnnulusLogPDF()
+        self.assertRaises(ValueError, f.__call__, [1])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3])
         self.assertTrue(np.max(f.sample(1000)) < 100)
         self.assertRaises(ValueError, f.sample, 0)
         f = pints.toy.AnnulusLogPDF()
