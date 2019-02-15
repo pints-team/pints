@@ -198,14 +198,6 @@ class TestOptimisationController(unittest.TestCase):
         self.assertTrue(type(opt.parallel()) == int)
         self.assertEqual(opt.parallel(), 1)
 
-    def test_deprecated_alias(self):
-        # Tests Optimisation()
-        r = pints.toy.RosenbrockError(1, 100)
-        x = np.array([1.1, 1.1])
-        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
-        self.assertIsInstance(opt, pints.OptimisationController)
-
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

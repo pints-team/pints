@@ -80,7 +80,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
 
         # Test sensitivities
         # default
-        log_pdf = pints.toy.MultimodalNormalLogPDF()
+        log_pdf = pints.toy.MultimodalGaussianLogPDF()
         l, dl = log_pdf.evaluateS1([1, 1])
         self.assertEqual(len(dl), 2)
         self.assertAlmostEqual(l, -2.8378770664093453)
@@ -94,7 +94,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
                        [[5**2, 0.3 * 5 * 6, 0.2 * 5 * 7],
                         [0.3 * 5 * 6, 6**2, -0.3 * 6 * 7],
                         [0.2 * 5 * 7, -0.3 * 6 * 7, 7**2]]]
-        log_pdf = pints.toy.MultimodalNormalLogPDF(
+        log_pdf = pints.toy.MultimodalGaussianLogPDF(
             modes=[[1, 2, 3], [3, 4, 5]],
             covariances=covariances)
         l, dl = log_pdf.evaluateS1([2, 4, 5])
@@ -105,7 +105,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(dl[2], -0.39317158556789844)
 
         # Test bounds
-        f = pints.toy.MultimodalNormalLogPDF()
+        f = pints.toy.MultimodalGaussianLogPDF()
         bounds = f.suggested_bounds()
         lower = -10
         upper = 20
@@ -113,7 +113,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         bounds1 = np.transpose(bounds1).tolist()
         self.assertTrue(np.array_equal(bounds, bounds1))
 
-        f = pints.toy.MultimodalNormalLogPDF(
+        f = pints.toy.MultimodalGaussianLogPDF(
             modes=[[1, 2, 3], [3, 4, 5]],
             covariances=covariances)
         bounds = f.suggested_bounds()
@@ -124,7 +124,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(bounds, bounds1))
 
         # Test KL divergence
-        f = pints.toy.MultimodalNormalLogPDF()
+        f = pints.toy.MultimodalGaussianLogPDF()
         n = 1000
         d = f.n_parameters()
         samples1 = f.sample(n)
@@ -138,7 +138,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
 
-        f = pints.toy.MultimodalNormalLogPDF(
+        f = pints.toy.MultimodalGaussianLogPDF(
             modes=[[1, 2, 3], [3, 4, 5]],
             covariances=covariances)
         n = 1000
@@ -154,7 +154,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
 
-        f = pints.toy.MultimodalNormalLogPDF(modes=[[1], [2], [3]])
+        f = pints.toy.MultimodalGaussianLogPDF(modes=[[1], [2], [3]])
         n = 1000
         d = f.n_parameters()
         samples1 = f.sample(n)
