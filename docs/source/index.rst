@@ -80,13 +80,15 @@ Sampling
    - ABC-MCMC
    - ABC-SMC
 
-#. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPosterior`)
+#. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 
-   - MALA
-   - :class:`HamiltonianMCMC`
+   - :class:`Metropolis-Adjusted Langevin Algorithm (MALA) <MALAMCMC>`, works
+     on any :class:`LogPDF` that provides 1st order sensitivities.
+   - :class:`Hamiltonian Monte Carlo<HamiltonianMCMC>`, works on any
+     :class:`LogPDF` that provides 1st order sensitivities.
    - NUTS
 
-#. Differential geometric methods (Need Hessian of :class:`LogPosterior`)
+#. Differential geometric methods (Need Hessian of :class:`LogPDF`)
 
    - smMALA
    - RMHMC
