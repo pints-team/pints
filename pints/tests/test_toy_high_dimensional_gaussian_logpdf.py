@@ -90,6 +90,7 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.kl_divergence, x)
         self.assertTrue(f.kl_divergence(samples1) > 0)
         self.assertEqual(f.kl_divergence(samples1), f.distance(samples1))
+        self.assertRaises(ValueError, f.sample, 0)
 
         # Test errors
         self.assertRaises(
