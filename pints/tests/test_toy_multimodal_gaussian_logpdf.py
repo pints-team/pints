@@ -168,6 +168,15 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.kl_divergence, x)
         self.assertRaises(ValueError, f.sample, 0)
 
+        # test KL divergence for when a mode is missed
+        f = pints.toy.MultimodalGaussianLogPDF()
+        samples = f.sample(n)
+        covs = [[[0.1, 0], [0, 0.1]],
+                [[0.1, 0], [0, 0.1]]]
+        g = pints.toy.MultimodalGaussianLogPDF([[0, 0], [0, 0]], covs)
+        samples1 = g.sample(n)
+        self.assertTrue(f.distance(samples1) > f.distance(samples))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
