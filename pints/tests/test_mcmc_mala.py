@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the Hamiltonian MCMC routine.
+# Tests the basic methods of the MALA MCMC routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -20,7 +20,7 @@ debug = False
 
 class TestMALAMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the Hamiltonian MCMC routine.
+    Tests the basic methods of the MALA MCMC routine.
     """
 
     def test_method(self):

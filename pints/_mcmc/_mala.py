@@ -139,10 +139,10 @@ class MALAMCMC(pints.SingleChainMCMC):
             a = np.atleast_1d(epsilon)
             if not len(a) == self._n_parameters:
                 raise ValueError('Dimensions of epsilon must be same as ' +
-                                 'number of parameters')
+                                 'number of parameters.')
             for element in epsilon:
                 if element <= 0:
-                    raise ValueError('Elements of epsilon must exceed 0')
+                    raise ValueError('Elements of epsilon must exceed 0.')
             self._epsilon = np.array(epsilon)
 
     def epsilon(self):
