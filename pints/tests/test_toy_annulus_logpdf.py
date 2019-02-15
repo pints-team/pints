@@ -86,7 +86,7 @@ class TestAnnulusLogPDF(unittest.TestCase):
         # test distance function
         log_pdf = pints.toy.AnnulusLogPDF()
         samples = log_pdf.sample(100)
-        d = map(lambda x: np.linalg.norm(x), samples)
+        d = list(map(lambda x: np.linalg.norm(x), samples))
         dist = (np.abs(np.var(d) - log_pdf.var_normed()) +
                 np.abs(np.mean(d) - log_pdf.mean_normed()))
         self.assertEqual(log_pdf.distance(samples), dist)
