@@ -1,4 +1,5 @@
 # Slow notebooks
+sampling-autoregressive-moving-average-errors.ipynb
 sampling-ellipsoidal-nested-rejection-sampling.ipynb
 sampling-hamiltonian-mcmc.ipynb
 toy-model-beeler-reuter-ap.ipynb

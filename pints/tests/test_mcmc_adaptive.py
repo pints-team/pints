@@ -3,7 +3,7 @@
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -50,7 +50,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         )
 
         # Create a log likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(cls.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(
@@ -78,6 +78,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
             if i >= 50:
                 chain.append(sample)
             rate.append(mcmc.acceptance_rate())
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
         chain = np.array(chain)
         rate = np.array(rate)
         self.assertEqual(chain.shape[0], 50)
@@ -149,7 +152,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         Test logging includes name and acceptance rate.
         """
         x = [self.real_parameters] * 3
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:

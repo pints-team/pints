@@ -44,7 +44,7 @@ class TestSNES(unittest.TestCase):
     def test_unbounded(self):
         """ Runs an optimisation without boundaries. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -55,7 +55,7 @@ class TestSNES(unittest.TestCase):
 
         # Rectangular boundaries
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -64,7 +64,7 @@ class TestSNES(unittest.TestCase):
         # Start near edge, to increase chance of out-of-bounds occurring.
         b = CircularBoundaries([0, 0], 1)
         x = [0.99, 0]
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -72,7 +72,7 @@ class TestSNES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         """ Runs an optimisation without boundaries and sigma. """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
@@ -82,7 +82,7 @@ class TestSNES(unittest.TestCase):
         Tests the hyper parameter interface for this optimiser.
         """
         r, x, s, b = self.problem()
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 1)
         n = m.population_size() + 2

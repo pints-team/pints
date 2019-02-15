@@ -13,5 +13,9 @@ This can then be added to simulation output to create "realistic" experimental
 
 .. autofunction:: ar1_unity
 
+.. autofunction:: arma11
+
+.. autofunction:: arma11_unity
+
 .. autofunction:: independent
 
