@@ -87,6 +87,28 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         bounds1 = np.transpose(bounds1).tolist()
         self.assertTrue(np.array_equal(bounds, bounds1))
 
+    def test_values_sensitivity(self):
+        """ Tests values of log pdf and sensitivities """
+        log_pdf = pints.toy.TwistedGaussianLogPDF(dimension=2)
+        self.assertEqual(log_pdf([-20, -30]), -4.1604621594033908)
+        x = [-1, 2]
+        l, dl = log_pdf.evaluateS1(x)
+        self.assertEqual(l, log_pdf(x))
+        self.assertAlmostEqual(l, -35.3455121594)
+        self.assertEqual(dl[0], -1.5799)
+        self.assertEqual(dl[1], 7.9)
+
+        # higher dimensions
+        log_pdf = pints.toy.TwistedGaussianLogPDF(dimension=4, b=0.3, V=200)
+        x = [-1, 2, -3, 12]
+        l, dl = log_pdf.evaluateS1(x)
+        self.assertAlmostEqual(l, -1747.1233642258126)
+        self.assertEqual(l, log_pdf(x))
+        self.assertAlmostEqual(dl[0], -34.619949999999996)
+        self.assertAlmostEqual(dl[1], 57.699999999999996)
+        self.assertEqual(dl[2], 3)
+        self.assertEqual(dl[3], -12)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

@@ -46,6 +46,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
             [-d, -d],
             [d, -d],
         ]
+        self._r = r
 
         # Set covariances
         self._covs = [np.eye(2) * sigma] * 4
@@ -55,9 +56,29 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
             scipy.stats.multivariate_normal(mode, self._covs[i])
             for i, mode in enumerate(self._modes)]
 
+        self._first_evaluate = True
+
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
         return -float('inf') if f == 0 else np.log(f)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        # See page 45 of
+        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
+        if self._first_evaluate:
+            self._sigma_invs = [np.linalg.inv(self._covs[i])
+                                for i, mode in enumerate(self._modes)]
+            self._first_evaluate = False
+        denom = np.exp(L)
+        numer = np.sum([np.matmul(
+            self._sigma_invs[i], x - np.array(self._modes[i])
+        ) * var.pdf(x)
+            for i, var in enumerate(self._vars)], axis=0)
+        return L, -numer / denom
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
@@ -139,4 +160,13 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         """
         Calculates approximate mode-wise KL divergence (see `kl_divergence`)
         """
-        return kl_divergence(samples)
+        return self.kl_divergence(samples)
+
+    def suggested_bounds(self):
+        """
+        Returns suggested boundaries for prior (typically used in performance
+        testing)
+        """
+        magnitude = self._r * self._sigma * 2
+        bounds = np.tile([-magnitude, magnitude], (2, 1))
+        return np.transpose(bounds).tolist()

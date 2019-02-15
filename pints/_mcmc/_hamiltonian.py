@@ -305,8 +305,20 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             # Hamiltonian difference is above a threshold
             div = proposed_U + proposed_K - (self._current_energy + current_K)
             if np.abs(div) > self._hamiltonian_threshold:  # pragma: no cover
-                self._divergent = np.append(self._divergent, self._iterations)
-                accept = 1
+                self._divergent = np.append(
+                    self._divergent, self._mcmc_iteration)
+                self._momentum = self._position = self._gradient = None
+                self._frog_iteration = 0
+
+                # Update MCMC iteration count
+                self._mcmc_iteration += 1
+
+                # Update acceptance rate (only used for output!)
+                self._mcmc_acceptance = (
+                    (self._mcmc_iteration * self._mcmc_acceptance + accept) /
+                    (self._mcmc_iteration + 1))
+                self._current.setflags(write=False)
+                return self._current
 
             # Accept/reject
             else:
