@@ -18,12 +18,14 @@ class TwistedGaussianLogPDF(pints.LogPDF):
     Twisted multivariate normal 'banana' with un-normalised density [1]:
 
     .. math::
-        p(x_1, x_2, x_3, ..., x_n) \propto \pi(\phi(x_1, x_2, x_2, ..., x_n))
+        p(x_1, x_2, x_3, ..., x_n) \\propto
+            \\pi(\\phi(x_1, x_2, x_2, ..., x_n))
 
-    where pi is the multivariate normal density and
+    where pi is the multivariate normal density with covariance matrix
+    :math:`\\Sigma=\\text{diag}(100, 1, 1, ..., 1)` and
 
     .. math::
-        \phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
+        \\phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
 
     Arguments:
 
@@ -54,14 +56,34 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         self._V = float(V)
 
         # Create phi
+        self._sigma = np.eye(self._n_parameters)
+        self._sigma[0, 0] = 100
         self._phi = scipy.stats.multivariate_normal(
-            np.zeros(self._n_parameters), np.eye(self._n_parameters))
+            np.zeros(self._n_parameters), self._sigma)
 
     def __call__(self, x):
-        y = np.array(x, copy=True)
-        y[0] /= np.sqrt(self._V)
+        y = np.array(x, copy=True, dtype='float')
+        y[0] = float(y[0]) / np.sqrt(self._V)
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        V = self._V
+        b = self._b
+        dx_first = 0.5 * (
+            -x[0] / (50 * V) - 4 * b * x[0] * (b * (x[0]**2 - V) + x[1])
+        )
+        dy_first = -b * (x[0]**2 - V) - x[1]
+        if len(x) > 2:
+            dL = [[dx_first, dy_first], (-np.array(x[2:])).tolist()]
+            dL = [item for sublist in dL for item in sublist]
+        else:
+            dL = [dx_first, dy_first]
+        return L, np.array(dL)
 
     def kl_divergence(self, samples):
         """
@@ -81,7 +103,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
                 'Given samples must have length ' + str(self._n_parameters))
 
         # Untwist the given samples, making them Gaussian again
-        y = np.array(samples, copy=True)
+        y = np.array(samples, copy=True, dtype='float')
         y[:, 0] /= np.sqrt(self._V)
         y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
 
@@ -104,9 +126,22 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         #
         m0 = np.mean(y, axis=0)
         s0 = np.cov(y.T)
+        s1 = self._sigma
+        m1 = np.zeros(self.n_parameters())
+        s1_inv = np.linalg.inv(s1)
         return 0.5 * (
-            np.trace(s0) + m0.dot(m0)
-            - np.log(np.linalg.det(s0)) - self._n_parameters)
+            np.trace(np.matmul(s1_inv, s0)) +
+            np.matmul(np.matmul(m1 - m0, s1_inv), m1 - m0) -
+            np.log(np.linalg.det(s0)) +
+            np.log(np.linalg.det(s1)) -
+            self._n_parameters)
+
+    def distance(self, samples):
+        """
+        Returns approximate Kullback-Leibler divergence of samples from
+        underyling distribution (see `kl_divergence`)
+        """
+        return self.kl_divergence(samples)
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """

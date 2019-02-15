@@ -31,7 +31,7 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
 
     def test_sampling_and_divergence(self):
         """
-        Tests :meth:`SimpleEggBoxLogPDF.kl_score()`.
+        Tests :meth:`SimpleEggBoxLogPDF.kl_divergence()`.
         """
         # Ensure consistent output
         np.random.seed(1)
@@ -46,11 +46,11 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         samples2 = log_pdf2.sample(n)
 
         # Test divergence scores
-        s11 = log_pdf1.kl_score(samples1)
-        s12 = log_pdf1.kl_score(samples2)
+        s11 = log_pdf1.kl_divergence(samples1)
+        s12 = log_pdf1.kl_divergence(samples2)
         self.assertLess(s11, s12)
-        s21 = log_pdf2.kl_score(samples1)
-        s22 = log_pdf2.kl_score(samples2)
+        s21 = log_pdf2.kl_divergence(samples1)
+        s22 = log_pdf2.kl_divergence(samples2)
         self.assertLess(s22, s21)
 
         # Test penalising if a mode is missing
@@ -58,7 +58,7 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
             samples2[samples2[:, 0] > 0],   # Top half
             samples2[samples2[:, 1] < 0],   # Left half
         ))
-        s23 = log_pdf2.kl_score(samples3)
+        s23 = log_pdf2.kl_divergence(samples3)
         self.assertLess(s22, s23)
         self.assertGreater(s23 / s22, 100)
 
@@ -68,9 +68,39 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         # Test shape testing
         self.assertEqual(samples1.shape, (n, 2))
         x = np.ones((n, 3))
-        self.assertRaises(ValueError, log_pdf1.kl_score, x)
+        self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
         x = np.ones((n, 2, 2))
-        self.assertRaises(ValueError, log_pdf1.kl_score, x)
+        self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
+
+    def test_sensitivity_bounds_distance(self):
+        """
+        Tests :meth:`SimpleEggBoxLogPDF.evaluateS1()`,
+        :meth:`SimpleEggBoxLogPDF.suggested_bounds()` and
+        :meth:`SimpleEggBoxLogPDF.distance()`
+        """
+        f = pints.toy.SimpleEggBoxLogPDF()
+        l, dl = f.evaluateS1([-5, 2])
+        self.assertEqual(l, f([-5, 2]))
+        self.assertAlmostEqual(l, -13.781024134434123)
+        self.assertAlmostEqual(dl[0], -1.5)
+        self.assertAlmostEqual(dl[1], 2.9999991)
+        self.assertTrue(np.array_equal(f.suggested_bounds(),
+                                       [[-16.0, -16.0], [16.0, 16.0]]))
+        samples = f.sample(100)
+        self.assertTrue(f.kl_divergence(samples) > 0)
+        self.assertEqual(f.kl_divergence(samples), f.distance(samples))
+
+        f = pints.toy.SimpleEggBoxLogPDF(3, 5)
+        l, dl = f.evaluateS1([-1, -7])
+        self.assertEqual(l, f([-1, -7]))
+        self.assertAlmostEqual(l, -46.269777289511559)
+        self.assertEqual(dl[0], -4.6662126879796366)
+        self.assertAlmostEqual(dl[1], -2.6666666666666639)
+        self.assertTrue(np.array_equal(f.suggested_bounds(),
+                                       [[-30.0, -30.0], [30.0, 30.0]]))
+        samples = f.sample(100)
+        self.assertTrue(f.kl_divergence(samples) > 0)
+        self.assertEqual(f.kl_divergence(samples), f.distance(samples))
 
 
 if __name__ == '__main__':
@@ -79,4 +109,3 @@ if __name__ == '__main__':
     if '-v' in sys.argv:
         debug = True
     unittest.main()
-
