@@ -80,13 +80,13 @@ class TestXNES(unittest.TestCase):
                 'Running in sequential mode.\n'
                 'Population size: 6\n'
                 'Iter. Eval. Best      Time m:s\n'
-                '0     6     -1.837877   0:00.0\n'
-                '1     12    -1.837877   0:00.0\n'
-                '2     18    -1.837877   0:00.0\n'
-                '3     24    -1.837877   0:00.0\n'
-                '6     42    -1.837877   0:00.0\n'
-                '9     60    -1.837877   0:00.0\n'
-                '10    60    -1.837877   0:00.0\n'
+                '0     6     -4.140462   0:00.0\n'
+                '1     12    -4.140462   0:00.0\n'
+                '2     18    -4.140462   0:00.0\n'
+                '3     24    -4.140462   0:00.0\n'
+                '6     42    -4.140462   0:00.0\n'
+                '9     60    -4.140462   0:00.0\n'
+                '10    60    -4.140462   0:00.0\n'
                 'Halting: Maximum number of iterations (10) reached.\n'
             )
             self.assertEqual(log_should_be, c.text())
@@ -125,8 +125,8 @@ class TestXNES(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
-        opt.set_threshold(2)
-        self.assertEqual(opt.threshold(), 2)
+        opt.set_threshold(5)
+        self.assertEqual(opt.threshold(), 5)
         with StreamCapture() as c:
             opt.run()
             self.assertIn(
@@ -148,7 +148,7 @@ class TestXNES(unittest.TestCase):
         """
         Tests the set_population_size method for this optimiser.
         """
-        r = pints.toy.RosenbrockError(1, 100)
+        r = pints.toy.RosenbrockError()
         x = np.array([1.01, 1.01])
         opt = pints.Optimisation(r, x, method=method)
         m = opt.optimiser()
@@ -174,7 +174,7 @@ class TestXNES(unittest.TestCase):
     def test_parallel(self):
         """ Test parallelised running. """
 
-        r = pints.toy.RosenbrockError(1, 100)
+        r = pints.toy.RosenbrockError()
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
