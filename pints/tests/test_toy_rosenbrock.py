@@ -62,6 +62,24 @@ class TestRosenbrock(unittest.TestCase):
         x = np.ones((100, 3, 2))
         self.assertRaises(ValueError, f.distance, x)
 
+        # there is no simple way to generate samples from Rosenbrock
+        nsamples = 10000
+        g = pints.toy.GaussianLogPDF([1, 1], [1, 1])
+        samples = g.sample(nsamples)
+        self.assertTrue(f.distance(samples) > 0)
+        x = np.ones((100, 3))
+        self.assertRaises(ValueError, f.distance, x)
+        x = np.ones((100, 2, 2))
+        self.assertRaises(ValueError, f.distance, x)
+
+        # generate samples with mean and variance closer to true values
+        g1 = pints.toy.GaussianLogPDF([0.86935785, 2.59978086],
+                                      [[1.80537968, 2.70257559],
+                                       [2.70257559, 8.52658308]])
+        samples1 = g1.sample(nsamples)
+        self.assertTrue(f.distance(samples1) > 0)
+        self.assertTrue(f.distance(samples) > f.distance(samples1))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
