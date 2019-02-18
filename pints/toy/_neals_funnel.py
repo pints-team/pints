@@ -24,7 +24,8 @@ class NealsFunnelLogPDF(pints.LogPDF):
             \\left[\\prod_{i=1}^d\\mathcal{N}(x_i|0,e^{\\nu/2})\\right] \\times
             \\mathcal{N}(\\nu|0,3)
 
-    where ``x`` is a d-dimensional real.
+    where ``x`` is a d-dimensional real. This distribution was introduced in
+    [1].
 
     Arguments:
 
@@ -33,6 +34,8 @@ class NealsFunnelLogPDF(pints.LogPDF):
         exceed 1.
 
     *Extends:* :class:`pints.LogPDF`.
+
+    [1] R. Neal, Annals of statistics , 705 (2003)
     """
     def __init__(self, dimensions=10):
         if dimensions < 2:
@@ -48,6 +51,15 @@ class NealsFunnelLogPDF(pints.LogPDF):
         x_log_pdf = [scipy.stats.norm.logpdf(y, 0, np.exp(nu / 2))
                      for y in x_temp]
         return np.sum(x_log_pdf) + scipy.stats.norm.logpdf(nu, 0, 3)
+
+    def marginal_log_pdf(self, x, nu):
+        """
+        Yields the marginal density :math:`\\text{log } p(x_i,\\nu)`
+        """
+        return (
+            scipy.stats.norm.logpdf(x, 0, np.exp(nu / 2)) +
+            scipy.stats.norm.logpdf(nu, 0, 3)
+        )
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
