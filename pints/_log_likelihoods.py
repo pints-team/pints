@@ -120,40 +120,56 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
 class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
-    at each time point where it is assumed that :math:`sigma\\sim U(0,upper)`
-    has been integrated out of the joint posterior.
+    at each time point where it is assumed that the dependence on
+    :math:`sigma\\sim U(0,b)` has been integrated out of the joint posterior.
 
-    For a noise characterised by ``sigma``, the log-likelihood is of the form:
+    The likelihood is given in terms of the sum of squared errors:
 
     .. math::
-        SSE =
-              -\\sum_{i=1}^N\log(1 +
-            \\frac{x_i - f(\\theta)}{2\\sigma}^2)
+        SSE = \\sum_{i=1}^n (f_i(\\theta) - y_i)^2
+
+    and is given up to a normalisation constant by:
+
+    .. math::
+        \\text{log } L = -(1 + n/2) \\text{log } 2 -n \\text{log } b -
+            (n / 2) \\text{log }\\pi
+            + \\text{log expintegralen}(3/2 - n/2, SSE / (2 b^2))
+
+    where :math:`\\text{expintegralen(a,b)}` is the exponential integral
+    of integer `a`.
 
     Arguments:
 
     ``problem``
-        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem one parameter is added ``sigma``, where
-        ``sigma`` is scale, for a multi-output problem ``n_outputs``
-        parameters are added.
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
+    ``b``
+        The upper limit on the uniform prior om `sigma`.
 
     *Extends:* :class:`ProblemLogLikelihood`
     """
 
-    def __init__(self, problem):
-        super(CauchyLogLikelihood, self).__init__(problem)
+    def __init__(self, problem, b):
+        super(IntegratedGaussianLikelihoodUniform, self).__init__(problem)
+
+        # upper limit on uniform prior
+        b = float(b)
+        if b <= 0:
+            raise ValueError('Upper limit on uniform prior for sigma ' +
+                             'must exceed 0.')
+        self._b = 0
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
         self._no = problem.n_outputs()
 
         # Add parameters to problem (one for each output)
-        self._n_parameters = problem.n_parameters() + self._no
+        self._n_parameters = problem.n_parameters()
 
         # Pre-calculate
-        self._n = len(self._times)
-        self._n_log_pi = self._n * np.log(np.pi)
+        self._const = (
+            -(1.0 + self._nt / 2.0) * np.log(2) - self._nt * np.log(self._b) -
+            (self._nt / 2) * np.log(np.pi)
+        )
 
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as
@@ -165,9 +181,7 @@ class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
         # problem parameters
         problem_parameters = x[:-m]
         error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
+        sse = np.sum(error**2)
 
         # Calculate
         return np.sum(
