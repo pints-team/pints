@@ -117,6 +117,66 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
 
 
+class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
+    """
+    Calculates a log-likelihood assuming independent Gaussian-distributed noise
+    at each time point where it is assumed that :math:`sigma\\sim U(0,upper)`
+    has been integrated out of the joint posterior.
+
+    For a noise characterised by ``sigma``, the log-likelihood is of the form:
+
+    .. math::
+        SSE =
+              -\\sum_{i=1}^N\log(1 +
+            \\frac{x_i - f(\\theta)}{2\\sigma}^2)
+
+    Arguments:
+
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem one parameter is added ``sigma``, where
+        ``sigma`` is scale, for a multi-output problem ``n_outputs``
+        parameters are added.
+
+    *Extends:* :class:`ProblemLogLikelihood`
+    """
+
+    def __init__(self, problem):
+        super(CauchyLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem (one for each output)
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate
+        self._n = len(self._times)
+        self._n_log_pi = self._n * np.log(np.pi)
+
+    def __call__(self, x):
+        # For multiparameter problems the parameters are stored as
+        # (model_params_1, model_params_2, ..., model_params_k,
+        # sigma_1, sigma_2,...)
+        n = self._n
+        m = self._no
+
+        # problem parameters
+        problem_parameters = x[:-m]
+        error = self._values - self._problem.evaluate(problem_parameters)
+
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+
+        # Calculate
+        return np.sum(
+            - self._n_log_pi
+            - n * np.log(sigma)
+            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
+        )
+
+
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood assuming independent Cauchy-distributed noise
@@ -490,4 +550,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-
