@@ -26,7 +26,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertAlmostEqual(f(x), -24.512039428370223)
         l, dl = f.evaluateS1(x)
         self.assertAlmostEqual(l, -24.512039428370223)
-        dnu = np.sum(0.5 * (np.exp(-3) - 1)) - 3.0 / 9.0
+        dnu = np.sum(np.repeat(0.5 * (np.exp(-3) - 1), 9)) - 3.0 / 9.0
         y = np.concatenate((np.repeat(-np.exp(-3), 9), [dnu]))
         self.assertTrue(np.array_equal(y, dl))
 
