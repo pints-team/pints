@@ -46,6 +46,9 @@ class NealsFunnelLogPDF(pints.LogPDF):
         self._m1 = 0
 
     def __call__(self, x):
+        if len(x) != self._n_parameters:
+            raise ValueError('Length of x must be equal number of ' +
+                             'parameters')
         nu = x[-1]
         x_temp = x[:-1]
         x_log_pdf = [scipy.stats.norm.logpdf(y, 0, np.exp(nu / 2))
@@ -72,9 +75,10 @@ class NealsFunnelLogPDF(pints.LogPDF):
 
         nu = x[-1]
         x_temp = x[:-1]
-        dnu = -nu / 9.0
-        cons = -np.exp(-nu)
-        dL = [var * cons for var in x_temp]
+        cons = np.exp(-nu)
+        dnu_first = [0.5 * (cons * var**2 - 1) for var in x_temp]
+        dnu = np.sum(dnu_first) - nu / 9.0
+        dL = [-var * cons for var in x_temp]
         dL.append(dnu)
         return L, dL
 
@@ -110,7 +114,7 @@ class NealsFunnelLogPDF(pints.LogPDF):
         Returns the variance of the target distribution in each dimension.
         Note :math:`nu` is the last entry.
         """
-        return np.concatenate((np.repeat(90, self._n_parameters), [9]))
+        return np.concatenate((np.repeat(90, self._n_parameters - 1), [9]))
 
     def sample(self, n_samples):
         """ Samples from the underlying distribution. """
