@@ -48,6 +48,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
 
         # test ValueErrors
         self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, pints.toy.NealsFunnelLogPDF, 1)
 
         n = 10
         d = 10
