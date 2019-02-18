@@ -39,7 +39,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         # test mean
         self.assertTrue(np.array_equal(np.zeros(10), f.mean()))
         self.assertTrue(np.array_equal(
-            np.concatenate((np.repeat(90, self._n_parameters), [9])),
+            np.concatenate((np.repeat(90, f._n_parameters), [9])),
             f.var()))
 
         # test marginal_log_pdf
@@ -77,7 +77,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         # test mean
         self.assertTrue(np.array_equal(np.zeros(20), f.mean()))
         self.assertTrue(np.array_equal(
-            np.concatenate((np.repeat(90, self._n_parameters - 1), [9])),
+            np.concatenate((np.repeat(90, f._n_parameters - 1), [9])),
             f.var()))
 
         n = 10
