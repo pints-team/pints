@@ -35,9 +35,9 @@ class BetaLogPrior(pints.LogPrior):
 
         # Validate inputs
         if self._a <= 0:
-            raise ValueError('Shape parameter alpha must be positive')
+            raise ValueError('Shape parameter a must be positive')
         if self._b <= 0:
-            raise ValueError('Shape parameter beta must be positive')
+            raise ValueError('Shape parameter b must be positive')
 
         # Cache constant
         self._log_beta = scipy.special.betaln(self._a, self._b)
@@ -273,9 +273,9 @@ class GammaLogPrior(pints.LogPrior):
 
         # Validate inputs
         if self._a <= 0:
-            raise ValueError('Shape parameter alpha must be positive')
+            raise ValueError('Shape parameter a must be positive')
         if self._b <= 0:
-            raise ValueError('Rate parameter beta must be positive')
+            raise ValueError('Rate parameter b must be positive')
 
         # Cache constant
         self._constant = scipy.special.xlogy(self._a,
