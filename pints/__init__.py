@@ -88,6 +88,7 @@ from ._log_priors import (
     GaussianLogPrior,
     HalfCauchyLogPrior,
     MultivariateGaussianLogPrior,
+    NormalLogPrior,
     StudentTLogPrior,
     UniformLogPrior,
 )
