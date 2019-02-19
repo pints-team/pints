@@ -392,7 +392,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     Arguments:
 
     ``location``
-        The center of the distribution.`
+        The center of the distribution.
     ``scale``
         The scale of the distribution.
 
@@ -454,7 +454,6 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         # Check input
         mean = pints.vector(mean)
         cov = np.array(cov, copy=True)
-        cov.setflags(write=False)
         if cov.ndim != 2:
             raise ValueError('Given covariance must be a matrix.')
         if not (mean.shape[0] == cov.shape[0] == cov.shape[1]):
