@@ -539,9 +539,9 @@ class StudentTLogPrior(pints.LogPrior):
         f(x|\\text{location},\\text{scale},\\text{df})=\\frac{\\left(\\frac{
         \\text{df}}{\\text{df}+\\frac{(x-\\text{location})^2}{\\text{scale}^2}}
         \\right)^{\\frac{\\text{df}+1}{2}}}{\\sqrt{\\text{df}}\\;\\text{scale}
-        \\;\\text{Beta}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}
+        \\;\\mathrm{B}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}
 
-    with expectation
+    where :math:`\\mathrm{B}` is the Beta function. This pdf has expectation
 
     .. math::
         \\mathrm{E}(X)=\\begin{cases}\\text{location},&\\text{df}>1\\\\
