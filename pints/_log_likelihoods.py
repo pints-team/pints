@@ -22,7 +22,7 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}
-                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
+                \sum_{i=2}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
 
     where
 
