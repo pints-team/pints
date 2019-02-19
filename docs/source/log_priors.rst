@@ -28,6 +28,8 @@ Example::
 
 .. autoclass:: MultivariateGaussianLogPrior
 
+.. autoclass:: NormalLogPrior
+
 .. autoclass:: StudentTLogPrior
 
 .. autoclass:: UniformLogPrior
