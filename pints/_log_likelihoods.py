@@ -18,16 +18,18 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
     Calculates a log-likelihood assuming AR1 noise model
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
+        \log{L(\\theta, \sigma'|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
-            -N\log{\sigma}
-            -\\frac{1}{2\sigma^2}
+            -N\log{\sigma'}
+            -\\frac{1}{2\sigma'^2}
                 \sum_{i=2}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
 
     where
 
     .. math::
         \\epsilon_i = x_i - f_i(\\theta)
+
+    and :math:`sigma' = \\frac{sigma} \\sqrt{1-\\rho^2}`.
 
 
     Arguments:
@@ -490,4 +492,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-
