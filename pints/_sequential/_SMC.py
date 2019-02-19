@@ -45,9 +45,9 @@ class SMC(pints.SMCSampler):
         # Proposed samples
         self._proposals = None
 
-        # Internal mcmc chains
+        # Internal mcmc chain: Uses only 1 chain for all samples!
         self._method = pints.AdaptiveCovarianceMCMC
-        self._chains = None
+        self._chain = None
 
         # Iterations: i_temp (outer loop) and i_mcmc (inner loop)
         self._i_temp = 1
@@ -84,12 +84,10 @@ class SMC(pints.SMCSampler):
             self._proposals = self._log_prior.sample(self._n_particles)
             self._proposals.setflags(write=False)
 
-            # Create and configure chains
-            self._chains = [
-                self._method(p, self._sigma0) for p in self._proposals]
-            if self._chains[0].needs_initial_phase():
-                for chain in self._chains:
-                    chain.set_initial_phase(False)
+            # Create and configure chain
+            self._chain = self._method(self._proposals[0], self._sigma0)
+            if self._chain.needs_initial_phase():
+                chain.set_initial_phase(False)
 
             # Get LogPDF of initial samples via ask/tell
             return self._proposals
@@ -101,15 +99,16 @@ class SMC(pints.SMCSampler):
         if self._last_ess < self._ess_threshold:
             self._resample()
 
-        # Update chains with log pdfs tempered with current beta
+        # Update chains with log pdfs tempered with current beta, get proposals
+        # and return
+        proposals = []
         for j, sample in enumerate(self._samples):
-            self._chains[j].replace(sample, self._temper(
+            self._chain.replace(sample, self._temper(
                 self._log_pdfs[j], self._log_prior(sample), beta))
+            proposals.append(self._chain.ask())
 
-        # Get proposals from MCMC and return
-        self._proposals = np.array([chain.ask() for chain in self._chains])
+        self._proposals = np.array(proposals)
         self._proposals.setflags(write=False)
-
         return self._proposals
 
     def ess(self):
@@ -138,10 +137,9 @@ class SMC(pints.SMCSampler):
             self._samples = np.copy(self._proposals)
             self._log_pdfs = np.array(log_pdfs, copy=True)
 
-            # Update all the chains with their initial log pdf
-            for i, f in enumerate(self._log_pdfs):
-                self._chains[i].ask()
-                self._chains[i].tell(f)
+            # Update the chains with an initial log_pdf
+            self._chain.ask()
+            self._chain.tell(log_pdfs[0])
 
             # Set weights based on next temperature
             beta = self._schedule[1]
