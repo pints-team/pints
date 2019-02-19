@@ -11,10 +11,73 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy
+import scipy.special
 import scipy.stats
 
 
-class CauchyLogPrior():
+class BetaLogPrior(pints.LogPrior):
+    """
+    Defines a beta (log) prior with given shape parameters ``a`` and ``b``,
+    with pdf
+
+    .. math::
+        f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\text{Beta}(a,b)}.
+
+    For example: ``p = BetaLogPrior(5, 1)`` for a shape parameters ``a=5`` and
+    ``b=1``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, a, b):
+        # Parse input arguments
+        self._a = float(a)
+        self._b = float(b)
+
+        # Validate inputs
+        if self._a <= 0:
+            raise ValueError('Shape parameter a must be positive')
+        if self._b <= 0:
+            raise ValueError('Shape parameter b must be positive')
+
+        # Cache constant
+        self._log_beta = scipy.special.betaln(self._a, self._b)
+
+    def __call__(self, x):
+        if x[0] < 0.0 or x[0] > 1.0:
+            return -float('inf')
+        else:
+            return scipy.special.xlogy(self._a - 1.0,
+                                       x[0]) + scipy.special.xlog1py(
+                self._b - 1.0, -x[0]) - self._log_beta
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        _x = x[0]
+
+        # Account for pathological edges
+        if _x == 0.0:
+            _x = np.nextafter(0.0, 1.0)
+        elif _x == 1.0:
+            _x = np.nextafter(1.0, 0.0)
+
+        if _x < 0.0 or _x > 1.0:
+            return value, np.asarray([0.])
+        else:
+            # Use np.divide here to better handle possible v small denominators
+            return value, np.asarray([np.divide(self._a - 1., _x) - np.divide(
+                self._b - 1., 1. - _x)])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.beta(self._a, self._b, size=(n, 1))
+
+
+class CauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
 
@@ -141,6 +204,114 @@ class ComposedLogPrior(pints.LogPrior):
         return output
 
 
+class ExponentialLogPrior(pints.LogPrior):
+    """
+    Defines an exponential (log) prior with given rate parameter ``rate`` with
+    pdf
+
+    .. math::
+        f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}.
+
+    For example: ``p = ExponentialLogPrior(0.5, 1)`` for a rate ``rate=0.5``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, rate):
+        # Parse input arguments
+        self._rate = float(rate)
+
+        # Validate inputs
+        if self._rate <= 0:
+            raise ValueError('Rate parameter "scale" must be positive')
+
+        # Cache constant
+        self._log_scale = np.log(self._rate)
+
+    def __call__(self, x):
+        if x[0] < 0.0:
+            return -float('inf')
+        else:
+            return self._log_scale - self._rate * x[0]
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+
+        if x[0] < 0.0:
+            return value, np.asarray([0.])
+        else:
+            return value, np.asarray([-self._rate])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.exponential(scale=1. / self._rate, size=(n, 1))
+
+
+class GammaLogPrior(pints.LogPrior):
+    """
+    Defines a gamma (log) prior with given shape parameter ``a`` and rate
+    parameter ``b``, with pdf
+
+    .. math::
+        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}
+
+    For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
+    rate parameter ``b=1``.
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, a, b):
+        # Parse input arguments
+        self._a = float(a)
+        self._b = float(b)
+
+        # Validate inputs
+        if self._a <= 0:
+            raise ValueError('Shape parameter a must be positive')
+        if self._b <= 0:
+            raise ValueError('Rate parameter b must be positive')
+
+        # Cache constant
+        self._constant = scipy.special.xlogy(self._a,
+                                             self._b) - scipy.special.gammaln(
+            self._a)
+
+    def __call__(self, x):
+        if x[0] < 0.0:
+            return -float('inf')
+        else:
+            return self._constant + scipy.special.xlogy(self._a - 1.,
+                                                        x[0]) - self._b * x[0]
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+
+        _x = x[0]
+
+        # Account for pathological edge
+        if _x == 0.0:
+            _x = np.nextafter(0.0, 1.0)
+
+        if _x < 0.0:
+            return value, np.asarray([0.])
+        else:
+            # Use np.divide here to better handle possible v small denominators
+            return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.gamma(self._a, 1. / self._b, size=(n, 1))
+
+
 class GaussianLogPrior(pints.LogPrior):
     """
     Defines a 1-d Gaussian (log) prior with a given ``mean`` and
@@ -177,7 +348,7 @@ class GaussianLogPrior(pints.LogPrior):
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
 
 
-class HalfCauchyLogPrior():
+class HalfCauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
@@ -299,7 +470,7 @@ class NormalLogPrior(GaussianLogPrior):
         super(NormalLogPrior, self).__init__(mean, standard_deviation)
 
 
-class StudentTLogPrior():
+class StudentTLogPrior(pints.LogPrior):
     """
     Defines a 1-d Student-t (log) prior with a given ``location``,
     ``degrees of freedom``,  and ``scale``.
@@ -333,16 +504,26 @@ class StudentTLogPrior():
         self._scale = float(scale)
 
         # Cache constants
-        self._first = 0.5 * (1.0 + self._df)
         self._log_df = np.log(self._df)
-        self._log_scale = np.log(self._scale)
-        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
+
+        self._1_sig_sq = 1. / (self._scale * self._scale)
+
+        self._first = 0.5 * (1.0 + self._df)
+
+        self._samp_const = scipy.special.xlogy(-0.5, self._df) - np.log(
+            self._scale) - scipy.special.betaln(0.5 * self._df, 0.5)
+
+        self._deriv_const = (-1. - self._df) * self._1_sig_sq
 
     def __call__(self, x):
-        return self._first * (self._log_df -
-                              np.log(self._df + ((x[0] - self._location)
-                                                 / self._scale)**2)) \
-            - 0.5 * self._log_df - self._log_scale - self._log_beta
+        return self._samp_const + self._first * (self._log_df - np.log(
+            self._df + self._1_sig_sq * (x[0] - self._location) ** 2))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        offset = x[0] - self._location
+        return self(x), np.asarray([offset * self._deriv_const / (
+            self._df + offset * offset * self._1_sig_sq)])
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """

@@ -11,6 +11,7 @@ from __future__ import division
 import unittest
 import pints
 import numpy as np
+import scipy.stats
 
 
 class TestPrior(unittest.TestCase):
@@ -348,9 +349,48 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, 0)
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 1, -1)
 
+        loc1 = 0
+        df1 = 2
+        scale1 = 10
+
+        loc2 = 10
+        df2 = 5
+        scale2 = 8
+
+        p1 = pints.StudentTLogPrior(loc1, df1, scale1)
+        p2 = pints.StudentTLogPrior(loc2, df2, scale2)
+
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
+
+        points = [-5., -2., 0., 1., 8.91011]
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.t.logpdf(to_test[0], df=df1, loc=loc1,
+                                     scale=scale1), p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.t.logpdf(to_test[0], df=df2, loc=loc2,
+                                     scale=scale2), p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0.06666666666666668, 0.02941176470588236, 0.,
+                     -0.01492537313432837, -0.0956738760845951]
+
+        p2_derivs = [0.1651376146788991, 0.1551724137931035,
+                     0.1428571428571429, 0.1346633416458853,
+                     0.02035986041216401]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
 
     def test_student_t_prior_sampling(self):
         p1 = pints.StudentTLogPrior(0, 1000, 1)
@@ -420,6 +460,194 @@ class TestPrior(unittest.TestCase):
         v_samples = p1.sample(n)
         self.assertEqual(len(v_samples), n)
         self.assertTrue(np.all(v_samples > 0))
+
+    def test_beta_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.BetaLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.BetaLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.BetaLogPrior, -2, 2)
+
+        p1 = pints.BetaLogPrior(0.123, 2.34)
+        p2 = pints.BetaLogPrior(3.45, 4.56)
+
+        points = [-2., 0.001, 0.1, 0.3, 0.5, 0.7, 0.9, 0.999, 2.]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.beta.logpdf(to_test[0], 0.123, 2.34),
+                p1(to_test),
+                places=9)
+            self.assertAlmostEqual(
+                scipy.stats.beta.logpdf(to_test[0], 3.45, 4.56),
+                p2(to_test),
+                places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -878.341341341342, -10.25888888888889,
+                     -4.837619047619048,
+                     -4.434, -5.719523809523809, -14.37444444444445,
+                     -1340.877877877876,
+                     0.]
+
+        p2_derivs = [0., 2446.436436436437, 20.54444444444445,
+                     3.080952380952382,
+                     -2.219999999999999, -8.36666666666666, -32.87777777777778,
+                     -3557.547547547544, 0.]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        # Test pathological edge cases
+        p3 = pints.BetaLogPrior(1.0, 1.0)
+        calc_val, calc_deriv = p3.evaluateS1([0.0])
+        self.assertAlmostEqual(calc_deriv[0], 0.0)
+
+        calc_val, calc_deriv = p3.evaluateS1([1.0])
+        self.assertAlmostEqual(calc_deriv[0], 0.0)
+
+    def test_beta_prior_sampling(self):
+        # Just returns samples from the numpy beta distribution so no utility
+        # in verifying shape params - just check it's working as expected
+        p1 = pints.BetaLogPrior(0.123, 2.34)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 100
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+    def test_exponential_prior(self):
+
+        # Test input parameter
+        self.assertRaises(ValueError, pints.ExponentialLogPrior, 0.0)
+        self.assertRaises(ValueError, pints.ExponentialLogPrior, -1.0)
+
+        r1 = 0.123
+        r2 = 4.567
+
+        p1 = pints.ExponentialLogPrior(r1)
+        p2 = pints.ExponentialLogPrior(r2)
+
+        points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.expon.logpdf(to_test[0], scale=1. / r1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.expon.logpdf(to_test[0], scale=1. / r2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -r1, -r1, -r1, -r1]
+
+        p2_derivs = [0., -r2, -r2, -r2, -r2]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+    def test_exponential_prior_sampling(self):
+        # Just returns samples from the numpy exponential distribution, but
+        # because we are parameterising it with rate not shape, we check the
+        # first moment to be sure we're doing the right thing
+        p1 = pints.ExponentialLogPrior(0.25)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 1000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be ~ 1/0.25 = 4, so we check that this is very roughly
+        # the case, but we can be very relaxed as we only check it's not ~0.25
+        mean = np.mean(samples1).item()
+        self.assertTrue(3. < mean < 4.)
+
+    def test_gamma_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.GammaLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.GammaLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.GammaLogPrior, -2, 2)
+
+        a1 = 0.123
+        a2 = 4.567
+
+        b1 = 2.345
+        b2 = 0.356
+
+        p1 = pints.GammaLogPrior(a1, b1)
+        p2 = pints.GammaLogPrior(a2, b2)
+
+        points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.gamma.logpdf(to_test[0], a=a1, scale=1. / b1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.gamma.logpdf(to_test[0], a=a2, scale=1. / b2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0., -879.345, -11.115, -3.222, -2.70295918367347,
+                     -2.474179555162763]
+
+        p2_derivs = [0., 3566.643999999999, 35.314, 3.211, 1.099918367346939,
+                     0.1694087494476359]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+
+        # Test pathological edge case
+        p3 = pints.GammaLogPrior(1.0, 1.0)
+        calc_val, calc_deriv = p3.evaluateS1([0.0])
+        self.assertAlmostEqual(calc_deriv[0], -1.)
+
+    def test_gamma_prior_sampling(self):
+        # Just returns samples from the numpy gamma distribution, but because
+        # we are parameterising it with rate not shape, we check the first
+        # moment to be sure we're doing the right thing
+        p1 = pints.GammaLogPrior(5.0, 0.25)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 1000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be ~ 5/0.25 = 20, so we check that this is very roughly
+        # the case, but we can be very relaxed as we only check it's not ~1.25
+        mean = np.mean(samples1).item()
+        self.assertTrue(19. < mean < 20.)
 
 
 if __name__ == '__main__':

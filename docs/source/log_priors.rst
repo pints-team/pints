@@ -12,9 +12,15 @@ Example::
     p = pints.GaussianLogPrior(mean=0, variance=1)
     x = p(0.1)
 
+.. autoclass:: BetaLogPrior
+
 .. autoclass:: CauchyLogPrior
 
 .. autoclass:: ComposedLogPrior
+
+.. autoclass:: ExponentialLogPrior
+
+.. autoclass:: GammaLogPrior
 
 .. autoclass:: GaussianLogPrior
 
