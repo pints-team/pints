@@ -114,29 +114,11 @@ class CauchyLogPrior(pints.LogPrior):
         if float(scale) <= 0:
             raise ValueError('Scale must be positive')
 
-        # Parse input arguments
-        # Cauchy is Student-t with 1 df
-        self._df = 1
-        self._location = float(location)
-        self._scale = float(scale)
-
-        # Cache constants
-        self._first = 0.5 * (1.0 + self._df)
-        self._log_df = np.log(self._df)
-        self._log_scale = np.log(self._scale)
-        self._log_beta = np.log(scipy.special.beta(0.5 * self._df, 0.5))
-
-        # Cache scipy stats object
-        self._t = scipy.stats.t(
-            df=self._df, loc=self._location, scale=self._scale)
+        self._student_t = pints.StudentTLogPrior(location=location, df=1,
+                                                 scale=scale)
 
     def __call__(self, x):
-        return (
-            self._first * (
-                self._log_df - np.log(
-                    self._df + ((x[0] - self._location) / self._scale)**2))
-            - 0.5 * self._log_df - self._log_scale - self._log_beta
-        )
+        return self._student_t(x)
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -144,7 +126,7 @@ class CauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return self._t.rvs(n)
+        return self._student_t.sample(n)
 
 
 class ComposedLogPrior(pints.LogPrior):
@@ -410,7 +392,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     Arguments:
 
     ``location``
-        The center of the distribution.
+        The center of the distribution.`
     ``scale``
         The scale of the distribution.
 
