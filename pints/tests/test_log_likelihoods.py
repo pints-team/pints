@@ -465,7 +465,7 @@ class TestLogLikelihood(unittest.TestCase):
         # multiple outputs
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
-        times = np.arange(1, 4)
+        times = np.arange(1, 5)
         model.simulate(parameters, times)
         values = np.asarray([[3.5, 7.6, 8.5, 3.4],
                              [1.1, -10.3, 15.6, 5.5],
@@ -496,6 +496,30 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.ARMA11LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
+
+        # multiple outputs
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.arange(1, 5)
+        model.simulate(parameters, times)
+        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
+                             [1.1, -10.3, 15.6, 5.5],
+                             [-10, -30.5, -5, 7.6],
+                             [-12, -10.1, -4, 2.3]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        # ARMA1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, phi=0.34 sigma=1) +
+        # ARMA1Logpdf((7.6,-10.3,-30.5, -10.1)|
+        #             mean=0, rho=-0.25, phi=0.1, sigma=3) +
+        # ARMA1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, phi=0.0, sigma=10) +
+        # ARMA1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, phi=0.9, sigma=2)
+        #      = -116.009 -74.94 -14.32 -8.88
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [0.5, 0.34, 1.0,
+                                         -0.25, 0.1, 3.0,
+                                         0.9, 0.0, 10.0,
+                                         0.0, 0.9, 2.0]),
+            -214.17034137601107)
 
 
 if __name__ == '__main__':
