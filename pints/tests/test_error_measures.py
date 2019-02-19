@@ -154,7 +154,7 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2]
 
         # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 2]]
+        # Model derivatives are 3 times [[1, 0], [0, 1]]
         y, dy = p.evaluateS1(x)
         self.assertTrue(np.all(y == p.evaluate(x)))
         self.assertTrue(np.all(y[0, :] == [1, 4]))
@@ -183,7 +183,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex.shape, (2, ))
 
         # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 2]]
+        # Derivatives are: [[1, 0], [0, 1]]
         # dex1 is: (2 / nt / no) * (0 - 1 - 2) * 1 = (1 / 3) * -3 * 1 = -1
         # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 1 = (1 / 3) * -9 * 1 = -3
         self.assertEqual(dex[0], -1)
@@ -218,7 +218,7 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2]
 
         # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 2]]
+        # Model derivatives are 3 times [[1, 0], [0, 1]]
         y, dy = p.evaluateS1(x)
         self.assertTrue(np.all(y == p.evaluate(x)))
         self.assertTrue(np.all(y[0, :] == [1, 4]))
@@ -344,7 +344,7 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2]
 
         # Model outputs are 3 times [1,4]
-        # Model derivatives are 3 times [[1, 0], [0, 2]]
+        # Model derivatives are 3 times [[1, 0], [0, 1]]
         y, dy = p.evaluateS1(x)
         self.assertTrue(np.all(y == p.evaluate(x)))
         self.assertTrue(np.all(y[0, :] == [1, 4]))
@@ -373,7 +373,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex.shape, (2, ))
 
         # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 2]]
+        # Derivatives are: [[1, 0], [0, 1]]
         # dex1 is: 2 * (0 - 1 - 2) * 1 = 2 * -3 * 1 = -6
         # dex2 is: 2 * (0 - 3 - 6) * 2 = 2 * -9 * 1 = -18
         self.assertEqual(dex[0], -6)
