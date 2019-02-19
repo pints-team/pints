@@ -1,8 +1,8 @@
 #
-# Multi-model normal log pdf
+# Multi-model Gaussian log pdf
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,9 +13,9 @@ import numpy as np
 import scipy.stats
 
 
-class MultimodalNormalLogPDF(pints.LogPDF):
+class MultimodalGaussianLogPDF(pints.LogPDF):
     """
-    Multimodal (un-normalised) multivariate Normal distribution.
+    Multimodal (un-normalised) multivariate Gaussian distribution.
 
     By default, the distribution is on a 2-dimensional space, with modes at
     at ``(0, 0)`` and ``(10, 10)`` with independent unit covariance matrices.
@@ -23,13 +23,13 @@ class MultimodalNormalLogPDF(pints.LogPDF):
     Examples::
 
         # Default 2d, bimodal
-        f = pints.toy.MultimodalNormalLogPDF()
+        f = pints.toy.MultimodalGaussianLogPDF()
 
         # 3d bimodal
-        f = pints.toy.MultimodalNormalLogPDF([[0, 1, 2], [10, 10, 10]])
+        f = pints.toy.MultimodalGaussianLogPDF([[0, 1, 2], [10, 10, 10]])
 
         # 2d with 3 modes
-        f = pints.toy.MultimodalNormalLogPDF([[0, 0], [5, 5], [5, 0]])
+        f = pints.toy.MultimodalGaussianLogPDF([[0, 0], [5, 5], [5, 0]])
 
     Arguments:
 
@@ -48,7 +48,7 @@ class MultimodalNormalLogPDF(pints.LogPDF):
 
         # Check modes
         if modes is None:
-            self._dimension = 2
+            self._n_parameters = 2
             self._modes = [[0, 0], [10, 10]]
         else:
             if len(modes) < 1:
@@ -56,14 +56,15 @@ class MultimodalNormalLogPDF(pints.LogPDF):
                     'Argument `modes` must be `None` or a non-empty list of'
                     ' modes.')
             self._modes = [pints.vector(mode) for mode in modes]
-            self._dimension = len(modes[0])
+            self._n_parameters = len(modes[0])
             for mode in self._modes:
-                if len(mode) != self._dimension:
-                    raise ValueError('All modes must have same dimension.')
+                if len(mode) != self._n_parameters:
+                    raise ValueError(
+                        'All modes must have same dimension.')
 
         # Check covariances
         if covariances is None:
-            self._covs = [np.eye(self._dimension)] * len(self._modes)
+            self._covs = [np.eye(self._n_parameters)] * len(self._modes)
         else:
             if len(covariances) != len(self._modes):
                 raise ValueError(
@@ -71,7 +72,7 @@ class MultimodalNormalLogPDF(pints.LogPDF):
                     ' modes.')
             self._covs = [np.array(cov, copy=True) for cov in covariances]
             for cov in self._covs:
-                if cov.shape != (self._dimension, self._dimension):
+                if cov.shape != (self._n_parameters, self._n_parameters):
                     raise ValueError(
                         'Covariance matrices must have shape (d, d), where d'
                         ' is the dimension of the given modes.')
@@ -87,5 +88,5 @@ class MultimodalNormalLogPDF(pints.LogPDF):
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return self._dimension
+        return self._n_parameters
 

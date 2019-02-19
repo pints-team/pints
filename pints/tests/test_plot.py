@@ -3,7 +3,7 @@
 # Tests the Pints plot methods.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -53,7 +53,7 @@ class TestPlot(unittest.TestCase):
         )
 
         # Create a log likelihood
-        self.log_likelihood = pints.UnknownNoiseLogLikelihood(self.problem)
+        self.log_likelihood = pints.GaussianLogLikelihood(self.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior = pints.LogPosterior(
@@ -65,8 +65,7 @@ class TestPlot(unittest.TestCase):
             self.real_parameters * 0.9,
             self.real_parameters * 1.05
         ]
-        mcmc = pints.MCMCSampling(self.log_posterior, 3, self.x0,
-                                  method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior, 3, self.x0)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples = mcmc.run()
@@ -89,8 +88,8 @@ class TestPlot(unittest.TestCase):
         # variable
         self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
         # Create a log likelihood
-        self.log_likelihood2 = pints.KnownNoiseLogLikelihood(self.problem2,
-                                                             self.noise2)
+        self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
+            self.problem2, self.noise2)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         self.log_posterior2 = pints.LogPosterior(
@@ -102,22 +101,20 @@ class TestPlot(unittest.TestCase):
             self.real_parameters2 * 0.9,
             self.real_parameters2 * 1.05
         ]
-        mcmc = pints.MCMCSampling(self.log_posterior2, 3, self.x02,
-                                  method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior2, 3, self.x02)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples2 = mcmc.run()
 
         # Create toy model (single-output, single-parameter)
         self.real_parameters3 = [0]
-        self.log_posterior3 = toy.NormalLogPDF(self.real_parameters3, [1])
+        self.log_posterior3 = toy.GaussianLogPDF(self.real_parameters3, [1])
         self.lower3 = [-3]
         self.upper3 = [3]
 
         # Run MCMC
         self.x03 = [[1], [-2], [3]]
-        mcmc = pints.MCMCSampling(self.log_posterior3, 3, self.x03,
-                                  method=pints.AdaptiveCovarianceMCMC)
+        mcmc = pints.MCMCController(self.log_posterior3, 3, self.x03)
         mcmc.set_max_iterations(300)  # make it as small as possible
         mcmc.set_log_to_screen(False)
         self.samples3 = mcmc.run()
@@ -411,6 +408,17 @@ class TestPlot(unittest.TestCase):
         # Test kde gives no error
         pints.plot.pairwise(few_samples, kde=True,
                             ref_parameters=self.real_parameters)
+
+        # Test heatmap gives no error
+        pints.plot.pairwise(few_samples, heatmap=True,
+                            ref_parameters=self.real_parameters)
+
+        # Check kde and heatmap error
+        self.assertRaisesRegexp(
+            ValueError, 'Cannot use \`kde\` and \`heatmap\` together\.',
+            pints.plot.pairwise, self.samples,
+            kde=True, heatmap=True
+        )
 
         # Test opacity gives no error
         pints.plot.pairwise(few_samples, opacity=0.2)

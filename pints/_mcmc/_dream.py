@@ -2,7 +2,7 @@
 # Dream MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -76,14 +76,14 @@ class DreamMCMC(pints.MultiChainMCMC):
 
         # Current points and proposed points
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdfs = None
         self._proposed = None
 
         #
         # Default settings
         #
 
-        # Normal proposal std.
+        # Gaussian proposal std.
         self._b = 0.01
 
         # b* distribution for e ~ U(-b*, b*)
@@ -125,7 +125,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Select initial proposal for chain j
                 delta = int(np.random.choice(self._delta_max, 1)[0] + 1)
                 if self._p_g < np.random.rand():
-                    gamma = 2.38 / np.sqrt(2 * delta * self._dimension)
+                    gamma = 2.38 / np.sqrt(2 * delta * self._n_parameters)
                 else:
                     gamma = 1.0
 
@@ -140,7 +140,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
                 self._proposed[j] += dX + np.random.normal(
                     loc=0, scale=np.abs(self._b * self._mu),
-                    size=self._dimension)
+                    size=self._n_parameters)
 
                 # Set crossover probability
                 if self._constant_crossover:
@@ -153,7 +153,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                     self._L[self._m[j]] += 1
 
                 # Randomly set elements of proposal to back original
-                for d in range(self._dimension):
+                for d in range(self._n_parameters):
                     if 1 - CR > np.random.rand():
                         self._proposed[j][d] = self._current[j][d]
 
@@ -162,6 +162,10 @@ class DreamMCMC(pints.MultiChainMCMC):
 
         # Return proposed points
         return self._proposed
+
+    def current_log_pdfs(self):
+        """ See :meth:`MultiChainMCMC._log_init()`. """
+        return self._current_log_pdfs
 
     def _initialise(self):
         """
@@ -243,7 +247,8 @@ class DreamMCMC(pints.MultiChainMCMC):
 
             # Accept
             self._current = self._proposed
-            self._current_log_pdfs = proposed_log_pdfs
+            self._current_log_pdfs = np.copy(proposed_log_pdfs)
+            self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
             self._proposed = None
@@ -252,8 +257,8 @@ class DreamMCMC(pints.MultiChainMCMC):
             return self._current
 
         # Perform iteration
-        next = np.array(self._current, copy=True)
-        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
+        next = np.copy(self._current)
+        next_log_pdfs = np.copy(self._current_log_pdfs)
 
         # Sample uniform numbers
         u = np.log(np.random.uniform(size=self._chains))
@@ -283,7 +288,7 @@ class DreamMCMC(pints.MultiChainMCMC):
                 # Update CR distribution
                 delta = (next - self._current)**2
                 for j in range(self._chains):
-                    for d in range(0, self._dimension):
+                    for d in range(0, self._n_parameters):
                         self._delta[self._m[j]] += (
                             delta[j][d] / max(self._variance[j][d], 1e-11))
 
@@ -300,6 +305,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Update (part 2)
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
@@ -310,7 +316,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def b(self):
         """
-        Returns the normal scale coefficient used in updating the position of
+        Returns the Gaussian scale coefficient used in updating the position of
         each chain.
         """
         return self._b
@@ -371,11 +377,12 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     def set_b(self, b):
         """
-        Sets the normal scale coefficient used in updating the position of each
-        chain (must be non-negative).
+        Sets the Gaussian scale coefficient used in updating the position of
+        each chain (must be non-negative).
         """
         if b < 0:
-            raise ValueError('normal scale coefficient must be non-negative.')
+            raise ValueError(
+                'Gaussian scale coefficient must be non-negative.')
         self._b = b
 
     def set_constant_crossover(self, enabled):
@@ -436,7 +443,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         if nCR < 2:
             raise ValueError(
                 'Length of discrete crossover distribution must be 2 or'
-                + ' greater.')
+                ' greater.')
         self._nCR = int(nCR)
 
     def set_hyper_parameters(self, x):

@@ -3,7 +3,7 @@
 # Tests the basic methods of the nested sampling routines.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -56,7 +56,8 @@ class TestNestedRejectionSampler(unittest.TestCase):
         )
 
         # Create a log-likelihood
-        cls.log_likelihood = pints.KnownNoiseLogLikelihood(problem, cls.noise)
+        cls.log_likelihood = pints.GaussianKnownSigmaLogLikelihood(
+            problem, cls.noise)
 
     def test_quick_run(self):
         """ Test a single run. """
@@ -236,7 +237,8 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         )
 
         # Create a log-likelihood
-        cls.log_likelihood = pints.KnownNoiseLogLikelihood(problem, cls.noise)
+        cls.log_likelihood = pints.GaussianKnownSigmaLogLikelihood(
+            problem, cls.noise)
 
     def test_construction_errors(self):
         """ Tests if invalid constructor calls are picked up. """

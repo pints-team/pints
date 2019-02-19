@@ -2,7 +2,7 @@
 # Simple egg-box LogPDF
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -15,7 +15,7 @@ import scipy.stats
 
 class SimpleEggBoxLogPDF(pints.LogPDF):
     """
-    Two-dimensional multimodal Normal distribution, with four more-or-less
+    Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
 
     Arguments:

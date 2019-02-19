@@ -3,7 +3,7 @@
 # Tests the log likelihood classes.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -28,7 +28,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a scaled and not scaled log_likelihood
-        log_likelihood_not_scaled = pints.KnownNoiseLogLikelihood(
+        log_likelihood_not_scaled = pints.GaussianKnownSigmaLogLikelihood(
             problem, sigma)
         log_likelihood_scaled = pints.ScaledLogLikelihood(
             log_likelihood_not_scaled)
@@ -60,7 +60,7 @@ class TestLogLikelihood(unittest.TestCase):
         times = np.linspace(0, 100, nt)
         values = model.simulate([0.5, 0.5, 0.5], times)
         problem = pints.MultiOutputProblem(model, times, values)
-        unscaled = pints.KnownNoiseLogLikelihood(problem, 1)
+        unscaled = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
         scaled = pints.ScaledLogLikelihood(unscaled)
         p = [0.1, 0.1, 0.1]
         x = unscaled(p)
@@ -78,7 +78,7 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
-    def test_known_and_unknown_noise_single(self):
+    def test_gaussian_log_likelihoods_single_output(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
         """
@@ -91,15 +91,15 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
 
         # Test if known/unknown give same result
-        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
-        l2 = pints.UnknownNoiseLogLikelihood(problem)
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        l2 = pints.GaussianLogLikelihood(problem)
         self.assertAlmostEqual(l1(parameters), l2(parameters + [sigma]))
 
         # Test invalid constructors
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
 
         # known noise value checks
         model = pints.toy.ConstantModel(1)
@@ -107,14 +107,14 @@ class TestLogLikelihood(unittest.TestCase):
         values = model.simulate([2], times)
         org_values = np.arange(10) / 5.0
         problem = pints.SingleOutputProblem(model, times, org_values)
-        log_likelihood = pints.KnownNoiseLogLikelihood(problem, 1.5)
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
         self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
         l, dl = log_likelihood.evaluateS1([3])
         self.assertAlmostEqual(l, -23.777369746461702)
         self.assertAlmostEqual(dl[0], -9.3333333333333321)
 
         # unknown noise value checks
-        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
         self.assertAlmostEqual(log_likelihood([-3, 1.5]), -47.777369746461702)
 
         # unknown noise check sensitivity
@@ -123,15 +123,23 @@ class TestLogLikelihood(unittest.TestCase):
         values = model.simulate([2], times)
         org_values = np.arange(10) / 5.0
         problem = pints.SingleOutputProblem(model, times, org_values)
-        log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
         l, dl = log_likelihood.evaluateS1([7, 2.0])
         self.assertAlmostEqual(l, -63.04585713764618)
         self.assertAlmostEqual(dl[0], -15.25)
         self.assertAlmostEqual(dl[1], 41.925000000000004)
 
-    def test_known_noise_single_S1(self):
+        # Test deprecated aliases
+        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
+
+        l2 = pints.UnknownNoiseLogLikelihood(problem)
+        self.assertIsInstance(l2, pints.GaussianLogLikelihood)
+
+    def test_known_noise_gaussian_single_S1(self):
         """
-        Simple tests for single known noise log-likelihood with sensitivities.
+        Simple tests for single known noise Gaussian log-likelihood with
+        sensitivities.
         """
         model = pints.toy.LogisticModel()
         x = [0.015, 500]
@@ -142,7 +150,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
 
         # Test if values are correct
-        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        f = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
         L1 = f(x)
         L2, dL = f.evaluateS1(x)
         self.assertEqual(L1, L2)
@@ -150,7 +158,7 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Test with MultiOutputProblem
         problem = pints.MultiOutputProblem(model, times, values)
-        f2 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        f2 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
         L3 = f2(x)
         L4, dL = f2.evaluateS1(x)
         self.assertEqual(L3, L4)
@@ -160,7 +168,7 @@ class TestLogLikelihood(unittest.TestCase):
         # Test without noise
         values = model.simulate(x, times)
         problem = pints.SingleOutputProblem(model, times, values)
-        f = pints.KnownNoiseLogLikelihood(problem, sigma)
+        f = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
         L1 = f(x)
         L2, dL = f.evaluateS1(x)
         self.assertEqual(L1, L2)
@@ -296,9 +304,10 @@ class TestLogLikelihood(unittest.TestCase):
             log_likelihood(parameters + [13, 8, 13.5, 10.5]),
             -49.51182454195375)
 
-    def test_known_and_unknown_noise_multi(self):
+    def test_gaussian_noise_multi(self):
         """
-        Multi-output test for known/unknown noise log-likelihood methods
+        Multi-output test for known/unknown Gaussian noise log-likelihood
+        methods.
         """
         model = pints.toy.FitzhughNagumoModel()
         parameters = [0.5, 0.5, 0.5]
@@ -309,9 +318,9 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
 
         # Test if known/unknown give same result
-        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
-        l2 = pints.KnownNoiseLogLikelihood(problem, [sigma, sigma])
-        l3 = pints.UnknownNoiseLogLikelihood(problem)
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        l2 = pints.GaussianKnownSigmaLogLikelihood(problem, [sigma, sigma])
+        l3 = pints.GaussianLogLikelihood(problem)
         self.assertAlmostEqual(
             l1(parameters),
             l2(parameters),
@@ -319,17 +328,19 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Test invalid constructors
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, 0)
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, -1)
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, [1])
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, [1])
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, [1, 2, 3, 4])
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem,
+            [1, 2, 3, 4])
         self.assertRaises(
-            ValueError, pints.KnownNoiseLogLikelihood, problem, [1, 2, -3])
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem,
+            [1, 2, -3])
 
-    def test_known_noise_single_and_multi(self):
+    def test_known_noise_gaussian_single_and_multi(self):
         """
         Tests the output of single-series against multi-series known noise
         log-likelihoods.
@@ -363,14 +374,14 @@ class TestLogLikelihood(unittest.TestCase):
         model1d = NullModel1()
         problem1 = pints.SingleOutputProblem(model1d, times, values1)
         problem2 = pints.SingleOutputProblem(model1d, times, values2)
-        log1 = pints.KnownNoiseLogLikelihood(problem1, sigma1)
-        log2 = pints.KnownNoiseLogLikelihood(problem2, sigma2)
+        log1 = pints.GaussianKnownSigmaLogLikelihood(problem1, sigma1)
+        log2 = pints.GaussianKnownSigmaLogLikelihood(problem2, sigma2)
 
         # Create one multi output problem
         values3 = np.array([values1, values2]).swapaxes(0, 1)
         model2d = NullModel2()
         problem3 = pints.MultiOutputProblem(model2d, times, values3)
-        log3 = pints.KnownNoiseLogLikelihood(
+        log3 = pints.GaussianKnownSigmaLogLikelihood(
             problem3, [sigma1, sigma2])
 
         # Check if we get the right output
@@ -386,8 +397,8 @@ class TestLogLikelihood(unittest.TestCase):
         values = model.simulate(x, times) + 0.1
         problem = pints.SingleOutputProblem(model, times, values)
 
-        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
-        l2 = pints.UnknownNoiseLogLikelihood(problem)
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        l2 = pints.GaussianLogLikelihood(problem)
         ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
         self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
@@ -423,7 +434,7 @@ class TestLogLikelihood(unittest.TestCase):
         values = model.simulate(x, times) + 0.01
         problem = pints.MultiOutputProblem(model, times, values)
         sigma = 0.01
-        l1 = pints.KnownNoiseLogLikelihood(problem, sigma)
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
         ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
         self.assertEqual(l1.n_parameters(), ll.n_parameters())
         self.assertEqual(3 * l1(x), ll(x))
@@ -438,6 +449,28 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
+
+    def test_ar1(self):
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([1.0, -10.7, 15.5])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.5, 5]), -19.706737485492436)
+
+    def test_arma11(self):
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3, 4])
+        model.simulate(parameters, times)
+        values = np.asarray([3, -4.5, 10.5, 0.3])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 # Population MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -55,10 +55,10 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Set initial state
         self._running = False
 
-        # Current points, and the logpdf of those points (_not_ the tempered
-        # version!)
+        # Current points, and the log pdfs of those points (_not_ the tempered
+        # versions!)
         self._current = None
-        self._current_log_pdf = None
+        self._current_log_pdfs = None
 
         # Single proposed point
         self._proposed = None
@@ -101,9 +101,13 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdfs[0]
+
     def in_initial_phase(self):
         """
-        See :meth:`MCMCSampling.in_initial_phase()`.
+        See :meth:`MCMCController.in_initial_phase()`.
         """
         return self._in_initial_phase
 
@@ -125,7 +129,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Propose initial point
         self._current = None
-        self._current_log_pdf = None
+        self._current_log_pdfs = None
         self._proposed = self._x0
 
         # Next chain to update
@@ -170,7 +174,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
     def set_initial_phase(self, phase):
         """
-        See :meth:`MCMCSampling.set_initial_phase()`.
+        See :meth:`MCMCController.set_initial_phase()`.
         """
         self._in_initial_phase = bool(phase)
         if self._running:
@@ -242,7 +246,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
             self._current = np.array([self._x0] * n)
 
             # Store untempered logpdfs
-            self._current_log_pdf = np.array([fx] * n)
+            self._current_log_pdfs = np.array([fx] * n)
 
             # Clear proposal
             self._proposed = None
@@ -260,7 +264,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Update current sample and untempered log pdf
         if np.any(sample != self._current[self._i]):
             self._current[self._i] = sample
-            self._current_log_pdf[self._i] = fx
+            self._current_log_pdfs[self._i] = fx
 
         # Clear proposal
         self._proposed = None
@@ -268,12 +272,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Perform exchange step
 
         # Calculate current tempered likelihoods
-        pii = (1 - self._schedule[self._i]) * self._current_log_pdf[self._i]
-        pjj = (1 - self._schedule[self._j]) * self._current_log_pdf[self._j]
+        pii = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._i]
+        pjj = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._j]
 
         # Calculate proposed log likelihoods
-        pij = (1 - self._schedule[self._i]) * self._current_log_pdf[self._j]
-        pji = (1 - self._schedule[self._j]) * self._current_log_pdf[self._i]
+        pij = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._j]
+        pji = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._i]
 
         # Accept/reject exchange step
         self._have_exchanged = False

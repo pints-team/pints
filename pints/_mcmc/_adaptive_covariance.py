@@ -2,7 +2,7 @@
 # Adaptive covariance MCMC method
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -61,7 +61,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Propose new point
         if self._proposed is None:
 
-            # Note: Normal distribution is symmetric
+            # Note: Gaussian distribution is symmetric
             #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
             #  distribution term from the acceptance criterion
             self._proposed = np.random.multivariate_normal(
@@ -72,6 +72,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Return proposed point
         return self._proposed
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
 
     def _initialise(self):
         """
@@ -174,7 +178,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Update mu, log acceptance rate, and covariance matrix
             self._mu = (1 - gamma) * self._mu + gamma * self._current
             self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
+            dsigm = np.reshape(
+                self._current - self._mu, (self._n_parameters, 1))
             self._sigma = (
                 (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
 
