@@ -136,6 +136,50 @@ class TestLogLikelihood(unittest.TestCase):
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertIsInstance(l2, pints.GaussianLogLikelihood)
 
+        # test multiple output unknown noise
+        model = pints.toy.ConstantModel(3)
+        parameters = [0, 0, 0]
+        times = [1, 2, 3, 4]
+        values = model.simulate([0, 0, 0], times)
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [3.5, 1, 12]),
+            -50.508848609684783
+        )
+        l, dl = log_likelihood.evaluateS1(parameters + [3.5, 1, 12])
+        self.assertAlmostEqual(l, -50.508848609684783)
+        self.assertAlmostEqual(dl[0], 1.820408163265306)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774)
+        self.assertAlmostEqual(dl[3], 3.6065306122448981)
+        self.assertAlmostEqual(dl[4], 27.490000000000002)
+        self.assertAlmostEqual(dl[5], -0.25425347222222222)
+
+        # test multiple output model dimensions of sensitivities
+        d = 20
+        model = pints.toy.ConstantModel(d)
+        parameters = [0 for i in range(d)]
+        times = [1, 2, 3, 4]
+        values = model.simulate(parameters, times)
+        org_values = np.ones((len(times), d))
+        extra_params = np.ones(d).tolist()
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+        l = log_likelihood(parameters + extra_params)
+        l1, dl = log_likelihood.evaluateS1(parameters + extra_params)
+        self.assertTrue(np.array_equal(len(dl),
+                                       len(parameters + extra_params)))
+        self.assertEqual(l, l1)
+
     def test_known_noise_gaussian_single_S1(self):
         """
         Simple tests for single known noise Gaussian log-likelihood with
@@ -507,7 +551,7 @@ class TestLogLikelihood(unittest.TestCase):
                              [-10, -30.5, -5, 7.6],
                              [-12, -10.1, -4, 2.3]])
         problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.AR1LogLikelihood(problem)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
         # ARMA1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, phi=0.34 sigma=1) +
         # ARMA1Logpdf((7.6,-10.3,-30.5, -10.1)|
         #             mean=0, rho=-0.25, phi=0.1, sigma=3) +
