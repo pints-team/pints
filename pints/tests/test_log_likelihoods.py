@@ -78,6 +78,31 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
+        # test values of log-likelihood and derivatives
+        model = pints.toy.ConstantModel(3)
+        times = [1, 2, 3, 4]
+        parameters = [0, 0, 0]
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        f2 = pints.GaussianKnownSigmaLogLikelihood(problem, [3.5, 1, 12])
+        log_likelihood = pints.ScaledLogLikelihood(f2)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters),
+            -50.508848609684783 / 12.0
+        )
+        l, dl = log_likelihood.evaluateS1(parameters)
+        self.assertAlmostEqual(l, -50.508848609684783 / 12.0)
+        self.assertAlmostEqual(dl[0], 1.820408163265306 / 12.0)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002 / 12.0)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774 / 12.0)
+
     def test_gaussian_log_likelihoods_single_output(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
