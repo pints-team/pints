@@ -69,7 +69,7 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming AR1 noise model
+    Calculates a log-likelihood assuming ARMA(1,1) noise model.
 
     .. math::
         \log{L(\\theta, \sigma|\\boldsymbol{x})} =
