@@ -202,12 +202,11 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         self._const_general = (
             -(n / 2.0) * np.log(np.pi) - np.log(2 * np.sqrt(2) * b)
         )
-        self._log_gamma = np.log(scipy.special.gamma(self._n_minus_1_over_2))
+        self._gamma = scipy.special.gamma(self._n_minus_1_over_2)
+        self._log_gamma = np.log(self._gamma)
+        self._two_power = 2**(1 / 2 - n / 2)
 
     def __call__(self, x):
-        # For multiparameter problems the parameters are stored as
-        # (model_params_1, model_params_2, ..., model_params_k,
-        # sigma_1, sigma_2,...)
         error = self._values - self._problem.evaluate(x)
         sse = np.sum(error**2, axis=0)
 
@@ -232,6 +231,45 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             self._log_gamma +
             log_temp
         )
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x)
+
+        # Reshape dy, in case we're working with a single-output problem
+        dy = dy.reshape(self._nt, self._no, self._n_parameters)
+
+        # Note: Must be (data - simulation), sign now matters!
+        r = self._values - y
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+
+        # Calculate derivatives in the model parameters
+        a = self._a
+        b = self._b
+        sse = r**2
+        ssr_a = sse / (a**2)
+        ssr_b = sse / (b**2)
+        exp_a = np.exp(-ssr_a / 2)
+        exp_b = np.exp(-ssr_b / 2)
+        print(sse[0])
+        dL = np.sum(
+            (1.0 / r) * (
+                -1 +
+                2 * (exp_a * ssr_a**(self._n_minus_1_over_2) -
+                     exp_b * ssr_b**(self._n_minus_1_over_2)) / (
+                    self._gamma * (scipy.special.gammaincc(self._n_minus_1_over_2,
+                                            sse / (2 * self._a2)) -
+                    scipy.special.gammaincc(self._n_minus_1_over_2,
+                                            sse / (2 * self._b2))))
+                ) * dy.T
+        )
+
+        # Return
+        return L, dL
 
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
