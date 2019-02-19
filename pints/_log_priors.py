@@ -350,7 +350,7 @@ class GaussianLogPrior(pints.LogPrior):
         return np.random.normal(self._mean, self._sigma, size=(n, 1))
 
 
-class HalfCauchyLogPrior():
+class HalfCauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
