@@ -403,10 +403,13 @@ class HalfCauchyLogPrior(pints.LogPrior):
         if float(scale) <= 0:
             raise ValueError('Scale must be positive')
 
-        self._cauchy = pints.CauchyLogPrior(location=location, scale=scale)
+        self._location = location
+        self._scale = scale
+        self._cauchy = pints.CauchyLogPrior(location=self._location,
+                                            scale=self._scale)
 
         # Cache constants
-        self._norm_factor = -np.log(np.arctan(location / scale)/np.pi + 0.5)
+        self._norm_factor = -np.log(np.arctan(location / scale) / np.pi + 0.5)
 
     def __call__(self, x):
         if x[0] > 0:
@@ -420,14 +423,8 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        samples = self._cauchy.sample(n)
-        resample = samples <= 0
-        n_resample = np.sum(resample)
-        while n_resample:
-            samples[resample] = self._cauchy.sample(n_resample)
-            resample = samples <= 0
-            n_resample = np.sum(resample)
-        return samples
+        return scipy.stats.halfcauchy.rvs(loc=self._location,
+                                          scale=self._scale, size=n)
 
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
