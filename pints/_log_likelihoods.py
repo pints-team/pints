@@ -117,7 +117,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
 
 
-class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
+class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
     at each time point where it is assumed that the dependence on
@@ -149,14 +149,14 @@ class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, b):
-        super(IntegratedGaussianLikelihoodUniform, self).__init__(problem)
+        super(GaussianIntegratedUniformLogLikelihood, self).__init__(problem)
 
         # upper limit on uniform prior
         b = float(b)
         if b <= 0:
             raise ValueError('Upper limit on uniform prior for sigma ' +
                              'must exceed 0.')
-        self._b = 0
+        self._b = b
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -166,28 +166,28 @@ class IntegratedGaussianLikelihoodUniform(pints.ProblemLogLikelihood):
         self._n_parameters = problem.n_parameters()
 
         # Pre-calculate
+        n = self._nt
         self._const = (
-            -(1.0 + self._nt / 2.0) * np.log(2) - self._nt * np.log(self._b) -
-            (self._nt / 2) * np.log(np.pi)
+            -n * np.log(b) - (n / 2.0) * np.log(np.pi) -
+            np.log(2 * np.sqrt(2))
         )
 
     def __call__(self, x):
         # For multiparameter problems the parameters are stored as
         # (model_params_1, model_params_2, ..., model_params_k,
         # sigma_1, sigma_2,...)
-        n = self._n
-        m = self._no
-
-        # problem parameters
-        problem_parameters = x[:-m]
-        error = self._values - self._problem.evaluate(problem_parameters)
-        sse = np.sum(error**2)
+        n = self._nt
+        error = self._values - self._problem.evaluate(x)
+        sse = np.sum(error**2, axis=0)
 
         # Calculate
-        return np.sum(
-            - self._n_log_pi
-            - n * np.log(sigma)
-            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
+        return (
+            self._const +
+            (1.0 / 2.0 - n / 2.0) * np.log(sse / (self._b**2)) +
+            np.log(scipy.special.gamma(
+                n / 2.0 - 1.0 / 2.0) *
+                scipy.special.gammaincc(
+                    n / 2.0 - 1.0 / 2.0, sse / (2 * self._b**2)))
         )
 
 

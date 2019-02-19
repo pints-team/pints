@@ -103,6 +103,7 @@ from ._log_likelihoods import (
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
+    GaussianIntegratedUniformLogLikelihood,
 )
 
 #
