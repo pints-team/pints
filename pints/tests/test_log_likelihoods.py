@@ -471,6 +471,7 @@ class TestLogLikelihood(unittest.TestCase):
                              [1.1, -10.3, 15.6, 5.5],
                              [-10, -30.5, -5, 7.6]])
         problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
 
     def test_arma11(self):
         model = pints.toy.ConstantModel(1)
