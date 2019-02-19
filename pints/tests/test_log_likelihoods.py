@@ -112,6 +112,7 @@ class TestLogLikelihood(unittest.TestCase):
         l, dl = log_likelihood.evaluateS1([3])
         self.assertAlmostEqual(l, -23.777369746461702)
         self.assertAlmostEqual(dl[0], -9.3333333333333321)
+        self.assertEqual(len(dl), 1)
 
         # unknown noise value checks
         log_likelihood = pints.GaussianLogLikelihood(problem)
@@ -275,6 +276,33 @@ class TestLogLikelihood(unittest.TestCase):
             plt.grid(True)
 
             plt.show()
+
+        # value-based tests (single output tests are above)
+        # multiple outputs
+        model = pints.toy.ConstantModel(3)
+        parameters = [0, 0, 0]
+        times = [1, 2, 3, 4]
+        values = model.simulate(parameters, times)
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        sigma = [3.5, 1, 12]
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters),
+            -50.508848609684783
+        )
+        l, dl = log_likelihood.evaluateS1(parameters)
+        self.assertAlmostEqual(l, -50.508848609684783)
+        self.assertAlmostEqual(dl[0], 1.820408163265306)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774)
 
     def test_student_t_log_likelihood_single(self):
         """
