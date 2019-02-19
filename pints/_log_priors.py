@@ -169,7 +169,10 @@ class NormalLogPrior(pints.LogPrior):
 class BetaLogPrior(pints.LogPrior):
     """
     Defines a beta (log) prior with given shape parameters ``a`` and ``b``,
-    with pdf f(x|a,b) = x^{a-1} * (1-x)^{b-1} / Beta(a,b).
+    with pdf
+
+    .. math::
+        f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\text{Beta}(a,b)}.
 
     For example: ``p = BetaLogPrior(5, 1)`` for a shape parameters ``a=5`` and
     ``b=1``.
@@ -228,7 +231,10 @@ class BetaLogPrior(pints.LogPrior):
 class ExponentialLogPrior(pints.LogPrior):
     """
     Defines an exponential (log) prior with given rate parameter ``rate`` with
-    pdf f(x|rate) = rate * e^-{rate*x}.
+    pdf
+
+    .. math::
+        f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}.
 
     For example: ``p = ExponentialLogPrior(0.5, 1)`` for a rate ``rate=0.5``.
 
@@ -272,7 +278,12 @@ class ExponentialLogPrior(pints.LogPrior):
 class GammaLogPrior(pints.LogPrior):
     """
     Defines a gamma (log) prior with given shape parameter ``a`` and rate
-    parameter ``b``, with pdf f(x|a,b)=b^a * x^(a-1) * e^{-bx} / Gamma(a)
+    parameter ``b``, with pdf
+
+    .. math::
+        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}
+
+
 
     For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
     rate parameter ``b=1``.
