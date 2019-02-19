@@ -21,7 +21,12 @@ class BetaLogPrior(pints.LogPrior):
     with pdf
 
     .. math::
-        f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\text{Beta}(a,b)}.
+        f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\mathrm{B}(a,b)}
+
+    where :math:`\\mathrm{B}` is the Beta function. This pdf has expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\frac{a}{a+b}.
 
     For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
     use::
@@ -87,7 +92,9 @@ class CauchyLogPrior(pints.LogPrior):
     .. math::
         f(x|\\text{location}, \\text{scale}) = \\frac{1}{\\pi\\;\\text{scale}
         \\left[1 + \\left(\\frac{x-\\text{location}}{\\text{scale}}\\right)^2
-        \\right]}.
+        \\right]}
+
+    and undefined expectation.
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -218,7 +225,12 @@ class ExponentialLogPrior(pints.LogPrior):
     pdf
 
     .. math::
-        f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}.
+        f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}
+
+    and expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\frac{1}{\\text{rate}}.
 
     For example, to create a prior with ``rate=0.5`` use::
 
@@ -267,7 +279,12 @@ class GammaLogPrior(pints.LogPrior):
     parameter ``b``, with pdf
 
     .. math::
-        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}.
+        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\mathrm{\\Gamma}(a)}
+
+    where :math:`\\Gamma` is the Gamma function.  This pdf has expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\frac{a}{b}.
 
     For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
     use::
@@ -331,8 +348,12 @@ class GaussianLogPrior(pints.LogPrior):
 
     .. math::
         f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
-        \\text{exp}\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}
-        \\right).
+        \\text{exp}\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
+
+    and expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\text{mean}.
 
     For example, to create a prior with mean of ``0`` and a standard deviation
     of ``1``, use::
@@ -378,7 +399,9 @@ class HalfCauchyLogPrior(pints.LogPrior):
         \\text{scale}\\left(\\frac{1}{\\pi}\\text{arctan}\\left(\\frac{
         \\text{location}}{\\text{scale} }\\right)+\\frac{1}{2}\\right)\\left(
         \\frac{(x-\\text{location})^2}{\\text{scale}^2}+1\\right)},&x>0\\\\0,&
-        \\text{Otherwise.}\\end{cases}
+        \\text{Otherwise}\\end{cases}
+
+    and undefined expectation.
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -447,7 +470,12 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
     .. math::
         f(x|\\text{mean},\\text{cov}) = \\frac{1}{(2\\pi)^{d/2}|
         \\text{cov}|^{1/2}} \\text{exp}\\left(-\\frac{1}{2}(x-\\text{mean})'
-        \\text{cov}^{-1}(x-\\text{mean})\\right).
+        \\text{cov}^{-1}(x-\\text{mean})\\right)
+
+    and expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\text{mean}.
 
     For example, to create a prior with zero mean and identity covariance,
     use::
@@ -511,7 +539,13 @@ class StudentTLogPrior(pints.LogPrior):
         f(x|\\text{location},\\text{scale},\\text{df})=\\frac{\\left(\\frac{
         \\text{df}}{\\text{df}+\\frac{(x-\\text{location})^2}{\\text{scale}^2}}
         \\right)^{\\frac{\\text{df}+1}{2}}}{\\sqrt{\\text{df}}\\;\\text{scale}
-        \\;\\text{Beta}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}.
+        \\;\\text{Beta}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}
+
+    with expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\begin{cases}\\text{location},&\\text{df}>1\\\\
+        \\text{undefined},&\\text{otherwise.}\\end{cases}
 
     For example, to create a prior centered around 0 with 3 degrees of freedom
     and a scale of 1, use::
@@ -585,7 +619,12 @@ class UniformLogPrior(pints.LogPrior):
     .. math::
         f(x|\\text{lower},\\text{upper})=\\begin{cases}0,&\\text{if }x\\not\\in
         [\\text{lower},\\text{upper})\\\\\\frac{1}{\\text{upper}-\\text{lower}}
-        ,&\\text{if }x\\in[\\text{lower},\\text{upper})\\end{cases}.
+        ,&\\text{if }x\\in[\\text{lower},\\text{upper})\\end{cases}
+
+    and expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\frac{1}{2}(\\text{lower}+\\text{upper}).
 
     For example, to create a prior with :math:`x\\in[0,4]`, :math:`y\\in[1,5]`,
     and :math:`z\\in[2,6]` use either::
