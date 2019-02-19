@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.special
+import scipy.integrate as integrate
 
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
@@ -255,7 +256,11 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         ssr_b = sse / (b**2)
         exp_a = np.exp(-ssr_a / 2)
         exp_b = np.exp(-ssr_b / 2)
-        print(sse[0])
+        gamma_diff = [integrate.quad(
+            lambda t: t**self._n_minus_1_over_2 * np.exp(-t),
+            s / (2 * self._a2[0]), s / (2 * self._b2[0])
+        )[0] for s in sse]
+        print(np.sum(gamma_diff))
         dL = np.sum(
             (1.0 / r) * (
                 -1 +
