@@ -451,6 +451,7 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertTrue(np.all(3 * dy1 == dy))
 
     def test_ar1(self):
+        # single outputs
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
@@ -460,6 +461,16 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.AR1LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.5, 5]), -19.706737485492436)
+
+        # multiple outputs
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.arange(1, 4)
+        model.simulate(parameters, times)
+        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
+                             [1.1, -10.3, 15.6, 5.5],
+                             [-10, -30.5, -5, 7.6]])
+        problem = pints.MultiOutputProblem(model, times, values)
 
     def test_arma11(self):
         model = pints.toy.ConstantModel(1)
