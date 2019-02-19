@@ -162,7 +162,9 @@ class SMC(pints.SMCSampler):
         # Normal iteration
         beta = self._schedule[self._i_temp]
 
-        # Update MCMC chains with tempered log pdf values
+        # Update MCMC to last point, then tell 
+        
+         with tempered log pdf values
         for j, proposed in enumerate(self._proposals):
             updated = self._chains[j].tell(
                 self._temper(log_pdfs[j], self._log_prior(proposed), beta))
