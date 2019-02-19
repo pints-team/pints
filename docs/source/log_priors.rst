@@ -22,11 +22,11 @@ Example::
 
 .. autoclass:: GammaLogPrior
 
+.. autoclass:: GaussianLogPrior
+
 .. autoclass:: HalfCauchyLogPrior
 
 .. autoclass:: MultivariateNormalLogPrior
-
-.. autoclass:: NormalLogPrior
 
 .. autoclass:: StudentTLogPrior
 
