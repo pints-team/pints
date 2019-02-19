@@ -23,8 +23,10 @@ class BetaLogPrior(pints.LogPrior):
     .. math::
         f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\text{Beta}(a,b)}.
 
-    For example: ``p = BetaLogPrior(5, 1)`` for a shape parameters ``a=5`` and
-    ``b=1``.
+    For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
+    use::
+
+        p = pints.BetaLogPrior(5, 1)
 
     *Extends:* :class:`LogPrior`
     """
@@ -146,7 +148,7 @@ class ComposedLogPrior(pints.LogPrior):
 
     For example, a composed log prior::
 
-        p = ComposedLogPrior(log_prior1, log_prior2, log_prior3)
+        p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)
 
     where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
     itself.
@@ -218,7 +220,9 @@ class ExponentialLogPrior(pints.LogPrior):
     .. math::
         f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}.
 
-    For example: ``p = ExponentialLogPrior(0.5, 1)`` for a rate ``rate=0.5``.
+    For example, to create a prior with ``rate=0.5`` use::
+
+        p = pints.ExponentialLogPrior(0.5)
 
     *Extends:* :class:`LogPrior`
     """
@@ -265,8 +269,10 @@ class GammaLogPrior(pints.LogPrior):
     .. math::
         f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}.
 
-    For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
-    rate parameter ``b=1``.
+    For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
+    use::
+
+        p = pints.GammaLogPrior(5, 1)
 
     *Extends:* :class:`LogPrior`
     """
@@ -328,8 +334,10 @@ class GaussianLogPrior(pints.LogPrior):
         \\text{exp}\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}
         \\right).
 
-    For example: ``p = GaussianLogPrior(0, 1)`` for a mean of ``0`` and
-    standard deviation of ``1``.
+    For example, to create a prior with mean of ``0`` and a standard deviation
+    of ``1``, use::
+
+        p = pints.GaussianLogPrior(0, 1)
 
     *Extends:* :class:`LogPrior`
     """
@@ -441,9 +449,10 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         \\text{cov}|^{1/2}} \\text{exp}\\left(-\\frac{1}{2}(x-\\text{mean})'
         \\text{cov}^{-1}(x-\\text{mean})\\right).
 
-    For example::
+    For example, to create a prior with zero mean and identity covariance,
+    use::
 
-        p = MultivariateGaussianLogPrior(
+        p = pints.MultivariateGaussianLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
     *Extends:* :class:`LogPrior`
@@ -578,8 +587,14 @@ class UniformLogPrior(pints.LogPrior):
         [\\text{lower},\\text{upper})\\\\\\frac{1}{\\text{upper}-\\text{lower}}
         ,&\\text{if }x\\in[\\text{lower},\\text{upper})\\end{cases}.
 
-    For example: ``p = UniformLogPrior([1, 1, 1], [10, 10, 100])``, or
-    ``p = UniformLogPrior(RectangularBoundaries([1, 1, 1], [10, 10, 100]))``.
+    For example, to create a prior with :math:`x\\in[0,4]`, :math:`y\\in[1,5]`,
+    and :math:`z\\in[2,6]` use either::
+
+        p = pints.UniformLogPrior([0, 1, 2], [4, 5, 6])
+
+    or::
+
+        p = pints.UniformLogPrior(RectangularBoundaries([0, 1, 2], [4, 5, 6]))
 
     *Extends:* :class:`LogPrior`
     """
