@@ -79,7 +79,13 @@ class BetaLogPrior(pints.LogPrior):
 
 class CauchyLogPrior(pints.LogPrior):
     """
-    Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
+    Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``,
+    with pdf
+
+    .. math::
+        f(x|\\text{location}, \\text{scale}) = \\frac{1}{\\pi\\;\\text{scale}
+        \\left[1 + \\left(\\frac{x-\\text{location}}{\\text{scale}}\\right)^2
+        \\right]}.
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -257,7 +263,7 @@ class GammaLogPrior(pints.LogPrior):
     parameter ``b``, with pdf
 
     .. math::
-        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}
+        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}.
 
     For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
     rate parameter ``b=1``.
@@ -315,22 +321,27 @@ class GammaLogPrior(pints.LogPrior):
 class GaussianLogPrior(pints.LogPrior):
     """
     Defines a 1-d Gaussian (log) prior with a given ``mean`` and
-    ``standard_deviation``.
+    standard deviation ``sd``, with pdf
+
+    .. math::
+        f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
+        \\text{exp}\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}
+        \\right).
 
     For example: ``p = GaussianLogPrior(0, 1)`` for a mean of ``0`` and
     standard deviation of ``1``.
 
     *Extends:* :class:`LogPrior`
     """
-    def __init__(self, mean, standard_deviation):
+    def __init__(self, mean, sd):
         # Parse input arguments
         self._mean = float(mean)
-        self._sigma = float(standard_deviation)
+        self._sd = float(sd)
 
         # Cache constants
-        self._offset = np.log(1 / np.sqrt(2 * np.pi * self._sigma ** 2))
-        self._factor = 1 / (2 * self._sigma ** 2)
-        self._factor2 = 1 / self._sigma**2
+        self._offset = np.log(1 / np.sqrt(2 * np.pi * self._sd ** 2))
+        self._factor = 1 / (2 * self._sd ** 2)
+        self._factor2 = 1 / self._sd**2
 
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
@@ -345,14 +356,21 @@ class GaussianLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return np.random.normal(self._mean, self._sigma, size=(n, 1))
+        return np.random.normal(self._mean, self._sd, size=(n, 1))
 
 
 class HalfCauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
-    between [0, inf].
+    between [0, inf], with pdf
+
+    .. math::
+        f(x|\\text{location},\\text{scale})=\\begin{cases}\\frac{1}{\\pi\\;
+        \\text{scale}\\left(\\frac{1}{\\pi}\\text{arctan}\\left(\\frac{
+        \\text{location}}{\\text{scale} }\\right)+\\frac{1}{2}\\right)\\left(
+        \\frac{(x-\\text{location})^2}{\\text{scale}^2}+1\\right)},&x>0\\\\0,&
+        \\text{Otherwise.}\\end{cases}
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -416,7 +434,12 @@ class HalfCauchyLogPrior(pints.LogPrior):
 class MultivariateGaussianLogPrior(pints.LogPrior):
     """
     Defines a multivariate Gaussian (log)prior with a given ``mean`` and
-    ``covariance`` matrix.
+    covariance matrix ``cov``, with pdf
+
+    .. math::
+        f(x|\\text{mean},\\text{cov}) = \\frac{1}{(2\\pi)^{d/2}|
+        \\text{cov}|^{1/2}} \\text{exp}\\left(-\\frac{1}{2}(x-\\text{mean})'
+        \\text{cov}^{-1}(x-\\text{mean})\\right).
 
     For example::
 
@@ -425,25 +448,25 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     *Extends:* :class:`LogPrior`
     """
-    def __init__(self, mean, covariance):
+    def __init__(self, mean, cov):
         # Check input
         mean = pints.vector(mean)
-        covariance = np.array(covariance, copy=True)
-        covariance.setflags(write=False)
-        if covariance.ndim != 2:
+        cov = np.array(cov, copy=True)
+        cov.setflags(write=False)
+        if cov.ndim != 2:
             raise ValueError('Given covariance must be a matrix.')
-        if not (mean.shape[0] == covariance.shape[0] == covariance.shape[1]):
+        if not (mean.shape[0] == cov.shape[0] == cov.shape[1]):
             raise ValueError('Sizes of mean and covariance do not match.')
 
         # Store
         self._mean = mean
-        self._covariance = covariance
+        self._cov = cov
         self._n_parameters = mean.shape[0]
 
     def __call__(self, x):
         return np.log(
             scipy.stats.multivariate_normal.pdf(
-                x, mean=self._mean, cov=self._covariance))
+                x, mean=self._mean, cov=self._cov))
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -453,7 +476,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         """ See :meth:`LogPrior.call()`. """
         # Note: size=n returns shape (n, d)
         return np.random.multivariate_normal(
-            self._mean, self._covariance, size=n)
+            self._mean, self._cov, size=n)
 
 
 class NormalLogPrior(GaussianLogPrior):
@@ -473,7 +496,13 @@ class NormalLogPrior(GaussianLogPrior):
 class StudentTLogPrior(pints.LogPrior):
     """
     Defines a 1-d Student-t (log) prior with a given ``location``,
-    ``degrees of freedom``,  and ``scale``.
+    degrees of freedom ``df``,  and ``scale`` with pdf
+
+    .. math::
+        f(x|\\text{location},\\text{scale},\\text{df})=\\frac{\\left(\\frac{
+        \\text{df}}{\\text{df}+\\frac{(x-\\text{location})^2}{\\text{scale}^2}}
+        \\right)^{\\frac{\\text{df}+1}{2}}}{\\sqrt{\\text{df}}\\;\\text{scale}
+        \\;\\text{Beta}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}.
 
     For example, to create a prior centered around 0 with 3 degrees of freedom
     and a scale of 1, use::
@@ -541,6 +570,13 @@ class UniformLogPrior(pints.LogPrior):
 
     The range includes the lower, but not the upper boundaries, so that any
     point ``x`` with a non-zero prior must have ``lower <= x < upper``.
+
+    In 1D this has pdf
+
+    .. math::
+        f(x|\\text{lower},\\text{upper})=\\begin{cases}0,&\\text{if }x\\not\\in
+        [\\text{lower},\\text{upper})\\\\\\frac{1}{\\text{upper}-\\text{lower}}
+        ,&\\text{if }x\\in[\\text{lower},\\text{upper})\\end{cases}.
 
     For example: ``p = UniformLogPrior([1, 1, 1], [10, 10, 100])``, or
     ``p = UniformLogPrior(RectangularBoundaries([1, 1, 1], [10, 10, 100]))``.
