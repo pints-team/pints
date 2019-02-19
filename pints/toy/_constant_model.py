@@ -106,8 +106,6 @@ class ConstantModel(pints.ForwardModelS1):
             #   [df2/dp1, df2/dp2]]
             # i.e.
             #  [[1, 0],
-            #   [0, 2]]
-            # i.e. np.diag(self._r)
-            dy = np.tile(np.diag(self._r), (len(times), 1, 1))
+            #   [0, 1]]
+            dy = np.tile(np.diag(np.ones(len(self._r))), (len(times), 1, 1))
         return (y, dy)
-
