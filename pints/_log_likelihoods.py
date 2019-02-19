@@ -56,8 +56,11 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        rho = np.asarray(x[-2 * self._no:-self._no])
-        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
+        m = 2 * self._no
+        parameters = x[-m:]
+        rho = np.asarray(parameters[0::2])
+        sigma = np.asarray(parameters[1::2])
+        sigma = np.asarray(sigma) * np.sqrt(1 - rho**2)
         error = self._values - self._problem.evaluate(x[:-2 * self._no])
         autocorr_error = error[1:] - rho * error[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
