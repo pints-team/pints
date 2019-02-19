@@ -77,7 +77,7 @@ class BetaLogPrior(pints.LogPrior):
         return np.random.beta(self._a, self._b, size=(n, 1))
 
 
-class CauchyLogPrior():
+class CauchyLogPrior(pints.LogPrior):
     """
     Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``.
 
