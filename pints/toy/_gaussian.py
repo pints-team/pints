@@ -2,7 +2,7 @@
 # Unimodal Normal/Gaussian toy log pdf.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -14,7 +14,7 @@ import numpy as np
 import scipy.stats
 
 
-class NormalLogPDF(pints.LogPDF):
+class GaussianLogPDF(pints.LogPDF):
     """
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
@@ -30,7 +30,8 @@ class NormalLogPDF(pints.LogPDF):
 
     *Extends:* :class:`pints.LogPDF`.
     """
-    def __init__(self, mean, sigma):
+
+    def __init__(self, mean=[0, 0], sigma=[1, 1]):
 
         # Copy and convert
         mean = np.array(mean, copy=True)
@@ -72,8 +73,6 @@ class NormalLogPDF(pints.LogPDF):
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
 
-        # Calculate the Kullback-Leibler divergence between the given samples
-        # and this multivariate normal distribution underlying.
         # From wikipedia:
         #
         # k = dimension of distribution
@@ -120,4 +119,3 @@ class NormalLogPDF(pints.LogPDF):
         # derivative wrt x
         dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
         return L, dL
-

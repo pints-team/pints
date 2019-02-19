@@ -14,14 +14,14 @@ examples.
     cone_logpdf
     constant_model
     fitzhugh_nagumo_model
+    gaussian_logpdf
     goodwin_oscillator_model
     hes1_michaelis_menten_model
-    high_dimensional_normal_logpdf
+    high_dimensional_gaussian_logpdf
     hodgkin_huxley_ik_model
     logistic_model
     lotka_volterra_model
-    multimodal_normal_logpdf
-    normal_logpdf
+    multimodal_gaussian_logpdf
     parabolic_error
     repressilator_model
     rosenbrock

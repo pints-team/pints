@@ -9,7 +9,7 @@ interface, that can be used to find the parameters that minimise an
 :class:`ErrorMeasure` or maximise a :class:`LogPDF`.
 
 The easiest way to run an optimisation is by using the :func:`optimise` method
-or the :class:`Optimisation` class.
+or the :class:`OptimisationController` class.
 
 .. toctree::
 

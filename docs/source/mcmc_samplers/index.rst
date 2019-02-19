@@ -18,5 +18,6 @@ interface, that can be used to sample from an unknown
     dream_mcmc
     emcee_hammer_mcmc
     hamiltonian_mcmc
+    mala_mcmc
     metropolis_mcmc
     population_mcmc

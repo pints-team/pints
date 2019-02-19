@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the MCMC Controller.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -50,9 +50,9 @@ LOG_FILE = [
 ]
 
 
-class TestMCMCSampling(unittest.TestCase):
+class TestMCMCController(unittest.TestCase):
     """
-    Tests the MCMCSampling class.
+    Tests the MCMCController class.
     """
 
     @classmethod
@@ -82,7 +82,7 @@ class TestMCMCSampling(unittest.TestCase):
         )
 
         # Create a log-likelihood
-        cls.log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
         cls.log_posterior = pints.LogPosterior(
@@ -99,7 +99,7 @@ class TestMCMCSampling(unittest.TestCase):
         xs = [x0]
         nparameters = len(x0)
         niterations = 10
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         self.assertEqual(len(mcmc.samplers()), nchains)
@@ -109,9 +109,9 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Check constructor arguments
-        pints.MCMCSampling(self.log_posterior, nchains, xs)
-        pints.MCMCSampling(self.log_prior, nchains, xs)
-        pints.MCMCSampling(self.log_likelihood, nchains, xs)
+        pints.MCMCController(self.log_posterior, nchains, xs)
+        pints.MCMCController(self.log_prior, nchains, xs)
+        pints.MCMCController(self.log_likelihood, nchains, xs)
 
         # Check sampler() method
         self.assertRaises(RuntimeError, mcmc.sampler)
@@ -119,40 +119,40 @@ class TestMCMCSampling(unittest.TestCase):
         def f(x):
             return x
         self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCSampling, f, nchains,
-            xs)
+            ValueError, 'extend pints.LogPDF', pints.MCMCController, f,
+            nchains, xs)
 
         # Test x0 and chain argument
         self.assertRaisesRegex(
             ValueError, 'chains must be at least 1',
-            pints.MCMCSampling, self.log_posterior, 0, [])
+            pints.MCMCController, self.log_posterior, 0, [])
         self.assertRaisesRegex(
             ValueError, 'positions must be equal to number of chains',
-            pints.MCMCSampling, self.log_posterior, 1, x0)
+            pints.MCMCController, self.log_posterior, 1, x0)
         self.assertRaisesRegex(
             ValueError, 'positions must be equal to number of chains',
-            pints.MCMCSampling, self.log_posterior, 2, xs)
+            pints.MCMCController, self.log_posterior, 2, xs)
         self.assertRaisesRegex(
             ValueError, 'same dimension',
-            pints.MCMCSampling, self.log_posterior, 1, [x0[:-1]])
+            pints.MCMCController, self.log_posterior, 1, [x0[:-1]])
         self.assertRaisesRegex(
             ValueError, 'extend pints.MCMCSampler',
-            pints.MCMCSampling, self.log_posterior, 1, xs, method=12)
+            pints.MCMCController, self.log_posterior, 1, xs, method=12)
 
         # Check different sigma0 initialisations
-        pints.MCMCSampling(self.log_posterior, nchains, xs)
+        pints.MCMCController(self.log_posterior, nchains, xs)
         sigma0 = [0.005, 100, 0.5 * self.noise]
-        pints.MCMCSampling(self.log_posterior, nchains, xs, sigma0)
+        pints.MCMCController(self.log_posterior, nchains, xs, sigma0)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
-        pints.MCMCSampling(self.log_posterior, nchains, xs, sigma0)
+        pints.MCMCController(self.log_posterior, nchains, xs, sigma0)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
-            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0)
+            pints.MCMCController, self.log_posterior, nchains, xs, sigma0)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
-            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0)
+            pints.MCMCController, self.log_posterior, nchains, xs, sigma0)
 
         # Test multi-chain with single-chain mcmc
 
@@ -163,7 +163,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
         nparameters = len(x0)
         niterations = 10
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
@@ -179,7 +179,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
         nparameters = len(xs[0])
         niterations = 20
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
             method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(niterations)
@@ -203,7 +203,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Test with multi-chain method
         meth = pints.DifferentialEvolutionMCMC
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs, method=meth)
         self.assertEqual(len(mcmc.samplers()), 1)
         mcmc.set_max_iterations(niterations)
@@ -214,9 +214,9 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Check constructor arguments
-        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
-        pints.MCMCSampling(self.log_prior, nchains, xs, method=meth)
-        pints.MCMCSampling(self.log_likelihood, nchains, xs, method=meth)
+        pints.MCMCController(self.log_posterior, nchains, xs, method=meth)
+        pints.MCMCController(self.log_prior, nchains, xs, method=meth)
+        pints.MCMCController(self.log_likelihood, nchains, xs, method=meth)
 
         # Test x0 and chain argument
         self.assertRaisesRegex(
@@ -235,22 +235,22 @@ class TestMCMCSampling(unittest.TestCase):
         self.assertIsInstance(mcmc.sampler(), pints.MultiChainMCMC)
 
         # Check different sigma0 initialisations work
-        pints.MCMCSampling(self.log_posterior, nchains, xs, method=meth)
+        pints.MCMCController(self.log_posterior, nchains, xs, method=meth)
         sigma0 = [0.005, 100, 0.5 * self.noise]
-        pints.MCMCSampling(
+        pints.MCMCController(
             self.log_posterior, nchains, xs, sigma0, method=meth)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
-        pints.MCMCSampling(
+        pints.MCMCController(
             self.log_posterior, nchains, xs, sigma0, method=meth)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
-            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            pints.MCMCController, self.log_posterior, nchains, xs, sigma0,
             method=meth)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
-            pints.MCMCSampling, self.log_posterior, nchains, xs, sigma0,
+            pints.MCMCController, self.log_posterior, nchains, xs, sigma0,
             method=meth)
 
     def test_stopping(self):
@@ -258,7 +258,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         nchains = 1
         xs = [np.array(self.real_parameters) * 1.1]
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
 
         # Test setting max iterations
         maxi = mcmc.max_iterations() + 2
@@ -284,7 +284,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
         nparameters = len(xs[0])
         niterations = 20
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
             method=pints.AdaptiveCovarianceMCMC)
         mcmc.set_max_iterations(niterations)
@@ -322,7 +322,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         # No output
         with StreamCapture() as capture:
-            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
             mcmc.set_initial_phase_iterations(5)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(False)
@@ -333,7 +333,7 @@ class TestMCMCSampling(unittest.TestCase):
         # With output to screen
         np.random.seed(1)
         with StreamCapture() as capture:
-            mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+            mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
             mcmc.set_initial_phase_iterations(5)
             mcmc.set_max_iterations(10)
             mcmc.set_log_to_screen(True)
@@ -342,7 +342,11 @@ class TestMCMCSampling(unittest.TestCase):
         lines = capture.text().splitlines()
         for i, line in enumerate(lines):
             self.assertLess(i, len(LOG_SCREEN))
-            self.assertEqual(line, LOG_SCREEN[i])
+            # Chop off time bit before comparison
+            if LOG_SCREEN[i][-6:] == '0:00.0':
+                self.assertEqual(line[:-6], LOG_SCREEN[i][:-6])
+            else:
+                self.assertEqual(line, LOG_SCREEN[i])
         self.assertEqual(len(lines), len(LOG_SCREEN))
 
         # With output to file
@@ -350,7 +354,7 @@ class TestMCMCSampling(unittest.TestCase):
         with StreamCapture() as capture:
             with TemporaryDirectory() as d:
                 filename = d.path('test.txt')
-                mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+                mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
                 mcmc.set_initial_phase_iterations(5)
                 mcmc.set_max_iterations(10)
                 mcmc.set_log_to_screen(False)
@@ -360,7 +364,12 @@ class TestMCMCSampling(unittest.TestCase):
                     lines = f.read().splitlines()
                 for i, line in enumerate(lines):
                     self.assertLess(i, len(LOG_FILE))
-                    self.assertEqual(line, LOG_FILE[i])
+                    # Chop off time bit before comparison
+                    if LOG_FILE[i][-6:] == '0:00.0':
+                        self.assertEqual(line[:-6], LOG_FILE[i][:-6])
+                    else:
+                        self.assertEqual(line, LOG_FILE[i])
+                    self.assertEqual(line[:-6], LOG_FILE[i][:-6])
                 self.assertEqual(len(lines), len(LOG_FILE))
             self.assertEqual(capture.text(), '')
 
@@ -376,7 +385,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
 
         # Initial phase
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         self.assertTrue(mcmc.method_needs_initial_phase())
         self.assertNotEqual(mcmc.initial_phase_iterations(), 10)
         mcmc.set_initial_phase_iterations(10)
@@ -391,7 +400,7 @@ class TestMCMCSampling(unittest.TestCase):
         for sampler in mcmc._samplers:
             self.assertTrue(sampler.in_initial_phase())
 
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(10)
         for sampler in mcmc._samplers:
             self.assertTrue(sampler.in_initial_phase())
@@ -402,7 +411,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertFalse(sampler.in_initial_phase())
 
         # No initial phase
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(0)
         mcmc.set_max_iterations(1)
         mcmc.set_log_to_screen(False)
@@ -420,7 +429,7 @@ class TestMCMCSampling(unittest.TestCase):
         nchains = len(xs)
 
         # Test writing chains - not evals to disk (using LogPosterior)
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -472,7 +481,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertNotIn('evals_0.csv', text)
 
         # Test writing evals - not chains to disk (using LogPosterior)
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -532,7 +541,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
         # Test writing chains and evals to disk (with LogPosterior)
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -596,7 +605,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
         # Test writing chains and evals to disk (with LogLikelihood)
-        mcmc = pints.MCMCSampling(self.log_likelihood, nchains, xs)
+        mcmc = pints.MCMCController(self.log_likelihood, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -657,7 +666,7 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
         # Test logging can be disabled again
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs)
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -707,7 +716,7 @@ class TestMCMCSampling(unittest.TestCase):
 
         # Test with a single chain
         nchains = 1
-        mcmc = pints.MCMCSampling(self.log_posterior, nchains, xs[:1])
+        mcmc = pints.MCMCController(self.log_posterior, nchains, xs[:1])
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -769,6 +778,12 @@ class TestMCMCSampling(unittest.TestCase):
             self.assertIn('chain_0.csv', text)
             self.assertIn('Writing evaluations to', text)
             self.assertIn('evals_0.csv', text)
+
+    def test_deprecated_alias(self):
+
+        mcmc = pints.MCMCSampling(
+            self.log_posterior, 1, [self.real_parameters])
+        self.assertIsInstance(mcmc, pints.MCMCController)
 
 
 if __name__ == '__main__':

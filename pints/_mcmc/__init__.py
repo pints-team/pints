@@ -2,7 +2,7 @@
 # Sub-module containing MCMC inference routines
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -44,6 +44,13 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         return False
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated logpdf.
+        """
+        return False
+
     def set_initial_phase(self, in_initial_phase):
         """
         For methods that need an initial phase (see
@@ -51,13 +58,6 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         algorithm. For other methods a ``NotImplementedError`` is returned.
         """
         raise NotImplementedError
-
-    def needs_sensitivities(self):
-        """
-        Returns ``True`` if this methods needs sensitivities to be passed in to
-        ``tell`` along with the evaluated logpdf.
-        """
-        return False
 
 
 class SingleChainMCMC(MCMCSampler):
@@ -82,7 +82,7 @@ class SingleChainMCMC(MCMCSampler):
         self._x0 = pints.vector(x0)
 
         # Get number of parameters
-        self._dimension = len(self._x0)
+        self._n_parameters = len(self._x0)
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -93,18 +93,25 @@ class SingleChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0)
-            if np.product(self._sigma0.shape) == self._dimension:
+            if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
-                self._sigma0 = self._sigma0.reshape((self._dimension,))
+                self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
             else:
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
-                    (self._dimension, self._dimension))
+                    (self._n_parameters, self._n_parameters))
 
     def ask(self):
         """
         Returns a parameter vector to evaluate the logpdf for.
+        """
+        raise NotImplementedError
+
+    def current_log_pdf(self):
+        """
+        Returns the log pdf value of the current point (i.e. of the most
+        recent point returned by :meth:`tell()`).
         """
         raise NotImplementedError
 
@@ -176,10 +183,10 @@ class MultiChainMCMC(MCMCSampler):
         self._x0.setflags(write=False)
 
         # Get number of parameters
-        self._dimension = len(self._x0[0])
+        self._n_parameters = len(self._x0[0])
 
         # Check initial points all have correct dimension
-        if not all([len(x) == self._dimension for x in self._x0]):
+        if not all([len(x) == self._n_parameters for x in self._x0]):
             raise ValueError('All initial points must have same dimension.')
 
         # Check initial standard deviation
@@ -191,18 +198,25 @@ class MultiChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._dimension:
+            if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
-                self._sigma0 = self._sigma0.reshape((self._dimension,))
+                self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
             else:
                 # Check if 2d matrix of correct size
                 self._sigma0 = self._sigma0.reshape(
-                    (self._dimension, self._dimension))
+                    (self._n_parameters, self._n_parameters))
 
     def ask(self):
         """
         Returns a sequence of parameter vectors to evaluate a LogPDF for.
+        """
+        raise NotImplementedError
+
+    def current_log_pdfs(self):
+        """
+        Returns the log pdf values of the current points (i.e. of the most
+        recent points returned by :meth:`tell()`).
         """
         raise NotImplementedError
 
@@ -223,7 +237,7 @@ class MultiChainMCMC(MCMCSampler):
         raise NotImplementedError
 
 
-class MCMCSampling(object):
+class MCMCController(object):
     """
     Samples from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
     (MCMC) method.
@@ -231,11 +245,11 @@ class MCMCSampling(object):
     The method to use (either a :class:`SingleChainMCMC` class or a
     :class:`MultiChainMCMC` class) is specified at runtime. For example::
 
-        mcmc = pints.MCMCSampling(
+        mcmc = pints.MCMCController(
             log_pdf, 3, x0, method=pints.AdaptiveCovarianceMCMC)
 
     Properties related to the number if iterations, parallelisation, and
-    logging can be set directly on the ``MCMCSampling`` object, e.g.::
+    logging can be set directly on the ``MCMCController`` object, e.g.::
 
         mcmc.set_max_iterations(1000)
 
@@ -249,7 +263,7 @@ class MCMCSampling(object):
 
         chains = mcmc.run()
 
-    By default, an MCMCSampling run will write regular progress updates to
+    By default, an MCMCController run will write regular progress updates to
     screen. This can be disabled using :meth:`set_log_to_screen()`. To write a
     similar progress log to a file, use :meth:`set_log_to_file()`. To store the
     chains and/or evaluations generated by :meth:`run()` to a file, use
@@ -287,7 +301,7 @@ class MCMCSampling(object):
         self._log_pdf = log_pdf
 
         # Get number of parameters
-        self._dimension = self._log_pdf.n_parameters()
+        self._n_parameters = self._log_pdf.n_parameters()
 
         # Check number of chains
         self._chains = int(chains)
@@ -299,7 +313,7 @@ class MCMCSampling(object):
             raise ValueError(
                 'Number of initial positions must be equal to number of'
                 ' chains.')
-        if not all([len(x) == self._dimension for x in x0]):
+        if not all([len(x) == self._n_parameters for x in x0]):
             raise ValueError(
                 'All initial positions must have the same dimension as the'
                 ' given LogPDF.')
@@ -437,7 +451,7 @@ class MCMCSampling(object):
                 cl = pints.Logger()
                 cl.set_stream(None)
                 cl.set_filename(filename, True)
-                for k in range(self._dimension):
+                for k in range(self._n_parameters):
                     cl.add_float('p' + str(k))
                 chain_loggers.append(cl)
 
@@ -544,8 +558,7 @@ class MCMCSampling(object):
 
                 none_found = [x is None for x in samples]
                 if any(none_found):
-                    # Can't mix None w. samples
-                    assert(all(none_found))
+                    assert(all(none_found))     # Can't mix None w. samples
                     intermediate_step = True
             else:
                 samples = self._samplers[0].tell(fxs)
@@ -634,9 +647,9 @@ class MCMCSampling(object):
         """
         if self._single_chain:
             raise RuntimeError(
-                'The method MCMCSampling.sampler() is only supported when a'
+                'The method MCMCController.sampler() is only supported when a'
                 ' MultiChainMCMC is selected. Please use'
-                ' MCMCSampling.samplers() instead, to obtain a list of all'
+                ' MCMCController.samplers() instead, to obtain a list of all'
                 ' internal SingleChainMCMC instances.')
         return self._samplers[0]
 
@@ -796,6 +809,20 @@ class MCMCSampling(object):
             self._n_workers = 1
 
 
+class MCMCSampling(MCMCController):
+    """ Deprecated alias for :class:`MCMCController`. """
+
+    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+        # Deprecated on 2019-02-06
+        import logging
+        logging.basicConfig()
+        log = logging.getLogger(__name__)
+        log.warning(
+            'The class `pints.MCMCSampling` is deprecated.'
+            ' Please use `pints.MCMCController` instead.')
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+
+
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
     """
     Sample from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
@@ -823,5 +850,5 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`AdaptiveCovarianceMCMC` is used.
     """
-    return MCMCSampling(    # pragma: no cover
+    return MCMCController(    # pragma: no cover
         log_pdf, chains, x0, sigma0, method).run()

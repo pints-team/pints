@@ -12,7 +12,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
-from scipy.integrate import odeint
 
 
 class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
@@ -45,7 +44,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
             plt.plot(t, v)
         plt.show()
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.ToyModel`.
 
     References:
 
@@ -68,6 +67,15 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         self._g_max = 36
 
         # Voltage step protocol
+        self._prepare_protocol()
+
+    def _prepare_protocol(self):
+        """
+        Sets up a voltage step protocol for use with this model.
+
+        The protocol consists of multiple steps, each starting with 90ms at a
+        fixed holding potential, followed by 10ms at a varying step potential.
+        """
         self._t_hold = 90         # 90ms at v_hold
         self._t_step = 10         # 10ms at v_step
         self._t_both = self._t_hold + self._t_step
@@ -91,17 +99,15 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         # Protocol duration
         self._duration = len(self._v_step) * (self._t_hold + self._t_step)
 
-    def _protocol(self, time):
-        """
-        Returns the voltage at the given time, according to the embedded
-        voltage step protocol.
-        """
-        i = int(time / self._t_both)
-        if i < 0 or i >= self._n_steps:
-            return self._v_hold
-        if time - i * self._t_both >= self._t_hold:
-            return self._v_step[i]
-        return self._v_hold
+        # Create list of times when V changes (not including t=0)
+        self._events = np.concatenate((
+            self._t_both * (1 + np.arange(self._n_steps)),
+            self._t_both * np.arange(self._n_steps) + self._t_hold))
+        self._events.sort()
+
+        # List of voltages (not including V(t=0))
+        self._voltages = np.repeat(self._v_step, 2)
+        self._voltages[1::2] = self._v_hold
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
@@ -110,25 +116,43 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
 
+        if times[0] < 0:
+            raise ValueError('All times must be positive.')
+        times = np.asarray(times)
+
         # Unpack parameters
         p1, p2, p3, p4, p5 = parameters
 
-        # Derivative
-        def dndt(n, t):
-            v = self._protocol(t)
+        # Analytically calculate n, during a fixed-voltage step
+        def calculate_n(v, n0, t0, times):
             a = p1 * (-(v + 75) + p2) / (np.exp((-(v + 75) + p2) / p3) - 1)
             b = p4 * np.exp((-v - 75) / p5)
-            return a * (1 - n) - b * n
+            tau = 1 / (a + b)
+            inf = a * tau
+            return inf - (inf - n0) * np.exp(-(times - t0) / tau)
 
-        # Integrate
-        ns = odeint(dndt, self._n0, times, atol=1e-8, rtol=1e-8)
-        ns = ns.reshape(times.shape)
+        # Output arrays
+        ns = np.zeros(times.shape)
+        vs = np.zeros(times.shape)
 
-        # Voltage over time
-        voltage = np.array([self._protocol(t) for t in times])
+        # Iterate over the step, fill in the output arrays
+        v = self._v_hold
+        t_last = 0
+        n_last = self._n0
+        for i, t_next in enumerate(self._events):
+            index = (t_last <= times) * (times < t_next)
+            vs[index] = v
+            ns[index] = calculate_n(v, n_last, t_last, times[index])
+            n_last = calculate_n(v, n_last, t_last, t_next)
+            t_last = t_next
+            v = self._voltages[i]
+        index = times >= t_next
+        vs[index] = v
+        ns[index] = calculate_n(v, n_last, t_last, times[index])
+        n_last = calculate_n(v, n_last, t_last, t_next)
 
         # Calculate and return current
-        return self._g_max * ns**4 * (voltage - self._E_k)
+        return self._g_max * ns**4 * (vs - self._E_k)
 
     def fold(self, times, values):
         """
@@ -141,15 +165,19 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         """
         # Get modulus of times
         times = np.mod(times, self._t_both)
+
         # Remove all points during t_hold
         selection = times >= self._t_hold
         times = times[selection]
         values = values[selection]
+
         # Use the start of the step as t=0
         times -= self._t_hold
+
         # Find points to split arrays
         split = 1 + np.argwhere(times[1:] < times[:-1])
         split = split.reshape((len(split),))
+
         # Split arrays
         traces = []
         i = 0

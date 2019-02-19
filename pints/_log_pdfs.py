@@ -2,7 +2,7 @@
 # Main Log PDF functions
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -67,7 +67,7 @@ class LogPrior(LogPDF):
         is the requested number of samples, and ``d`` is the dimension of the
         prior.
 
-        Note: This method is optional, in the sense that only a subsets of
+        Note: This method is optional, in the sense that only a subset of
         inference methods require it.
         """
         raise NotImplementedError
@@ -199,8 +199,8 @@ class SumOfIndependentLogPDFs(LogPDF):
     Example::
 
         log_likelihood = pints.SumOfIndependentLogPDFs([
-            pints.UnknownNoiseLogLikelihood(problem1),
-            pints.UnknownNoiseLogLikelihood(problem2),
+            pints.GaussianLogLikelihood(problem1),
+            pints.GaussianLogLikelihood(problem2),
         ])
 
     *Extends:* :class:`LogPDF`

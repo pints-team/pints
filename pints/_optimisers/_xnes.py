@@ -2,7 +2,7 @@
 # Exponential natural evolution strategy optimizer: xNES
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -54,7 +54,7 @@ class XNES(pints.PopulationBasedOptimiser):
         self._ready_for_tell = True
 
         # Create new samples
-        self._zs = np.array([np.random.normal(0, 1, self._dimension)
+        self._zs = np.array([np.random.normal(0, 1, self._n_parameters)
                              for i in range(self._population_size)])
         self._xs = np.array([self._mu + np.dot(self._A, self._zs[i])
                              for i in range(self._population_size)])
@@ -95,7 +95,7 @@ class XNES(pints.PopulationBasedOptimiser):
             self._manual_boundaries = True
 
         # Shorthands
-        d = self._dimension
+        d = self._n_parameters
         n = self._population_size
 
         # Learning rates
@@ -131,7 +131,7 @@ class XNES(pints.PopulationBasedOptimiser):
 
     def _suggested_population_size(self):
         """ See :meth:`Optimiser._suggested_population_size(). """
-        return 4 + int(3 * np.log(self._dimension))
+        return 4 + int(3 * np.log(self._n_parameters))
 
     def tell(self, fx):
         """ See :meth:`Optimiser.tell()`. """

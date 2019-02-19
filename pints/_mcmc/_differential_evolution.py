@@ -2,7 +2,7 @@
 # Differential evolution MCMC
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -51,7 +51,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('Need at least 3 chains.')
 
         # Warn user against using too few chains
-        if self._chains < 1.5 * self._dimension:
+        if self._chains < 1.5 * self._n_parameters:
             log = logging.getLogger(__name__)
             log.warning('This method should be run with n_chains >= ' +
                         '1.5 * n_parameters')
@@ -61,7 +61,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Current points and proposed points
         self._current = None
-        self._current_logpdf = None
+        self._current_log_pdfs = None
         self._proposed = None
 
         #
@@ -69,7 +69,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         #
 
         # Gamma
-        self._gamma = 2.38 / np.sqrt(2 * self._dimension)
+        self._gamma = 2.38 / np.sqrt(2 * self._n_parameters)
 
         # Gamma switch to 1 every (below) steps to help find
         # modes
@@ -81,8 +81,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Mean used for scaling error process
         self._mu = np.mean(self._x0, axis=0)
 
-        # Normal error vs uniform
-        self._normal_error = True
+        # Gaussian error vs uniform
+        self._gaussian_error = True
 
         # Relative scaling
         self._relative_scaling = True
@@ -102,7 +102,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
             self._proposed = np.zeros(self._current.shape)
             for j in range(self._chains):
-                if self._normal_error:
+                if self._gaussian_error:
                     error = np.random.normal(0, self._b_star, self._mu.shape)
                 else:
                     error = np.random.uniform(-self._b_star, self._b_star,
@@ -115,7 +115,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 )
 
             # reset gamma
-            self._gamma = 2.38 / np.sqrt(2 * self._dimension)
+            self._gamma = 2.38 / np.sqrt(2 * self._n_parameters)
 
             # Set as read only
             self._proposed.setflags(write=False)
@@ -123,15 +123,19 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
-    def set_normal_error(self, normal_error):
+    def current_log_pdfs(self):
+        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
+        return self._current_log_pdfs
+
+    def set_gaussian_error(self, gaussian_error):
         """
-        If true sets the error process to be a normal error, N(0, b*);
-        if false, it uses a uniform error U(-b*, b*);
-        where b* = b if absolute scaling used and b* = mu * b if
-        relative used instead
+        If ``True`` sets the error process to be a gaussian error,
+        ``N(0, b*)``; if ``False``, it uses a uniform error ``U(-b*, b*)``;
+        where ``b* = b`` if absolute scaling used and ``b* = mu * b`` if
+        relative scaling is used instead.
         """
-        normal_error = bool(normal_error)
-        self._normal_error = normal_error
+        gaussian_error = bool(gaussian_error)
+        self._gaussian_error = gaussian_error
 
     def _initialise(self):
         """
@@ -153,7 +157,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._relative_scaling:
             self._b_star = np.abs(self._mu * self._b)
         else:
-            self._b_star = np.repeat(self._b, self._dimension)
+            self._b_star = np.repeat(self._b, self._n_parameters)
 
         # Gamma set to 1 counter
         self._iter_count = 0
@@ -185,7 +189,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if self._relative_scaling:
             self._b_star = self._mu * self._b
         else:
-            self._b_star = np.repeat(self._b, self._dimension)
+            self._b_star = np.repeat(self._b, self._n_parameters)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -209,6 +213,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             # Accept
             self._current = self._proposed
             self._current_log_pdfs = proposed_log_pdfs
+            self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
             self._proposed = None
@@ -231,6 +236,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
@@ -265,8 +271,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[gamma, normal_scale_coefficient,
-        gamma_switch_rate, normal_error, relative_scaling]``.
+        The hyper-parameter vector is ``[gamma, gaussian_scale_coefficient,
+        gamma_switch_rate, gaussian_error, relative_scaling]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
@@ -279,7 +285,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                              'gamma=1 iterations must be convertable ' +
                              'to an integer.')
         self.set_gamma_switch_rate(int_x2)
-        self.set_normal_error(x[3])
+        self.set_gaussian_error(x[3])
         self.set_relative_scaling(x[4])
 
 

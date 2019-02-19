@@ -2,7 +2,7 @@
 # Sub-module containing several optimisation routines
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -15,6 +15,10 @@ import numpy as np
 class Optimiser(pints.Loggable, pints.TunableMethod):
     """
     Base class for optimisers implementing an ask-and-tell interface.
+
+    This interface provides fine-grained control. Users seeking to simply run
+    an optimisation may wish to use the :class:`OptimisationController`
+    instead.
 
     Optimisers are initialised using the arguments:
 
@@ -36,7 +40,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     those points. This allows a user to have fine-grained control over an
     optimisation, and implement custom parallelisation, logging, stopping
     criteria etc. Users who don't need this functionality can use optimisers
-    via the :class:`Optimisation` class instead.
+    via the :class:`OptimisationController` class instead.
 
     An optimisation with ask-and-tell, proceeds roughly as follows::
 
@@ -77,14 +81,14 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         self._x0 = pints.vector(x0)
 
         # Get dimension
-        self._dimension = len(self._x0)
-        if self._dimension < 1:
+        self._n_parameters = len(self._x0)
+        if self._n_parameters < 1:
             raise ValueError('Problem dimension must be greater than zero.')
 
         # Store boundaries
         self._boundaries = boundaries
         if self._boundaries:
-            if self._boundaries.n_parameters() != self._dimension:
+            if self._boundaries.n_parameters() != self._n_parameters:
                 raise ValueError(
                     'Boundaries must have same dimension as starting point.')
 
@@ -116,16 +120,16 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
             if sigma0 <= 0:
                 raise ValueError(
                     'Initial standard deviation must be greater than zero.')
-            self._sigma0 = np.ones(self._dimension) * sigma0
+            self._sigma0 = np.ones(self._n_parameters) * sigma0
             self._sigma0.setflags(write=False)
 
         else:
             # Vector given
             self._sigma0 = pints.vector(sigma0)
-            if len(self._sigma0) != self._dimension:
+            if len(self._sigma0) != self._n_parameters:
                 raise ValueError(
                     'Initial standard deviation must be None, scalar, or have'
-                    ' dimension ' + str(self._dimension) + '.')
+                    ' dimension ' + str(self._n_parameters) + '.')
             if np.any(self._sigma0 <= 0):
                 raise ValueError(
                     'Initial standard deviations must be greater than zero.')
@@ -258,7 +262,7 @@ class PopulationBasedOptimiser(Optimiser):
         self.set_population_size(x[0])
 
 
-class Optimisation(object):
+class OptimisationController(object):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.
@@ -691,6 +695,22 @@ class Optimisation(object):
         return self._threshold
 
 
+class Optimisation(OptimisationController):
+    """ Deprecated alias for :class:`OptimisationController`. """
+
+    def __init__(
+            self, function, x0, sigma0=None, boundaries=None, method=None):
+        # Deprecated on 2019-02-12
+        import logging
+        logging.basicConfig()
+        log = logging.getLogger(__name__)
+        log.warning(
+            'The class `pints.Optimisation` is deprecated.'
+            ' Please use `pints.OptimisationController` instead.')
+        super(Optimisation, self).__init__(
+            function, x0, sigma0=None, boundaries=None, method=None)
+
+
 def optimise(function, x0, sigma0=None, boundaries=None, method=None):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
@@ -719,7 +739,8 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
 
     Returns a tuple ``(xbest, fbest)``.
     """
-    return Optimisation(function, x0, sigma0, boundaries, method).run()
+    return OptimisationController(
+        function, x0, sigma0, boundaries, method).run()
 
 
 class TriangleWaveTransform(object):
@@ -801,7 +822,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     ``max_unchanged=200``
         A stopping criterion based on the maximum number of successive
         iterations without a signficant change in ``f`` (see
-        :meth:`pints.Optimisation`).
+        :meth:`pints.OptimisationController`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
     ``parallel=False``
@@ -840,7 +861,8 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     e = _CurveFitError(f, d, x, y)
 
     # Set up optimisation
-    opt = pints.Optimisation(e, p0, boundaries=boundaries, method=method)
+    opt = pints.OptimisationController(
+        e, p0, boundaries=boundaries, method=method)
 
     # Set stopping criteria
     opt.set_threshold(threshold)
@@ -910,7 +932,7 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     ``max_unchanged=200``
         A stopping criterion based on the maximum number of successive
         iterations without a signficant change in ``f`` (see
-        :meth:`pints.Optimisation`).
+        :meth:`pints.OptimisationController`).
     ``verbose=False``
         Set to ``True`` to print progress messages to the screen.
     ``parallel=False``
@@ -946,7 +968,8 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     e = _FminError(f, d) if args is None else _FminErrorWithArgs(f, d, args)
 
     # Set up optimisation
-    opt = pints.Optimisation(e, x0, boundaries=boundaries, method=method)
+    opt = pints.OptimisationController(
+        e, x0, boundaries=boundaries, method=method)
 
     # Set stopping criteria
     opt.set_threshold(threshold)

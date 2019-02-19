@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the XNES optimiser.
+# Tests the pints.OptimisationController class
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -24,7 +24,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestXNES(unittest.TestCase):
+class TestOptimisationController(unittest.TestCase):
     """
     Tests shared optimisation properties.
     """
@@ -50,7 +50,7 @@ class TestXNES(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -65,7 +65,7 @@ class TestXNES(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(3)
@@ -73,23 +73,28 @@ class TestXNES(unittest.TestCase):
         self.assertEqual(opt.max_iterations(), 10)
         with StreamCapture() as c:
             opt.run()
-
-            log_should_be = (
-                'Maximising LogPDF\n'
-                'using Exponential Natural Evolution Strategy (xNES)\n'
-                'Running in sequential mode.\n'
-                'Population size: 6\n'
-                'Iter. Eval. Best      Time m:s\n'
-                '0     6     -1.837877   0:00.0\n'
-                '1     12    -1.837877   0:00.0\n'
-                '2     18    -1.837877   0:00.0\n'
-                '3     24    -1.837877   0:00.0\n'
-                '6     42    -1.837877   0:00.0\n'
-                '9     60    -1.837877   0:00.0\n'
-                '10    60    -1.837877   0:00.0\n'
-                'Halting: Maximum number of iterations (10) reached.\n'
-            )
-            self.assertEqual(log_should_be, c.text())
+            log_should_be = [
+                'Maximising LogPDF',
+                'using Exponential Natural Evolution Strategy (xNES)',
+                'Running in sequential mode.',
+                'Population size: 6',
+                'Iter. Eval. Best      Time m:s',
+                '0     6     -1.837877   0:00.0',
+                '1     12    -1.837877   0:00.0',
+                '2     18    -1.837877   0:00.0',
+                '3     24    -1.837877   0:00.0',
+                '6     42    -1.837877   0:00.0',
+                '9     60    -1.837877   0:00.0',
+                '10    60    -1.837877   0:00.0',
+                'Halting: Maximum number of iterations (10) reached.',
+            ]
+            lines = c.text().splitlines()
+            self.assertEqual(len(lines), len(log_should_be))
+            for i, line in enumerate(log_should_be):
+                if line[-6:] == '0:00.0':
+                    self.assertEqual(line[:-6], lines[i][:-6])
+                else:
+                    self.assertEqual(line, lines[i])
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
@@ -100,7 +105,7 @@ class TestXNES(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -121,7 +126,7 @@ class TestXNES(unittest.TestCase):
         x = np.array([0.008, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -138,7 +143,7 @@ class TestXNES(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.Optimisation(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -150,7 +155,7 @@ class TestXNES(unittest.TestCase):
         """
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.01, 1.01])
-        opt = pints.Optimisation(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
         n = m.population_size()
         m.set_population_size(n + 1)
@@ -172,14 +177,14 @@ class TestXNES(unittest.TestCase):
         self.assertRaises(Exception, m.set_population_size, 2)
 
     def test_parallel(self):
-        """ Test parallelised running. """
+        # Test parallelised running.
 
         r = pints.toy.RosenbrockError(1, 100)
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
         # Run with guessed number of cores
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(debug)
         opt.set_parallel(False)
@@ -190,13 +195,21 @@ class TestXNES(unittest.TestCase):
         opt.run()
 
         # Run with explicit number of cores
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(debug)
         opt.set_parallel(1)
         opt.run()
         self.assertTrue(type(opt.parallel()) == int)
         self.assertEqual(opt.parallel(), 1)
+
+    def test_deprecated_alias(self):
+        # Tests Optimisation()
+        r = pints.toy.RosenbrockError(1, 100)
+        x = np.array([1.1, 1.1])
+        b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
+        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        self.assertIsInstance(opt, pints.OptimisationController)
 
 
 if __name__ == '__main__':
