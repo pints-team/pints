@@ -80,16 +80,16 @@ from ._log_pdfs import (
 # Log-priors
 #
 from ._log_priors import (
-    ComposedLogPrior,
-    MultivariateNormalLogPrior,
-    NormalLogPrior,
     BetaLogPrior,
+    CauchyLogPrior,
+    ComposedLogPrior,
     ExponentialLogPrior,
     GammaLogPrior,
+    HalfCauchyLogPrior,
+    MultivariateGaussianLogPrior,
+    NormalLogPrior,
     UniformLogPrior,
     StudentTLogPrior,
-    CauchyLogPrior,
-    HalfCauchyLogPrior,
 )
 
 #
