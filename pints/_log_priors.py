@@ -259,8 +259,6 @@ class GammaLogPrior(pints.LogPrior):
     .. math::
         f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\text{Gamma}(a)}
 
-
-
     For example: ``p = GammaLogPrior(5, 1)`` for a shape parameter ``a=5`` and
     rate parameter ``b=1``.
 
