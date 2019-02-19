@@ -160,9 +160,9 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertTrue(np.all(y[0, :] == [1, 4]))
         self.assertTrue(np.all(y[1, :] == [1, 4]))
         self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 2]]))
+        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
 
         # Check residuals
         rx = y - np.array(values)
@@ -185,9 +185,9 @@ class TestErrorMeasures(unittest.TestCase):
         # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
         # Derivatives are: [[1, 0], [0, 2]]
         # dex1 is: (2 / nt / no) * (0 - 1 - 2) * 1 = (1 / 3) * -3 * 1 = -1
-        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 2 = (1 / 3) * -9 * 2 = -6
+        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 1 = (1 / 3) * -9 * 1 = -3
         self.assertEqual(dex[0], -1)
-        self.assertEqual(dex[1], -6)
+        self.assertEqual(dex[1], -3)
 
     def test_mean_squared_error_weighted(self):
         """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
@@ -224,9 +224,9 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertTrue(np.all(y[0, :] == [1, 4]))
         self.assertTrue(np.all(y[1, :] == [1, 4]))
         self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 2]]))
+        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
 
         # Check residuals
         rx = y - np.array(values)
@@ -251,11 +251,11 @@ class TestErrorMeasures(unittest.TestCase):
         # dex1 is: (2 / nt / no) * (0 - 1 - 2) * 1 * 1
         #        = (1 / 3) * -3 * 1 * 1
         #        = -1
-        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 2 * 2
-        #        = (1 / 3) * -9 * 2 * 2
-        #        = -12
+        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 1 * 2
+        #        = (1 / 3) * -9 * 1 * 2
+        #        = -6
         self.assertEqual(dex[0], -1)
-        self.assertEqual(dex[1], -12)
+        self.assertEqual(dex[1], -6)
 
     def test_probability_based_error(self):
         """ Tests :class:`pints.ProbabilityBasedError`. """
@@ -350,9 +350,9 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertTrue(np.all(y[0, :] == [1, 4]))
         self.assertTrue(np.all(y[1, :] == [1, 4]))
         self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 2]]))
+        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
 
         # Check residuals
         rx = y - np.array(values)
@@ -375,9 +375,9 @@ class TestErrorMeasures(unittest.TestCase):
         # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
         # Derivatives are: [[1, 0], [0, 2]]
         # dex1 is: 2 * (0 - 1 - 2) * 1 = 2 * -3 * 1 = -6
-        # dex2 is: 2 * (0 - 3 - 6) * 2 = 2 * -9 * 2 = -36
+        # dex2 is: 2 * (0 - 3 - 6) * 2 = 2 * -9 * 1 = -18
         self.assertEqual(dex[0], -6)
-        self.assertEqual(dex[1], -36)
+        self.assertEqual(dex[1], -18)
 
     def test_sum_of_squares_error_weighted(self):
         """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
@@ -408,15 +408,15 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2]
 
         # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 2]]
+        # Model derivatives are 3 times [[1, 0], [0, 1]]
         y, dy = p.evaluateS1(x)
         self.assertTrue(np.all(y == p.evaluate(x)))
         self.assertTrue(np.all(y[0, :] == [1, 4]))
         self.assertTrue(np.all(y[1, :] == [1, 4]))
         self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 2]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 2]]))
+        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
+        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
 
         # Check residuals
         rx = y - np.array(values)
@@ -437,15 +437,15 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex.shape, (2, ))
 
         # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 2]]
+        # Derivatives are: [[1, 0], [0, 1]]
         # dex1 is: 2 * (0 - 1 - 2) * 1 * 1
         #        = 2 * -3 * 1 * 1
         #        = -6
-        # dex2 is: 2 * (0 - 3 - 6) * 2 * 2
-        #        = 2 * -9 * 2 * 2
-        #        = -72
+        # dex2 is: 2 * (0 - 3 - 6) * 2 * 1
+        #        = 2 * -9 * 2 * 1
+        #        = -36
         self.assertEqual(dex[0], -6)
-        self.assertEqual(dex[1], -72)
+        self.assertEqual(dex[1], -36)
 
     def test_sum_of_errors(self):
         """ Tests :class:`pints.SumOfErrors`. """
