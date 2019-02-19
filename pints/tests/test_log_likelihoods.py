@@ -469,9 +469,22 @@ class TestLogLikelihood(unittest.TestCase):
         model.simulate(parameters, times)
         values = np.asarray([[3.5, 7.6, 8.5, 3.4],
                              [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6]])
+                             [-10, -30.5, -5, 7.6],
+                             [-12, -10.1, -4, 2.3]])
         problem = pints.MultiOutputProblem(model, times, values)
         log_likelihood = pints.AR1LogLikelihood(problem)
+        # Test AR1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, sigma=1) +
+        #      AR1Logpdf((7.6,-10.3,-30.5, -10.1)|mean=0, rho=-0.25, sigma=3) +
+        #      AR1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, sigma=10) +
+        #      AR1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, sigma=2)
+        #      = -109.4752924909364 -75.32717801724532
+        #
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [0.5, 1.0,
+                                         -0.25, 3.0,
+                                         0.9, 10.0,
+                                         0.0, 1.0]),
+            -47.83720347766945)
 
     def test_arma11(self):
         model = pints.toy.ConstantModel(1)
