@@ -85,9 +85,9 @@ from ._log_priors import (
     ComposedLogPrior,
     ExponentialLogPrior,
     GammaLogPrior,
+    GaussianLogPrior,
     HalfCauchyLogPrior,
     MultivariateGaussianLogPrior,
-    NormalLogPrior,
     UniformLogPrior,
     StudentTLogPrior,
 )
