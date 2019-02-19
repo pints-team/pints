@@ -403,28 +403,14 @@ class HalfCauchyLogPrior(pints.LogPrior):
         if float(scale) <= 0:
             raise ValueError('Scale must be positive')
 
-        # Parse input arguments
-        # set df for Student-t for sampling only
-        self._df = 1
-        self._location = float(location)
-        self._scale = float(scale)
+        self._cauchy = pints.CauchyLogPrior(location=location, scale=scale)
 
         # Cache constants
-        self._first = np.log(2)
-        self._log_scale = np.log(self._scale)
-        self._log_weird = np.log(
-            np.pi + 2 * np.arctan(self._location / self._scale))
-        self._scale_sq = self._scale**2
-
-        # Store scipy distribution object
-        self._t = scipy.stats.t(
-            df=self._df, loc=self._location, scale=self._scale)
+        self._norm_factor = -np.log(np.arctan(location / scale)/np.pi + 0.5)
 
     def __call__(self, x):
         if x[0] > 0:
-            return (
-                self._first + self._log_scale - self._log_weird
-                - np.log((x[0] - self._location)**2 + self._scale_sq))
+            return self._norm_factor + self._cauchy(x)
         else:
             return -float('inf')
 
@@ -434,11 +420,11 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        samples = self._t.rvs(size=n)
+        samples = self._cauchy.sample(n)
         resample = samples <= 0
         n_resample = np.sum(resample)
         while n_resample:
-            samples[resample] = self._t.rvs(size=n_resample)
+            samples[resample] = self._cauchy.sample(n_resample)
             resample = samples <= 0
             n_resample = np.sum(resample)
         return samples
