@@ -649,6 +649,72 @@ class TestPrior(unittest.TestCase):
         mean = np.mean(samples1).item()
         self.assertTrue(19. < mean < 20.)
 
+    def test_inverse_gamma_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.InverseGammaLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.InverseGammaLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.InverseGammaLogPrior, -2, 2)
+
+        a1 = 0.123
+        a2 = 4.567
+
+        b1 = 2.345
+        b2 = 0.356
+
+        p1 = pints.InverseGammaLogPrior(a1, b1)
+        p2 = pints.InverseGammaLogPrior(a2, b2)
+
+        points = [-2., 0.0, 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.invgamma.logpdf(to_test[0], a=a1, scale=b1),
+                p1(to_test), places=9)
+            self.assertAlmostEqual(
+                scipy.stats.invgamma.logpdf(to_test[0], a=a2, scale=b2),
+                p2(to_test), places=9)
+
+        # Test derivatives
+        p1_derivs = [0., np.inf, 2.343877e6, 223.27, 1.2220000000000002,
+                     -0.06769679300291548, -0.1145365009000441]
+
+        p2_derivs = [0., np.inf, 350433.00000000006, -20.07,
+                     -5.211000000000001, -2.2129362765514373,
+                     -0.8122790150278407]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+            self.assertAlmostEqual(calc_val,
+                                   scipy.stats.invgamma.logpdf(point, a=a1,
+                                                               scale=b1))
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(calc_deriv[0], deriv)
+            self.assertAlmostEqual(calc_val,
+                                   scipy.stats.invgamma.logpdf(point, a=a2,
+                                                               scale=b2))
+
+    def test_inverse_gamma_prior_sampling(self):
+        p1 = pints.InverseGammaLogPrior(5.0, 40.)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 1000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be b/(a-1) = 40/4 = 10, so we check that this is very
+        # roughly the case, to ensure the parameterisation is correct
+        mean = np.mean(samples1).item()
+        self.assertTrue(9. < mean < 11.)
+
 
 if __name__ == '__main__':
     unittest.main()

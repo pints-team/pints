@@ -51,7 +51,7 @@ class BetaLogPrior(pints.LogPrior):
 
     def __call__(self, x):
         if x[0] < 0.0 or x[0] > 1.0:
-            return -float('inf')
+            return -np.inf
         else:
             return scipy.special.xlogy(self._a - 1.0,
                                        x[0]) + scipy.special.xlog1py(
@@ -239,7 +239,7 @@ class ExponentialLogPrior(pints.LogPrior):
 
     def __call__(self, x):
         if x[0] < 0.0:
-            return -float('inf')
+            return -np.inf
         else:
             return self._log_scale - self._rate * x[0]
 
@@ -299,7 +299,7 @@ class GammaLogPrior(pints.LogPrior):
 
     def __call__(self, x):
         if x[0] < 0.0:
-            return -float('inf')
+            return -np.inf
         else:
             return self._constant + scipy.special.xlogy(self._a - 1.,
                                                         x[0]) - self._b * x[0]
@@ -336,7 +336,7 @@ class GaussianLogPrior(pints.LogPrior):
 
     .. math::
         f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
-        \\text{exp}\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
+        \\exp\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
 
     and expectation
 
@@ -421,7 +421,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
         if x[0] > 0:
             return self._norm_factor + self._cauchy(x)
         else:
-            return -float('inf')
+            return -np.inf
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -433,6 +433,73 @@ class HalfCauchyLogPrior(pints.LogPrior):
                                           scale=self._scale, size=n)
 
 
+class InverseGammaLogPrior(pints.LogPrior):
+    """
+    Defines an inverse gamma (log) prior with given shape parameter ``a`` and
+    scale parameter ``b``, with pdf
+
+    .. math::
+        f(x|a,b)=\\begin{cases}\\frac{b^a}{\\Gamma(a)}x^{-a-1}\\exp
+        \\left(-\\frac{b}{x}\\right),&x>0\\\\0,&\\text{Otherwise}\\end{cases}
+
+    where :math:`\\Gamma` is the Gamma function.  This pdf has expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\begin{cases}\\frac{b}{a-1},&a>1\\\\
+        \\text{undefined},&\\text{otherwise.}\\end{cases}
+
+    For example, to create a prior with shape parameter ``a=5`` and scale
+    parameter ``b=1``, use::
+
+        p = pints.InverseGammaLogPrior(5, 1)
+
+    *Extends:* :class:`LogPrior`
+    """
+    def __init__(self, a, b):
+        # Parse input arguments
+        self._a = float(a)
+        self._b = float(b)
+
+        # Validate inputs
+        if self._a <= 0:
+            raise ValueError('Shape parameter a must be positive')
+        if self._b <= 0:
+            raise ValueError('Scale parameter b must be positive')
+
+        # Cache constants
+        self._k = self._a * np.log(self._b) - scipy.special.gammaln(self._a)
+        self._ap1 = self._a + 1.
+
+    def __call__(self, x):
+        _x = float(x[0])
+
+        if _x <= 0.0:
+            return -np.inf
+        else:
+            return self._k - self._ap1 * np.log(_x) - np.divide(self._b, _x)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        val = self(x)
+
+        _x = float(x[0])
+
+        if _x < 0.0:
+            return val, np.asarray([0.])
+        else:
+            return val, np.asarray(
+                [np.divide(self._b - self._ap1 * _x, _x * _x)])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.invgamma.rvs(a=self._a, scale=self._b, loc=0.,
+                                        size=n)
+
+
 class MultivariateGaussianLogPrior(pints.LogPrior):
     """
     Defines a multivariate Gaussian (log)prior with a given ``mean`` and
@@ -440,7 +507,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     .. math::
         f(x|\\text{mean},\\text{cov}) = \\frac{1}{(2\\pi)^{d/2}|
-        \\text{cov}|^{1/2}} \\text{exp}\\left(-\\frac{1}{2}(x-\\text{mean})'
+        \\text{cov}|^{1/2}} \\exp\\left(-\\frac{1}{2}(x-\\text{mean})'
         \\text{cov}^{-1}(x-\\text{mean})\\right)
 
     and expectation
@@ -623,7 +690,7 @@ class UniformLogPrior(pints.LogPrior):
         self._n_parameters = self._boundaries.n_parameters()
 
         # Minimum output value
-        self._minf = -float('inf')
+        self._minf = -np.inf
 
         # Maximum output value
         # Use normalised value (1/area) for rectangular boundaries,
