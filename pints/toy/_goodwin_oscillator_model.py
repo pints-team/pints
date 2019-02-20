@@ -2,35 +2,38 @@
 # Three-state Goodwin oscillator toy model.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
 from __future__ import print_function
-import pints
 import numpy as np
+import pints
 import scipy
 
+from . import ToyModel
 
-class GoodwinOscillatorModel(pints.ForwardModel, pints.ToyModel):
+
+class GoodwinOscillatorModel(pints.ForwardModel, ToyModel):
     """
     Three-state Goodwin oscillator toy model [1, 2].
 
-    [1] Oscillatory behavior in enzymatic control processes."
+    [1] Oscillatory behavior in enzymatic control processes.
     Goodwin (1965) Advances in enzyme regulation.
 
     [2] Mathematics of cellular control processes I. Negative feedback to one
     gene. Griffith (1968) Journal of theoretical biology.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 5
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 3
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 5
 
     def _rhs(self, state, time, parameters):
         """
@@ -51,12 +54,12 @@ class GoodwinOscillatorModel(pints.ForwardModel, pints.ToyModel):
         return solution
 
     def suggested_parameters(self):
-        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
 
         return np.array([2, 4, 0.12, 0.08, 0.1])
 
     def suggested_times(self):
-        """ See :meth:`pints.ToyModel.suggested_times()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
 
         return np.linspace(0, 100, 200)
 

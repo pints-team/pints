@@ -2,17 +2,19 @@
 # Lotka-Volterra model of Predatory-Prey relationships.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
 from __future__ import print_function
-import pints
 import numpy as np
+import pints
 import scipy
 
+from . import ToyModel
 
-class LotkaVolterraModel(pints.ForwardModel):
+
+class LotkaVolterraModel(pints.ForwardModel, ToyModel):
     """
     Lotka-Volterra model of Predatory-Prey relationships [1].
 
@@ -31,7 +33,7 @@ class LotkaVolterraModel(pints.ForwardModel):
         The initial population, given as a vector ``[a, b]`` such that
         ``a >= 0`` and ``b >= 0``.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
     """
@@ -47,13 +49,13 @@ class LotkaVolterraModel(pints.ForwardModel):
         """
         return np.array(self._y0, copy=True)
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 4
-
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 2
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 4
 
     def _rhs(self, state, time, parameters):
         """
@@ -78,14 +80,10 @@ class LotkaVolterraModel(pints.ForwardModel):
             self._rhs, self._y0, times, args=(parameters,))
 
     def suggested_parameters(self):
-        """
-        Returns a suggested array of parameter values.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
         return np.array([3, 2, 3, 2])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of sampling times.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         return np.linspace(0, 3, 300)
 

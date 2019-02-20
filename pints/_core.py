@@ -2,14 +2,14 @@
 # Core modules and methods
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
+import pints
 
 
 class ForwardModel(object):
@@ -59,31 +59,6 @@ class ForwardModel(object):
         Returns the number of outputs this model has. The default is 1.
         """
         return 1
-
-
-class ToyModel(object):
-
-    """
-    Defines an interface for the toy problems.
-    """
-
-    def __init__(self):
-        super(ToyModel, self).__init__()
-
-    def suggested_times(self):
-        """
-        Returns an numpy array of time points that is representative of the
-        model
-        """
-        raise NotImplementedError
-
-    def suggested_parameters(self):
-        """
-        Returns an numpy array of the parameter values that are representative
-        of the model. For example, these parameters might reproduce a
-        particular result that the model is famous for.
-        """
-        raise NotImplementedError
 
 
 class ForwardModelS1(ForwardModel):

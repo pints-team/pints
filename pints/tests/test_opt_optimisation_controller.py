@@ -73,28 +73,23 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(opt.max_iterations(), 10)
         with StreamCapture() as c:
             opt.run()
-            log_should_be = [
-                'Maximising LogPDF',
-                'using Exponential Natural Evolution Strategy (xNES)',
-                'Running in sequential mode.',
-                'Population size: 6',
-                'Iter. Eval. Best      Time m:s',
-                '0     6     -1.837877   0:00.0',
-                '1     12    -1.837877   0:00.0',
-                '2     18    -1.837877   0:00.0',
-                '3     24    -1.837877   0:00.0',
-                '6     42    -1.837877   0:00.0',
-                '9     60    -1.837877   0:00.0',
-                '10    60    -1.837877   0:00.0',
-                'Halting: Maximum number of iterations (10) reached.',
-            ]
-            lines = c.text().splitlines()
-            self.assertEqual(len(lines), len(log_should_be))
-            for i, line in enumerate(log_should_be):
-                if line[-6:] == '0:00.0':
-                    self.assertEqual(line[:-6], lines[i][:-6])
-                else:
-                    self.assertEqual(line, lines[i])
+
+            log_should_be = (
+                'Maximising LogPDF\n'
+                'using Exponential Natural Evolution Strategy (xNES)\n'
+                'Running in sequential mode.\n'
+                'Population size: 6\n'
+                'Iter. Eval. Best      Time m:s\n'
+                '0     6     -4.140462   0:00.0\n'
+                '1     12    -4.140462   0:00.0\n'
+                '2     18    -4.140462   0:00.0\n'
+                '3     24    -4.140462   0:00.0\n'
+                '6     42    -4.140462   0:00.0\n'
+                '9     60    -4.140462   0:00.0\n'
+                '10    60    -4.140462   0:00.0\n'
+                'Halting: Maximum number of iterations (10) reached.\n'
+            )
+            self.assertEqual(log_should_be, c.text())
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
@@ -130,8 +125,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
-        opt.set_threshold(2)
-        self.assertEqual(opt.threshold(), 2)
+        opt.set_threshold(5)
+        self.assertEqual(opt.threshold(), 5)
         with StreamCapture() as c:
             opt.run()
             self.assertIn(
@@ -153,7 +148,7 @@ class TestOptimisationController(unittest.TestCase):
         """
         Tests the set_population_size method for this optimiser.
         """
-        r = pints.toy.RosenbrockError(1, 100)
+        r = pints.toy.RosenbrockError()
         x = np.array([1.01, 1.01])
         opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
@@ -179,7 +174,7 @@ class TestOptimisationController(unittest.TestCase):
     def test_parallel(self):
         # Test parallelised running.
 
-        r = pints.toy.RosenbrockError(1, 100)
+        r = pints.toy.RosenbrockError()
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
 
@@ -205,7 +200,7 @@ class TestOptimisationController(unittest.TestCase):
 
     def test_deprecated_alias(self):
         # Tests Optimisation()
-        r = pints.toy.RosenbrockError(1, 100)
+        r = pints.toy.RosenbrockError()
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
@@ -213,8 +208,4 @@ class TestOptimisationController(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

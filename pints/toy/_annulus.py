@@ -8,12 +8,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy
 
+from . import ToyLogPDF
 
-class AnnulusLogPDF(pints.LogPDF):
+
+class AnnulusLogPDF(ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form
 
@@ -55,23 +56,57 @@ class AnnulusLogPDF(pints.LogPDF):
         self._sigma = sigma
 
     def __call__(self, x):
+        if not len(x) == self._n_parameters:
+            raise ValueError('x must be of same dimensions as density')
         return scipy.stats.norm.logpdf(
             np.linalg.norm(x), self._r0, self._sigma)
 
-    def r0(self):
+    def distance(self, samples):
         """
-        Returns ``r0``.
-        """
-        return self._r0
+        Calculates a measure of normed distance of samples from exact mean and
+        covariance matrix assuming uniform prior with bounds given by
+        :meth:`suggested_bounds`.
 
-    def sigma(self):
+        See :meth:`ToyLogPDF.distance()`.
         """
-        Returns ``sigma``
-        """
-        return self._sigma
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be n x 2.')
+        if samples.shape[1] != self.n_parameters():
+            raise ValueError(
+                'Given samples must have length ' +
+                str(self.n_parameters()))
+        # calculate normed distance
+        d = list(map(lambda x: np.linalg.norm(x), samples))
+        dist = (
+            np.abs(self.mean_normed() - np.mean(d)) +
+            np.abs(self.var_normed() - np.var(d))
+        )
+        return dist
 
-    def n_parameters(self):
-        return self._n_parameters
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`.
+        """
+        L = self.__call__(x)
+
+        r = self._r0
+        norm = np.linalg.norm(x)
+        sigma = self._sigma
+        cons = -(norm - r) / (norm * sigma**2)
+        dL = np.array([var * cons for var in x])
+        return L, dL
+
+    def mean(self):
+        """
+        Returns the mean of this distribution.
+        """
+        return np.zeros(self._n_parameters)
+
+    def mean_normed(self):
+        """
+        Returns the mean of the normed distance from the origin.
+        """
+        return self.moment_normed(1)
 
     def moment_normed(self, order):
         """
@@ -98,41 +133,14 @@ class AnnulusLogPDF(pints.LogPDF):
         m /= (np.sqrt(2) * s * g3 * h3 + 2 * r * g4 * h4)
         return m
 
-    def mean(self):
-        """
-        Returns the mean of this distribution.
-        """
-        return np.zeros(self._n_parameters)
+    def n_parameters(self):
+        return self._n_parameters
 
-    def mean_normed(self):
+    def r0(self):
         """
-        Returns the mean of the normed distance from the origin.
+        Returns ``r0``.
         """
-        return self.moment_normed(1)
-
-    def var_normed(self):
-        """
-        Returns the variance of the normed distance from the origin.
-        """
-        return self.moment_normed(2) - self.moment_normed(1)**2
-
-    def sample(self, n_samples):
-        """
-        Generates independent samples from the underlying distribution.
-        """
-        n_samples = int(n_samples)
-        if n_samples < 1:
-            raise ValueError('Number of samples must be greater than or ' +
-                             'equal to 1.')
-
-        # First sample values of r
-        r = self._reject_sample(n_samples)
-
-        # uniformly sample X s.t. their normed distance is r0
-        X_norm = np.random.normal(size=(n_samples, self._n_parameters))
-        lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
-        x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
-        return np.array(x_unit)
+        return self._r0
 
     def _reject_sample(self, n_samples):
         """
@@ -144,3 +152,42 @@ class AnnulusLogPDF(pints.LogPDF):
             r = np.random.normal(self._r0, self._sigma, size=np.sum(f))
             f = r < 0
         return r
+
+    def sample(self, n_samples):
+        """ See :meth:`ToyLogPDF.sample()`. """
+        n_samples = int(n_samples)
+        if n_samples < 1:
+            raise ValueError(
+                'Number of samples must be greater than or equal to 1.')
+
+        # First sample values of r
+        r = self._reject_sample(n_samples)
+
+        # uniformly sample X s.t. their normed distance is r0
+        X_norm = np.random.normal(size=(n_samples, self._n_parameters))
+        lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
+        x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
+        return np.array(x_unit)
+
+    def sigma(self):
+        """
+        Returns ``sigma``
+        """
+        return self._sigma
+
+    def suggested_bounds(self):
+        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
+        # in higher dimensions reduce volume as otherwise gets too wide
+        r0_magnitude = (self._r0 + self._sigma) * (
+            5**(1.0 / (self._n_parameters - 1.0))
+        )
+        bounds = np.tile([-r0_magnitude, r0_magnitude],
+                         (self._n_parameters, 1))
+        return np.transpose(bounds).tolist()
+
+    def var_normed(self):
+        """
+        Returns the variance of the normed distance from the origin.
+        """
+        return self.moment_normed(2) - self.moment_normed(1)**2
+

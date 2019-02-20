@@ -8,18 +8,19 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy
 
+from . import ToyLogPDF
 
-class ConeLogPDF(pints.LogPDF):
+
+class ConeLogPDF(ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
 
-        f(x) \propto e^{-|x|^\\beta}
+        f(x) \\propto e^{-|x|^\\beta}
 
     where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm. The
     mean and variance that are returned relate to expectations on ``|x|`` not
@@ -44,33 +45,16 @@ class ConeLogPDF(pints.LogPDF):
             raise ValueError('beta must be positive.')
         self._beta = beta
 
-    def __call__(self, x):
-        return -np.linalg.norm(x)**self._beta
-
-    def n_parameters(self):
-        return self._n_parameters
-
     def beta(self):
         """
         Returns the exponent in the pdf
         """
         return self._beta
 
-    def mean_normed(self):
-        """
-        Returns the mean of the normed distance from the origin
-        """
-        g1 = scipy.special.gamma((1 + self._n_parameters) / self._beta)
-        g2 = scipy.special.gamma(self._n_parameters / self._beta)
-        return g1 / g2
-
-    def var_normed(self):
-        """
-        Returns the variance of the normed distance from the origin
-        """
-        g1 = scipy.special.gamma((2 + self._n_parameters) / self._beta)
-        g2 = scipy.special.gamma(self._n_parameters / self._beta)
-        return g1 / g2 - self.mean_normed()**2
+    def __call__(self, x):
+        if not len(x) == self._n_parameters:
+            raise ValueError('x must be of same dimensions as density')
+        return -np.linalg.norm(x)**self._beta
 
     def CDF(self, x):
         """
@@ -87,10 +71,51 @@ class ConeLogPDF(pints.LogPDF):
             return (-(x**n) * ((x**beta)**(-(n / beta))) *
                     scipy.special.gammaincc(n / beta, x**beta) + 1)
 
+    def distance(self, samples):
+        """
+        Calculates a measure of normed distance of samples from exact mean and
+        covariance matrix assuming uniform prior with bounds given by
+        :meth:`suggested_bounds()`.
+
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        # Check size of input
+        if not len(samples.shape) == 2:
+            raise ValueError('Given samples list must be n x 2.')
+        if samples.shape[1] != self.n_parameters():
+            raise ValueError(
+                'Given samples must have length ' +
+                str(self.n_parameters()))
+        # calculate normed distance
+        d = list(map(lambda x: np.linalg.norm(x), samples))
+        diff = (
+            np.abs(self.mean_normed() - np.mean(d)) +
+            np.abs(self.var_normed() - np.var(d))
+        )
+        return diff
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        L = self.__call__(x)
+
+        norm = np.linalg.norm(x)**2
+        norm = self._beta * norm**(-1.0 + self._beta / 2.0)
+        dL = np.array([-var * norm for var in x])
+        return L, dL
+
+    def mean_normed(self):
+        """
+        Returns the mean of the normed distance from the origin
+        """
+        g1 = scipy.special.gamma((1 + self._n_parameters) / self._beta)
+        g2 = scipy.special.gamma(self._n_parameters / self._beta)
+        return g1 / g2
+
+    def n_parameters(self):
+        return self._n_parameters
+
     def sample(self, n_samples):
-        """
-        Generates independent samples from the underlying distribution.
-        """
+        """ See :meth:`ToyLogPDF.sample()`. """
         n_samples = int(n_samples)
         if n_samples < 1:
             raise ValueError(
@@ -114,4 +139,18 @@ class ConeLogPDF(pints.LogPDF):
         lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
         x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
         return np.array(x_unit)
+
+    def suggested_bounds(self):
+        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
+        magnitude = 1000
+        bounds = np.tile([-magnitude, magnitude], (self._n_parameters, 1))
+        return np.transpose(bounds).tolist()
+
+    def var_normed(self):
+        """
+        Returns the variance of the normed distance from the origin.
+        """
+        g1 = scipy.special.gamma((2 + self._n_parameters) / self._beta)
+        g2 = scipy.special.gamma(self._n_parameters / self._beta)
+        return g1 / g2 - self.mean_normed()**2
 

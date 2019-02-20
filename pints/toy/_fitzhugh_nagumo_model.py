@@ -1,8 +1,8 @@
 #
-# Fitzhugh-Nagumo model.
+# Fitzhugh-Nagumo toy model.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,8 +13,10 @@ import numpy as np
 import pints
 from scipy.integrate import odeint
 
+from . import ToyModel
 
-class FitzhughNagumoModel(pints.ForwardModelS1, pints.ToyModel):
+
+class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     """
     Fitzhugh Nagumo model of action potential.
 
@@ -50,6 +52,8 @@ class FitzhughNagumoModel(pints.ForwardModelS1, pints.ToyModel):
 
     ``y0``
         The system's initial state
+
+    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
     """
 
     def __init__(self, y0=None):
@@ -63,13 +67,13 @@ class FitzhughNagumoModel(pints.ForwardModelS1, pints.ToyModel):
             if len(self._y0) != 2:
                 raise ValueError('Initial value must have size 2.')
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters)`. """
-        return 3
-
     def n_outputs(self):
-        """ See :meth:`pints.ForwardModel.outputs()`. """
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 2
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 3
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
@@ -156,10 +160,10 @@ class FitzhughNagumoModel(pints.ForwardModelS1, pints.ToyModel):
             return values
 
     def suggested_parameters(self):
-        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
         return np.array([0.1, 0.5, 3])
 
     def suggested_times(self):
-        """ See :meth:`pints.ToyModel.suggested_times()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         return np.linspace(0, 20, 200)
 

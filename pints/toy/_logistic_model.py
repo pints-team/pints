@@ -1,8 +1,8 @@
 #
-# Logistic model.
+# Logistic toy model.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -11,8 +11,10 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
+from . import ToyModel
 
-class LogisticModel(pints.ForwardModelS1, pints.ToyModel):
+
+class LogisticModel(pints.ForwardModelS1, ToyModel):
 
     """
     Logistic model of population growth [1].
@@ -31,6 +33,8 @@ class LogisticModel(pints.ForwardModelS1, pints.ToyModel):
     the (optional) named constructor arg ``initial_population_size``
 
     [1] https://en.wikipedia.org/wiki/Population_growth
+
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
 
     def __init__(self, initial_population_size=2):
@@ -78,11 +82,11 @@ class LogisticModel(pints.ForwardModelS1, pints.ToyModel):
             return values
 
     def suggested_parameters(self):
-        """ See :meth:`pints.ToyModel.suggested_parameters()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
 
         return np.array([0.1, 50])
 
     def suggested_times(self):
-        """ See :meth:`pints.ToyModel.suggested_times()`. """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
 
         return np.linspace(0, 100, 100)

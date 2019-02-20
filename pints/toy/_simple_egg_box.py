@@ -1,5 +1,5 @@
 #
-# Simple egg-box LogPDF
+# Simple egg-box toy LogPDF.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -8,12 +8,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy.stats
 
+from . import ToyLogPDF
 
-class SimpleEggBoxLogPDF(pints.LogPDF):
+
+class SimpleEggBoxLogPDF(ToyLogPDF):
     """
     Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
@@ -26,7 +27,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         The first mode will be located at ``(d, d)``, ``(-d, d)``, (-d, -d)``,
         and ``(d, -d)``, where ``d = r * sigma``.
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, sigma=2, r=4):
 
@@ -46,6 +47,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
             [-d, -d],
             [d, -d],
         ]
+        self._r = r
 
         # Set covariances
         self._covs = [np.eye(2) * sigma] * 4
@@ -55,15 +57,35 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
             scipy.stats.multivariate_normal(mode, self._covs[i])
             for i, mode in enumerate(self._modes)]
 
+        # See page 45 of
+        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
+        self._sigma_invs = [np.linalg.inv(self._covs[i])
+                            for i, mode in enumerate(self._modes)]
+
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
         return -float('inf') if f == 0 else np.log(f)
 
-    def n_parameters(self):
-        """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return 2
+    def distance(self, samples):
+        """
+        Calculates :meth:`approximate mode-wise KL divergence<kl_divergence>`.
 
-    def kl_score(self, samples):
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        return self.kl_divergence(samples)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        L = self.__call__(x)
+
+        denom = np.exp(L)
+        numer = np.sum([np.matmul(
+            self._sigma_invs[i], x - np.array(self._modes[i])
+        ) * var.pdf(x)
+            for i, var in enumerate(self._vars)], axis=0)
+        return L, -numer / denom
+
+    def kl_divergence(self, samples):
         """
         Calculates a heuristic score for how well a given set of samples
         matches this LogPDF's underlying distribution, based on
@@ -75,7 +97,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
 
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be 2x2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != dimension:
             raise ValueError(
                 'Given samples must have length ' + str(dimension))
@@ -116,10 +138,12 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         penalty2 = np.max(ns) / max(1, np.min(ns))
         return score * penalty2
 
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return 2
+
     def sample(self, n):
-        """
-        Returns ``n`` samples from the underlying distribution.
-        """
+        """ See :meth:`ToyLogPDF.sample()`. """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
 
@@ -135,3 +159,8 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         np.random.shuffle(x)
         return x
 
+    def suggested_bounds(self):
+        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
+        magnitude = self._r * self._sigma * 2
+        bounds = np.tile([-magnitude, magnitude], (2, 1))
+        return np.transpose(bounds).tolist()

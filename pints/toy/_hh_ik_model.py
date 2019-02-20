@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 #
-# Logistic model.
+# Potassium current (IK) toy model based on the model by Hodgkin & Huxley (HH).
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,8 +12,10 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
+from . import ToyModel
 
-class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
+
+class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
     """
     Toy model based on the potassium current experiments used for Hodgkin and
     Huxley's 1952 model of the action potential of a squid's giant axon.
@@ -44,7 +45,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
             plt.plot(t, v)
         plt.show()
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.ToyModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     References:
 
@@ -68,6 +69,43 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
 
         # Voltage step protocol
         self._prepare_protocol()
+
+    def fold(self, times, values):
+        """
+        Takes a set of times and values as return by this model, and "folds"
+        the individual currents over each other, to create a very common plot
+        in electrophysiology.
+
+        Returns a list of tuples ``(times, values)`` for each different voltage
+        step.
+        """
+        # Get modulus of times
+        times = np.mod(times, self._t_both)
+
+        # Remove all points during t_hold
+        selection = times >= self._t_hold
+        times = times[selection]
+        values = values[selection]
+
+        # Use the start of the step as t=0
+        times -= self._t_hold
+
+        # Find points to split arrays
+        split = 1 + np.argwhere(times[1:] < times[:-1])
+        split = split.reshape((len(split),))
+
+        # Split arrays
+        traces = []
+        i = 0
+        for j in split:
+            traces.append((times[i:j], values[i:j]))
+            i = j
+        traces.append((times[i:], values[i:]))
+        return traces
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 5
 
     def _prepare_protocol(self):
         """
@@ -108,10 +146,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         # List of voltages (not including V(t=0))
         self._voltages = np.repeat(self._v_step, 2)
         self._voltages[1::2] = self._v_hold
-
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 5
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
@@ -154,39 +188,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         # Calculate and return current
         return self._g_max * ns**4 * (vs - self._E_k)
 
-    def fold(self, times, values):
-        """
-        Takes a set of times and values as return by this model, and "folds"
-        the individual currents over each other, to create a very common plot
-        in electrophysiology.
-
-        Returns a list of tuples ``(times, values)`` for each different voltage
-        step.
-        """
-        # Get modulus of times
-        times = np.mod(times, self._t_both)
-
-        # Remove all points during t_hold
-        selection = times >= self._t_hold
-        times = times[selection]
-        values = values[selection]
-
-        # Use the start of the step as t=0
-        times -= self._t_hold
-
-        # Find points to split arrays
-        split = 1 + np.argwhere(times[1:] < times[:-1])
-        split = split.reshape((len(split),))
-
-        # Split arrays
-        traces = []
-        i = 0
-        for j in split:
-            traces.append((times[i:j], values[i:j]))
-            i = j
-        traces.append((times[i:], values[i:]))
-        return traces
-
     def suggested_duration(self):
         """
         Returns the duration of the experimental protocol modeled in this toy
@@ -196,7 +197,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
 
     def suggested_parameters(self):
         """
-        See :meth:`pints.ToyModel.suggested_parameters()`.
+        See :meth:`pints.toy.ToyModel.suggested_parameters()`.
 
         Returns an array with the original model parameters used by Hodgkin
         and Huxley.
@@ -209,9 +210,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, pints.ToyModel):
         return p1, p2, p3, p4, p5
 
     def suggested_times(self):
-        """
-        See :meth:`pints.ToyModel.suggested_times()`.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         fs = 4
         return np.arange(self._duration * fs) / fs
 

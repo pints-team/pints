@@ -1,8 +1,8 @@
 #
-# Repressilator model.
+# Repressilator toy model.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,8 +13,10 @@ import numpy as np
 import pints
 from scipy.integrate import odeint
 
+from . import ToyModel
 
-class RepressilatorModel(pints.ForwardModel):
+
+class RepressilatorModel(pints.ForwardModel, ToyModel):
     """
     The "Repressilator" model describes oscillations in a network of proteins
     that suppress their own creation [1].
@@ -45,7 +47,7 @@ class RepressilatorModel(pints.ForwardModel):
     ``y0``
         The system's initial state, must have 6 entries all >=0.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     References:
 
@@ -78,13 +80,13 @@ class RepressilatorModel(pints.ForwardModel):
             if np.any(self._y0 < 0):
                 raise ValueError('Initial states can not be negative.')
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters)`. """
-        return 4
-
     def n_outputs(self):
-        """ See :meth:`pints.ForwardModel.outputs()`. """
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 3
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 4
 
     def _rhs(self, y, t, alpha_0, alpha, beta, n):
         """
@@ -106,18 +108,14 @@ class RepressilatorModel(pints.ForwardModel):
         return y[:, :3]
 
     def suggested_parameters(self):
-        """
-        Returns a suggested set of parameters for this toy model.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
         # Toni et al.:
         return np.array([1, 1000, 5, 2])
         # Figure 42 in book:
         #return np.array([0, 50, 0.2, 2])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of simulation times for this toy model.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         # Toni et al.:
         return np.linspace(0, 40, 400)
         # Figure 42 in book:
