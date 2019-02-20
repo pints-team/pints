@@ -8,13 +8,14 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy
 import scipy.stats
 
+from . import ToyLogPDF
 
-class NealsFunnelLogPDF(pints.ToyLogPDF):
+
+class NealsFunnelLogPDF(ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form,
 
@@ -33,7 +34,7 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
         The dimensionality of funnel (by default equal to 10) which must
         exceed 1.
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
 
     [1] R. Neal, Annals of statistics , 705 (2003)
     """
@@ -47,30 +48,20 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
 
     def __call__(self, x):
         if len(x) != self._n_parameters:
-            raise ValueError('Length of x must be equal number of ' +
-                             'parameters')
+            raise ValueError(
+                'Length of x must be equal number of parameters')
         nu = x[-1]
         x_temp = x[:-1]
         x_log_pdf = [scipy.stats.norm.logpdf(y, 0, np.exp(nu / 2))
                      for y in x_temp]
         return np.sum(x_log_pdf) + scipy.stats.norm.logpdf(nu, 0, 3)
 
-    def marginal_log_pdf(self, x, nu):
-        """
-        Yields the marginal density :math:`\\text{log } p(x_i,\\nu)`
-        """
-        return (
-            scipy.stats.norm.logpdf(x, 0, np.exp(nu / 2)) +
-            scipy.stats.norm.logpdf(nu, 0, 3)
-        )
-
-    def n_parameters(self):
-        """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return self._n_parameters
+    def distance(self, samples):
+        """ See :meth:`pints.toy.ToyLogPDF.distance()`. """
+        return self.kl_divergence(samples)
 
     def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`.
-        """
+        """ See :meth:`LogPDF.evaluateS1()`. """
         L = self.__call__(x)
 
         nu = x[-1]
@@ -85,7 +76,7 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
     def kl_divergence(self, samples):
         """
         Calculates the KL divergence of samples of the :math:`nu` parameter
-        of Neal's funnel from the analytic :math:`\\mathcal{N}(0, 3)` result
+        of Neal's funnel from the analytic :math:`\\mathcal{N}(0, 3)` result.
         """
         # Check size of input
         if not len(samples.shape) == 2:
@@ -103,20 +94,14 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
                       np.log(self._s1) -
                       1)
 
-    def distance(self, samples):
+    def marginal_log_pdf(self, x, nu):
         """
-        Calculates KL divergence (see `kl_divergence`)
+        Yields the marginal density :math:`\\text{log } p(x_i,\\nu)`.
         """
-        return self.kl_divergence(samples)
-
-    def suggested_bounds(self):
-        """
-        See :meth:`ToyLogPDF.suggested_bounds()`.
-        """
-        magnitude = 30
-        bounds = np.tile([-magnitude, magnitude],
-                         (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()
+        return (
+            scipy.stats.norm.logpdf(x, 0, np.exp(nu / 2)) +
+            scipy.stats.norm.logpdf(nu, 0, 3)
+        )
 
     def mean(self):
         """
@@ -124,15 +109,12 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
         """
         return np.zeros(self._n_parameters)
 
-    def var(self):
-        """
-        Returns the variance of the target distribution in each dimension.
-        Note :math:`nu` is the last entry.
-        """
-        return np.concatenate((np.repeat(90, self._n_parameters - 1), [9]))
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._n_parameters
 
     def sample(self, n_samples):
-        """ See :meth:`ToyLogPDF.sample()`. """
+        """ See :meth:`pints.toy.ToyLogPDF.sample()`. """
         n = self._n_parameters
         samples = np.zeros((n_samples, n))
         for i in range(n_samples):
@@ -142,3 +124,18 @@ class NealsFunnelLogPDF(pints.ToyLogPDF):
             samples[i, 0:(n - 1)] = x
             samples[i, n - 1] = nu
         return samples
+
+    def suggested_bounds(self):
+        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
+        magnitude = 30
+        bounds = np.tile([-magnitude, magnitude],
+                         (self._n_parameters, 1))
+        return np.transpose(bounds).tolist()
+
+    def var(self):
+        """
+        Returns the variance of the target distribution in each dimension.
+        Note :math:`nu` is the last entry.
+        """
+        return np.concatenate((np.repeat(90, self._n_parameters - 1), [9]))
+

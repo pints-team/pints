@@ -54,7 +54,6 @@ FLOAT_FORMAT = '{: .17e}'
 # Core classes
 #
 from ._core import ForwardModel, ForwardModelS1
-from ._core import ToyModel
 from ._core import TunableMethod
 from ._core import SingleOutputProblem, MultiOutputProblem
 
@@ -74,7 +73,6 @@ from ._log_pdfs import (
     LogPosterior,
     ProblemLogLikelihood,
     SumOfIndependentLogPDFs,
-    ToyLogPDF,
 )
 
 #

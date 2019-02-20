@@ -2,9 +2,13 @@
 Toy problems
 ************
 
-The `toy` module provides toy :class:`models<pints.ForwardModel>` and
-:class:`distributions<pints.LogPDF>` that can be used for tests and in
+The `toy` module provides toy :class:`models<pints.ForwardModel>`,
+:class:`distributions<pints.LogPDF>` and
+:class:`error measures<pints.ErrorMeasure>` that can be used for tests and in
 examples.
+
+Some toy classes provide extra functionality defined in the
+:class:`pints.toy.ToyModel` and :class:`pints.toy.ToyLogPDF` classes.
 
 
 .. toctree::
@@ -27,5 +31,6 @@ examples.
     rosenbrock
     sir_model
     simple_egg_box_logpdf
+    toy_classes
     twisted_gaussian_logpdf
 

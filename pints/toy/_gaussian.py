@@ -8,13 +8,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-
-import pints
 import numpy as np
 import scipy.stats
 
+from . import ToyLogPDF
 
-class GaussianLogPDF(pints.ToyLogPDF):
+
+class GaussianLogPDF(ToyLogPDF):
     """
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
@@ -28,7 +28,7 @@ class GaussianLogPDF(pints.ToyLogPDF):
         or a vector (in which case ``diag(sigma)`` will be used. Should be
         symmetric and positive-semidefinite.
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
 
     def __init__(self, mean=[0, 0], sigma=[1, 1]):
@@ -55,6 +55,25 @@ class GaussianLogPDF(pints.ToyLogPDF):
 
     def __call__(self, x):
         return self._phi.logpdf(x)
+
+    def distance(self, samples):
+        """
+        Returns the :meth:`Kullback-Leibler divergence<kl_divergence>`.
+
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        return self.kl_divergence(samples)
+
+    def evaluateS1(self, x):
+        """ See :meth:`pints.LogPDF.evaluateS1()`. """
+        L = self.__call__(x)
+
+        self._sigma_inv = np.linalg.inv(self._sigma)
+        self._x_minus_mu = x - self._mean
+
+        # derivative wrt x
+        dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
+        return L, dL
 
     def kl_divergence(self, samples):
         """
@@ -101,21 +120,8 @@ class GaussianLogPDF(pints.ToyLogPDF):
         return self._n_parameters
 
     def sample(self, n):
-        """
-        See :meth:`ToyLogPDF.sample()`.
-        """
+        """ See :meth:`pints.toy.ToyLogPDF.sample()`. """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
         return self._phi.rvs(n)
 
-    def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`.
-        """
-        L = self.__call__(x)
-
-        self._sigma_inv = np.linalg.inv(self._sigma)
-        self._x_minus_mu = x - self._mean
-
-        # derivative wrt x
-        dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
-        return L, dL
