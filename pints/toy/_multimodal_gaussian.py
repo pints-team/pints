@@ -1,5 +1,5 @@
 #
-# Multi-model Gaussian log pdf
+# Multi-model Gaussian log pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -8,12 +8,14 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
+import pints
 import scipy.stats
 
+from . import ToyLogPDF
 
-class MultimodalGaussianLogPDF(pints.ToyLogPDF):
+
+class MultimodalGaussianLogPDF(ToyLogPDF):
     """
     Multimodal (un-normalised) multivariate Gaussian distribution.
 
@@ -42,7 +44,7 @@ class MultimodalGaussianLogPDF(pints.ToyLogPDF):
         A list of covariance matrices, one for each mode. If not set, a unit
         matrix will be used for each.
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, modes=None, covariances=None):
 
@@ -84,36 +86,25 @@ class MultimodalGaussianLogPDF(pints.ToyLogPDF):
 
         # See page 45 of
         # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
-        self._sigma_invs = [np.linalg.inv(self._covs[i])
-                            for i, mode in enumerate(self._modes)]
+        self._sigma_invs = [
+            np.linalg.inv(self._covs[i]) for i, mode in enumerate(self._modes)]
 
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
         return -float('inf') if f == 0 else np.log(f)
 
-    def n_parameters(self):
-        """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return self._n_parameters
-
-    def sample(self, n_samples):
+    def distance(self, samples):
         """
-        See :meth:`ToyLogPDF.sample()`.
-        """
-        n_samples = int(n_samples)
-        if n_samples < 1:
-            raise ValueError(
-                'Number of samples must be greater than or equal to 1.')
+        Calculates :meth:`per mode approximate KL divergence <kl_divergence>`
+        then sums these.
 
-        samples = np.zeros((n_samples, self._n_parameters))
-        num_modes = len(self._modes)
-        for i in range(n_samples):
-            rand_mode = np.random.choice(num_modes, 1)[0]
-            samples[i, :] = self._vars[rand_mode].rvs(1)
-        return samples
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        kl = self.kl_divergence(samples)
+        return np.sum(kl)
 
     def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`.
-        """
+        """ See :meth:`LogPDF.evaluateS1()`. """
         L = self.__call__(x)
 
         denom = np.exp(L)
@@ -122,19 +113,6 @@ class MultimodalGaussianLogPDF(pints.ToyLogPDF):
         ) * var.pdf(x)
             for i, var in enumerate(self._vars)], axis=0)
         return L, -numer / denom
-
-    def suggested_bounds(self):
-        """
-        See :meth:`ToyLogPDF.suggested_bounds()`.
-        """
-        # make rectangular bounds in each dimension 3X width of range
-        a_max = np.max(self._modes)
-        a_min = np.min(self._modes)
-        a_range = a_max - a_min
-        lower = a_min - a_range
-        upper = a_max + a_range
-        bounds = np.tile([lower, upper], (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()
 
     def kl_divergence(self, samples):
         """
@@ -196,10 +174,32 @@ class MultimodalGaussianLogPDF(pints.ToyLogPDF):
                     1)
         return kl
 
-    def distance(self, samples):
-        """
-        Calculates per mode approximate KL divergence (see `kl_divergence`)
-        then sums these
-        """
-        kl = self.kl_divergence(samples)
-        return np.sum(kl)
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+    def sample(self, n_samples):
+        """ See :meth:`pints.toy.ToyLogPDF.sample()`. """
+        n_samples = int(n_samples)
+        if n_samples < 1:
+            raise ValueError(
+                'Number of samples must be greater than or equal to 1.')
+
+        samples = np.zeros((n_samples, self._n_parameters))
+        num_modes = len(self._modes)
+        for i in range(n_samples):
+            rand_mode = np.random.choice(num_modes, 1)[0]
+            samples[i, :] = self._vars[rand_mode].rvs(1)
+        return samples
+
+    def suggested_bounds(self):
+        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
+        # make rectangular bounds in each dimension 3X width of range
+        a_max = np.max(self._modes)
+        a_min = np.min(self._modes)
+        a_range = a_max - a_min
+        lower = a_min - a_range
+        upper = a_max + a_range
+        bounds = np.tile([lower, upper], (self._n_parameters, 1))
+        return np.transpose(bounds).tolist()
+

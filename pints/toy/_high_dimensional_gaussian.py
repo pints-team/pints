@@ -8,12 +8,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy.stats
 
+from . import ToyLogPDF
 
-class HighDimensionalGaussianLogPDF(pints.ToyLogPDF):
+
+class HighDimensionalGaussianLogPDF(ToyLogPDF):
     """
     High-dimensional multivariate Gaussian log pdf, with off-diagonal
     correlations.
@@ -27,7 +28,7 @@ class HighDimensionalGaussianLogPDF(pints.ToyLogPDF):
         must be between ```-1 / (dimension - 1) and 1`` so that the
         covariance matrix is positive semi-definite.
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)
@@ -61,13 +62,14 @@ class HighDimensionalGaussianLogPDF(pints.ToyLogPDF):
     def __call__(self, x):
         return self._var.logpdf(x)
 
-    def n_parameters(self):
-        """ See :meth:`pints.LogPDF.n_parameters()`. """
-        return self._n_parameters
+    def distance(self, samples):
+        """
+        Returns approximate Kullback-Leibler divergence between samples
+        and underlying distribution.
 
-    def rho(self):
-        """ Returns rho (correlation between dimensions) """
-        return self._rho
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        return self.kl_divergence(samples)
 
     def kl_divergence(self, samples):
         """
@@ -116,29 +118,27 @@ class HighDimensionalGaussianLogPDF(pints.ToyLogPDF):
             np.log(np.linalg.det(s1)) -
             self._n_parameters)
 
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+    def rho(self):
+        """ Returns rho (correlation between dimensions) """
+        return self._rho
+
+    def sample(self, n_samples):
+        """ See :meth:`pints.toy.ToyLogPDF.sample()`. """
+        n_samples = int(n_samples)
+        if n_samples < 1:
+            raise ValueError(
+                'Number of samples must be greater than or equal to 1.')
+        return self._var.rvs(n_samples)
+
     def suggested_bounds(self):
-        """
-        See :meth:`ToyLogPDF.suggested_bounds()`.
-        """
+        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
         # maximum variance in one dimension is n_parameters, so use
         # 3 times sqrt of this as prior bounds
         magnitude = 3 * np.sqrt(self.n_parameters())
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
         return np.transpose(bounds).tolist()
 
-    def distance(self, samples):
-        """
-        Returns approximate Kullback-Leibler divergence between samples
-        and underlying distribution
-        """
-        return self.kl_divergence(samples)
-
-    def sample(self, n_samples):
-        """
-        See :meth:`ToyLogPDF.sample()`.
-        """
-        n_samples = int(n_samples)
-        if n_samples < 1:
-            raise ValueError(
-                'Number of samples must be greater than or equal to 1.')
-        return self._var.rvs(n_samples)

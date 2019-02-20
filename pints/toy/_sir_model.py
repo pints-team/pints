@@ -1,8 +1,8 @@
 #
-# SIR Epidemiology model.
+# SIR Epidemiology toy model.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,8 +13,10 @@ import numpy as np
 import pints
 from scipy.integrate import odeint
 
+from . import ToyModel
 
-class SIRModel(pints.ForwardModel):
+
+class SIRModel(pints.ForwardModel, ToyModel):
     """
     The SIR model of infectious disease models the number of susceptible (S),
     infected (I), and recovered (R) people in a population [1, 2].
@@ -48,7 +50,7 @@ class SIRModel(pints.ForwardModel):
     ``y0``
         The system's initial state, must have 3 entries all >=0.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
 
     References:
 
@@ -83,13 +85,13 @@ class SIRModel(pints.ForwardModel):
             if np.any(self._y0 < 0):
                 raise ValueError('Initial states can not be negative.')
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters)`. """
-        return 3
-
     def n_outputs(self):
-        """ See :meth:`pints.ForwardModel.outputs()`. """
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 2
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 3
 
     def _rhs(self, y, t, gamma, v):
         """

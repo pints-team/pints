@@ -2,7 +2,7 @@
 # Constant model with multiple outputs.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -63,12 +63,12 @@ class ConstantModel(pints.ForwardModelS1):
         # Reshape for single-output models?
         self._reshape = (n == 1 and not force_multi_output)
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+    def n_outputs(self):
+        """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return self._n
 
-    def n_outputs(self):
-        """ See :meth:`pints.ForwardModel.outputs()`. """
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return self._n
 
     def simulate(self, parameters, times):

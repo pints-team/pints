@@ -8,12 +8,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
 import scipy.stats
 
+from . import ToyLogPDF
 
-class TwistedGaussianLogPDF(pints.ToyLogPDF):
+
+class TwistedGaussianLogPDF(ToyLogPDF):
     """
     Twisted multivariate Gaussian 'banana' with un-normalised density [1]:
 
@@ -38,7 +39,7 @@ class TwistedGaussianLogPDF(pints.ToyLogPDF):
     ``V``
         Offset (see equation).
 
-    *Extends:* :class:`pints.LogPDF`.
+    *Extends:* :class:`pints.toy.ToyLogPDF`.
 
     [1] Adaptive proposal distribution for random walk Metropolis algorithm
     Haario, Saksman, Tamminen (1999) Computational Statistics.
@@ -67,9 +68,17 @@ class TwistedGaussianLogPDF(pints.ToyLogPDF):
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
 
-    def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`.
+    def distance(self, samples):
         """
+        Returns :meth:`approximate Kullback-Leibler divergence<kl_divergence>`
+        of samples from underyling distribution.
+
+        See :meth:`pints.toy.ToyLogPDF.distance()`.
+        """
+        return self.kl_divergence(samples)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
         L = self.__call__(x)
 
         V = self._V
@@ -136,19 +145,12 @@ class TwistedGaussianLogPDF(pints.ToyLogPDF):
             np.log(np.linalg.det(s1)) -
             self._n_parameters)
 
-    def distance(self, samples):
-        """
-        Returns approximate Kullback-Leibler divergence of samples from
-        underyling distribution (see `kl_divergence`)
-        """
-        return self.kl_divergence(samples)
-
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._n_parameters
 
     def sample(self, n):
-        """ See :meth:`ToyLogPDF.sample()`. """
+        """ See :meth:`pints.toy.ToyLogPDF.sample()`. """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
 
@@ -158,9 +160,7 @@ class TwistedGaussianLogPDF(pints.ToyLogPDF):
         return x
 
     def suggested_bounds(self):
-        """
-        See :meth:`ToyLogPDF.suggested_bounds()`.
-        """
+        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
         # based on independent sampling think the following hard bounds are ok
         bounds = [[-50, 50], [-100, 100]]
         return np.transpose(bounds).tolist()

@@ -2,7 +2,7 @@
 # Parabolic error measure.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -26,6 +26,9 @@ class ParabolicError(pints.ErrorMeasure):
         self._c = pints.vector(c)
         self._n = len(self._c)
 
+    def __call__(self, x):
+        return np.sum((self._c - x)**2)
+
     def n_parameters(self):
         """ See :meth:`pints.ErrorMeasure.n_parameters()`. """
         return self._n
@@ -35,7 +38,4 @@ class ParabolicError(pints.ErrorMeasure):
         Returns the global optimum for this function.
         """
         return np.array(self._c, copy=True)
-
-    def __call__(self, x):
-        return np.sum((self._c - x)**2)
 

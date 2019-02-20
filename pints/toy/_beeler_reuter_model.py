@@ -1,18 +1,20 @@
 #
-# Beeler-Reuter model for mammalian ventricular action potential
+# Beeler-Reuter model for mammalian ventricular action potential.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
 from __future__ import print_function
-import pints
 import numpy as np
+import pints
 import scipy.integrate
 
+from . import ToyModel
 
-class ActionPotentialModel(pints.ForwardModel):
+
+class ActionPotentialModel(pints.ForwardModel, ToyModel):
     """
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
     (AP) [1].
@@ -38,7 +40,7 @@ class ActionPotentialModel(pints.ForwardModel):
         (Optional) The initial condition of the observables ``v`` and ``cai``,
         where ``cai >= 0``.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
     def __init__(self, y0=None):
         if y0 is None:
@@ -68,15 +70,21 @@ class ActionPotentialModel(pints.ForwardModel):
         # Solver tolerances
         self.set_solver_tolerances()
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        # 5 conductance values
-        return 5
+    def initial_conditions(self):
+        """
+        Returns the initial conditions of this model.
+        """
+        return [self._v0, self._cai0]
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         # membrane voltage and calcium concentration
         return 2
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        # 5 conductance values
+        return 5
 
     def _rhs(self, states, time, parameters):
         """
@@ -164,12 +172,6 @@ class ActionPotentialModel(pints.ForwardModel):
         self._v0 = y0[0]
         self._cai0 = y0[1]
 
-    def initial_conditions(self):
-        """
-        Returns the initial conditions of this model.
-        """
-        return [self._v0, self._cai0]
-
     def set_solver_tolerances(self, rtol=1e-4, atol=1e-6):
         """
         Updates the solver tolerances.
@@ -216,9 +218,7 @@ class ActionPotentialModel(pints.ForwardModel):
         return solved_states
 
     def suggested_parameters(self):
-        """
-        Returns a suggested array of parameter values.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
         # maximum conducances, in mS/cm^2
         g_Na = 4.0
         g_NaC = 0.003
@@ -228,8 +228,6 @@ class ActionPotentialModel(pints.ForwardModel):
         return np.log([g_Na, g_NaC, g_Ca, g_K1, g_x1])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of sampling times.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         return np.arange(0, 400, 0.5)
 

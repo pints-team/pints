@@ -2,17 +2,19 @@
 # HES1 Michaelis-Menten model of regulatory dynamics.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
 from __future__ import print_function
-import pints
 import numpy as np
+import pints
 import scipy
 
+from . import ToyModel
 
-class Hes1Model(pints.ForwardModel):
+
+class Hes1Model(pints.ForwardModel, ToyModel):
     """
     HES1 Michaelis-Menten model of regulatory dynamics [1].
 
@@ -43,7 +45,7 @@ class Hes1Model(pints.ForwardModel):
         The implicit parameter of the model that is not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
 
-    *Extends:* :class:`pints.ForwardModel`.
+    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
@@ -55,13 +57,13 @@ class Hes1Model(pints.ForwardModel):
         else:
             self.set_implicit_parameters(implicit_parameters)
 
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 4
-
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 1
+
+    def n_parameters(self):
+        """ See :meth:`pints.ForwardModel.n_parameters()`. """
+        return 4
 
     def _rhs(self, state, time, parameters):
         """
@@ -124,20 +126,17 @@ class Hes1Model(pints.ForwardModel):
         return solved_states
 
     def suggested_parameters(self):
-        """
-        Returns a suggested array of parameter values.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
         return np.array([2.4, 0.025, 0.11, 6.9])
 
     def suggested_times(self):
-        """
-        Returns a suggested set of sampling times.
-        """
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         return np.arange(0, 270, 30)
 
     def suggested_values(self):
         """
-        Returns a suggested set of values that matches ``suggested_times()``.
+        Returns a suggested set of values that matches
+        :meth:`suggested_times()`.
         """
         return np.array([2, 1.20, 5.90, 4.58, 2.64, 5.38, 6.42, 5.60, 4.48])
 
