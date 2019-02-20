@@ -88,6 +88,11 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertLess(s33, s32)
         self.assertLess(s33, s31)
 
+        # Test distance() returns the same as kl_divergence()
+        self.assertEqual(s31, log_pdf3.distance(samples1))
+        self.assertEqual(s32, log_pdf3.distance(samples2))
+        self.assertEqual(s33, log_pdf3.distance(samples3))
+
         # Test sample() errors
         self.assertRaises(ValueError, log_pdf1.sample, -1)
 
