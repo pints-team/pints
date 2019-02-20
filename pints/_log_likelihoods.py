@@ -11,7 +11,6 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.special
-import scipy.integrate as integrate
 
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
@@ -133,7 +132,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
 
     .. math::
         \\text{log } L = - n / 2 \\text{log}(\\pi) -
-            \\text{log}(2b \\sqrt(2)) +
+            \\text{log}(2 (b - a) \\sqrt(2)) +
             (1 / 2 - n / 2) \\text{log}(SSE) +
             \\text{log}\\left[\\Gamma((n - 1) / 2, \\frac{SSE}{2 b^2}) -
             \\Gamma((n - 1) / 2, \\frac{SSE}{2 a^2}) \\right]
@@ -201,10 +200,9 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         self._b2 = self._b**2
         self._a2 = self._a**2
         self._const_general = (
-            -(n / 2.0) * np.log(np.pi) - np.log(2 * np.sqrt(2) * b)
+            -(n / 2.0) * np.log(np.pi) - np.log(2 * np.sqrt(2) * (b - a))
         )
-        self._gamma = scipy.special.gamma(self._n_minus_1_over_2)
-        self._log_gamma = np.log(self._gamma)
+        self._log_gamma = scipy.special.gammaln(self._n_minus_1_over_2)
         self._two_power = 2**(1 / 2 - n / 2)
 
     def __call__(self, x):
@@ -225,56 +223,12 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
                 log_temp[i] = np.log(
                     scipy.special.gammaincc(self._n_minus_1_over_2,
                                             sse[i] / (2 * self._b2[i])))
-
         return np.sum(
             self._const_general -
             self._n_minus_1_over_2 * np.log(sse) +
             self._log_gamma +
             log_temp
         )
-
-    def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`. """
-
-        # Evaluate, and get residuals
-        y, dy = self._problem.evaluateS1(x)
-
-        # Reshape dy, in case we're working with a single-output problem
-        dy = dy.reshape(self._nt, self._no, self._n_parameters)
-
-        # Note: Must be (data - simulation), sign now matters!
-        r = self._values - y
-
-        # Calculate log-likelihood
-        L = self.__call__(x)
-
-        # Calculate derivatives in the model parameters
-        a = self._a
-        b = self._b
-        sse = r**2
-        ssr_a = sse / (a**2)
-        ssr_b = sse / (b**2)
-        exp_a = np.exp(-ssr_a / 2)
-        exp_b = np.exp(-ssr_b / 2)
-        gamma_diff = [integrate.quad(
-            lambda t: t**self._n_minus_1_over_2 * np.exp(-t),
-            s / (2 * self._a2[0]), s / (2 * self._b2[0])
-        )[0] for s in sse]
-        print(np.sum(gamma_diff))
-        dL = np.sum(
-            (1.0 / r) * (
-                -1 +
-                2 * (exp_a * ssr_a**(self._n_minus_1_over_2) -
-                     exp_b * ssr_b**(self._n_minus_1_over_2)) / (
-                    self._gamma * (scipy.special.gammaincc(self._n_minus_1_over_2,
-                                            sse / (2 * self._a2)) -
-                    scipy.special.gammaincc(self._n_minus_1_over_2,
-                                            sse / (2 * self._b2))))
-                ) * dy.T
-        )
-
-        # Return
-        return L, dL
 
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):

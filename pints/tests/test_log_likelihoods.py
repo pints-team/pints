@@ -244,7 +244,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
             problem, 2, 4)
-        self.assertAlmostEqual(log_likelihood([0]), -21.134185087681246)
+        self.assertAlmostEqual(log_likelihood([0]), -20.441037907121299)
 
         # test incorrect constructors
         self.assertRaises(ValueError,
@@ -274,7 +274,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
             problem, 2, 4)
-        self.assertAlmostEqual(log_likelihood(parameters), -78.215896337046999)
+        self.assertAlmostEqual(log_likelihood(parameters), -75.443307614807225)
 
         # test non-equal prior limits
         model = pints.toy.ConstantModel(4)
@@ -287,7 +287,7 @@ class TestLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(model, times, values)
         log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
             problem, [1, 0, 5, 2], [2, 4, 7, 8])
-        self.assertAlmostEqual(log_likelihood(parameters), -73.854354860421665)
+        self.assertAlmostEqual(log_likelihood(parameters), -71.62076263891457)
 
         # test incorrect constructors
         model = pints.toy.ConstantModel(2)
