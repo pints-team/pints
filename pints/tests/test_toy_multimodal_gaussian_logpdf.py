@@ -17,8 +17,11 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
     """
     Tests the multimodal log-pdf toy problems.
     """
-    def test_default(self):
-
+    def test_basic(self):
+        """
+        Tests instantiations and calls in 2D and 3D across varying
+        numbers of modes
+        """
         # Default settings
         f = pints.toy.MultimodalGaussianLogPDF()
         self.assertEqual(f.n_parameters(), 2)
@@ -64,7 +67,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             [1, 1], [1.5, 1.5], [3, 0], [0, 3.5]
         ])
 
-        # Bad constructors
+    def test_bad_constructors(self):
+        """ Tests bad Constructors """
         self.assertRaises(
             ValueError, pints.toy.MultimodalGaussianLogPDF, [])
         self.assertRaises(
@@ -78,8 +82,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             ValueError, pints.toy.MultimodalGaussianLogPDF, None,
             [[[1, 0], [0]], [[1, 0], [0, 1]]])
 
-        # Test sensitivities
-        # default
+    def test_sensitivities(self):
+        """ Tests sensitivities """
         log_pdf = pints.toy.MultimodalGaussianLogPDF()
         l, dl = log_pdf.evaluateS1([1, 1])
         self.assertEqual(len(dl), 2)
@@ -104,8 +108,15 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(dl[1], -0.054933536830093638)
         self.assertAlmostEqual(dl[2], -0.39317158556789844)
 
-        # Test bounds
+    def test_suggested_bounds(self):
+        """ Tests suggested_bounds() """
         f = pints.toy.MultimodalGaussianLogPDF()
+        covariances = [[[5**2, 0.5 * 5 * 3, -0.1 * 5 * 2],
+                        [0.5 * 5 * 3, 3**2, 0.4 * 3 * 2],
+                        [-0.1 * 5 * 2, 0.4 * 3 * 2, 2**2]],
+                       [[5**2, 0.3 * 5 * 6, 0.2 * 5 * 7],
+                        [0.3 * 5 * 6, 6**2, -0.3 * 6 * 7],
+                        [0.2 * 5 * 7, -0.3 * 6 * 7, 7**2]]]
         bounds = f.suggested_bounds()
         lower = -10
         upper = 20
@@ -123,8 +134,15 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         bounds1 = np.transpose(bounds1).tolist()
         self.assertTrue(np.array_equal(bounds, bounds1))
 
-        # Test KL divergence
+    def test_distance_function(self):
+        """ Tests distance function which calls kl_divergence() """
         f = pints.toy.MultimodalGaussianLogPDF()
+        covariances = [[[5**2, 0.5 * 5 * 3, -0.1 * 5 * 2],
+                        [0.5 * 5 * 3, 3**2, 0.4 * 3 * 2],
+                        [-0.1 * 5 * 2, 0.4 * 3 * 2, 2**2]],
+                       [[5**2, 0.3 * 5 * 6, 0.2 * 5 * 7],
+                        [0.3 * 5 * 6, 6**2, -0.3 * 6 * 7],
+                        [0.2 * 5 * 7, -0.3 * 6 * 7, 7**2]]]
         n = 1000
         d = f.n_parameters()
         samples1 = f.sample(n)
@@ -179,8 +197,4 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

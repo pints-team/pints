@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats
 
 
-class TwistedGaussianLogPDF(pints.LogPDF):
+class TwistedGaussianLogPDF(pints.ToyLogPDF):
     """
     Twisted multivariate Gaussian 'banana' with un-normalised density [1]:
 
@@ -57,7 +57,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
 
         # Create phi
         self._sigma = np.eye(self._n_parameters)
-        self._sigma[0, 0] = 100
+        self._sigma[0, 0] = self._V
         self._phi = scipy.stats.multivariate_normal(
             np.zeros(self._n_parameters), self._sigma)
 
@@ -97,7 +97,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
@@ -148,9 +148,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
         return self._n_parameters
 
     def sample(self, n):
-        """
-        Generates samples from the underlying distribution.
-        """
+        """ See :meth:`ToyLogPDF.sample()`. """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
 
@@ -161,8 +159,7 @@ class TwistedGaussianLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         # based on independent sampling think the following hard bounds are ok
         bounds = [[-50, 50], [-100, 100]]

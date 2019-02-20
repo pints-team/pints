@@ -40,7 +40,7 @@ class RosenbrockError(pints.ErrorMeasure):
         return (self._a - x[0])**2 + self._b * (x[1] - x[0]**2)**2
 
 
-class RosenbrockLogPDF(pints.LogPDF):
+class RosenbrockLogPDF(pints.ToyLogPDF):
     """
     Unnormalised LogPDF based on the Rosenbrock function (see:
     https://en.wikipedia.org/wiki/Rosenbrock_function) although with
@@ -48,6 +48,8 @@ class RosenbrockLogPDF(pints.LogPDF):
 
     .. math::
         f(x,y) = -log[1 + (1 - x)^2 + 100(y - x^2)^2 ]
+
+    Arguments: None.
 
     *Extends:* :class:`pints.LogPDF`.
     """
@@ -70,8 +72,7 @@ class RosenbrockLogPDF(pints.LogPDF):
         return self._f.optimum()
 
     def __call__(self, x):
-        f = (1.0 + self._f(x))
-        return -np.log(f)
+        return -np.log(1.0 + self._f(x))
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`.
@@ -101,7 +102,7 @@ class RosenbrockLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._f.n_parameters():
             raise ValueError(
                 'Given samples must have length ' +
@@ -115,8 +116,7 @@ class RosenbrockLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         # think the following hard bounds are ok
         bounds = [[-2, 4], [-1, 12]]

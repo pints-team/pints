@@ -13,7 +13,7 @@ import numpy as np
 import scipy
 
 
-class ConeLogPDF(pints.LogPDF):
+class ConeLogPDF(pints.ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form,
 
@@ -92,7 +92,7 @@ class ConeLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self.n_parameters():
             raise ValueError(
                 'Given samples must have length ' +
@@ -122,7 +122,7 @@ class ConeLogPDF(pints.LogPDF):
 
     def sample(self, n_samples):
         """
-        Generates independent samples from the underlying distribution.
+        See :meth:`ToyLogPDF.sample()`.
         """
         n_samples = int(n_samples)
         if n_samples < 1:
@@ -150,8 +150,7 @@ class ConeLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         magnitude = 1000
         bounds = np.tile([-magnitude, magnitude], (self._n_parameters, 1))

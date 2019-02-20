@@ -37,6 +37,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertEqual(a_mean[0], 0)
         self.assertEqual(a_mean[1], 0)
 
+    def test_sample_and_moments(self):
+        """ Tests sampling """
         # Change dimensions and beta
         f = pints.toy.AnnulusLogPDF(10, 15, 0.5)
         self.assertEqual(f.n_parameters(), 10)
@@ -44,7 +46,6 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertAlmostEqual(f.var_normed(), 0.24756486472776373)
         self.assertAlmostEqual(f.moment_normed(5), 806385.71374340181)
 
-        # Test sample function
         x = f.sample(10)
         self.assertEqual(len(x), 10)
         f = pints.toy.AnnulusLogPDF()
@@ -59,7 +60,7 @@ class TestAnnulusLogPDF(unittest.TestCase):
         # Test _reject_sample_r
         self.assertTrue(np.all(f._reject_sample(100) > 0))
 
-        # Bad constructors
+    def test_bad_constructors(self):
         self.assertRaises(
             ValueError, pints.toy.AnnulusLogPDF, 0, 1, 1)
         self.assertRaises(
@@ -67,7 +68,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.AnnulusLogPDF, 3, 1, -1)
 
-        # Test suggested bounds
+    def test_suggested_bounds(self):
+        """ Tests suggested_bounds() method """
         f = pints.toy.AnnulusLogPDF()
         bounds = f.suggested_bounds()
         a_val = 55
@@ -85,7 +87,10 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertEqual(bounds[1][0], r0_magnitude)
         self.assertTrue(np.array_equal(np.array(bounds).shape, [2, 5]))
 
-        # test distance function
+    def test_distance_function(self):
+        """
+        Tests distance function
+        """
         log_pdf = pints.toy.AnnulusLogPDF()
         samples = log_pdf.sample(100)
         d = list(map(lambda x: np.linalg.norm(x), samples))
@@ -116,7 +121,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         x = np.ones((100, 5, 2))
         self.assertRaises(ValueError, f.distance, x)
 
-        # test sensitivities
+    def test_sensitivities(self):
+        """ Tests sensitivities """
         f = pints.toy.AnnulusLogPDF()
         l, dl = f.evaluateS1([0, -9])
         self.assertEqual(l, f([0, -9]))

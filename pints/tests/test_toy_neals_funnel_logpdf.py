@@ -17,7 +17,8 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
     """
     Tests the Neal's funnel log pdf toy problem.
     """
-    def test_high_dimensional_log_pdf(self):
+    def test_default(self):
+        """ Tests instantiation and calls """
 
         # test default instantiation
         f = pints.toy.NealsFunnelLogPDF()
@@ -35,6 +36,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(samples.shape,
                                        [10000, 10]))
         self.assertTrue(f.kl_divergence(samples) < 0.1)
+        self.assertEqual(f.kl_divergence(samples), f.distance(samples))
 
         # test mean
         self.assertTrue(np.array_equal(np.zeros(10), f.mean()))
@@ -46,7 +48,9 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         log_prob = f.marginal_log_pdf(0.5, -0.5)
         self.assertAlmostEqual(log_prob, -2.9064684028038599)
 
-        # test ValueErrors
+    def test_bad_calls(self):
+        """ Tests bad calls """
+        f = pints.toy.NealsFunnelLogPDF()
         self.assertRaises(ValueError, f.__call__, [1, 2])
         self.assertRaises(ValueError, pints.toy.NealsFunnelLogPDF, 1)
 
@@ -57,7 +61,8 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
 
-        # test non-default
+    def test_bespoke(self):
+        """ Tests non-default function behaviour """
         f = pints.toy.NealsFunnelLogPDF(20)
         self.assertEqual(f.n_parameters(), 20)
         x = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -74,6 +79,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(samples.shape,
                                        [10000, 20]))
         self.assertTrue(f.kl_divergence(samples) < 0.1)
+        self.assertEqual(f.kl_divergence(samples), f.distance(samples))
 
         # test mean
         self.assertTrue(np.array_equal(np.zeros(20), f.mean()))
@@ -88,10 +94,26 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
 
+    def test_suggested_bounds(self):
+        """ Tests suggested_bounds() """
+        # default
+        f = pints.toy.NealsFunnelLogPDF()
+        bounds = f.suggested_bounds()
+        magnitude = 30
+        bounds1 = np.tile([-magnitude, magnitude],
+                          (f._n_parameters, 1))
+        bounds1 = np.transpose(bounds1).tolist()
+        self.assertTrue(np.array_equal(bounds, bounds1))
+
+        # non-default
+        f = pints.toy.NealsFunnelLogPDF(20)
+        bounds = f.suggested_bounds()
+        magnitude = 30
+        bounds1 = np.tile([-magnitude, magnitude],
+                          (f._n_parameters, 1))
+        bounds1 = np.transpose(bounds1).tolist()
+        self.assertTrue(np.array_equal(bounds, bounds1))
+
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

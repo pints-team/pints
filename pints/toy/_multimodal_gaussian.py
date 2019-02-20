@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats
 
 
-class MultimodalGaussianLogPDF(pints.LogPDF):
+class MultimodalGaussianLogPDF(pints.ToyLogPDF):
     """
     Multimodal (un-normalised) multivariate Gaussian distribution.
 
@@ -82,7 +82,10 @@ class MultimodalGaussianLogPDF(pints.LogPDF):
             scipy.stats.multivariate_normal(mode, self._covs[i])
             for i, mode in enumerate(self._modes)]
 
-        self._first_evaluate = True
+        # See page 45 of
+        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
+        self._sigma_invs = [np.linalg.inv(self._covs[i])
+                            for i, mode in enumerate(self._modes)]
 
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
@@ -94,7 +97,7 @@ class MultimodalGaussianLogPDF(pints.LogPDF):
 
     def sample(self, n_samples):
         """
-        Generates independent samples from the underlying distribution.
+        See :meth:`ToyLogPDF.sample()`.
         """
         n_samples = int(n_samples)
         if n_samples < 1:
@@ -113,12 +116,6 @@ class MultimodalGaussianLogPDF(pints.LogPDF):
         """
         L = self.__call__(x)
 
-        # See page 45 of
-        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
-        if self._first_evaluate:
-            self._sigma_invs = [np.linalg.inv(self._covs[i])
-                                for i, mode in enumerate(self._modes)]
-            self._first_evaluate = False
         denom = np.exp(L)
         numer = np.sum([np.matmul(
             self._sigma_invs[i], x - np.array(self._modes[i])
@@ -128,8 +125,7 @@ class MultimodalGaussianLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         # make rectangular bounds in each dimension 3X width of range
         a_max = np.max(self._modes)
@@ -156,7 +152,7 @@ class MultimodalGaussianLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))

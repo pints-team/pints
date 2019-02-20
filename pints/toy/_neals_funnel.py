@@ -14,7 +14,7 @@ import scipy
 import scipy.stats
 
 
-class NealsFunnelLogPDF(pints.LogPDF):
+class NealsFunnelLogPDF(pints.ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form,
 
@@ -89,7 +89,7 @@ class NealsFunnelLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
@@ -102,6 +102,21 @@ class NealsFunnelLogPDF(pints.LogPDF):
                       np.log(s0) +
                       np.log(self._s1) -
                       1)
+
+    def distance(self, samples):
+        """
+        Calculates KL divergence (see `kl_divergence`)
+        """
+        return self.kl_divergence(samples)
+
+    def suggested_bounds(self):
+        """
+        See :meth:`ToyLogPDF.suggested_bounds()`.
+        """
+        magnitude = 30
+        bounds = np.tile([-magnitude, magnitude],
+                         (self._n_parameters, 1))
+        return np.transpose(bounds).tolist()
 
     def mean(self):
         """
@@ -117,7 +132,7 @@ class NealsFunnelLogPDF(pints.LogPDF):
         return np.concatenate((np.repeat(90, self._n_parameters - 1), [9]))
 
     def sample(self, n_samples):
-        """ Samples from the underlying distribution. """
+        """ See :meth:`ToyLogPDF.sample()`. """
         n = self._n_parameters
         samples = np.zeros((n_samples, n))
         for i in range(n_samples):
