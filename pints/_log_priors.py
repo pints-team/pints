@@ -114,11 +114,16 @@ class CauchyLogPrior(pints.LogPrior):
         if float(scale) <= 0:
             raise ValueError('Scale must be positive')
 
-        self._student_t = pints.StudentTLogPrior(location=location, df=1,
-                                                 scale=scale)
+        self._location = location
+        self._scale = scale
+
+        # Cache constants
+        self._pi_sig = np.pi * self._scale
+        self._pi_on_sig = np.pi / self._scale
 
     def __call__(self, x):
-        return self._student_t(x)
+        _x_sq = (x[0] - self._location) * (x[0] - self._location)
+        return -np.log(self._pi_sig + self._pi_on_sig * _x_sq)
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -126,7 +131,8 @@ class CauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return self._student_t.sample(n)
+        return scipy.stats.cauchy.rvs(loc=self._location, scale=self._scale,
+                                      size=n)
 
 
 class ComposedLogPrior(pints.LogPrior):
