@@ -103,10 +103,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
         traces.append((times[i:], values[i:]))
         return traces
 
-    def n_outputs(self):
-        """ See :meth:`pints.ForwardModel.n_outputs()`. """
-        return 1
-
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 5
