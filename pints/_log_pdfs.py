@@ -254,3 +254,26 @@ class SumOfIndependentLogPDFs(LogPDF):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
 
+
+class ToyLogPDF(LogPDF):
+    """ Abstract base class for toy distributions """
+
+    def distance(self, samples):
+        """
+        Defines a measure of distance from samples to some characteristic of
+        the underlying distribution
+        """
+        raise NotImplementedError
+
+    def suggested_bounds(self):
+        """
+        Returns suggested boundaries for prior (typically used in performance
+        testing)
+        """
+        raise NotImplementedError
+
+    def sample(self, n_samples):
+        """
+        Generates independent samples from the underlying distribution.
+        """
+        raise NotImplementedError

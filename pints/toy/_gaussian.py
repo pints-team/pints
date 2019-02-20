@@ -14,7 +14,7 @@ import numpy as np
 import scipy.stats
 
 
-class GaussianLogPDF(pints.LogPDF):
+class GaussianLogPDF(pints.ToyLogPDF):
     """
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
@@ -68,7 +68,7 @@ class GaussianLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be 2x2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
@@ -102,7 +102,7 @@ class GaussianLogPDF(pints.LogPDF):
 
     def sample(self, n):
         """
-        Generates samples from the underlying distribution.
+        See :meth:`ToyLogPDF.sample()`.
         """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')

@@ -104,7 +104,7 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         log_pdf = pints.toy.TwistedGaussianLogPDF(dimension=4, b=0.3, V=200)
         x = [-1, 2, -3, 12]
         l, dl = log_pdf.evaluateS1(x)
-        self.assertAlmostEqual(l, -1747.1233642258126)
+        self.assertAlmostEqual(l, -1747.4699253160925)
         self.assertEqual(l, log_pdf(x))
         self.assertAlmostEqual(dl[0], -34.619949999999996)
         self.assertAlmostEqual(dl[1], 57.699999999999996)

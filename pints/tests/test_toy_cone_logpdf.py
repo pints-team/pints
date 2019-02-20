@@ -17,7 +17,8 @@ class TestConeLogPDF(unittest.TestCase):
     """
     Tests the cone log-pdf toy problems.
     """
-    def test_default(self):
+    def test_basic(self):
+        """ Tests moments, calls, CDF evaluations and sampling """
 
         # Default settings
         f = pints.toy.ConeLogPDF()
@@ -55,7 +56,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertTrue(np.max(f.sample(1000)) < 10)
         self.assertRaises(ValueError, f.sample, 0)
 
-        # Bad constructors
+    def test_bad_constructors(self):
+        """ Tests bad instantiations and calls """
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 0, 1)
         self.assertRaises(
@@ -68,7 +70,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.__call__, [1, 2, 3])
         self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
 
-        # Test bounds
+    def test_bounds(self):
+        """ Tests suggested_bounds() """
         f = pints.toy.ConeLogPDF()
         bounds = f.suggested_bounds()
         self.assertTrue(np.array_equal([[-1000, -1000], [1000, 1000]],
@@ -82,7 +85,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertEqual(bounds[0][1], magnitude)
         self.assertTrue(np.array_equal(np.array(bounds).shape, [4, 2]))
 
-        # Test sensitivities
+    def test_sensitivities(self):
+        """ Tests sensitivities """
         f = pints.toy.ConeLogPDF()
         l, dl = f.evaluateS1([-1, 3])
         self.assertEqual(len(dl), 2)
@@ -98,7 +102,8 @@ class TestConeLogPDF(unittest.TestCase):
         for i, elem in enumerate(dl):
             self.assertAlmostEqual(elem, cons * xx[i])
 
-        # Check distance function
+    def test_distance_function(self):
+        """ Tests distance function """
         f = pints.toy.ConeLogPDF()
         x = f.sample(10)
         self.assertTrue(f.distance(x) > 0)

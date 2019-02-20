@@ -11,9 +11,10 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy
+import pints.toy
 
 
-class AnnulusLogPDF(pints.LogPDF):
+class AnnulusLogPDF(pints.ToyLogPDF):
     """
     Toy distribution based on a d-dimensional distribution of the form
 
@@ -120,7 +121,7 @@ class AnnulusLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self.n_parameters():
             raise ValueError(
                 'Given samples must have length ' +
@@ -153,7 +154,7 @@ class AnnulusLogPDF(pints.LogPDF):
 
     def sample(self, n_samples):
         """
-        Generates independent samples from the underlying distribution.
+        See :meth:`ToyLogPDF.sample()`.
         """
         n_samples = int(n_samples)
         if n_samples < 1:
@@ -182,8 +183,7 @@ class AnnulusLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         # in higher dimensions reduce volume as otherwise gets too wide
         r0_magnitude = (self._r0 + self._sigma) * (

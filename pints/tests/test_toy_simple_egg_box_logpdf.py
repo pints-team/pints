@@ -73,11 +73,10 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
     def test_sensitivity_bounds_distance(self):
-        """
-        Tests :meth:`SimpleEggBoxLogPDF.evaluateS1()`,
-        :meth:`SimpleEggBoxLogPDF.suggested_bounds()` and
-        :meth:`SimpleEggBoxLogPDF.distance()`
-        """
+        # Tests :meth:`SimpleEggBoxLogPDF.evaluateS1()`,
+        # :meth:`SimpleEggBoxLogPDF.suggested_bounds()` and
+        # :meth:`SimpleEggBoxLogPDF.distance()`
+
         f = pints.toy.SimpleEggBoxLogPDF()
         l, dl = f.evaluateS1([-5, 2])
         self.assertEqual(l, f([-5, 2]))

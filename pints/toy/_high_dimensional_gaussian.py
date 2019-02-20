@@ -13,10 +13,19 @@ import numpy as np
 import scipy.stats
 
 
-class HighDimensionalGaussianLogPDF(pints.LogPDF):
+class HighDimensionalGaussianLogPDF(pints.ToyLogPDF):
     """
-    High-dimensional multivariate Gaussian log pdf, with tricky off-diagonal
-    covariances.
+    High-dimensional multivariate Gaussian log pdf, with off-diagonal
+    correlations.
+
+    Arguments:
+
+    ``dimension``
+        Dimensions of Gaussian distribution.
+    ``rho``
+        The correlation between pairs of parameter dimensions. Note that this
+        must be between ```-1 / (dimension - 1) and 1`` so that the
+        covariance matrix is positive semi-definite.
 
     *Extends:* :class:`pints.LogPDF`.
     """
@@ -27,7 +36,6 @@ class HighDimensionalGaussianLogPDF(pints.LogPDF):
         rho = float(rho)
         # bounds must satisfy:
         # https://stats.stackexchange.com/questions/72790/
-        # bound-for-the-correlation-of-three-random-variables
         if rho > 1.0:
             raise ValueError('rho must be between -1 / (dims - 1) and 1.')
         if rho < -float(1.0 / (self._n_parameters - 1)):
@@ -73,7 +81,7 @@ class HighDimensionalGaussianLogPDF(pints.LogPDF):
         """
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be nx2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != self._n_parameters:
             raise ValueError(
                 'Given samples must have length ' + str(self._n_parameters))
@@ -110,8 +118,7 @@ class HighDimensionalGaussianLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         # maximum variance in one dimension is n_parameters, so use
         # 3 times sqrt of this as prior bounds
@@ -128,7 +135,7 @@ class HighDimensionalGaussianLogPDF(pints.LogPDF):
 
     def sample(self, n_samples):
         """
-        Generates independent samples from the underlying distribution.
+        See :meth:`ToyLogPDF.sample()`.
         """
         n_samples = int(n_samples)
         if n_samples < 1:

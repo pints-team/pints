@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats
 
 
-class SimpleEggBoxLogPDF(pints.LogPDF):
+class SimpleEggBoxLogPDF(pints.ToyLogPDF):
     """
     Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
@@ -56,23 +56,19 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
             scipy.stats.multivariate_normal(mode, self._covs[i])
             for i, mode in enumerate(self._modes)]
 
-        self._first_evaluate = True
+        # See page 45 of
+        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
+        self._sigma_invs = [np.linalg.inv(self._covs[i])
+                            for i, mode in enumerate(self._modes)]
 
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
         return -float('inf') if f == 0 else np.log(f)
 
     def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`.
-        """
+        """ See :meth:`LogPDF.evaluateS1()`. """
         L = self.__call__(x)
 
-        # See page 45 of
-        # http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
-        if self._first_evaluate:
-            self._sigma_invs = [np.linalg.inv(self._covs[i])
-                                for i, mode in enumerate(self._modes)]
-            self._first_evaluate = False
         denom = np.exp(L)
         numer = np.sum([np.matmul(
             self._sigma_invs[i], x - np.array(self._modes[i])
@@ -96,7 +92,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
 
         # Check size of input
         if not len(samples.shape) == 2:
-            raise ValueError('Given samples list must be 2x2.')
+            raise ValueError('Given samples list must be n x 2.')
         if samples.shape[1] != dimension:
             raise ValueError(
                 'Given samples must have length ' + str(dimension))
@@ -138,9 +134,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
         return score * penalty2
 
     def sample(self, n):
-        """
-        Returns ``n`` samples from the underlying distribution.
-        """
+        """ See :meth:`ToyLogPDF.sample()`. """
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
 
@@ -164,8 +158,7 @@ class SimpleEggBoxLogPDF(pints.LogPDF):
 
     def suggested_bounds(self):
         """
-        Returns suggested boundaries for prior (typically used in performance
-        testing)
+        See :meth:`ToyLogPDF.suggested_bounds()`.
         """
         magnitude = self._r * self._sigma * 2
         bounds = np.tile([-magnitude, magnitude], (2, 1))
