@@ -28,6 +28,8 @@ Example::
 
 .. autoclass:: InverseGammaLogPrior
 
+.. autoclass:: LogNormalLogPrior
+
 .. autoclass:: MultivariateGaussianLogPrior
 
 .. autoclass:: NormalLogPrior

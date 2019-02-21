@@ -774,18 +774,20 @@ class TestPrior(unittest.TestCase):
             self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
 
     def test_log_normal_prior_sampling(self):
-        p1 = pints.LogNormalLogPrior(-18., 6.)
+        mu = -1.234
+        sig = 0.456
+        p1 = pints.LogNormalLogPrior(mu, sig)
         self.assertEqual(len(p1.sample()), 1)
 
-        n = 100000
+        n = 1000
         samples1 = p1.sample(n)
         self.assertEqual(len(samples1), n)
 
-        # Mean should be exp(mu + 0.5*sig^2) = 1, so we check that this is very
+        # Mean should be exp(mu + 0.5*sig^2), so we check that this is very
         # roughly the case, to ensure the parameterisation is correct
-        mean = np.mean(samples1).item()
-        print(mean)
-        self.assertTrue(0.5 < mean < 1.5)
+        sample_mean = np.mean(samples1).item()
+        analyt_mean = np.exp(mu + 0.5 * sig * sig)
+        self.assertTrue(0.9 * analyt_mean < sample_mean < 1.1 * analyt_mean)
 
 
 if __name__ == '__main__':
