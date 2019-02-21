@@ -549,7 +549,7 @@ class LogNormalLogPrior(pints.LogPrior):
         self._sigsqmmu = self._scale * self._scale - self._log_mean
 
     def __call__(self, x):
-        if x[0] < 0.0:
+        if x[0] <= 0.0:
             return -np.inf
         else:
             _lx = np.log(x[0])
