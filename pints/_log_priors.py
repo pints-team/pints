@@ -500,23 +500,23 @@ class InverseGammaLogPrior(pints.LogPrior):
 
 
 class LogNormalLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a log-normal (log) prior with a given ``logmean`` and scale
     ``scale``, with pdf
 
     .. math::
-        f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
-        \\exp\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
+        f(x|\text{logmean},\text{scale}) = \frac{1}{x\;\text{scale}\sqrt{2\pi}}
+        \exp\left(-\frac{(\log x-\text{logmean})^2}{2\;\text{scale}^2}\right)
 
     and expectation
 
     .. math::
-        \\mathrm{E}(X)=\\text{mean}.
+        \mathrm{E}(X)=\exp\left(\text{logmean}+\frac{\text{scale}^2}{2}\right).
 
-    For example, to create a prior with mean of ``0`` and a standard deviation
-    of ``1``, use::
+    For example, to create a prior with logmean of ``0`` and a scale of ``1``,
+    use::
 
-        p = pints.GaussianLogPrior(0, 1)
+        p = pints.LogNormalLogPrior(0, 1)
 
     *Extends:* :class:`LogPrior`
     """
@@ -565,7 +565,7 @@ class LogNormalLogPrior(pints.LogPrior):
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
     """
-    Defines a multivariate Gaussian (log)prior with a given ``mean`` and
+    Defines a multivariate Gaussian (log) prior with a given ``mean`` and
     covariance matrix ``cov``, with pdf
 
     .. math::
