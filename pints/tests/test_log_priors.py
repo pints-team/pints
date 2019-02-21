@@ -28,6 +28,10 @@ class TestPrior(unittest.TestCase):
 
         points = [-2., 0.001, 0.1, 0.3, 0.5, 0.7, 0.9, 0.999, 2.]
 
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 0.04993909866017051)
+        self.assertAlmostEqual(p2.mean(), 0.4307116104868914)
+
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
 
@@ -91,6 +95,10 @@ class TestPrior(unittest.TestCase):
         # Test exceptions
         self.assertRaises(ValueError, pints.CauchyLogPrior, 0, 0)
         self.assertRaises(ValueError, pints.CauchyLogPrior, 10, -1)
+
+        # Test means
+        self.assertTrue(np.isnan(p1.mean()))
+        self.assertTrue(np.isnan(p2.mean()))
 
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
@@ -197,6 +205,10 @@ class TestPrior(unittest.TestCase):
 
         points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
 
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 8.13008130081301)
+        self.assertAlmostEqual(p2.mean(), 0.2189621195533173)
+
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
 
@@ -256,6 +268,10 @@ class TestPrior(unittest.TestCase):
         p2 = pints.GammaLogPrior(a2, b2)
 
         points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 0.05245202558635395)
+        self.assertAlmostEqual(p2.mean(), 12.82865168539326)
 
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
@@ -324,6 +340,9 @@ class TestPrior(unittest.TestCase):
         py = [p([i]) for i in y]
         self.assertTrue(np.all(py[1:] <= py[:-1]))
 
+        # Test means
+        self.assertAlmostEqual(p.mean(), mean)
+
         # Test derivatives
         x = [8]
         y, dy = p.evaluateS1(x)
@@ -376,6 +395,10 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(ValueError, pints.HalfCauchyLogPrior, 0, 0)
         self.assertRaises(ValueError, pints.HalfCauchyLogPrior, 10, -1)
 
+        # Test means
+        self.assertTrue(np.isnan(p1.mean()))
+        self.assertTrue(np.isnan(p2.mean()))
+
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
@@ -407,6 +430,10 @@ class TestPrior(unittest.TestCase):
         p2 = pints.InverseGammaLogPrior(a2, b2)
 
         points = [-2., 0.0, 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test means
+        self.assertTrue(np.isnan(p1.mean()))
+        self.assertAlmostEqual(p2.mean(), 0.0998037566582562)
 
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
@@ -472,6 +499,10 @@ class TestPrior(unittest.TestCase):
         p2 = pints.LogNormalLogPrior(mu2, sd2)
 
         points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 17.68138692293243)
+        self.assertAlmostEqual(p2.mean(), 0.01106872184593001)
 
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
@@ -557,6 +588,10 @@ class TestPrior(unittest.TestCase):
         p([1, 2, 3, 4, 5])
         p([-1, 2, -3, 4, -5])
 
+        # Test mean
+        for idx, component in enumerate(mean):
+            self.assertAlmostEqual(p.mean()[idx], component)
+
         # Test errors
         self.assertRaises(
             ValueError, pints.MultivariateGaussianLogPrior, [1, 2],
@@ -618,6 +653,12 @@ class TestPrior(unittest.TestCase):
 
         p1 = pints.StudentTLogPrior(loc1, df1, scale1)
         p2 = pints.StudentTLogPrior(loc2, df2, scale2)
+        p3 = pints.StudentTLogPrior(1.23, 1, 2.34)
+
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 0.)
+        self.assertAlmostEqual(p2.mean(), 10.)
+        self.assertTrue(np.isnan(p3.mean()))
 
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
@@ -699,6 +740,11 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
 
+        # Test mean
+        mean = p.mean()
+        self.assertAlmostEqual(mean[0], 5.5)
+        self.assertAlmostEqual(mean[1], 11.)
+
         # Test from rectangular boundaries object
         b = pints.RectangularBoundaries(lower, upper)
         p = pints.UniformLogPrior(b)
@@ -723,6 +769,11 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([5, 5]), w)
         self.assertEqual(p([5, 20 - 1e-14]), w)
 
+        # Test mean
+        mean = p.mean()
+        self.assertAlmostEqual(mean[0], 5.5)
+        self.assertAlmostEqual(mean[1], 11.)
+
         # Test custom boundaries object
         class CircleBoundaries(pints.Boundaries):
             def __init__(self, x, y, r):
@@ -740,6 +791,9 @@ class TestPrior(unittest.TestCase):
         minf = -float('inf')
         self.assertTrue(p([0, 0]) == minf)
         self.assertTrue(p([4, 4]) > minf)
+
+        # Test mean
+        self.assertRaises(NotImplementedError, p.mean)
 
         # Test derivatives (always 0)
         for x in [[0, 0], [0, 5], [0, 19], [0, 21], [5, 0], [5, 21]]:
