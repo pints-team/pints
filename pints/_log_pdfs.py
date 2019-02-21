@@ -40,6 +40,13 @@ class LogPDF(object):
         """
         raise NotImplementedError
 
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
+        """
+        raise NotImplementedError
+
     def n_parameters(self):
         """
         Returns the dimension of the space this :class:`LogPDF` is defined
