@@ -509,7 +509,10 @@ class InverseGammaLogPrior(pints.LogPrior):
 class LogNormalLogPrior(pints.LogPrior):
     r"""
     Defines a log-normal (log) prior with a given ``logmean`` and scale
-    ``scale``, with pdf
+    ``scale``. The ``logmean`` parameter of a log-normal distribution is the
+    mean of a normal distribution whose random samples, when exponentiated,
+    yield samples from a log-normal distribution. This log-normal distribution
+    has pdf
 
     .. math::
         f(x|\text{logmean},\text{scale}) = \frac{1}{x\;\text{scale}\sqrt{2\pi}}
