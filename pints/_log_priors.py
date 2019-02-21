@@ -508,23 +508,25 @@ class InverseGammaLogPrior(pints.LogPrior):
 
 class LogNormalLogPrior(pints.LogPrior):
     r"""
-    Defines a log-normal (log) prior with a given ``logmean`` and scale
-    ``scale``. The ``logmean`` parameter of a log-normal distribution is the
+    Defines a log-normal (log) prior with a given ``log_mean`` and scale
+    ``scale``. The ``log_mean`` parameter of a log-normal distribution is the
     mean of a normal distribution whose random samples, when exponentiated,
     yield samples from a log-normal distribution. This log-normal distribution
     has pdf
 
     .. math::
-        f(x|\text{logmean},\text{scale}) = \frac{1}{x\;\text{scale}\sqrt{2\pi}}
-        \exp\left(-\frac{(\log x-\text{logmean})^2}{2\;\text{scale}^2}\right).
+        f(x|\text{log_mean},\text{scale}) = \frac{1}{x\;\text{scale}
+        \sqrt{2\pi}}\exp\left(-\frac{(\log x-\text{log_mean})^2}{2\;
+        \text{scale}^2}\right).
 
     A random variable :math:`X` distributed according to this pdf has
     expectation
 
     .. math::
-        \mathrm{E}(X)=\exp\left(\text{logmean}+\frac{\text{scale}^2}{2}\right).
+        \mathrm{E}(X)=\exp\left(\text{log_mean}+\frac{\text{scale}^2}{2}
+        \right).
 
-    For example, to create a prior with logmean of ``0`` and a scale of ``1``,
+    For example, to create a prior with log_mean of ``0`` and a scale of ``1``,
     use::
 
         p = pints.LogNormalLogPrior(0, 1)
@@ -532,9 +534,9 @@ class LogNormalLogPrior(pints.LogPrior):
     *Extends:* :class:`LogPrior`
     """
 
-    def __init__(self, logmean, scale):
+    def __init__(self, log_mean, scale):
         # Parse input arguments
-        self._logmean = float(logmean)
+        self._log_mean = float(log_mean)
         self._scale = float(scale)
 
         if self._scale <= 0:
@@ -544,14 +546,14 @@ class LogNormalLogPrior(pints.LogPrior):
         self._offset = -np.log(self._scale * np.sqrt(2. * np.pi))
         self._1on2sigsq = 1. / (2. * self._scale * self._scale)
         self._m1onsigsq = -1. / (self._scale * self._scale)
-        self._sigsqmmu = self._scale * self._scale - self._logmean
+        self._sigsqmmu = self._scale * self._scale - self._log_mean
 
     def __call__(self, x):
         if x[0] < 0.0:
             return -np.inf
         else:
             _lx = np.log(x[0])
-            _shift = _lx - self._logmean
+            _shift = _lx - self._log_mean
             return self._offset - _lx - self._1on2sigsq * _shift * _shift
 
     def evaluateS1(self, x):
@@ -570,7 +572,7 @@ class LogNormalLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return scipy.stats.lognorm.rvs(scale=np.exp(self._logmean),
+        return scipy.stats.lognorm.rvs(scale=np.exp(self._log_mean),
                                        s=self._scale, size=n)
 
 
