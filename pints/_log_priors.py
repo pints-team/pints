@@ -16,17 +16,18 @@ import scipy.stats
 
 
 class BetaLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a beta (log) prior with given shape parameters ``a`` and ``b``,
     with pdf
 
     .. math::
-        f(x|a,b) = \\frac{x^{a-1} (1-x)^{b-1}}{\\mathrm{B}(a,b)}
+        f(x|a,b) = \frac{x^{a-1} (1-x)^{b-1}}{\mathrm{B}(a,b)}
 
-    where :math:`\\mathrm{B}` is the Beta function. This pdf has expectation
+    where :math:`\mathrm{B}` is the Beta function. A random variable :math:`X`
+    distributed according to this pdf has expectation
 
     .. math::
-        \\mathrm{E}(X)=\\frac{a}{a+b}.
+        \mathrm{E}(X)=\frac{a}{a+b}.
 
     For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
     use::
@@ -58,7 +59,7 @@ class BetaLogPrior(pints.LogPrior):
                 self._b - 1.0, -x[0]) - self._log_beta
 
     def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`. """
+        r""" See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
         _x = x[0]
 
@@ -85,16 +86,17 @@ class BetaLogPrior(pints.LogPrior):
 
 
 class CauchyLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a 1-d Cauchy (log) prior with a given ``location``, and ``scale``,
     with pdf
 
     .. math::
-        f(x|\\text{location}, \\text{scale}) = \\frac{1}{\\pi\\;\\text{scale}
-        \\left[1 + \\left(\\frac{x-\\text{location}}{\\text{scale}}\\right)^2
-        \\right]}
+        f(x|\text{location}, \text{scale}) = \frac{1}{\pi\;\text{scale}
+        \left[1 + \left(\frac{x-\text{location}}{\text{scale}}\right)^2
+        \right]}.
 
-    and undefined expectation.
+    A random variable distributed according to this pdf has undefined
+    expectation.
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -136,7 +138,7 @@ class CauchyLogPrior(pints.LogPrior):
 
 
 class ComposedLogPrior(pints.LogPrior):
-    """
+    r"""
     N-dimensional LogPrior composed of one or more other Ni-dimensional
     LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
     log-prior assumes the input log-priors are all independent from each other.
@@ -208,17 +210,18 @@ class ComposedLogPrior(pints.LogPrior):
 
 
 class ExponentialLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines an exponential (log) prior with given rate parameter ``rate`` with
     pdf
 
     .. math::
-        f(x|\\text{rate}) = \\text{rate} \\; e^{-\\text{rate}\;x}
+        f(x|\text{rate}) = \text{rate} \; e^{-\text{rate}\;x}.
 
-    and expectation
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
 
     .. math::
-        \\mathrm{E}(X)=\\frac{1}{\\text{rate}}.
+        \mathrm{E}(X)=\frac{1}{\text{rate}}.
 
     For example, to create a prior with ``rate=0.5`` use::
 
@@ -262,17 +265,18 @@ class ExponentialLogPrior(pints.LogPrior):
 
 
 class GammaLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a gamma (log) prior with given shape parameter ``a`` and rate
     parameter ``b``, with pdf
 
     .. math::
-        f(x|a,b)=\\frac{b^a x^{a-1} e^{-bx}}{\\mathrm{\\Gamma}(a)}
+        f(x|a,b)=\frac{b^a x^{a-1} e^{-bx}}{\mathrm{\Gamma}(a)}.
 
-    where :math:`\\Gamma` is the Gamma function.  This pdf has expectation
+    where :math:`\Gamma` is the Gamma function.  A random variable :math:`X`
+    distributed according to this pdf has expectation
 
     .. math::
-        \\mathrm{E}(X)=\\frac{a}{b}.
+        \mathrm{E}(X)=\frac{a}{b}.
 
     For example, to create a prior with shape parameters ``a=5`` and ``b=1``,
     use::
@@ -330,18 +334,19 @@ class GammaLogPrior(pints.LogPrior):
 
 
 class GaussianLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a 1-d Gaussian (log) prior with a given ``mean`` and
     standard deviation ``sd``, with pdf
 
     .. math::
-        f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
-        \\exp\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
+        f(x|\text{mean},\text{sd}) = \frac{1}{\text{sd}\sqrt{2\pi}}
+        \exp\left(-\frac{(x-\text{mean})^2}{2\;\text{sd}^2}\right).
 
-    and expectation
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
 
     .. math::
-        \\mathrm{E}(X)=\\text{mean}.
+        \mathrm{E}(X)=\text{mean}.
 
     For example, to create a prior with mean of ``0`` and a standard deviation
     of ``1``, use::
@@ -386,9 +391,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
         f(x|\text{location},\text{scale})=\begin{cases}\frac{1}{\pi\;
         \text{scale}\left(\frac{1}{\pi}\arctan\left(\frac{\text{location}}
         {\text{scale} }\right)+\frac{1}{2}\right)\left(\frac{(x-\text{location}
-        )^2}{\text{scale}^2}+1\right)},&x>0\\0,&\text{otherwise}\end{cases}
+        )^2}{\text{scale}^2}+1\right)},&x>0\\0,&\text{otherwise.}\end{cases}
 
-    and undefined expectation.
+    A random variable distributed according to this pdf has undefined
+    expectation.
 
     For example, to create a prior centered around 0 and a scale of 5, use::
 
@@ -433,19 +439,20 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
 
 class InverseGammaLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines an inverse gamma (log) prior with given shape parameter ``a`` and
     scale parameter ``b``, with pdf
 
     .. math::
-        f(x|a,b)=\\begin{cases}\\frac{b^a}{\\Gamma(a)}x^{-a-1}\\exp
-        \\left(-\\frac{b}{x}\\right),&x>0\\\\0,&\\text{Otherwise}\\end{cases}
+        f(x|a,b)=\begin{cases}\frac{b^a}{\Gamma(a)}x^{-a-1}\exp
+        \left(-\frac{b}{x}\right),&x>0\\0,&\text{otherwise.}\end{cases}
 
-    where :math:`\\Gamma` is the Gamma function.  This pdf has expectation
+    where :math:`\Gamma` is the Gamma function.  A random variable :math:`X`
+    distributed according to this pdf has expectation
 
     .. math::
-        \\mathrm{E}(X)=\\begin{cases}\\frac{b}{a-1},&a>1\\\\
-        \\text{undefined},&\\text{otherwise.}\\end{cases}
+        \mathrm{E}(X)=\begin{cases}\frac{b}{a-1},&a>1\\
+        \text{undefined},&\text{otherwise.}\end{cases}
 
     For example, to create a prior with shape parameter ``a=5`` and scale
     parameter ``b=1``, use::
@@ -506,9 +513,10 @@ class LogNormalLogPrior(pints.LogPrior):
 
     .. math::
         f(x|\text{logmean},\text{scale}) = \frac{1}{x\;\text{scale}\sqrt{2\pi}}
-        \exp\left(-\frac{(\log x-\text{logmean})^2}{2\;\text{scale}^2}\right)
+        \exp\left(-\frac{(\log x-\text{logmean})^2}{2\;\text{scale}^2}\right).
 
-    and expectation
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
 
     .. math::
         \mathrm{E}(X)=\exp\left(\text{logmean}+\frac{\text{scale}^2}{2}\right).
@@ -564,19 +572,20 @@ class LogNormalLogPrior(pints.LogPrior):
 
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a multivariate Gaussian (log) prior with a given ``mean`` and
     covariance matrix ``cov``, with pdf
 
     .. math::
-        f(x|\\text{mean},\\text{cov}) = \\frac{1}{(2\\pi)^{d/2}|
-        \\text{cov}|^{1/2}} \\exp\\left(-\\frac{1}{2}(x-\\text{mean})'
-        \\text{cov}^{-1}(x-\\text{mean})\\right)
+        f(x|\text{mean},\text{cov}) = \frac{1}{(2\pi)^{d/2}|
+        \text{cov}|^{1/2}} \exp\left(-\frac{1}{2}(x-\text{mean})'
+        \text{cov}^{-1}(x-\text{mean})\right).
 
-    and expectation
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
 
     .. math::
-        \\mathrm{E}(X)=\\text{mean}.
+        \mathrm{E}(X)=\text{mean}.
 
     For example, to create a prior with zero mean and identity covariance,
     use::
@@ -617,7 +626,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
 
 class NormalLogPrior(GaussianLogPrior):
-    """ Deprecated alias of :class:`GaussianLogPrior`. """
+    r""" Deprecated alias of :class:`GaussianLogPrior`. """
 
     def __init__(self, mean, standard_deviation):
         # Deprecated on 2019-02-06
@@ -631,21 +640,22 @@ class NormalLogPrior(GaussianLogPrior):
 
 
 class StudentTLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a 1-d Student-t (log) prior with a given ``location``,
     degrees of freedom ``df``,  and ``scale`` with pdf
 
     .. math::
-        f(x|\\text{location},\\text{scale},\\text{df})=\\frac{\\left(\\frac{
-        \\text{df}}{\\text{df}+\\frac{(x-\\text{location})^2}{\\text{scale}^2}}
-        \\right)^{\\frac{\\text{df}+1}{2}}}{\\sqrt{\\text{df}}\\;\\text{scale}
-        \\;\\mathrm{B}\\left(\\frac{\\text{df} }{2},\\frac{1}{2}\\right)}
+        f(x|\text{location},\text{scale},\text{df})=\frac{\left(\frac{
+        \text{df}}{\text{df}+\frac{(x-\text{location})^2}{\text{scale}^2}}
+        \right)^{\frac{\text{df}+1}{2}}}{\sqrt{\text{df}}\;\text{scale}
+        \;\mathrm{B}\left(\frac{\text{df} }{2},\frac{1}{2}\right)}.
 
-    where :math:`\\mathrm{B}` is the Beta function. This pdf has expectation
+    where :math:`\mathrm{B}` is the Beta function. A random variable :math:`X`
+    distributed according to this pdf has expectation
 
     .. math::
-        \\mathrm{E}(X)=\\begin{cases}\\text{location},&\\text{df}>1\\\\
-        \\text{undefined},&\\text{otherwise.}\\end{cases}
+        \mathrm{E}(X)=\begin{cases}\text{location},&\text{df}>1\\\
+        \text{undefined},&\text{otherwise.}\end{cases}
 
     For example, to create a prior centered around 0 with 3 degrees of freedom
     and a scale of 1, use::
@@ -708,7 +718,7 @@ class StudentTLogPrior(pints.LogPrior):
 
 
 class UniformLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a uniform prior over a given range.
 
     The range includes the lower, but not the upper boundaries, so that any
@@ -717,17 +727,18 @@ class UniformLogPrior(pints.LogPrior):
     In 1D this has pdf
 
     .. math::
-        f(x|\\text{lower},\\text{upper})=\\begin{cases}0,&\\text{if }x\\not\\in
-        [\\text{lower},\\text{upper})\\\\\\frac{1}{\\text{upper}-\\text{lower}}
-        ,&\\text{if }x\\in[\\text{lower},\\text{upper})\\end{cases}
+        f(x|\text{lower},\text{upper})=\begin{cases}0,&\text{if }x\not\in
+        [\text{lower},\text{upper})\\\frac{1}{\text{upper}-\text{lower}}
+        ,&\text{if }x\in[\text{lower},\text{upper})\end{cases}.
 
-    and expectation
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
 
     .. math::
-        \\mathrm{E}(X)=\\frac{1}{2}(\\text{lower}+\\text{upper}).
+        \mathrm{E}(X)=\frac{1}{2}(\text{lower}+\text{upper}).
 
-    For example, to create a prior with :math:`x\\in[0,4]`, :math:`y\\in[1,5]`,
-    and :math:`z\\in[2,6]` use either::
+    For example, to create a prior with :math:`x\in[0,4]`, :math:`y\in[1,5]`,
+    and :math:`z\in[2,6]` use either::
 
         p = pints.UniformLogPrior([0, 1, 2], [4, 5, 6])
 
