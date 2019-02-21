@@ -377,17 +377,16 @@ class GaussianLogPrior(pints.LogPrior):
 
 
 class HalfCauchyLogPrior(pints.LogPrior):
-    """
+    r"""
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
-    between [0, inf], with pdf
+    between :math:`[0,\infty]`, with pdf
 
     .. math::
-        f(x|\\text{location},\\text{scale})=\\begin{cases}\\frac{1}{\\pi\\;
-        \\text{scale}\\left(\\frac{1}{\\pi}\\text{arctan}\\left(\\frac{
-        \\text{location}}{\\text{scale} }\\right)+\\frac{1}{2}\\right)\\left(
-        \\frac{(x-\\text{location})^2}{\\text{scale}^2}+1\\right)},&x>0\\\\0,&
-        \\text{Otherwise}\\end{cases}
+        f(x|\text{location},\text{scale})=\begin{cases}\frac{1}{\pi\;
+        \text{scale}\left(\frac{1}{\pi}\arctan\left(\frac{\text{location}}
+        {\text{scale} }\right)+\frac{1}{2}\right)\left(\frac{(x-\text{location}
+        )^2}{\text{scale}^2}+1\right)},&x>0\\0,&\text{otherwise}\end{cases}
 
     and undefined expectation.
 
@@ -498,6 +497,70 @@ class InverseGammaLogPrior(pints.LogPrior):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.invgamma.rvs(a=self._a, scale=self._b, loc=0.,
                                         size=n)
+
+
+class LogNormalLogPrior(pints.LogPrior):
+    """
+    Defines a log-normal (log) prior with a given ``logmean`` and scale
+    ``scale``, with pdf
+
+    .. math::
+        f(x|\\text{mean},\\text{sd}) = \\frac{1}{\\sqrt{2\\pi\\;\\text{sd}^2}}
+        \\exp\\left(-\\frac{(x-\\text{mean})^2}{2\\;\\text{sd}^2}\\right)
+
+    and expectation
+
+    .. math::
+        \\mathrm{E}(X)=\\text{mean}.
+
+    For example, to create a prior with mean of ``0`` and a standard deviation
+    of ``1``, use::
+
+        p = pints.GaussianLogPrior(0, 1)
+
+    *Extends:* :class:`LogPrior`
+    """
+
+    def __init__(self, logmean, scale):
+        # Parse input arguments
+        self._logmean = float(logmean)
+        self._scale = float(scale)
+
+        if self._scale <= 0:
+            raise ValueError('Scale must be positive')
+
+        # Cache constants
+        self._offset = -np.log(self._scale * np.sqrt(2. * np.pi))
+        self._1on2sigsq = 1. / (2. * self._scale * self._scale)
+        self._m1onsigsq = -1. / (self._scale * self._scale)
+        self._sigsqmmu = self._scale * self._scale - self._logmean
+
+    def __call__(self, x):
+        if x[0] < 0.0:
+            return -np.inf
+        else:
+            _lx = np.log(x[0])
+            _shift = _lx - self._logmean
+            return self._offset - _lx - self._1on2sigsq * _shift * _shift
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        if x[0] < 0.0:
+            return self(x), np.asarray([0.])
+        else:
+            _x = x[0]
+            _lx = np.log(_x)
+            return self(x), np.asarray(
+                [self._m1onsigsq * np.divide(self._sigsqmmu + _lx, _x)])
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.lognorm.rvs(scale=np.exp(self._logmean),
+                                       s=self._scale, size=n)
 
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
@@ -689,9 +752,6 @@ class UniformLogPrior(pints.LogPrior):
         # Cache dimension
         self._n_parameters = self._boundaries.n_parameters()
 
-        # Minimum output value
-        self._minf = -np.inf
-
         # Maximum output value
         # Use normalised value (1/area) for rectangular boundaries,
         # otherwise just use 1.
@@ -701,7 +761,7 @@ class UniformLogPrior(pints.LogPrior):
             self._value = 1
 
     def __call__(self, x):
-        return self._value if self._boundaries.check(x) else self._minf
+        return self._value if self._boundaries.check(x) else -np.inf
 
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """

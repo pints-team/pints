@@ -715,6 +715,78 @@ class TestPrior(unittest.TestCase):
         mean = np.mean(samples1).item()
         self.assertTrue(9. < mean < 11.)
 
+    def test_log_normal_prior(self):
+
+        # Test input parameters
+        self.assertRaises(ValueError, pints.LogNormalLogPrior, 0, 0)
+        self.assertRaises(ValueError, pints.LogNormalLogPrior, 2, -2)
+
+        mu1 = 0.123
+        mu2 = -4.567
+
+        sd1 = 2.345
+        sd2 = 0.356
+
+        p1 = pints.LogNormalLogPrior(mu1, sd1)
+        p2 = pints.LogNormalLogPrior(mu2, sd2)
+
+        points = [-2., 0.001, 0.1, 1.0, 2.45, 6.789]
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 1)
+
+        # Test specific points
+        for point in points:
+            pints_val_1 = p1([point])
+            scipy_val_1 = scipy.stats.lognorm.logpdf(point, scale=np.exp(mu1),
+                                                     s=sd1)
+
+            pints_val_2 = p2([point])
+            scipy_val_2 = scipy.stats.lognorm.logpdf(point, scale=np.exp(mu2),
+                                                     s=sd2)
+
+            self.assertAlmostEqual(pints_val_1, scipy_val_1)
+            self.assertAlmostEqual(pints_val_2, scipy_val_2)
+
+        # Test derivatives
+        p1_derivs = [0., 278.54579293277163, -5.589063346695011,
+                     -0.977632398470638, -0.4655454616904081,
+                     -0.19530581390245802]
+
+        p2_derivs = [0., 17469.53729786411, -188.67179862122487,
+                     -37.03553844211642, -18.00246833062188,
+                     -7.681261547066602]
+
+        for point, hand_calc_deriv in zip(points, p1_derivs):
+            pints_val, pints_deriv = p1.evaluateS1([point])
+            scipy_val = scipy.stats.lognorm.logpdf(point, scale=np.exp(mu1),
+                                                   s=sd1)
+
+            self.assertAlmostEqual(pints_val, scipy_val)
+            self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
+
+        for point, hand_calc_deriv in zip(points, p2_derivs):
+            pints_val, pints_deriv = p2.evaluateS1([point])
+            scipy_val = scipy.stats.lognorm.logpdf(point, scale=np.exp(mu2),
+                                                   s=sd2)
+
+            self.assertAlmostEqual(pints_val, scipy_val)
+            self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
+
+    def test_log_normal_prior_sampling(self):
+        p1 = pints.LogNormalLogPrior(-18., 6.)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 100000
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        # Mean should be exp(mu + 0.5*sig^2) = 1, so we check that this is very
+        # roughly the case, to ensure the parameterisation is correct
+        mean = np.mean(samples1).item()
+        print(mean)
+        self.assertTrue(0.5 < mean < 1.5)
+
 
 if __name__ == '__main__':
     unittest.main()
