@@ -97,13 +97,13 @@ from ._log_likelihoods import (
     AR1LogLikelihood,
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
+    GaussianIntegratedUniformLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
-    GaussianIntegratedUniformLogLikelihood,
 )
 
 #

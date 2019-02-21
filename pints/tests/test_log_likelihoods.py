@@ -233,9 +233,8 @@ class TestLogLikelihood(unittest.TestCase):
             plt.show()
 
     def test_gaussian_integrated_uniform_log_likelihood_single(self):
-        """
-        Tests GaussianIntegratedUniformLogLikelihood
-        """
+        # Tests GaussianIntegratedUniformLogLikelihood with single output
+        # problem
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
@@ -261,9 +260,8 @@ class TestLogLikelihood(unittest.TestCase):
                           problem, [1, 2], [2, 3])
 
     def test_gaussian_integrated_uniform_log_likelihood_multi(self):
-        """
-        Tests GaussianIntegratedUniformLogLikelihood
-        """
+        # Tests GaussianIntegratedUniformLogLikelihood with multi output
+        # problem
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.asarray([1, 2, 3])

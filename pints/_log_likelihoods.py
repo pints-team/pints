@@ -118,33 +118,50 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
 
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
     at each time point where it is assumed that the dependence on
-    :math:`\\sigma\\sim U(a,b)` has been integrated out of the joint posterior.
+    :math:`\sigma\sim U(a,b)` has been integrated out of the joint posterior,
+
+    .. math::
+        \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
+        \mathrm{d}\sigma\\
+        &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
+        \mathrm{d}\sigma,\end{align}
+
+    A possible advantage of this likelihood compared with using a
+    `GaussianLogLikelihood` with a uniform prior on :math:`\sigma`,
+    this is exactly the same statistical model, except with one fewer
+    parameter (:math:`sigma`). Having one fewer parameter than the full
+    distribution may speed up convergence to the posterior distribution,
+    especially for multi-output problems which will have `n_outputs` fewer
+    parameter dimensions.
 
     The likelihood is given in terms of the sum of squared errors:
 
     .. math::
-        SSE = \\sum_{i=1}^n (f_i(\\theta) - y_i)^2
+        SSE = \sum_{i=1}^n (f_i(\\theta) - y_i)^2
 
     and is given up to a normalisation constant by:
 
     .. math::
-        \\text{log } L = - n / 2 \\text{log}(\\pi) -
-            \\text{log}(2 (b - a) \\sqrt(2)) +
-            (1 / 2 - n / 2) \\text{log}(SSE) +
-            \\text{log}\\left[\\Gamma((n - 1) / 2, \\frac{SSE}{2 b^2}) -
-            \\Gamma((n - 1) / 2, \\frac{SSE}{2 a^2}) \\right]
+        \text{log } L = - n / 2 \text{log}(\pi) -
+            \text{log}(2 (b - a) \sqrt(2)) +
+            (1 / 2 - n / 2) \text{log}(SSE) +
+            \text{log}\\left[\Gamma((n - 1) / 2, \frac{SSE}{2 b^2}) -
+            \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right]
 
-    where :math:`\\Gamma(u,v)` is the upper incomplete gamma function
+    where :math:`\Gamma(u,v)` is the upper incomplete gamma function
     as defined here: https://en.wikipedia.org/wiki/Incomplete_gamma_function
 
     Arguments:
 
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
-    ``b``
+    ``lower``
+        The lower limit on the uniform prior om `sigma`. Must be
+        non-negative.
+    ``upper``
         The upper limit on the uniform prior om `sigma`.
 
     *Extends:* :class:`ProblemLogLikelihood`
