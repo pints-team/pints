@@ -30,7 +30,7 @@ class ConstantModel(pints.ForwardModelS1):
     .. math::
 
         \\frac{\partial{f_i(t)}}{dp_j} =
-            \\begin{cases} i, i = j\\\\0, i \\neq j \end{cases}
+            \\begin{cases} 1, i = j\\\\0, i \\neq j \end{cases}
 
     Arguments:
 
@@ -106,8 +106,6 @@ class ConstantModel(pints.ForwardModelS1):
             #   [df2/dp1, df2/dp2]]
             # i.e.
             #  [[1, 0],
-            #   [0, 2]]
-            # i.e. np.diag(self._r)
-            dy = np.tile(np.diag(self._r), (len(times), 1, 1))
+            #   [0, 1]]
+            dy = np.tile(np.diag(np.ones(self._n)), (len(times), 1, 1))
         return (y, dy)
-

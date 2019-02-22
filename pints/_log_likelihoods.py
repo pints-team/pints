@@ -18,16 +18,18 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
     Calculates a log-likelihood assuming AR1 noise model
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
+        \log{L(\\theta, \sigma'|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
-            -N\log{\sigma}
-            -\\frac{1}{2\sigma^2}
-                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
+            -N\log{\sigma'}
+            -\\frac{1}{2\sigma'^2}
+                \sum_{i=2}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
 
     where
 
     .. math::
         \\epsilon_i = x_i - f_i(\\theta)
+
+    and :math:`sigma' = \\frac{sigma} \\sqrt{1-\\rho^2}`.
 
 
     Arguments:
@@ -54,8 +56,11 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        rho = np.asarray(x[-2 * self._no:-self._no])
-        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
+        m = 2 * self._no
+        parameters = x[-m:]
+        rho = np.asarray(parameters[0::2])
+        sigma = np.asarray(parameters[1::2])
+        sigma = np.asarray(sigma) * np.sqrt(1 - rho**2)
         error = self._values - self._problem.evaluate(x[:-2 * self._no])
         autocorr_error = error[1:] - rho * error[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
@@ -64,21 +69,29 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming AR1 noise model
+    Calculates a log-likelihood assuming ARMA(1,1) noise model.
 
     .. math::
         \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}
-                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} -
-                              \\phi \\nu(t-1))^2}
+                \sum_{i=3}^N{(\\nu_i - \\phi \\nu_{i-1})^2}
 
     where
 
     .. math::
+        \\nu_i = \\epsilon_i - \\rho \\epsilon_{i-1}
+
+    and
+
+    ..math::
         \\epsilon_i = x_i - f_i(\\theta)
 
+    and
+
+    .. math::
+        \\sigma = \\sigma\\sqrt{\\frac{1-\\rho^2}{1 + 2\\phi\\rho + \\phi^2}}`
 
     Arguments:
 
@@ -104,13 +117,16 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        rho = np.asarray(x[-3 * self._no:-2 * self._no])
-        phi = np.asarray(x[-2 * self._no:-self._no])
+        m = 3 * self._no
+        parameters = x[-m:]
+        rho = np.asarray(parameters[0::3])
+        phi = np.asarray(parameters[1::3])
+        sigma = np.asarray(parameters[2::3])
         sigma = (
-            np.asarray(x[-self._no:]) *
+            sigma *
             np.sqrt((1.0 - rho**2) / (1.0 + 2.0 * phi * rho + phi**2))
         )
-        error = self._values - self._problem.evaluate(x[:-3 * self._no])
+        error = self._values - self._problem.evaluate(x[:-m])
         v = error[1:] - rho * error[:-1]
         autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
@@ -320,29 +336,27 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        sigma = float(np.asarray(x[-self._no:]))
+        sigma = np.asarray(x[-self._no:])
 
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x[:-self._no])
 
         # Reshape dy, in case we're working with a single-output problem
-        dy = dy.reshape(self._nt, self._no, self._n_parameters - 1)
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
 
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
 
         # Calculate log-likelihood
-        L = np.sum(-self._logn - self._nt * np.log(sigma)
-                   - (1.0 / (2 * sigma**2)) * np.sum(r**2, axis=0))
+        L = self.__call__(x)
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
             (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
 
         # Calculate derivative wrt sigma
-        dsigma = np.sum(-self._nt / sigma +
-                        sigma**(-3.0) * np.sum(r**2, axis=0))
-        dL = np.concatenate((dL, np.array([dsigma])))
+        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
+        dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return
         return L, dL
@@ -490,4 +504,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-

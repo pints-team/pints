@@ -78,6 +78,31 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
+        # test values of log-likelihood and derivatives
+        model = pints.toy.ConstantModel(3)
+        times = [1, 2, 3, 4]
+        parameters = [0, 0, 0]
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        f2 = pints.GaussianKnownSigmaLogLikelihood(problem, [3.5, 1, 12])
+        log_likelihood = pints.ScaledLogLikelihood(f2)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters),
+            -50.508848609684783 / 12.0
+        )
+        l, dl = log_likelihood.evaluateS1(parameters)
+        self.assertAlmostEqual(l, -50.508848609684783 / 12.0)
+        self.assertAlmostEqual(dl[0], 1.820408163265306 / 12.0)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002 / 12.0)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774 / 12.0)
+
     def test_gaussian_log_likelihoods_single_output(self):
         """
         Single-output test for known/unknown noise log-likelihood methods
@@ -112,6 +137,7 @@ class TestLogLikelihood(unittest.TestCase):
         l, dl = log_likelihood.evaluateS1([3])
         self.assertAlmostEqual(l, -23.777369746461702)
         self.assertAlmostEqual(dl[0], -9.3333333333333321)
+        self.assertEqual(len(dl), 1)
 
         # unknown noise value checks
         log_likelihood = pints.GaussianLogLikelihood(problem)
@@ -135,6 +161,50 @@ class TestLogLikelihood(unittest.TestCase):
 
         l2 = pints.UnknownNoiseLogLikelihood(problem)
         self.assertIsInstance(l2, pints.GaussianLogLikelihood)
+
+        # test multiple output unknown noise
+        model = pints.toy.ConstantModel(3)
+        parameters = [0, 0, 0]
+        times = [1, 2, 3, 4]
+        values = model.simulate([0, 0, 0], times)
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [3.5, 1, 12]),
+            -50.508848609684783
+        )
+        l, dl = log_likelihood.evaluateS1(parameters + [3.5, 1, 12])
+        self.assertAlmostEqual(l, -50.508848609684783)
+        self.assertAlmostEqual(dl[0], 1.820408163265306)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774)
+        self.assertAlmostEqual(dl[3], 3.6065306122448981)
+        self.assertAlmostEqual(dl[4], 27.490000000000002)
+        self.assertAlmostEqual(dl[5], -0.25425347222222222)
+
+        # test multiple output model dimensions of sensitivities
+        d = 20
+        model = pints.toy.ConstantModel(d)
+        parameters = [0 for i in range(d)]
+        times = [1, 2, 3, 4]
+        values = model.simulate(parameters, times)
+        org_values = np.ones((len(times), d))
+        extra_params = np.ones(d).tolist()
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+        l = log_likelihood(parameters + extra_params)
+        l1, dl = log_likelihood.evaluateS1(parameters + extra_params)
+        self.assertTrue(np.array_equal(len(dl),
+                                       len(parameters + extra_params)))
+        self.assertEqual(l, l1)
 
     def test_known_noise_gaussian_single_S1(self):
         """
@@ -231,6 +301,33 @@ class TestLogLikelihood(unittest.TestCase):
             plt.grid(True)
 
             plt.show()
+
+        # value-based tests (single output tests are above)
+        # multiple outputs
+        model = pints.toy.ConstantModel(3)
+        parameters = [0, 0, 0]
+        times = [1, 2, 3, 4]
+        values = model.simulate(parameters, times)
+        org_values = [[10.7, 3.5, 3.8],
+                      [1.1, 3.2, -1.4],
+                      [9.3, 0.0, 4.5],
+                      [1.2, -3, -10]]
+        problem = pints.MultiOutputProblem(model, times, org_values)
+        sigma = [3.5, 1, 12]
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=3.5) +
+        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
+        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=12)
+        #      = -50.5088...
+        self.assertAlmostEqual(
+            log_likelihood(parameters),
+            -50.508848609684783
+        )
+        l, dl = log_likelihood.evaluateS1(parameters)
+        self.assertAlmostEqual(l, -50.508848609684783)
+        self.assertAlmostEqual(dl[0], 1.820408163265306)
+        self.assertAlmostEqual(dl[1], 3.7000000000000002)
+        self.assertAlmostEqual(dl[2], -0.021527777777777774)
 
     def test_student_t_log_likelihood_single(self):
         """
@@ -451,6 +548,7 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertTrue(np.all(3 * dy1 == dy))
 
     def test_ar1(self):
+        # single outputs
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
@@ -460,6 +558,30 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.AR1LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.5, 5]), -19.706737485492436)
+
+        # multiple outputs
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.arange(1, 5)
+        model.simulate(parameters, times)
+        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
+                             [1.1, -10.3, 15.6, 5.5],
+                             [-10, -30.5, -5, 7.6],
+                             [-12, -10.1, -4, 2.3]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        # Test AR1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, sigma=1) +
+        #      AR1Logpdf((7.6,-10.3,-30.5, -10.1)|mean=0, rho=-0.25, sigma=3) +
+        #      AR1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, sigma=10) +
+        #      AR1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, sigma=2)
+        #      = -109.4752924909364 -93.58199 - 18.3833..
+        #        -16.4988
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [0.5, 1.0,
+                                         -0.25, 3.0,
+                                         0.9, 10.0,
+                                         0.0, 2.0]),
+            -237.93936126949615)
 
     def test_arma11(self):
         model = pints.toy.ConstantModel(1)
@@ -471,6 +593,30 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.ARMA11LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
+
+        # multiple outputs
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.arange(1, 5)
+        model.simulate(parameters, times)
+        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
+                             [1.1, -10.3, 15.6, 5.5],
+                             [-10, -30.5, -5, 7.6],
+                             [-12, -10.1, -4, 2.3]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        # ARMA1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, phi=0.34 sigma=1) +
+        # ARMA1Logpdf((7.6,-10.3,-30.5, -10.1)|
+        #             mean=0, rho=-0.25, phi=0.1, sigma=3) +
+        # ARMA1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, phi=0.0, sigma=10) +
+        # ARMA1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, phi=0.9, sigma=2)
+        #      = -116.009 -74.94 -14.32 -8.88
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [0.5, 0.34, 1.0,
+                                         -0.25, 0.1, 3.0,
+                                         0.9, 0.0, 10.0,
+                                         0.0, 0.9, 2.0]),
+            -214.17034137601107)
 
 
 if __name__ == '__main__':
