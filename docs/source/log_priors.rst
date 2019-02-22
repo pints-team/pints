@@ -26,6 +26,10 @@ Example::
 
 .. autoclass:: HalfCauchyLogPrior
 
+.. autoclass:: InverseGammaLogPrior
+
+.. autoclass:: LogNormalLogPrior
+
 .. autoclass:: MultivariateGaussianLogPrior
 
 .. autoclass:: NormalLogPrior
