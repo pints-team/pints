@@ -158,6 +158,18 @@ class TestPrior(unittest.TestCase):
         self.assertAlmostEqual(dy[0], dy1[0])
         self.assertAlmostEqual(dy[1], dy2[0])
 
+        # Test means
+        m1 = 10
+        c1 = 2
+        p1 = pints.GaussianLogPrior(m1, c1)
+
+        m2 = -50
+        c2 = 50
+        p2 = pints.UniformLogPrior(m2, c2)
+
+        p = pints.ComposedLogPrior(p1, p2)
+        self.assertTrue(np.array_equal(p.mean(), [10, 0]))
+
     def test_composed_prior_sampling(self):
 
         m1 = 10
