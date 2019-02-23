@@ -142,7 +142,7 @@ class CauchyLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.cauchy.rvs(loc=self._location, scale=self._scale,
-                                      size=n)
+                                      size=(n, 1))
 
 
 class ComposedLogPrior(pints.LogPrior):
@@ -215,6 +215,10 @@ class ComposedLogPrior(pints.LogPrior):
             hi += prior.n_parameters()
             output[:, lo:hi] = prior.sample(n)
         return output
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return [prior.mean() for prior in self._priors]
 
 
 class ExponentialLogPrior(pints.LogPrior):
@@ -459,7 +463,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.halfcauchy.rvs(loc=self._location,
-                                          scale=self._scale, size=n)
+                                          scale=self._scale, size=(n, 1))
 
 
 class InverseGammaLogPrior(pints.LogPrior):
@@ -531,7 +535,7 @@ class InverseGammaLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.invgamma.rvs(a=self._a, scale=self._b, loc=0.,
-                                        size=n)
+                                        size=(n, 1))
 
 
 class LogNormalLogPrior(pints.LogPrior):
@@ -605,7 +609,7 @@ class LogNormalLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.lognorm.rvs(scale=np.exp(self._log_mean),
-                                       s=self._scale, size=n)
+                                       s=self._scale, size=(n, 1))
 
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
@@ -759,7 +763,7 @@ class StudentTLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.t.rvs(df=self._df, loc=self._location,
-                                 scale=self._scale, size=n)
+                                 scale=self._scale, size=(n, 1))
 
 
 class UniformLogPrior(pints.LogPrior):
