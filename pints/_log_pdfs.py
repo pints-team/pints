@@ -8,6 +8,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+
 import numpy as np
 
 
@@ -36,6 +37,13 @@ class LogPDF(object):
         ``L' = d/dp log(f(p))``, evaluated at ``p=x``.
 
         *This is an optional method that is not always implemented.*
+        """
+        raise NotImplementedError
+
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
         """
         raise NotImplementedError
 

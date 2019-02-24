@@ -59,7 +59,7 @@ class BetaLogPrior(pints.LogPrior):
                 self._b - 1.0, -x[0]) - self._log_beta
 
     def evaluateS1(self, x):
-        r""" See :meth:`LogPDF.evaluateS1()`. """
+        """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
         _x = x[0]
 
@@ -75,6 +75,10 @@ class BetaLogPrior(pints.LogPrior):
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - np.divide(
                 self._b - 1., 1. - _x)])
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._a / (self._a + self._b)
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -127,6 +131,10 @@ class CauchyLogPrior(pints.LogPrior):
         _x_sq = (x[0] - self._location) * (x[0] - self._location)
         return -np.log(self._pi_sig + self._pi_on_sig * _x_sq)
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return np.nan
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -134,7 +142,7 @@ class CauchyLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.cauchy.rvs(loc=self._location, scale=self._scale,
-                                      size=n)
+                                      size=(n, 1))
 
 
 class ComposedLogPrior(pints.LogPrior):
@@ -208,6 +216,10 @@ class ComposedLogPrior(pints.LogPrior):
             output[:, lo:hi] = prior.sample(n)
         return output
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return [prior.mean() for prior in self._priors]
+
 
 class ExponentialLogPrior(pints.LogPrior):
     r"""
@@ -254,6 +266,10 @@ class ExponentialLogPrior(pints.LogPrior):
             return value, np.asarray([0.])
         else:
             return value, np.asarray([-self._rate])
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return 1. / self._rate
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -324,6 +340,10 @@ class GammaLogPrior(pints.LogPrior):
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._a / self._b
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -371,6 +391,10 @@ class GaussianLogPrior(pints.LogPrior):
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         return self(x), self._factor2 * (self._mean - np.asarray(x))
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._mean
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -428,6 +452,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
         else:
             return -np.inf
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return np.nan
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -435,7 +463,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.halfcauchy.rvs(loc=self._location,
-                                          scale=self._scale, size=n)
+                                          scale=self._scale, size=(n, 1))
 
 
 class InverseGammaLogPrior(pints.LogPrior):
@@ -496,6 +524,10 @@ class InverseGammaLogPrior(pints.LogPrior):
             return val, np.asarray(
                 [np.divide(self._b - self._ap1 * _x, _x * _x)])
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._b / (self._a - 1.) if self._a > 1 else np.nan
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -503,7 +535,7 @@ class InverseGammaLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.invgamma.rvs(a=self._a, scale=self._b, loc=0.,
-                                        size=n)
+                                        size=(n, 1))
 
 
 class LogNormalLogPrior(pints.LogPrior):
@@ -566,6 +598,10 @@ class LogNormalLogPrior(pints.LogPrior):
             return self(x), np.asarray(
                 [self._m1onsigsq * np.divide(self._sigsqmmu + _lx, _x)])
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return np.exp(self._log_mean + 0.5 * self._scale * self._scale)
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -573,7 +609,7 @@ class LogNormalLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.lognorm.rvs(scale=np.exp(self._log_mean),
-                                       s=self._scale, size=n)
+                                       s=self._scale, size=(n, 1))
 
 
 class MultivariateGaussianLogPrior(pints.LogPrior):
@@ -618,6 +654,10 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         return np.log(
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._cov))
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._mean
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -712,6 +752,10 @@ class StudentTLogPrior(pints.LogPrior):
         return self(x), np.asarray([offset * self._deriv_const / (
             self._df + offset * offset * self._1_sig_sq)])
 
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        return self._location if self._df > 1. else np.nan
+
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return 1
@@ -719,7 +763,7 @@ class StudentTLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.t.rvs(df=self._df, loc=self._location,
-                                 scale=self._scale, size=n)
+                                 scale=self._scale, size=(n, 1))
 
 
 class UniformLogPrior(pints.LogPrior):
@@ -785,6 +829,13 @@ class UniformLogPrior(pints.LogPrior):
         # hypercube), because it's very unlikely and won't help the search
         # much...
         return self(x), np.zeros(self._n_parameters)
+
+    def mean(self):
+        """ See :meth:`LogPDF.mean()`. """
+        if isinstance(self._boundaries, pints.RectangularBoundaries):
+            return 0.5 * (self._boundaries.lower() + self._boundaries.upper())
+        else:
+            raise NotImplementedError
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
