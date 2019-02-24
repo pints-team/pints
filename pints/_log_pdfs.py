@@ -40,13 +40,6 @@ class LogPDF(object):
         """
         raise NotImplementedError
 
-    def mean(self):
-        """
-        Returns the analytical value of the expectation of a random variable
-        distributed according to this :class:`LogPDF`.
-        """
-        raise NotImplementedError
-
     def n_parameters(self):
         """
         Returns the dimension of the space this :class:`LogPDF` is defined
@@ -76,6 +69,13 @@ class LogPrior(LogPDF):
 
         Note: This method is optional, in the sense that only a subset of
         inference methods require it.
+        """
+        raise NotImplementedError
+
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
         """
         raise NotImplementedError
 
@@ -260,4 +260,3 @@ class SumOfIndependentLogPDFs(LogPDF):
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
-
