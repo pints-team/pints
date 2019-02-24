@@ -8,6 +8,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+
 import numpy as np
 
 
@@ -68,6 +69,13 @@ class LogPrior(LogPDF):
 
         Note: This method is optional, in the sense that only a subset of
         inference methods require it.
+        """
+        raise NotImplementedError
+
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
         """
         raise NotImplementedError
 
@@ -252,4 +260,3 @@ class SumOfIndependentLogPDFs(LogPDF):
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
-
