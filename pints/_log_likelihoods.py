@@ -18,18 +18,16 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
     Calculates a log-likelihood assuming AR1 noise model
 
     .. math::
-        \log{L(\\theta, \sigma'|\\boldsymbol{x})} =
+        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
-            -N\log{\sigma'}
-            -\\frac{1}{2\sigma'^2}
-                \sum_{i=2}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
+            -N\log{\sigma}
+            -\\frac{1}{2\sigma^2}
+                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
 
     where
 
     .. math::
         \\epsilon_i = x_i - f_i(\\theta)
-
-    and :math:`sigma' = \\frac{sigma} \\sqrt{1-\\rho^2}`.
 
 
     Arguments:
@@ -56,11 +54,8 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        m = 2 * self._no
-        parameters = x[-m:]
-        rho = np.asarray(parameters[0::2])
-        sigma = np.asarray(parameters[1::2])
-        sigma = np.asarray(sigma) * np.sqrt(1 - rho**2)
+        rho = np.asarray(x[-2 * self._no:-self._no])
+        sigma = np.asarray(x[-self._no:]) * np.sqrt(1 - rho**2)
         error = self._values - self._problem.evaluate(x[:-2 * self._no])
         autocorr_error = error[1:] - rho * error[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
@@ -69,29 +64,21 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     """
-    Calculates a log-likelihood assuming ARMA(1,1) noise model.
+    Calculates a log-likelihood assuming AR1 noise model
 
     .. math::
         \log{L(\\theta, \sigma|\\boldsymbol{x})} =
             -\\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
             -\\frac{1}{2\sigma^2}
-                \sum_{i=3}^N{(\\nu_i - \\phi \\nu_{i-1})^2}
+                \sum_{i=1}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} -
+                              \\phi \\nu(t-1))^2}
 
     where
 
     .. math::
-        \\nu_i = \\epsilon_i - \\rho \\epsilon_{i-1}
-
-    and
-
-    ..math::
         \\epsilon_i = x_i - f_i(\\theta)
 
-    and
-
-    .. math::
-        \\sigma = \\sigma\\sqrt{\\frac{1-\\rho^2}{1 + 2\\phi\\rho + \\phi^2}}`
 
     Arguments:
 
@@ -117,20 +104,148 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         self._logn = 0.5 * (self._nt) * np.log(2 * np.pi)
 
     def __call__(self, x):
-        m = 3 * self._no
-        parameters = x[-m:]
-        rho = np.asarray(parameters[0::3])
-        phi = np.asarray(parameters[1::3])
-        sigma = np.asarray(parameters[2::3])
+        rho = np.asarray(x[-3 * self._no:-2 * self._no])
+        phi = np.asarray(x[-2 * self._no:-self._no])
         sigma = (
-            sigma *
+            np.asarray(x[-self._no:]) *
             np.sqrt((1.0 - rho**2) / (1.0 + 2.0 * phi * rho + phi**2))
         )
-        error = self._values - self._problem.evaluate(x[:-m])
+        error = self._values - self._problem.evaluate(x[:-3 * self._no])
         v = error[1:] - rho * error[:-1]
         autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
+
+
+class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent Gaussian-distributed noise
+    at each time point where it is assumed that the dependence on
+    :math:`\sigma\sim U(a,b)` has been integrated out of the joint posterior,
+
+    .. math::
+        \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
+        \mathrm{d}\sigma\\
+        &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
+        \mathrm{d}\sigma,\end{align}
+
+    A possible advantage of this likelihood compared with using a
+    `GaussianLogLikelihood` with a uniform prior on :math:`\sigma`,
+    this is exactly the same statistical model, except with one fewer
+    parameter (:math:`sigma`). Having one fewer parameter than the full
+    distribution may speed up convergence to the posterior distribution,
+    especially for multi-output problems which will have `n_outputs` fewer
+    parameter dimensions.
+
+    The likelihood is given in terms of the sum of squared errors:
+
+    .. math::
+        SSE = \sum_{i=1}^n (f_i(\\theta) - y_i)^2
+
+    and is given up to a normalisation constant by:
+
+    .. math::
+        \text{log } L = - n / 2 \text{log}(\pi) -
+            \text{log}(2 (b - a) \sqrt(2)) +
+            (1 / 2 - n / 2) \text{log}(SSE) +
+            \text{log}\\left[\Gamma((n - 1) / 2, \frac{SSE}{2 b^2}) -
+            \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right]
+
+    where :math:`\Gamma(u,v)` is the upper incomplete gamma function
+    as defined here: https://en.wikipedia.org/wiki/Incomplete_gamma_function
+
+    Arguments:
+
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
+    ``lower``
+        The lower limit on the uniform prior om `sigma`. Must be
+        non-negative.
+    ``upper``
+        The upper limit on the uniform prior om `sigma`.
+
+    *Extends:* :class:`ProblemLogLikelihood`
+    """
+
+    def __init__(self, problem, lower, upper):
+        super(GaussianIntegratedUniformLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters()
+        a = lower
+        if np.isscalar(a):
+            a = np.ones(self._no) * float(a)
+        else:
+            a = pints.vector(a)
+            if len(a) != self._no:
+                raise ValueError(
+                    'Lower limit on uniform prior for sigma must be a ' +
+                    ' scalar or a vector of length n_outputs.')
+        if np.any(a < 0):
+            raise ValueError('Lower limit on uniform prior for sigma ' +
+                             'must be non-negative.')
+        b = upper
+        if np.isscalar(b):
+            b = np.ones(self._no) * float(b)
+        else:
+            b = pints.vector(b)
+            if len(b) != self._no:
+                raise ValueError(
+                    'Upper limit on uniform prior for sigma must be a ' +
+                    ' scalar or a vector of length n_outputs.')
+        if np.any(b <= 0):
+            raise ValueError('Lower limit on uniform prior for sigma ' +
+                             'must be positive.')
+        diff = b - a
+        if np.any(diff <= 0):
+            raise ValueError('Upper limit on uniform prior for sigma ' +
+                             'must exceed lower limit.')
+        self._a = a
+        self._b = b
+
+        # Pre-calculate
+        n = self._nt
+        self._n_minus_1_over_2 = (n - 1.0) / 2.0
+        self._const_a_0 = (
+            -n * np.log(b) - (n / 2.0) * np.log(np.pi) -
+            np.log(2 * np.sqrt(2))
+        )
+        self._b2 = self._b**2
+        self._a2 = self._a**2
+        self._const_general = (
+            -(n / 2.0) * np.log(np.pi) - np.log(2 * np.sqrt(2) * (b - a))
+        )
+        self._log_gamma = scipy.special.gammaln(self._n_minus_1_over_2)
+        self._two_power = 2**(1 / 2 - n / 2)
+
+    def __call__(self, x):
+        error = self._values - self._problem.evaluate(x)
+        sse = np.sum(error**2, axis=0)
+
+        # Calculate
+        log_temp = np.zeros(len(self._a2))
+        sse = pints.vector(sse)
+        for i, a in enumerate(self._a2):
+            if not a == 0:
+                log_temp[i] = np.log(
+                    scipy.special.gammaincc(self._n_minus_1_over_2,
+                                            sse[i] / (2 * self._b2[i])) -
+                    scipy.special.gammaincc(self._n_minus_1_over_2,
+                                            sse[i] / (2 * a)))
+            else:
+                log_temp[i] = np.log(
+                    scipy.special.gammaincc(self._n_minus_1_over_2,
+                                            sse[i] / (2 * self._b2[i])))
+        return np.sum(
+            self._const_general -
+            self._n_minus_1_over_2 * np.log(sse) +
+            self._log_gamma +
+            log_temp
+        )
 
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
@@ -336,27 +451,29 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        sigma = np.asarray(x[-self._no:])
+        sigma = float(np.asarray(x[-self._no:]))
 
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x[:-self._no])
 
         # Reshape dy, in case we're working with a single-output problem
-        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - 1)
 
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
 
         # Calculate log-likelihood
-        L = self.__call__(x)
+        L = np.sum(-self._logn - self._nt * np.log(sigma)
+                   - (1.0 / (2 * sigma**2)) * np.sum(r**2, axis=0))
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
             (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
 
         # Calculate derivative wrt sigma
-        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
-        dL = np.concatenate((dL, np.array(list(dsigma))))
+        dsigma = np.sum(-self._nt / sigma +
+                        sigma**(-3.0) * np.sum(r**2, axis=0))
+        dL = np.concatenate((dL, np.array([dsigma])))
 
         # Return
         return L, dL
