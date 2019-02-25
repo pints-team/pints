@@ -120,8 +120,8 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
-    at each time point where it is assumed that the dependence on
-    :math:`\sigma\sim U(a,b)` has been integrated out of the joint posterior,
+    at each time point where :math:`\sigma\sim U(a,b)` has been integrated
+    out of the joint posterior of :math:`p(\theta,\sigma|X)`,
 
     .. math::
         \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
@@ -129,15 +129,15 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
         \mathrm{d}\sigma,\end{align}
 
-    A possible advantage of this likelihood compared with using a
-    `GaussianLogLikelihood` with a uniform prior on :math:`\sigma`,
-    this is exactly the same statistical model, except with one fewer
-    parameter (:math:`sigma`). Having one fewer parameter than the full
-    distribution may speed up convergence to the posterior distribution,
-    especially for multi-output problems which will have `n_outputs` fewer
-    parameter dimensions.
+    Note that this is exactly the same statistical model as
+    `pints.GaussianLogLikelihood` with a uniform prior on :math:`\sigma`.
+    A possible advantage of this log-likelihood compared with using a
+    `pints.GaussianLogLikelihood`, is that it has one fewer
+    parameter (:math:`sigma`) which may speed up convergence to the
+    posterior distribution, especially for multi-output problems which will
+    have `n_outputs` fewer parameter dimensions.
 
-    The likelihood is given in terms of the sum of squared errors:
+    The log-likelihood is given in terms of the sum of squared errors:
 
     .. math::
         SSE = \sum_{i=1}^n (f_i(\\theta) - y_i)^2
@@ -153,6 +153,11 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
 
     where :math:`\Gamma(u,v)` is the upper incomplete gamma function
     as defined here: https://en.wikipedia.org/wiki/Incomplete_gamma_function
+
+    This log-likelihood is inherently a Bayesian method since it
+    assumes a uniform prior on :math:`\sigma\sim U(a,b)`. However
+    using this likelihood in optimisation routines should yield the
+    same estimates as the full `pints.GaussianLogLikelihood`.
 
     Arguments:
 
