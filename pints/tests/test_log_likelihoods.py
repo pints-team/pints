@@ -206,6 +206,83 @@ class TestLogLikelihood(unittest.TestCase):
                                        len(parameters + extra_params)))
         self.assertEqual(l, l1)
 
+    def test_gaussian_integrated_uniform_log_likelihood_single(self):
+        # Tests GaussianIntegratedUniformLogLikelihood with single output
+        # problem
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([1.0, -10.7, 15.5])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood([0]), -20.441037907121299)
+
+        # test incorrect constructors
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, -1, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 0, 0)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 1)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 3])
+
+    def test_gaussian_integrated_uniform_log_likelihood_multi(self):
+        # Tests GaussianIntegratedUniformLogLikelihood with multi output
+        # problem
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([[3.4, 4.3, 22.0, -7.3],
+                             [11.1, 12.2, 13.9, 5.0],
+                             [-0.4, -12.3, -8.3, -1.2]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood(parameters), -75.443307614807225)
+
+        # test non-equal prior limits
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([[3.4, 4.3, 22.0, -7.3],
+                             [11.1, 12.2, 13.9, 5.0],
+                             [-0.4, -12.3, -8.3, -1.2]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, [1, 0, 5, 2], [2, 4, 7, 8])
+        self.assertAlmostEqual(log_likelihood(parameters), -71.62076263891457)
+
+        # test incorrect constructors
+        model = pints.toy.ConstantModel(2)
+        parameters = [0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = [[1, 2],
+                  [3, 4],
+                  [5, 6]]
+        problem = pints.MultiOutputProblem(model, times, values)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2, 3], [2, 4])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 4, 5])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 3], [2, 2])
+
     def test_known_noise_gaussian_single_S1(self):
         """
         Simple tests for single known noise Gaussian log-likelihood with
