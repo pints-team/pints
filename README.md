@@ -10,8 +10,7 @@
 Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and bayesian inference problems with ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
 
-## How do I use pints?
-
+## Using Pints
 To use a model with Pints, you need to make sure it extends the [ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface, which has just two methods:
 
 ```
@@ -23,11 +22,15 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 
 If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
+### Citing Pints
+
+If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
+
 ### Examples and documentation
 
 Pints comes with a number of [detailed examples](examples/README.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
 
-## How can I install Pints?
+## Installing Pints
 
 You'll need the following requirements:
 
@@ -58,13 +61,11 @@ To uninstall again, type
 $ pip uninstall pints
 ```
 
-## How can I contribute to Pints?
+## Contributing to Pints
 
 If you'd like to help us develop Pints by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](CONTRIBUTING.md) first.
 
-## Licensing and citation
+## License
 
 Pints is fully open source. For more information about its license, see [LICENSE](./LICENSE).
-
-If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
 
