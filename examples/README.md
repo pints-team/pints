@@ -44,11 +44,12 @@ relevant code.
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
-
-### Further sampling
-
 - [Effective sample size](./sampling-effective-sample-size.ipynb)
-- [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
+
+## Statistical modelling
+
+- [Log priors](./stats-log-priors.ipynb)
+- [Student-t noise model](./stats-student-t-sampling-error.ipynb)
 
 ## Toy problems
 
