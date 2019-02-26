@@ -140,7 +140,7 @@ def doctest_examples_readme():
     # Report any failures
     if len(not_indexed) > 0:
         print('The following notebooks are not indexed in %s:' % index_file)
-        for nb in not_indexed:
+        for nb in sorted(not_indexed):
             print(nb)
         print('FAILED')
         sys.exit(1)
