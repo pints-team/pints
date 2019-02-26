@@ -78,8 +78,19 @@ def run_flake8():
 
 def run_doctests():
     """
-    Checks if the documentation can be built, runs any doctests (currently not
-    used).
+    Runs a number of tests related to documentation
+    """
+
+    # Check documentation can be built with sphinx
+    doctest_sphinx()
+
+    # Check all example notebooks are in the index
+    doctest_examples_readme()
+
+
+def doctest_sphinx():
+    """
+    Checks that sphinx-build can be invoked without producing errors
     """
     print('Checking if docs can be built.')
     p = subprocess.Popen([
@@ -103,6 +114,38 @@ def run_doctests():
     if ret != 0:
         print('FAILED')
         sys.exit(ret)
+
+
+def doctest_examples_readme():
+    """
+    Checks that every ipynb in the examples directory is included in the index
+    `examples/README.md`.
+    """
+    print('\nChecking that example notebooks are indexed.')
+
+    # Index file is in ./examples/README.md
+    index_file = os.path.join('examples', 'README.md')
+    assert(os.path.isfile(index_file))
+
+    with open(index_file, 'r') as f:
+        index_contents = f.read()
+
+    # Get a list of all notebooks in the examples directory
+    notebooks = [x for x in os.listdir('examples') if x.endswith('.ipynb')]
+    assert(len(notebooks) > 10)
+
+    # Find which are not indexed
+    not_indexed = [nb for nb in notebooks if nb not in index_contents]
+
+    # Report any failures
+    if len(not_indexed) > 0:
+        print('The following notebooks are not indexed in %s:' % index_file)
+        for nb in sorted(not_indexed):
+            print(nb)
+        print('FAILED')
+        sys.exit(1)
+    else:
+        print('All example notebooks are indexed.')
 
 
 def run_notebook_tests(skip_slow_books=False, executable='python'):

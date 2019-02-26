@@ -26,6 +26,7 @@ relevant code.
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 - [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
+- [Multiple objectives](./optimisation-multi-objective.ipynb)
 
 ## Sampling
 
@@ -34,6 +35,12 @@ relevant code.
 - [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
+- [Emcee Hammer](./sampling-emcee-hammer.ipynb)
+- [DREAM MCMC](./sampling-dream-mcmc.ipynb)
+
+### MCMC with gradients
+- [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
+- [MALA MCMC](./sampling-mala-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
@@ -44,11 +51,14 @@ relevant code.
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Pairwise scatterplots](./plot-mcmc-pairwise-scatterplots.ipynb)
 - [Pairwise scatterplots with KDE](./plot-mcmc-pairwise-kde-plots.ipynb)
-
-### Further sampling
-
 - [Effective sample size](./sampling-effective-sample-size.ipynb)
-- [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
+
+## Statistical modelling
+
+- [Log priors](./stats-log-priors.ipynb)
+- [Student-t noise model](./stats-student-t-sampling-error.ipynb)
+- [Autoregressive moving average errors](./stats-autoregressive-moving-average-errors.ipynb)
+- [Cauchy sampling error](./stats-cauchy-sampling-error.ipynb)
 
 ## Toy problems
 
@@ -67,8 +77,12 @@ relevant code.
 
 ### Distributions
 
-- [Multimodal normal distribution](./toy-distribution-multimodal-normal.ipynb)
+- [Multimodal gaussian distribution](./toy-distribution-multimodal-gaussian.ipynb)
+- [High dimensional gaussian](./toy-distribution-high-dimensional-gaussian.ipynb)
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
+- [Annulus](./toy-distribution-annulus.ipynb)
+- [Cone](./toy-distribution-cone.ipynb)
+- [Neals Funnel](./toy-distribution-neals-funnel.ipynb)
 
