@@ -49,6 +49,7 @@ relevant code.
 
 - [Effective sample size](./sampling-effective-sample-size.ipynb)
 - [Student-t noise model](./sampling-student-t-sampling-error.ipynb)
+- [Integrated noise model](./sampling-integrated-gaussian-log-likelihood.ipynb)
 
 ## Toy problems
 
@@ -71,4 +72,3 @@ relevant code.
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
-
