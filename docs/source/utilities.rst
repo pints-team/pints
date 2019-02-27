@@ -13,4 +13,6 @@ Utilities
 
 .. autoclass:: Timer
 
+.. autofunction:: matrix2d
+
 .. autofunction:: vector

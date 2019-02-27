@@ -6,6 +6,8 @@ Core classes and methods
 
 .. autofunction:: version
 
+.. autoclass:: TunableMethod
+
 
 Forward model
 *************
