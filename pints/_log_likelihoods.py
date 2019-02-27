@@ -144,12 +144,13 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
         \mathrm{d}\sigma,\end{align}
     Note that this is exactly the same statistical model as
-    `pints.GaussianLogLikelihood` with a uniform prior on :math:`\sigma`.
+    :class:`pints.GaussianLogLikelihood` with a uniform prior on
+    :math:`\sigma`.
     A possible advantage of this log-likelihood compared with using a
-    `pints.GaussianLogLikelihood`, is that it has one fewer
+    :class:`pints.GaussianLogLikelihood`, is that it has one fewer
     parameter (:math:`sigma`) which may speed up convergence to the
     posterior distribution, especially for multi-output problems which will
-    have `n_outputs` fewer parameter dimensions.
+    have ``n_outputs`` fewer parameter dimensions.
     The log-likelihood is given in terms of the sum of squared errors:
     .. math::
         SSE = \sum_{i=1}^n (f_i(\\theta) - y_i)^2
@@ -165,8 +166,10 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     This log-likelihood is inherently a Bayesian method since it
     assumes a uniform prior on :math:`\sigma\sim U(a,b)`. However
     using this likelihood in optimisation routines should yield the
-    same estimates as the full `pints.GaussianLogLikelihood`.
+    same estimates as the full :class:`pints.GaussianLogLikelihood`.
+
     Arguments:
+
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
     ``lower``
@@ -174,6 +177,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         non-negative.
     ``upper``
         The upper limit on the uniform prior om `sigma`.
+
     *Extends:* :class:`ProblemLogLikelihood`
     """
 
@@ -208,7 +212,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
                     'Upper limit on uniform prior for sigma must be a ' +
                     ' scalar or a vector of length n_outputs.')
         if np.any(b <= 0):
-            raise ValueError('Lower limit on uniform prior for sigma ' +
+            raise ValueError('Upper limit on uniform prior for sigma ' +
                              'must be positive.')
         diff = b - a
         if np.any(diff <= 0):
@@ -240,7 +244,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         log_temp = np.zeros(len(self._a2))
         sse = pints.vector(sse)
         for i, a in enumerate(self._a2):
-            if not a == 0:
+            if a != 0:
                 log_temp[i] = np.log(
                     scipy.special.gammaincc(self._n_minus_1_over_2,
                                             sse[i] / (2 * self._b2[i])) -
