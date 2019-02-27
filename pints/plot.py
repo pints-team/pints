@@ -8,10 +8,6 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
-import warnings
-import numpy as np
-import scipy.stats as stats
 
 
 def function(f, x, lower=None, upper=None, evaluations=20):
@@ -37,6 +33,8 @@ def function(f, x, lower=None, upper=None, evaluations=20):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
+    import pints
 
     # Check function and get n_parameters
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
@@ -122,6 +120,8 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
+    import pints
 
     # Check function and get n_parameters
     if not (isinstance(f, pints.LogPDF) or isinstance(f, pints.ErrorMeasure)):
@@ -193,6 +193,7 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
 
     # If we switch to Python3 exclusively, bins and alpha can be keyword-only
     # arguments
@@ -279,6 +280,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
 
     # If we switch to Python3 exclusively, bins and alpha can be keyword-only
     # arguments
@@ -377,6 +379,7 @@ def autocorrelation(samples, max_lags=100):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
 
     # Check samples size
     try:
@@ -438,6 +441,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     Returns a ``matplotlib`` figure object and axes handle.
     """
     import matplotlib.pyplot as plt
+    import numpy as np
 
     # Check samples size
     try:
@@ -586,6 +590,9 @@ def pairwise(samples,
     """
     import matplotlib
     import matplotlib.pyplot as plt
+    import numpy as np
+    import scipy.stats as stats
+    import warnings
     from distutils.version import LooseVersion
 
     # Check matplotlib version
