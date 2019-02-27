@@ -4,6 +4,7 @@
 [![functional](https://github.com/pints-team/functional-testing-results/blob/master/badge.svg)](https://github.com/pints-team/functional-testing-results)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
+[![BCH compliance](https://bettercodehub.com/edge/badge/pints-team/pints?branch=master)](https://bettercodehub.com/results/pints-team/pints)
 
 # What is Pints?
 
