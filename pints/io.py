@@ -8,10 +8,6 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import os
-import numpy as np
-
-import pints
 
 
 def load_samples(filename, n=None):
@@ -28,6 +24,9 @@ def load_samples(filename, n=None):
 
     See also :meth:`save_samples()`.
     """
+    import numpy as np
+    import os
+
     # Define data loading method
     def load(filename):
         with open(filename, 'r') as f:
@@ -75,6 +74,10 @@ def save_samples(filename, *sample_lists):
 
     See also: :meth:`load_samples()`.
     """
+    import numpy as np
+    import os
+    import pints
+
     # Get filenames
     k = len(sample_lists)
     if k < 1:

@@ -7,7 +7,6 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import numpy as np
 
 
 def independent(sigma, shape):
@@ -29,6 +28,7 @@ def independent(sigma, shape):
         noisy_values = values + noise.independent(5, values.shape)
 
     """
+    import numpy as np
 
     # Don't test sigma/shape: handled by numpy for higher-dimensions etc.!
     return np.random.normal(0, sigma, shape)
@@ -62,6 +62,8 @@ def ar1(rho, sigma, n):
         noisy_values = values + noise.ar1(0.9, 5, len(values))
 
     """
+    import numpy as np
+
     if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process'
@@ -93,6 +95,8 @@ def arma11(rho, theta, sigma, n):
     and
     ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
     """
+    import numpy as np
+
     if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process'
@@ -139,6 +143,8 @@ def ar1_unity(rho, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
+    import numpy as np
+
     if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process is'
@@ -189,6 +195,8 @@ def arma11_unity(rho, theta, sigma, n):
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
 
     """
+    import numpy as np
+
     if abs(rho) >= 1:
         raise ValueError(
             'Magnitude of rho must be less than 1 (otherwise the process is'

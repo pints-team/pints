@@ -26,6 +26,7 @@ Some toy classes provide extra functionality defined in the
     logistic_model
     lotka_volterra_model
     multimodal_gaussian_logpdf
+    neals_funnel
     parabolic_error
     repressilator_model
     rosenbrock

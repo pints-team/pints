@@ -21,3 +21,4 @@ or the :class:`OptimisationController` class.
     snes
     xnes
 
+.. autoclass:: OptimisationController

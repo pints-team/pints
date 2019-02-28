@@ -204,7 +204,7 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 #
 # Noise generators (always import!)
 #
-import pints.noise
+from . import noise
 
 #
 # Remove any imported modules, so we don't expose them as part of pints
