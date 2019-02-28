@@ -19,6 +19,8 @@ Example::
 
 .. autoclass:: CauchyLogLikelihood
 
+.. autoclass:: GaussianIntegratedUniformLogLikelihood
+
 .. autoclass:: GaussianKnownSigmaLogLikelihood
 
 .. autoclass:: GaussianLogLikelihood
