@@ -189,21 +189,25 @@ def doctest_rst_and_public_interface():
           'public interfaces are clean.')
 
 
-def check_exposed_symbols(_module, _submodule_names, _doc_symbols):
+def check_exposed_symbols(module, submodule_names, doc_symbols):
     """
-    Check _module for any classes and methods not contained in _doc_symbols,
-    and check for any modules not contained in _submodule_names.
+    Check ``module`` for any classes and methods not contained in
+    ``doc_symbols``, and check for any modules not contained in
+    ``submodule_names``.
 
-    :param _module: the module to check
-    :param _submodule_names: list of submodules exposed by _module
-    :param _doc_symbols: dictionary containing lists of documented classes and
-     functions
+    Arguments:
+
+    ``module``
+        The module to check
+    ``submodule_names``
+        List of submodules expected to be exposed by ``module``
+    ``doc_symbols``
+        Dictionary containing lists of documented classes and functions
     """
 
     import inspect
-    exposed_symbols = [x for x in dir(_module) if not x.startswith('_')]
-    symbols = [getattr(_module, exposed_symbols[x]) for x in
-               range(len(exposed_symbols))]
+    exposed_symbols = [x for x in dir(module) if not x.startswith('_')]
+    symbols = [getattr(module, x) for x in exposed_symbols]
 
     classes = [x for x in symbols if inspect.isclass(x)]
     functions = [x for x in symbols if inspect.isfunction(x)]
@@ -211,11 +215,11 @@ def check_exposed_symbols(_module, _submodule_names, _doc_symbols):
     # Check for modules: these should match perfectly with _submodule_names
     exposed_modules = [x for x in symbols if inspect.ismodule(x)]
     unexpected_modules = [m for m in exposed_modules if
-                          m.__name__ not in _submodule_names]
+                          m.__name__ not in submodule_names]
 
     if len(unexpected_modules) > 0:
         print('The following modules are unexpectedly exposed in the public '
-              'interface of %s:' % _module.__name__)
+              'interface of %s:' % module.__name__)
         for m in sorted(unexpected_modules):
             print('  unexpected module: ' + m.__name__)
 
@@ -229,8 +233,8 @@ def check_exposed_symbols(_module, _submodule_names, _doc_symbols):
     # Check that all classes are documented
     undocumented_classes = []
     for _class in classes:
-        class_name = _module.__name__ + '.' + _class.__name__
-        if class_name not in _doc_symbols['classes']:
+        class_name = module.__name__ + '.' + _class.__name__
+        if class_name not in doc_symbols['classes']:
             undocumented_classes.append(class_name)
 
     if len(undocumented_classes) > 0:
@@ -243,8 +247,8 @@ def check_exposed_symbols(_module, _submodule_names, _doc_symbols):
     # Check that all functions are documented
     undocumented_functions = []
     for _funct in functions:
-        funct_name = _module.__name__ + '.' + _funct.__name__
-        if funct_name not in _doc_symbols['functions']:
+        funct_name = module.__name__ + '.' + _funct.__name__
+        if funct_name not in doc_symbols['functions']:
             undocumented_functions.append(funct_name)
 
     if len(undocumented_functions) > 0:
@@ -260,7 +264,7 @@ def get_all_documented_symbols():
     Recursively traverse docs/source and identify all autoclass and
     autofunction declarations.
 
-    :return: A dict containing a list of classes and a list of functions
+    Returns: A dict containing a list of classes and a list of functions
     """
 
     doc_files = []
@@ -269,8 +273,11 @@ def get_all_documented_symbols():
             if file.endswith('.rst'):
                 doc_files.append(os.path.join(root, file))
 
-    # Regular expressions to find autoclass and autofunction specifiers
+    # Regular expression that would find either 'module' or 'currentmodule':
+    # this needs to be prepended to the symbols as x.y.z != x.z
     regex_module = re.compile(r'\.\.\s*\S*module\:\:\s*(\S+)')
+
+    # Regular expressions to find autoclass and autofunction specifiers
     regex_class = re.compile(r'\.\.\s*autoclass\:\:\s*(\S+)')
     regex_funct = re.compile(r'\.\.\s*autofunction\:\:\s*(\S+)')
 
