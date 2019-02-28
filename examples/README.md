@@ -25,6 +25,7 @@ relevant code.
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 - [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
 - [Multiple objectives](./optimisation-multi-objective.ipynb)
+- [Optimisation on a loglikelihood](./optimisation-on-a-loglikelihood.ipynb)
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
 
 ## Sampling
