@@ -81,6 +81,8 @@ def run_doctests():
     Runs a number of tests related to documentation
     """
 
+    print('\n{}\n# Starting doctests... #\n{}\n'.format('#' * 24, '#' * 24))
+
     # Check documentation can be built with sphinx
     doctest_sphinx()
 
@@ -93,6 +95,8 @@ def run_doctests():
 
     # Check all .slow-books exist (they haven't been, e.g., renamed or removed)
     doctest_slow_books()
+
+    print('\n{}\n# Doctests passed. #\n{}\n'.format('#' * 20, '#' * 20))
 
 
 def doctest_sphinx():
