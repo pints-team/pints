@@ -81,6 +81,8 @@ def run_doctests():
     Runs a number of tests related to documentation
     """
 
+    print('\n{}\n# Starting doctests... #\n{}\n'.format('#' * 24, '#' * 24))
+
     # Check documentation can be built with sphinx
     doctest_sphinx()
 
@@ -90,6 +92,11 @@ def run_doctests():
     # Check all classes and methods are documented in rst files, and no
     # unintended modules are exposed via a public interface
     doctest_rst_and_public_interface()
+
+    # Check all .slow-books exist (they haven't been, e.g., renamed or removed)
+    doctest_slow_books()
+
+    print('\n{}\n# Doctests passed. #\n{}\n'.format('#' * 20, '#' * 20))
 
 
 def doctest_sphinx():
@@ -314,6 +321,50 @@ def get_all_documented_symbols():
             sys.exit(1)
 
     return documented_symbols
+
+
+def doctest_slow_books():
+    """
+    Check that all notebooks listed in .slow-books actually exist. This
+    prevents cron jobs falling over if slow notebooks are renamed without
+    editing the list.
+    """
+
+    print('\nChecking that all notebooks listed in .slow-books exist.')
+
+    with open('.slow-books', 'r') as f:
+        slow_books = [l.strip() for l in f.readlines() if
+                      l.strip().endswith('.ipynb')]
+
+    if len(slow_books) < 1:
+        print('No slow books found in .slow-books. Did something change?')
+        print('FAILED')
+        sys.exit(1)
+
+    with open('.slow-books', 'r') as f:
+        other_lines = [l.strip() for l in f.readlines() if not (
+            l.strip().startswith('#') or
+            l.strip().endswith('.ipynb') or
+            l.strip() == ''
+        )]
+
+    if len(other_lines) > 0:
+        print('The following entries are in .slow-books but are not ipynb:')
+        print('  {}'.format('\n  '.join(other_lines)))
+        print('FAILED')
+        sys.exit(1)
+
+    examples = [l for l in os.listdir('examples') if l.endswith('ipynb')]
+    undocumented = [b for b in slow_books if b not in examples]
+
+    if len(undocumented) > 0:
+        print('The following ipynb files are in .slow-books but are not in the'
+              'examples directory:')
+        print('  {}'.format('\n  '.join(undocumented)))
+        print('FAILED')
+        sys.exit(1)
+
+    print('All notebooks listed in .slow-books exist.')
 
 
 def run_notebook_tests(skip_slow_books=False, executable='python'):
