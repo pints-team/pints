@@ -61,6 +61,10 @@ class CMAES(pints.PopulationBasedOptimiser):
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
+            if len(self._user_xs) == 0:     # pragma: no-cover
+                self._logger.warning(
+                    'All points requested by CMA-ES are outside the'
+                    ' boundaries.')
 
         # Set as read-only and return
         self._user_xs.setflags(write=False)

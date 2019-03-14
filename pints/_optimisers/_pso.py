@@ -10,8 +10,9 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+import logging
 import numpy as np
+import pints
 
 
 class PSO(pints.PopulationBasedOptimiser):
@@ -84,6 +85,9 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set default settings
         self.set_local_global_balance()
+
+        # Python logger
+        self._logger = logging.getLogger(__name__)
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -163,6 +167,9 @@ class PSO(pints.PopulationBasedOptimiser):
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
+            if len(self._user_xs) == 0:     # pragma: no-cover
+                self._logger.warning(
+                    'All initial PSO particles are outside the boundaries.')
         else:
             self._user_xs = np.array(self._xs, copy=True)
 
@@ -278,6 +285,9 @@ class PSO(pints.PopulationBasedOptimiser):
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
+            if len(self._user_xs) == 0:     # pragma: no-cover
+                self._logger.warning(
+                    'All PSO particles are outside the boundaries.')
         else:
             self._user_xs = np.array(self._xs, copy=True)
 
