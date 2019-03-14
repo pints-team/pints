@@ -138,9 +138,9 @@ class SumOfErrors(ErrorMeasure):
         super(SumOfErrors, self).__init__()
 
         # Check input arguments
-        if len(error_measures) < 2:
+        if len(error_measures) < 1:
             raise ValueError(
-                'SumOfErrors requires at least 2 error measures.')
+                'SumOfErrors requires at least 1 error measure.')
         if weights is None:
             weights = [1] * len(error_measures)
         elif len(error_measures) != len(weights):
