@@ -434,7 +434,7 @@ class OptimisationController(object):
                     print('Maximising LogPDF')
 
                 # Show method
-                print('using ' + str(self._optimiser.name()))
+                print('Using ' + str(self._optimiser.name()))
 
                 # Show parallelisation
                 if self._parallel:
