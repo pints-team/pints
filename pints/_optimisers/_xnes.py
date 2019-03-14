@@ -72,7 +72,7 @@ class XNES(pints.PopulationBasedOptimiser):
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
-            if len(self._user_xs) == 0:     # pragma: no-cover
+            if len(self._user_xs) == 0:     # pragma: no cover
                 self._logger.warning(
                     'All points requested by XNES are outside the boundaries.')
         else:
