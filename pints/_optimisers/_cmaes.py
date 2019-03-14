@@ -188,9 +188,11 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Manual boundaries? Then reconstruct full fx vector
         if self._manual_boundaries and len(fx) < self._population_size:
             # Note: CMA-ES uses ``nan`` to mean "could not calculate this
-            # point".
+            # point". But for some reason this doesn't work well, causes a lot
+            # of points to go out of bounds for some reason. Works much better
+            # when just using ``inf``...
             user_fx = fx
-            fx = np.ones((self._population_size, )) * float('inf')
+            fx = np.ones((self._population_size, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Tell CMA-ES
