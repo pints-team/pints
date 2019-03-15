@@ -16,7 +16,7 @@ import pints
 class CMAES(pints.PopulationBasedOptimiser):
     """
     Finds the best parameters using the CMA-ES method described in [1, 2] and
-    implemented in the `cma` module.
+    implemented in the ``cma`` module.
 
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
@@ -61,6 +61,10 @@ class CMAES(pints.PopulationBasedOptimiser):
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
+            if len(self._user_xs) == 0:     # pragma: no cover
+                self._logger.warning(
+                    'All points requested by CMA-ES are outside the'
+                    ' boundaries.')
 
         # Set as read-only and return
         self._user_xs.setflags(write=False)
@@ -183,9 +187,12 @@ class CMAES(pints.PopulationBasedOptimiser):
 
         # Manual boundaries? Then reconstruct full fx vector
         if self._manual_boundaries and len(fx) < self._population_size:
-            # Note: CMA-ES uses `nan` to mean "could not calculate this point".
+            # Note: CMA-ES uses ``nan`` to mean "could not calculate this
+            # point". But for some reason this doesn't work well, causes a lot
+            # of points to go out of bounds for some reason. Works much better
+            # when just using ``inf``...
             user_fx = fx
-            fx = np.ones((self._population_size, )) * float('nan')
+            fx = np.ones((self._population_size, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Tell CMA-ES

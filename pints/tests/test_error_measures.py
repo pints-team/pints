@@ -502,8 +502,8 @@ class TestErrorMeasures(unittest.TestCase):
             e = pints.SumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isnan(e(x)))
 
-        # Wrong number of arguments
-        self.assertRaises(ValueError, pints.SumOfErrors, [e1], [1])
+        # Wrong number of ErrorMeasures
+        self.assertRaises(ValueError, pints.SumOfErrors, [], [])
 
         # Wrong argument types
         self.assertRaises(

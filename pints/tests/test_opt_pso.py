@@ -130,7 +130,7 @@ class TestPSO(unittest.TestCase):
 
         self.assertEqual(len(lines), 11)
         self.assertEqual(lines[0], 'Maximising LogPDF')
-        self.assertEqual(lines[1], 'using Particle Swarm Optimisation (PSO)')
+        self.assertEqual(lines[1], 'Using Particle Swarm Optimisation (PSO)')
         self.assertEqual(
             lines[2], 'Running in parallel with 2 worker processes.')
         self.assertEqual(lines[3], 'Population size: 6')

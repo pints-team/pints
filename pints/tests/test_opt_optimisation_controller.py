@@ -76,7 +76,7 @@ class TestOptimisationController(unittest.TestCase):
 
             log_should_be = (
                 'Maximising LogPDF\n'
-                'using Exponential Natural Evolution Strategy (xNES)\n'
+                'Using Exponential Natural Evolution Strategy (xNES)\n'
                 'Running in sequential mode.\n'
                 'Population size: 6\n'
                 'Iter. Eval. Best      Time m:s\n'
