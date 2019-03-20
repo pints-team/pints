@@ -28,7 +28,8 @@ class GaussianProcessErrorMeasure(pints.ErrorMeasure):
         """
         self._gaussian_process.set_sigma(x[0])
         self._gaussian_process.set_lengthscale(x[1:])
-        return None, -self._gaussian_process.likelihood_gradient()
+        likelihood_gradient = self._gaussian_process.likelihood_gradient()
+        return None, -likelihood_gradient
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
@@ -70,19 +71,27 @@ class GaussianProcess(pints.LogPDF):
 
         sample_range = np.ptp(samples, axis=0)
         value_range = np.ptp(pdf_values)
-        hyper_min = np.zeros(self.n_parameters() + 1)
-        hyper_max = np.concatinate(([value_range], sample_range))
+        hyper_min = np.zeros(self.n_parameters())
+        hyper_max = 100*np.concatenate(([value_range], sample_range))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
-        x0 = 0.5*(hyper_min+hyper_max)
-        sigma0 = hyper_min-hyper_max
-        found_parameters, found_value = pints.optimise(
+        x0 = 0.5*(hyper_min + hyper_max)
+        print(x0)
+        sigma0 = hyper_max - hyper_min
+
+        opt = pints.OptimisationController(
             score,
             x0,
             sigma0,
             boundaries,
             method=pints.AdaptiveMomentEstimation
         )
+        opt.optimiser().set_alpha(1.01*np.min(sigma0))
+
+        found_parameters, found_value = opt.run()
+        print('found parameters ',found_parameters)
+        print(hyper_max)
+        print(hyper_min)
         self._gaussian_process.set_sigma(found_parameters[0])
         self._gaussian_process.set_lengthscale(found_parameters[1:])
 

@@ -103,19 +103,29 @@ template <unsigned int D> class GaussianProcess {
       Operator_t, Eigen::Lower | Eigen::Upper,
       MultiGridPreconditioner<Operator_t, Eigen::LLT<Eigen::MatrixXd>>>;
   using Map_t = Eigen::Map<Eigen::VectorXd>;
+  using x_vector_t = Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, D>, 0,
+                                Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+  using f_vector_t = Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 1>, 0,
+                                Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+  using lengthscale_vector_t = Eigen::Ref<const Eigen::Matrix<double, D, 1>, 0,
+                                Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
 
 public:
   GaussianProcess()
-      : m_lambda(1), m_uninitialised(true), m_mult_buffer(10),
-        m_nsubdomain(20), m_lengthscales(double_d::Constant(1)),
+      : m_lambda(1), m_uninitialised(true), m_mult_buffer(10), m_nsubdomain(20),
+        m_lengthscales(double_d::Constant(1)),
+        m_K(create_dense_operator(m_particles, m_particles,
+                                  Kernel_t(m_kernel, m_lambda))),
+        m_gradK(create_dense_operator(m_particles, m_particles,
+                                      GradientKernel_t(m_kernel))),
         m_trace_iterations(4) {
     set_tolerance(1e-6);
     set_max_iterations(1000);
     set_sigma(1);
   }
   gradient_t likelihood_gradient();
-  void set_data(Eigen::Ref<Eigen::VectorXd> x, Eigen::Ref<Eigen::VectorXd> f);
-  void set_lengthscale(Eigen::Ref<Eigen::VectorXd> sigma);
+  void set_data(x_vector_t x, f_vector_t f);
+  void set_lengthscale(lengthscale_vector_t sigma);
   void set_sigma(const double sigma) {
     m_kernel.set_sigma(sigma);
     m_uninitialised = true;
@@ -125,7 +135,7 @@ public:
     m_uninitialised = true;
   }
 
-  const unsigned int n_parameters() const { return D;}
+  const unsigned int n_parameters() const { return D+1; }
 
   void set_max_iterations(const double n) { m_solver.setMaxIterations(n); }
 

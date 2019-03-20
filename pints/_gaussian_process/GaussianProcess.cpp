@@ -1,5 +1,6 @@
 #include "GaussianProcess.hpp"
 #include <algorithm>
+#include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 
 namespace Aboria {
@@ -28,7 +29,7 @@ GaussianProcess<D>::likelihood_gradient() {
   const int Nr = 4;
   Eigen::VectorXd tmp;
   for (int i = 0; i < Nr; ++i) {
-    Eigen::VectorXd r = Eigen::VectorXd::Random();
+    Eigen::VectorXd r = Eigen::VectorXd::Random(m_particles.size());
     std::transform(r.data(), r.data() + r.size(), r.data(),
                    [](const double i) { return i > 0 ? 1.0 : -1.0; });
     m_invKr = m_solver.solveWithGuess(r, m_invKr);
@@ -36,9 +37,9 @@ GaussianProcess<D>::likelihood_gradient() {
       throw std::runtime_error(
           "invKr solver failed to converge to set tolerance");
     }
-    std::cout << "invKr: Solver finished with " << m_solver.iterations()
-              << " iterations and " << m_solver.error() << " error"
-              << std::endl;
+    //std::cout << "invKr: Solver finished with " << m_solver.iterations()
+    //          << " iterations and " << m_solver.error() << " error"
+    //          << std::endl;
     tmp = m_gradK * r;
     for (int j = 0; j < D + 1; ++j) {
       gradient[j] += m_invKr.dot(tmp(Eigen::seq(0, Eigen::last, D + 1)));
@@ -52,19 +53,19 @@ GaussianProcess<D>::likelihood_gradient() {
     throw std::runtime_error(
         "invKy solver failed to converge to set tolerance");
   }
-  std::cout << "invKy: Solver finished with " << m_solver.iterations()
-            << " iterations and " << m_solver.error() << " error" << std::endl;
+  //std::cout << "invKy: Solver finished with " << m_solver.iterations()
+  //          << " iterations and " << m_solver.error() << " error" << std::endl;
   tmp = m_gradK * m_invKy;
   for (int j = 0; j < D + 1; ++j) {
     gradient[j] -= 0.5 * m_invKy.dot(tmp(Eigen::seq(0, Eigen::last, D + 1)));
   }
+  //std::cout << "gradient was "<<gradient<<std::endl;
   return gradient;
 }
 
 template <unsigned int D>
-void GaussianProcess<D>::set_data(Eigen::Ref<Eigen::VectorXd> x,
-                                  Eigen::Ref<Eigen::VectorXd> f) {
-  m_particles.resize(x.size());
+void GaussianProcess<D>::set_data(x_vector_t x, f_vector_t f) {
+  m_particles.resize(f.size());
   double_d min = double_d::Constant(std::numeric_limits<double>::max());
   double_d max = double_d::Constant(std::numeric_limits<double>::min());
   for (size_t i = 0; i < m_particles.size(); ++i) {
@@ -81,11 +82,16 @@ void GaussianProcess<D>::set_data(Eigen::Ref<Eigen::VectorXd> x,
   }
   m_particles.init_neighbour_search(min, max, bool_d::Constant(false),
                                     m_nsubdomain);
+
+  // zero previous guesses
+  m_invKr.setZero(m_particles.size());
+  m_invKy.setZero(m_particles.size());
+
   m_uninitialised = true;
 }
 
 template <unsigned int D>
-void GaussianProcess<D>::set_lengthscale(Eigen::Ref<Eigen::VectorXd> sigma) {
+void GaussianProcess<D>::set_lengthscale(lengthscale_vector_t sigma) {
   for (size_t j = 0; j < D; ++j) {
     m_lengthscales[j] = sigma[j];
   }
@@ -99,8 +105,10 @@ using namespace Aboria;
 
 PYBIND11_MODULE(gaussian_process, m) {
   py::class_<GaussianProcess<2>>(m, "GaussianProcess2")
+      .def(py::init<>())
       .def("likelihood_gradient", &GaussianProcess<2>::likelihood_gradient)
-      .def("set_data", &GaussianProcess<2>::set_data)
+      .def("set_data", &GaussianProcess<2>::set_data, py::arg().noconvert(),
+           py::arg().noconvert())
       .def("n_parameters", &GaussianProcess<2>::n_parameters)
       .def("set_lengthscale", &GaussianProcess<2>::set_lengthscale)
       .def("set_sigma", &GaussianProcess<2>::set_sigma)

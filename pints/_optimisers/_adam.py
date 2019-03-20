@@ -12,6 +12,7 @@ import logging
 import numpy as np
 import pints
 
+
 class AdaptiveMomentEstimation(pints.Optimiser):
     """
     Finds the best parameters using the Adam method, as described in [1]
@@ -32,7 +33,10 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self._ready_for_tell = False
 
         # default hyper-parameters
-        self.set_alpha()
+        if sigma0 is not None:
+            self.set_alpha(0.01*np.min(sigma0))
+        else:
+            self.set_alpha()
         self.set_beta1()
         self.set_beta2()
 
@@ -46,7 +50,7 @@ class AdaptiveMomentEstimation(pints.Optimiser):
 
         # Best solution found
         self._xbest = pints.vector(x0)
-        self._gradf_best = float('inf')
+        self._m_hat = float('inf')
 
         # Python logger
         self._logger = logging.getLogger(__name__)
@@ -70,13 +74,13 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self._beta2 = beta2
 
     def alpha(self):
-        return self._alpha;
+        return self._alpha
 
     def beta1(self):
-        return self._beta1;
+        return self._beta1
 
     def beta2(self):
-        return self._beta2;
+        return self._beta2
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
@@ -107,12 +111,13 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self._ready_for_tell = False
 
         self._t += 1
-        _, self._gradf_best = fx[0]
-        self._m = self._beta1*self._m + (1-self._beta1)*self._gradf_best
-        self._v = self._beta2*self._v + (1-self._beta2)*self._gradf_best**2
-        m_hat = self._m / (1 - self._beta1**self._t)
-        v_hat = self._v / (1 - self._beta2**self._t)
-        self._xbest = self._xbest - self._alpha * m_hat / (np.sqrt(v_hat) + self._epsilon)
+        _, gradf = fx[0]
+        self._m = self._beta1*self._m + (1-self._beta1)*gradf
+        self._v = self._beta2*self._v + (1-self._beta2)*gradf**2
+        self._m_hat = self._m / (1 - self._beta1**self._t)
+        self._v_hat = self._v / (1 - self._beta2**self._t)
+        self._xbest = self._xbest - self._alpha * \
+            self._m_hat / (np.sqrt(self._v_hat) + self._epsilon)
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
@@ -137,9 +142,8 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         This method only evaluates sensitivities, so uses abs(sensitivities) as
         a proxy for fbest
         """
-        return np.sum(self._gradf_best**2)
+        return np.sum(self._m_hat**2)
 
     def needs_sensitivities(self):
         """ See :meth:`Optimiser.needs_sensitivities()`. """
         return True
-

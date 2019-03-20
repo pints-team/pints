@@ -15,7 +15,7 @@ import pints.toy
 
 from shared import StreamCapture, CircularBoundaries
 
-debug = False
+debug = True
 method = pints.AdaptiveMomentEstimation
 
 # Consistent unit testing in Python 2 and 3

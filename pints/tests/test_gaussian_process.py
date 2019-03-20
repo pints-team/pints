@@ -43,7 +43,7 @@ class TestGaussianProcess(unittest.TestCase):
         """ fits the gp to the problem. """
         log_pdf = self.problem()
 
-        n = 10000
+        n = 100
         samples = log_pdf.sample(n)
         values = log_pdf(samples)
         gp = pints.GaussianProcess(samples, values)
