@@ -95,12 +95,6 @@ class TestAdam(unittest.TestCase):
         self.assertRaisesRegex(
             Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
 
-    def test_is_default(self):
-        """ Checks this is the default optimiser. """
-        r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x)
-        self.assertIsInstance(opt.optimiser(), method)
-
     def test_hyper_parameter_interface(self):
         """
         Tests the hyper parameter interface for this optimiser.

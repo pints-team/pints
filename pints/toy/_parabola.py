@@ -22,12 +22,18 @@ class ParabolicError(pints.ErrorMeasure):
 
     *Extends:* :class:`pints.ErrorMeasure`.
     """
+
     def __init__(self, c=[0, 0]):
         self._c = pints.vector(c)
         self._n = len(self._c)
 
     def __call__(self, x):
+        """ See :meth:`pints.ErrorMeasure.__call__()`. """
         return np.sum((self._c - x)**2)
+
+    def evaluateS1(self, x):
+        """ See :meth:`pints.ErrorMeasure.evaluateS1()`. """
+        return self.__call__(x), 2*(x - self._c)
 
     def n_parameters(self):
         """ See :meth:`pints.ErrorMeasure.n_parameters()`. """
@@ -38,4 +44,3 @@ class ParabolicError(pints.ErrorMeasure):
         Returns the global optimum for this function.
         """
         return np.array(self._c, copy=True)
-

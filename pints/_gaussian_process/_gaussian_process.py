@@ -8,7 +8,10 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
-from aboria_wrapper import GaussianProcess2
+#from aboria_wrapper import GaussianProcess2
+class GaussianProcess2:
+    def __init__(self):
+        print("dummy")
 
 class GaussianProcessErrorMeasure(pints.ErrorMeasure):
     """

@@ -17,7 +17,7 @@ class AdaptiveMomentEstimation(pints.Optimiser):
     Finds the best parameters using the Adam method described in [1]
 
     Adam stands for Adaptive Moment Estimation, it is a stochastic gradient descent
-    algorithm that only uses the gradient of the error function
+    algorithm that uses a noisy gradient of the error function
 
     *Extends:* :class:`Optimiser`
 
@@ -28,10 +28,12 @@ class AdaptiveMomentEstimation(pints.Optimiser):
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(AdaptiveMomentEstimation, self).__init__(x0, sigma0, boundaries)
 
+        self._ready_for_tell = False
+
         # default hyper-parameters
-        set_alpha()
-        set_beta1()
-        set_beta2()
+        self.set_alpha()
+        self.set_beta1()
+        self.set_beta2()
 
         # init state variables
         self._m = 0.0
@@ -66,6 +68,15 @@ class AdaptiveMomentEstimation(pints.Optimiser):
             raise ValueError("beta2 should be in the range [0, 1)")
         self._beta2 = beta2
 
+    def alpha(self):
+        return self._alpha;
+
+    def beta1(self):
+        return self._beta1;
+
+    def beta2(self):
+        return self._beta2;
+
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 3
@@ -78,24 +89,29 @@ class AdaptiveMomentEstimation(pints.Optimiser):
             ``x``: array of [alpha, beta1, beta2]
 
         """
-        set_alpha(x[0])
-        set_beta1(x[1])
-        set_beta2(x[2])
+        self.set_alpha(x[0])
+        self.set_beta1(x[1])
+        self.set_beta2(x[2])
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
-        self._xbest.setflags(write=False)
-        return self._xbest
+        # Ready for tell now
+        self._ready_for_tell = True
+        return [self._xbest]
 
     def tell(self, fx):
         """ See :meth:`Optimiser.tell()`. """
-        t += 1
-        _, self._gradf_best = fx
+        if not self._ready_for_tell:
+            raise Exception('ask() not called before tell()')
+        self._ready_for_tell = False
+
+        self._t += 1
+        _, self._gradf_best = fx[0]
         self._m = self._beta1*self._m + (1-self._beta1)*self._gradf_best
-        self._v = self._beta2*self._m + (1-self._beta2)*self._gradf_best**2
-        m_hat = self._m / (1 - self._beta1**t)
-        v_hat = self._v / (1 - self._beta2**t)
-        self._xbest -= self._alpha * m_hat / (np.sqrt(v_hat) + self._epsilon)
+        self._v = self._beta2*self._v + (1-self._beta2)*self._gradf_best**2
+        m_hat = self._m / (1 - self._beta1**self._t)
+        v_hat = self._v / (1 - self._beta2**self._t)
+        self._xbest = self._xbest - self._alpha * m_hat / (np.sqrt(v_hat) + self._epsilon)
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
@@ -120,8 +136,9 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         This method only evaluates sensitivities, so uses abs(sensitivities) as
         a proxy for fbest
         """
-        return np.abs(self._gradf_best)
+        return np.sum(self._gradf_best**2)
 
     def needs_sensitivities(self):
+        """ See :meth:`Optimiser.needs_sensitivities()`. """
         return True
 

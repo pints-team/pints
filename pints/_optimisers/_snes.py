@@ -175,3 +175,6 @@ class SNES(pints.PopulationBasedOptimiser):
         """ See :meth:`Optimiser.xbest()`. """
         return self._xbest
 
+    def needs_sensitivities(self):
+        """ See :meth:`Optimiser.needs_sensitivities()`. """
+        return False

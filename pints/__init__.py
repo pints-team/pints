@@ -75,10 +75,7 @@ from ._log_pdfs import (
     SumOfIndependentLogPDFs,
 )
 
-#
-# GaussianProcess log pdf
-#
-from ._gaussian_process import GaussianProcess
+
 
 #
 # Log-priors
@@ -211,7 +208,10 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 #
 from . import noise
 
-
+#
+# GaussianProcess log pdf
+#
+from ._gaussian_process._gaussian_process import GaussianProcess
 
 #
 # Remove any imported modules, so we don't expose them as part of pints

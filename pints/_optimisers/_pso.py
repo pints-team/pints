@@ -302,3 +302,7 @@ class PSO(pints.PopulationBasedOptimiser):
         if self._running:
             return np.array(self._pg, copy=True)
         return np.array(self._x0, copy=True)
+
+    def needs_sensitivities(self):
+        """ See :meth:`Optimiser.needs_sensitivities()`. """
+        return False

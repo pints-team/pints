@@ -204,3 +204,7 @@ class CMAES(pints.PopulationBasedOptimiser):
             x = self._es.result.xbest
             return np.array(self._x0 if x is None else x, copy=True)
         return np.array(self._x0, copy=True)
+
+    def needs_sensitivities(self):
+        """ See :meth:`Optimiser.needs_sensitivities()`. """
+        return False

@@ -316,8 +316,19 @@ class OptimisationController(object):
                 'Starting point must have same dimension as function to'
                 ' optimise.')
 
+        # Create optimiser
+        if method is None:
+            method = pints.CMAES
+        elif not issubclass(method, pints.Optimiser):
+            raise ValueError('Method must be subclass of pints.Optimiser.')
+        self._optimiser = method(x0, sigma0, boundaries)
+
         # Check if minimising or maximising
         self._minimising = not isinstance(function, pints.LogPDF)
+
+        # Check if sensitivities are required
+        if self._optimiser.needs_sensitivities():
+            function = function.evaluateS1
 
         # Store function
         if self._minimising:
@@ -325,13 +336,6 @@ class OptimisationController(object):
         else:
             self._function = pints.ProbabilityBasedError(function)
         del(function)
-
-        # Create optimiser
-        if method is None:
-            method = pints.CMAES
-        elif not issubclass(method, pints.Optimiser):
-            raise ValueError('Method must be subclass of pints.Optimiser.')
-        self._optimiser = method(x0, sigma0, boundaries)
 
         # Logging
         self._log_to_screen = True
@@ -486,10 +490,7 @@ class OptimisationController(object):
                 xs = self._optimiser.ask()
 
                 # Calculate scores
-                if self._optimiser.needs_sensitivities()
-                    fs = evaluator.evaluateS1(xs)
-                else
-                    fs = evaluator.evaluate(xs)
+                fs = evaluator.evaluate(xs)
 
                 # Perform iteration
                 self._optimiser.tell(fs)
