@@ -170,6 +170,11 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the optimiser algorithm, using the evaluations
         ``fx`` of the points ``x`` previously specified by ``ask``.
+
+        For methods that require sensitivities (see
+        :meth:`Optimiser.needs_sensitivities`), ``fx`` should be a tuple
+        ``(error, sensitivities)``, containing the values returned by
+        :meth:`pints.ErrorMeasure.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -184,13 +189,6 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         Returns True if the method needs model sensitivities.
         """
         raise NotImplementedError
-
-    def needs_function_evaluate(self):
-        """
-        Returns True if the method needs model evaluations.
-        """
-        raise NotImplementedError
-
 
 
 class PopulationBasedOptimiser(Optimiser):
@@ -488,7 +486,10 @@ class OptimisationController(object):
                 xs = self._optimiser.ask()
 
                 # Calculate scores
-                fs = evaluator.evaluate(xs)
+                if self._optimiser.needs_sensitivities()
+                    fs = evaluator.evaluateS1(xs)
+                else
+                    fs = evaluator.evaluate(xs)
 
                 # Perform iteration
                 self._optimiser.tell(fs)

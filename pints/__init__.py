@@ -165,7 +165,7 @@ from ._optimisers._cmaes import CMAES
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
-
+from ._optimisers._adam import AdaptiveMomentEstimation
 
 #
 # Diagnostics
