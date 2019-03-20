@@ -14,14 +14,15 @@ import pints
 
 class AdaptiveMomentEstimation(pints.Optimiser):
     """
-    Finds the best parameters using the Adam method described in [1]
+    Finds the best parameters using the Adam method, as described in [1]
 
-    Adam stands for Adaptive Moment Estimation, it is a stochastic gradient descent
-    algorithm that uses a noisy gradient of the error function
+    Adam stands for Adaptive Moment Estimation, it is a stochastic gradient
+    descent algorithm that uses a noisy gradient of the error function
 
     *Extends:* :class:`Optimiser`
 
-    [1] Diederik, Kingma; Ba, Jimmy (2014). "Adam: A method for stochastic optimization". arXiv:1412.6980
+    [1] Diederik, Kingma; Ba, Jimmy (2014).
+        "Adam: A method for stochastic optimization". arXiv:1412.6980
 
     """
 

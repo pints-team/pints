@@ -34,5 +34,5 @@ set(header_files
 
 include_directories(${source_dir} ${include_dirs})
 
-pybind11_add_module(aboria_wrapper ${source_files} ${header_files})
+pybind11_add_module(gaussian_process ${source_files} ${header_files})
 

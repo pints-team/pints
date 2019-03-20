@@ -93,7 +93,7 @@ setup(
     url='https://github.com/pints-team/pints',
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
-    ext_modules=[CMakeExtension('pints/_aboria')],
+    ext_modules=[CMakeExtension('gaussian_process',sourcedir='pints/_gaussian_process')],
     cmdclass=dict(build_ext=CMakeBuild),
     # List of dependencies
     install_requires=[

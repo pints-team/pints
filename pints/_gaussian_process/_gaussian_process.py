@@ -8,10 +8,8 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
-#from aboria_wrapper import GaussianProcess2
-class GaussianProcess2:
-    def __init__(self):
-        print("dummy")
+from gaussian_process import GaussianProcess2
+
 
 class GaussianProcessErrorMeasure(pints.ErrorMeasure):
     """
@@ -23,17 +21,14 @@ class GaussianProcessErrorMeasure(pints.ErrorMeasure):
 
     def evaluateS1(self, x):
         """
-        Evaluates this error measure, and returns the result plus the partial
-        derivatives of the result with respect to the parameters.
+        returns the partial derivatives of the function with respect to the parameters.
 
-        The returned data has the shape ``(e, e')`` where ``e`` is a scalar
-        value and ``e'`` is a sequence of length ``n_parameters``.
+        Note: the function itself is not evaluated and is returned as None
 
-        *This is an optional method that is not always implemented.*
         """
         self._gaussian_process.set_sigma(x[0])
         self._gaussian_process.set_lengthscale(x[1:])
-        return -self._gaussian_process.likelihood_gradient()
+        return None, -self._gaussian_process.likelihood_gradient()
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
@@ -64,7 +59,9 @@ class GaussianProcess(pints.LogPDF):
 
         # currently only supports dimension 2
         if samples.shape[1] != 2:
-            raise NotImplementedError
+            raise NotImplementedError(
+                'GaussianProcess currently only supports 2d'
+            )
 
         self._gaussian_process = GaussianProcess2()
         self._gaussian_process.set_data(samples, pdf_values)
@@ -86,24 +83,13 @@ class GaussianProcess(pints.LogPDF):
             boundaries,
             method=pints.AdaptiveMomentEstimation
         )
-
+        self._gaussian_process.set_sigma(found_parameters[0])
+        self._gaussian_process.set_lengthscale(found_parameters[1:])
 
     def __call__(self, x):
         raise NotImplementedError
 
     def evaluateS1(self, x):
-        """
-        Evaluates this LogPDF, and returns the result plus the partial
-        derivatives of the result with respect to the parameters.
-
-        The returned data is a tuple ``(L, L')`` where ``L`` is a scalar value
-        and ``L'`` is a sequence of length ``n_parameters``.
-
-        Note that the derivative returned is of the log-pdf, so
-        ``L' = d/dp log(f(p))``, evaluated at ``p=x``.
-
-        *This is an optional method that is not always implemented.*
-        """
         raise NotImplementedError
 
     def n_parameters(self):

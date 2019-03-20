@@ -97,7 +97,7 @@ void GaussianProcess<D>::set_lengthscale(Eigen::Ref<Eigen::VectorXd> sigma) {
 namespace py = pybind11;
 using namespace Aboria;
 
-PYBIND11_MODULE(aboria_wrapper, m) {
+PYBIND11_MODULE(gaussian_process, m) {
   py::class_<GaussianProcess<2>>(m, "GaussianProcess2")
       .def("likelihood_gradient", &GaussianProcess<2>::likelihood_gradient)
       .def("set_data", &GaussianProcess<2>::set_data)
