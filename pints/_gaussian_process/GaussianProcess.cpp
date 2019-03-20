@@ -101,6 +101,7 @@ PYBIND11_MODULE(aboria_wrapper, m) {
   py::class_<GaussianProcess<2>>(m, "GaussianProcess2")
       .def("likelihood_gradient", &GaussianProcess<2>::likelihood_gradient)
       .def("set_data", &GaussianProcess<2>::set_data)
+      .def("n_parameters", &GaussianProcess<2>::n_parameters)
       .def("set_lengthscale", &GaussianProcess<2>::set_lengthscale)
       .def("set_sigma", &GaussianProcess<2>::set_sigma)
       .def("set_max_iterations", &GaussianProcess<2>::set_max_iterations)

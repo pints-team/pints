@@ -125,6 +125,8 @@ public:
     m_uninitialised = true;
   }
 
+  const unsigned int n_parameters() const { return D;}
+
   void set_max_iterations(const double n) { m_solver.setMaxIterations(n); }
 
   void set_tolerance(const double tol) { m_solver.setTolerance(tol); }

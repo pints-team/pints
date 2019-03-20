@@ -179,6 +179,19 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def needs_sensitivities(self):
+        """
+        Returns True if the method needs model sensitivities.
+        """
+        raise NotImplementedError
+
+    def needs_function_evaluate(self):
+        """
+        Returns True if the method needs model evaluations.
+        """
+        raise NotImplementedError
+
+
 
 class PopulationBasedOptimiser(Optimiser):
     """
