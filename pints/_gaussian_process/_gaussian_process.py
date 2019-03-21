@@ -11,25 +11,31 @@ import pints
 from gaussian_process import GaussianProcess2
 
 
-class GaussianProcessErrorMeasure(pints.ErrorMeasure):
+class GaussianProcessLogLikelihood(pints.LogPDF):
     """
     """
 
     def __init__(self, gaussian_process):
-        super(GaussianProcessErrorMeasure, self).__init__()
+        super(GaussianProcessLogLikelihood, self).__init__()
         self._gaussian_process = gaussian_process
+
+    def __call__(self, x):
+        self._gaussian_process.set_lengthscale(x[:-1])
+        self._gaussian_process.set_noise(x[-1])
+        likelihood = self._gaussian_process.likelihood()
+        return likelihood
 
     def evaluateS1(self, x):
         """
         returns the partial derivatives of the function with respect to the parameters.
 
-        Note: the function itself is not evaluated and is returned as None
-
         """
-        self._gaussian_process.set_sigma(x[0])
-        self._gaussian_process.set_lengthscale(x[1:])
-        likelihood_gradient = self._gaussian_process.likelihood_gradient()
-        return None, -likelihood_gradient
+        self._gaussian_process.set_lengthscale(x[:-1])
+        self._gaussian_process.set_noise(x[-1])
+        gradient = np.empty_like(x)
+        likelihood = 0
+        self._gaussian_process.likelihoodS1(likelihood, gradient)
+        return likelihood, gradient
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
@@ -67,33 +73,33 @@ class GaussianProcess(pints.LogPDF):
         self._gaussian_process = GaussianProcess2()
         self._gaussian_process.set_data(samples, pdf_values)
 
-        score = GaussianProcessErrorMeasure(self._gaussian_process)
+        score = GaussianProcessLogLikelihood(self._gaussian_process)
 
         sample_range = np.ptp(samples, axis=0)
         value_range = np.ptp(pdf_values)
         hyper_min = np.zeros(self.n_parameters())
-        hyper_max = 100*np.concatenate(([value_range], sample_range))
+        hyper_max = 30000*np.concatenate((sample_range,[1]))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
-        x0 = 0.5*(hyper_min + hyper_max)
+        x0 = 0.1*(hyper_min + hyper_max)
         print(x0)
-        sigma0 = hyper_max - hyper_min
+        sigma0 = 0.9*(hyper_max - hyper_min)
 
         opt = pints.OptimisationController(
             score,
             x0,
             sigma0,
             boundaries,
-            method=pints.AdaptiveMomentEstimation
+            method=pints.PSO
         )
-        opt.optimiser().set_alpha(1.01*np.min(sigma0))
+        #opt.optimiser().set_alpha(1.01*np.min(sigma0))
 
         found_parameters, found_value = opt.run()
         print('found parameters ',found_parameters)
         print(hyper_max)
         print(hyper_min)
-        self._gaussian_process.set_sigma(found_parameters[0])
-        self._gaussian_process.set_lengthscale(found_parameters[1:])
+        self._gaussian_process.set_lengthscale(found_parameters[:-1])
+        self._gaussian_process.set_noise(found_parameters[-1])
 
     def __call__(self, x):
         raise NotImplementedError
