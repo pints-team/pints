@@ -23,7 +23,7 @@ template <unsigned int D> struct matern_kernel {
   double get_sigma() { return m_sigma; }
   void set_lengthscale(const double_d &lengthscale) {
     for (int i = 0; i < D; ++i) {
-    m_lengthscale[i] = 1.0 / std::abs(lengthscale[i]);
+      m_lengthscale[i] = 1.0 / std::abs(lengthscale[i]);
     }
   }
   double operator()(const Vector<double, D> &a,
@@ -53,9 +53,12 @@ template <unsigned int D> struct matern_kernel {
     const double_d dx2 = ((b - a) * m_lengthscale).pow(2);
     const double r = std::sqrt(dx2.sum());
     const double exp_term = std::exp(-std::sqrt(3.0) * r);
-    // grad[0] = 2 * m_sigma * (1.0 + std::sqrt(3.0) * r) * exp_term;
-    const double factor = 3 * m_sigma2 * exp_term;
-    return m_lengthscale[i] * dx2[i] * factor;
+    if (i == D) {
+      return 2 * m_sigma * (1.0 + std::sqrt(3.0) * r) * exp_term;
+    } else {
+      const double factor = 3 * m_sigma2 * exp_term;
+      return m_lengthscale[i] * dx2[i] * factor;
+    }
   }
 };
 
@@ -112,7 +115,7 @@ template <unsigned int D> class GaussianProcess {
       Particles<std::tuple<function>, D, std::vector, KdtreeNanoflann>;
   using position = typename Particles_t::position;
   using double_d = Vector<double, D>;
-  using gradient_t = Eigen::Matrix<double, D+1, 1>;
+  using gradient_t = Eigen::Matrix<double, D + 2, 1>;
   using bool_d = Vector<bool, D>;
   using RawKernel_t = matern_kernel<D>;
   using Kernel_t = self_kernel<Particles_t, matern_kernel<D>>;
@@ -136,16 +139,11 @@ template <unsigned int D> class GaussianProcess {
   using const_vector_D_t =
       Eigen::Ref<const Eigen::Matrix<double, D, 1>, 0,
                  Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
-  using vector_D_t =
-      Eigen::Ref<Eigen::Matrix<double, D, 1>, 0,
-                 Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+  using vector_D_t = Eigen::Ref<Eigen::Matrix<double, D, 1>, 0,
+                                Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
   using vector_parameter_t =
-      Eigen::Ref<const Eigen::Matrix<double, D+2, 1>, 0,
+      Eigen::Ref<const Eigen::Matrix<double, D + 2, 1>, 0,
                  Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
-
-
-
-
 
 public:
   GaussianProcess();
@@ -156,7 +154,7 @@ public:
 
   void set_parameters(vector_parameter_t parameters);
 
-  const unsigned int n_parameters() const { return D+2; }
+  const unsigned int n_parameters() const { return D + 2; }
 
   void set_max_iterations(const double n) { m_solver.setMaxIterations(n); }
 
@@ -173,13 +171,20 @@ private:
   void initialise();
   double calculate_max_eigenvalue();
 
-  void calculate_chebyshev_coefficients(const int n);
+  void initialise_chebyshev(const int n);
 
-  template <typename Operator>
-  double calculate_log_det(const Operator &A, const int m);
+  double calculate_log_det(const Operator_t &A, const int m);
 
-  template <typename Operator>
-  double calculate_log_det_exact(const Operator &A);
+  std::vector<double>
+  calculate_log_det_grad(const Operator_t &A,
+                         const std::vector<GradientOperator_t> &gradA,
+                         const int m);
+
+  double calculate_log_det_exact(const Operator_t &A);
+
+  std::vector<double>
+  calculate_log_det_grad_exact(const Operator_t &A,
+                               const std::vector<GradientOperator_t> &gradA);
 
   double m_lambda;
   bool m_uninitialised;

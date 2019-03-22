@@ -81,6 +81,7 @@ class GaussianProcess(pints.LogPDF):
         self._gaussian_process.set_data(samples, pdf_values)
 
         score = GaussianProcessLogLikelihood(self._gaussian_process)
+        score = pints.ProbabilityBasedError(score)
 
         sample_range = np.ptp(samples, axis=0)
         value_range = np.ptp(pdf_values)
@@ -97,7 +98,8 @@ class GaussianProcess(pints.LogPDF):
             x0,
             sigma0,
             boundaries,
-            method=pints.PSO
+            #method=pints.PSO
+            method=pints.AdaptiveMomentEstimation
         )
         #opt.optimiser().set_alpha(1.01*np.min(sigma0))
 

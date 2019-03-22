@@ -15,11 +15,11 @@ GaussianProcess<D>::GaussianProcess()
       m_trace_iterations(4) {
   set_tolerance(1e-6);
   set_max_iterations(1000);
-  for (int i = 0; i < D; ++i) {
+  for (int i = 0; i < D + 1; ++i) {
     m_gradKs.emplace_back(create_dense_operator(m_particles, m_particles,
                                                 GradientKernel_t(m_kernel, i)));
   }
-  calculate_chebyshev_coefficients(15);
+  initialise_chebyshev(15);
 }
 
 template <unsigned int D> void GaussianProcess<D>::initialise() {
@@ -30,7 +30,7 @@ template <unsigned int D> void GaussianProcess<D>::initialise() {
 
   // create operators
   m_K = create_dense_operator(m_particles, m_particles,
-                              Kernel_t(m_kernel, std::pow(m_lambda,2)));
+                              Kernel_t(m_kernel, std::pow(m_lambda, 2)));
 
   for (int i = 0; i < D; ++i) {
     m_gradKs[i] = create_dense_operator(m_particles, m_particles,
@@ -83,23 +83,23 @@ void GaussianProcess<D>::likelihoodS1(double &likelihood,
   }
 
   // trace term
-  for (int i = 0; i < D; ++i) {
-    gradient[i] -= 0.5 * calculate_log_det(m_gradKs[i], 10);
-    // std::cout << "log_det estimate = " << gradient[i] << ". log_det exact = "
-    //          << -0.5 * calculate_log_det_exact(m_gradKs[i]) << std::endl;
+  auto result = calculate_log_det_grad_exact(m_K, m_gradKs);
+  for (int i = 0; i < result.size()-1; ++i) {
+    gradient[i] = -0.5 * result[i];
   }
-  gradient[D] -= std::log(m_lambda);
+  likelihood = -0.5*result.back();
 
   // second term
-  for (int i = 0; i < D; ++i) {
+  for (int i = 0; i <= D; ++i) {
     gradient[i] += 0.5 * m_invKy.dot(m_gradKs[i] * m_invKy);
   }
-  gradient[D] += m_lambda * m_invKy.dot(m_invKy);
+  gradient[D+1] += m_lambda * m_invKy.dot(m_invKy);
 
   Eigen::Map<Eigen::VectorXd> y(get<function>(m_particles).data(),
                                 m_particles.size());
 
-  likelihood = -0.5 * calculate_log_det(m_K, 10) - 0.5 * y.dot(m_invKy);
+  // likelihood = -0.5 * calculate_log_det(m_K, 10) - 0.5 * y.dot(m_invKy);
+  likelihood += - 0.5 * y.dot(m_invKy);
 }
 
 template <unsigned int D>
@@ -187,7 +187,7 @@ double GaussianProcess<D>::calculate_max_eigenvalue() {
 }
 
 template <unsigned int D>
-void GaussianProcess<D>::calculate_chebyshev_coefficients(const int n) {
+void GaussianProcess<D>::initialise_chebyshev(const int n) {
 
   const double pi = 3.14159265358979323846;
 
@@ -212,96 +212,91 @@ void GaussianProcess<D>::calculate_chebyshev_coefficients(const int n) {
   }
 }
 
-template <unsigned int D>
-template <typename Operator>
-double GaussianProcess<D>::calculate_log_det(const Operator &B, const int m) {
+template <typename Op> std::array<double, 2> eigenvalue_range(const Op &B) {
+  std::array<double, 2> minmax;
   // estimate eigenvalue range via n Gershgorin discs
-  double max_eigenvalue = std::numeric_limits<double>::min();
-  double min_eigenvalue = std::numeric_limits<double>::max();
-  for (int i = 0; i < m_particles.size(); ++i) {
+  minmax[1] = std::numeric_limits<double>::min();
+  minmax[0] = std::numeric_limits<double>::max();
+  for (int i = 0; i < B.rows(); ++i) {
     const double centre = B.coeff(i, i);
     double R = 0;
     for (int j = 0; j < i; ++j) {
       R += std::abs(B.coeff(i, j));
     }
-    for (int j = i + 1; j < m_particles.size(); ++j) {
+    for (int j = i + 1; j < B.cols(); ++j) {
       R += std::abs(B.coeff(i, j));
     }
     const double max_i = centre + R;
     const double min_i = centre - R;
-    if (max_i > max_eigenvalue) {
-      max_eigenvalue = max_i;
+    if (max_i > minmax[1]) {
+      minmax[1] = max_i;
     }
-    if (min_i < min_eigenvalue) {
-      min_eigenvalue = min_i;
+    if (min_i < minmax[0]) {
+      minmax[0] = min_i;
     }
   }
-  if (min_eigenvalue < 0) {
-    min_eigenvalue = 0.0;
+  if (minmax[0] < 0) {
+    minmax[0] = 0.0;
   }
+  return minmax;
+}
 
-  // std::cout << "eigen values range from " << min_eigenvalue << "-"
-  //          << max_eigenvalue << std::endl;
+template <typename F>
+std::vector<double>
+calculate_chebyshev_coefficients(const std::vector<double> points,
+                                 const Eigen::MatrixXd &polynomials,
+                                 const F &f) {
 
-  const double scale = 1.0 / (max_eigenvalue + min_eigenvalue);
-  const double delta = min_eigenvalue * scale;
+  // initialise coefficients to zero
+  std::vector<double> coefficients(points.size(), 0);
 
-  // Eigen::MatrixXd M(B.rows(), B.cols());
-  // for (int i = 0; i < B.rows(); ++i) {
-  //  for (int j = 0; j < B.cols(); ++j) {
-  //    M(i, j) = scale * B.coeff(i, j);
-  //  }
-  //}
-  // Eigen::VectorXd eigenvalues = M.eigenvalues().cwiseAbs();
-  // double min = std::numeric_limits<double>::max();
-  // double max = std::numeric_limits<double>::min();
-  // for (int i = 0; i < eigenvalues.size(); ++i) {
-  //  if (eigenvalues[i] < min) {
-  //    min = eigenvalues[i];
-  //  }
-  //  if (eigenvalues[i] > max) {
-  //    max = eigenvalues[i];
-  //  }
-  //}
-  // std::cout << "exact: eigenvalues range from " << min << "-" << max
-  //          << std::endl;
+  // generate chebyshev interpolation coefficients for f
+  const int n = points.size();
+  for (int k = 0; k < n; ++k) {
+    coefficients[0] += f(points[k]) * polynomials(k, 0);
+  }
+  coefficients[0] /= n + 1;
+  for (int i = 1; i < n; ++i) {
+    for (int k = 0; k < n; ++k) {
+      coefficients[i] += f(points[k]) * polynomials(k, i);
+    }
+    coefficients[i] *= 2.0 / (n + 1);
+  }
+  return coefficients;
+}
+
+template <unsigned int D>
+double GaussianProcess<D>::calculate_log_det(const Operator_t &B, const int m) {
+
+  auto minmax = eigenvalue_range(B);
+
+  const double scale = 1.0 / (minmax[1] + minmax[0]);
+  const double delta = minmax[0] * scale;
 
   // specify function to interpolate
   auto f = [&](const double x) {
     return std::log(1 - ((1 - 2 * delta) * x + 1) / 2);
   };
 
-  // generate chebyshev interpolation coefficients for f
-  const int n = m_chebyshev_points.size();
-  m_chebyshev_coefficients = Eigen::VectorXd::Zero(n);
-  for (int k = 0; k < n; ++k) {
-    m_chebyshev_coefficients(0) +=
-        f(m_chebyshev_points[k]) * m_chebyshev_polynomials(k, 0);
-  }
-  m_chebyshev_coefficients(0) /= n + 1;
-  for (int i = 1; i < n; ++i) {
-    for (int k = 0; k < n; ++k) {
-      m_chebyshev_coefficients(i) +=
-          f(m_chebyshev_points[k]) * m_chebyshev_polynomials(k, i);
-    }
-    m_chebyshev_coefficients(i) *= 2.0 / (n + 1);
-  }
+  auto chebyshev_coefficients = calculate_chebyshev_coefficients(
+      m_chebyshev_points, m_chebyshev_polynomials, f);
 
   double gamma = 0;
+  const int n = chebyshev_coefficients.size();
   for (int i = 0; i < m; ++i) {
     // generate Rademacher random vector
     Eigen::VectorXd v = Eigen::VectorXd::Random(m_particles.size());
     std::transform(v.data(), v.data() + v.size(), v.data(),
                    [](const double i) { return i > 0 ? 1.0 : -1.0; });
-    Eigen::VectorXd u = m_chebyshev_coefficients[0] * v;
+    Eigen::VectorXd u = chebyshev_coefficients[0] * v;
     if (n > 1) {
       Eigen::VectorXd w0 = v;
       Eigen::VectorXd w1 = v - scale * (B * v);
-      u += m_chebyshev_coefficients[1] * w1;
+      u += chebyshev_coefficients[1] * w1;
       Eigen::VectorXd w2(m_particles.size());
       for (int j = 2; j < n; ++j) {
         w2 = 2 * (w1 - scale * (B * w1)) - w0;
-        u += m_chebyshev_coefficients[j] * w2;
+        u += chebyshev_coefficients[j] * w2;
         w0 = w1;
         w1 = w2;
       }
@@ -309,12 +304,11 @@ double GaussianProcess<D>::calculate_log_det(const Operator &B, const int m) {
     gamma += v.dot(u) / m;
   }
 
-  return gamma + m_particles.size() * std::log(max_eigenvalue + min_eigenvalue);
+  return gamma + m_particles.size() * std::log(minmax[1] + minmax[0]);
 }
 
 template <unsigned int D>
-template <typename Operator>
-double GaussianProcess<D>::calculate_log_det_exact(const Operator &B) {
+double GaussianProcess<D>::calculate_log_det_exact(const Operator_t &B) {
   Eigen::MatrixXd M(B.rows(), B.cols());
   B.assemble(M);
 
@@ -326,6 +320,114 @@ double GaussianProcess<D>::calculate_log_det_exact(const Operator &B) {
   }
   ld *= 2;
   return ld;
+}
+
+template <unsigned int D>
+std::vector<double> GaussianProcess<D>::calculate_log_det_grad_exact(
+    const Operator_t &B, const std::vector<GradientOperator_t> &gradB) {
+
+  // put D+2 gradients in first, then normal log_det term in last
+  std::vector<double> result(gradB.size() + 2);
+
+  Eigen::MatrixXd M(B.rows(), B.cols());
+  B.assemble(M);
+  Eigen::LLT<Eigen::MatrixXd> chol(M);
+
+  for (int i = 0; i < gradB.size(); ++i) {
+    Eigen::MatrixXd gradM(gradB[i].rows(), gradB[i].cols());
+    gradB[i].assemble(gradM);
+
+    result[i] = chol.solve(gradM).trace();
+  }
+
+  double ld = 0;
+  auto &U = chol.matrixL();
+  for (size_t i = 0; i < M.rows(); ++i) {
+    ld += 1.0 / U(i, i);
+  }
+  ld /= 2;
+  result[gradB.size()] = ld;
+
+  ld = 0;
+  for (size_t i = 0; i < M.rows(); ++i) {
+    ld += std::log(U(i, i));
+  }
+  ld *= 2;
+  result[gradB.size()] = ld;
+  return result;
+}
+
+template <unsigned int D>
+std::vector<double> GaussianProcess<D>::calculate_log_det_grad(
+    const Operator_t &B, const std::vector<GradientOperator_t> &gradB,
+    const int m) {
+
+  std::vector<double> result(gradB.size() + 1, 0);
+
+  auto minmax = eigenvalue_range(B);
+
+  const double scale = 1.0 / (minmax[1] + minmax[0]);
+  const double delta = minmax[0] * scale;
+
+  // specify function to interpolate
+  auto f = [&](const double x) {
+    return std::log(1 - ((1 - 2 * delta) * x + 1) / 2);
+  };
+
+  auto chebyshev_coefficients = calculate_chebyshev_coefficients(
+      m_chebyshev_points, m_chebyshev_polynomials, f);
+
+  const int n = chebyshev_coefficients.size();
+  for (int i = 0; i < m; ++i) {
+    // generate Rademacher random vector
+    Eigen::VectorXd v = Eigen::VectorXd::Random(m_particles.size());
+    std::transform(v.data(), v.data() + v.size(), v.data(),
+                   [](const double i) { return i > 0 ? 1.0 : -1.0; });
+    Eigen::VectorXd u = chebyshev_coefficients[0] * v;
+
+    std::vector<Eigen::VectorXd> gradu(gradB.size());
+    for (int i = 0; i < gradB.size(); ++i) {
+      gradu[i] = u;
+    }
+    if (n > 1) {
+      Eigen::VectorXd w0 = v;
+      Eigen::VectorXd w1 = v - scale * (B * v);
+      u += chebyshev_coefficients[1] * w1;
+      Eigen::VectorXd w2(m_particles.size());
+
+      std::vector<Eigen::VectorXd> gradw0(gradB.size());
+      std::vector<Eigen::VectorXd> gradw1(gradB.size());
+      std::vector<Eigen::VectorXd> gradw2(gradB.size());
+      for (int i = 0; i < gradB.size(); ++i) {
+        gradw0[i].setZero(m_particles.size());
+        gradw1[i] = -scale * gradB[i] * v;
+        gradw2[i].resize(m_particles.size());
+        gradu[i] += chebyshev_coefficients[1] * gradw1[i];
+      }
+      for (int j = 2; j < n; ++j) {
+        w2 = 2 * (w1 - scale * (B * w1)) - w0;
+        u += chebyshev_coefficients[j] * w2;
+        w0 = w1;
+        w1 = w2;
+
+        for (int i = 0; i < gradB.size(); ++i) {
+          gradw2[i] = 2 * (-scale * gradB[i] * w1 + w1 - scale * (B * w1)) - w0;
+          gradu[i] += chebyshev_coefficients[j] * gradw2[i];
+          gradw0[i] = gradw1[i];
+          gradw1[i] = gradw2[i];
+        }
+      }
+    }
+    for (int i = 0; i < gradB.size(); ++i) {
+      result[i] += v.dot(gradu[i]) / m;
+    }
+    result[gradB.size()] += v.dot(u) / m;
+  }
+  // for (int i = 0; i < gradB.size(); ++i) {
+  //  result[i] += m_particles.size() * std::log(minmax[1] + minmax[0]);
+  //}
+  result[gradB.size()] += m_particles.size() * std::log(minmax[1] + minmax[0]);
+  return result;
 }
 
 template <unsigned int D>
@@ -391,7 +493,7 @@ PYBIND11_MODULE(gaussian_process, m) {
       .def("set_data", &GaussianProcess<D>::set_data, py::arg().noconvert(),   \
            py::arg().noconvert())                                              \
       .def("n_parameters", &GaussianProcess<D>::n_parameters)                  \
-      .def("set_parameters", &GaussianProcess<D>::set_parameters)            \
+      .def("set_parameters", &GaussianProcess<D>::set_parameters)              \
       .def("set_max_iterations", &GaussianProcess<D>::set_max_iterations)      \
       .def("set_tolerance", &GaussianProcess<D>::set_tolerance)                \
       .def("set_trace_iterations", &GaussianProcess<D>::set_trace_iterations);
