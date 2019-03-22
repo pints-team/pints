@@ -22,7 +22,9 @@ template <unsigned int D> struct matern_kernel {
   }
   double get_sigma() { return m_sigma; }
   void set_lengthscale(const double_d &lengthscale) {
-    m_lengthscale = 1.0 / lengthscale;
+    for (int i = 0; i < D; ++i) {
+    m_lengthscale[i] = 1.0 / std::abs(lengthscale[i]);
+    }
   }
   double operator()(const Vector<double, D> &a,
                     const Vector<double, D> &b) const {
@@ -61,21 +63,21 @@ template <typename Particles, typename Kernel> struct self_kernel {
   using raw_const_reference = typename Particles::raw_const_reference;
   using position = typename Particles::position;
   Kernel m_kernel;
-  double m_jitter;
+  double m_diagonal;
 
-  self_kernel(const Kernel &kernel, const double jitter)
-      : m_kernel(kernel), m_jitter(jitter) {}
+  self_kernel(const Kernel &kernel, const double diagonal)
+      : m_kernel(kernel), m_diagonal(diagonal) {}
 
   template <typename OldKernel> self_kernel(const OldKernel &kernel) {
     m_kernel.m_scale = kernel.m_kernel.m_scale;
     m_kernel.m_sigma = kernel.m_kernel.m_sigma;
-    m_jitter = kernel.m_jitter;
+    m_diagonal = kernel.m_diagonal;
   }
 
   double operator()(raw_const_reference a, raw_const_reference b) const {
     double ret = m_kernel(get<position>(a), get<position>(b));
     if (get<id>(a) == get<id>(b)) {
-      ret += m_jitter;
+      ret += m_diagonal;
     }
     return ret;
   }
@@ -131,9 +133,19 @@ template <unsigned int D> class GaussianProcess {
   using f_vector_t =
       Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 1>, 0,
                  Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
-  using lengthscale_vector_t =
+  using const_vector_D_t =
       Eigen::Ref<const Eigen::Matrix<double, D, 1>, 0,
                  Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+  using vector_D_t =
+      Eigen::Ref<Eigen::Matrix<double, D, 1>, 0,
+                 Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+  using vector_parameter_t =
+      Eigen::Ref<const Eigen::Matrix<double, D+2, 1>, 0,
+                 Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
+
+
+
+
 
 public:
   GaussianProcess();
@@ -141,14 +153,10 @@ public:
   double likelihood();
 
   void set_data(x_vector_t x, f_vector_t f);
-  void set_lengthscale(lengthscale_vector_t sigma);
 
-  void set_noise(const double lambda) {
-    m_lambda = lambda;
-    m_uninitialised = true;
-  }
+  void set_parameters(vector_parameter_t parameters);
 
-  const unsigned int n_parameters() const { return D+1; }
+  const unsigned int n_parameters() const { return D+2; }
 
   void set_max_iterations(const double n) { m_solver.setMaxIterations(n); }
 
@@ -157,6 +165,9 @@ public:
   void set_trace_iterations(const int iterations) {
     m_trace_iterations = iterations;
   }
+
+  double predict(const_vector_D_t x);
+  Eigen::Vector2d predict_var(const_vector_D_t x);
 
 private:
   void initialise();

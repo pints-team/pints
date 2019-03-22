@@ -8,7 +8,7 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
-from gaussian_process import GaussianProcess2
+from gaussian_process import GaussianProcess2, GaussianProcess1
 
 
 class GaussianProcessLogLikelihood(pints.LogPDF):
@@ -20,8 +20,7 @@ class GaussianProcessLogLikelihood(pints.LogPDF):
         self._gaussian_process = gaussian_process
 
     def __call__(self, x):
-        self._gaussian_process.set_lengthscale(x[:-1])
-        self._gaussian_process.set_noise(x[-1])
+        self._gaussian_process.set_parameters(x)
         likelihood = self._gaussian_process.likelihood()
         return likelihood
 
@@ -30,8 +29,7 @@ class GaussianProcessLogLikelihood(pints.LogPDF):
         returns the partial derivatives of the function with respect to the parameters.
 
         """
-        self._gaussian_process.set_lengthscale(x[:-1])
-        self._gaussian_process.set_noise(x[-1])
+        self._gaussian_process.set_parameters(x)
         gradient = np.empty_like(x)
         likelihood = 0
         self._gaussian_process.likelihoodS1(likelihood, gradient)
@@ -64,13 +62,22 @@ class GaussianProcess(pints.LogPDF):
     def __init__(self, samples, pdf_values):
         super(GaussianProcess, self).__init__()
 
-        # currently only supports dimension 2
-        if samples.shape[1] != 2:
+        # handle 1d array input
+        if len(samples.shape) == 1:
+            samples = np.reshape(samples,(-1,1))
+
+        print(samples.shape,len(samples.shape))
+
+        if samples.shape[1] == 1:
+            self._gaussian_process = GaussianProcess1()
+        elif samples.shape[1] == 2:
+            self._gaussian_process = GaussianProcess2()
+        else:
             raise NotImplementedError(
-                'GaussianProcess currently only supports 2d'
+                'GaussianProcess currently only supports d <= 2'
             )
 
-        self._gaussian_process = GaussianProcess2()
+        pdf_values = pdf_values
         self._gaussian_process.set_data(samples, pdf_values)
 
         score = GaussianProcessLogLikelihood(self._gaussian_process)
@@ -78,10 +85,10 @@ class GaussianProcess(pints.LogPDF):
         sample_range = np.ptp(samples, axis=0)
         value_range = np.ptp(pdf_values)
         hyper_min = np.zeros(self.n_parameters())
-        hyper_max = 30000*np.concatenate((sample_range,[1]))
+        hyper_max = np.concatenate((sample_range,[value_range], [value_range]))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
-        x0 = 0.1*(hyper_min + hyper_max)
+        x0 = 0.5*(hyper_min + hyper_max)
         print(x0)
         sigma0 = 0.9*(hyper_max - hyper_min)
 
@@ -98,14 +105,14 @@ class GaussianProcess(pints.LogPDF):
         print('found parameters ',found_parameters)
         print(hyper_max)
         print(hyper_min)
-        self._gaussian_process.set_lengthscale(found_parameters[:-1])
-        self._gaussian_process.set_noise(found_parameters[-1])
+        self._gaussian_process.set_parameters(found_parameters)
 
     def __call__(self, x):
-        raise NotImplementedError
+        return self._gaussian_process.predict(x)
 
-    def evaluateS1(self, x):
-        raise NotImplementedError
+    def predict(self, x):
+        mean, variance = self._gaussian_process.predict_var(x)
+        return mean, variance
 
     def n_parameters(self):
         """

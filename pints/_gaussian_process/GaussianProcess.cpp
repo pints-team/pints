@@ -30,7 +30,7 @@ template <unsigned int D> void GaussianProcess<D>::initialise() {
 
   // create operators
   m_K = create_dense_operator(m_particles, m_particles,
-                              Kernel_t(m_kernel, m_lambda));
+                              Kernel_t(m_kernel, std::pow(m_lambda,2)));
 
   for (int i = 0; i < D; ++i) {
     m_gradKs[i] = create_dense_operator(m_particles, m_particles,
@@ -88,13 +88,13 @@ void GaussianProcess<D>::likelihoodS1(double &likelihood,
     // std::cout << "log_det estimate = " << gradient[i] << ". log_det exact = "
     //          << -0.5 * calculate_log_det_exact(m_gradKs[i]) << std::endl;
   }
-  gradient[D] -= 0.5 * std::log(m_lambda);
+  gradient[D] -= std::log(m_lambda);
 
   // second term
   for (int i = 0; i < D; ++i) {
     gradient[i] += 0.5 * m_invKy.dot(m_gradKs[i] * m_invKy);
   }
-  gradient[D] += 0.5 * m_lambda * m_invKy.dot(m_invKy);
+  gradient[D] += m_lambda * m_invKy.dot(m_invKy);
 
   Eigen::Map<Eigen::VectorXd> y(get<function>(m_particles).data(),
                                 m_particles.size());
@@ -133,12 +133,13 @@ void GaussianProcess<D>::set_data(x_vector_t x, f_vector_t f) {
 }
 
 template <unsigned int D>
-void GaussianProcess<D>::set_lengthscale(lengthscale_vector_t sigma) {
+void GaussianProcess<D>::set_parameters(vector_parameter_t parameters) {
   for (size_t j = 0; j < D; ++j) {
-    m_lengthscales[j] = sigma[j];
+    m_lengthscales[j] = parameters[j];
   }
   m_kernel.set_lengthscale(m_lengthscales);
-
+  m_lambda = parameters[D];
+  m_kernel.set_sigma(parameters[D + 1]);
   m_uninitialised = true;
 }
 
@@ -327,22 +328,74 @@ double GaussianProcess<D>::calculate_log_det_exact(const Operator &B) {
   return ld;
 }
 
+template <unsigned int D>
+double GaussianProcess<D>::predict(const_vector_D_t argx) {
+
+  const double_d x = argx;
+
+  if (m_particles.size() == 0) {
+    return 0;
+  }
+  if (m_uninitialised) {
+    initialise();
+  }
+
+  double sum = 0;
+  for (int i = 0; i < m_particles.size(); ++i) {
+    sum += m_kernel(x, get<position>(m_particles)[i]) * m_invKy(i);
+  }
+  return sum;
+}
+template <unsigned int D>
+Eigen::Vector2d GaussianProcess<D>::predict_var(const_vector_D_t argx) {
+  Eigen::Vector2d mean_var = Eigen::Vector2d::Zero();
+  const double_d x = argx;
+
+  if (m_particles.size() == 0) {
+    return mean_var;
+  }
+  if (m_uninitialised) {
+    initialise();
+  }
+
+  Eigen::VectorXd kstar(m_particles.size());
+  for (int i = 0; i < m_particles.size(); ++i) {
+    kstar[i] = m_kernel(x, get<position>(m_particles)[i]);
+  }
+
+  mean_var[0] = kstar.dot(m_invKy);
+
+  Eigen::VectorXd invKstar = m_solver.solve(kstar);
+  if (m_solver.info() != Eigen::Success) {
+    throw std::runtime_error(
+        "invKstar solver failed to converge to set tolerance");
+  }
+  mean_var[1] = m_kernel(x, x) - kstar.dot(invKstar);
+  return mean_var;
+}
+
 } // namespace Aboria
 
 namespace py = pybind11;
 using namespace Aboria;
 
 PYBIND11_MODULE(gaussian_process, m) {
-  py::class_<GaussianProcess<2>>(m, "GaussianProcess2")
-      .def(py::init<>())
-      .def("likelihoodS1", &GaussianProcess<2>::likelihoodS1)
-      .def("likelihood", &GaussianProcess<2>::likelihood)
-      .def("set_data", &GaussianProcess<2>::set_data, py::arg().noconvert(),
-           py::arg().noconvert())
-      .def("n_parameters", &GaussianProcess<2>::n_parameters)
-      .def("set_lengthscale", &GaussianProcess<2>::set_lengthscale)
-      .def("set_max_iterations", &GaussianProcess<2>::set_max_iterations)
-      .def("set_tolerance", &GaussianProcess<2>::set_tolerance)
-      .def("set_trace_iterations", &GaussianProcess<2>::set_trace_iterations)
-      .def("set_noise", &GaussianProcess<2>::set_noise);
+
+#define ADD_DIMENSION(D)                                                       \
+  py::class_<GaussianProcess<D>>(m, "GaussianProcess" #D)                      \
+      .def(py::init<>())                                                       \
+      .def("likelihoodS1", &GaussianProcess<D>::likelihoodS1)                  \
+      .def("likelihood", &GaussianProcess<D>::likelihood)                      \
+      .def("predict", &GaussianProcess<D>::predict)                            \
+      .def("predict_var", &GaussianProcess<D>::predict_var)                    \
+      .def("set_data", &GaussianProcess<D>::set_data, py::arg().noconvert(),   \
+           py::arg().noconvert())                                              \
+      .def("n_parameters", &GaussianProcess<D>::n_parameters)                  \
+      .def("set_parameters", &GaussianProcess<D>::set_parameters)            \
+      .def("set_max_iterations", &GaussianProcess<D>::set_max_iterations)      \
+      .def("set_tolerance", &GaussianProcess<D>::set_tolerance)                \
+      .def("set_trace_iterations", &GaussianProcess<D>::set_trace_iterations);
+
+  ADD_DIMENSION(1)
+  ADD_DIMENSION(2)
 }
