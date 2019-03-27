@@ -27,6 +27,7 @@ class TestGaussianProcess(unittest.TestCase):
     """
     Tests the basic methods of the gaussian process log pdf.
     """
+
     def setUp(self):
         """ Called before every test """
         np.random.seed(1)
@@ -49,6 +50,71 @@ class TestGaussianProcess(unittest.TestCase):
 
         return log_pdf
 
+    def test_likelihood_gradient(self):
+        log_pdf = self.problem1D()
+        n = 100
+        samples = log_pdf.sample(n)
+        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
+        gp = pints.GaussianProcess(samples, values)
+        p1_values = np.linspace(5, 20, 50)
+        p2_values = np.linspace(3, 10, 50)
+        p3_values = np.linspace(0.09, 0.092, 50)
+        p1_likelihood = np.empty_like(p1_values)
+        p2_likelihood = np.empty_like(p2_values)
+        p3_likelihood = np.empty_like(p3_values)
+        p1_grad_likelihood = np.empty_like(p1_values)
+        p2_grad_likelihood = np.empty_like(p2_values)
+        p3_grad_likelihood = np.empty_like(p3_values)
+        centre_point = [12.0196836, 7.65880237, 0.0920143]
+        for i, value in enumerate(p1_values):
+            gp.set_hyper_parameters([value, centre_point[1], centre_point[2]])
+            p1_likelihood[i] = gp._gaussian_process.likelihood_exact()
+            p1_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[0]
+
+        for i, value in enumerate(p2_values):
+            gp.set_hyper_parameters([centre_point[0], value, centre_point[2]])
+            p2_likelihood[i] = gp._gaussian_process.likelihood_exact()
+            p2_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[1]
+
+        for i, value in enumerate(p3_values):
+            gp.set_hyper_parameters([centre_point[0], centre_point[1], value])
+            p3_likelihood[i] = gp._gaussian_process.likelihood_exact()
+            p3_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[2]
+
+        #plt.figure()
+        #plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
+        #plt.plot(p1_values, p1_grad_likelihood, label='likS1')
+        #plt.legend()
+        #plt.figure()
+        #plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
+        #plt.plot(p2_values, p2_grad_likelihood, label='likS1')
+        #plt.legend()
+        #plt.figure()
+        #plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
+        #plt.plot(p3_values, p3_grad_likelihood, label='likS1')
+        #plt.legend()
+
+        np.testing.assert_almost_equal(p1_grad_likelihood[1:-1], np.gradient(
+            p1_likelihood, p1_values)[1:-1], decimal=1)
+        np.testing.assert_almost_equal(p2_grad_likelihood[1:-1], np.gradient(
+            p2_likelihood, p2_values)[1:-1], decimal=1)
+        np.testing.assert_almost_equal(p3_grad_likelihood[1:-1], np.gradient(
+            p3_likelihood, p3_values)[1:-1], decimal=1)
+
+    def test_approximate_likelihood(self):
+        log_pdf = self.problem1D()
+        n = 100
+        samples = log_pdf.sample(n)
+        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
+        gp = pints.GaussianProcess(samples, values)
+        gp.set_hyper_parameters([12.0, 1.6, 12.1])
+        gp._gaussian_process.set_stochastic_samples(300)
+
+        likelihoodS1_approx = gp._gaussian_process.likelihoodS1()[:-1]
+        likelihoodS1_exact = gp._gaussian_process.likelihoodS1_exact()[:-1]
+
+        np.testing.assert_almost_equal(
+            likelihoodS1_exact, likelihoodS1_approx, decimal=1)
 
     def test_fitting(self):
         """ fits the gp to the problem. """
@@ -56,18 +122,36 @@ class TestGaussianProcess(unittest.TestCase):
 
         n = 100
         samples = log_pdf.sample(n)
-        values = log_pdf(samples)  + np.random.normal(0,0.1,size=n)
+        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
         gp = pints.GaussianProcess(samples, values)
-        test_samples = np.sort(log_pdf.sample(n).reshape(-1,1),axis=0)
-        test_values = [gp.predict(test_samples[i,:]) for i in range(test_samples.shape[0])]
+        gp.optimise_hyper_parameters(use_approximate_likelihood=False)
+
+        test_samples = np.sort(log_pdf.sample(n).reshape(-1, 1), axis=0)
+        test_values = [gp.predict(test_samples[i, :])
+                       for i in range(test_samples.shape[0])]
         test_means = [mv[0] for mv in test_values]
         test_stddev = np.sqrt([mv[1] for mv in test_values])
 
         plt.figure()
         plt.scatter(samples, values, label='original')
         plt.plot(test_samples, test_means, label='gp')
-        plt.fill_between(test_samples.reshape(-1),test_means-test_stddev,test_means+test_stddev,alpha=0.3)
+        plt.fill_between(test_samples.reshape(-1), test_means -
+                         test_stddev, test_means+test_stddev, alpha=0.3)
+
+        gp.optimise_hyper_parameters(use_approximate_likelihood=True)
+        test_samples = np.sort(log_pdf.sample(n).reshape(-1, 1), axis=0)
+        test_values = [gp.predict(test_samples[i, :])
+                       for i in range(test_samples.shape[0])]
+        test_means = [mv[0] for mv in test_values]
+        test_stddev = np.sqrt([mv[1] for mv in test_values])
+
+        plt.figure()
+        plt.scatter(samples, values, label='original')
+        plt.plot(test_samples, test_means, label='gp')
+        plt.fill_between(test_samples.reshape(-1), test_means -
+                         test_stddev, test_means+test_stddev, alpha=0.3)
         plt.show()
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')

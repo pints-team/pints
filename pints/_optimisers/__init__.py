@@ -326,16 +326,16 @@ class OptimisationController(object):
         # Check if minimising or maximising
         self._minimising = not isinstance(function, pints.LogPDF)
 
-        # Check if sensitivities are required
-        if self._optimiser.needs_sensitivities():
-            function = function.evaluateS1
-
         # Store function
         if self._minimising:
             self._function = function
         else:
             self._function = pints.ProbabilityBasedError(function)
         del(function)
+
+        # Check if sensitivities are required
+        if self._optimiser.needs_sensitivities():
+            self._function = self._function.evaluateS1
 
         # Logging
         self._log_to_screen = True

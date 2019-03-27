@@ -40,6 +40,12 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self.set_beta1()
         self.set_beta2()
 
+        # default behaviour is to use function evaluations
+        self._ignore_fbest = False
+
+        # init best function eval
+        self._fbest = float('inf')
+
         # init state variables
         self._m = 0.0
         self._v = 0.0
@@ -98,6 +104,9 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self.set_beta1(x[1])
         self.set_beta2(x[2])
 
+    def set_ignore_fbest(self, ignore=True):
+        self._ignore_fbest = ignore
+
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Ready for tell now
@@ -111,7 +120,7 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self._ready_for_tell = False
 
         self._t += 1
-        _, gradf = fx[0]
+        self._fbest, gradf = fx[0]
         self._m = self._beta1*self._m + (1-self._beta1)*gradf
         self._v = self._beta2*self._v + (1-self._beta2)*gradf**2
         self._m_hat = self._m / (1 - self._beta1**self._t)
@@ -139,10 +148,13 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         """
         See :meth:`Optimiser.fbest()`
 
-        This method only evaluates sensitivities, so uses abs(sensitivities) as
-        a proxy for fbest
+        use norm(gradient) as a proxy for fbest if the function evaluations are being
+        ignored
         """
-        return np.sum(self._m_hat**2)
+        if self._ignore_fbest:
+            return np.linalg.norm(self._m_hat)
+        else:
+            return self._fbest
 
     def needs_sensitivities(self):
         """ See :meth:`Optimiser.needs_sensitivities()`. """

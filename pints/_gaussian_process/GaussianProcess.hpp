@@ -23,7 +23,7 @@ template <unsigned int D> struct matern_kernel {
   double get_sigma() { return m_sigma; }
   void set_lengthscale(const double_d &lengthscale) {
     for (int i = 0; i < D; ++i) {
-      m_lengthscale[i] = 1.0 / std::abs(lengthscale[i]);
+      m_lengthscale[i] = 1.0 / lengthscale[i];
     }
   }
   double operator()(const Vector<double, D> &a,
@@ -115,7 +115,6 @@ template <unsigned int D> class GaussianProcess {
       Particles<std::tuple<function>, D, std::vector, KdtreeNanoflann>;
   using position = typename Particles_t::position;
   using double_d = Vector<double, D>;
-  using gradient_t = Eigen::Matrix<double, D + 2, 1>;
   using bool_d = Vector<bool, D>;
   using RawKernel_t = matern_kernel<D>;
   using Kernel_t = self_kernel<Particles_t, matern_kernel<D>>;
@@ -145,10 +144,16 @@ template <unsigned int D> class GaussianProcess {
       Eigen::Ref<const Eigen::Matrix<double, D + 2, 1>, 0,
                  Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
 
+  using likelihoodS1_return_t = Eigen::Matrix<double, D + 3, 1>;
+
 public:
   GaussianProcess();
-  void likelihoodS1(double &likelihood, Eigen::Ref<gradient_t> gradient);
+
+  likelihoodS1_return_t likelihoodS1();
   double likelihood();
+
+  likelihoodS1_return_t likelihoodS1_exact();
+  double likelihood_exact();
 
   void set_data(x_vector_t x, f_vector_t f);
 
@@ -160,9 +165,11 @@ public:
 
   void set_tolerance(const double tol) { m_solver.setTolerance(tol); }
 
-  void set_trace_iterations(const int iterations) {
-    m_trace_iterations = iterations;
+  void set_stochastic_samples(const int iterations) {
+    m_stochastic_samples_m = iterations;
   }
+
+  void set_chebyshev_n(const int n) { m_chebyshev_n = n; initialise_chebyshev(n);}
 
   double predict(const_vector_D_t x);
   Eigen::Vector2d predict_var(const_vector_D_t x);
@@ -198,8 +205,9 @@ private:
   Solver_t m_solver;
   Eigen::VectorXd m_invKy;
   Eigen::VectorXd m_invKr;
-  int m_trace_iterations;
   Eigen::VectorXd m_chebyshev_coefficients;
+  int m_chebyshev_n;
+  int m_stochastic_samples_m;
 
   std::vector<double> m_chebyshev_points;
   Eigen::MatrixXd m_chebyshev_polynomials;
