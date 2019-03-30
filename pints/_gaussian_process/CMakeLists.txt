@@ -26,10 +26,17 @@ list(APPEND include_dirs ${lib_dir}/boost)
 set(source_dir ".")
 
 set(source_files 
-  ${source_dir}/GaussianProcess.cpp
+  ${source_dir}/Kernels.cpp
+  ${source_dir}/python_wrapper.cpp
     )
 set(header_files 
+  ${source_dir}/Kernels.hpp
   ${source_dir}/GaussianProcess.hpp
+  ${source_dir}/GaussianProcess.tcc
+  ${source_dir}/GaussianProcessMatrixFree.hpp
+  ${source_dir}/GaussianProcessMatrixFree.tcc
+  ${source_dir}/GaussianProcessDenseMatrix.hpp
+  ${source_dir}/GaussianProcessDenseMatrix.tcc
     )
 
 include_directories(${source_dir} ${include_dirs})

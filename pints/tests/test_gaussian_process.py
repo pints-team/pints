@@ -68,31 +68,32 @@ class TestGaussianProcess(unittest.TestCase):
         centre_point = [12.0196836, 7.65880237, 0.0920143]
         for i, value in enumerate(p1_values):
             gp.set_hyper_parameters([value, centre_point[1], centre_point[2]])
-            p1_likelihood[i] = gp._gaussian_process.likelihood_exact()
-            p1_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[0]
+            p1_likelihood[i] = gp.likelihood()
+            p1_grad_likelihood[i] = gp.grad_likelihood()[0]
 
         for i, value in enumerate(p2_values):
             gp.set_hyper_parameters([centre_point[0], value, centre_point[2]])
-            p2_likelihood[i] = gp._gaussian_process.likelihood_exact()
-            p2_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[1]
+            p2_likelihood[i] = gp.likelihood()
+            p2_grad_likelihood[i] = gp.grad_likelihood()[1]
 
         for i, value in enumerate(p3_values):
             gp.set_hyper_parameters([centre_point[0], centre_point[1], value])
-            p3_likelihood[i] = gp._gaussian_process.likelihood_exact()
-            p3_grad_likelihood[i] = gp._gaussian_process.likelihoodS1_exact()[2]
+            p3_likelihood[i] = gp.likelihood()
+            p3_grad_likelihood[i] = gp.grad_likelihood()[2]
 
-        #plt.figure()
-        #plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
-        #plt.plot(p1_values, p1_grad_likelihood, label='likS1')
-        #plt.legend()
-        #plt.figure()
-        #plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
-        #plt.plot(p2_values, p2_grad_likelihood, label='likS1')
-        #plt.legend()
-        #plt.figure()
-        #plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
-        #plt.plot(p3_values, p3_grad_likelihood, label='likS1')
-        #plt.legend()
+        plt.figure()
+        plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
+        plt.plot(p1_values, p1_grad_likelihood, label='likS1')
+        plt.legend()
+        plt.figure()
+        plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
+        plt.plot(p2_values, p2_grad_likelihood, label='likS1')
+        plt.legend()
+        plt.figure()
+        plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
+        plt.plot(p3_values, p3_grad_likelihood, label='likS1')
+        plt.legend()
+        plt.show()
 
         np.testing.assert_almost_equal(p1_grad_likelihood[1:-1], np.gradient(
             p1_likelihood, p1_values)[1:-1], decimal=1)
@@ -106,16 +107,24 @@ class TestGaussianProcess(unittest.TestCase):
         n = 100
         samples = log_pdf.sample(n)
         values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
-        gp = pints.GaussianProcess(samples, values)
-        gp.set_hyper_parameters([12.0, 1.6, 12.1])
-        gp._gaussian_process.set_stochastic_samples(300)
+        gp_standard = pints.GaussianProcess(samples, values)
+        gp_free = pints.GaussianProcess(samples, values, matrix_free=True)
+        gp_dense = pints.GaussianProcess(samples, values, dense_matrix=True)
 
-        likelihoodS1_approx = gp._gaussian_process.likelihoodS1()[:-1]
-        likelihoodS1_exact = gp._gaussian_process.likelihoodS1_exact()[:-1]
+        for gp in [gp_standard, gp_free, gp_dense]:
+            gp.set_hyper_parameters([12.0, 1.6, 12.1])
 
-        np.testing.assert_almost_equal(
-            likelihoodS1_exact, likelihoodS1_approx, decimal=1)
+        grad_likelihood_exact = gp_standard.grad_likelihood()
+        print('exact grad lik = ',grad_likelihood_exact)
+        for gp in [gp_free, gp_dense]:
+            gp._gaussian_process.set_stochastic_samples(300)
+            grad_likelihood_approx = gp.grad_likelihood()
+            print('approx grad lik = ',grad_likelihood_approx)
 
+            np.testing.assert_almost_equal(
+                grad_likelihood_exact, grad_likelihood_approx, decimal=2)
+
+    @unittest.skip('reason')
     def test_fitting(self):
         """ fits the gp to the problem. """
         log_pdf = self.problem1D()
