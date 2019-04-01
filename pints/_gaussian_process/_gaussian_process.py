@@ -262,7 +262,6 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
             x0,
             sigma0,
             boundaries,
-            # method=pints.PSO
             method=pints.AdaptiveMomentEstimation
         )
         opt.set_threshold(1e-3)

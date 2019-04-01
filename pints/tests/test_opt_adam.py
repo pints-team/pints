@@ -61,6 +61,13 @@ class TestAdam(unittest.TestCase):
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
 
+        # Rectangular boundaries do not cover optimum, stops when boundaries are hit
+        b = pints.RectangularBoundaries([0.5, 0.5], [1, 1])
+        opt = pints.OptimisationController(r, [0.75, 0.75], boundaries=b, method=method)
+        opt.set_log_to_screen(debug)
+        found_parameters, found_solution = opt.run()
+        self.assertTrue(np.linalg.norm(found_parameters - np.array([0.5,0.5])) < 1e-3)
+
         # Circular boundaries
         # Start near edge, to increase chance of out-of-bounds occurring.
         b = CircularBoundaries([0, 0], 1)

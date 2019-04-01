@@ -54,6 +54,9 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         # small epsilon to prevent divide by zero
         self._epsilon = 1e-8
 
+        # boundaries check flag
+        self._outside_boundaries = False
+
         # Best solution found
         self._xbest = pints.vector(x0)
         self._m_hat = float('inf')
@@ -128,6 +131,9 @@ class AdaptiveMomentEstimation(pints.Optimiser):
         self._xbest = self._xbest - self._alpha * \
             self._m_hat / (np.sqrt(self._v_hat) + self._epsilon)
 
+        if self._boundaries is not None and not self._boundaries.check(self._xbest):
+            self._outside_boundaries = True
+
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Adaptive Moment Estimation (Adam)'
@@ -138,7 +144,7 @@ class AdaptiveMomentEstimation(pints.Optimiser):
 
     def stop(self):
         """ See :meth:`Optimiser.stop()`. """
-        return False
+        return self._outside_boundaries
 
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
