@@ -10,11 +10,11 @@ import pints
 import scipy
 
 from gaussian_process import (
-        GaussianProcessMatrixFree1,
-        GaussianProcessMatrixFree2,
-        GaussianProcessDenseMatrix1,
-        GaussianProcessDenseMatrix2,
-        )
+    GaussianProcessMatrixFree1,
+    GaussianProcessMatrixFree2,
+    GaussianProcessDenseMatrix1,
+    GaussianProcessDenseMatrix2,
+)
 
 
 class matern_kernel:
@@ -28,21 +28,21 @@ class matern_kernel:
         self._sigma2 = sigma**2
 
     def set_lengthscales(self, lengthscales):
-        self._inv_lengthscales = (1.0/np.array(lengthscales)).reshape(1,1,-1)
+        self._inv_lengthscales = (1.0/np.array(lengthscales)).reshape(1, 1, -1)
 
     def __call__(self, dx):
-        r = np.sqrt(np.sum((dx*self._inv_lengthscales)**2,axis=2))
+        r = np.sqrt(np.sum((dx*self._inv_lengthscales)**2, axis=2))
         return self._sigma2 * (1.0 + np.sqrt(3.0) * r) * np.exp(-np.sqrt(3.0) * r)
 
     def gradient_by(self, dx, i):
         dx2 = (dx*self._inv_lengthscales)**2
-        r = np.sqrt(np.sum(dx2,axis=2))
+        r = np.sqrt(np.sum(dx2, axis=2))
         exp_term = np.exp(-np.sqrt(3.0) * r)
         if i == self._dim:
             return 2 * self._sigma * (1.0 + np.sqrt(3.0) * r) * exp_term
         else:
             factor = 3 * self._sigma2 * exp_term
-            return self._inv_lengthscales[i] * dx2[:,:,i] * factor
+            return self._inv_lengthscales[i] * dx2[:, :, i] * factor
 
 
 class grad_kernel:
@@ -138,7 +138,6 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._lambda = 1e-5
         self._dx = self._create_dx()
 
-
     def _create_matrix(self, kernel, diagonal):
         matrix = kernel(self._dx)
         diag = np.diag_indices(self._values.size)
@@ -149,17 +148,16 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
     def _create_dx(self):
 
         n = self._values.size
-        matrix = np.empty((n,n,self._samples.shape[1]))
+        matrix = np.empty((n, n, self._samples.shape[1]))
         for i in range(n):
             for j in range(n):
-                matrix[i,j,:] = self._samples[i,:] - self._samples[j,:]
+                matrix[i, j, :] = self._samples[i, :] - self._samples[j, :]
         return matrix
-
 
     def initialise(self):
         self._K = self._create_matrix(self._kernel, self._lambda**2)
         self._gradK = [
-            self._create_matrix(grad_kernel(self._kernel, i), np.sqrt(1e-5))
+            self._create_matrix(grad_kernel(self._kernel, i), 1e-5)
             for i in range(self.n_parameters()+1)
         ]
         n = self._values.size
@@ -203,7 +201,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
         second_term = np.empty(len(self._gradK))
         for i, gradK in enumerate(self._gradK):
-            second_term[i] = np.dot(self._invKy, gradK @ self._invKy)
+            second_term[i] = np.dot(self._invKy, np.dot(gradK, self._invKy))
 
         gradient = -0.5*trace_term + 0.5*second_term
 
@@ -252,7 +250,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         sample_range = np.ptp(self._samples, axis=0)
         value_range = np.ptp(self._values)
         hyper_min = np.zeros(self.n_hyper_parameters())
-        hyper_max = np.concatenate((sample_range, [value_range], [value_range]))
+        hyper_max = 5*np.concatenate((sample_range, [value_range], [value_range]))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
         x0 = 0.5*(hyper_min + hyper_max)
@@ -267,6 +265,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
             # method=pints.PSO
             method=pints.AdaptiveMomentEstimation
         )
+        opt.set_threshold(1e-3)
+        opt.set_max_unchanged_iterations(None)
         opt.optimiser().set_ignore_fbest()
 
         found_parameters, found_value = opt.run()
@@ -275,11 +275,45 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         print(hyper_min)
         self.set_hyper_parameters(found_parameters)
 
+    def _predict_mean(self, x):
+        n = self._values.size
+        if n == 0:
+            return 0
+
+        if self._uninitialised:
+            self.initialise()
+
+        dx = x - self._samples
+        return self._kernel(dx).dot(self._invKy)
+
+    def _predict(self, x):
+        n = self._values.size
+        if n == 0:
+            return 0
+
+        if self._uninitialised:
+            self.initialise()
+
+        dx = x - self._samples
+        kstar = self._kernel(dx)
+        mean = kstar.dot(self._invKy)
+
+        invKstar = scipy.linalg.cho_solve(self._cholesky_L, kstar)
+        var = self._kernel([0, 0]) + self._lambda**2 - kstar.dot(invKstar)
+
+        return mean, var
+
     def __call__(self, x):
-        return self._gaussian_process.predict(x)
+        if self._use_dense_matrix:
+            return self._predict_mean(x)
+        else:
+            return self._gaussian_process.predict(x)
 
     def predict(self, x):
-        mean, variance = self._gaussian_process.predict_var(x)
+        if self._use_dense_matrix:
+            mean, variance = self._predict(x)
+        else:
+            mean, variance = self._gaussian_process.predict_var(x)
         return mean, variance
 
     def n_parameters(self):

@@ -81,19 +81,19 @@ class TestGaussianProcess(unittest.TestCase):
             p3_likelihood[i] = gp.likelihood()
             p3_grad_likelihood[i] = gp.grad_likelihood()[2]
 
-        plt.figure()
-        plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
-        plt.plot(p1_values, p1_grad_likelihood, label='likS1')
-        plt.legend()
-        plt.figure()
-        plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
-        plt.plot(p2_values, p2_grad_likelihood, label='likS1')
-        plt.legend()
-        plt.figure()
-        plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
-        plt.plot(p3_values, p3_grad_likelihood, label='likS1')
-        plt.legend()
-        plt.show()
+        #plt.figure()
+        #plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
+        #plt.plot(p1_values, p1_grad_likelihood, label='likS1')
+        #plt.legend()
+        #plt.figure()
+        #plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
+        #plt.plot(p2_values, p2_grad_likelihood, label='likS1')
+        #plt.legend()
+        #plt.figure()
+        #plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
+        #plt.plot(p3_values, p3_grad_likelihood, label='likS1')
+        #plt.legend()
+        #plt.show()
 
         np.testing.assert_almost_equal(p1_grad_likelihood[1:-1], np.gradient(
             p1_likelihood, p1_values)[1:-1], decimal=1)
@@ -115,16 +115,13 @@ class TestGaussianProcess(unittest.TestCase):
             gp.set_hyper_parameters([12.0, 1.6, 12.1])
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
-        print('exact grad lik = ',grad_likelihood_exact)
         for gp in [gp_free, gp_dense]:
             gp._gaussian_process.set_stochastic_samples(300)
             grad_likelihood_approx = gp.grad_likelihood()
-            print('approx grad lik = ',grad_likelihood_approx)
 
             np.testing.assert_almost_equal(
                 grad_likelihood_exact, grad_likelihood_approx, decimal=2)
 
-    @unittest.skip('reason')
     def test_fitting(self):
         """ fits the gp to the problem. """
         log_pdf = self.problem1D()
