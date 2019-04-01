@@ -28,21 +28,21 @@ class matern_kernel:
         self._sigma2 = sigma**2
 
     def set_lengthscales(self, lengthscales):
-        self._inv_lengthscales = 1.0/np.array(lengthscales)
+        self._inv_lengthscales = (1.0/np.array(lengthscales)).reshape(1,1,-1)
 
-    def __call__(self, a, b):
-        r = np.linalg.norm((b - a) * self._inv_lengthscales)
+    def __call__(self, dx):
+        r = np.sqrt(np.sum((dx*self._inv_lengthscales)**2,axis=2))
         return self._sigma2 * (1.0 + np.sqrt(3.0) * r) * np.exp(-np.sqrt(3.0) * r)
 
-    def gradient_by(self, a, b, i):
-        dx2 = ((b - a) * self._inv_lengthscales)**2
-        r = np.sqrt(np.sum(dx2))
+    def gradient_by(self, dx, i):
+        dx2 = (dx*self._inv_lengthscales)**2
+        r = np.sqrt(np.sum(dx2,axis=2))
         exp_term = np.exp(-np.sqrt(3.0) * r)
         if i == self._dim:
             return 2 * self._sigma * (1.0 + np.sqrt(3.0) * r) * exp_term
         else:
             factor = 3 * self._sigma2 * exp_term
-            return self._inv_lengthscales[i] * dx2[i] * factor
+            return self._inv_lengthscales[i] * dx2[:,:,i] * factor
 
 
 class grad_kernel:
@@ -50,8 +50,8 @@ class grad_kernel:
         self._kernel = kernel
         self._dim = dim
 
-    def __call__(self, a, b):
-        return self._kernel.gradient_by(a, b, self._dim)
+    def __call__(self, dx):
+        return self._kernel.gradient_by(dx, self._dim)
 
 
 class GaussianProcessLogLikelihood(pints.LogPDF):
@@ -136,18 +136,25 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._kernel = matern_kernel(self._n_parameters)
         self._uninitialised = True
         self._lambda = 1e-5
+        self._dx = self._create_dx()
+
 
     def _create_matrix(self, kernel, diagonal):
-        n = self._values.size
-        matrix = np.empty((n, n))
-        for i in range(n):
-            for j in range(n):
-                matrix[i, j] = kernel(self._samples[i, :], self._samples[j, :])
-
-        diag = np.diag_indices(n)
+        matrix = kernel(self._dx)
+        diag = np.diag_indices(self._values.size)
         matrix[diag] += diagonal
 
         return matrix
+
+    def _create_dx(self):
+
+        n = self._values.size
+        matrix = np.empty((n,n,self._samples.shape[1]))
+        for i in range(n):
+            for j in range(n):
+                matrix[i,j,:] = self._samples[i,:] - self._samples[j,:]
+        return matrix
+
 
     def initialise(self):
         self._K = self._create_matrix(self._kernel, self._lambda**2)

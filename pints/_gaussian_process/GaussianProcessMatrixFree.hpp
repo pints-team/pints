@@ -56,7 +56,7 @@ public:
 
   void set_chebyshev_n(const int n) {
     m_chebyshev_n = n;
-    initialise_chebyshev(n);
+    initialise_chebyshev(n, m_chebyshev_points, m_chebyshev_polynomials);
   }
 
   double predict(const_vector_D_t x);
@@ -67,8 +67,6 @@ private:
   void initialise();
 
   double calculate_max_eigenvalue();
-
-  void initialise_chebyshev(const int n);
 
   int m_mult_buffer;
   Operator_t m_K;
