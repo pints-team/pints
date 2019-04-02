@@ -148,7 +148,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
     def _create_dx(self):
 
         n = self._values.size
-        matrix = np.empty((n, n, self._samples.shape[1]))
+        matrix = np.empty((n, n, self.n_parameters()))
         for i in range(n):
             for j in range(n):
                 matrix[i, j, :] = self._samples[i, :] - self._samples[j, :]
@@ -250,7 +250,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         sample_range = np.ptp(self._samples, axis=0)
         value_range = np.ptp(self._values)
         hyper_min = np.zeros(self.n_hyper_parameters())
-        hyper_max = 5*np.concatenate((sample_range, [value_range], [value_range]))
+        hyper_max = 20*np.concatenate((sample_range, [value_range], [value_range]))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
         x0 = 0.5*(hyper_min + hyper_max)
@@ -274,32 +274,28 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         print(hyper_min)
         self.set_hyper_parameters(found_parameters)
 
-    def _predict_mean(self, x):
+    def _init_and_calculate_kstar(self, x):
         n = self._values.size
+        d = self.n_parameters()
         if n == 0:
             return 0
 
         if self._uninitialised:
             self.initialise()
 
-        dx = x - self._samples
-        return self._kernel(dx).dot(self._invKy)
+        dx = x.reshape(1, 1, d) - self._samples.reshape(n, 1, d)
+        return self._kernel(dx).reshape(-1)
+
+    def _predict_mean(self, x):
+        kstar = self._init_and_calculate_kstar(x)
+        return kstar.dot(self._invKy)
 
     def _predict(self, x):
-        n = self._values.size
-        if n == 0:
-            return 0
-
-        if self._uninitialised:
-            self.initialise()
-
-        dx = x - self._samples
-        kstar = self._kernel(dx)
+        kstar = self._init_and_calculate_kstar(x)
         mean = kstar.dot(self._invKy)
-
         invKstar = scipy.linalg.cho_solve(self._cholesky_L, kstar)
-        var = self._kernel([0, 0]) + self._lambda**2 - kstar.dot(invKstar)
-
+        dx0 = np.zeros((1, 1, self.n_parameters()))
+        var=self._kernel(dx0) + self._lambda**2 - kstar.dot(invKstar)
         return mean, var
 
     def __call__(self, x):
@@ -310,9 +306,9 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
     def predict(self, x):
         if self._use_dense_matrix:
-            mean, variance = self._predict(x)
+            mean, variance=self._predict(x)
         else:
-            mean, variance = self._gaussian_process.predict_var(x)
+            mean, variance=self._gaussian_process.predict_var(x)
         return mean, variance
 
     def n_parameters(self):

@@ -81,19 +81,19 @@ class TestGaussianProcess(unittest.TestCase):
             p3_likelihood[i] = gp.likelihood()
             p3_grad_likelihood[i] = gp.grad_likelihood()[2]
 
-        #plt.figure()
+        # plt.figure()
         #plt.plot(p1_values, np.gradient(p1_likelihood, p1_values), label='lik')
         #plt.plot(p1_values, p1_grad_likelihood, label='likS1')
-        #plt.legend()
-        #plt.figure()
+        # plt.legend()
+        # plt.figure()
         #plt.plot(p2_values, np.gradient(p2_likelihood, p2_values), label='lik')
         #plt.plot(p2_values, p2_grad_likelihood, label='likS1')
-        #plt.legend()
-        #plt.figure()
+        # plt.legend()
+        # plt.figure()
         #plt.plot(p3_values, np.gradient(p3_likelihood, p3_values), label='lik')
         #plt.plot(p3_values, p3_grad_likelihood, label='likS1')
-        #plt.legend()
-        #plt.show()
+        # plt.legend()
+        # plt.show()
 
         np.testing.assert_almost_equal(p1_grad_likelihood[1:-1], np.gradient(
             p1_likelihood, p1_values)[1:-1], decimal=1)
@@ -122,21 +122,43 @@ class TestGaussianProcess(unittest.TestCase):
             np.testing.assert_almost_equal(
                 grad_likelihood_exact, grad_likelihood_approx, decimal=2)
 
+    def test_predict(self):
+        log_pdf = self.problem1D()
+        n = 100
+        samples = log_pdf.sample(n)
+        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
+        gp_standard = pints.GaussianProcess(samples, values)
+        gp_free = pints.GaussianProcess(samples, values, matrix_free=True)
+        gp_dense = pints.GaussianProcess(samples, values, dense_matrix=True)
+
+        for gp in [gp_standard, gp_free, gp_dense]:
+            gp.set_hyper_parameters([12.0, 1.6, 12.1])
+
+        x = np.array([0.5*(samples[0] + samples[1])])
+        mean_exact, var_exact = gp_standard.predict(x)
+        self.assertEqual(mean_exact, gp_standard(x))
+        for gp in [gp_free, gp_dense]:
+            mean_approx, var_approx = gp.predict(x)
+            self.assertAlmostEqual(mean_approx, gp(x))
+            self.assertAlmostEqual(mean_approx, mean_exact)
+            self.assertAlmostEqual(var_approx, var_exact)
+
     def test_fitting(self):
         """ fits the gp to the problem. """
         log_pdf = self.problem1D()
 
-        n = 100
+        n = 20
         samples = log_pdf.sample(n)
         values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
         gp = pints.GaussianProcess(samples, values)
-        gp.optimise_hyper_parameters(use_approximate_likelihood=False)
+        gp.optimise_hyper_parameters()
 
         test_samples = np.sort(log_pdf.sample(n).reshape(-1, 1), axis=0)
-        test_values = [gp.predict(test_samples[i, :])
-                       for i in range(test_samples.shape[0])]
-        test_means = [mv[0] for mv in test_values]
-        test_stddev = np.sqrt([mv[1] for mv in test_values])
+        test_values = np.empty((test_samples.shape[0],2))
+        for i in range(test_samples.shape[0]):
+            test_values[i,:] = gp.predict(test_samples[i,:])
+        test_means = test_values[:,0]
+        test_stddev = np.sqrt(test_values[:,1])
 
         plt.figure()
         plt.scatter(samples, values, label='original')
@@ -144,18 +166,6 @@ class TestGaussianProcess(unittest.TestCase):
         plt.fill_between(test_samples.reshape(-1), test_means -
                          test_stddev, test_means+test_stddev, alpha=0.3)
 
-        gp.optimise_hyper_parameters(use_approximate_likelihood=True)
-        test_samples = np.sort(log_pdf.sample(n).reshape(-1, 1), axis=0)
-        test_values = [gp.predict(test_samples[i, :])
-                       for i in range(test_samples.shape[0])]
-        test_means = [mv[0] for mv in test_values]
-        test_stddev = np.sqrt([mv[1] for mv in test_values])
-
-        plt.figure()
-        plt.scatter(samples, values, label='original')
-        plt.plot(test_samples, test_means, label='gp')
-        plt.fill_between(test_samples.reshape(-1), test_means -
-                         test_stddev, test_means+test_stddev, alpha=0.3)
         plt.show()
 
 
