@@ -244,24 +244,25 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         """
         return self._n_parameters
 
-    def optimise_hyper_parameters(self, use_approximate_likelihood=False):
+    def optimise_hyper_parameters(self, x0=None, sigma=None):
         score = GaussianProcessLogLikelihood(self)
 
         sample_range = np.ptp(self._samples, axis=0)
         value_range = np.ptp(self._values)
         hyper_min = np.zeros(self.n_hyper_parameters())
-        hyper_max = 20*np.concatenate((sample_range, [value_range], [value_range]))
+        hyper_max = np.concatenate((sample_range, [value_range], [value_range]))
         boundaries = pints.RectangularBoundaries(hyper_min, hyper_max)
 
-        x0 = 0.5*(hyper_min + hyper_max)
-        print(x0)
-        sigma0 = 0.9*(hyper_max - hyper_min)
+        if x0 is None:
+            x0 = 0.5*(hyper_min + hyper_max)
+
+        if sigma is None:
+            sigma = 0.9*(hyper_max - hyper_min)
 
         opt = pints.OptimisationController(
             score,
             x0,
-            sigma0,
-            boundaries,
+            sigma,
             method=pints.AdaptiveMomentEstimation
         )
         opt.set_threshold(1e-3)
@@ -269,9 +270,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         opt.optimiser().set_ignore_fbest()
 
         found_parameters, found_value = opt.run()
-        print('found parameters ', found_parameters)
-        print(hyper_max)
-        print(hyper_min)
+        print('Found optimal hyper parameters',found_parameters)
         self.set_hyper_parameters(found_parameters)
 
     def _init_and_calculate_kstar(self, x):
