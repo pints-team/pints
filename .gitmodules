@@ -7,3 +7,6 @@
 [submodule "third-party/eigen-git-mirror"]
 	path = third-party/eigen-git-mirror
 	url = https://github.com/eigenteam/eigen-git-mirror.git
+[submodule "third-party/boost"]
+	path = third-party/boost
+	url = https://github.com/pints-team/boost-redist.git
