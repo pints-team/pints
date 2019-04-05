@@ -146,15 +146,11 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         return matrix
 
     def _create_dx(self):
-
-        print('create_dx')
         n = self._values.size
-        matrix = np.empty((n, n, self.n_parameters()))
-        for i in range(n):
-            for j in range(n):
-                matrix[i, j, :] = self._samples[i, :] - self._samples[j, :]
-        print('finished create_dx')
-        return matrix
+        d = self._samples.shape[1]
+        x = np.repeat(self._samples.reshape(n,1,d),n,axis=1)
+        dx = x - np.transpose(x,axes=(1, 0, 2))
+        return dx
 
     def initialise(self):
         self._K = self._create_matrix(self._kernel, self._lambda**2)
