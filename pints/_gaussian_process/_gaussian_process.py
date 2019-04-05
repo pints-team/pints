@@ -42,7 +42,7 @@ class matern_kernel:
             return 2 * self._sigma * (1.0 + np.sqrt(3.0) * r) * exp_term
         else:
             factor = 3 * self._sigma2 * exp_term
-            return self._inv_lengthscales[i] * dx2[:, :, i] * factor
+            return self._inv_lengthscales[0,0,i] * dx2[:, :, i] * factor
 
 
 class grad_kernel:
@@ -147,11 +147,13 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
     def _create_dx(self):
 
+        print('create_dx')
         n = self._values.size
         matrix = np.empty((n, n, self.n_parameters()))
         for i in range(n):
             for j in range(n):
                 matrix[i, j, :] = self._samples[i, :] - self._samples[j, :]
+        print('finished create_dx')
         return matrix
 
     def initialise(self):

@@ -82,23 +82,23 @@ class TestGaussianProcess(unittest.TestCase):
             p3_grad_likelihood[i] = gp.grad_likelihood()[2]
 
         self.assertLess(
-            np.linalg.norm((p1_grad_likelihood[1:-1]- \
-                            np.gradient(p1_likelihood,p1_values)[1:-1])) / \
+            np.linalg.norm((p1_grad_likelihood[1:-1] -
+                            np.gradient(p1_likelihood, p1_values)[1:-1])) /
             np.linalg.norm(p1_grad_likelihood[1:-1]),
-                5e-3
-                )
+            5e-3
+        )
         self.assertLess(
-            np.linalg.norm((p2_grad_likelihood[1:-1]- \
-                            np.gradient(p2_likelihood,p2_values)[1:-1])) / \
+            np.linalg.norm((p2_grad_likelihood[1:-1] -
+                            np.gradient(p2_likelihood, p2_values)[1:-1])) /
             np.linalg.norm(p2_grad_likelihood[1:-1]),
-                5e-3
-                )
+            5e-3
+        )
         self.assertLess(
-            np.linalg.norm((p3_grad_likelihood[1:-1]- \
-                            np.gradient(p3_likelihood,p3_values)[1:-1])) / \
+            np.linalg.norm((p3_grad_likelihood[1:-1] -
+                            np.gradient(p3_likelihood, p3_values)[1:-1])) /
             np.linalg.norm(p3_grad_likelihood[1:-1]),
-                5e-3
-                )
+            5e-3
+        )
 
     def test_approximate_likelihood(self):
         log_pdf = self.problem1D()
@@ -143,38 +143,38 @@ class TestGaussianProcess(unittest.TestCase):
 
     def test_fitting(self):
         """ fits the gp to the problem. """
-        log_pdf = self.problem1D()
+        for log_pdf in [self.problem1D(), self.problem2D()]:
+            n = 20
+            sigma = 0.1
+            samples = log_pdf.sample(n)
+            values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
+            gp = pints.GaussianProcess(samples, values)
+            gp.optimise_hyper_parameters()
 
-        n = 20
-        sigma = 0.1
-        samples = log_pdf.sample(n)
-        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
-        gp = pints.GaussianProcess(samples, values)
-        gp.optimise_hyper_parameters()
+            test_samples = samples
+            if len(test_samples.shape)==1:
+                test_samples = test_samples.reshape(-1,1)
 
-        # sort samples for plotting
-        sorted_indices = np.argsort(samples)
-        samples = samples[sorted_indices]
-        values = values[sorted_indices]
+            test_values = np.empty((test_samples.shape[0], 2))
+            for i in range(test_samples.shape[0]):
+                test_values[i, :] = gp.predict(test_samples[i, :])
+            test_means = test_values[:, 0]
+            test_stddev = np.sqrt(test_values[:, 1])
+            plt.scatter(test_samples[:,0], test_means)
+            plt.scatter(test_samples[:,0], test_means)
+            plt.show()
 
-        test_samples = np.sort(samples.reshape(-1, 1), axis=0)
-        test_values = np.empty((test_samples.shape[0], 2))
-        for i in range(test_samples.shape[0]):
-            test_values[i, :] = gp.predict(test_samples[i, :])
-        test_means = test_values[:, 0]
-        test_stddev = np.sqrt(test_values[:, 1])
+            # check 95% confidence intervals
+            failure = np.logical_or(
+                values > (test_means + 1.96 * test_stddev),
+                values < (test_means - 1.96 * test_stddev)
+            )
+            self.assertLess(np.sum(failure), 0.05*n)
 
-        # check 95% confidence intervals
-        failure = np.logical_or(
-            values > (test_means + 1.96 * test_stddev),
-            values < (test_means - 1.96 * test_stddev)
-        )
-        self.assertLess(np.sum(failure), 0.05*n)
-
-        # check mean against log_pdf
-        true_means = log_pdf(samples)
-        self.assertLess(np.linalg.norm(test_means-true_means) /
-                        np.linalg.norm(true_means), 5e-2)
+            # check mean against log_pdf
+            true_means = log_pdf(samples)
+            self.assertLess(np.linalg.norm(test_means-true_means) /
+                            np.linalg.norm(true_means), 5e-2)
 
 
 if __name__ == '__main__':
