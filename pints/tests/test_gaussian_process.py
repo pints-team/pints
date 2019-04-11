@@ -50,6 +50,7 @@ class TestGaussianProcess(unittest.TestCase):
 
         return log_pdf
 
+    @unittest.skip('')
     def test_likelihood_gradient(self):
         log_pdf = self.problem1D()
         n = 100
@@ -113,13 +114,20 @@ class TestGaussianProcess(unittest.TestCase):
             gp.set_hyper_parameters([12.0, 1.6, 12.1])
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
-        for gp in [gp_free, gp_dense]:
+        likelihood_exact = gp_standard.likelihood()
+        for gp in [gp_dense, gp_free]:
             gp._gaussian_process.set_stochastic_samples(300)
+            likelihood_approx = gp.likelihood()
             grad_likelihood_approx = gp.grad_likelihood()
+            print('likelihood approx = ',likelihood_approx)
+
+            np.testing.assert_almost_equal(
+                likelihood_exact, likelihood_approx, decimal=1)
 
             np.testing.assert_almost_equal(
                 grad_likelihood_exact, grad_likelihood_approx, decimal=2)
 
+    @unittest.skip('')
     def test_predict(self):
         log_pdf = self.problem1D()
         n = 100
@@ -141,6 +149,7 @@ class TestGaussianProcess(unittest.TestCase):
             self.assertAlmostEqual(mean_approx, mean_exact)
             self.assertAlmostEqual(var_approx, var_exact)
 
+    @unittest.skip('')
     def test_fitting(self):
         """ fits the gp to the problem. """
         for log_pdf in [self.problem1D(), self.problem2D()]:
@@ -160,9 +169,6 @@ class TestGaussianProcess(unittest.TestCase):
                 test_values[i, :] = gp.predict(test_samples[i, :])
             test_means = test_values[:, 0]
             test_stddev = np.sqrt(test_values[:, 1])
-            plt.scatter(test_samples[:,0], test_means)
-            plt.scatter(test_samples[:,0], test_means)
-            plt.show()
 
             # check 95% confidence intervals
             failure = np.logical_or(

@@ -12,8 +12,12 @@ import scipy
 from gaussian_process import (
     GaussianProcessMatrixFree1,
     GaussianProcessMatrixFree2,
+    GaussianProcessMatrixFree4,
+    GaussianProcessMatrixFree9,
     GaussianProcessDenseMatrix1,
     GaussianProcessDenseMatrix2,
+    GaussianProcessDenseMatrix4,
+    GaussianProcessDenseMatrix9,
 )
 
 
@@ -41,8 +45,7 @@ class matern_kernel:
         if i == self._dim:
             return 2 * self._sigma * (1.0 + np.sqrt(3.0) * r) * exp_term
         else:
-            factor = 3 * self._sigma2 * exp_term
-            return self._inv_lengthscales[0,0,i] * dx2[:, :, i] * factor
+            return 3 * self._inv_lengthscales[0, 0, i] * self._sigma2 * dx2[:, :, i] * exp_term
 
 
 class grad_kernel:
@@ -75,6 +78,7 @@ class GaussianProcessLogLikelihood(pints.LogPDF):
         self._gaussian_process.set_hyper_parameters(x)
         # result is [gradient, likelihood]
         result = self._gaussian_process.grad_likelihood()
+        print('log likelihood is ',self._gaussian_process.likelihood())
         return float('nan'), result
 
     def n_parameters(self):
@@ -113,7 +117,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                                       dense_matrix)
 
         if not self._use_dense_matrix:
-            if self._n_parameters > 2:
+            if not (self._n_parameters <= 2 or self._n_parameters == 4 or
+                    self._n_parameters == 9):
                 raise NotImplementedError(
                     'GaussianProcess with matrix_free or hierarchical_matrix '
                     'currently only supports d <= 2'
@@ -123,11 +128,19 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessDenseMatrix1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessDenseMatrix2()
+                elif self._n_parameters == 4:
+                    self._gaussian_process = GaussianProcessDenseMatrix4()
+                elif self._n_parameters == 9:
+                    self._gaussian_process = GaussianProcessDenseMatrix9()
             elif matrix_free:
                 if self._n_parameters == 1:
                     self._gaussian_process = GaussianProcessMatrixFree1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessMatrixFree2()
+                elif self._n_parameters == 4:
+                    self._gaussian_process = GaussianProcessMatrixFree4()
+                elif self._n_parameters == 9:
+                    self._gaussian_process = GaussianProcessMatrixFree9()
 
             self._gaussian_process.set_data(samples, pdf_values)
 
@@ -137,6 +150,17 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._uninitialised = True
         self._lambda = 1e-5
         self._dx = self._create_dx()
+
+        print('Constructing Gaussian Process:')
+        print('\tdim =',self.n_parameters())
+        print('\tn =',len(self._values))
+        if self._use_dense_matrix:
+            print('\tpure python')
+        else:
+            if dense_matrix:
+                print('\tC++ with dense matrix')
+            else:
+                print('\tC++ with matrix free')
 
     def _create_matrix(self, kernel, diagonal):
         matrix = kernel(self._dx)
@@ -148,8 +172,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
     def _create_dx(self):
         n = self._values.size
         d = self._samples.shape[1]
-        x = np.repeat(self._samples.reshape(n,1,d),n,axis=1)
-        dx = x - np.transpose(x,axes=(1, 0, 2))
+        x = np.repeat(self._samples.reshape(n, 1, d), n, axis=1)
+        dx = x - np.transpose(x, axes=(1, 0, 2))
         return dx
 
     def initialise(self):
@@ -243,6 +267,12 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         return self._n_parameters
 
     def optimise_hyper_parameters(self, x0=None, sigma=None):
+        print('Optimising Hyper-parameters')
+        print('\thyper dim =',self.n_hyper_parameters())
+
+        if not self._use_dense_matrix:
+            self._gaussian_process.set_stochastic_samples(4)
+
         score = GaussianProcessLogLikelihood(self)
 
         sample_range = np.ptp(self._samples, axis=0)
@@ -268,7 +298,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         opt.optimiser().set_ignore_fbest()
 
         found_parameters, found_value = opt.run()
-        print('Found optimal hyper parameters',found_parameters)
+        print('Found optimal hyper parameters', found_parameters)
         self.set_hyper_parameters(found_parameters)
 
     def _init_and_calculate_kstar(self, x):
@@ -292,7 +322,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         mean = kstar.dot(self._invKy)
         invKstar = scipy.linalg.cho_solve(self._cholesky_L, kstar)
         dx0 = np.zeros((1, 1, self.n_parameters()))
-        var=self._kernel(dx0) + self._lambda**2 - kstar.dot(invKstar)
+        var = self._kernel(dx0) + self._lambda**2 - kstar.dot(invKstar)
         return mean, var
 
     def __call__(self, x):
@@ -303,9 +333,9 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
     def predict(self, x):
         if self._use_dense_matrix:
-            mean, variance=self._predict(x)
+            mean, variance = self._predict(x)
         else:
-            mean, variance=self._gaussian_process.predict_var(x)
+            mean, variance = self._gaussian_process.predict_var(x)
         return mean, variance
 
     def n_parameters(self):

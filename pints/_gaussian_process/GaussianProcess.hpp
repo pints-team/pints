@@ -97,10 +97,12 @@ template <typename Op> std::array<double, 2> eigenvalue_range(const Op &B) {
   return minmax;
 }
 
-void initialise_chebyshev(const int n, std::vector<double> m_chebyshev_points,
+void initialise_chebyshev(const int n, std::vector<double> &m_chebyshev_points,
                           Eigen::MatrixXd &m_chebyshev_polynomials) {
 
   const double pi = 3.14159265358979323846;
+
+  std::cout << "initialising chebyshev with n = " << n << std::endl;
 
   // generate chebyshev nodes
   m_chebyshev_points.resize(n + 1);
@@ -235,15 +237,22 @@ calculate_gp_grad_likelihood(const Eigen::VectorXd &m_invKy, Solver &m_solver,
 
   // trace term
   for (int i = 0; i < m_stochastic_samples_m; ++i) {
+    std::cout << "calculate_gp_grad_likelihood: iteration " << i << std::endl;
     // generate Rademacher random vector
     Eigen::VectorXd v = Eigen::VectorXd::Random(m_invKy.size());
     std::transform(v.data(), v.data() + v.size(), v.data(),
                    [](const double i) { return i > 0 ? 1.0 : -1.0; });
     for (int j = 0; j < m_gradKs.size(); ++j) {
       gradient[j] += v.dot(m_solver.solve(m_gradKs[j] * v));
+      std::cout << "finished solving with " << m_solver.iterations()
+                << " iterations" << std::endl;
     }
     gradient[D] += v.dot(m_solver.solve(m_gradSigmaK * v));
+    std::cout << "finished solving with " << m_solver.iterations()
+              << " iterations" << std::endl;
     gradient[D + 1] += v.dot(m_solver.solve((2 * m_lambda) * v));
+    std::cout << "finished solving with " << m_solver.iterations()
+              << " iterations" << std::endl;
   }
 
   for (int i = 0; i < gradient.size(); ++i) {
@@ -257,6 +266,119 @@ calculate_gp_grad_likelihood(const Eigen::VectorXd &m_invKy, Solver &m_solver,
   gradient[D] += 0.5 * m_invKy.dot(m_gradSigmaK * m_invKy);
   gradient[D + 1] += m_lambda * m_invKy.dot(m_invKy);
 
+  return gradient;
+}
+
+template <unsigned int D, typename Derived, typename Solver, typename Op,
+          typename GradKOps, typename GradSigmaOp>
+Eigen::Matrix<double, D + 2, 1> calculate_gp_grad_likelihood_chebyshev(
+    const Eigen::VectorXd &m_invKy, const Eigen::MatrixBase<Derived> &y,
+    Solver &m_solver, Op &m_K, std::vector<GradKOps> &m_gradKs,
+    GradSigmaOp &m_gradSigmaK, const double m_lambda,
+    const std::vector<double> m_chebyshev_points,
+    const Eigen::MatrixXd &m_chebyshev_polynomials,
+    const int m_stochastic_samples_m) {
+
+  using grad_likelihood_return_t = Eigen::Matrix<double, D + 2, 1>;
+  grad_likelihood_return_t gradient = grad_likelihood_return_t::Zero();
+  double likelihood = 0;
+
+  auto minmax = eigenvalue_range(m_K);
+  minmax[0] = 0;
+
+  const double scale = 1.0 / (minmax[1] + minmax[0]);
+  const double delta = minmax[0] * scale;
+
+  // specify function to interpolate
+  auto f = [&](const double x) {
+    // return std::log(1 - ((1 - 2 * delta) * x + 1) / 2);
+    return std::log(1 - x);
+  };
+
+  auto chebyshev_coefficients = calculate_chebyshev_coefficients(
+      m_chebyshev_points, m_chebyshev_polynomials, f);
+
+  const int n = chebyshev_coefficients.size() - 1;
+  for (int i = 0; i < m_stochastic_samples_m; ++i) {
+    // generate Rademacher random vector
+    Eigen::VectorXd v = Eigen::VectorXd::Random(m_invKy.size());
+    std::transform(v.data(), v.data() + v.size(), v.data(),
+                   [](const double i) { return i > 0 ? 1.0 : -1.0; });
+    Eigen::VectorXd u = chebyshev_coefficients[0] * v;
+
+    std::vector<Eigen::VectorXd> gradu(D + 2);
+    for (int i = 0; i < D + 2; ++i) {
+      gradu[i] = u;
+    }
+    if (n > 1) {
+      Eigen::VectorXd w0 = v;
+      Eigen::VectorXd w1 = v - scale * (m_K * v);
+      u += chebyshev_coefficients[1] * w1;
+      Eigen::VectorXd w2(v.size());
+
+      std::vector<Eigen::VectorXd> gradw0(D + 2);
+      std::vector<Eigen::VectorXd> gradw1(D + 2);
+      std::vector<Eigen::VectorXd> gradw2(D + 2);
+      for (int i = 0; i < D + 2; ++i) {
+        gradw0[i].setZero(v.size());
+        if (i == D + 1) {
+          // final gradB is 2 * m_lambda * I
+          gradw1[i] = -2 * scale * m_lambda * v;
+        } else if (i == D) {
+          gradw1[i] = -scale * (m_gradSigmaK * v);
+        } else {
+          gradw1[i] = -scale * (m_gradKs[i] * v);
+        }
+        gradw2[i].resize(v.size());
+        gradu[i] += chebyshev_coefficients[1] * gradw1[i];
+      }
+      for (int j = 2; j < n; ++j) {
+        w2 = 2 * (w1 - scale * (m_K * w1)) - w0;
+        u += chebyshev_coefficients[j] * w2;
+        w0 = w1;
+        w1 = w2;
+
+        for (int i = 0; i < D + 2; ++i) {
+          if (i == D + 1) {
+            // final gradB is 2 * m_lambda * I
+            gradw2[i] = 2 * (-2 * scale * m_lambda * w1 + w1 -
+                             2 * scale * m_lambda * w1) -
+                        w0;
+          } else if (i == D) {
+
+            gradw2[i] =
+                2 * (-scale * (m_gradSigmaK * w1) + w1 - scale * (m_K * w1)) -
+                w0;
+          } else {
+            gradw2[i] =
+                2 * (-scale * (m_gradKs[i] * w1) + w1 - scale * (m_K * w1)) -
+                w0;
+          }
+          gradu[i] += chebyshev_coefficients[j] * gradw2[i];
+          gradw0[i] = gradw1[i];
+          gradw1[i] = gradw2[i];
+        }
+      }
+    }
+    for (int i = 0; i < D + 2; ++i) {
+      gradient[i] += v.dot(gradu[i]) / m_stochastic_samples_m;
+    }
+    likelihood += v.dot(u) / m_stochastic_samples_m;
+  }
+  for (int i = 0; i < D + 2; ++i) {
+    gradient[i] -= m_invKy.size() * std::log(scale);
+  }
+
+  likelihood -= m_invKy.size() * std::log(scale);
+  likelihood = -0.5 * likelihood - 0.5 * y.dot(m_invKy);
+  std::cout << "likelihood = " << likelihood << std::endl;
+
+  // second term
+  for (int i = 0; i < D; ++i) {
+    gradient[i] = -0.5 * gradient[i] + 0.5 * m_invKy.dot(m_gradKs[i] * m_invKy);
+  }
+  gradient[D] = -0.5 * gradient[D] + 0.5 * m_invKy.dot(m_gradSigmaK * m_invKy);
+  gradient[D + 1] = -0.5 * gradient[D + 1] + m_lambda * m_invKy.dot(m_invKy);
   return gradient;
 }
 

@@ -9,6 +9,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1 )
 set(include_dirs "")
 set(lib_dir "${CMAKE_SOURCE_DIR}/../../third-party")
 
+# OpenMP
+find_package(OpenMP REQUIRED)
+add_definitions(-DHAVE_OPENMP)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+
+
 # Aboria 
 list(APPEND include_dirs ${lib_dir}/Aboria/src)
 list(APPEND include_dirs ${lib_dir}/Aboria/third-party)
