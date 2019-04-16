@@ -10,9 +10,9 @@
 
 Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and bayesian inference problems with ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
-
 ## Using Pints
-To use a model with Pints, you need to make sure it extends the [ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface, which has just two methods:
+
+Pints can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface. This has just two methods:
 
 ```
 n_parameters() --> Returns the dimension of the parameter space.
@@ -23,13 +23,48 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 
 If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
-### Citing Pints
+A simple example could look like this:
 
-If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
+```
+# Create a model
+class MyModel(pints.ForwardModel):
+    def n_parameters():
+        return 2
+    def simulate(parameters, times):
+        ... Run a simulation implemented in Python
+        ... or in a Python C/C++ extension
+        ... or even call a binary in a subprocess
+        return simulated_data
+
+# Load your experimental data
+times, values = ... Load your data as lists or numpy arrays
+
+# Combine model and data into a Problem
+problem = pints.SingleOutputProblem(model, times, values)
+
+# Select an ErrorMeasure, or a LogLikelihood
+# Here we'll use a log likelihood that assumes Gaussian noise with sigma=3
+log_likelihood = pints.GaussianKnownNoiseLogLikelihood(problem, 3)
+
+# Run an optimisation to find parameters that give a good fit
+guess = [10, 2]
+obtained_parameters, obtained_log_likelihood = pints.optimise(log_likelihood, guess)
+
+# Use MCMC to sample the log_likelihood near the found solutions
+initial_points = [obtained_parameters, obtained_parameters]
+samples = pints.mcmc_sample(log_likelihood, 2, initial_points)
+```
+
+For details, please see [our long list of detailed examples](examples/README.md)
 
 ### Examples and documentation
 
 Pints comes with a number of [detailed examples](examples/README.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
+
+### Citing Pints
+
+If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
+
 
 ## Installing Pints
 
