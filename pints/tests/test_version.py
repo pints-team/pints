@@ -25,7 +25,7 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(type(pints.__version_int__[2]), int)
 
         self.assertEqual(
-            type(pints.__version__),
+            pints.__version__,
             '.'.join([str(x) for x in pints.__version_int__])
         )
 
