@@ -72,5 +72,10 @@ If you'd like to help us develop Pints by adding new methods, writing documentat
 
 ## License
 
-Pints is fully open source. For more information about its license, see [LICENSE](./LICENSE.txt).
+Pints is fully open source. For more information about its license, see [LICENSE](LICENSE.txt).
 
+## Get in touch
+
+Questions, suggestions, or bug reports? [Open an issue](issues) and let us know.
+
+Alternatively, feel free to email us at [michael.clerx@cs.ox.ac.uk] or [martin.robinson@cs.ox.ac.uk].
