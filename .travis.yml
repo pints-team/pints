@@ -93,3 +93,5 @@ notifications:
   email:
     recipients:
     - pints-core-devs@maillist.ox.ac.uk
+    - martinjrobins@gmail.com
+    - michael.clerx@cs.ox.ac.uk
