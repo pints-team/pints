@@ -8,7 +8,7 @@
 
 # What is Pints?
 
-Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and bayesian inference problems with ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
+Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference on ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
 ## Using Pints
 
@@ -22,17 +22,19 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
                                 the given times, using the given parameters
 ```
 
-If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
+Experimental data sets in Pints are defined simply as lists (or arrays) of `times` and corresponding experimental `values`.
+If you have this kind of data, and if your model implements the two methods above - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - then you are ready to start using Pints to infer parameter values using [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
 A brief example is shown below:
 ![An example of using Pints in an optimisation](example.svg)
-_(Left)_ A user-supplied time series and a forward model.
-_(Right)_ An example optimisation run in Pints.
-The full code can be [viewed here](examples/readme-example.ipynb), but you may prefer starting with the [detailed examples](examples/README.md) instead.
+_(Left)_ A noisy experimental time series and a computational forward model.
+_(Right)_ Example code for an optimisation problem.
+The full code can be [viewed here](examples/readme-example.ipynb) but a friendlier, more elaborate, introduction can be found on the [examples page](examples/README.md).
 
 ### Examples and documentation
 
-Pints comes with a number of [detailed examples](examples/README.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
+Pints comes with a number of [detailed examples](examples/README.md), hosted here on github.
+In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
 
 ### Citing Pints
 
