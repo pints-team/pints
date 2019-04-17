@@ -6,12 +6,14 @@ Each example was created as a _Jupyter notebook_ (http://jupyter.org/).
 These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
+
 ## Getting started
 - [Optimisation: First example](./optimisation-first-example.ipynb)
 - [Sampling: First example](./sampling-first-example.ipynb)
 - [Writing a model](./writing-a-model.ipynb)
 - [Writing a custom LogPDF](./writing-a-logpdf.ipynb)
 - [Writing a custom LogPrior](./writing-a-prior.ipynb)
+
 
 ## Optimisation
 
@@ -27,6 +29,7 @@ relevant code.
 - [Multiple objectives](./optimisation-multi-objective.ipynb)
 - [Optimisation on a loglikelihood](./optimisation-on-a-loglikelihood.ipynb)
 - [Transformed parameter space](./optimisation-transformed-parameters.ipynb)
+
 
 ## Sampling
 
@@ -53,12 +56,14 @@ relevant code.
 - [Predicted time series](./plot-mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plot-mcmc-trace-plots.ipynb)
 
+
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats-autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats-cauchy-sampling-error.ipynb)
 - [Integrated noise model](./sampling-integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats-log-priors.ipynb)
 - [Student-t noise model](./stats-student-t-sampling-error.ipynb)
+
 
 ## Toy problems
 
@@ -83,6 +88,7 @@ relevant code.
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
+
 
 ## Miscellaneous
 
