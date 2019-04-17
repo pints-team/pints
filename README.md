@@ -10,9 +10,10 @@
 
 Pints (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and bayesian inference problems with ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
-
 ## Using Pints
-To use a model with Pints, you need to make sure it extends the [ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface, which has just two methods:
+
+Pints can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface. 
+This has just two methods:
 
 ```
 n_parameters() --> Returns the dimension of the parameter space.
@@ -23,13 +24,16 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 
 If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
-### Citing Pints
-
-If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
+![An example of using Pints in an optimisation](example.svg)
 
 ### Examples and documentation
 
 Pints comes with a number of [detailed examples](examples/README.md), hosted here on github. In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
+
+### Citing Pints
+
+If you use PINTS in any scientific work, please [credit our work with a citation](./CITATION).
+
 
 ## Installing Pints
 
