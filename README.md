@@ -24,7 +24,11 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 
 If your model implements these methods - [or you can write a wrapper class that does](examples/writing-a-model.ipynb) - you can start using Pints for [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
+A brief example is shown below:
 ![An example of using Pints in an optimisation](example.svg)
+_(Left)_ A user-supplied time series and a forward model that can simulate a similar series.
+_(Right)_ An example optimisation run in Pints.
+The complete code can be found [here](examples/readme-example.ipynb), but a better place to start is [here](examples/README.md).
 
 ### Examples and documentation
 
