@@ -28,7 +28,7 @@ A brief example is shown below:
 ![An example of using Pints in an optimisation](example.svg)
 _(Left)_ A user-supplied time series and a forward model that can simulate a similar series.
 _(Right)_ An example optimisation run in Pints.
-The complete code can be found [here](examples/readme-example.ipynb), but a better place to start is [here](examples/README.md).
+The full code can be [viewed here](examples/readme-example.ipynb), but you may prefer starting with the [detailed examples](examples/README.md) instead.
 
 ### Examples and documentation
 
