@@ -16,7 +16,7 @@ class TestVersion(unittest.TestCase):
     Tests the version number information.
     """
 
-    def test_version_properties():
+    def test_version_properties(self):
 
         self.assertEqual(type(pints.__version_int__), tuple)
         self.assertEqual(len(pints.__version_int__), 3)
@@ -29,7 +29,7 @@ class TestVersion(unittest.TestCase):
             '.'.join([str(x) for x in pints.__version_int__])
         )
 
-    def test_version_method():
+    def test_version_method(self):
 
         self.assertEqual(pints.version(), pints.__version_int__)
         self.assertEqual(pints.version(True), 'Pints ' + pints.__version__)
