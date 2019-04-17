@@ -21,7 +21,7 @@ from __future__ import print_function, unicode_literals
 import sys
 
 #
-# Version info: Remember to keep this in sync with setup.py!
+# Version info
 #
 def _load_version_int():
     try:
