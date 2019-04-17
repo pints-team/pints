@@ -208,6 +208,10 @@ Where possible, notebooks are tested daily. A list of slow notebooks (which time
 
 ## Infrastructure
 
+### Version number
+
+A central version number is stored in `pints/version`.
+
 ### Setuptools
 
 Installation of Pints _and dependencies_ is handled via [setuptools](http://setuptools.readthedocs.io/)
@@ -216,9 +220,10 @@ Configuration files:
 
 ```
 setup.py
+MANIFEST.in
 ```
 
-Note that this file must be kept in sync with the version number in [pints/__init__.py](pints/__init__.py).
+The `MANIFEST.in` file is used to list non-Python files to be included in the installation.
 
 ### PIP
 
