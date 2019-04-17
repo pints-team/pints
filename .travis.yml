@@ -92,5 +92,4 @@ after_success:
 notifications:
   email:
     recipients:
-    - martinjrobins@gmail.com
-    - michael.clerx@cs.ox.ac.uk
+    - pints-core-devs@maillist.ox.ac.uk
