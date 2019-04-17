@@ -786,19 +786,17 @@ class TestMCMCController(unittest.TestCase):
         self.assertIsInstance(mcmc, pints.MCMCController)
 
     def test_log_likelihood_storage(self):
-        # 2 chains
+
+        # Single-chain method
         x0 = np.array(self.real_parameters) * 1.1
         x1 = np.array(self.real_parameters) * 1.15
         xs = [x0, x1]
         nchains = len(xs)
-
-        # single chain
         mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         self.assertTrue(not mcmc.log_likelihood_storage())
         self.assertEqual(mcmc.stored_log_likelihoods(), None)
         mcmc.set_log_likelihood_storage(True)
         self.assertTrue(mcmc.log_likelihood_storage())
-        #self.assertTrue(np.array_equal(mcmc.stored_log_likelihoods(), []))
         mcmc.set_max_iterations(11)
         mcmc.set_log_to_screen(False)
         samples = mcmc.run()
@@ -806,28 +804,28 @@ class TestMCMCController(unittest.TestCase):
             [[self.log_likelihood(x) for x in chain] for chain in samples])
         self.assertTrue(np.array_equal(mcmc.stored_log_likelihoods(), evals))
 
-        # multiple chain
-        # 2 chains
+        # Multi-chains method
         x0 = np.array(self.real_parameters) * 1.1
         x1 = np.array(self.real_parameters) * 1.15
-        xs = [x0, x1, x1]
+        xs = [x0, x1, x0, x1, x0]
         nchains = len(xs)
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
             method=pints.DifferentialEvolutionMCMC)
+        mcmc.set_parallel(False)
         self.assertTrue(not mcmc.log_likelihood_storage())
         self.assertEqual(mcmc.stored_log_likelihoods(), None)
         mcmc.set_log_likelihood_storage(True)
         self.assertTrue(mcmc.log_likelihood_storage())
-        #self.assertTrue(np.array_equal(mcmc.stored_log_likelihoods(), []))
-        mcmc.set_max_iterations(11)
+        mcmc.set_max_iterations(5)
         mcmc.set_log_to_screen(False)
         samples = mcmc.run()
         evals = np.array(
             [[self.log_likelihood(x) for x in chain] for chain in samples])
         self.assertTrue(np.array_equal(mcmc.stored_log_likelihoods(), evals))
 
-        # log_pdf not log_posterior should not allow log-likelihood logging
+        # When not using a log_posterior should not allow log-likelihood
+        # logging
         log_pdf = pints.toy.RosenbrockLogPDF()
         x0 = np.random.uniform([-2, -0.5], [3, 3], size=(4, 2))
         mcmc = pints.MCMCSampling(
@@ -835,19 +833,17 @@ class TestMCMCController(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_log_likelihood_storage, True)
 
     def test_log_density_storage(self):
-        # 2 chains
+
+        # Single-chain method
         x0 = np.array(self.real_parameters) * 1.1
         x1 = np.array(self.real_parameters) * 1.15
         xs = [x0, x1]
         nchains = len(xs)
-
-        # single chain
         mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         self.assertTrue(not mcmc.log_density_storage())
         self.assertEqual(mcmc.stored_log_densities(), None)
         mcmc.set_log_density_storage(True)
         self.assertTrue(mcmc.log_density_storage())
-        #self.assertTrue(np.array_equal(mcmc.stored_log_densities(), []))
         mcmc.set_max_iterations(11)
         mcmc.set_log_to_screen(False)
         samples = mcmc.run()
@@ -855,11 +851,10 @@ class TestMCMCController(unittest.TestCase):
             [[self.log_posterior(x) for x in chain] for chain in samples])
         self.assertTrue(np.array_equal(mcmc.stored_log_densities(), evals))
 
-        # multiple chain
-        # 2 chains
+        # Multi-chains method
         x0 = np.array(self.real_parameters) * 1.1
         x1 = np.array(self.real_parameters) * 1.15
-        xs = [x0, x1, x1]
+        xs = [x0, x1, x0, x1, x0]
         nchains = len(xs)
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
@@ -868,7 +863,6 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(mcmc.stored_log_densities(), None)
         mcmc.set_log_density_storage(True)
         self.assertTrue(mcmc.log_density_storage())
-        #self.assertTrue(np.array_equal(mcmc.stored_log_densities(), []))
         mcmc.set_max_iterations(11)
         mcmc.set_log_to_screen(False)
         samples = mcmc.run()
@@ -876,7 +870,7 @@ class TestMCMCController(unittest.TestCase):
             [[self.log_posterior(x) for x in chain] for chain in samples])
         self.assertTrue(np.array_equal(mcmc.stored_log_densities(), evals))
 
-        # log_pdf should allow log-likelihood logging
+        # When using a log_pdf should allow log-likelihood logging
         log_pdf = pints.toy.RosenbrockLogPDF()
         x0 = np.random.uniform([-2, -0.5], [3, 3], size=(4, 2))
         mcmc = pints.MCMCController(
@@ -885,7 +879,6 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(mcmc.stored_log_densities(), None)
         mcmc.set_log_density_storage(True)
         self.assertTrue(mcmc.log_density_storage())
-        #self.assertTrue(np.array_equal(mcmc.stored_log_densities(), []))
         mcmc.set_max_iterations(11)
         mcmc.set_log_to_screen(False)
         samples = mcmc.run()
