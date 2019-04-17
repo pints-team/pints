@@ -26,7 +26,7 @@ If your model implements these methods - [or you can write a wrapper class that 
 
 A brief example is shown below:
 ![An example of using Pints in an optimisation](example.svg)
-_(Left)_ A user-supplied time series and a forward model that can simulate a similar series.
+_(Left)_ A user-supplied time series and a forward model.
 _(Right)_ An example optimisation run in Pints.
 The full code can be [viewed here](examples/readme-example.ipynb), but you may prefer starting with the [detailed examples](examples/README.md) instead.
 
