@@ -371,8 +371,22 @@ def run_notebook_tests(skip_slow_books=False, executable='python'):
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    # Ignore slow books?
+    # Ignore books with deliberate errors and books that are too slow for
+    # fast testing.
     ignore_list = []
+    if os.path.isfile('.error-books'):
+        with open('.error-books', 'r') as f:
+            for line in f.readlines():
+                line = line.strip()
+                if not line or line[:1] == '#':
+                    continue
+                if not line.startswith('examples/'):
+                    line = 'examples/' + line
+                if not line.endswith('.ipynb'):
+                    line = line + '.ipynb'
+                if not os.path.isfile(line):
+                    raise Exception('Error notebook not found: ' + line)
+                ignore_list.append(line)
     if skip_slow_books and os.path.isfile('.slow-books'):
         with open('.slow-books', 'r') as f:
             for line in f.readlines():
