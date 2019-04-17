@@ -78,4 +78,4 @@ Pints is fully open source. For more information about its license, see [LICENSE
 
 Questions, suggestions, or bug reports? [Open an issue](issues) and let us know.
 
-Alternatively, feel free to email us at michael.clerx [at] cs.ox.ac.uk or martin.robinson [at] cs.ox.ac.uk.
+Alternatively, feel free to email us at `pints-core-devs at maillist.ox.ac.uk`.
