@@ -82,3 +82,8 @@ relevant code.
 - [Rosenbrock function](./toy-distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy-distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy-distribution-twisted-gaussian.ipynb)
+
+## Miscellaneous
+
+- [The example shown on the landing page](./readme-example.ipynb)
+
