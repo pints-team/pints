@@ -77,9 +77,10 @@ class GaussianProcessLogLikelihood(pints.LogPDF):
         """
         self._gaussian_process.set_hyper_parameters(x)
         # result is [gradient, likelihood]
+        # likelihood = self._gaussian_process.likelihood()
+        likelihood = float('nan')
         result = self._gaussian_process.grad_likelihood()
-        print('log likelihood is ',self._gaussian_process.likelihood())
-        return float('nan'), result
+        return likelihood, result
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
@@ -148,19 +149,19 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._values = pdf_values
         self._kernel = matern_kernel(self._n_parameters)
         self._uninitialised = True
-        self._lambda = 1e-5
+        self._lambda = 1
         self._dx = self._create_dx()
 
-        print('Constructing Gaussian Process:')
-        print('\tdim =',self.n_parameters())
-        print('\tn =',len(self._values))
-        if self._use_dense_matrix:
-            print('\tpure python')
-        else:
-            if dense_matrix:
-                print('\tC++ with dense matrix')
-            else:
-                print('\tC++ with matrix free')
+        #print('Constructing Gaussian Process:')
+        #print('\tdim =',self.n_parameters())
+        #print('\tn =',len(self._values))
+        #if self._use_dense_matrix:
+        #    print('\tpure python')
+        #else:
+        #    if dense_matrix:
+        #        print('\tC++ with dense matrix')
+        #    else:
+        #        print('\tC++ with matrix free')
 
     def _create_matrix(self, kernel, diagonal):
         matrix = kernel(self._dx)
@@ -176,16 +177,24 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         dx = x - np.transpose(x, axes=(1, 0, 2))
         return dx
 
-    def initialise(self):
-        self._K = self._create_matrix(self._kernel, self._lambda**2)
-        self._gradK = [
-            self._create_matrix(grad_kernel(self._kernel, i), 1e-5)
-            for i in range(self.n_parameters()+1)
-        ]
+    def _uninitialise(self):
+        if self._use_dense_matrix:
+            self._uninitialised = True
+        else:
+            self._gaussian_process.set_uninitialised(True)
+
+    def initialise(self, just_K=False):
         n = self._values.size
-        self._gradK.append(2*self._lambda*np.identity(n))
+        self._K = self._create_matrix(self._kernel, self._lambda**2)
+        if not just_K:
+            self._gradK = [
+                self._create_matrix(grad_kernel(self._kernel, i), 1e-5)
+                for i in range(self.n_parameters()+1)
+            ]
+            self._gradK.append(2*self._lambda*np.identity(n))
 
         self._cholesky_L = scipy.linalg.cho_factor(self._K)
+
         self._invKy = scipy.linalg.cho_solve(self._cholesky_L, self._values)
 
         self._uninitialised = False
@@ -272,6 +281,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
         if not self._use_dense_matrix:
             self._gaussian_process.set_stochastic_samples(4)
+            self._gaussian_process.set_tolerance(1e-6)
+            self._gaussian_process.set_chebyshev_n(100)
 
         score = GaussianProcessLogLikelihood(self)
 
@@ -293,7 +304,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
             sigma,
             method=pints.AdaptiveMomentEstimation
         )
-        opt.set_threshold(1e-3)
+        opt.set_threshold(1e-1)
         opt.set_max_unchanged_iterations(None)
         opt.optimiser().set_ignore_fbest()
 

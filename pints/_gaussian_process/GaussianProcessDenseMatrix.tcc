@@ -53,7 +53,10 @@ template <unsigned int D> void GaussianProcessDenseMatrix<D>::initialise() {
                                 this->m_particles.size());
   // std::cout << "y = [" << y(0) << "," << y(1) << "," << y(2) << "..."
   //          << std::endl;
-  std::cout << "solving..." << std::endl;
+  // std::cout << "solving..." << std::endl;
+  if (m_invKy.size() != this->m_particles.size()) {
+    m_invKy.setZero(this->m_particles.size());
+  }
   m_invKy = m_solver.solveWithGuess(y, m_invKy);
   std::cout << "finished solving with " << m_solver.iterations()
             << " iterations" << std::endl;
@@ -94,15 +97,16 @@ GaussianProcessDenseMatrix<D>::grad_likelihood() {
     initialise();
   }
 
-  /*
   return calculate_gp_grad_likelihood<D>(m_invKy, m_solver, m_gradKs,
-  m_gradSigmaK, this->m_lambda, m_stochastic_samples_m);
-                                      */
+                                         m_gradSigmaK, this->m_lambda,
+                                         m_stochastic_samples_m);
+  /*
   Eigen::Map<Eigen::VectorXd> y(get<function>(this->m_particles).data(),
                                 this->m_particles.size());
   return calculate_gp_grad_likelihood_chebyshev<D>(
       m_invKy, y, m_solver, m_K, m_gradKs, m_gradSigmaK, this->m_lambda,
       m_chebyshev_points, m_chebyshev_polynomials, m_stochastic_samples_m);
+      */
 }
 
 template <unsigned int D>

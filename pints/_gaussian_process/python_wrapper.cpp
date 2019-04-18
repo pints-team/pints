@@ -1,5 +1,5 @@
-#include "GaussianProcessMatrixFree.hpp"
 #include "GaussianProcessDenseMatrix.hpp"
+#include "GaussianProcessMatrixFree.hpp"
 
 namespace py = pybind11;
 using namespace Aboria;
@@ -17,6 +17,8 @@ PYBIND11_MODULE(gaussian_process, m) {
            py::arg().noconvert(), py::arg().noconvert())                       \
       .def("n_parameters", &GaussianProcessMatrixFree<D>::n_parameters)        \
       .def("set_parameters", &GaussianProcessMatrixFree<D>::set_parameters)    \
+      .def("set_uninitialised",                                                \
+           &GaussianProcessMatrixFree<D>::set_uninitialised)                   \
       .def("set_max_iterations",                                               \
            &GaussianProcessMatrixFree<D>::set_max_iterations)                  \
       .def("set_tolerance", &GaussianProcessMatrixFree<D>::set_tolerance)      \
@@ -34,6 +36,8 @@ PYBIND11_MODULE(gaussian_process, m) {
       .def("set_data", &GaussianProcessDenseMatrix<D>::set_data,               \
            py::arg().noconvert(), py::arg().noconvert())                       \
       .def("n_parameters", &GaussianProcessDenseMatrix<D>::n_parameters)       \
+      .def("set_uninitialised",                                                \
+           &GaussianProcessDenseMatrix<D>::set_uninitialised)                  \
       .def("set_parameters", &GaussianProcessDenseMatrix<D>::set_parameters)   \
       .def("set_max_iterations",                                               \
            &GaussianProcessDenseMatrix<D>::set_max_iterations)                 \

@@ -50,7 +50,6 @@ class TestGaussianProcess(unittest.TestCase):
 
         return log_pdf
 
-    @unittest.skip('')
     def test_likelihood_gradient(self):
         log_pdf = self.problem1D()
         n = 100
@@ -116,18 +115,17 @@ class TestGaussianProcess(unittest.TestCase):
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()
         for gp in [gp_dense, gp_free]:
-            gp._gaussian_process.set_stochastic_samples(300)
+            gp._gaussian_process.set_stochastic_samples(500)
+            gp._gaussian_process.set_chebyshev_n(200)
             likelihood_approx = gp.likelihood()
             grad_likelihood_approx = gp.grad_likelihood()
-            print('likelihood approx = ',likelihood_approx)
 
             np.testing.assert_almost_equal(
-                likelihood_exact, likelihood_approx, decimal=1)
+                likelihood_exact, likelihood_approx, decimal=2)
 
             np.testing.assert_almost_equal(
                 grad_likelihood_exact, grad_likelihood_approx, decimal=2)
 
-    @unittest.skip('')
     def test_predict(self):
         log_pdf = self.problem1D()
         n = 100
@@ -149,38 +147,42 @@ class TestGaussianProcess(unittest.TestCase):
             self.assertAlmostEqual(mean_approx, mean_exact)
             self.assertAlmostEqual(var_approx, var_exact)
 
-    @unittest.skip('')
     def test_fitting(self):
         """ fits the gp to the problem. """
         for log_pdf in [self.problem1D(), self.problem2D()]:
+
             n = 20
             sigma = 0.1
             samples = log_pdf.sample(n)
             values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
-            gp = pints.GaussianProcess(samples, values)
-            gp.optimise_hyper_parameters()
+            for gp in [
+                    pints.GaussianProcess(samples, values),
+                    pints.GaussianProcess(samples, values, matrix_free=True),
+                    pints.GaussianProcess(samples, values, dense_matrix=True),
+            ]:
+                gp.optimise_hyper_parameters()
 
-            test_samples = samples
-            if len(test_samples.shape)==1:
-                test_samples = test_samples.reshape(-1,1)
+                test_samples = samples
+                if len(test_samples.shape) == 1:
+                    test_samples = test_samples.reshape(-1, 1)
 
-            test_values = np.empty((test_samples.shape[0], 2))
-            for i in range(test_samples.shape[0]):
-                test_values[i, :] = gp.predict(test_samples[i, :])
-            test_means = test_values[:, 0]
-            test_stddev = np.sqrt(test_values[:, 1])
+                test_values = np.empty((test_samples.shape[0], 2))
+                for i in range(test_samples.shape[0]):
+                    test_values[i, :] = gp.predict(test_samples[i, :])
+                test_means = test_values[:, 0]
+                test_stddev = np.sqrt(test_values[:, 1])
 
-            # check 95% confidence intervals
-            failure = np.logical_or(
-                values > (test_means + 1.96 * test_stddev),
-                values < (test_means - 1.96 * test_stddev)
-            )
-            self.assertLess(np.sum(failure), 0.05*n)
+                # check 95% confidence intervals
+                failure = np.logical_or(
+                    values > (test_means + 1.96 * test_stddev),
+                    values < (test_means - 1.96 * test_stddev)
+                )
+                self.assertLess(np.sum(failure), 0.05*n)
 
-            # check mean against log_pdf
-            true_means = log_pdf(samples)
-            self.assertLess(np.linalg.norm(test_means-true_means) /
-                            np.linalg.norm(true_means), 5e-2)
+                # check mean against log_pdf
+                true_means = log_pdf(samples)
+                self.assertLess(np.linalg.norm(test_means-true_means) /
+                                np.linalg.norm(true_means), 5e-2)
 
 
 if __name__ == '__main__':

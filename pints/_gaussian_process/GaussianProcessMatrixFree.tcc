@@ -53,6 +53,9 @@ template <unsigned int D> void GaussianProcessMatrixFree<D>::initialise() {
                                 this->m_particles.size());
   // std::cout << "y = [" << y(0) << "," << y(1) << "," << y(2) << "..."
   //          << std::endl;
+  if (m_invKy.size() != this->m_particles.size()) {
+    m_invKy.setZero(this->m_particles.size());
+  }
   m_invKy = m_solver.solveWithGuess(y, m_invKy);
   // std::cout << "error = "<<(m_K*m_invKy-y).norm()<<std::endl;
   if (m_solver.info() != Eigen::Success) {
