@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 3.1)
 
 project(aboria_wrapper)
 
+
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1 )
 
 set(include_dirs "")
+set(libs "")
 set(lib_dir "${CMAKE_SOURCE_DIR}/../../third-party")
+
+set(CMAKE_MODULE_PATH "${lib_dir}/Aboria/cmake" ${CMAKE_MODULE_PATH})
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -15,6 +20,12 @@ add_definitions(-DHAVE_OPENMP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
+# H2Lib
+find_package(H2Lib REQUIRED)
+list(APPEND libs ${H2Lib_LIBRARIES})
+list(APPEND include_dirs ${H2Lib_INCLUDE_DIRS})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${H2Lib_LINKER_FLAGS}")
+add_definitions(-DHAVE_H2LIB)
 
 # Aboria 
 list(APPEND include_dirs ${lib_dir}/Aboria/src)
@@ -49,4 +60,5 @@ set(header_files
 include_directories(${source_dir} ${include_dirs})
 
 pybind11_add_module(gaussian_process ${source_files} ${header_files})
+target_link_libraries(gaussian_process PRIVATE ${libs})
 

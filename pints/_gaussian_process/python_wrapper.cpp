@@ -1,4 +1,5 @@
 #include "GaussianProcessDenseMatrix.hpp"
+#include "GaussianProcessH2Matrix.hpp"
 #include "GaussianProcessMatrixFree.hpp"
 
 namespace py = pybind11;
@@ -25,6 +26,27 @@ PYBIND11_MODULE(gaussian_process, m) {
       .def("set_chebyshev_n", &GaussianProcessMatrixFree<D>::set_chebyshev_n)  \
       .def("set_stochastic_samples",                                           \
            &GaussianProcessMatrixFree<D>::set_stochastic_samples);             \
+                                                                               \
+  py::class_<GaussianProcessH2Matrix<D>>(m, "GaussianProcessH2Matrix" #D)      \
+      .def(py::init<>())                                                       \
+      .def("grad_likelihood", &GaussianProcessH2Matrix<D>::grad_likelihood)    \
+      .def("likelihood", &GaussianProcessH2Matrix<D>::likelihood)              \
+      .def("print_h2_errors", &GaussianProcessH2Matrix<D>::print_h2_errors)    \
+      .def("predict", &GaussianProcessH2Matrix<D>::predict)                    \
+      .def("predict_var", &GaussianProcessH2Matrix<D>::predict_var)            \
+      .def("set_data", &GaussianProcessH2Matrix<D>::set_data,                  \
+           py::arg().noconvert(), py::arg().noconvert())                       \
+      .def("n_parameters", &GaussianProcessH2Matrix<D>::n_parameters)          \
+      .def("set_parameters", &GaussianProcessH2Matrix<D>::set_parameters)      \
+      .def("set_h2_order", &GaussianProcessH2Matrix<D>::set_h2_order)          \
+      .def("set_uninitialised",                                                \
+           &GaussianProcessH2Matrix<D>::set_uninitialised)                     \
+      .def("set_max_iterations",                                               \
+           &GaussianProcessH2Matrix<D>::set_max_iterations)                    \
+      .def("set_tolerance", &GaussianProcessH2Matrix<D>::set_tolerance)        \
+      .def("set_chebyshev_n", &GaussianProcessH2Matrix<D>::set_chebyshev_n)    \
+      .def("set_stochastic_samples",                                           \
+           &GaussianProcessH2Matrix<D>::set_stochastic_samples);               \
                                                                                \
   py::class_<GaussianProcessDenseMatrix<D>>(m,                                 \
                                             "GaussianProcessDenseMatrix" #D)   \

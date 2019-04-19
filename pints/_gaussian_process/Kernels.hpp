@@ -112,4 +112,31 @@ template <typename Particles, typename Kernel> struct gradient_by_sigma_kernel {
   }
 };
 
+template <unsigned int D, typename Kernel>
+struct gradient_by_lengthscale_raw_kernel {
+  Kernel m_kernel;
+  int m_i;
+
+  gradient_by_lengthscale_raw_kernel(const Kernel &kernel, const int i)
+      : m_kernel(kernel), m_i(i) {}
+
+  double operator()(const Vector<double, D> &a,
+                    const Vector<double, D> &b) const {
+    const double ret = m_kernel.gradient_by_lengthscale(a, b, m_i);
+    return ret;
+  }
+};
+
+template <unsigned int D, typename Kernel> struct gradient_by_sigma_raw_kernel {
+  Kernel m_kernel;
+
+  gradient_by_sigma_raw_kernel(const Kernel &kernel) : m_kernel(kernel) {}
+
+  double operator()(const Vector<double, D> &a,
+                    const Vector<double, D> &b) const {
+    const double ret = m_kernel.gradient_by_sigma(a, b);
+    return ret;
+  }
+};
+
 } // namespace Aboria

@@ -18,6 +18,10 @@ from gaussian_process import (
     GaussianProcessDenseMatrix2,
     GaussianProcessDenseMatrix4,
     GaussianProcessDenseMatrix9,
+    GaussianProcessH2Matrix1,
+    GaussianProcessH2Matrix2,
+    GaussianProcessH2Matrix4,
+    GaussianProcessH2Matrix9,
 )
 
 
@@ -142,6 +146,15 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessMatrixFree4()
                 elif self._n_parameters == 9:
                     self._gaussian_process = GaussianProcessMatrixFree9()
+            elif hierarchical_matrix:
+                if self._n_parameters == 1:
+                    self._gaussian_process = GaussianProcessH2Matrix1()
+                elif self._n_parameters == 2:
+                    self._gaussian_process = GaussianProcessH2Matrix2()
+                elif self._n_parameters == 4:
+                    self._gaussian_process = GaussianProcessH2Matrix4()
+                elif self._n_parameters == 9:
+                    self._gaussian_process = GaussianProcessH2Matrix9()
 
             self._gaussian_process.set_data(samples, pdf_values)
 

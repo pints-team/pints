@@ -108,9 +108,12 @@ class TestGaussianProcess(unittest.TestCase):
         gp_standard = pints.GaussianProcess(samples, values)
         gp_free = pints.GaussianProcess(samples, values, matrix_free=True)
         gp_dense = pints.GaussianProcess(samples, values, dense_matrix=True)
+        gp_h2 = pints.GaussianProcess(samples, values, hierarchical_matrix=True)
 
-        for gp in [gp_standard, gp_free, gp_dense]:
+        for gp in [gp_standard, gp_free, gp_dense, gp_h2]:
             gp.set_hyper_parameters([12.0, 1.6, 12.1])
+
+        gp_h2._gaussian_process.set_h2_order(4)
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()

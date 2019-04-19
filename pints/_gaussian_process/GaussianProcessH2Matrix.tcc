@@ -1,4 +1,4 @@
-#include "GaussianProcessDenseMatrix.hpp"
+#include "GaussianProcessH2Matrix.hpp"
 #include <algorithm>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -6,43 +6,64 @@
 namespace Aboria {
 
 template <unsigned int D>
-GaussianProcessDenseMatrix<D>::GaussianProcessDenseMatrix()
-    : base_t(), m_mult_buffer(10),
-      m_K(create_matrix_operator(this->m_particles, this->m_particles,
-                                 Kernel_t(this->m_kernel, this->m_lambda))),
-      m_gradSigmaK(
-          create_matrix_operator(this->m_particles, this->m_particles,
-                                 GradientSigmaKernel_t(this->m_kernel))),
+GaussianProcessH2Matrix<D>::GaussianProcessH2Matrix()
+    : base_t(), m_mult_buffer(10), m_h2_order(4),
+      m_K(create_h2_operator(
+          this->m_particles, this->m_particles, m_h2_order, this->m_kernel,
+          Kernel_t(this->m_kernel, std::pow(this->m_lambda, 2)))),
+      m_gradSigmaK(create_h2_operator(this->m_particles, this->m_particles,
+                                      m_h2_order,
+                                      GradientSigmaRawKernel_t(this->m_kernel),
+                                      GradientSigmaKernel_t(this->m_kernel))),
       m_stochastic_samples_m(10), m_chebyshev_n(15) {
   set_tolerance(1e-6);
   set_max_iterations(1000);
   for (int i = 0; i < D; ++i) {
     m_gradKs.emplace_back(
-        create_matrix_operator(this->m_particles, this->m_particles,
-                               GradientLengthscaleKernel_t(this->m_kernel, i)));
+        create_h2_operator(this->m_particles, this->m_particles, m_h2_order,
+                           GradientLengthscaleRawKernel_t(this->m_kernel, i),
+                           GradientLengthscaleKernel_t(this->m_kernel, i)));
   }
   initialise_chebyshev(m_chebyshev_n, m_chebyshev_points,
                        m_chebyshev_polynomials);
 }
 
-template <unsigned int D> void GaussianProcessDenseMatrix<D>::initialise() {
+template <unsigned int D> void GaussianProcessH2Matrix<D>::print_h2_errors() {
+  if (this->m_uninitialised) {
+    initialise();
+  }
+
+  auto K = create_dense_operator(
+      this->m_particles, this->m_particles,
+      Kernel_t(this->m_kernel, std::pow(this->m_lambda, 2)));
+  Eigen::VectorXd b = Eigen::VectorXd::Random(this->m_particles.size());
+  Eigen::VectorXd truth = K * b;
+  Eigen::VectorXd approx = m_K * b;
+  std::cout << "error for K is " << (truth - approx).norm() / truth.norm()
+            << std::endl;
+}
+
+template <unsigned int D> void GaussianProcessH2Matrix<D>::initialise() {
   // normalise kernel
   // const double max_eigenvalue = calculate_eigenvalue();
   // std::cout << "max eigenvalue is " << max_eigenvalue << std::endl;
   // m_kernel.set_sigma(m_kernel.get_sigma() / std::sqrt(max_eigenvalue));
 
   // create operators
-  m_K = create_matrix_operator(
-      this->m_particles, this->m_particles,
+  m_K = create_h2_operator(
+      this->m_particles, this->m_particles, m_h2_order, this->m_kernel,
       Kernel_t(this->m_kernel, std::pow(this->m_lambda, 2)));
 
-  m_gradSigmaK = create_matrix_operator(this->m_particles, this->m_particles,
-                                        GradientSigmaKernel_t(this->m_kernel));
+  m_gradSigmaK =
+      create_h2_operator(this->m_particles, this->m_particles, m_h2_order,
+                         GradientSigmaRawKernel_t(this->m_kernel),
+                         GradientSigmaKernel_t(this->m_kernel));
 
   for (int i = 0; i < D; ++i) {
     m_gradKs[i] =
-        create_matrix_operator(this->m_particles, this->m_particles,
-                               GradientLengthscaleKernel_t(this->m_kernel, i));
+        create_h2_operator(this->m_particles, this->m_particles, m_h2_order,
+                           GradientLengthscaleRawKernel_t(this->m_kernel, i),
+                           GradientLengthscaleKernel_t(this->m_kernel, i));
   }
 
   // create solver
@@ -53,13 +74,10 @@ template <unsigned int D> void GaussianProcessDenseMatrix<D>::initialise() {
                                 this->m_particles.size());
   // std::cout << "y = [" << y(0) << "," << y(1) << "," << y(2) << "..."
   //          << std::endl;
-  // std::cout << "solving..." << std::endl;
   if (m_invKy.size() != this->m_particles.size()) {
     m_invKy.setZero(this->m_particles.size());
   }
   m_invKy = m_solver.solveWithGuess(y, m_invKy);
-  //std::cout << "finished solving with " << m_solver.iterations()
-  //          << " iterations" << std::endl;
   // std::cout << "error = "<<(m_K*m_invKy-y).norm()<<std::endl;
   if (m_solver.info() != Eigen::Success) {
     throw std::runtime_error(
@@ -69,7 +87,7 @@ template <unsigned int D> void GaussianProcessDenseMatrix<D>::initialise() {
   this->m_uninitialised = false;
 }
 
-template <unsigned int D> double GaussianProcessDenseMatrix<D>::likelihood() {
+template <unsigned int D> double GaussianProcessH2Matrix<D>::likelihood() {
   if (this->m_particles.size() == 0) {
     return 0;
   }
@@ -86,8 +104,8 @@ template <unsigned int D> double GaussianProcessDenseMatrix<D>::likelihood() {
 }
 
 template <unsigned int D>
-typename GaussianProcessDenseMatrix<D>::grad_likelihood_return_t
-GaussianProcessDenseMatrix<D>::grad_likelihood() {
+typename GaussianProcessH2Matrix<D>::grad_likelihood_return_t
+GaussianProcessH2Matrix<D>::grad_likelihood() {
   grad_likelihood_return_t gradient = grad_likelihood_return_t::Zero();
 
   if (this->m_particles.size() == 0) {
@@ -100,17 +118,10 @@ GaussianProcessDenseMatrix<D>::grad_likelihood() {
   return calculate_gp_grad_likelihood<D>(m_invKy, m_solver, m_gradKs,
                                          m_gradSigmaK, this->m_lambda,
                                          m_stochastic_samples_m);
-  /*
-  Eigen::Map<Eigen::VectorXd> y(get<function>(this->m_particles).data(),
-                                this->m_particles.size());
-  return calculate_gp_grad_likelihood_chebyshev<D>(
-      m_invKy, y, m_solver, m_K, m_gradKs, m_gradSigmaK, this->m_lambda,
-      m_chebyshev_points, m_chebyshev_polynomials, m_stochastic_samples_m);
-      */
 }
 
 template <unsigned int D>
-double GaussianProcessDenseMatrix<D>::predict(const_vector_D_t argx) {
+double GaussianProcessH2Matrix<D>::predict(const_vector_D_t argx) {
 
   const Vector<double, D> x = argx;
 
@@ -130,8 +141,7 @@ double GaussianProcessDenseMatrix<D>::predict(const_vector_D_t argx) {
 }
 
 template <unsigned int D>
-Eigen::Vector2d
-GaussianProcessDenseMatrix<D>::predict_var(const_vector_D_t argx) {
+Eigen::Vector2d GaussianProcessH2Matrix<D>::predict_var(const_vector_D_t argx) {
   Eigen::Vector2d mean_var = Eigen::Vector2d::Zero();
   const Vector<double, D> x = argx;
 

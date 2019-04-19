@@ -253,18 +253,18 @@ calculate_gp_grad_likelihood(const Eigen::VectorXd &m_invKy, Solver &m_solver,
     for (int j = 0; j < m_gradKs.size(); ++j) {
       guesses[j] = m_solver.solveWithGuess(m_gradKs[j] * v, guesses[j]);
       gradient[j] += v.dot(guesses[j]);
-      // std::cout << "finished solving with " << m_solver.iterations()
-      //          << " iterations" << std::endl;
+      //std::cout << "finished solving with " << m_solver.iterations()
+      //         << " iterations" << std::endl;
     }
     guesses[D] = m_solver.solveWithGuess(m_gradSigmaK * v, guesses[D]);
     gradient[D] += v.dot(guesses[D]);
-    // std::cout << "finished solving with " << m_solver.iterations()
-    //          << " iterations" << std::endl;
+    //std::cout << "finished solving with " << m_solver.iterations()
+    //         << " iterations" << std::endl;
     guesses[D + 1] =
         m_solver.solveWithGuess((2 * m_lambda) * v, guesses[D + 1]);
     gradient[D + 1] += v.dot(guesses[D + 1]);
-    // std::cout << "finished solving with " << m_solver.iterations()
-    //          << " iterations" << std::endl;
+    //std::cout << "finished solving with " << m_solver.iterations()
+    //         << " iterations" << std::endl;
   }
 
   for (int i = 0; i < gradient.size(); ++i) {
