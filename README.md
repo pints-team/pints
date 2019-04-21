@@ -23,7 +23,7 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 ```
 
 Experimental data sets in Pints are defined simply as lists (or arrays) of `times` and corresponding experimental `values`.
-If you have this kind of data, and if your model implements the two methods above - [or you can write a wrapper class which does that](examples/writing-a-model.ipynb) - then you are ready to start using Pints to infer parameter values using [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
+If you have this kind of data, and if [your model (or model wrapper)](examples/writing-a-model.ipynb) implements the two methods above, then you are ready to start using Pints to infer parameter values using [optimisation](examples/optimisation-first-example.ipynb) or [sampling](examples/sampling-first-example.ipynb).
 
 A brief example is shown below:  
 ![An example of using Pints in an optimisation](example.svg)  
