@@ -88,13 +88,28 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
 
         x0 = self.real_parameters * 1.1
         mcmc = pints.MetropolisRandomWalkMCMC(x0)
+
+        # One round of ask-tell must have been run
         self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+
         mcmc.ask()
+
+        # One round of ask-tell must have been run
         self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+
         mcmc.tell(0.5)
         mcmc.replace([1, 2, 3], 10)
         mcmc.replace([1, 2, 3], 10)
+
+        # New position must have correct size
         self.assertRaises(ValueError, mcmc.replace, [1, 2], 1)
+
+        # Proposal can be changed too
+        mcmc.ask()
+        mcmc.replace([1, 2, 3], 10, [3, 4, 5])
+
+        # New proposal must have correct size
+        self.assertRaises(ValueError, mcmc.replace, [1, 2], 3, [3, 4])
 
     def test_flow(self):
 
