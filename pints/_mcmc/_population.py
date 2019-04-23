@@ -166,12 +166,6 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return self._needs_initial_phase
 
-    def replace(self, x, fx):
-        """
-        Not implemented for this method!
-        """
-        raise NotImplementedError
-
     def set_initial_phase(self, phase):
         """
         See :meth:`MCMCController.set_initial_phase()`.
