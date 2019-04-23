@@ -109,7 +109,7 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         mcmc.replace([1, 2, 3], 10, [3, 4, 5])
 
         # New proposal must have correct size
-        self.assertRaises(ValueError, mcmc.replace, [1, 2], 3, [3, 4])
+        self.assertRaises(ValueError, mcmc.replace, [1, 2, 3], 3, [3, 4])
 
     def test_flow(self):
 
