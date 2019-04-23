@@ -33,9 +33,9 @@ class SMC(pints.SMCSampler):
         # Keep track of last/current ess
         self._last_ess = None
 
-        # Determines whether to resample particles at end of
-        # steps 2 and 3 from Del Moral et al. (2006)
-        self._resample_end_2_3 = True
+        # Determines whether to resample particles at end of steps 2 and 3 from
+        # Del Moral et al. (2006)
+        self._resample_end_2_3 = False
 
         # Current samples, their log pdfs, and weights
         self._samples = None
@@ -94,7 +94,8 @@ class SMC(pints.SMCSampler):
             if self._chain.needs_initial_phase():
                 self._chain.set_initial_phase(False)
 
-            # No need to use the inner chains yet
+            # Call ask(), so that chain asks for f(initial value)
+            self._chain.ask()
 
             # Get LogPDFs of all initial samples via ask/tell
             return self._proposals
@@ -108,7 +109,7 @@ class SMC(pints.SMCSampler):
 
         # Repeatedly set chain to proposed point and its tempered PDF, get new
         # proposals and return
-        proposals = np.array(self._n_particles, self._n_parameters)
+        proposals = np.zeros((self._n_particles, self._n_parameters))
         for i, sample in enumerate(self._samples):
             self._chain.replace(sample, self._temper(
                 self._log_pdfs[i], self._log_prior(sample), beta))
@@ -144,12 +145,15 @@ class SMC(pints.SMCSampler):
             self._samples = np.copy(self._proposals)
             self._log_pdfs = np.array(log_pdfs, copy=True)
 
+            # Get next temperature
+            beta = self._schedule[1]
+
             # Tell chain evaluation of its initial value
-            # (Just so that the chain is initialised, not used further!)
-            self._chain.tell(self._log_pdfs[0])
+            initial_tempered = self._temper(
+                log_pdfs[0], self._log_prior(self._samples[0]), beta)
+            self._chain.tell(initial_tempered)
 
             # Set weights based on next temperature
-            beta = self._schedule[1]
             priors = np.array([self._log_prior(x) for x in self._samples])
             self._weights = beta * (self._log_pdfs - priors)
             self._weights = np.exp(self._weights - logsumexp(self._weights))
@@ -182,7 +186,7 @@ class SMC(pints.SMCSampler):
                 log_pdfs[i], self._log_prior(proposed), beta)
             self._samples[i] = self._chain.tell(proposed_tempered)
 
-            # Update log pdf
+            # Update log pdf (to untempered value)
             if np.all(self._samples[i] == proposed):  # TODO: use accepted()
                 self._log_pdfs[i] = log_pdfs[i]
 
@@ -209,12 +213,14 @@ class SMC(pints.SMCSampler):
         # Store ess, before resampling
         self._last_ess = 1 / np.sum(self._weights**2)
 
-        # Conditional resampling step
-        if self._resample_end_2_3:
-            self._resample()
-
         # Update temperature step
         self._i_temp += 1
+
+        # Conditional resampling step
+        if self._resample_end_2_3 and self._i_temp < len(self._schedule):
+            self._resample()
+
+        print(self._samples)
 
         # Return copy of current samples
         return np.copy(self._samples)
@@ -263,7 +269,7 @@ class SMC(pints.SMCSampler):
         logger.log(1 - self._schedule[self._i_temp - 1])
         logger.log(self.ess())
 
-    def _resample(self):
+    def _resample(self, update_weights=True):
         """
         Resamples (and updates the weights and log_pdfs) according to the
         weights vector from the multinomial distribution.
@@ -280,10 +286,6 @@ class SMC(pints.SMCSampler):
                 lo = hi
         self._samples = new_samples
         self._log_pdfs = new_log_pdfs
-
-        #TODO: Can this go?
-        if np.count_nonzero(new_samples == 0) > 0:  # pragma: no cover
-            raise RuntimeError('Zero elements appearing in samples matrix.')
 
         # Update weights
         self._weights = np.repeat(1 / self._n_particles, self._n_particles)

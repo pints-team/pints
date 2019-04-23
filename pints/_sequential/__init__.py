@@ -113,8 +113,9 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
                 'Number of particles cannot be changed during run.')
 
         n = int(n)
-        if n < 10:
-            raise ValueError('Number of particles must be at least 10.')
+        #TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+        #if n < 10:
+        #    raise ValueError('Number of particles must be at least 10.')
         self._n_particles = n
 
     def set_temperature_schedule(self, schedule=10):
