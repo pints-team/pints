@@ -45,9 +45,11 @@ class SMC(pints.SMCSampler):
         # Proposed samples
         self._proposals = None
 
-        # Internal mcmc chains
+        # Internal mcmc chain: Uses only 1 chain for all samples!
+        # - Must be a SingleChainMCMC method
+        # - Must implement replace()
         self._method = pints.AdaptiveCovarianceMCMC
-        self._chains = None
+        self._chain = None
 
         # Iterations: i_temp (outer loop) and i_mcmc (inner loop)
         self._i_temp = 1
@@ -63,7 +65,9 @@ class SMC(pints.SMCSampler):
 
         # Too many steps?
         if self._i_temp >= len(self._schedule):
-            raise RuntimeError('Too many iterations in SMC!')
+            raise RuntimeError(
+                'SMC.ask() called after the maximum number of iterations was'
+                ' reached.')
 
         # We're up and running now
         self._running = True
@@ -84,14 +88,15 @@ class SMC(pints.SMCSampler):
             self._proposals = self._log_prior.sample(self._n_particles)
             self._proposals.setflags(write=False)
 
-            # Create and configure chains
-            self._chains = [
-                self._method(p, self._sigma0) for p in self._proposals]
-            if self._chains[0].needs_initial_phase():
-                for chain in self._chains:
-                    chain.set_initial_phase(False)
+            # Create and configure chain
+            self._chain = self._method(self._proposals[0], self._sigma0)
+            # TODO: Ignoring initial phase for now
+            if self._chain.needs_initial_phase():
+                self._chain.set_initial_phase(False)
 
-            # Get LogPDF of initial samples via ask/tell
+            # No need to use the inner chains yet
+
+            # Get LogPDFs of all initial samples via ask/tell
             return self._proposals
 
         # Get beta, using next temperature
@@ -101,15 +106,16 @@ class SMC(pints.SMCSampler):
         if self._last_ess < self._ess_threshold:
             self._resample()
 
-        # Update chains with log pdfs tempered with current beta
-        for j, sample in enumerate(self._samples):
-            self._chains[j].replace(sample, self._temper(
-                self._log_pdfs[j], self._log_prior(sample), beta))
+        # Repeatedly set chain to proposed point and its tempered PDF, get new
+        # proposals and return
+        proposals = np.array(self._n_particles, self._n_parameters)
+        for i, sample in enumerate(self._samples):
+            self._chain.replace(sample, self._temper(
+                self._log_pdfs[i], self._log_prior(sample), beta))
+            proposals[i] = self._chain.ask()
 
-        # Get proposals from MCMC and return
-        self._proposals = np.array([chain.ask() for chain in self._chains])
+        self._proposals = proposals
         self._proposals.setflags(write=False)
-
         return self._proposals
 
     def ess(self):
@@ -133,15 +139,14 @@ class SMC(pints.SMCSampler):
         if self._samples is None:
 
             # Store current samples and logpdfs
-            # (Copy proposals to remove read-only property: but the reference
-            #  is still outside so users could now modify them...)
+            # (Copy proposals to remove read-only property - can't just unset
+            #  flags as user still has reference too)
             self._samples = np.copy(self._proposals)
             self._log_pdfs = np.array(log_pdfs, copy=True)
 
-            # Update all the chains with their initial log pdf
-            for i, f in enumerate(self._log_pdfs):
-                self._chains[i].ask()
-                self._chains[i].tell(f)
+            # Tell chain evaluation of its initial value
+            # (Just so that the chain is initialised, not used further!)
+            self._chain.tell(self._log_pdfs[0])
 
             # Set weights based on next temperature
             beta = self._schedule[1]
@@ -164,14 +169,22 @@ class SMC(pints.SMCSampler):
         # Normal iteration
         beta = self._schedule[self._i_temp]
 
-        # Update MCMC chains with tempered log pdf values
-        for j, proposed in enumerate(self._proposals):
-            updated = self._chains[j].tell(
-                self._temper(log_pdfs[j], self._log_prior(proposed), beta))
+        # Update chain to (sample[i], f(sample)[i], proposal[i]), then call
+        # tell() with tempered log pdf values
+        for i, proposed in enumerate(self._proposals):
+            # `Replace' chain position
+            current_tempered = self._temper(
+                self._log_pdfs[i], self._log_prior(self._samples[i]), beta)
+            self._chain.replace(self._samples[i], current_tempered, proposed)
 
-            if np.all(updated == proposed):  # TODO: use accepted()
-                self._samples[j] = proposed
-                self._log_pdfs[j] = log_pdfs[j]
+            # Tell, get updated sample
+            proposed_tempered = self._temper(
+                log_pdfs[i], self._log_prior(proposed), beta)
+            self._samples[i] = self._chain.tell(proposed_tempered)
+
+            # Update log pdf
+            if np.all(self._samples[i] == proposed):  # TODO: use accepted()
+                self._log_pdfs[i] = log_pdfs[i]
 
         # Clear proposals
         self._proposals = None

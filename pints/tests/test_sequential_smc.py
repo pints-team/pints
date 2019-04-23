@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the seqential Monte Carlo routines.
+# Tests the basic methods of the SMCController.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -36,7 +36,7 @@ LOG_SCREEN = [
 ]
 
 
-class TestSMC(unittest.TestCase):
+class TestSMCController(unittest.TestCase):
     """
     Unit (not functional!) tests for :class:`SMC`.
     """

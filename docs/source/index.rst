@@ -72,7 +72,7 @@ Sampling
    - :class:`NestedRejectionSampler`, requires a :class:`LogPDF` and a
      :class:`LogPrior` that can be sampled from.
 
-#. Particle based samplers
+#. Sequential samplers
 
    - :class:`SMC`, requires a :class:`LogPDF` and a :class:`LogPrior` that can
      be sampled from.
