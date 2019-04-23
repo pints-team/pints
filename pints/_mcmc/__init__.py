@@ -104,7 +104,7 @@ class SingleChainMCMC(MCMCSampler):
 
     def ask(self):
         """
-        Returns a parameter vector to evaluate the logpdf for.
+        Returns a parameter vector to evaluate the LogPDF for.
         """
         raise NotImplementedError
 
@@ -133,12 +133,15 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
-    def replace(self, x, fx):
+    def replace(self, current, current_log_pdf, proposed=None):
         """
-        Replaces the chain's current position by a user-specified point ``x``,
-        with log-pdf ``fx``.
+        Replaces the internal current position, current LogPDF, and proposed
+        point by the user-specified values.
 
-        This is an optional method, and may not be implemented by all methods!
+        This method can only be used once the initial position and LogPDF have
+        been set (so after at least 1 round of ask-and-tell).
+
+        This is an optional method, and some samplers may not support it.
         """
         raise NotImplementedError
 
