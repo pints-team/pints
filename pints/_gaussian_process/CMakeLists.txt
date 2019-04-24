@@ -51,6 +51,10 @@ set(header_files
   ${source_dir}/Kernels.hpp
   ${source_dir}/GaussianProcess.hpp
   ${source_dir}/GaussianProcess.tcc
+  ${source_dir}/GaussianProcessDirect.hpp
+  ${source_dir}/GaussianProcessDirect.tcc
+  ${source_dir}/GaussianProcessH2Matrix.hpp
+  ${source_dir}/GaussianProcessH2Matrix.tcc
   ${source_dir}/GaussianProcessMatrixFree.hpp
   ${source_dir}/GaussianProcessMatrixFree.tcc
   ${source_dir}/GaussianProcessDenseMatrix.hpp

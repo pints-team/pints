@@ -1,5 +1,6 @@
 #include "GaussianProcessDenseMatrix.hpp"
 #include "GaussianProcessH2Matrix.hpp"
+#include "GaussianProcessDirect.hpp"
 #include "GaussianProcessMatrixFree.hpp"
 
 namespace py = pybind11;
@@ -47,6 +48,18 @@ PYBIND11_MODULE(gaussian_process, m) {
       .def("set_chebyshev_n", &GaussianProcessH2Matrix<D>::set_chebyshev_n)    \
       .def("set_stochastic_samples",                                           \
            &GaussianProcessH2Matrix<D>::set_stochastic_samples);               \
+                                                                               \
+  py::class_<GaussianProcessDirect<D>>(m, "GaussianProcessDirect" #D)          \
+      .def(py::init<>())                                                       \
+      .def("grad_likelihood", &GaussianProcessDirect<D>::grad_likelihood)      \
+      .def("likelihood", &GaussianProcessDirect<D>::likelihood)                \
+      .def("predict", &GaussianProcessDirect<D>::predict)                      \
+      .def("predict_var", &GaussianProcessDirect<D>::predict_var)              \
+      .def("set_data", &GaussianProcessDirect<D>::set_data,                    \
+           py::arg().noconvert(), py::arg().noconvert())                       \
+      .def("n_parameters", &GaussianProcessDirect<D>::n_parameters)            \
+      .def("set_parameters", &GaussianProcessDirect<D>::set_parameters)        \
+      .def("set_uninitialised", &GaussianProcessDirect<D>::set_uninitialised); \
                                                                                \
   py::class_<GaussianProcessDenseMatrix<D>>(m,                                 \
                                             "GaussianProcessDenseMatrix" #D)   \
