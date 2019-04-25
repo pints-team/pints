@@ -57,6 +57,7 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         s13 = log_pdf1.kl_divergence(samples3)
         self.assertLess(s11, s12)
         self.assertLess(s11, s13)
+        self.assertEqual(s11, 0.0012248323505286152)
 
         s21 = log_pdf2.kl_divergence(samples1)
         s22 = log_pdf2.kl_divergence(samples2)
