@@ -22,6 +22,10 @@ from gaussian_process import (
     GaussianProcessH2Matrix2,
     GaussianProcessH2Matrix4,
     GaussianProcessH2Matrix9,
+    GaussianProcessDirect1,
+    GaussianProcessDirect2,
+    GaussianProcessDirect4,
+    GaussianProcessDirect9,
 )
 
 
@@ -110,7 +114,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
     *Extends:* :class:`LogPDF`
     """
 
-    def __init__(self, samples, pdf_values, matrix_free=False, dense_matrix=False, hierarchical_matrix=False):
+    def __init__(self, samples, pdf_values, matrix_free=False, dense_matrix=False,
+            hierarchical_matrix=False, direct=False):
         super(GaussianProcess, self).__init__()
 
         # handle 1d array input
@@ -155,6 +160,15 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessH2Matrix4()
                 elif self._n_parameters == 9:
                     self._gaussian_process = GaussianProcessH2Matrix9()
+            elif direct:
+                if self._n_parameters == 1:
+                    self._gaussian_process = GaussianProcessDirect1()
+                elif self._n_parameters == 2:
+                    self._gaussian_process = GaussianProcessDirect2()
+                elif self._n_parameters == 4:
+                    self._gaussian_process = GaussianProcessDirect4()
+                elif self._n_parameters == 9:
+                    self._gaussian_process = GaussianProcessDirect9()
 
             self._gaussian_process.set_data(samples, pdf_values)
 
