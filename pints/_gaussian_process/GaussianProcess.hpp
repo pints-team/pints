@@ -64,6 +64,7 @@ protected:
   double_d m_lengthscales;
   Particles_t m_particles;
   RawKernel_t m_kernel;
+  std::mt19937 m_gen;
 };
 
 template <typename Op> std::array<double, 2> eigenvalue_range(const Op &B) {
@@ -156,7 +157,7 @@ double calculate_gp_likelihood_chebyshev(
     const Eigen::MatrixBase<Derived> &y,
     const std::vector<double> m_chebyshev_points,
     const Eigen::MatrixXd &m_chebyshev_polynomials,
-    const int m_stochastic_samples_m) {
+    const int m_stochastic_samples_m, std::mt19937 &gen) {
 
   // approximate log det with chebyshev interpolation and stochastic trace
   // estimation
@@ -233,37 +234,32 @@ Eigen::Matrix<double, D + 2, 1>
 calculate_gp_grad_likelihood(const Eigen::VectorXd &m_invKy, Solver &m_solver,
                              std::vector<GradKOps> &m_gradKs,
                              GradSigmaOp &m_gradSigmaK, const double m_lambda,
-                             const int m_stochastic_samples_m) {
+                             const int m_stochastic_samples_m,
+                             std::mt19937 &gen) {
   using grad_likelihood_return_t = Eigen::Matrix<double, D + 2, 1>;
   grad_likelihood_return_t gradient = grad_likelihood_return_t::Zero();
-
-  std::array<Eigen::VectorXd, D + 2> guesses;
-  for (int i = 0; i < D + 2; ++i) {
-    guesses[i].setZero(m_invKy.size());
-  }
+  std::uniform_real_distribution<float> dis(-1.0, 1.0);
 
   // trace term
   for (int i = 0; i < m_stochastic_samples_m; ++i) {
     // std::cout << "calculate_gp_grad_likelihood: iteration " << i <<
     // std::endl;
     // generate Rademacher random vector
-    Eigen::VectorXd v = Eigen::VectorXd::Random(m_invKy.size());
-    std::transform(v.data(), v.data() + v.size(), v.data(),
-                   [](const double i) { return i > 0 ? 1.0 : -1.0; });
+    Eigen::VectorXd v = Eigen::VectorXd::NullaryExpr(m_invKy.size(), [&]() {
+      const float rnd = dis(gen);
+      return rnd > 0.f ? 1.0 : -1.0;
+    });
+
     for (int j = 0; j < m_gradKs.size(); ++j) {
-      guesses[j] = m_solver.solveWithGuess(m_gradKs[j] * v, guesses[j]);
-      gradient[j] += v.dot(guesses[j]);
-      //std::cout << "finished solving with " << m_solver.iterations()
+      gradient[j] += v.dot(m_solver.solve(m_gradKs[j] * v));
+      // std::cout << "finished solving with " << m_solver.iterations()
       //         << " iterations" << std::endl;
     }
-    guesses[D] = m_solver.solveWithGuess(m_gradSigmaK * v, guesses[D]);
-    gradient[D] += v.dot(guesses[D]);
-    //std::cout << "finished solving with " << m_solver.iterations()
+    gradient[D] += v.dot(m_solver.solve(m_gradSigmaK * v));
+    // std::cout << "finished solving with " << m_solver.iterations()
     //         << " iterations" << std::endl;
-    guesses[D + 1] =
-        m_solver.solveWithGuess((2 * m_lambda) * v, guesses[D + 1]);
-    gradient[D + 1] += v.dot(guesses[D + 1]);
-    //std::cout << "finished solving with " << m_solver.iterations()
+    gradient[D + 1] += v.dot(m_solver.solve((2 * m_lambda) * v));
+    // std::cout << "finished solving with " << m_solver.iterations()
     //         << " iterations" << std::endl;
   }
 

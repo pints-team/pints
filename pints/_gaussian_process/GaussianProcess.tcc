@@ -8,7 +8,7 @@ namespace Aboria {
 template <unsigned int D>
 GaussianProcess<D>::GaussianProcess()
     : m_lambda(1), m_uninitialised(true),m_nsubdomain(20),
-      m_lengthscales(double_d::Constant(1)), m_kernel(1, m_lengthscales) {}
+      m_lengthscales(double_d::Constant(1)), m_kernel(1, m_lengthscales), m_gen(std::random_device()()) {}
 
 template <unsigned int D> double GaussianProcess<D>::likelihood() { return 0; }
 

@@ -117,14 +117,14 @@ class TestGaussianProcess(unittest.TestCase):
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()
-        for gp in [gp_dense, gp_free]:
+        for gp in [gp_dense, gp_free, gp_h2]:
             gp._gaussian_process.set_stochastic_samples(500)
             gp._gaussian_process.set_chebyshev_n(200)
             likelihood_approx = gp.likelihood()
             grad_likelihood_approx = gp.grad_likelihood()
 
             np.testing.assert_almost_equal(
-                likelihood_exact, likelihood_approx, decimal=2)
+                likelihood_exact, likelihood_approx, decimal=1)
 
             np.testing.assert_almost_equal(
                 grad_likelihood_exact, grad_likelihood_approx, decimal=2)

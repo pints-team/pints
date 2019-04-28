@@ -82,7 +82,7 @@ template <unsigned int D> double GaussianProcessDenseMatrix<D>::likelihood() {
 
   return calculate_gp_likelihood_chebyshev(m_K, m_invKy, y, m_chebyshev_points,
                                            m_chebyshev_polynomials,
-                                           m_stochastic_samples_m);
+                                           m_stochastic_samples_m, this->m_gen);
 }
 
 template <unsigned int D>
@@ -99,7 +99,7 @@ GaussianProcessDenseMatrix<D>::grad_likelihood() {
 
   return calculate_gp_grad_likelihood<D>(m_invKy, m_solver, m_gradKs,
                                          m_gradSigmaK, this->m_lambda,
-                                         m_stochastic_samples_m);
+                                         m_stochastic_samples_m, this->m_gen);
   /*
   Eigen::Map<Eigen::VectorXd> y(get<function>(this->m_particles).data(),
                                 this->m_particles.size());
