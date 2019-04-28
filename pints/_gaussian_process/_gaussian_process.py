@@ -124,7 +124,7 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
 
         self._n_parameters = samples.shape[1]
         self._use_dense_matrix = not (matrix_free or hierarchical_matrix or
-                                      dense_matrix)
+                                      dense_matrix or direct)
 
         if not self._use_dense_matrix:
             if not (self._n_parameters <= 2 or self._n_parameters == 4 or
@@ -177,7 +177,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._kernel = matern_kernel(self._n_parameters)
         self._uninitialised = True
         self._lambda = 1
-        self._dx = self._create_dx()
+        if self._use_dense_matrix:
+            self._dx = self._create_dx()
 
         #print('Constructing Gaussian Process:')
         #print('\tdim =',self.n_parameters())

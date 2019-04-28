@@ -27,12 +27,14 @@ template <unsigned int D> void GaussianProcessDirect<D>::initialise() {
     auto gradKs =
         create_dense_operator(this->m_particles, this->m_particles,
                               GradientLengthscaleKernel_t(this->m_kernel, i));
+    m_gradKs[i].resize(n, n);
     gradKs.assemble(m_gradKs[i]);
   }
 
   auto gradSigmaK =
       create_dense_operator(this->m_particles, this->m_particles,
                             GradientSigmaKernel_t(this->m_kernel));
+  m_gradKs[D].resize(n, n);
   gradSigmaK.assemble(m_gradKs[D]);
 
   // create solver
@@ -87,12 +89,13 @@ GaussianProcessDirect<D>::grad_likelihood() {
   }
 
   const int n = this->m_particles.size();
-  for (int i = 0; i  <= D; ++i) {
+  for (int i = 0; i <= D; ++i) {
     gradient[i] += m_solver.solve(m_gradKs[i]).trace();
   }
   // final entry in gradient is gradient with m_lambda
   gradient[D + 1] =
-      m_solver.solve(2 * this->m_lambda * Eigen::MatrixXd::Identity(n, n)).trace();
+      m_solver.solve(2 * this->m_lambda * Eigen::MatrixXd::Identity(n, n))
+          .trace();
 
   // second term
   for (int i = 0; i <= D; ++i) {
@@ -102,7 +105,6 @@ GaussianProcessDirect<D>::grad_likelihood() {
 
   return gradient;
 }
-
 
 template <unsigned int D>
 double GaussianProcessDirect<D>::predict(const_vector_D_t argx) {
@@ -118,7 +120,8 @@ double GaussianProcessDirect<D>::predict(const_vector_D_t argx) {
 
   double sum = 0;
   for (int i = 0; i < this->m_particles.size(); ++i) {
-    sum += this->m_kernel(x, get<position_d<D>>(this->m_particles)[i]) * m_invKy(i);
+    sum += this->m_kernel(x, get<position_d<D>>(this->m_particles)[i]) *
+           m_invKy(i);
   }
   return sum;
 }
