@@ -90,10 +90,11 @@ GaussianProcessDirect<D>::grad_likelihood() {
 
   const int n = this->m_particles.size();
   for (int i = 0; i <= D; ++i) {
-    gradient[i] += m_solver.solve(m_gradKs[i]).trace();
+    gradient[i] = -0.5 * m_solver.solve(m_gradKs[i]).trace();
   }
   // final entry in gradient is gradient with m_lambda
   gradient[D + 1] =
+      -0.5 *
       m_solver.solve(2 * this->m_lambda * Eigen::MatrixXd::Identity(n, n))
           .trace();
 

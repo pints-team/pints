@@ -111,23 +111,51 @@ class TestGaussianProcess(unittest.TestCase):
         gp_h2 = pints.GaussianProcess(samples, values, hierarchical_matrix=True)
 
         for gp in [gp_standard, gp_free, gp_dense, gp_h2]:
-            gp.set_hyper_parameters([12.0, 1.6, 12.1])
+            gp.set_hyper_parameters([10.0, 10.1, 12.1])
 
         gp_h2._gaussian_process.set_h2_order(4)
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()
-        for gp in [gp_dense, gp_free, gp_h2]:
-            gp._gaussian_process.set_stochastic_samples(500)
+        for gp in [gp_dense, gp_free]:
+            gp._gaussian_process.set_stochastic_samples(4)
+            gp._gaussian_process.set_tolerance(1e-6)
             gp._gaussian_process.set_chebyshev_n(200)
-            likelihood_approx = gp.likelihood()
-            grad_likelihood_approx = gp.grad_likelihood()
+            repeats = 100
+            likelihood_approx = np.empty(repeats,dtype=float)
+            grad_likelihood_approx = np.empty((repeats,3),dtype=float)
+            for r in range(repeats):
+                likelihood_approx[r] = gp.likelihood()
+                grad_likelihood_approx[r,:] = gp.grad_likelihood()
 
             np.testing.assert_almost_equal(
-                likelihood_exact, likelihood_approx, decimal=1)
+                likelihood_exact, np.mean(likelihood_approx), decimal=1)
 
             np.testing.assert_almost_equal(
-                grad_likelihood_exact, grad_likelihood_approx, decimal=2)
+                grad_likelihood_exact, np.mean(grad_likelihood_approx,axis=0), decimal=2)
+
+    def test_direct_likelihood(self):
+        log_pdf = self.problem1D()
+        n = 100
+        samples = log_pdf.sample(n)
+        values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
+        gp_standard = pints.GaussianProcess(samples, values)
+        gp_direct = pints.GaussianProcess(samples, values, direct=True)
+
+        for gp in [gp_standard, gp_direct]:
+            gp.set_hyper_parameters([5.0, 0.6, 12.1])
+
+        grad_likelihood_exact = gp_standard.grad_likelihood()
+        likelihood_exact = gp_standard.likelihood()
+        for gp in [gp_direct]:
+            likelihood_direct = gp.likelihood()
+            grad_likelihood_direct = gp.grad_likelihood()
+
+            np.testing.assert_almost_equal(
+                likelihood_exact, likelihood_direct, decimal=7)
+
+            np.testing.assert_almost_equal(
+                grad_likelihood_exact, grad_likelihood_direct, decimal=7)
 
     def test_predict(self):
         log_pdf = self.problem1D()
