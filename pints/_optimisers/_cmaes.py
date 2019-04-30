@@ -166,7 +166,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         # callback: User callback triggered stop
         stop = self._es.stop()
         if stop:
-            if 'tolconditioncov' in stop:
+            if 'tolconditioncov' in stop:    # pragma: no-cover
                 return 'Ill-conditioned covariance matrix.'
 
             self._logger.debug(
