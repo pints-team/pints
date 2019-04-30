@@ -545,7 +545,7 @@ class OptimisationController(object):
 
                 # Error in optimiser
                 error = self._optimiser.stop()
-                if error:
+                if error:   # pragma: no cover
                     running = False
                     halt_message = ('Halting: ' + str(error))
 
