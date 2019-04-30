@@ -13,7 +13,8 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture, CircularBoundaries
+# from shared import StreamCapture
+from shared import CircularBoundaries
 
 debug = False
 method = pints.CMAES
