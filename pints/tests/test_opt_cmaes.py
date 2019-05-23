@@ -13,7 +13,8 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture, CircularBoundaries
+from shared import CircularBoundaries
+from shared import StreamCapture
 
 debug = False
 method = pints.CMAES
@@ -79,6 +80,7 @@ class TestCMAES(unittest.TestCase):
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
 
+    @unittest.skip('Newer versions of cma no longer trigger this condition')
     def test_stopping_on_ill_conditioned_covariance_matrix(self):
         """ Tests that ill conditioned covariance matrices are detected. """
         from scipy.integrate import odeint
@@ -161,4 +163,6 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
     unittest.main()

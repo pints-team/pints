@@ -128,22 +128,18 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         #       - k
         #       )
         #
-        # For this distribution, s1 is the identify matrix, and m1 is zero,
-        # so it simplifies to
-        #
-        # dkl = 0.5 * (trace(s0) + m0.dot(m0) - log(det(s0)) - k))
-        #
         m0 = np.mean(y, axis=0)
         s0 = np.cov(y.T)
         s1 = self._sigma
         m1 = np.zeros(self.n_parameters())
         s1_inv = np.linalg.inv(s1)
         return 0.5 * (
-            np.trace(np.matmul(s1_inv, s0)) +
-            np.matmul(np.matmul(m1 - m0, s1_inv), m1 - m0) -
-            np.log(np.linalg.det(s0)) +
-            np.log(np.linalg.det(s1)) -
-            self._n_parameters)
+            np.trace(np.matmul(s1_inv, s0))
+            + np.matmul(np.matmul((m1 - m0).T, s1_inv), m1 - m0)
+            + np.log(np.linalg.det(s1))
+            - np.log(np.linalg.det(s0))
+            - self._n_parameters
+        )
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """

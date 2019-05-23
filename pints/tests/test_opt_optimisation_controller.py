@@ -61,6 +61,8 @@ class TestOptimisationController(unittest.TestCase):
             self.assertIn('Halting: Maximum number of iterations', c.text())
 
     def test_logging(self):
+
+        # Test with logpdf
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -73,7 +75,6 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(opt.max_iterations(), 10)
         with StreamCapture() as c:
             opt.run()
-
             log_should_be = (
                 'Maximising LogPDF\n'
                 'Using Exponential Natural Evolution Strategy (xNES)\n'
@@ -87,6 +88,37 @@ class TestOptimisationController(unittest.TestCase):
                 '6     42    -4.140462   0:00.0\n'
                 '9     60    -4.140462   0:00.0\n'
                 '10    60    -4.140462   0:00.0\n'
+                'Halting: Maximum number of iterations (10) reached.\n'
+            )
+            self.assertEqual(log_should_be, c.text())
+
+        # Invalid log interval
+        self.assertRaises(ValueError, opt.set_log_interval, 0)
+
+        # Test with error measure
+        r = pints.toy.RosenbrockError()
+        x = np.array([1.01, 1.01])
+        opt = pints.OptimisationController(r, x, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_log_interval(4)
+        opt.set_max_iterations(10)
+        self.assertEqual(opt.max_iterations(), 10)
+        with StreamCapture() as c:
+            opt.run()
+            log_should_be = (
+                'Minimising error measure\n'
+                'Using Exponential Natural Evolution Strategy (xNES)\n'
+                'Running in sequential mode.\n'
+                'Population size: 6\n'
+                'Iter. Eval. Best      Time m:s\n'
+                '0     6      0.888      0:00.0\n'
+                '1     12     0.888      0:00.0\n'
+                '2     18     0.29       0:00.0\n'
+                '3     24     0.29       0:00.0\n'
+                '4     30     0.0813     0:00.0\n'
+                '8     54     0.0652     0:00.0\n'
+                '10    60     0.0431     0:00.0\n'
                 'Halting: Maximum number of iterations (10) reached.\n'
             )
             self.assertEqual(log_should_be, c.text())
