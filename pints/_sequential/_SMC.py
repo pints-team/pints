@@ -250,7 +250,7 @@ class SMC(pints.SMCSampler):
         self._i_temp += 1
 
         # Conditional resampling step
-        if self._resample_end_2_3: # and self._i_temp < len(self._schedule):
+        if self._resample_end_2_3 and self._i_temp < len(self._schedule):
             self._resample()
 
         # Return copy of current samples
