@@ -20,6 +20,46 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
     This class provides fine-grained control over SMC sampling. Users who don't
     require this may prefer to use the :class:`SMCController` class instead.
 
+    Sequential Monte Carlo samplers iteratively update a set of particles, with
+    each iteration using tempering at a different temperature. As part of this
+    iteration, 1 or multiple MCMC steps are performed. In pseudo-code, an SMC
+    run looks like this::
+
+        for i, temperature in enumerate(temperature_schedule):
+            for j in range(mcmc_steps):
+                for k in particles:
+                    update_particle()
+
+    This can be made more efficient by using an adaptive MCMC method, in which
+    case the pseudo-code becomes::
+
+        for i, temperature in enumerate(temperature_schedule):
+            for j in range(mcmc_steps):
+                for k in particles:
+                    update_particle(k)
+                    adapt_mcmc_chain()
+
+    To allow parallelisation, this method performs particle updates in batches
+    (where the number of batches can be set to equal the number of processes),
+    leading to the following pseudo-code::
+
+        for i, temperature in enumerate(temperature_schedule):
+            for j in range(mcmc_steps):
+                k < 0
+                while k < n_particles:
+                    for p in range(k, k + batch_size):
+                        update_particle(p)
+                    k += batch_size
+                    adapt_mcmc_chain()
+
+    This fits into ask/tell in the following manner:
+
+        1. The first ask() will return ``n_particles`` initial points to be
+           evaluated.
+        2. Subsequent calls will ask for ``<= n_batch`` particles to be
+           evaluated, and return ``None`` unless this completes all operations
+           for the current temperature.
+
     Arguments:
 
     ``log_prior``
@@ -61,11 +101,20 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
         # Number of MCMC steps per temperature
         self._n_mcmc_steps = 1
 
+        # Batch-size to evaluate particles in (for parallelisation)
+        self._n_batch = 1
+
     def ask(self):
         """
         Returns an array of samples to calculate log pdf values for.
         """
         raise NotImplementedError
+
+    def batch_size(self):
+        """
+        Returns the batch size used for particle evaluation by this sampler.
+        """
+        return self._n_batch
 
     def name(self):
         """
@@ -91,6 +140,23 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
         """
         return self._n_particles
 
+    def set_batch_size(self, n):
+        """
+        Sets the number of samples to be evaluated in each ask/tell call.
+
+        Note that the actual number may differ: all particles are evaluated in
+        the first ask/tell call, and subsequent ask/tells will evaluate _at
+        most_ ``n`` samples.
+        """
+        if self._running:
+            raise RuntimeError(
+                'Batch size cannot be changed during run.')
+
+        n = int(n)
+        if n < 1:
+            raise ValueError('Batch size must be 1 or greater.')
+        self._n_batch = n
+
     def set_n_kernel_samples(self, n):  # TODO CHANGE NAME?
         """
         Sets the number of MCMC steps to take for each temperature.
@@ -113,9 +179,8 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
                 'Number of particles cannot be changed during run.')
 
         n = int(n)
-        #TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-        #if n < 10:
-        #    raise ValueError('Number of particles must be at least 10.')
+        if n < 10:
+            raise ValueError('Number of particles must be at least 10.')
         self._n_particles = n
 
     def set_temperature_schedule(self, schedule=10):
@@ -265,7 +330,7 @@ class SMCController(object):
             raise RuntimeError('A controller can only be run once.')
         self._has_run = True
 
-        # Create evaluator object
+        # Create evaluator object, and set SMC batch size
         if self._parallel:
             # Guess number of workers if not explicitly set
             if self._n_workers is None:
@@ -274,8 +339,10 @@ class SMCController(object):
                     pints.ParallelEvaluator.cpu_count() * 2)
 
             evaluator = pints.ParallelEvaluator(self._log_pdf, self._n_workers)
+            self._sampler.set_batch_size(self._n_workers)
         else:
             evaluator = pints.SequentialEvaluator(self._log_pdf)
+            self._sampler.set_batch_size(1)
 
         # Count evaluations
         evaluations = 0
@@ -298,10 +365,6 @@ class SMCController(object):
                 print('Number of temperatures: ' + str(n_temperatures))
                 print('Number of MCMC steps at each temperature: '
                       + str(n_mcmc_steps))
-                #if self._resample_end_2_3:
-                #    print('Resampling at end of each iteration')
-                #else:
-                #    print('Not resampling at end of each iteration')
                 if self._parallel:
                     print('Running in parallel with ' + str(self._n_workers)
                           + ' worker processes.')
@@ -323,19 +386,23 @@ class SMCController(object):
 
         # Start sampling
         timer = pints.Timer()
+        total_iterations = 0
         for iteration in range(n_iter):
 
-            # Get points
-            xs = self._sampler.ask()
+            samples = None
+            while samples is None:
 
-            # Calculate log pdfs
-            fxs = evaluator.evaluate(xs)
+                # Get points
+                xs = self._sampler.ask()
 
-            # Update evaluation count
-            evaluations += n_particles
+                # Calculate log pdfs
+                fxs = evaluator.evaluate(xs)
 
-            # Update sampler
-            samples = self._sampler.tell(fxs)
+                # Update evaluation count
+                evaluations += len(fxs)
+
+                # Update sampler
+                samples = self._sampler.tell(fxs)
 
             # Show progress
             logged_current_iteration = False
@@ -348,7 +415,7 @@ class SMCController(object):
                 logger.log(timer.time())
 
                 # Choose next logging point
-                if iteration < self._message_warm_up:
+                if total_iterations < self._message_warm_up:
                     next_message = iteration + 1
                 else:
                     next_message = self._message_interval * (
@@ -430,6 +497,12 @@ class SMCController(object):
         setting ``parallel`` to an integer greater than 0.
         Parallelisation can be disabled by setting ``parallel`` to anything
         less than 2, or to ``False``.
+
+        N.B. Enabling parallelisation in :class:`SMCSampler` methods may
+        negatively affect performance. In particular, methods like
+        :class:`pints.SMC` use an adaptive MCMC chain internally, and will
+        adapt after every sample evaluated in sequential mode. In parallel mode
+        adaptation happens only after every batch is completed.
         """
         if self._has_run:
             raise RuntimeError(

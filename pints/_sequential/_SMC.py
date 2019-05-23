@@ -35,7 +35,7 @@ class SMC(pints.SMCSampler):
 
         # Determines whether to resample particles at end of steps 2 and 3 from
         # Del Moral et al. (2006)
-        self._resample_end_2_3 = False
+        self._resample_end_2_3 = True
 
         # Current samples, their log pdfs, and weights
         self._samples = None
@@ -51,17 +51,25 @@ class SMC(pints.SMCSampler):
         self._method = pints.AdaptiveCovarianceMCMC
         self._chain = None
 
-        # Iterations: i_temp (outer loop) and i_mcmc (inner loop)
+        # Iterations:
+        #   i_temp (outer loop)
+        #       i_mcmc (inner loop)
+        #           i_batch (indice of first sample to update)
         self._i_temp = 1
         self._i_mcmc = 0
+        self._i_batch = 0
+
+        # Status
+        self._expecting_ask = True
         self._finished = False
 
     def ask(self):
         """ See :meth:`SMCSampler.ask()`. """
 
         # Check ask/tell pattern
-        if self._proposals is not None:
+        if not self._expecting_ask:
             raise RuntimeError('Ask called when expecting tell.')
+        self._expecting_ask = False
 
         # Too many steps?
         if self._i_temp >= len(self._schedule):
@@ -89,7 +97,9 @@ class SMC(pints.SMCSampler):
             self._proposals.setflags(write=False)
 
             # Create and configure chain
-            self._chain = self._method(self._proposals[0], self._sigma0)
+            x0 = self._proposals[0]
+            #TODO: COME UP WITH BETTER x0
+            self._chain = self._method(x0, self._sigma0)
             # TODO: Ignoring initial phase for now
             if self._chain.needs_initial_phase():
                 self._chain.set_initial_phase(False)
@@ -103,21 +113,27 @@ class SMC(pints.SMCSampler):
         # Get beta, using next temperature
         beta = self._schedule[self._i_temp]
 
-        # If ESS < threshold then resample to avoid degeneracies
-        if self._last_ess < self._ess_threshold:
-            self._resample()
+        # At the start of every MCMC iteration, create a new proposal matrix
+        if self._i_batch == 0:
+            # If ESS < threshold then resample to avoid degeneracies
+            if self._last_ess < self._ess_threshold:
+                self._resample()
 
-        # Repeatedly set chain to proposed point and its tempered PDF, get new
-        # proposals and return
-        proposals = np.zeros((self._n_particles, self._n_parameters))
-        for i, sample in enumerate(self._samples):
-            self._chain.replace(sample, self._temper(
-                self._log_pdfs[i], self._log_prior(sample), beta))
-            proposals[i] = self._chain.ask()
+            self._proposals = np.zeros((self._n_particles, self._n_parameters))
 
-        self._proposals = proposals
-        self._proposals.setflags(write=False)
-        return self._proposals
+        # Set the proposals in batches
+        lo = self._i_batch
+        hi = min(lo + self._n_batch, self._n_particles)
+        for i in range(lo, hi):
+            # Repeatedly set chain to proposed point and its tempered PDF, get
+            # new proposals
+            self._chain.replace(self._samples[i], self._temper(
+                self._log_pdfs[i], self._log_prior(self._samples[i]), beta))
+            self._proposals[i] = self._chain.ask()
+
+        batch = self._proposals[lo:hi]
+        batch.setflags(write=False)
+        return batch
 
     def ess(self):
         """
@@ -133,8 +149,9 @@ class SMC(pints.SMCSampler):
         """ See :meth:`SMCSampler.ask()`. """
 
         # Check ask/tell pattern
-        if self._proposals is None:
+        if self._expecting_ask:
             raise RuntimeError('Tell called when expecting ask.')
+        self._expecting_ask = True
 
         # First step?
         if self._samples is None:
@@ -173,9 +190,19 @@ class SMC(pints.SMCSampler):
         # Normal iteration
         beta = self._schedule[self._i_temp]
 
-        # Update chain to (sample[i], f(sample)[i], proposal[i]), then call
-        # tell() with tempered log pdf values
-        for i, proposed in enumerate(self._proposals):
+        # Update batch of samples
+        lo = self._i_batch
+        hi = min(lo + self._n_batch, self._n_particles)
+        if hi - lo != len(log_pdfs):
+            raise ValueError(
+                'Number of evaluations passed to tell() does not match number'
+                ' of points requested by ask().')
+
+        for i in range(lo, hi):
+            # Update chain to (sample[i], f(sample)[i], proposal[i]), then call
+            # tell() with tempered log pdf values
+            proposed = self._proposals[i]
+
             # `Replace' chain position
             current_tempered = self._temper(
                 self._log_pdfs[i], self._log_prior(self._samples[i]), beta)
@@ -183,12 +210,18 @@ class SMC(pints.SMCSampler):
 
             # Tell, get updated sample
             proposed_tempered = self._temper(
-                log_pdfs[i], self._log_prior(proposed), beta)
+                log_pdfs[i - lo], self._log_prior(proposed), beta)
             self._samples[i] = self._chain.tell(proposed_tempered)
 
             # Update log pdf (to untempered value)
             if np.all(self._samples[i] == proposed):  # TODO: use accepted()
-                self._log_pdfs[i] = log_pdfs[i]
+                self._log_pdfs[i] = log_pdfs[i - lo]
+
+        # Update i_batch
+        self._i_batch += self._n_batch
+        if self._i_batch < self._n_particles:
+            return None
+        self._i_batch = 0
 
         # Clear proposals
         self._proposals = None
@@ -217,10 +250,8 @@ class SMC(pints.SMCSampler):
         self._i_temp += 1
 
         # Conditional resampling step
-        if self._resample_end_2_3 and self._i_temp < len(self._schedule):
+        if self._resample_end_2_3: # and self._i_temp < len(self._schedule):
             self._resample()
-
-        print(self._samples)
 
         # Return copy of current samples
         return np.copy(self._samples)
@@ -262,12 +293,14 @@ class SMC(pints.SMCSampler):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Temperature')
         logger.add_float('ESS')
+        logger.add_float('Acc.')
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
         # Called after tell() has updated i_temp!
         logger.log(1 - self._schedule[self._i_temp - 1])
-        logger.log(self.ess())
+        logger.log(self._last_ess)
+        logger.log(self._chain.acceptance_rate())
 
     def _resample(self, update_weights=True):
         """
