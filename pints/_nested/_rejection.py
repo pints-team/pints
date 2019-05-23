@@ -11,7 +11,12 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy.misc import logsumexp
+
+try:
+    # Import logsumexp from its new location in scipy.special
+    from scipy.special import logsumexp
+except ImportError:  # pragma: no cover
+    from scipy.misc import logsumexp
 
 
 class NestedRejectionSampler(pints.NestedSampler):
