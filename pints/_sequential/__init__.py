@@ -145,8 +145,8 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
         Sets the number of samples to be evaluated in each ask/tell call.
 
         Note that the actual number may differ: all particles are evaluated in
-        the first ask/tell call, and subsequent ask/tells will evaluate _at
-        most_ ``n`` samples.
+        the first ask/tell call, and subsequent ask/tells will evaluate *at
+        most* ``n`` samples.
         """
         if self._running:
             raise RuntimeError(
