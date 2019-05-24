@@ -45,7 +45,7 @@ If you use PINTS in any scientific work, please [credit our work with a citation
 
 You'll need the following requirements:
 
-- Python 2.7 or Python 3.4+
+- Python 2.7 or Python 3.5+
 - Python libraries: `cma` `numpy` `matplotlib` `scipy`
 
 These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:

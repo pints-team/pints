@@ -20,10 +20,6 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
-        - python: "3.4"
-          env:
-            - PINTS_UNIT=true
-          if: type != cron
         - python: "3.5"
           env:
             - PINTS_UNIT=true
