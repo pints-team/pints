@@ -1,6 +1,6 @@
 sudo: false
 
-dist: trusty
+dist: xenial
 
 language: python
 
@@ -16,10 +16,6 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
-        - python: "2.7.6"
-          env:
-            - PINTS_UNIT=true
-          if: type != cron
         - python: "3.4"
           env:
             - PINTS_UNIT=true
@@ -32,10 +28,10 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
-        #- python: "3.7"
-        #  env:
-        #    - PINT_UNIT=true
-        #  if: type != cron
+        - python: "3.7"
+          env:
+            - PINTS_UNIT=true
+          if: type != cron
         # Unit testing on OS/X
         - os: osx
           language: generic
@@ -43,20 +39,20 @@ matrix:
             - PINTS_UNIT=true
           if: type != cron
         # Docs, style and cover checking, latest Python version only
-        - python: "3.6"
+        - python: "3.7"
           env:
             - PINTS_DOCS=true
           if: type != cron
-        - python: "3.6"
+        - python: "3.7"
           env:
             - PINTS_STYLE=true
           if: type != cron
-        - python: "3.6"
+        - python: "3.7"
           env:
             - PINTS_COVER=true
           if: type != cron
           # Cron jobs
-        - python: "3.6"
+        - python: "3.7"
           if: type == cron
 
 # Install dependencies
