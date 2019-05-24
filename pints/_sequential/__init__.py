@@ -238,6 +238,9 @@ class SMCSampler(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the sampler's algorithm, using the given log
         pdf values.
+        Should return a list of samples after every full iteration (i.e. only
+        when all MCMC/kernel iterations for a given temperature have been
+        done).
         """
         raise NotImplementedError
 
@@ -351,7 +354,7 @@ class SMCController(object):
         n_particles = self._sampler.n_particles()
         n_mcmc_steps = self._sampler.n_kernel_samples()
         n_temperatures = self._sampler.n_temperatures()
-        n_iter = (1 + (n_temperatures - 1) * n_mcmc_steps)
+        n_iter = n_temperatures
 
         # Set up progress reporting
         next_message = 0
@@ -386,7 +389,6 @@ class SMCController(object):
 
         # Start sampling
         timer = pints.Timer()
-        total_iterations = 0
         for iteration in range(n_iter):
 
             samples = None
@@ -415,7 +417,7 @@ class SMCController(object):
                 logger.log(timer.time())
 
                 # Choose next logging point
-                if total_iterations < self._message_warm_up:
+                if iteration < self._message_warm_up:
                     next_message = iteration + 1
                 else:
                     next_message = self._message_interval * (
