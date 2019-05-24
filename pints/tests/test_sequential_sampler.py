@@ -50,6 +50,7 @@ class TestSMCSampler(unittest.TestCase):
         sampler.set_n_kernel_samples(20)
         sampler.set_n_particles(20)
         sampler.set_temperature_schedule(10)
+        sampler.set_batch_size(4)
 
         sampler.ask()
 
@@ -60,6 +61,8 @@ class TestSMCSampler(unittest.TestCase):
             RuntimeError, 'during run', sampler.set_n_particles, 20)
         self.assertRaisesRegex(
             RuntimeError, 'during run', sampler.set_temperature_schedule, 10)
+        self.assertRaisesRegex(
+            RuntimeError, 'during run', sampler.set_batch_size, 4)
 
     def test_get_set(self):
 
@@ -78,6 +81,12 @@ class TestSMCSampler(unittest.TestCase):
         self.assertEqual(smc.sampler().n_kernel_samples(), 10)
         smc.sampler().set_n_kernel_samples(1)
         self.assertEqual(smc.sampler().n_kernel_samples(), 1)
+        smc.sampler().set_batch_size(1)
+        self.assertEqual(smc.sampler().batch_size(), 1)
+        smc.sampler().set_batch_size(2)
+        self.assertEqual(smc.sampler().batch_size(), 2)
+        smc.sampler().set_batch_size(10)
+        self.assertEqual(smc.sampler().batch_size(), 10)
 
         # Test invalid values
         self.assertRaisesRegex(
@@ -92,6 +101,10 @@ class TestSMCSampler(unittest.TestCase):
             ValueError, 'at least two',
             smc.sampler().set_temperature_schedule, 1)
         smc.sampler().set_temperature_schedule(2)
+        self.assertRaisesRegex(
+            ValueError, '1 or greater',
+            smc.sampler().set_batch_size, 0)
+        smc.sampler().set_batch_size(3)
 
         # Test setting custom schedule
         sched = [0, 0.1, 0.2, 0.5, 1]
