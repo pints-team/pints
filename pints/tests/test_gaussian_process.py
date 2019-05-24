@@ -56,16 +56,16 @@ class TestGaussianProcess(unittest.TestCase):
         samples = log_pdf.sample(n)
         values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
         gp = pints.GaussianProcess(samples, values)
-        p1_values = np.linspace(5, 20, 50)
-        p2_values = np.linspace(3, 10, 50)
-        p3_values = np.linspace(0.09, 0.092, 50)
+        p1_values = np.linspace(0.4, 0.6, 50)
+        p2_values = np.linspace(0.4, 0.6, 50)
+        p3_values = np.linspace(0.4, 0.6, 50)
         p1_likelihood = np.empty_like(p1_values)
         p2_likelihood = np.empty_like(p2_values)
         p3_likelihood = np.empty_like(p3_values)
         p1_grad_likelihood = np.empty_like(p1_values)
         p2_grad_likelihood = np.empty_like(p2_values)
         p3_grad_likelihood = np.empty_like(p3_values)
-        centre_point = [12.0196836, 7.65880237, 0.0920143]
+        centre_point = [0.5, 0.5, 0.5]
         for i, value in enumerate(p1_values):
             gp.set_hyper_parameters([value, centre_point[1], centre_point[2]])
             p1_likelihood[i] = gp.likelihood()
@@ -111,28 +111,30 @@ class TestGaussianProcess(unittest.TestCase):
         gp_h2 = pints.GaussianProcess(samples, values, hierarchical_matrix=True)
 
         for gp in [gp_standard, gp_free, gp_dense, gp_h2]:
-            gp.set_hyper_parameters([10.0, 10.1, 12.1])
+            gp.set_hyper_parameters([0.5, 0.5, 0.5])
 
         gp_h2._gaussian_process.set_h2_order(4)
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()
-        for gp in [gp_dense, gp_free]:
+        for gp in [gp_dense, gp_free, gp_h2]:
             gp._gaussian_process.set_stochastic_samples(4)
             gp._gaussian_process.set_tolerance(1e-6)
-            gp._gaussian_process.set_chebyshev_n(200)
-            repeats = 100
-            likelihood_approx = np.empty(repeats,dtype=float)
-            grad_likelihood_approx = np.empty((repeats,3),dtype=float)
+            gp._gaussian_process.set_chebyshev_n(100)
+            repeats = 50
+            likelihood_approx = np.empty(repeats, dtype=float)
+            grad_likelihood_approx = np.empty((repeats, 3), dtype=float)
             for r in range(repeats):
                 likelihood_approx[r] = gp.likelihood()
-                grad_likelihood_approx[r,:] = gp.grad_likelihood()
+                grad_likelihood_approx[r, :] = gp.grad_likelihood()
 
-            np.testing.assert_almost_equal(
-                likelihood_exact, np.mean(likelihood_approx), decimal=1)
+            self.assertAlmostEqual(likelihood_exact, np.mean(likelihood_approx),
+                                   delta=np.std(likelihood_approx))
 
-            np.testing.assert_almost_equal(
-                grad_likelihood_exact, np.mean(grad_likelihood_approx,axis=0), decimal=2)
+            for i in range(3):
+                self.assertAlmostEqual(
+                    grad_likelihood_exact[i], np.mean(grad_likelihood_approx[:, i]),
+                    delta=np.std(grad_likelihood_approx[:, i]))
 
     def test_direct_likelihood(self):
         log_pdf = self.problem1D()
@@ -143,7 +145,7 @@ class TestGaussianProcess(unittest.TestCase):
         gp_direct = pints.GaussianProcess(samples, values, direct=True)
 
         for gp in [gp_standard, gp_direct]:
-            gp.set_hyper_parameters([5.0, 0.6, 12.1])
+            gp.set_hyper_parameters([0.5, 0.5, 0.5])
 
         grad_likelihood_exact = gp_standard.grad_likelihood()
         likelihood_exact = gp_standard.likelihood()
@@ -165,14 +167,15 @@ class TestGaussianProcess(unittest.TestCase):
         gp_standard = pints.GaussianProcess(samples, values)
         gp_free = pints.GaussianProcess(samples, values, matrix_free=True)
         gp_dense = pints.GaussianProcess(samples, values, dense_matrix=True)
+        gp_direct = pints.GaussianProcess(samples, values, direct=True)
 
-        for gp in [gp_standard, gp_free, gp_dense]:
-            gp.set_hyper_parameters([12.0, 1.6, 12.1])
+        for gp in [gp_standard, gp_free, gp_dense, gp_direct]:
+            gp.set_hyper_parameters([0.5, 0.5, 0.5])
 
         x = np.array([0.5*(samples[0] + samples[1])])
         mean_exact, var_exact = gp_standard.predict(x)
         self.assertEqual(mean_exact, gp_standard(x))
-        for gp in [gp_free, gp_dense]:
+        for gp in [gp_free, gp_dense, gp_direct]:
             mean_approx, var_approx = gp.predict(x)
             self.assertAlmostEqual(mean_approx, gp(x))
             self.assertAlmostEqual(mean_approx, mean_exact)
@@ -183,11 +186,11 @@ class TestGaussianProcess(unittest.TestCase):
         for log_pdf in [self.problem1D(), self.problem2D()]:
 
             n = 20
-            sigma = 0.1
             samples = log_pdf.sample(n)
             values = log_pdf(samples) + np.random.normal(0, 0.1, size=n)
             for gp in [
                     pints.GaussianProcess(samples, values),
+                    pints.GaussianProcess(samples, values, direct=True),
                     pints.GaussianProcess(samples, values, matrix_free=True),
                     pints.GaussianProcess(samples, values, dense_matrix=True),
             ]:

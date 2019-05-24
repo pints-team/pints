@@ -30,6 +30,10 @@ add_definitions(-DHAVE_H2LIB)
 # Aboria 
 list(APPEND include_dirs ${lib_dir}/Aboria/src)
 list(APPEND include_dirs ${lib_dir}/Aboria/third-party)
+set(Aboria_LOG_LEVEL 1 CACHE STRING "Logging level (1 = least, 3 = most)")
+add_definitions(-DABORIA_LOG_LEVEL=${Aboria_LOG_LEVEL})
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cxxtest/build_tools/cmake/"
 
 # Eigen
 add_definitions(-DHAVE_EIGEN)
