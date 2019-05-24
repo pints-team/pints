@@ -156,6 +156,12 @@ class SMC(pints.SMCSampler):
         # First step?
         if self._samples is None:
 
+            # Check returned size
+            if len(log_pdfs) != len(self._proposals):
+                raise ValueError(
+                    'Number of evaluations passed to tell() does not match'
+                    ' number requested by ask().')
+
             # Store current samples and logpdfs
             # (Copy proposals to remove read-only property - can't just unset
             #  flags as user still has reference too)
@@ -196,7 +202,7 @@ class SMC(pints.SMCSampler):
         if hi - lo != len(log_pdfs):
             raise ValueError(
                 'Number of evaluations passed to tell() does not match number'
-                ' of points requested by ask().')
+                ' requested by ask().')
 
         for i in range(lo, hi):
             # Update chain to (sample[i], f(sample)[i], proposal[i]), then call

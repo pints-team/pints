@@ -23,6 +23,9 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
+method = pints.SMC
+
+
 LOG_SCREEN = [
     'Using Sequential Monte Carlo',
     'Total number of particles: 10',
@@ -36,7 +39,7 @@ LOG_SCREEN = [
 ]
 
 
-class TestSMCController(unittest.TestCase):
+class TestSMC(unittest.TestCase):
     """
     Unit (not functional!) tests for :class:`SMC`.
     """
@@ -66,7 +69,7 @@ class TestSMCController(unittest.TestCase):
             RuntimeError, 'expecting ask', sampler.tell, fxs)
 
         # Can't run too many times
-        smc = pints.SMCController(self.pdf, self.prior)
+        smc = pints.SMCController(self.pdf, self.prior, method=method)
         smc.sampler().set_n_particles(10)
         smc.sampler().set_n_kernel_samples(1)
         smc.sampler().set_temperature_schedule(4)
@@ -75,7 +78,7 @@ class TestSMCController(unittest.TestCase):
         self.assertRaisesRegex(
             RuntimeError, 'maximum number of iterations', smc.sampler().ask)
 
-        smc = pints.SMCController(self.pdf, self.prior)
+        smc = pints.SMCController(self.pdf, self.prior, method=method)
         smc.sampler().set_n_particles(10)
         smc.sampler().set_n_kernel_samples(3)
         smc.sampler().set_temperature_schedule(4)
@@ -84,12 +87,31 @@ class TestSMCController(unittest.TestCase):
         self.assertRaisesRegex(
             RuntimeError, 'maximum number of iterations', smc.sampler().ask)
 
+        # Can't give wrong number of samples in initial tell()
+        sampler = pints.SMC(self.prior)
+        sampler.set_batch_size(4)
+        x0 = sampler.ask()
+        self.assertRaisesRegex(
+            ValueError, 'does not match number requested',
+            sampler.tell, [1] * (len(x0) + 1))
+
+        # Can't give wrong number of samples in ordinary tell()
+        sampler = pints.SMC(self.prior)
+        sampler.set_batch_size(4)
+        x0 = sampler.ask()
+        sampler.tell([1] * len(x0))
+        x0 = sampler.ask()
+        self.assertRaisesRegex(
+            ValueError, 'does not match number requested',
+            sampler.tell, [1] * (len(x0) + 1))
+
     def test_run(self):
 
         # Test with 1 kernel sample
         n = 10
         d = 2
-        smc = pints.SMCController(self.pdf, self.prior, self.sigma0)
+        smc = pints.SMCController(
+            self.pdf, self.prior, self.sigma0, method=method)
         smc.sampler().set_temperature_schedule(5)
         smc.sampler().set_n_particles(n)
         smc.sampler().set_n_kernel_samples(1)
@@ -101,7 +123,7 @@ class TestSMCController(unittest.TestCase):
 
         # Check creation with sigma vector
         sigma0 = np.array([2, 2])
-        smc = pints.SMCController(self.pdf, self.prior, sigma0)
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
 
         # Test with multiple kernel samples
         smc.sampler().set_temperature_schedule(3)
@@ -112,7 +134,7 @@ class TestSMCController(unittest.TestCase):
         self.assertEqual(samples.shape, (n, d))
 
         # Test with multiple kernel samples, no resampling end 2 3
-        smc = pints.SMCController(self.pdf, self.prior, sigma0)
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
         smc.sampler().set_temperature_schedule(3)
         smc.sampler().set_n_particles(n)
         smc.sampler().set_n_kernel_samples(3)
@@ -122,7 +144,7 @@ class TestSMCController(unittest.TestCase):
         self.assertEqual(samples.shape, (n, d))
 
         # Test with user-specified ess threshold
-        smc = pints.SMCController(self.pdf, self.prior, sigma0)
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
         smc.sampler().set_temperature_schedule(3)
         smc.sampler().set_n_particles(n)
         smc.sampler().set_n_kernel_samples(3)
@@ -133,7 +155,7 @@ class TestSMCController(unittest.TestCase):
         self.assertEqual(samples.shape, (n, d))
 
         # Test unsetting user-specified ess threshold
-        smc = pints.SMCController(self.pdf, self.prior, sigma0)
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
         smc.sampler().set_temperature_schedule(3)
         smc.sampler().set_n_particles(n)
         smc.sampler().set_n_kernel_samples(3)
@@ -152,7 +174,7 @@ class TestSMCController(unittest.TestCase):
         self.assertEqual(samples.shape, (n, d))
 
         # Sneakily set invalid ess threshold
-        smc = pints.SMCController(self.pdf, self.prior, sigma0)
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
         smc.sampler().set_temperature_schedule(3)
         smc.sampler().set_n_particles(n * 2)
         smc.sampler().set_ess_threshold(n + 1)
@@ -160,10 +182,38 @@ class TestSMCController(unittest.TestCase):
         smc.set_log_to_screen(False)
         self.assertRaisesRegex(RuntimeError, 'lower than or equal', smc.run)
 
+        # Test with batch size > 1
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(10)
+        smc.sampler().set_batch_size(5)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
+        self.assertEqual(samples.shape, (10, 2))
+
+        # Test with batch size == n_particles
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(10)
+        smc.sampler().set_batch_size(10)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
+        self.assertEqual(samples.shape, (10, 2))
+
+        # Test with akward batch size
+        smc = pints.SMCController(self.pdf, self.prior, sigma0, method=method)
+        smc.sampler().set_temperature_schedule(3)
+        smc.sampler().set_n_particles(11)
+        smc.sampler().set_batch_size(5)
+        smc.set_log_to_screen(False)
+        samples = smc.run()
+        self.assertEqual(samples.shape, (11, 2))
+
     def test_info_methods(self):
 
         n = 10
-        smc = pints.SMCController(self.pdf, self.prior, self.sigma0)
+        smc = pints.SMCController(
+            self.pdf, self.prior, self.sigma0, method=method)
         smc.sampler().set_n_particles(10)
 
         self.assertEqual('Sequential Monte Carlo', smc.sampler().name())
@@ -191,7 +241,7 @@ class TestSMCController(unittest.TestCase):
 
         # Set very high ess threshold, triggering lots of resampling
         n = 10
-        smc = pints.SMCController(self.pdf, self.prior)
+        smc = pints.SMCController(self.pdf, self.prior, method=method)
         smc.sampler().set_temperature_schedule(3)
         smc.sampler().set_n_particles(n)
         smc.sampler().set_ess_threshold(n)
@@ -205,7 +255,7 @@ class TestSMCController(unittest.TestCase):
 
         # No output
         with StreamCapture() as capture:
-            smc = pints.SMCController(self.pdf, self.prior)
+            smc = pints.SMCController(self.pdf, self.prior, method=method)
             smc.sampler().set_temperature_schedule(3)
             smc.sampler().set_n_particles(n)
             smc.set_log_to_screen(False)
@@ -216,7 +266,7 @@ class TestSMCController(unittest.TestCase):
         # With output to screen
         np.random.seed(1)
         with StreamCapture() as capture:
-            smc = pints.SMCController(self.pdf, self.prior)
+            smc = pints.SMCController(self.pdf, self.prior, method=method)
             smc.sampler().set_temperature_schedule(3)
             smc.sampler().set_n_particles(n)
             smc.set_log_to_screen(True)
