@@ -60,7 +60,9 @@ Then navigate to the path where you downloaded Pints to, and install both Pints 
 $ pip install .
 ```
 
-Or, if you want to install Pints as a [developer](CONTRIBUTING.md), use
+(If you're on Windows, you might need the longer version of this command: `python -m pip install .`)
+
+To install Pints as a [developer](CONTRIBUTING.md), use
 
 ```
 $ pip install -e .[dev,docs]
