@@ -19,5 +19,11 @@ __pycache__/
 # vscode
 .vscode
 
+# pycharm
+.idea
+
 # Studies have their own repo now
 studies
+
+# venvs
+venv*
