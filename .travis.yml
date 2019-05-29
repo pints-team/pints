@@ -17,6 +17,19 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
+        # Docs, style and cover checking, latest Python version only
+        - python: "3.7"
+          env:
+            - PINTS_DOCS=true
+          if: type != cron
+        - python: "3.7"
+          env:
+            - PINTS_STYLE=true
+          if: type != cron
+        - python: "3.7"
+          env:
+            - PINTS_COVER=true
+          if: type != cron
         # Unit testing on all supported Python versions on Ubuntu
         - python: "2.7.6"
           dist: trusty
@@ -39,20 +52,7 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
-        # Docs, style and cover checking, latest Python version only
-        - python: "3.7"
-          env:
-            - PINTS_DOCS=true
-          if: type != cron
-        - python: "3.7"
-          env:
-            - PINTS_STYLE=true
-          if: type != cron
-        - python: "3.7"
-          env:
-            - PINTS_COVER=true
-          if: type != cron
-          # Cron jobs
+        # Cron jobs
         - python: "3.7"
           if: type == cron
 
