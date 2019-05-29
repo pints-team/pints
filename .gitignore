@@ -25,5 +25,5 @@ __pycache__/
 # Studies have their own repo now
 studies
 
-# venvs
+# Virtual environments
 venv*
