@@ -17,39 +17,13 @@ import unittest
 import subprocess
 
 
-def run_unit_tests(executable=None):
+def run_unit_tests():
     """
-    Runs unit tests, exits if they don't finish.
-
-    If an ``executable`` is given, tests are run in subprocesses using the
-    given executable (e.g. ``python2`` or ``python3``).
+    Runs unit tests (without subprocesses).
     """
     tests = os.path.join('pints', 'tests')
-    if executable is None:
-        suite = unittest.defaultTestLoader.discover(tests, pattern='test*.py')
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    else:
-        print('Running unit tests with executable `' + executable + '`')
-        cmd = [executable] + [
-            '-m',
-            'unittest',
-            'discover',
-            '-v',
-            tests,
-        ]
-        p = subprocess.Popen(cmd)
-        try:
-            ret = p.wait()
-        except KeyboardInterrupt:
-            try:
-                p.terminate()
-            except OSError:
-                pass
-            p.wait()
-            print('')
-            sys.exit(1)
-        if ret != 0:
-            sys.exit(ret)
+    suite = unittest.defaultTestLoader.discover(tests, pattern='test*.py')
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
 def run_flake8():
@@ -58,7 +32,9 @@ def run_flake8():
     """
     print('Running flake8 ... ')
     sys.stdout.flush()
-    p = subprocess.Popen(['flake8'], stderr=subprocess.PIPE)
+    p = subprocess.Popen(
+        [sys.executable, '-m', 'flake8'], stderr=subprocess.PIPE
+    )
     try:
         ret = p.wait()
     except KeyboardInterrupt:
@@ -101,7 +77,8 @@ def run_doctests():
 
 def doctest_sphinx():
     """
-    Checks that sphinx-build can be invoked without producing errors
+    Runs sphinx-build in a subprocess, checking that it can be invoked without
+    producing errors.
     """
     print('Checking if docs can be built.')
     p = subprocess.Popen([
@@ -442,9 +419,9 @@ def scan_for_notebooks(
     return ok
 
 
-def test_notebook(path, executable='python'):
+def test_notebook(path):
     """
-    Tests a single notebook, exists if it doesn't finish.
+    Tests a notebook in a subprocess, exists if it doesn't finish.
     """
     import nbconvert
     import pints
@@ -460,14 +437,15 @@ def test_notebook(path, executable='python'):
     code = '\n'.join([x for x in code.splitlines() if x[:9] != '# coding'])
 
     # Tell matplotlib not to produce any figures
-    env = dict(os.environ)
+    env = os.environ.copy()
     env['MPLBACKEND'] = 'Template'
 
     # Run in subprocess
-    cmd = [executable] + ['-c', code]
+    cmd = [sys.executable, '-c', code]
     try:
         p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+        )
         stdout, stderr = p.communicate()
         # TODO: Use p.communicate(timeout=3600) if Python3 only
         if p.returncode != 0:
@@ -532,21 +510,6 @@ if __name__ == '__main__':
         action='store_true',
         help='Run all unit tests using the `python` interpreter.',
     )
-    parser.add_argument(
-        '--unit2',
-        action='store_true',
-        help='Run all unit tests using the `python2` interpreter.',
-    )
-    parser.add_argument(
-        '--unit3',
-        action='store_true',
-        help='Run all unit tests using the `python3` interpreter.',
-    )
-    parser.add_argument(
-        '--nosub',
-        action='store_true',
-        help='Run all unit tests without starting a subprocess.',
-    )
     # Notebook tests
     parser.add_argument(
         '--books',
@@ -585,15 +548,6 @@ if __name__ == '__main__':
     # Unit tests
     if args.unit:
         has_run = True
-        run_unit_tests('python')
-    if args.unit2:
-        has_run = True
-        run_unit_tests('python2')
-    if args.unit3:
-        has_run = True
-        run_unit_tests('python3')
-    if args.nosub:
-        has_run = True
         run_unit_tests()
     # Doctests
     if args.doctest:
@@ -613,7 +567,7 @@ if __name__ == '__main__':
     if args.quick:
         has_run = True
         run_flake8()
-        run_unit_tests('python')
+        run_unit_tests()
         run_doctests()
     # Help
     if not has_run:
