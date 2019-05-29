@@ -12,6 +12,11 @@ branches:
 matrix:
     include:
         # Unit testing on all supported Python versions on Ubuntu
+        - python: "2.7.6"
+          dist: trusty
+          env:
+            - PINTS_UNIT=true
+          if: type != cron
         - python: "2.7"
           env:
             - PINTS_UNIT=true
