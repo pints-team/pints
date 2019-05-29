@@ -19,7 +19,7 @@ import subprocess
 
 def run_unit_tests():
     """
-    Runs unit tests using same interpreter and environment as for this script.
+    Runs unit tests (without subprocesses).
     """
     tests = os.path.join('pints', 'tests')
     suite = unittest.defaultTestLoader.discover(tests, pattern='test*.py')
@@ -77,7 +77,8 @@ def run_doctests():
 
 def doctest_sphinx():
     """
-    Checks that sphinx-build can be invoked without producing errors
+    Runs sphinx-build in a subprocess, checking that it can be invoked without
+    producing errors.
     """
     print('Checking if docs can be built.')
     p = subprocess.Popen([
@@ -420,7 +421,7 @@ def scan_for_notebooks(
 
 def test_notebook(path):
     """
-    Tests a single notebook, exists if it doesn't finish.
+    Tests a notebook in a subprocess, exists if it doesn't finish.
     """
     import nbconvert
     import pints
