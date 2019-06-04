@@ -2,6 +2,6 @@
 DreamMCMC
 *********
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: DreamMCMC

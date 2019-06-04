@@ -2,7 +2,7 @@
 Hamiltonian MCMC
 ****************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: HamiltonianMCMC
 

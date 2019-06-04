@@ -2,7 +2,7 @@
 Adaptive Covariance MCMC
 ************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: AdaptiveCovarianceMCMC
 

@@ -2,7 +2,7 @@
 SNES
 ****
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: SNES
 

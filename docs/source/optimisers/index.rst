@@ -2,7 +2,7 @@
 Optimisers
 **********
 
-.. module:: pints
+.. currentmodule:: pints
 
 Pints provides a number of optimisers, all implementing the :class:`Optimiser`
 interface, that can be used to find the parameters that minimise an

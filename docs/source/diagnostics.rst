@@ -2,7 +2,7 @@
 Diagnostics
 ***********
 
-.. module:: pints
+.. currentmodule:: pints
 
 Pints provides a number of functions to diagnose MCMC progress and convergence.
 

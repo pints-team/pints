@@ -2,8 +2,7 @@
 Running an optimisation
 ***********************
 
-.. module:: pints
-
+.. currentmodule:: pints
 
 .. autofunction:: optimise
 

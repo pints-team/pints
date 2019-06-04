@@ -2,7 +2,7 @@
 Utilities
 *********
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autofunction:: strfloat
 

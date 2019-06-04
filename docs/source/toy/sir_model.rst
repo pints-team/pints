@@ -2,7 +2,7 @@
 SIR Epidemiology model
 **********************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: SIRModel
 

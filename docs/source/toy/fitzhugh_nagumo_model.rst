@@ -2,7 +2,7 @@
 Fitzhugh-Nagumo Model
 *********************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: FitzhughNagumoModel
 

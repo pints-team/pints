@@ -2,7 +2,7 @@
 xNES
 ****
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: XNES
 

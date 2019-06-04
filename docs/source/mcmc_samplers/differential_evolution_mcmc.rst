@@ -2,6 +2,6 @@
 Differential Evolution MCMC
 ***************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: DifferentialEvolutionMCMC

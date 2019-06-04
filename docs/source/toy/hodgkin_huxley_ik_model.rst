@@ -2,7 +2,7 @@
 Hodgkin-Huxley IK Experiment Model
 **********************************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: HodgkinHuxleyIKModel
 

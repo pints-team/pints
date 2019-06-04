@@ -2,7 +2,7 @@
 MCMC Samplers
 *************
 
-.. module:: pints
+.. currentmodule:: pints
 
 Pints provides a number of MCMC methods, all implementing the :class:`MCMC`
 interface, that can be used to sample from an unknown

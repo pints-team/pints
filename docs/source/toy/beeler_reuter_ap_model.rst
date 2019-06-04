@@ -2,7 +2,7 @@
 Beeler-Reuter Action Potential Model
 ************************************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: ActionPotentialModel
 

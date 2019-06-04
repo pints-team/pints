@@ -2,7 +2,7 @@
 CMA-ES
 ******
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: CMAES
 

@@ -2,7 +2,7 @@
 Running an MCMC routine
 ***********************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autofunction:: mcmc_sample
 

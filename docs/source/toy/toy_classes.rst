@@ -2,7 +2,7 @@
 Toy base classes
 ****************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: ToyLogPDF
 
