@@ -344,7 +344,7 @@ def doctest_slow_books():
     print('All notebooks listed in .slow-books exist.')
 
 
-def run_notebook_tests(skip_slow_books=False, executable='python'):
+def run_notebook_tests(skip_slow_books=False):
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
@@ -379,15 +379,14 @@ def run_notebook_tests(skip_slow_books=False, executable='python'):
                 ignore_list.append(line)
 
     # Scan and run
-    print('Testing notebooks with executable `' + str(executable) + '`')
-    if not scan_for_notebooks('examples', True, executable, ignore_list):
+    print('Testing notebooks')
+    if not scan_for_notebooks('examples', True, ignore_list):
         print('\nErrors encountered in notebooks')
         sys.exit(1)
     print('\nOK')
 
 
-def scan_for_notebooks(
-        root, recursive=True, executable='python', ignore_list=[]):
+def scan_for_notebooks(root, recursive=True, ignore_list=[]):
     """
     Scans for, and tests, all notebooks in a directory.
     """
@@ -406,14 +405,14 @@ def scan_for_notebooks(
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            ok &= scan_for_notebooks(path, recursive, executable)
+            ok &= scan_for_notebooks(path, recursive)
 
         # Test notebooks
         if os.path.splitext(path)[1] == '.ipynb':
             if debug:
                 print(path)
             else:
-                ok &= test_notebook(path, executable)
+                ok &= test_notebook(path)
 
     # Return True if every notebook is ok
     return ok
@@ -426,7 +425,7 @@ def test_notebook(path):
     import nbconvert
     import pints
     b = pints.Timer()
-    print('Test ' + path + ' ... ', end='')
+    print('Running ' + path + ' ... ', end='')
     sys.stdout.flush()
 
     # Load notebook, convert to python
