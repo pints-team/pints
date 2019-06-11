@@ -30,16 +30,18 @@ class SMC(pints.SMCSampler):
         # ESS threshold (default from Del Moral et al.)
         self._ess_threshold = None
 
-        # Keep track of last/current ess
+        # Keep track of last ess
         self._last_ess = None
 
         # Determines whether to resample particles at end of steps 2 and 3 from
         # Del Moral et al. (2006)
-        self._resample_end_2_3 = True
+        self._resample_end_2_3 = False
 
         # Current samples, their log pdfs, and weights
         self._samples = None
         self._log_pdfs = None
+        self._samples_previous = None
+        self._log_pdfs_previous = None
         self._weights = None
 
         # Proposed samples
@@ -113,13 +115,19 @@ class SMC(pints.SMCSampler):
         # Get beta, using next temperature
         beta = self._schedule[self._i_temp]
 
-        # At the start of every MCMC iteration, create a new proposal matrix
+        # Start of an MCMC iteration?
         if self._i_batch == 0:
             # If ESS < threshold then resample to avoid degeneracies
             if self._last_ess < self._ess_threshold:
+                print('Resampling ess threshold')
                 self._resample()
 
+            # Create new proposal
             self._proposals = np.zeros((self._n_particles, self._n_parameters))
+
+            # Store previous samples and log pdfs
+            self._samples_previous = np.copy(self._samples)
+            self._log_pdfs_previous = np.copy(self._log_pdfs)
 
         # Set the proposals in batches
         lo = self._i_batch
@@ -243,8 +251,8 @@ class SMC(pints.SMCSampler):
         # Update weights
         for j, w in enumerate(self._weights):
             self._weights[j] = np.log(w) + self._w_tilde(
-                self._log_pdfs[j],
-                self._log_prior(self._samples[j]),
+                self._log_pdfs_previous[j],
+                self._log_prior(self._samples_previous[j]),
                 self._schedule[self._i_temp - 1],
                 self._schedule[self._i_temp])
         self._weights = np.exp(self._weights - logsumexp(self._weights))
@@ -257,6 +265,7 @@ class SMC(pints.SMCSampler):
 
         # Conditional resampling step
         if self._resample_end_2_3 and self._i_temp < len(self._schedule):
+            print('Resampling end 2/3')
             self._resample()
 
         # Return copy of current samples
