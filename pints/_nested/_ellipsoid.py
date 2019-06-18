@@ -12,7 +12,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import numpy.linalg as la
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):

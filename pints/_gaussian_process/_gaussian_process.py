@@ -12,18 +12,22 @@ import scipy
 from gaussian_process import (
     GaussianProcessMatrixFree1,
     GaussianProcessMatrixFree2,
+    GaussianProcessMatrixFree3,
     GaussianProcessMatrixFree4,
     GaussianProcessMatrixFree9,
     GaussianProcessDenseMatrix1,
     GaussianProcessDenseMatrix2,
+    GaussianProcessDenseMatrix3,
     GaussianProcessDenseMatrix4,
     GaussianProcessDenseMatrix9,
     GaussianProcessH2Matrix1,
     GaussianProcessH2Matrix2,
+    GaussianProcessH2Matrix3,
     GaussianProcessH2Matrix4,
     GaussianProcessH2Matrix9,
     GaussianProcessDirect1,
     GaussianProcessDirect2,
+    GaussianProcessDirect3,
     GaussianProcessDirect4,
     GaussianProcessDirect9,
 )
@@ -140,17 +144,19 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
         self._use_cholesky_decom = self._use_python or direct
 
         if not self._use_python:
-            if not (self._n_parameters <= 2 or self._n_parameters == 4 or
+            if not (self._n_parameters <= 3 or self._n_parameters == 4 or
                     self._n_parameters == 9):
                 raise NotImplementedError(
                     'GaussianProcess with matrix_free or hierarchical_matrix '
-                    'currently only supports d <= 2'
+                    'currently only supports d <= 3'
                 )
             if dense_matrix:
                 if self._n_parameters == 1:
                     self._gaussian_process = GaussianProcessDenseMatrix1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessDenseMatrix2()
+                elif self._n_parameters == 3:
+                    self._gaussian_process = GaussianProcessDenseMatrix3()
                 elif self._n_parameters == 4:
                     self._gaussian_process = GaussianProcessDenseMatrix4()
                 elif self._n_parameters == 9:
@@ -160,6 +166,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessMatrixFree1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessMatrixFree2()
+                elif self._n_parameters == 3:
+                    self._gaussian_process = GaussianProcessMatrixFree3()
                 elif self._n_parameters == 4:
                     self._gaussian_process = GaussianProcessMatrixFree4()
                 elif self._n_parameters == 9:
@@ -169,6 +177,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessH2Matrix1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessH2Matrix2()
+                elif self._n_parameters == 3:
+                    self._gaussian_process = GaussianProcessH2Matrix3()
                 elif self._n_parameters == 4:
                     self._gaussian_process = GaussianProcessH2Matrix4()
                 elif self._n_parameters == 9:
@@ -178,6 +188,8 @@ class GaussianProcess(pints.LogPDF, pints.TunableMethod):
                     self._gaussian_process = GaussianProcessDirect1()
                 elif self._n_parameters == 2:
                     self._gaussian_process = GaussianProcessDirect2()
+                elif self._n_parameters == 3:
+                    self._gaussian_process = GaussianProcessDirect3()
                 elif self._n_parameters == 4:
                     self._gaussian_process = GaussianProcessDirect4()
                 elif self._n_parameters == 9:
