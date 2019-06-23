@@ -23,7 +23,7 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     *Extends:* :class:`PopulationBasedOptimiser`
 
-    [1] https://www.lri.fr/~hansen/cmaesintro.html
+    [1] https://arxiv.org/pdf/1604.00772.pdf
 
     [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
     the derandomized evolution strategy with covariance matrix adaptation
