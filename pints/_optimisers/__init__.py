@@ -349,6 +349,24 @@ class OptimisationController(object):
         # Threshold value
         self._threshold = None
 
+        # Post-run statistics
+        self._evaluations = None
+        self._iterations = None
+
+    def evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't ran yet.
+        """
+        return self._evaluations
+
+    def iterations(self):
+        """
+        Returns the number of iterations performed during the last run, or
+        ``None`` if the controller hasn't ran yet.
+        """
+        return self._iterations
+
     def max_iterations(self):
         """
         Returns the maximum iterations if this stopping criterion is set, or
