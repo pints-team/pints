@@ -253,6 +253,8 @@ class TestOptimisationController(unittest.TestCase):
 
         self.assertEqual(opt.iterations(), 75)
         self.assertEqual(opt.evaluations(), 450)
+        t = opt.time()
+        self.assertTrue(0 < t < 5)
 
 
 if __name__ == '__main__':
