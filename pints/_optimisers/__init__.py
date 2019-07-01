@@ -587,6 +587,10 @@ class OptimisationController(object):
             if self._log_to_screen:
                 print(halt_message)
 
+        # Save post-run statistics
+        self._evaluations = evaluations
+        self._iterations = iteration
+
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
 
