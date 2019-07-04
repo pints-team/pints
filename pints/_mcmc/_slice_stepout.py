@@ -328,38 +328,59 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Slice Sampling'
+        return 'Slice Sampling - Stepout'
 
     def set_w(self, w):
         """
-        Sets width w for generating the interval
+        Sets width w for generating the interval.
         """
         w = float(w)
         if w <= 0:
-            raise ValueError('Width w must be positive for expanding the interval.')
+            raise ValueError('Width w must be positive for interval expansion.')
         self._w = w
 
     def set_m(self, m):
         """
-        Set integer m for limiting interval expansion
+        Set integer m for limiting interval expansion.
         """
         m = int(m)
         if m <= 0:
             raise ValueError('Integer m must be positive to limit the interval size to "m*w".')
         self._m = m
 
-    def w(self):
+    def get_w(self):
         """
-        Returns width w used for generating the interval
+        Returns width w used for generating the interval.
         """
         return self._w
 
-    def m(self):
+    def get_m(self):
         """
-        Returns integer m used for limiting interval expansion
+        Returns integer m used for limiting interval expansion.
         """
         return self._m  
 
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
+
+    def current_slice_height(self):
+        """
+        Returns current log_y used to define the current slice.
+        """        
+        return self._current_log_y
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[w, m]``.
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_w(x[0])
+        self.set_m(x[1])
 
 
 

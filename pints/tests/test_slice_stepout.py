@@ -340,7 +340,7 @@ class TestSliceStepout(unittest.TestCase):
     
     def test_run(self):
         """
-        Test multiple MCMC iterations of the sample
+        Test multiple MCMC iterations of the sampler.
         """
         # Set seed for monitoring
         np.random.seed(2)
@@ -367,6 +367,51 @@ class TestSliceStepout(unittest.TestCase):
 
         #print(mean) [2.00 4.00]
         #print(cov)  [[1.00, 0.01][0.01, 2.98]]
+
+
+
+    def test_basic(self):
+        """
+        Test basic methods of the class.
+        """
+        # Create mcmc
+        x0 = np.array([1,1])
+        mcmc = pints.SliceStepoutMCMC(x0)
+
+        # Test name
+        self.assertEqual(mcmc.name(), 'Slice Sampling - Stepout')
+
+        # Test set_w
+        mcmc.set_w(2)
+        self.assertEqual(mcmc._w, 2.)
+        with self.assertRaises(ValueError):
+            mcmc.set_w(-1)
+
+        # Test set_m
+        mcmc.set_m(3)
+        self.assertEqual(mcmc._m, 3.)
+        with self.assertRaises(ValueError):
+            mcmc.set_m(-1)
+
+        # Test get_w
+        self.assertEqual(mcmc.get_w(), 2.)
+
+        # Test get_m
+        self.assertEqual(mcmc.get_m(), 3.)
+
+        # Test current_log_pdf
+        self.assertEqual(mcmc.current_log_pdf(), mcmc._current_log_pdf)
+
+        # Test current_slice height
+        self.assertEqual(mcmc.current_slice_height(), mcmc._current_log_y)
+
+        # Test number of hyperparameters
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+
+        # Test setting hyperparameters
+        mcmc.set_hyper_parameters([3, 100])
+        self.assertEqual(mcmc._w, 3)
+        self.assertEqual(mcmc._m, 100)
 
 
 if __name__ == '__main__':

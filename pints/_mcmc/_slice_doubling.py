@@ -426,3 +426,61 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._continue_check = False
 
         return None
+
+
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Slice Sampling - Doubling'
+
+    def set_w(self, w):
+        """
+        Sets width w for generating the interval.
+        """
+        w = float(w)
+        if w <= 0:
+            raise ValueError('Width w must be positive for interval expansion.')
+        self._w = w
+
+    def set_p(self, m):
+        """
+        Set integer m for limiting interval expansion.
+        """
+        p = int(m)
+        if p <= 0:
+            raise ValueError('Integer m must be positive to limit the interval size to "(2^p)*w".')
+        self._p = p
+
+    def get_w(self):
+        """
+        Returns width w used for generating the interval.
+        """
+        return self._w
+
+    def get_p(self):
+        """
+        Returns integer p used for limiting interval expansion.
+        """
+        return self._p
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
+
+    def current_slice_height(self):
+        """
+        Returns current log_y used to define the current slice.
+        """        
+        return self._current_log_y
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[w, p]``.
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_w(x[0])
+        self.set_p(x[1])

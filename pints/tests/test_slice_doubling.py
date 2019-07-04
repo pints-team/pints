@@ -417,6 +417,53 @@ class TestSliceDoubling(unittest.TestCase):
         #print(mean) [1.99 3.98]
         #print(cov)  [[0.99, 0.00][0.00, 3.05]]
 
+
+
+    def test_basic(self):
+        """
+        Test basic methods of the class.
+        """
+        # Create mcmc
+        x0 = np.array([1,1])
+        mcmc = pints.SliceDoublingMCMC(x0)
+
+        # Test name
+        self.assertEqual(mcmc.name(), 'Slice Sampling - Doubling')
+
+        # Test set_w
+        mcmc.set_w(2)
+        self.assertEqual(mcmc._w, 2.)
+        with self.assertRaises(ValueError):
+            mcmc.set_w(-1)
+
+        # Test set_p
+        mcmc.set_p(3)
+        self.assertEqual(mcmc._p, 3.)
+        with self.assertRaises(ValueError):
+            mcmc.set_p(-1)
+
+        # Test get_w
+        self.assertEqual(mcmc.get_w(), 2.)
+
+        # Test get_m
+        self.assertEqual(mcmc.get_p(), 3.)
+
+        # Test current_log_pdf
+        self.assertEqual(mcmc.current_log_pdf(), mcmc._current_log_pdf)
+
+        # Test current_slice height
+        self.assertEqual(mcmc.current_slice_height(), mcmc._current_log_y)
+
+        # Test number of hyperparameters
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+
+        # Test setting hyperparameters
+        mcmc.set_hyper_parameters([3, 100])
+        self.assertEqual(mcmc._w, 3)
+        self.assertEqual(mcmc._p, 100)
+
+
+
 if __name__ == '__main__':
     print('Add -v for more debug output')
     import sys
