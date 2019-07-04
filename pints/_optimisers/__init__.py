@@ -349,6 +349,25 @@ class OptimisationController(object):
         # Threshold value
         self._threshold = None
 
+        # Post-run statistics
+        self._evaluations = None
+        self._iterations = None
+        self._time = None
+
+    def evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't ran yet.
+        """
+        return self._evaluations
+
+    def iterations(self):
+        """
+        Returns the number of iterations performed during the last run, or
+        ``None`` if the controller hasn't ran yet.
+        """
+        return self._iterations
+
     def max_iterations(self):
         """
         Returns the maximum iterations if this stopping criterion is set, or
@@ -560,14 +579,20 @@ class OptimisationController(object):
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
+        time_taken = timer.time()
 
         # Log final values and show halt message
         if logging:
             logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
-            logger.log(timer.time())
+            logger.log(time_taken)
             if self._log_to_screen:
                 print(halt_message)
+
+        # Save post-run statistics
+        self._evaluations = evaluations
+        self._iterations = iteration
+        self._time = time_taken
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
@@ -693,6 +718,13 @@ class OptimisationController(object):
         stopping criterion is set. See :meth:`set_threshold()`.
         """
         return self._threshold
+
+    def time(self):
+        """
+        Returns the time needed for the last run, in seconds, or ``None`` if
+        the controller hasn't ran yet.
+        """
+        return self._time
 
 
 class Optimisation(OptimisationController):

@@ -238,6 +238,24 @@ class TestOptimisationController(unittest.TestCase):
         opt = pints.Optimisation(r, x, boundaries=b, method=method)
         self.assertIsInstance(opt, pints.OptimisationController)
 
+    def test_post_run_statistics(self):
+        """ Test the methods to return statistics, post-run. """
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(50, 1e-11)
+
+        np.random.seed(123)
+        opt.run()
+
+        self.assertEqual(opt.iterations(), 75)
+        self.assertEqual(opt.evaluations(), 450)
+        t = opt.time()
+        self.assertTrue(0 < t < 5)
+
 
 if __name__ == '__main__':
     unittest.main()
