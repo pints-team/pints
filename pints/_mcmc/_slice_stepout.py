@@ -84,7 +84,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
         # Default initial interval width w used in the Stepout procedure 
         # to expand the interval
-        self._w = 1
+        self._w = np.ones(len(self._x0))
 
         # Default integer limiting the size of the interval to ``m*w```
         self._m = 50
@@ -123,6 +123,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._v = 0
         self._e = 0
 
+        # Flags used to calculate log_pdf of initial interval edges ``l,r```
+        self._init_left = False
+        self._init_right = False
 
 
     def ask(self):
@@ -149,8 +152,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Set initial values for l and r
             self._u = np.random.uniform()
-            self._l = self._proposed[self._i] - self._w*self._u
-            self._r = self._l + self._w
+            self._l = self._proposed[self._i] - self._w[self._i]*self._u
+            self._r = self._l + self._w[self._i]
 
             # Set maximum number of steps for expansion to the left (j) and right (k)
             self._v = np.random.uniform()
@@ -166,10 +169,22 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # We have initialised the expansion, so we set the flag to false
             self._first_expansion = False
 
-            # Ask for log pdf of initial interval ``I``` edges
-            self._ready_for_tell = True
+            # Set flags to calculate log_pdf of ``l,r``
+            self._init_left = True
+            self._init_right = True
 
-            return np.array(self._temp_l, copy=True), np.array(self._temp_r, copy=True)
+        # Ask for log_pdf of initial edges ``l,r```
+        if self._init_left:
+
+            # Ask for log_pdf of initial left edge
+            self._ready_for_tell = True
+            return np.array(self._temp_l, copy=True)
+
+        if self._init_right:
+
+            # Ask for log pdf of initial right edge
+            self._ready_for_tell = True
+            return np.array(self._temp_r, copy=True)
         
         # Expand the interval ``I``` until edges ``l,r`` are outside the slice or we have reached
         # limit of expansion steps
@@ -181,7 +196,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._set_l = True
 
             # If left edge of the interval is inside the slice, keep expanding
-            self._l -= self._w
+            self._l -= self._w[self._i]
             self._temp_l[self._i] = self._l
             self._j -= 1 
 
@@ -200,7 +215,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._set_r = True
 
             # If right edge of the interval is inside the slice, keep expanding
-            self._r += self._w
+            self._r += self._w[self._i]
             self._temp_r[self._i] = self._r
             self._k -= 1
 
@@ -267,13 +282,16 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         if self._interval_found == False:
             
             # Set the log_pdf of the interval edge that we are expanding
-            if self._set_l == True:
+            if self._set_l:
                 self._fx_l = fx
-            elif self._set_r == True:
+            elif self._set_r:
                 self._fx_r = fx
-            else:
-                self._fx_l = fx[0]
-                self._fx_r = fx[1]
+            elif self._init_left:
+                self._fx_l = fx
+                self._init_left = False
+            elif self._init_right: 
+                self._fx_r = fx
+                self._init_right = False   
 
             return None
 
@@ -334,8 +352,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         Sets width w for generating the interval.
         """
-        w = float(w)
-        if w <= 0:
+        if type(w) == int or float:
+            w = np.full((len(self._x0)), w)
+        else:
+            w = np.asarray(w)
+        if any(n < 0 for n in w) == True:
             raise ValueError('Width w must be positive for interval expansion.')
         self._w = w
 

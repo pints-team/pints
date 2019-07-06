@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 import pints
-import pints.toy
+import pints.toy as toy
 
 from shared import StreamCapture
 
@@ -42,6 +42,8 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertFalse(mcmc._d)
         self.assertFalse(mcmc._init_check)
         self.assertFalse(mcmc._continue_check)
+        self.assertFalse(mcmc._init_left)
+        self.assertFalse(mcmc._init_right)
 
         self.assertEqual(mcmc._current, None)
         self.assertEqual(mcmc._current_log_pdf, None)
@@ -58,7 +60,7 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertEqual(mcmc._fx_l, None)
         self.assertEqual(mcmc._fx_r, None)
 
-        self.assertEqual(mcmc._w, 1)
+        self.assertTrue(np.all(mcmc._w == [1,1]))
         self.assertEqual(mcmc._p, 10)
         self.assertEqual(mcmc._k, 0)
         self.assertEqual(mcmc._i, 0)
@@ -124,6 +126,7 @@ class TestSliceDoubling(unittest.TestCase):
         # Check flag
         self.assertTrue(mcmc._first_expansion)
 
+    
     def test_cycle(self):
         """
         Tests every step of a single MCMC iteration.
@@ -146,34 +149,54 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertEqual(mcmc._fx_l, None)
         self.assertEqual(mcmc._fx_r, None)
 
+    
         ##################################
         ### FIRST PARAMETER  - INDEX 0 ###
         ##################################
 
-        # FIRST RUN: create initial interval edges
-        x = mcmc.ask()
+        # FIRST 2 RUNS: create initial interval edges
 
+        # Start with initiating edges and ask for log_pdf of left edge
+        self.assertTrue(mcmc._first_expansion)
+        x = mcmc.ask()
+        self.assertFalse(mcmc._first_expansion)
+        
         # Check that interval edges are initialised appropriately
-        self.assertTrue(x[0][0] < mcmc._current[0])
-        self.assertTrue(x[1][0] > mcmc._current[0])
+        self.assertTrue(mcmc._l < mcmc._current[0])
+        self.assertTrue(mcmc._r > mcmc._current[0])
 
         # Check that interval I expansion steps are correct
         self.assertEqual(mcmc._k, 10)
 
-        # We calculate the log pdf of the interval edges and since they are
-        # within the slice, we return None 
+        # We calculate the log pdf of the initial left interval edge
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertTrue(mcmc._fx_l, fx[0])
-        self.assertTrue(mcmc._fx_r, fx[1])
 
-        # SECOND RUN: begin expanding the interval
+        # Check that we have set the log_pdf of the initialised left edge correctly
+        self.assertEqual(fx, mcmc._fx_l)
+        
+        # Ask for log_pdf of right edge
+        self.assertFalse(mcmc._first_expansion)
         x = mcmc.ask()
 
-        # v < .5, therefore we expand the left edge
-        self.assertEqual(x[0][0], mcmc._l)
+        # We calculate the log pdf of the initial right interval edge
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)
 
+        # Check that we have set the log_pdf of the initialised right edge correctly
+        self.assertEqual(fx, mcmc._fx_r)
+        
+        # Check that flags for pdf of initial edges are False
+        self.assertFalse(mcmc._init_left)
+        self.assertFalse(mcmc._init_right)
+
+        
+        # THIRD RUN: begin expanding the interval
+        x = mcmc.ask()
+        
+        # v < .5, therefore we expand the left edge
+        self.assertEqual(x[0], mcmc._l)
+        
         # Check that we are still within the slice or that k > 0
         self.assertTrue(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
         
@@ -181,18 +204,18 @@ class TestSliceDoubling(unittest.TestCase):
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
         self.assertEqual(sample, None)
-        self.assertEqual(fx[0], mcmc._fx_l)
-
-        # SUBSEQUENT EXPANSIONs: expand left edge n-1 times and on the nth iteration we expand the right edge
+        self.assertEqual(fx, mcmc._fx_l)
+        
+        
+        # SUBSEQUENT EXPANSIONS: expand left edge n-1 times and on the nth iteration we expand the right edge
         while mcmc._v < .5 or mcmc._k == 0:
             x = mcmc.ask()
-            self.assertEqual(x[0][0], mcmc._l)
             self.assertTrue(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             self.assertEqual(sample, None)
-            self.assertEqual(fx[0], mcmc._fx_l)
 
+        
         # COMPLETE INTERVAL EXPANSION: Check whether the edges are now outside the slice
         self.assertFalse(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
            
@@ -203,6 +226,7 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue(mcmc._init_check)
         self.assertTrue(mcmc._continue_check)
 
+        
         # The log pdf of the proposed point is smaller than the slice height. The ``Threshold Check``
         # was not passed, so we reject, shrink and set the _init_check and _continue_check flags to 
         # False
@@ -212,8 +236,8 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertEqual(mcmc._l, mcmc._proposed[mcmc._i])
         self.assertFalse(mcmc._init_check)
         self.assertFalse(mcmc._continue_check)
-
-
+        
+        
         # TRY NEW PROPOSALS: Stop when a point is proposed within the slice
         while mcmc._current_log_y >= fx:
             x = mcmc.ask()
@@ -221,12 +245,25 @@ class TestSliceDoubling(unittest.TestCase):
             sample = mcmc.tell(fx)
         self.assertTrue(mcmc._current_log_y <= fx)
 
-
+        
         # START ACCEPTANCE CHECK: Since the new proposed point passed the threshold test (fx > log_y),
         # we mantain the flags for proceeding with the ``Acceptance Check``
         self.assertTrue(mcmc._init_check)
         self.assertTrue(mcmc._continue_check)     
+
+        # Check whether we are initialising the ``Acceptance Check`` interval appropriately 
         x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)     
+        self.assertEqual(fx, mcmc._fx_l_hat)
+        self.assertEqual(None, mcmc._fx_r_hat)
+        self.assertTrue(np.all(mcmc._temp_l == mcmc._temp_l_hat))
+
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)     
+        self.assertEqual(fx, mcmc._fx_r_hat)
+        self.assertTrue(np.all(mcmc._temp_r == mcmc._temp_r_hat))
 
         # Since the intervals generated from the new point do not differ from the ones generated 
         # by the current sample, the following condition should be false, therefore d should remain
@@ -234,27 +271,23 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertFalse((mcmc._current[mcmc._i] < mcmc._m and mcmc._proposed[mcmc._i] >= mcmc._m) or (mcmc._current[mcmc._i] >= mcmc._m and mcmc._proposed[mcmc._i] < mcmc._m))
         self.assertFalse(mcmc._d)
 
-        # Check whether the edges of the acceptance interval ``A=(l_hat, r_hat)`` have been initialised correctly
-        self.assertTrue(np.all(x[0] == mcmc._temp_l_hat))
-        self.assertTrue(np.all(x[1] == mcmc._temp_r_hat))
-        self.assertFalse(mcmc._init_check)
-        self.assertFalse(mcmc._d)
-
         # We proceed with the ``Acceptance Check``
+        x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
- 
+        self.assertEqual(fx, mcmc._fx_r_hat)
+
         # The rejection condition in the ``Acceptance Check`` procedure should be False
         self.assertFalse(mcmc._d == True and mcmc._current_log_y >= fx[0] and mcmc._current_log_y >= fx[1])
 
         # Since the point hasn't been rejected, we will continue the ``Acceptance Check`` process
-        while (mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w:
+        while (mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w[mcmc._i]:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
- 
+            sample = mcmc.tell(fx) 
+        
         # The loop ends once the interval is smaller than ``1.1*w```
-        self.assertFalse((mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w)
+        self.assertFalse((mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w[mcmc._i])
 
         # Since the ``Acceptance Check`` is finished, the _continue_check has been set to False
         # and we accepted the point
@@ -274,28 +307,47 @@ class TestSliceDoubling(unittest.TestCase):
         ### SECOND PARAMETER - INDEX 1 ###
         ##################################
 
-        # FIRST RUN: create initial interval edges
+        # Start with initiating edges and ask for log_pdf of left edge
+        self.assertTrue(mcmc._first_expansion)
         x = mcmc.ask()
-
+        self.assertFalse(mcmc._first_expansion)
+        
         # Check that interval edges are initialised appropriately
-        self.assertTrue(x[0][1] < mcmc._current[1])
-        self.assertTrue(x[1][1] > mcmc._current[1])
+        self.assertTrue(mcmc._l < mcmc._current[1])
+        self.assertTrue(mcmc._r > mcmc._current[1])
+
+        # Check that interval I expansion steps are correct
         self.assertEqual(mcmc._k, 10)
 
-        # We calculate the log pdf of the interval edges and since they are
-        # within the slice, we return None 
+        # We calculate the log pdf of the initial left interval edge
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertTrue(mcmc._fx_l, fx[0])
-        self.assertTrue(mcmc._fx_r, fx[1])
 
-        # SECOND RUN: begin expanding the interval
+        # Check that we have set the log_pdf of the initialised left edge correctly
+        self.assertEqual(fx, mcmc._fx_l)
+        
+        # Ask for log_pdf of right edge
+        self.assertFalse(mcmc._first_expansion)
         x = mcmc.ask()
 
-        # v < .5, therefore we expand the left edge
-        self.assertEqual(x[0][1], mcmc._l)
+        # We calculate the log pdf of the initial right interval edge
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)
 
+        # Check that we have set the log_pdf of the initialised right edge correctly
+        self.assertEqual(fx, mcmc._fx_r)
+        
+        # Check that flags for pdf of initial edges are False
+        self.assertFalse(mcmc._init_left)
+        self.assertFalse(mcmc._init_right)
+
+        
+        # THIRD RUN: begin expanding the interval
+        x = mcmc.ask()
+        
+        # v < .5, therefore we expand the left edge
+        self.assertEqual(x[1], mcmc._l)
+        
         # Check that we are still within the slice or that k > 0
         self.assertTrue(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
         
@@ -303,20 +355,18 @@ class TestSliceDoubling(unittest.TestCase):
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
         self.assertEqual(sample, None)
-        self.assertEqual(fx[0], mcmc._fx_l)
+        self.assertEqual(fx, mcmc._fx_l)
 
-        # SUBSEQUENT EXPANSION: expand left edge n-1 times and on the nth iteration we expand the right edge
+        
+        # SUBSEQUENT EXPANSIONS: expand left edge n-1 times and on the nth iteration we expand the right edge
         while mcmc._v < .5 or mcmc._k == 0:
             x = mcmc.ask()
-            self.assertEqual(x[0][1], mcmc._l)
             self.assertTrue(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             self.assertEqual(sample, None)
-            self.assertEqual(fx[0], mcmc._fx_l)
-
-        # COMPLETE INTERVAL EXPANSION: Check whether the edges are now outside the slice or if we
-        # have reached max number of expansion steps
+        
+        # COMPLETE INTERVAL EXPANSION: Check whether the edges are now outside the slice
         self.assertFalse(mcmc._k > 0 and (mcmc._current_log_y < mcmc._fx_l or mcmc._current_log_y < mcmc._fx_r))
         
         # PROPOSE PARAMETER: now that we have estimated the interval, we sample a new parameter,
@@ -331,39 +381,52 @@ class TestSliceDoubling(unittest.TestCase):
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
         self.assertTrue(fx > mcmc._current_log_y)
+        self.assertFalse(mcmc._init_left_hat)
+        self.assertFalse(mcmc._init_right_hat)
 
-        # START ACCEPTANCE TEST: Since the new proposed point passed the threshold test (fx > log_y),
+        
+        # START ACCEPTANCE CHECK: Since the new proposed point passed the threshold test (fx > log_y),
         # we mantain the flags for proceeding with the ``Acceptance Check``
         self.assertTrue(mcmc._init_check)
-        self.assertTrue(mcmc._continue_check)   
+        self.assertTrue(mcmc._continue_check)     
+
+        # Check whether we are initialising the ``Acceptance Check`` interval appropriately 
         x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)     
+        self.assertEqual(fx, mcmc._fx_l_hat)
+        self.assertEqual(None, mcmc._fx_r_hat)
+        self.assertTrue(np.all(mcmc._temp_l == mcmc._temp_l_hat))
+
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        sample = mcmc.tell(fx)     
+        self.assertEqual(fx, mcmc._fx_r_hat)
+        self.assertTrue(np.all(mcmc._temp_r == mcmc._temp_r_hat))
 
         # Since the intervals generated from the new point do not differ from the ones generated 
         # by the current sample, the following condition should be false, therefore d should remain
         # False
         self.assertFalse((mcmc._current[mcmc._i] < mcmc._m and mcmc._proposed[mcmc._i] >= mcmc._m) or (mcmc._current[mcmc._i] >= mcmc._m and mcmc._proposed[mcmc._i] < mcmc._m))
-
-        # Check whether the edges of the acceptance interval ''A=(l_hat, r_hat)'' have been initialised correctly
-        self.assertTrue(np.all(x[0] == mcmc._temp_l_hat))
-        self.assertTrue(np.all(x[1] == mcmc._temp_r_hat))
-        self.assertFalse(mcmc._init_check)
-        self.assertFalse(mcmc._d)
-
+        
         # We proceed with the ``Acceptance Check``
+        x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
- 
-        # The rejection condition in the Acceptance Check procedure should be False
+        self.assertEqual(fx, mcmc._fx_r_hat)
+
+        # The rejection condition in the ``Acceptance Check`` procedure should be False
         self.assertFalse(mcmc._d == True and mcmc._current_log_y >= fx[0] and mcmc._current_log_y >= fx[1])
 
         # Since the point hasn't been rejected, we will continue the ``Acceptance Check`` process
-        while (mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w:
+        while (mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w[mcmc._i]:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
- 
+
+        
         # The loop ends once the interval is smaller than ``1.1*w``
-        self.assertFalse((mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w)
+        self.assertFalse((mcmc._r_hat - mcmc._l_hat) > 1.1 * mcmc._w[mcmc._i])
         self.assertFalse((mcmc._d == True and mcmc._current_log_y >= fx[0] and mcmc._current_log_y >= fx[1]))
 
         # Since the Acceptance check is finished, the _continue_check has been set to False
@@ -389,11 +452,14 @@ class TestSliceDoubling(unittest.TestCase):
         # Check whether the new slice has been generated correctly
         self.assertEqual(mcmc._current_log_y, mcmc._current_log_pdf - mcmc._e)
 
-
+    
     def test_complete_run(self):
         """
         Test multiple MCMC iterations of the sample
         """
+        # Set seed for monitoring
+        np.random.seed(1)
+
         # Create log pdf
         log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
 
@@ -414,8 +480,8 @@ class TestSliceDoubling(unittest.TestCase):
         mean = np.mean(chain, axis=0)
         cov = np.cov(chain, rowvar=0)
 
-        #print(mean) [1.99 3.98]
-        #print(cov)  [[0.99, 0.00][0.00, 3.05]]
+        print(mean) #[2.01 4.01]
+        print(cov)  #[[1.00, 0.00][0.00, 2.94]]
 
 
 
@@ -432,7 +498,7 @@ class TestSliceDoubling(unittest.TestCase):
 
         # Test set_w
         mcmc.set_w(2)
-        self.assertEqual(mcmc._w, 2.)
+        self.assertTrue(np.all(mcmc._w == np.array([2,2])))
         with self.assertRaises(ValueError):
             mcmc.set_w(-1)
 
@@ -443,7 +509,7 @@ class TestSliceDoubling(unittest.TestCase):
             mcmc.set_p(-1)
 
         # Test get_w
-        self.assertEqual(mcmc.get_w(), 2.)
+        self.assertTrue(np.all(mcmc.get_w() == np.array([2,2])))
 
         # Test get_m
         self.assertEqual(mcmc.get_p(), 3.)
@@ -459,10 +525,68 @@ class TestSliceDoubling(unittest.TestCase):
 
         # Test setting hyperparameters
         mcmc.set_hyper_parameters([3, 100])
-        self.assertEqual(mcmc._w, 3)
+        self.assertTrue((np.all(mcmc._w == np.array([3,3]))))
         self.assertEqual(mcmc._p, 100)
 
 
+    def test_logistic(self):
+        """
+        Test sampler on a logistic task.
+        """
+        # Load a forward model
+        model = toy.LogisticModel()
+
+        # Create some toy data
+        real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        org_values = model.simulate(real_parameters, times)
+
+        # Add noise
+        noise = 10
+        values = org_values + np.random.normal(0, noise, org_values.shape)
+        real_parameters = np.array(real_parameters + [noise])
+
+        # Get properties of the noise sample
+        noise_sample_mean = np.mean(values - org_values)
+        noise_sample_std = np.std(values - org_values)
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a log-likelihood function (adds an extra parameter!)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Create a uniform prior over both the parameters and the new noise variable
+        log_prior = pints.UniformLogPrior(
+            [0.01, 400, noise * 0.1],
+            [0.02, 600, noise * 100],
+        )
+
+        # Create a posterior log-likelihood (log(likelihood * prior))
+        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
+
+        # Choose starting points for 3 mcmc chains
+        num_chains = 1
+        xs = [real_parameters * (1 + 0.1 * np.random.rand())]
+
+        # Create mcmc routine
+        mcmc = pints.MCMCController(
+            log_posterior, num_chains, xs, method=pints.SliceDoublingMCMC)
+
+        for sampler in mcmc.samplers():
+            sampler.set_w(0.1)
+
+        # Add stopping criterion
+        mcmc.set_max_iterations(1000)
+
+        # Set up modest logging
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_interval(500)
+
+        # Run!
+        print('Running...')
+        chains = mcmc.run()
+        print('Done!')
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
