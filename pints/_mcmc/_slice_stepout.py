@@ -344,7 +344,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         return None        
 
 
-
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Stepout'

@@ -499,7 +499,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         return None
 
 
-
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Doubling'
