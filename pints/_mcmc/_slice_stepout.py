@@ -333,7 +333,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._i += 1
                 return None
 
-        # If the trail point is rejected in the ``Threshold Check``, shrink the interval
+        # If the trial point is rejected in the ``Threshold Check``, shrink the interval
         if self._proposed[self._i] < self._current[self._i]:
             self._l = self._proposed[self._i]
             self._temp_l[self._i] = self._l
@@ -342,6 +342,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._temp_r[self._i] = self._r
 
         return None        
+
 
 
     def name(self):

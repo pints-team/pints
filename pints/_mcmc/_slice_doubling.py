@@ -162,6 +162,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._init_left_hat = False
         self._init_right_hat = False
 
+
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
 
@@ -304,7 +305,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                     return np.array(self._temp_l_hat, copy=True)
 
             # Now that (r_hat - l_hat) <= 1.1*w, the ``Acceptance Check`` loop is over and we accept
-            # the trail point.
+            # the trial point.
 
             # Reset log_pdf of initial interval edges for the ``Acceptance Check``
             self._fx_r_hat = None
@@ -335,7 +336,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Send new point for ``Threshold Check```
         self._ready_for_tell = True
         return np.array(self._proposed, copy=True)
-
 
 
     def tell(self, reply):
@@ -483,7 +483,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 self._i += 1
                 return None
 
-        # If the trail point is rejected in the ``Threshold Check``, shrink the interval
+        # If the trial point is rejected in the ``Threshold Check``, shrink the interval
         if self._proposed[self._i] < self._current[self._i]:
             self._l = self._proposed[self._i]
             self._temp_l[self._i] = self._l
