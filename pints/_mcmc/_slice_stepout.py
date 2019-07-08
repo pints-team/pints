@@ -16,49 +16,75 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
-    Implements Slice Sampling with Stepout, as described in [1].
+    Implements Slice Sampling with Stepout, as described in [1]. This is a
+    univariate method, which is applied in a Slice-Sampling-within-Gibbs
+    framework to allow MCMC sampling from multivariate models.
 
-    Generates samples by sampling uniformly from the volume laying underneath the 
-    un-normalised posterior (``f``). It does so by introducing an auxiliary variable (``y``)
+    Generates samples by sampling uniformly from the volume underneath the
+    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
     and by definying a Markov chain.
-    
-    If the distribution is univariate, the Markov chain will have the following steps:
+
+    If the distribution is univariate, sampling follows:
 
     1) Calculate the pdf (``f(x0)``) of the current sample (``x0``).
-    2) Draw a real value (``y``) uniformly from (0, f(x0)), thereby defining a
-    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is always within S.
-    3) Find an interval (``I = (L, R)``) around ``x0`` that contains all, or much, of the
-    slice.
-    4) Draw the new point (``x1``) from the part of the slice within this interval.
+    2) Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
+    always within S.
+    3) Find an interval (``I = (L, R)``) around ``x0`` that contains all,
+    or much, of the slice.
+    4) Draw a new point (``x1``) from the part of the slice
+    within this interval.
 
-    If the distribution is multivariate and we need to sample for ``x = (x1,...,xn)``, we
-    apply the univariate algorithm to each variable in turn. We hereby define ``x = (x1,...,xn)``
-    as the sample, and ``(x1,...,xn)`` as the parameters of the sample.
+    If the distribution is multivariate, we apply the univariate algorithm to
+    each variable in turn, where the other variables are set at their
+    current values.
 
-    The algorithm we implement uses the ``Stepout`` method to define the interval ``I = (L, R)``,
-    as described in [1] Fig. 3. pp.715: we define the interval ``I`` by expanding the initial 
-    interval by a width ``w`` in each direction until both edges fall outside the slice, or until
-    a pre-determined limit is reached.
-    
-    The presented implementation uses the ``Shrinkage`` procedure to shrink ``I = (L, R)`` 
-    after rejecting a trial point, as defined in [1] Fig. 5. pp.716: we initially uniformly 
-    sample a trial point from the interval ``I``, and subsequently shrink the interval each 
-    time a trial point is rejected.
+    This implementation uses the ``Stepout`` method to estimate the interval
+    ``I = (L, R)``, as described in [1] Fig. 3. pp.715 and consists of the
+    following steps:
 
-    Note that to include the a new trial point, we implement 1 check procedure, as described
-    in [1] Fig. 5. pp.716:
+    1. ``U \sim uniform(0, 1)``
+    2. ``L = x_0 - wU``
+    3. ``R = L + w``
+    4. ``V \sim uniform(0, 1)``
+    5. ``J = floor(mV)``
+    6. ``K = (m - 1) - J``
+    6. while ``J > 0`` and ``y < f(L)``, ``L = L - w`` and ``J = J - 1``
+    7. while ``K > 0`` and ``y < f(R)``, ``R = R + w`` and ``K = K - 1``
 
-    1) We check whether y < f(x1). We will refer to this check as the ``Threshold Check``.
-    
-    To avoid floating-point underflow, we implement the suggestion advanced in [1] pp.712: 
-    we use the log pdf of the un-normalised posterior (``g(x) = log(f(x))``) instead of 
-    ``f(x)``, and we define the slice as S = {x : z < g(x)}, where:
+    Intuitively, the interval ``I`` is estimated by expanding the initial
+    interval by a width ``w`` in each direction until both edges fall outside
+    the slice, or until a pre-determined limit is reached. The parameters
+    ``m`` (an integer, which determines the limit of slice size) and
+    ``w`` (the estimate of typical slice width) are hyperparameters.
 
-        z = log(y) = g(x0) − e
+    To sample from the interval ``I = (L, R)``, such that the sample
+    ``x`` satisfies ``y < f(x)``, we use the ``Shrinkage`` procedure, which
+    reduces the size of the interval after rejecting a trial point,
+    as defined in [1] Fig. 5. pp.716. This algorithm consists of the
+    following steps:
 
-    and e is exponentially distributed with mean 1.
+    1. ``\bar{L} = L`` and ``\bar{R} = R``
+    2. Repeat:
+        a. ``U \sim uniform(0, 1)``
+        b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
+        c. if ``y < f(x_1)`` accept ``x_1`` and exit loop,
+           else
+            if ``x_1 < x_0``, ``\bar{L} = x_1``
+            else ``\bar{R} = x_1``
 
-    [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3), pp.705-767.
+    Intuitively, we uniformly sample a trial point from the interval ``I``,
+    and subsequently shrink the interval each time a trial point is rejected.
+
+    To avoid floating-point underflow, we implement the suggestion advanced
+    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
+
+    [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
+    pp.705-767.
     """
 
     def __init__(self, x0, sigma0=None):
@@ -70,9 +96,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
 
         # Iterations monitoring
-        self._mcmc_iteration = 0 
+        self._mcmc_iteration = 0
 
-        # Current sample, log_pdf of the current sample 
+        # Current sample, log_pdf of the current sample
         self._current = None
         self._current_log_pdf = None
 
@@ -82,7 +108,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Current proposed sample
         self._proposed = None
 
-        # Default initial interval width w used in the Stepout procedure 
+        # Default initial interval width w used in the Stepout procedure
         # to expand the interval
         self._w = np.ones(len(self._x0))
 
@@ -134,7 +160,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Check ask/tell pattern
         if self._ready_for_tell:
             raise RuntimeError('Ask() called when expecting call to tell().')
-        
+
         # Initialise on first call
         if not self._running:
             self._running = True
@@ -147,7 +173,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             return np.array(self._x0, copy=True)
 
 
-        # If the flag is True, we initialise the expansion of interval ``I=(l,r)`` 
+        # If the flag is True, we initialise the expansion of interval ``I=(l,r)``
         if self._first_expansion == True:
 
             # Set initial values for l and r
@@ -159,7 +185,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._v = np.random.uniform()
             self._j = np.floor(self._m*self._v)
             self._k = (self._m-1) - self._j
-            
+
             # Initialise arrays used for calculating the log_pdf of the edges l,r
             self._temp_l = np.array(self._proposed, copy=True)
             self._temp_r = np.array(self._proposed, copy=True)
@@ -185,20 +211,20 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Ask for log pdf of initial right edge
             self._ready_for_tell = True
             return np.array(self._temp_r, copy=True)
-        
+
         # Expand the interval ``I``` until edges ``l,r`` are outside the slice or we have reached
         # limit of expansion steps
-        
+
         # Check whether we can expand to the left
         if self._j > 0 and self._current_log_y < self._fx_l:
-            
+
             # Set flag to indicate that we are updating the left edge
             self._set_l = True
 
             # If left edge of the interval is inside the slice, keep expanding
             self._l -= self._w[self._i]
             self._temp_l[self._i] = self._l
-            self._j -= 1 
+            self._j -= 1
 
             # Ask for log pdf of the updated left edge
             self._ready_for_tell = True
@@ -258,7 +284,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
 
-            # Set current sample, log pdf of current sample and initialise proposed 
+            # Set current sample, log pdf of current sample and initialise proposed
             # sample for next iteration
             self._current = np.array(self._x0, copy=True)
             self._current_log_pdf = fx
@@ -280,7 +306,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
         # While we expand the interval ``I=(l,r)``, we return None
         if self._interval_found == False:
-            
+
             # Set the log_pdf of the interval edge that we are expanding
             if self._set_l:
                 self._fx_l = fx
@@ -289,9 +315,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             elif self._init_left:
                 self._fx_l = fx
                 self._init_left = False
-            elif self._init_right: 
+            elif self._init_right:
                 self._fx_r = fx
-                self._init_right = False   
+                self._init_right = False
 
             return None
 
@@ -299,7 +325,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         if self._current_log_y < fx:
 
             # Reset flag to true as we need to initialise the interval for the update of the
-            # next parameter 
+            # next parameter
             self._first_expansion = True
 
             # Reset flag to false since we still need to estimate the interval for the next parameter
@@ -341,7 +367,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._r = self._proposed[self._i]
             self._temp_r[self._i] = self._r
 
-        return None        
+        return None
 
 
     def name(self):
@@ -379,7 +405,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         Returns integer m used for limiting interval expansion.
         """
-        return self._m  
+        return self._m
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
@@ -388,7 +414,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     def current_slice_height(self):
         """
         Returns current log_y used to define the current slice.
-        """        
+        """
         return self._current_log_y
 
     def n_hyper_parameters(self):
@@ -402,7 +428,3 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         self.set_w(x[0])
         self.set_m(x[1])
-
-
-
-
