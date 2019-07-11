@@ -160,7 +160,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._ready_for_tell = True
             return np.array(self._x0, copy=True)
 
-
         # Initialise the expansion of interval ``I=(l,r)``
         if self._first_expansion == True:
 
@@ -215,7 +214,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Ask for log pdf of the updated left edge
             self._ready_for_tell = True
-
             return np.array(self._temp_l, copy=True)
 
         # Reset flag now that we have finished updating the left edge
@@ -234,7 +232,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Ask for log pdf of the updated right edge
             self._ready_for_tell = True
-
             return np.array(self._temp_r, copy=True)
 
         # Reset flag now that we have finished updating the right edge
@@ -302,7 +299,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             elif self._init_right:
                 self._fx_r = fx
                 self._init_right = False
-
             return None
 
         # Do ``Threshold Check`` to check if the proposed point is within the slice
@@ -325,7 +321,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # Sample new log_y used to define the next slice
                 e = np.random.exponential(1)
                 self._current_log_y = self._current_log_pdf - e
-
                 return np.array(self._proposed, copy=True)
 
             else:
@@ -339,7 +334,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         else:
             self._r = self._proposed[self._active_param_index]
             self._temp_r[self._active_param_index] = self._r
-
         return None
 
 
