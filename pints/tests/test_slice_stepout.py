@@ -56,7 +56,6 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc._fx_l, None)
         self.assertEqual(mcmc._fx_r, None)
 
-        self.assertTrue(np.all(mcmc._w == np.array([1, 1])))
         self.assertEqual(mcmc._m, 50)
         self.assertEqual(mcmc._mcmc_iteration, 0)
         self.assertEqual(mcmc._i, 0)
@@ -138,6 +137,7 @@ class TestSliceStepout(unittest.TestCase):
         x0 = np.array([2., 4.])
         mcmc = pints.SliceStepoutMCMC(x0)
 
+        mcmc.set_w(1)
         # VERY FIRST RUN
         x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
@@ -489,7 +489,6 @@ class TestSliceStepout(unittest.TestCase):
 
         for sampler in mcmc.samplers():
             sampler.set_w(0.1)
-            print(sampler._w)
 
         # Add stopping criterion
         mcmc.set_max_iterations(1000)

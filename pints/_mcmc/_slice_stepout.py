@@ -94,23 +94,17 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._x0 = np.asarray(x0, dtype=float)
         self._running = False
         self._ready_for_tell = False
-
-        # Iterations monitoring
-        self._mcmc_iteration = 0
-
-        # Current sample, log_pdf of the current sample
         self._current = None
         self._current_log_pdf = None
-
-        # Current log_y used to define the slice
         self._current_log_y = None
-
-        # Current proposed sample
         self._proposed = None
+        self._mcmc_iteration = 0
 
         # Default initial interval width w used in the Stepout procedure
         # to expand the interval
-        self._w = np.ones(len(self._x0))
+        self._w = np.abs(self._x0)
+        self._w[self._w == 0] = 1
+        self._w = 0.1 * self._w
 
         # Default integer limiting the size of the interval to ``m*w```
         self._m = 50
