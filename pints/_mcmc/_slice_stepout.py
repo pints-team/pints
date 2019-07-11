@@ -98,7 +98,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._current_log_y = None
         self._proposed = None
-        self._mcmc_iteration = 0
 
         # Default initial interval width w used in the Stepout procedure
         # to expand the interval
@@ -106,7 +105,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._w[self._w == 0] = 1
         self._w = 0.1 * self._w
 
-        # Default integer limiting the size of the interval to ``m*w```
+        # Default integer limiting the size of the interval to ``m * w```
         self._m = 50
 
         # Flag to initialise the expansion of the interval ``I=(L,R)``
@@ -123,11 +122,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._l = None
         self._r = None
 
-        # Multi-dimensional points used to calculate the log_pdf of the edges ``l,r```
+        # Parameter values at interval edges
         self._temp_l = None
         self._temp_r = None
 
-        # Log_pdf of interval edge points ``l,r```
+        # Log_pdf of interval edges
         self._fx_l = None
         self._fx_r = None
 
@@ -136,12 +135,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._set_r  = False
 
         # Index of parameter "xi" we are updating of the sample "x = (x1,...,xn)"
-        self._i = 0
-
-        # Stochastic variables as instance variables for testing
-        self._u = 0
-        self._v = 0
-        self._e = 0
+        self._active_param_index = 0
 
         # Flags used to calculate log_pdf of initial interval edges ``l,r```
         self._init_left = False
@@ -167,26 +161,25 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             return np.array(self._x0, copy=True)
 
 
-        # If the flag is True, we initialise the expansion of interval ``I=(l,r)``
+        # Initialise the expansion of interval ``I=(l,r)``
         if self._first_expansion == True:
 
             # Set initial values for l and r
-            self._u = np.random.uniform()
-            self._l = self._proposed[self._i] - self._w[self._i]*self._u
-            self._r = self._l + self._w[self._i]
+            u = np.random.uniform()
+            self._l = self._proposed[self._active_param_index] - self._w[self._active_param_index] * u
+            self._r = self._l + self._w[self._active_param_index]
 
             # Set maximum number of steps for expansion to the left (j) and right (k)
-            self._v = np.random.uniform()
-            self._j = np.floor(self._m*self._v)
+            v = np.random.uniform()
+            self._j = np.floor(self._m * v)
             self._k = (self._m-1) - self._j
 
             # Initialise arrays used for calculating the log_pdf of the edges l,r
             self._temp_l = np.array(self._proposed, copy=True)
             self._temp_r = np.array(self._proposed, copy=True)
-            self._temp_l[self._i] = self._l
-            self._temp_r[self._i] = self._r
+            self._temp_l[self._active_param_index] = self._l
+            self._temp_r[self._active_param_index] = self._r
 
-            # We have initialised the expansion, so we set the flag to false
             self._first_expansion = False
 
             # Set flags to calculate log_pdf of ``l,r``
@@ -215,9 +208,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Set flag to indicate that we are updating the left edge
             self._set_l = True
 
-            # If left edge of the interval is inside the slice, keep expanding
-            self._l -= self._w[self._i]
-            self._temp_l[self._i] = self._l
+            # Expand interval to the left
+            self._l -= self._w[self._active_param_index]
+            self._temp_l[self._active_param_index] = self._l
             self._j -= 1
 
             # Ask for log pdf of the updated left edge
@@ -234,9 +227,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Set flag to indicate that we are updating the right edge
             self._set_r = True
 
-            # If right edge of the interval is inside the slice, keep expanding
-            self._r += self._w[self._i]
-            self._temp_r[self._i] = self._r
+            # Expand interval to the right
+            self._r += self._w[self._active_param_index]
+            self._temp_r[self._active_param_index] = self._r
             self._k -= 1
 
             # Ask for log pdf of the updated right edge
@@ -251,8 +244,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._interval_found = True
 
         # Sample new trial point by sampling uniformly from the interval ``I=(l,r)``
-        self._u = np.random.uniform()
-        self._proposed[self._i] = self._l + self._u*(self._r - self._l)
+        u = np.random.uniform()
+        self._proposed[self._active_param_index] = self._l + u * (self._r - self._l)
 
         # Send trial point for checks
         self._ready_for_tell = True
@@ -285,11 +278,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._proposed = np.array(self._current, copy=True)
 
             # Sample height of the slice log_y for next iteration
-            self._e = np.random.exponential(1)
-            self._current_log_y = self._current_log_pdf - self._e
-
-            # Increase number of samples found
-            self._mcmc_iteration += 1
+            e = np.random.exponential(1)
+            self._current_log_y = self._current_log_pdf - e
 
             # Set flag to true as we need to initialise the interval expansion for
             # next iteration
@@ -318,19 +308,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Do ``Threshold Check`` to check if the proposed point is within the slice
         if self._current_log_y < fx:
 
-            # Reset flag to true as we need to initialise the interval for the update of the
-            # next parameter
             self._first_expansion = True
-
-            # Reset flag to false since we still need to estimate the interval for the next parameter
             self._interval_found = False
 
+            # Reset active parameter indices
+            if self._active_param_index == len(self._proposed)-1:
 
-            # If we have updated all the parameters of the sample, start constructing next sample
-            if self._i == len(self._proposed)-1:
-
-                # Reset index to 0, so that we start from updating parameter x0 of the next sample
-                self._i = 0
+                self._active_param_index = 0
 
                 # The accepted sample becomes the new current sample
                 self._current = np.array(self._proposed, copy=True)
@@ -338,28 +322,23 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # The log_pdf of the accepted sample is used to construct the new slice
                 self._current_log_pdf = fx
 
-                # Update number of mcmc iterations
-                self._mcmc_iteration += 1
-
                 # Sample new log_y used to define the next slice
-                self._e = np.random.exponential(1)
-                self._current_log_y = self._current_log_pdf - self._e
+                e = np.random.exponential(1)
+                self._current_log_y = self._current_log_pdf - e
 
-                # Return the accepted sample
                 return np.array(self._proposed, copy=True)
 
-            # If there are still parameters to update to generate the sample, move to next parameter
             else:
-                self._i += 1
+                self._active_param_index += 1
                 return None
 
         # If the trial point is rejected in the ``Threshold Check``, shrink the interval
-        if self._proposed[self._i] < self._current[self._i]:
-            self._l = self._proposed[self._i]
-            self._temp_l[self._i] = self._l
+        if self._proposed[self._active_param_index] < self._current[self._active_param_index]:
+            self._l = self._proposed[self._active_param_index]
+            self._temp_l[self._active_param_index] = self._l
         else:
-            self._r = self._proposed[self._i]
-            self._temp_r[self._i] = self._r
+            self._r = self._proposed[self._active_param_index]
+            self._temp_r[self._active_param_index] = self._r
 
         return None
 
@@ -386,7 +365,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         m = int(m)
         if m <= 0:
-            raise ValueError('Integer m must be positive to limit the interval size to "m*w".')
+            raise ValueError('Integer m must be positive to limit the interval size to "m * w".')
         self._m = m
 
     def get_w(self):

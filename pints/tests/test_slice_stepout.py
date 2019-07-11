@@ -57,8 +57,7 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc._fx_r, None)
 
         self.assertEqual(mcmc._m, 50)
-        self.assertEqual(mcmc._mcmc_iteration, 0)
-        self.assertEqual(mcmc._i, 0)
+        self.assertEqual(mcmc._active_param_index, 0)
 
 
 
@@ -115,7 +114,6 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc._current_log_pdf, fx)
 
         # Check that the new slice has been constructed appropriately 
-        self.assertTrue(mcmc._current_log_y == (mcmc._current_log_pdf - mcmc._e))
         self.assertTrue(mcmc._current_log_y < mcmc._current_log_pdf)
 
         # Check flag
@@ -242,7 +240,7 @@ class TestSliceStepout(unittest.TestCase):
         sample = mcmc.tell(fx)
         
         # Since we have accepted the value for the new parameter, we increase the index
-        self.assertEqual(mcmc._i, 1)
+        self.assertEqual(mcmc._active_param_index, 1)
 
         # We are moving to a new parameter, so we reset the flags for expanding
         # the interval of the new parameter
@@ -361,7 +359,7 @@ class TestSliceStepout(unittest.TestCase):
 
         # We have updated all the parameters for the new sample, so we move to the 
         # next sample and reset the index to 0
-        self.assertEqual(mcmc._i, 0)
+        self.assertEqual(mcmc._active_param_index, 0)
 
         # We are moving to a new parameter, so we reset the flags for expanding
         # the interval of the new parameter
@@ -385,7 +383,7 @@ class TestSliceStepout(unittest.TestCase):
 
         # Run multiple iterations of the sampler
         chain = []
-        while mcmc._mcmc_iteration < 10000:
+        while len(chain) < 10000:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
