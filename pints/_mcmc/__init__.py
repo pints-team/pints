@@ -541,38 +541,42 @@ class MCMCController(object):
                 if self._log_to_screen:
                     print('Initial phase completed.')
 
-            # Get points
+            # Update chains: loop through intermediate steps until a new
+            # acceptable sample is drawn for each chain
+            xs = []
+            fxs = []
+            samples = []
+
             if self._single_chain:
-                xs = [sampler.ask() for sampler in self._samplers]
+                for i, s in enumerate(self._samplers):
+                    while True:
+                        # Get point
+                        x = [s.ask()]
+
+                        # Calculate logpdf
+                        fx = evaluator.evaluate(x)[0]
+
+                        # Update evaluation count
+                        evaluations += 1
+
+                        # Update single chain
+                        sample = s.tell(fx)
+
+                        # If not an intermediate step, return sampled point
+                        if sample is not None:
+                            break
+
+                    xs.append(x)
+                    fxs.append(fx)
+                    samples.append(sample)
             else:
-                xs = self._samplers[0].ask()
-
-            # Calculate logpdfs
-            fxs = evaluator.evaluate(xs)
-
-            # Update evaluation count
-            evaluations += len(fxs)
-
-            # Update chains
-            intermediate_step = False
-            if self._single_chain:
-                samples = np.array([
-                    s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
-
-                none_found = [x is None for x in samples]
-                if any(none_found):
-                    assert(all(none_found))     # Can't mix None w. samples
-                    intermediate_step = True
-            else:
-                samples = self._samplers[0].tell(fxs)
-                intermediate_step = samples is None
-
-            # If no new samples were added, then no MCMC iteration was
-            # performed, and so the iteration count shouldn't be updated,
-            # logging shouldn't be triggered, and stopping criteria shouldn't
-            # be checked
-            if intermediate_step:
-                continue
+                while True:
+                    xs = self._samplers[0].ask()
+                    fxs = evaluator.evaluate(xs)
+                    evaluations += len(fxs)
+                    samples = self._samplers[0].tell(fxs)
+                    if samples is not None:
+                        break
 
             # Add new samples to the chains
             chains.append(samples)
