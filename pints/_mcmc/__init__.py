@@ -542,7 +542,7 @@ class MCMCController(object):
                     print('Initial phase completed.')
 
             # Update chains: loop through intermediate steps until
-            # a new acceptable sample is drawn
+            # a new acceptable sample is drawn for each chain
             xs = []
             fxs = []
             samples = []
@@ -552,19 +552,16 @@ class MCMCController(object):
                     while True:
                         # Get point
                         x = [s.ask()]
-
                         # Calculate logpdf
                         fx = evaluator.evaluate(x)[0]
-
                         # Update evaluation count
                         evaluations += 1
-
                         # Update single chain
                         sample = s.tell(fx)
-
                         # If not an intermediate step, return sampled point
                         if sample is not None:
                             break
+
                     xs.append(x)
                     fxs.append(fx)
                     samples.append(sample)
