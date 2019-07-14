@@ -311,8 +311,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             # Work backward through the intervals that the doubling procedure
             # would pass through to arrive at the interval ``I`` when starting
             # from the new trial point.
-            if ((self._r_hat - self._l_hat) > 1.1 *
-               self._w[self._active_param_index]):
+            if ((self._r_hat - self._l_hat) >
+                    1.1 * self._w[self._active_param_index]):
 
                 # Calculate interval ``A=(l_hat, r_hat)`` mid point
                 self._m = (self._l_hat + self._r_hat) / 2
@@ -321,9 +321,9 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 # be generated from the new point differ from those leading to
                 # the current point
                 if ((self._current[self._active_param_index] < self._m and
-                     self._proposed[self._active_param_index] >= self._m) or
-                    (self._current[self._active_param_index] >= self._m and
-                     self._proposed[self._active_param_index] < self._m)):
+                        self._proposed[self._active_param_index] >= self._m) or
+                        (self._current[self._active_param_index] >= self._m and
+                         self._proposed[self._active_param_index] < self._m)):
                     self._d = True
 
                 self._ready_for_tell = True
@@ -452,11 +452,11 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 # If the condition is met, the point fails the
                 # ``Acceptance Check`` and is rejected
                 if (self._d and self._current_log_y >= self._fx_l_hat and
-                   self._current_log_y >= self._fx_r_hat):
+                        self._current_log_y >= self._fx_r_hat):
 
                     # Shrink the interval ``I=(l,r)``
                     if (self._proposed[self._active_param_index] <
-                       self._current[self._active_param_index]):
+                            self._current[self._active_param_index]):
                         self._l = self._proposed[self._active_param_index]
                         self._temp_l[self._active_param_index] = self._l
                     else:
@@ -506,7 +506,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # If the trial point is rejected in the ``Threshold Check``, shrink
         # the interval
         if (self._proposed[self._active_param_index] <
-           self._current[self._active_param_index]):
+                self._current[self._active_param_index]):
             self._l = self._proposed[self._active_param_index]
             self._temp_l[self._active_param_index] = self._l
         else:

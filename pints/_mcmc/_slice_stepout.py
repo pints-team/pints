@@ -189,14 +189,10 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
         # Ask for log_pdf of initial edges ``l,r```
         if self._init_left:
-
-            # Ask for log_pdf of initial left edge
             self._ready_for_tell = True
             return np.array(self._temp_l, copy=True)
 
         if self._init_right:
-
-            # Ask for log pdf of initial right edge
             self._ready_for_tell = True
             return np.array(self._temp_r, copy=True)
 
