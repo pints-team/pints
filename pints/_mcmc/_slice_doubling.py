@@ -122,25 +122,16 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._x0 = np.asarray(x0, dtype=float)
         self._running = False
         self._ready_for_tell = False
-
-        # Iterations monitoring
-        self._mcmc_iteration = 0
-
-        # Current sample, log_pdf of the current sample
         self._current = None
         self._current_log_pdf = None
-
-        # Current log_y used to define the slice
         self._current_log_y = None
-
-        # Current proposed sample, log_pdf of the proposed sample
         self._proposed = None
         self._proposed_pdf = None
 
         # Flag used to store the log_pdf of the proposed sample
         self._sent_proposal = False
 
-        # Default initial interval width w used in the Doubling procedure
+        # Default initial interval width ``w``` used in the Doubling procedure
         # to expand the interval
         self._w = np.ones(len(self._x0))
 
@@ -160,12 +151,11 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._l = None
         self._r = None
 
-        # Multi-dimensional points used to calculate the log_pdf of the
-        # edges ``l,r```
+        # Parameter values at interval edges
         self._temp_l = None
         self._temp_r = None
 
-        # Log_pdf of interval edge points ``l,r```
+        # Log_pdf of interval edges
         self._fx_l = None
         self._fx_r = None
 
@@ -173,8 +163,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._l_hat = None
         self._r_hat = None
 
-        # Multi-dimensional points used to calculate the log_pdf of the
-        # "Acceptance Check" edges l_hat ,r_hat
+        # Parameter values at "Acceptance Check" edges ``l_hat ,r_hat```
         self._temp_l_hat = None
         self._temp_r_hat = None
 
@@ -194,17 +183,13 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Flag to control the "Acceptance Check"
         self._continue_check = False
 
-        # Mid point between l_hat and r_hat used in the "Acceptance Check"
-        self._m = 0
+        # Mid point between ``l_hat`` and ``r_hat`` used in the "Acceptance
+        # Check"
+        self._m = None
 
         # Index of parameter "xi" we are updating of the sample
         # "x = (x1,...,xn)"
-        self._i = 0
-
-        # Stochastic variables as instance variables for testing
-        self._u = 0
-        self._v = 0
-        self._e = 0
+        self._active_param_index = 0
 
         # Flags used to calculate log_pdf of initial interval edges ``l,r``
         self._init_left = False
@@ -214,6 +199,10 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # edges ``l_hat,r_hat``
         self._init_left_hat = False
         self._init_right_hat = False
+
+        self._u = None
+        self._v = None
+        self._e = None
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -233,26 +222,24 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             self._ready_for_tell = True
             return np.array(self._x0, copy=True)
 
-        # If the flag is True, we initialise the expansion of interval
-        # ``I=(l,r)``
+        # Initialise the expansion of interval ``I=(l,r)``
         if self._first_expansion:
 
-            # Set limit to the number to expansion steps
             self._k = self._p
 
-            # Set initial values for l and r
+            # Set initial values for ``l,r``
             self._u = np.random.uniform()
-            self._l = self._proposed[self._i] - self._w[self._i] * self._u
-            self._r = self._l + self._w[self._i]
+            self._l = (self._proposed[self._active_param_index] -
+                       self._w[self._active_param_index] * self._u)
+            self._r = self._l + self._w[self._active_param_index]
 
             # Initialise arrays used for calculating the log_pdf of the
-            # edges l,r
+            # edges ``l,r``
             self._temp_l = np.array(self._proposed, copy=True)
             self._temp_r = np.array(self._proposed, copy=True)
-            self._temp_l[self._i] = self._l
-            self._temp_r[self._i] = self._r
+            self._temp_l[self._active_param_index] = self._l
+            self._temp_r[self._active_param_index] = self._r
 
-            # We have initialised the expansion, so we set the flag to false
             self._first_expansion = False
 
             # Set flags to calculate log_pdf of ``l,r``
@@ -261,48 +248,42 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
         # Ask for log_pdf of initial edges ``l,r```
         if self._init_left:
-
-            # Ask for log_pdf of initial left edge
             self._ready_for_tell = True
             return np.array(self._temp_l, copy=True)
 
         if self._init_right:
-
-            # Ask for log pdf of initial right edge
             self._ready_for_tell = True
             return np.array(self._temp_r, copy=True)
 
         # Expand the interval ``I``` until edges ``l,r`` are outside the slice
-        # or we have reached limit of expansion steps
+        # or until expansion limit is reached
         if self._k > 0 and (self._current_log_y < self._fx_l or
                             self._current_log_y < self._fx_r):
 
-            # Decrease number of allowed interval expansion steps
             self._k -= 1
 
             # Use ``Doubling`` expansion procedure as described in
             # [1] Fig. 4. pp.715
             self._v = np.random.uniform()
-
-            # Return new expanded interval edges
             self._ready_for_tell = True
 
             if self._v < .5:
                 self._l = self._l - (self._r - self._l)
-                self._temp_l[self._i] = self._l
+                self._temp_l[self._active_param_index] = self._l
                 return np.array(self._temp_l, copy=True)
 
             else:
                 self._r = self._r + (self._r - self._l)
-                self._temp_r[self._i] = self._r
+                self._temp_r[self._active_param_index] = self._r
                 return np.array(self._temp_r, copy=True)
 
-        # If previous "if" condition fails, the interval has been found
         self._interval_found = True
 
-        # If we have proposed a new point, we initialise the
+        # After having proposed a new point, we initialise the
         # ``Acceptance Check``
         if self._init_check:
+
+            self._init_check = False
 
             # Initialise edges for the ``Acceptance Check``
             self._l_hat = self._l
@@ -310,24 +291,16 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             self._temp_l_hat = np.array(self._temp_l, copy=True)
             self._temp_r_hat = np.array(self._temp_r, copy=True)
 
-            # Put flag to False so that we don't repeat the process while
-            # being in the "Acceptance Check" loop
-            self._init_check = False
-
             # Set flags to calculate log_pdf of ``l_hat,r_hat``
             self._init_left_hat = True
             self._init_right_hat = True
 
-        # Ask for log_pdf of initial edges ``l_hat,r_hat```
+        # Ask for log_pdf of initial edges ``l_hat,r_hat``
         if self._init_left_hat:
-
-            # Ask for log_pdf of initial left edge
             self._ready_for_tell = True
             return np.array(self._temp_l_hat, copy=True)
 
         if self._init_right_hat:
-
-            # Ask for log pdf of initial right edge
             self._ready_for_tell = True
             return np.array(self._temp_r_hat, copy=True)
 
@@ -337,51 +310,43 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
             # Work backward through the intervals that the doubling procedure
             # would pass through to arrive at the interval ``I`` when starting
-            # from the new trial point. The float 1.1 guards against round-off
-            # error, as described in [1] Fig.6 pp.717
-            if (self._r_hat - self._l_hat) > 1.1 * self._w[self._i]:
+            # from the new trial point.
+            if ((self._r_hat - self._l_hat) > 1.1 *
+               self._w[self._active_param_index]):
 
                 # Calculate interval ``A=(l_hat, r_hat)`` mid point
                 self._m = (self._l_hat + self._r_hat) / 2
 
-                # Boolean d tracks tracks whether the intervals that would be
-                # generated from the new point differ from those leading to
+                # Boolean ``d`` tracks tracks whether the intervals that would
+                # be generated from the new point differ from those leading to
                 # the current point
-                if ((self._current[self._i] < self._m and
-                     self._proposed[self._i] >= self._m) or
-                    (self._current[self._i] >= self._m and
-                     self._proposed[self._i] < self._m)):
+                if ((self._current[self._active_param_index] < self._m and
+                     self._proposed[self._active_param_index] >= self._m) or
+                    (self._current[self._active_param_index] >= self._m and
+                     self._proposed[self._active_param_index] < self._m)):
                     self._d = True
 
-                # Send the new edges of interval ``A=(l_hat, r_hat) to
-                # continue the ``Acceptance Check`` loop
                 self._ready_for_tell = True
 
                 # Work backward through the doubling procedure starting from
                 # the trial point
-                if self._proposed[self._i] < self._m:
+                if self._proposed[self._active_param_index] < self._m:
                     self._r_hat = self._m
-                    self._temp_r_hat[self._i] = self._r_hat
+                    self._temp_r_hat[self._active_param_index] = self._r_hat
                     return np.array(self._temp_r_hat, copy=True)
 
-                if self._proposed[self._i] >= self._m:
+                if self._proposed[self._active_param_index] >= self._m:
                     self._l_hat = self._m
-                    self._temp_l_hat[self._i] = self._l_hat
+                    self._temp_l_hat[self._active_param_index] = self._l_hat
                     return np.array(self._temp_l_hat, copy=True)
 
             # Now that (r_hat - l_hat) <= 1.1*w, the ``Acceptance Check`` loop
             # is over and we accept the trial point.
 
-            # Reset log_pdf of initial interval edges for the
-            # ``Acceptance Check``
+            # Reset variables
             self._fx_r_hat = None
             self._fx_l_hat = None
-
-            # Reset variable d to be correctly initalised for the next
-            # ``Acceptance Check`` loop
             self._d = False
-
-            # Reset ``Acceptance Check``
             self._continue_check = False
 
             # Send the accepted trial point
@@ -391,7 +356,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Sample new parameter by sampling uniformly from the interval
         # ``I=(l,r)``
         self._u = np.random.uniform()
-        self._proposed[self._i] = self._l + self._u * (self._r - self._l)
+        self._proposed[self._active_param_index] = (self._l + self._u *
+                                                    (self._r - self._l))
 
         # Set "Acceptance Check" flags for the proposal point
         self._init_check = True
@@ -402,7 +368,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # method
         self._sent_proposal = True
 
-        # Send new point for ``Threshold Check```
+        # Send new point for to check ``f(x_1) >= y``
         self._ready_for_tell = True
         return np.array(self._proposed, copy=True)
 
@@ -417,8 +383,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Unpack reply
         fx = np.asarray(reply, dtype=float)
 
-        # If this is the log_pdf of a new point, save the value and use it for
-        # the "Threshold Check"
+        # If this is the log_pdf of a new point, save the value and use it
+        # to check ``f(x_1) >= y``
         if self._sent_proposal:
             self._proposed_pdf = fx
             self._sent_proposal = False
@@ -440,9 +406,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             # Sample height of the slice log_y for the next iteration
             self._e = np.random.exponential(1)
             self._current_log_y = self._current_log_pdf - self._e
-
-            # Increase number of samples found
-            self._mcmc_iteration += 1
 
             # Set flag to true as we need to initialise the interval expansion
             # for the next iteration
@@ -468,12 +431,10 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                     self._fx_r = fx
             return None
 
-        # Do ``Threshold Check`` to check if the proposed point is within the
-        # slice
+        # Check ``f(x_1) >= y``
         if self._current_log_y < self._proposed_pdf:
 
-            # If the point passes the ``Threshold Check``, we start the
-            # ``Acceptance Check``
+            # Start the ``Acceptance Check``
             if self._continue_check:
 
                 if self._init_left_hat:
@@ -483,7 +444,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                     self._fx_r_hat = fx
                     self._init_right_hat = False
                 elif not self._init_check:
-                    if self._proposed[self._i] < self._m:
+                    if self._proposed[self._active_param_index] < self._m:
                         self._fx_r_hat = fx
                     else:
                         self._fx_l_hat = fx
@@ -493,31 +454,21 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 if (self._d and self._current_log_y >= self._fx_l_hat and
                    self._current_log_y >= self._fx_r_hat):
 
-                    # If the proposed point is rejected, shrink the interval
-                    #  ``I=(l,r)``
-                    if self._proposed[self._i] < self._current[self._i]:
-                        self._l = self._proposed[self._i]
-                        self._temp_l[self._i] = self._l
+                    # Shrink the interval ``I=(l,r)``
+                    if (self._proposed[self._active_param_index] <
+                       self._current[self._active_param_index]):
+                        self._l = self._proposed[self._active_param_index]
+                        self._temp_l[self._active_param_index] = self._l
                     else:
-                        self._r = self._proposed[self._i]
-                        self._temp_r[self._i] = self._r
+                        self._r = self._proposed[self._active_param_index]
+                        self._temp_r[self._active_param_index] = self._r
 
-                    # If the point has been rejected in the
-                    # ``Acceptance Check``, reset the flag so that we wait for
-                    # a new trial point before starting the
-                    # ``Acceptance Check`` again
+                    # Reset variables
                     self._continue_check = False
-
-                    # Reset d
                     self._d = False
-
-                    # Reset log_pdf of initial interval edges for the
-                    # ``Acceptance Check``
                     self._fx_r_hat = None
                     self._fx_l_hat = None
 
-                    # Since we reject the trial point, we return None and wait
-                    # for a new trial point from ask()
                     return None
 
                 # If the rejection condition is not met, we continue the
@@ -526,21 +477,13 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
             # We have updated successfully the parameter of the new sample!
 
-            # Reset flag to true as we need to initialise the interval for the
-            # update of the next parameter
             self._first_expansion = True
-
-            # Reset flag to false since we still need to estimate the interval
-            # for the next parameter
             self._interval_found = False
 
-            # If we have updated all the parameters of the sample, start
-            # constructing next sample
-            if self._i == len(self._proposed) - 1:
+            # Reset active parameter index
+            if self._active_param_index == len(self._proposed) - 1:
 
-                # Reset index to 0, so that we start from updating parameter
-                # x0 of the next sample
-                self._i = 0
+                self._active_param_index = 0
 
                 # The accepted sample becomes the new current sample
                 self._current = np.array(self._proposed, copy=True)
@@ -549,9 +492,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 # new slice
                 self._current_log_pdf = fx
 
-                # Update number of mcmc iterations
-                self._mcmc_iteration += 1
-
                 # Sample new log_y used to define the next slice
                 self._e = np.random.exponential(1)
                 self._current_log_y = self._current_log_pdf - self._e
@@ -559,24 +499,22 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 # Return the accepted sample
                 return np.array(self._proposed, copy=True)
 
-            # If there are still parameters to update to generate the sample,
-            # move to next parameter
             else:
-                self._i += 1
+                self._active_param_index += 1
                 return None
 
         # If the trial point is rejected in the ``Threshold Check``, shrink
         # the interval
-        if self._proposed[self._i] < self._current[self._i]:
-            self._l = self._proposed[self._i]
-            self._temp_l[self._i] = self._l
+        if (self._proposed[self._active_param_index] <
+           self._current[self._active_param_index]):
+            self._l = self._proposed[self._active_param_index]
+            self._temp_l[self._active_param_index] = self._l
         else:
-            self._r = self._proposed[self._i]
-            self._temp_r[self._i] = self._r
+            self._r = self._proposed[self._active_param_index]
+            self._temp_r[self._active_param_index] = self._r
 
         # If the point has been rejected, set flag for ``Acceptance Check``
-        # check to False
-        # so that we can sample a new point
+        # check to False so that we can sample a new point
         self._init_check = False
         self._continue_check = False
 
