@@ -16,62 +16,100 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
-    Implements Slice Sampling with Doubling, as described in [1].
+    Implements Slice Sampling with Doubling, as described in [1]. This is a
+    univariate method, which is applied in a Slice-Sampling-within-Gibbs
+    framework to allow MCMC sampling from multivariate models.
 
-    Generates samples by sampling uniformly from the volume laying underneath
-    the un-normalised posterior (``f``). It does so by introducing an
-    auxiliary variable (``y``) and by definying a Markov chain.
+    Generates samples by sampling uniformly from the volume underneath the
+    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
+    and by definying a Markov chain.
 
-    If the distribution is univariate, the Markov chain will have the
-    following steps:
+    If the distribution is univariate, sampling follows:
 
     1) Calculate the pdf (``f(x0)``) of the current sample (``x0``).
-    2) Draw a real value (``y``) uniformly from (0, f(x0)), thereby defining a
-    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is always
-    within S.
+    2) Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
+    always within S.
     3) Find an interval (``I = (L, R)``) around ``x0`` that contains all,
     or much, of the slice.
-    4) Draw the new point (``x1``) from the part of the slice within this
-    interval.
+    4) Draw a new point (``x1``) from the part of the slice
+    within this interval.
 
-    If the distribution is multivariate and we need to sample for
-    ``x = (x1,...,xn)``, we apply the univariate algorithm to each variable in
-    turn. We hereby define ``x = (x1,...,xn)`` as the sample, and
-    ``(x1,...,xn)`` as the parameters of the sample.
+    If the distribution is multivariate, we apply the univariate algorithm to
+    each variable in turn, where the other variables are set at their
+    current values.
 
-    The algorithm we implement uses the ``Doubling`` method to define the
-    interval ``I = (L, R)``, as described in [1] Fig. 4. pp.715: we define the
-    interval ``I`` by producing a sequence of intervals, each twice the size
-    of the previous one, until an interval is found with both ends outside the
-    slice, or until a pre-determined limit is reached.
+    This implementation uses the ``Doubling`` method to estimate the interval
+    ``I = (L, R)``, as described in [1] Fig. 4. pp.715 and consists of the
+    following steps:
 
-    The presented implementation uses the ``Shrinkage`` procedure to shrink
-    ``I = (L, R)`` after rejecting a trial point, as defined in
-    [1] Fig. 5. pp.716: we initially uniformly sample a trial point from the
-    interval ``I``, and subsequently shrink the interval each time a trial
-    point is rejected.
+    1. ``U \sim uniform(0, 1)``
+    2. ``L = x_0 - wU``
+    3. ``R = L + w``
+    4. ``K = p``
+    5. while ``K > 0`` and ``{y < f(L) or y < f(R)}``:
+        a. ``V \sim uniform(0, 1)``
+        b. if ``V < 0.5``, ``L = L - (R - L)``
+           else, ``R = R + (R - L)``
+    6. ``K = K - 1``
 
-    Note that to include the a new trial point, we implement 2 check
-    procedures, as described in [1] Fig. 5. pp.:
+    Intuitively, the interval ``I`` is estimated by expanding the initial
+    interval by producing a sequence of intervals, each twice the size
+    of the previous one, until an interval is found with both ends outside
+    the slice, or until a pre-determined limit is reached. The parameters
+    ``p`` (an integer, which determines the limit of slice size) and
+    ``w`` (the estimate of typical slice width) are hyperparameters.
 
-    1) We check whether y < f(x1). We will refer to this check as the
-    ``Threshold Check``.
-    2) We implement the Accept(x) check described in [1] Fig. 6. pp.717: this
-    procedure works backward through the intervals that the doubling procedure
-    would pass through to arrive at the interval ``I`` when starting from the
-    new point, checking that none of them has both ends outside the slice,
-    which would lead to earlier termination of the doubling procedure. We will
-    refer to this check as the ``Acceptance Check``, and the interval used
-    in this check will be referred to as ``A=(l_hat, r_hat)``.
+    To sample from the interval ``I = (L, R)``, such that the sample
+    ``x`` satisfies ``y < f(x)``, we use the ``Shrinkage`` procedure, which
+    reduces the size of the interval after rejecting a trial point,
+    as defined in [1] Fig. 5. pp.716. This algorithm consists of the
+    following steps:
 
-    To avoid floating-point underflow, we implement the suggestion advanced in
-    [1] pp.712: we use the log pdf of the un-normalised posterior
-    (``g(x) = log(f(x))``) instead of ``f(x)``, and we define the slice as
-    S = {x : z < g(x)}, where:
+    1. ``\bar{L} = L`` and ``\bar{R} = R``
+        2. Repeat:
+            a. ``U \sim uniform(0, 1)``
+            b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
+            c. if ``y < f(x_1)`` and ``Accept(x_1)``, exit loop
+            else
+                if ``x_1 < x_0``, ``\bar{L} = x_1``
+                else ``\bar{R} = x_1``
 
-        z = log(y) = g(x0) − e
+    Intuitively, we uniformly sample a trial point from the interval ``I``,
+    and subsequently shrink the interval each time a trial point is rejected.
 
-    and e is exponentially distributed with mean 1.
+    The ``Accept(x_1)`` check is required to guarantee detailed balance. We
+    shall refer to this check as the ``Acceptance Check``. Intuitively, it
+    tests  whether starting the doubling expansion at ``x_1`` leads to an
+    earlier termination compared to starting it from the current state ``x_0``.
+    The procedure works backward through the intervals that the doubling
+    expansion would pass through to arrive at ``I`` when starting from ``x_1``,
+    checking that none of them has both ends outside the slice. The algorithm
+    is described in [1] Fig. 6. pp.717 and it consists of the following steps:
+
+    1. ``\hat{L} = L`` and ``\hat{R} = R`` and ``D = False``
+        2. while ``\hat{R} - \hat{L} > 1.1w``:
+            a. M = ``(\hat{L} + \hat{R})/2``
+            b. if {``x_0 < M`` and ``x_1 >= M``} or
+                  {``x_0 >= M`` and `` x_1 < M``}, ``D = True``
+            c. if ``x_1 < M``, `\hat{R} = M``
+               else, `\hat{L} = M``
+            d. if ``D`` and ``y >= f(\hat{L})`` and ``y >= f(\hat{R})``,
+                reject proposal
+        3. If the proposal is not rejected in the previous loop, accept it
+
+    The multiplication by ``1.1`` in the ``while`` condition in Step 2 guards
+    against possible round-off errors. The variable ``D`` tracks whether the
+    intervals that would be generated from ``x_1`` differ from those leading
+    to ``x_0``: when they don't, time is saved by omitting the subsequent
+    check.
+
+    To avoid floating-point underflow, we implement the suggestion advanced
+    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
