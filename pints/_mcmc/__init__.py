@@ -541,7 +541,7 @@ class MCMCController(object):
                 if self._log_to_screen:
                     print('Initial phase completed.')
 
-            # Update chains: loop through intermediate steps returning "None" until
+            # Update chains: loop through intermediate steps until
             # a new acceptable sample is drawn
             xs = []
             fxs = []
@@ -552,10 +552,10 @@ class MCMCController(object):
                     while True:
                         # Get point
                         x = [s.ask()]
-                        
+
                         # Calculate logpdf
                         fx = evaluator.evaluate(x)[0]
-                        
+
                         # Update evaluation count
                         evaluations += 1
 
