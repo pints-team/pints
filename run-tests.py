@@ -23,7 +23,8 @@ def run_unit_tests():
     """
     tests = os.path.join('pints', 'tests')
     suite = unittest.defaultTestLoader.discover(tests, pattern='test*.py')
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    res = unittest.TextTestRunner(verbosity=2).run(suite)
+    sys.exit(0 if res.wasSuccessful() else 1)
 
 
 def run_flake8():
