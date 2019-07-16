@@ -1,7 +1,7 @@
 [![travis](https://travis-ci.org/pints-team/pints.svg?branch=master)](https://travis-ci.org/pints-team/pints)
 [![appveyor](https://ci.appveyor.com/api/projects/status/k8xvn7md0pte2gsi/branch/master?svg=true)](https://ci.appveyor.com/project/MichaelClerx/pints/branch/master)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/master/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
-[![functional](https://github.com/pints-team/functional-testing-results/blob/master/badge.svg)](https://github.com/pints-team/functional-testing-results)
+[![Functional testing](https://github.com/pints-team/functional-testing/blob/master/badge.svg)](https://github.com/pints-team/functional-testing)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
 [![BCH compliance](https://bettercodehub.com/edge/badge/pints-team/pints?branch=master)](https://bettercodehub.com/results/pints-team/pints)
