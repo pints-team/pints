@@ -118,6 +118,10 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._j = None
         self._k = None
 
+        # Flags used to calculate log_pdf of initial interval edges ``l,r```
+        self._init_left = False
+        self._init_right = False
+
         # Edges of the interval ``I=(L,R)``
         self._l = None
         self._r = None
@@ -138,9 +142,42 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # "x = (x1,...,xn)"
         self._active_param_index = 0
 
-        # Flags used to calculate log_pdf of initial interval edges ``l,r```
-        self._init_left = False
-        self._init_right = False
+        """Variables used in overrelaxed step"""
+
+        # Flag for overrelaxed step
+        self._overrelaxed_step = False
+
+        # Probability of overrelaxed step
+        self._prob_overrelaxed = 0
+
+        # Interval edges used in overrelaxed step
+        self._l_bar = None
+        self._r_bar = None
+        self._l_hat = None
+        self._r_hat = None
+        self._l_bisection = None
+        self._r_bisection = None
+        self._temp_l_bisection = None
+        self._temp_r_bisection = None
+        self._set_l_bisection = False
+        self._set_r_bisection = False
+
+        # Integer limiting overrelaxation endpoint accuracy to ``2^(-a) * w``
+        self._a = 10
+
+        # Interval width ``w_bar`` used in the overrelaxation step
+        self._w_bar = None
+
+        # Mid-point of overrelaxed interval
+        self._mid = None
+        self._temp_mid = None
+        self._fx_mid = None
+
+        # Flags used for overrelaxed step
+        self._init_overrelaxation = False
+        self._continue_narrowing = False
+        self._init_bisection = False
+        self._bisection = False
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -238,15 +275,92 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Now that we have expanded the interval, set flag
         self._interval_found = True
 
-        # Sample new trial point by sampling uniformly from the
-        # interval ``I=(l,r)``
-        u = np.random.uniform()
-        self._proposed[self._active_param_index] = self._l + u * (self._r -
-                                                                  self._l)
+        # Overrelaxed Step
+        if self._overrelaxed_step:
 
-        # Send trial point for checks
-        self._ready_for_tell = True
-        return np.array(self._proposed, copy=True)
+            # Initialise variables for overrelaxed step
+            if self._init_overrelaxation:
+                self._l_bar = self._l
+                self._r_bar = self._r
+                self._w_bar = self._w[self._active_param_index]
+                self._a_bar = self._a
+                self._temp_mid = np.array(self._proposed, copy=True)
+                self._continue_narrowing = True
+                self._init_bisection = True
+                self._init_overrelaxation = False
+
+            # If interval is of size ``w``, narrow it until mid-point is
+            # within the slice
+            if (((self._r - self._l) < 1.1 * self._w[self._active_param_index])
+                    and self._continue_narrowing):
+
+                # Ask for log pdf of interval mid point
+                self._mid = (self._l_bar + self._r_bar) / 2
+                self._temp_mid[self._active_param_index] = self._mid
+                self._ready_for_tell = True
+                return np.array(self._temp_mid, copy=True)
+
+            # Initialise endpoints for bisection
+            if self._init_bisection:
+                self._l_hat = self._l_bar
+                self._r_hat = self._r_bar
+                self._init_bisection = False
+
+            # Apply bisection to endpoint edges
+            if self._a_bar > 0:
+
+                if self._bisection:
+                    self._w_bar = self._w_bar / 2
+
+                    self._temp_l_bisection = np.array(self._proposed,
+                                                      copy=True)
+                    self._temp_r_bisection = np.array(self._proposed,
+                                                      copy=True)
+
+                    self._set_l_bisection = True
+                    self._set_r_bisection = True
+
+                    self._bisection = False
+
+                # Apply bisection to left edge
+                if self._set_l_bisection:
+
+                    self._l_bisection = (self._l_hat + self._w_bar)
+                    self._temp_l_bisection[self._active_param_index] = (
+                        self._l_bisection)
+
+                    self._ready_for_tell = True
+                    return np.array(self._temp_l_bisection, copy=True)
+
+                # Apply bisection to right edge
+                if self._set_r_bisection:
+                    self._r_bisection = (self._r_hat - self._w_bar)
+                    self._temp_r_bisection[self._active_param_index] = (
+                        self._r_bisection)
+
+                    self._ready_for_tell = True
+                    return np.array(self._temp_r_bisection, copy=True)
+
+            # Find candidate point by flipping from the current point to
+            # the opposide side
+            self._proposed[self._active_param_index] = (self._l_hat +
+                                                        self._r_hat -
+                                                        self._current
+                                                        [self.
+                                                         _active_param_index])
+            self._ready_for_tell = True
+            return np.array(self._proposed, copy=True)
+
+        else:
+            # Sample new trial point by sampling uniformly from the
+            # interval ``I=(l,r)``
+            u = np.random.uniform()
+            self._proposed[self._active_param_index] = self._l + u * (self._r -
+                                                                      self._l)
+
+            # Send trial point for checks
+            self._ready_for_tell = True
+            return np.array(self._proposed, copy=True)
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -281,6 +395,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # for next iteration
             self._first_expansion = True
 
+            # Check whether next mcmc step should be overrelaxed
+            self._overrelaxed_step = (np.random.uniform() <
+                                      self._prob_overrelaxed)
+            if self._overrelaxed_step:
+                self._init_overrelaxation = True
+                self._bisection = True
+
             # Return first point in chain, which is x0
             return np.array(self._current, copy=True)
 
@@ -300,12 +421,68 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._init_right = False
             return None
 
-        # Do ``Threshold Check`` to check if the proposed point is within
-        # the slice
-        if self._current_log_y < fx:
+        # Overrelaxed step
+        if self._overrelaxed_step:
 
+            # When the interval is of size ``w``, narrow until mid-point
+            # is inside the slice
+            if (((self._r - self._l) < 1.1 *
+                    self._w[self._active_param_index]) and
+                    self._continue_narrowing):
+
+                self._fx_mid = fx
+
+                # Break loop
+                if (self._a_bar == 0 or (self._current_log_y <
+                                         self._fx_mid)):
+
+                    self._continue_narrowing = False
+                    return None
+
+                # Narrow interval
+                if (self._current[self._active_param_index] >
+                        self._temp_mid[self._active_param_index]):
+                    self._l_bar = self._mid
+                else:
+                    self._r_bar = self._mid
+
+                self._a_bar -= 1
+                self._w_bar = self._w_bar / 2
+                return None
+
+            # Apply bisection to left edge
+            if self._set_l_bisection:
+                if self._current_log_y >= fx:
+                    self._l_hat = (self._l_hat + self._w_bar)
+                self._set_l_bisection = False
+                return None
+
+            # Apply bisection to right edge
+            if self._set_r_bisection:
+                if self._current_log_y >= fx:
+                    self._r_hat = (self._r_hat - self._w_bar)
+                self._set_r_bisection = False
+
+                # Reset flag for next bisection iteration
+                self._bisection = True
+
+                self._a_bar -= 1
+
+                return None
+
+            if (self._proposed[self._active_param_index] < self._l_bar or
+                    self._proposed[self._active_param_index] > self._r_bar or
+                    self._current_log_y >= fx):
+                self._proposed[self._active_param_index] = (
+                    self._current[self._active_param_index])
+
+            # Reset flags for next interval expansion
             self._first_expansion = True
             self._interval_found = False
+
+            # Reset overrelaxation flags
+            self._init_overrelaxation = True
+            self._bisection = True
 
             # Reset active parameter indices
             if self._active_param_index == len(self._proposed) - 1:
@@ -322,22 +499,64 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # Sample new log_y used to define the next slice
                 e = np.random.exponential(1)
                 self._current_log_y = self._current_log_pdf - e
+
+                # Check whether next mcmc step should be overrelaxed
+                self._overrelaxed_step = (np.random.uniform() <
+                                          self._prob_overrelaxed)
+
                 return np.array(self._proposed, copy=True)
 
             else:
                 self._active_param_index += 1
                 return None
 
-        # If the trial point is rejected in the ``Threshold Check``, shrink
-        # the interval
-        if (self._proposed[self._active_param_index] <
-                self._current[self._active_param_index]):
-            self._l = self._proposed[self._active_param_index]
-            self._temp_l[self._active_param_index] = self._l
         else:
-            self._r = self._proposed[self._active_param_index]
-            self._temp_r[self._active_param_index] = self._r
-        return None
+            # Do ``Threshold Check`` to check if the proposed point is within
+            # the slice
+            if self._current_log_y < fx:
+
+                self._first_expansion = True
+                self._interval_found = False
+
+                # Reset active parameter indices
+                if self._active_param_index == len(self._proposed) - 1:
+
+                    self._active_param_index = 0
+
+                    # The accepted sample becomes the new current sample
+                    self._current = np.array(self._proposed, copy=True)
+
+                    # The log_pdf of the accepted sample is used to construct
+                    # the new slice
+                    self._current_log_pdf = fx
+
+                    # Sample new log_y used to define the next slice
+                    e = np.random.exponential(1)
+                    self._current_log_y = self._current_log_pdf - e
+
+                    # Check whether next mcmc step should be overrelaxed
+                    self._overrelaxed_step = (np.random.uniform() <
+                                              self._prob_overrelaxed)
+                    if self._overrelaxed_step:
+                        self._init_overrelaxation = True
+                        self._bisection = True
+
+                    return np.array(self._proposed, copy=True)
+
+                else:
+                    self._active_param_index += 1
+                    return None
+
+            # If the trial point is rejected in the ``Threshold Check``, shrink
+            # the interval
+            if (self._proposed[self._active_param_index] <
+                    self._current[self._active_param_index]):
+                self._l = self._proposed[self._active_param_index]
+                self._temp_l[self._active_param_index] = self._l
+            else:
+                self._r = self._proposed[self._active_param_index]
+                self._temp_r[self._active_param_index] = self._r
+            return None
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -345,26 +564,46 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_w(self, w):
         """
-        Sets width w for generating the interval.
+        Sets width "w" for generating the interval.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
         else:
             w = np.asarray(w)
         if any(n < 0 for n in w):
-            raise ValueError("""Width w must be positive for
+            raise ValueError("""Width "w" must be positive for
                             interval expansion.""")
         self._w = w
 
     def set_m(self, m):
         """
-        Set integer m for limiting interval expansion.
+        Set integer "m" for limiting interval expansion.
         """
         m = int(m)
         if m <= 0:
-            raise ValueError("""Integer m must be positive to limit the
+            raise ValueError("""Integer "m" must be positive to limit the
                             interval size to "m * w".""")
         self._m = m
+
+    def set_prob_overrelaxed(self, prob):
+        """
+        Set the probability of a step being overrelaxed.
+        """
+        prob = float(prob)
+        if prob < 0 or prob > 1:
+            raise ValueError("""Probability must be positive and <= 1.""")
+        self._prob_overrelaxed = prob
+
+    def set_a(self, a):
+        """
+        Set integer "a" for limiting bisection process in overrelaxed steps.
+        """
+        a = int(a)
+        if a < 0:
+            raise ValueError("""Integer "a" must be positive to limit
+                                overrelaxation endpoint accuracy to
+                                ``2^(-a) * w``.""")
+        self._a = a
 
     def get_w(self):
         """
@@ -378,6 +617,22 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         return self._m
 
+    def get_prob_overrelaxed(self, prob):
+        """
+        Returns probability of carrying out an overrelaxed step.
+        """
+        prob = float(prob)
+        if prob < 0 or prob > 1:
+            raise ValueError("""Probability must be positive and <= 1.""")
+        self._prob_overrelaxed = prob
+
+    def get_a(self):
+        """
+        Returns integer "a" limit overrelaxation endpoint accuracy to
+        ``2^(-a) * w``.
+        """
+        return self._a
+
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return self._current_log_pdf
@@ -390,7 +645,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 4
 
     def set_hyper_parameters(self, x):
         """
@@ -399,3 +654,5 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         self.set_w(x[0])
         self.set_m(x[1])
+        self.set_prob_overrelaxed(x[2])
+        self.set_a(x[3])
