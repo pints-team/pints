@@ -83,6 +83,43 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     ``\epsilon \sim \text{exp}(1)`` and define the slice as
     S = {x : z < g(x)}.
 
+    The following implementation includes the possibility of carrying out
+    ``overrelaxed`` slice sampling steps, as described in [1] pp. 726-729.
+    Overrelaxed steps increase sampling efficiency in highly correlated
+    unimodal distributions by suppressing the random walk behaviour of
+    single-variable slice sampling: each variable is still updated in turn,
+    but rather than drawing a new value for a variable from its conditional
+    distribution independently of the current value, the new value is instead
+    chosen to be on the opposite side of the mode from the current value. The
+    interval ``I`` is still calculated via Stepout, and the edges ``l,r`` are
+    used to estimate the slice endpoints via bisection. To obtain a full
+    sampling scheme, overrelaxed updates are alternated with normal Stepout
+    updates. To obtain the full benefits of overrelaxation, [1] suggests to
+    set almost every update to being overrelaxed and to set the limit ``m``
+    for finding ``I`` to infinity. The algorithm consists of the following
+    steps:
+
+    1. ``\bar{L} = L``,``\bar{R} = R``,``\bar{w} = w``, ``\bar{a} = a``
+    2. while ``R - L < 1.1 * w``:
+        a. ``M = (\bar{L} + \bar{R}) / 2
+        b. if ``\bar{a} = 0 `` or ``y < f(M)``, exit loop
+        c. if ``x_0 > M``, ``\bar{L} = M``
+           else, ``\bar{R} = M``
+        d. ``\bar{a} = \bar{a} - 1``
+        e. ``\bar{w} = \bar{w} / 2``
+    3. ``\hat{L} = \bar{L}``, ``\hat{R} = \bar{R}``
+    4. while ``\bar{a} > 0``:
+        a. ``\bar{a} = \bar{a} - 1``
+        b. ``\bar{w} = \bar{w} \ 2``
+        c. if ``y >= f(\hat{L} + \bar{w})``, ``\hat{L} = \hat{L} + \bar{w}``
+        d. if ``y >= f(\hat{R} - \bar{w})``, ``\hat{R} = \hat{R} - \bar{W}``
+    5. ``x_1 = \hat{L} + \hat{R} - x_0``
+    6. if ``x_1 < \bar{L}`` or ``x_1 >= \bar{R}`` or ``y >= f(x_1)``, x_1 = x_0
+
+    The probability of pursuing an overrelaxed step, ``_prob_overrelaxed`` (0
+    as default), and the number of bisection iterations, ``a``, are
+    hyperparameters.
+
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
     """
@@ -98,6 +135,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._current_log_pdf = None
         self._current_log_y = None
         self._proposed = None
+        self._overrelaxed_step = False
 
         # Default initial interval width w used in the Stepout procedure
         # to expand the interval
@@ -114,7 +152,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Flag indicating whether the interval expansion is concluded
         self._interval_found = False
 
-        # Number of steps used for expanding the interval ``I=(L,R)``
+        # Number of steps used for expanding the interval ``I``
         self._j = None
         self._k = None
 
@@ -122,7 +160,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._init_left = False
         self._init_right = False
 
-        # Edges of the interval ``I=(L,R)``
+        # Edges of the interval ``I``
         self._l = None
         self._r = None
 
@@ -141,11 +179,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Index of parameter "xi" we are updating of the sample
         # "x = (x1,...,xn)"
         self._active_param_index = 0
-
-        """Variables used in overrelaxed step"""
-
-        # Flag for overrelaxed step
-        self._overrelaxed_step = False
 
         # Probability of overrelaxed step
         self._prob_overrelaxed = 0
@@ -175,7 +208,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
         # Flags used for overrelaxed step
         self._init_overrelaxation = False
-        self._continue_narrowing = False
+        self._init_narrowing = False
         self._init_bisection = False
         self._bisection = False
 
@@ -275,7 +308,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         # Now that we have expanded the interval, set flag
         self._interval_found = True
 
-        # Overrelaxed Step
+        # Overrelaxed step
         if self._overrelaxed_step:
 
             # Initialise variables for overrelaxed step
@@ -285,14 +318,14 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._w_bar = self._w[self._active_param_index]
                 self._a_bar = self._a
                 self._temp_mid = np.array(self._proposed, copy=True)
-                self._continue_narrowing = True
-                self._init_bisection = True
                 self._init_overrelaxation = False
+                self._init_narrowing = True
+                self._init_bisection = True
 
             # If interval is of size ``w``, narrow it until mid-point is
             # within the slice
             if (((self._r - self._l) < 1.1 * self._w[self._active_param_index])
-                    and self._continue_narrowing):
+                    and self._init_narrowing):
 
                 # Ask for log pdf of interval mid point
                 self._mid = (self._l_bar + self._r_bar) / 2
@@ -309,17 +342,15 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Apply bisection to endpoint edges
             if self._a_bar > 0:
 
+                # Prepare bisection
                 if self._bisection:
                     self._w_bar = self._w_bar / 2
-
                     self._temp_l_bisection = np.array(self._proposed,
                                                       copy=True)
                     self._temp_r_bisection = np.array(self._proposed,
                                                       copy=True)
-
                     self._set_l_bisection = True
                     self._set_r_bisection = True
-
                     self._bisection = False
 
                 # Apply bisection to left edge
@@ -328,7 +359,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._l_bisection = (self._l_hat + self._w_bar)
                     self._temp_l_bisection[self._active_param_index] = (
                         self._l_bisection)
-
                     self._ready_for_tell = True
                     return np.array(self._temp_l_bisection, copy=True)
 
@@ -337,7 +367,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._r_bisection = (self._r_hat - self._w_bar)
                     self._temp_r_bisection[self._active_param_index] = (
                         self._r_bisection)
-
                     self._ready_for_tell = True
                     return np.array(self._temp_r_bisection, copy=True)
 
@@ -428,15 +457,15 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # is inside the slice
             if (((self._r - self._l) < 1.1 *
                     self._w[self._active_param_index]) and
-                    self._continue_narrowing):
+                    self._init_narrowing):
 
                 self._fx_mid = fx
 
-                # Break loop
+                # Once the mid-point is within the slice or narrowing limit is
+                # reached, break narrowing loop
                 if (self._a_bar == 0 or (self._current_log_y <
                                          self._fx_mid)):
-
-                    self._continue_narrowing = False
+                    self._init_narrowing = False
                     return None
 
                 # Narrow interval
@@ -466,10 +495,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # Reset flag for next bisection iteration
                 self._bisection = True
 
+                # Decrease count of bisection steps left
                 self._a_bar -= 1
-
                 return None
 
+            # If trial point is not acceptable, keep maintain current state
             if (self._proposed[self._active_param_index] < self._l_bar or
                     self._proposed[self._active_param_index] > self._r_bar or
                     self._current_log_y >= fx):
@@ -503,13 +533,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # Check whether next mcmc step should be overrelaxed
                 self._overrelaxed_step = (np.random.uniform() <
                                           self._prob_overrelaxed)
-
                 return np.array(self._proposed, copy=True)
 
             else:
                 self._active_param_index += 1
                 return None
 
+        # Normal Stepout step
         else:
             # Do ``Threshold Check`` to check if the proposed point is within
             # the slice
@@ -540,7 +570,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     if self._overrelaxed_step:
                         self._init_overrelaxation = True
                         self._bisection = True
-
                     return np.array(self._proposed, copy=True)
 
                 else:
@@ -633,11 +662,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         return self._a
 
-    def current_log_pdf(self):
+    def get_current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return self._current_log_pdf
 
-    def current_slice_height(self):
+    def get_current_slice_height(self):
         """
         Returns current log_y used to define the current slice.
         """
@@ -649,7 +678,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[w, m]``.
+        The hyper-parameter vector is ``[w, m, prob_overrelaxed, a]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_w(x[0])

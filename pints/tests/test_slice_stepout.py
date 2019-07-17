@@ -167,6 +167,20 @@ class TestSliceStepout(unittest.TestCase):
         with self.assertRaises(ValueError):
             mcmc.set_m(-1)
 
+        # Test set_prob_overrelaxed
+        mcmc.set_prob_overrelaxed(.5)
+        self.assertEqual(mcmc._prob_overrelaxed, .5)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(-1)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(4)
+
+        # Test set_a
+        mcmc.set_a(40)
+        self.assertEqual(mcmc._a, 40)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(-1)
+
         # Test get_w
         self.assertTrue(np.all(mcmc.get_w() == np.array([2, 2])))
 
@@ -174,18 +188,20 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc.get_m(), 3.)
 
         # Test current_log_pdf
-        self.assertEqual(mcmc.current_log_pdf(), mcmc._current_log_pdf)
+        self.assertEqual(mcmc.get_current_log_pdf(), mcmc._current_log_pdf)
 
         # Test current_slice height
-        self.assertEqual(mcmc.current_slice_height(), mcmc._current_log_y)
+        self.assertEqual(mcmc.get_current_slice_height(), mcmc._current_log_y)
 
         # Test number of hyperparameters
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+        self.assertEqual(mcmc.n_hyper_parameters(), 4)
 
         # Test setting hyperparameters
-        mcmc.set_hyper_parameters([3, 100])
+        mcmc.set_hyper_parameters([3, 100, .7, 50])
         self.assertTrue((np.all(mcmc._w == np.array([3, 3]))))
         self.assertEqual(mcmc._m, 100)
+        self.assertEqual(mcmc._prob_overrelaxed, 0.7)
+        self.assertEqual(mcmc._a, 50)
 
     def test_logistic(self):
         """
@@ -271,7 +287,7 @@ class TestSliceStepout(unittest.TestCase):
         # First MCMC step: set flags to True
         x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
+        mcmc.tell(fx)
 
         self.assertTrue(mcmc._overrelaxed_step)
         self.assertTrue(mcmc._init_overrelaxation)
@@ -284,34 +300,34 @@ class TestSliceStepout(unittest.TestCase):
         while not mcmc._interval_found:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
+            mcmc.tell(fx)
 
         # Check initialisation of overrelaxed step - start narrowing ``w```
-        self.assertTrue(mcmc._continue_narrowing)
+        self.assertTrue(mcmc._init_narrowing)
         self.assertFalse(mcmc._init_overrelaxation)
         self.assertTrue(((mcmc._r - mcmc._l) < 1.1 *
                          mcmc._w[mcmc._active_param_index]) and
-                        mcmc._continue_narrowing)
+                        mcmc._init_narrowing)
 
         # Continue narrowing ``w``
         x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertFalse(mcmc._continue_narrowing)
+        mcmc.tell(fx)
+        self.assertFalse(mcmc._init_narrowing)
         self.assertFalse(mcmc._set_l_bisection)
 
         # Now that we have narrowed ``w``, init bisection
         while mcmc._a_bar > 0:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
+            mcmc.tell(fx)
 
         # Update parameter and index
         x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
         self.assertFalse(mcmc._set_l_bisection)
         self.assertFalse(mcmc._set_r_bisection)
-        sample = mcmc.tell(fx)
+        mcmc.tell(fx)
         self.assertEqual(mcmc._active_param_index, 1)
         self.assertTrue(mcmc._first_expansion)
         self.assertFalse(mcmc._interval_found)
@@ -321,27 +337,27 @@ class TestSliceStepout(unittest.TestCase):
         while not mcmc._interval_found:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
+            mcmc.tell(fx)
 
         # Check initialisation of overrelaxed step - start narrowing ``w```
-        self.assertTrue(mcmc._continue_narrowing)
+        self.assertTrue(mcmc._init_narrowing)
         self.assertFalse(mcmc._init_overrelaxation)
         self.assertFalse(((mcmc._r - mcmc._l) < 1.1 *
                          mcmc._w[mcmc._active_param_index]) and
-                         mcmc._continue_narrowing)
+                         mcmc._init_narrowing)
 
         # Now that we have narrowed ``w``, init bisection
         while mcmc._a_bar > 0:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
+            mcmc.tell(fx)
 
         # Update parameter and index
         x = mcmc.ask()
         fx = log_pdf.evaluateS1(x)[0]
         self.assertFalse(mcmc._set_l_bisection)
         self.assertFalse(mcmc._set_r_bisection)
-        sample = mcmc.tell(fx)
+        mcmc.tell(fx)
         self.assertEqual(mcmc._active_param_index, 0)
         self.assertTrue(mcmc._first_expansion)
         self.assertFalse(mcmc._interval_found)
@@ -371,10 +387,9 @@ class TestSliceStepout(unittest.TestCase):
                 chain.append(np.copy(sample))
 
         # Fit Multivariate Gaussian to chain samples
-        mean = np.mean(chain, axis=0)
-        cov = np.cov(chain, rowvar=0)
-        print(mean)
-        print(cov)
+        np.mean(chain, axis=0)
+        np.cov(chain, rowvar=0)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
