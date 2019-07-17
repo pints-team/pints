@@ -251,11 +251,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             self._temp_l[self._active_param_index] = self._l
             self._temp_r[self._active_param_index] = self._r
 
-            self._first_expansion = False
-
             # Set flags to calculate log_pdf of ``l,r``
             self._init_left = True
             self._init_right = True
+
+            self._first_expansion = False
 
         # Ask for log_pdf of initial edges ``l,r```
         if self._init_left:
@@ -474,7 +474,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._l_bar = self._mid
                 else:
                     self._r_bar = self._mid
-
                 self._a_bar -= 1
                 self._w_bar = self._w_bar / 2
                 return None
@@ -499,7 +498,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._a_bar -= 1
                 return None
 
-            # If trial point is not acceptable, keep maintain current state
+            # If trial point is not acceptable, maintain current state
             if (self._proposed[self._active_param_index] < self._l_bar or
                     self._proposed[self._active_param_index] > self._r_bar or
                     self._current_log_y >= fx):
