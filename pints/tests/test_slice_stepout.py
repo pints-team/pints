@@ -116,263 +116,6 @@ class TestSliceStepout(unittest.TestCase):
         # Check flag
         self.assertTrue(mcmc._first_expansion)
 
-    def test_cycle(self):
-        """
-        Tests every step of a single MCMC iteration.
-        """
-        # Set seed for monitoring
-        np.random.seed(2)
-
-        # Create log pdf
-        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
-
-        # Create mcmc
-        x0 = np.array([2., 4.])
-        mcmc = pints.SliceStepoutMCMC(x0)
-
-        mcmc.set_w(1)
-        # VERY FIRST RUN
-        x = mcmc.ask()
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertTrue(np.all(sample == x0))
-        self.assertEqual(mcmc._fx_l, None)
-        self.assertEqual(mcmc._fx_r, None)
-
-        ##################################
-        ####FIRST PARAMETER  - INDEX 0####
-        ##################################
-
-        # FIRST 2 RUNS: create initial interval edges
-
-        # Start with initiating edges and ask for log_pdf of left edge
-        self.assertTrue(mcmc._first_expansion)
-        x = mcmc.ask()
-        self.assertFalse(mcmc._first_expansion)
-
-        # Check that interval edges are initialised appropriately
-        self.assertTrue(mcmc._l < mcmc._current[0])
-        self.assertTrue(mcmc._r > mcmc._current[0])
-
-        # Check that limits for interval expansion steps have been initialised
-        # appropriately
-        self.assertTrue(mcmc._j <= 49)
-        self.assertEqual(mcmc._k, (49 - mcmc._j))
-
-        # We calculate the log pdf of the initial left interval edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # Check that we have set the log_pdf of the initialised left
-        # edge correctly
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # Ask for log_pdf of right edge
-        self.assertFalse(mcmc._first_expansion)
-        x = mcmc.ask()
-
-        # We calculate the log pdf of the initial right interval edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # Check that we have set the log_pdf of the initialised right
-        # edge correctly
-        self.assertEqual(fx, mcmc._fx_r)
-
-        # Check that flags for pdf of initial edges are False
-        self.assertFalse(mcmc._init_left)
-        self.assertFalse(mcmc._init_right)
-
-        # THIRD RUN: begin expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been set
-        self.assertTrue(mcmc._set_l)
-
-        # The left edge is still within the slice, co continue expanding
-        # to the left
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # FOURTH RUN: Continue expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been set
-        self.assertTrue(mcmc._set_l)
-
-        # The edges are not inside the slice: we have concluded the
-        # interval expansion to the left. Return None and update the
-        # log pdf of the left edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # FIFTH RUN: Continue expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been reset
-        self.assertFalse(mcmc._set_l)
-
-        # Check that the flag for updating the right edge has been reset
-        self.assertTrue(mcmc._set_r)
-
-        # The edges are not inside the slice: we have concluded the
-        # interval expansion to the right. Return None and update the
-        # log pdf of the left edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_r)
-
-        # SIXTH RUN: We have expanded the interval. We now propose a trial
-        # point uniformly distributed from the estimated interval
-        x = mcmc.ask()
-
-        # Check that the flags are set correctly
-        self.assertFalse(mcmc._set_r)
-        self.assertTrue(mcmc._interval_found)
-
-        # The proposed point is in the slice, so it passes the
-        # ``Threshold Check``.
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # Since we have accepted the value for the new parameter, we increase
-        # the index
-        self.assertEqual(mcmc._active_param_index, 1)
-
-        # We are moving to a new parameter, so we reset the flags for expanding
-        # the interval of the new parameter
-        self.assertTrue(mcmc._first_expansion)
-        self.assertFalse(mcmc._interval_found)
-
-        ###################################
-        ####SECOND PARAMETER  - INDEX 1####
-        ###################################
-
-        # FIRST 2 RUNS: create initial interval edges
-        self.assertTrue(mcmc._first_expansion)
-        x = mcmc.ask()
-        self.assertFalse(mcmc._first_expansion)
-
-        # Check that interval edges are initialised appropriately
-        self.assertTrue(mcmc._l < mcmc._current[1])
-        self.assertTrue(mcmc._r > mcmc._current[1])
-
-        # Check that limits for interval expansion steps have been initialised
-        # appropriately
-        self.assertTrue(mcmc._j <= 49)
-        self.assertEqual(mcmc._k, (49 - mcmc._j))
-
-        # We calculate the log pdf of the initial left interval edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # Check that we have set the log_pdf of the initialised left edge
-        # correctly
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # Ask for log_pdf of right edge
-        self.assertFalse(mcmc._first_expansion)
-        x = mcmc.ask()
-
-        # We calculate the log pdf of the initial right interval edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # Check that we have set the log_pdf of the initialised right edge
-        # correctly
-        self.assertEqual(fx, mcmc._fx_r)
-
-        # Check that flags for pdf of initial edges are False
-        self.assertFalse(mcmc._init_left)
-        self.assertFalse(mcmc._init_right)
-
-        # THIRD RUN: begin expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been set
-        self.assertTrue(mcmc._set_l)
-
-        # The left edge is still within the slice, so continue expanding to
-        # the left
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # FOURTH RUN: Continue expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been set
-        self.assertTrue(mcmc._set_l)
-
-        # The edges are not inside the slice: we have concluded the interval
-        # expansion to the left. Return None and update the log pdf of the
-        # left edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_l)
-
-        # FIFTH RUN: Continue expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been reset
-        self.assertFalse(mcmc._set_l)
-
-        # Check that the flag for updating the right edge has been reset
-        self.assertTrue(mcmc._set_r)
-
-        # The right edge is still within the slice, co continue expanding to
-        # the right
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_r)
-
-        # SIXTH RUN: Continue expanding the interval
-        x = mcmc.ask()
-
-        # Check that the flag for updating the left edge has been reset
-        self.assertFalse(mcmc._set_l)
-
-        # Check that the flag for updating the right edge has been reset
-        self.assertTrue(mcmc._set_r)
-
-        # The edges are not inside the slice: we have concluded the interval
-        # expansion to the right. Return None and update the log pdf of the
-        # left edge
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-        self.assertEqual(sample, None)
-        self.assertEqual(fx, mcmc._fx_r)
-
-        # SEVENTH RUN: We have expanded the interval. We now propose a trial
-        # point uniformly distributed from the estimated interval
-        x = mcmc.ask()
-
-        # Check that the flags are set correctly
-        self.assertFalse(mcmc._set_r)
-        self.assertTrue(mcmc._interval_found)
-
-        # The proposed point is in the slice, so it passes the
-        # ``Threshold Check``.
-        fx = log_pdf.evaluateS1(x)[0]
-        sample = mcmc.tell(fx)
-
-        # We have updated all the parameters for the new sample, so we move to
-        # the next sample and reset the index to 0
-        self.assertEqual(mcmc._active_param_index, 0)
-
-        # We are moving to a new parameter, so we reset the flags for expanding
-        # the interval of the new parameter
-        self.assertTrue(mcmc._first_expansion)
-        self.assertFalse(mcmc._interval_found)
-
     def test_run(self):
         """
         Test multiple MCMC iterations of the sampler on a
@@ -400,8 +143,6 @@ class TestSliceStepout(unittest.TestCase):
         # Fit Multivariate Gaussian to chain samples
         np.mean(chain, axis=0)
         np.cov(chain, rowvar=0)
-        #print(mean) [2.00 4.00]
-        #print(cov)  [[1.00, 0.01][0.01, 2.98]]
 
     def test_basic(self):
         """
@@ -426,6 +167,20 @@ class TestSliceStepout(unittest.TestCase):
         with self.assertRaises(ValueError):
             mcmc.set_m(-1)
 
+        # Test set_prob_overrelaxed
+        mcmc.set_prob_overrelaxed(.5)
+        self.assertEqual(mcmc._prob_overrelaxed, .5)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(-1)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(4)
+
+        # Test set_a
+        mcmc.set_a(40)
+        self.assertEqual(mcmc._a, 40)
+        with self.assertRaises(ValueError):
+            mcmc.set_prob_overrelaxed(-1)
+
         # Test get_w
         self.assertTrue(np.all(mcmc.get_w() == np.array([2, 2])))
 
@@ -433,18 +188,20 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc.get_m(), 3.)
 
         # Test current_log_pdf
-        self.assertEqual(mcmc.current_log_pdf(), mcmc._current_log_pdf)
+        self.assertEqual(mcmc.get_current_log_pdf(), mcmc._current_log_pdf)
 
         # Test current_slice height
-        self.assertEqual(mcmc.current_slice_height(), mcmc._current_log_y)
+        self.assertEqual(mcmc.get_current_slice_height(), mcmc._current_log_y)
 
         # Test number of hyperparameters
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+        self.assertEqual(mcmc.n_hyper_parameters(), 4)
 
         # Test setting hyperparameters
-        mcmc.set_hyper_parameters([3, 100])
+        mcmc.set_hyper_parameters([3, 100, .7, 50])
         self.assertTrue((np.all(mcmc._w == np.array([3, 3]))))
         self.assertEqual(mcmc._m, 100)
+        self.assertEqual(mcmc._prob_overrelaxed, 0.7)
+        self.assertEqual(mcmc._a, 50)
 
     def test_logistic(self):
         """
@@ -501,6 +258,137 @@ class TestSliceStepout(unittest.TestCase):
         print('Running...')
         mcmc.run()
         print('Done!')
+
+    def test_overrelaxed(self):
+
+        # Set seed for monitoring
+        np.random.seed(2)
+
+        # Create log pdf
+        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
+
+        # Create mcmc
+        x0 = np.array([1, 1])
+        mcmc = pints.SliceStepoutMCMC(x0)
+
+        # Set probability of overrelaxed step
+        mcmc.set_prob_overrelaxed(1)
+
+        # Set w
+        mcmc.set_w(10)
+
+        # Check that variables are initialised correctly
+        self.assertFalse(mcmc._overrelaxed_step)
+        self.assertIsNone(mcmc._l_bar)
+        self.assertIsNone(mcmc._r_bar)
+        self.assertIsNone(mcmc._l_hat)
+        self.assertIsNone(mcmc._r_hat)
+
+        # First MCMC step: set flags to True
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        mcmc.tell(fx)
+
+        self.assertTrue(mcmc._overrelaxed_step)
+        self.assertTrue(mcmc._init_overrelaxation)
+        self.assertTrue(mcmc._bisection)
+
+        #print("SLICE: " + str(mcmc._current_log_y)) -4.95
+
+        """FIRST PARAMETER"""
+        # Expand interval using stepout
+        while not mcmc._interval_found:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            mcmc.tell(fx)
+
+        # Check initialisation of overrelaxed step - start narrowing ``w```
+        self.assertTrue(mcmc._init_narrowing)
+        self.assertFalse(mcmc._init_overrelaxation)
+        self.assertTrue(((mcmc._r - mcmc._l) < 1.1 *
+                         mcmc._w[mcmc._active_param_index]) and
+                        mcmc._init_narrowing)
+
+        # Continue narrowing ``w``
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        mcmc.tell(fx)
+        self.assertFalse(mcmc._init_narrowing)
+        self.assertFalse(mcmc._set_l_bisection)
+
+        # Now that we have narrowed ``w``, init bisection
+        while mcmc._a_bar > 0:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            mcmc.tell(fx)
+
+        # Update parameter and index
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        self.assertFalse(mcmc._set_l_bisection)
+        self.assertFalse(mcmc._set_r_bisection)
+        mcmc.tell(fx)
+        self.assertEqual(mcmc._active_param_index, 1)
+        self.assertTrue(mcmc._first_expansion)
+        self.assertFalse(mcmc._interval_found)
+
+        """SECOND PARAMETER"""
+        # Expand interval using stepout
+        while not mcmc._interval_found:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            mcmc.tell(fx)
+
+        # Check initialisation of overrelaxed step - start narrowing ``w```
+        self.assertTrue(mcmc._init_narrowing)
+        self.assertFalse(mcmc._init_overrelaxation)
+        self.assertFalse(((mcmc._r - mcmc._l) < 1.1 *
+                         mcmc._w[mcmc._active_param_index]) and
+                         mcmc._init_narrowing)
+
+        # Now that we have narrowed ``w``, init bisection
+        while mcmc._a_bar > 0:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            mcmc.tell(fx)
+
+        # Update parameter and index
+        x = mcmc.ask()
+        fx = log_pdf.evaluateS1(x)[0]
+        self.assertFalse(mcmc._set_l_bisection)
+        self.assertFalse(mcmc._set_r_bisection)
+        mcmc.tell(fx)
+        self.assertEqual(mcmc._active_param_index, 0)
+        self.assertTrue(mcmc._first_expansion)
+        self.assertFalse(mcmc._interval_found)
+
+    def test_overrelaxed_run(self):
+
+        # Set seed for monitoring
+        np.random.seed(2)
+
+        # Create log pdf
+        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
+
+        # Create mcmc
+        x0 = np.array([1, 1])
+        mcmc = pints.SliceStepoutMCMC(x0)
+
+        # Set probability of overrelaxed step
+        mcmc.set_prob_overrelaxed(1)
+
+        # Run multiple iterations of the sampler
+        chain = []
+        while len(chain) < 1000:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            sample = mcmc.tell(fx)
+            if sample is not None:
+                chain.append(np.copy(sample))
+
+        # Fit Multivariate Gaussian to chain samples
+        np.mean(chain, axis=0)
+        np.cov(chain, rowvar=0)
 
 
 if __name__ == '__main__':
