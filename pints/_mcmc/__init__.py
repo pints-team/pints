@@ -559,7 +559,7 @@ class MCMCController(object):
 
             # Calculate logpdfs
             fxs = evaluator.evaluate(xs)
-            #print(fxs)
+
             # Update evaluation count
             if self._single_chain:
                 for i, sampler in enumerate(self._samplers):
