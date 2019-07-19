@@ -84,6 +84,9 @@ class SingleChainMCMC(MCMCSampler):
         # Get number of parameters
         self._n_parameters = len(self._x0)
 
+        # State of sampler
+        self._active = True
+
         # Check initial standard deviation
         if sigma0 is None:
             # Get representative parameter value for each parameter
@@ -541,45 +544,66 @@ class MCMCController(object):
                 if self._log_to_screen:
                     print('Initial phase completed.')
 
-            # Update chains: loop through intermediate steps until a new
-            # acceptable sample is drawn for each chain
-            xs = []
-            fxs = []
-            samples = []
-
+            # Get points
             if self._single_chain:
-                for i, s in enumerate(self._samplers):
-                    while True:
-                        # Get point
-                        x = [s.ask()]
-
-                        # Calculate logpdf
-                        fx = evaluator.evaluate(x)[0]
-
-                        # Update evaluation count
-                        evaluations += 1
-
-                        # Update single chain
-                        sample = s.tell(fx)
-
-                        # If not an intermediate step, return sampled point
-                        if sample is not None:
-                            break
-
-                    xs.append(x)
-                    fxs.append(fx)
-                    samples.append(sample)
+                # First MCMC step, create array for initial samples
+                if evaluations == 0:
+                    xs = [sampler.ask() for sampler in self._samplers]
+                # Ask for log_pdf of points in active samplers
+                else:
+                    for i, sampler in enumerate(self._samplers):
+                        if sampler._active:
+                            xs[i] = sampler.ask()
             else:
-                while True:
-                    xs = self._samplers[0].ask()
-                    fxs = evaluator.evaluate(xs)
-                    evaluations += len(fxs)
-                    samples = self._samplers[0].tell(fxs)
-                    if samples is not None:
-                        break
+                xs = self._samplers[0].ask()
+
+            # Calculate logpdfs
+            fxs = evaluator.evaluate(xs)
+            #print(fxs)
+            # Update evaluation count
+            if self._single_chain:
+                for i, sampler in enumerate(self._samplers):
+                    if sampler._active:
+                        evaluations += 1
+            else:
+                evaluations += len(fxs)
+
+            # Update chains
+            intermediate_step = False
+            if self._single_chain:
+                # First iteration
+                if evaluations == self._chains:
+                    samples = np.array([
+                        s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+
+                # Subsequent iterations: tell() for active samplers
+                # and deactivate samplers returning valid sample
+                else:
+                    for i, sampler in enumerate(self._samplers):
+                        if sampler._active:
+                            samples[i] = sampler.tell(fxs[i])
+                            if not np.isnan(samples[i]).all():
+                                sampler._active = False
+
+                none_found = [np.isnan(x).all() for x in samples]
+                if any(none_found):
+                    intermediate_step = True
+                else:
+                    for i, sampler in enumerate(self._samplers):
+                        sampler._active = True
+            else:
+                samples = self._samplers[0].tell(fxs)
+                intermediate_step = samples is None
+
+            # If no new samples were added, then no MCMC iteration was
+            # performed, and so the iteration count shouldn't be updated,
+            # logging shouldn't be triggered, and stopping criteria shouldn't
+            # be checked
+            if intermediate_step:
+                continue
 
             # Add new samples to the chains
-            chains.append(samples)
+            chains.append(np.array(samples, copy=True))
 
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
