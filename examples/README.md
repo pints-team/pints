@@ -40,6 +40,8 @@ relevant code.
 - [Emcee Hammer](./sampling-emcee-hammer.ipynb)
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Slice Sampling - Stepout MCMC](./sampling-slice-stepout.ipynb)
+- [Slice Sampling - Doubling MCMC](./sampling-slice-doubling.ipynb)
 
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
