@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # Tests the basic methods of the Slice Sampling with Doubling routine.
 #
