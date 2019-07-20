@@ -59,7 +59,6 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertEqual(mcmc._fx_l, None)
         self.assertEqual(mcmc._fx_r, None)
 
-        self.assertTrue(np.all(mcmc._w == [1, 1]))
         self.assertEqual(mcmc._p, 10)
         self.assertEqual(mcmc._k, 0)
         self.assertEqual(mcmc._active_param_index, 0)
@@ -138,6 +137,8 @@ class TestSliceDoubling(unittest.TestCase):
         # Create mcmc
         x0 = np.array([2., 4.])
         mcmc = pints.SliceDoublingMCMC(x0)
+
+        mcmc.set_w(1)
 
         # VERY FIRST RUN
         x = mcmc.ask()
@@ -386,7 +387,7 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue(mcmc._continue_check)
 
         # The log pdf of the proposed point is greater than the slice height.
-        # The point has passed the "Threshold Check"
+        # The point has passed the ``Threshold Check```
         fx = log_pdf.evaluateS1(x)[0]
         sample = mcmc.tell(fx)
         self.assertTrue(fx > mcmc._current_log_y)

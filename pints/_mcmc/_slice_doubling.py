@@ -28,7 +28,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     1) Calculate the pdf (``f(x0)``) of the current sample (``x0``).
     2) Draw a real value (``y``) uniformly from (0, f(x0)), defining a
-    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
+    horizontal ``slice``: S = {x: y < f (x)}. Note that ``x0`` is
     always within S.
     3) Find an interval (``I = (L, R)``) around ``x0`` that contains all,
     or much, of the slice.
@@ -131,9 +131,11 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Flag used to store the log_pdf of the proposed sample
         self._sent_proposal = False
 
-        # Default initial interval width ``w``` used in the Doubling procedure
+        # Default initial interval width w used in the Doubling procedure
         # to expand the interval
-        self._w = np.ones(len(self._x0))
+        self._w = np.abs(self._x0)
+        self._w[self._w == 0] = 1
+        self._w = 0.1 * self._w
 
         # Default integer ``p`` limiting the size of the interval to
         # ``(2^p) * w``.
@@ -159,36 +161,36 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._fx_l = None
         self._fx_r = None
 
-        # Edges used for the "Acceptance Check"
+        # Edges used for the ``Acceptance Check``
         self._l_hat = None
         self._r_hat = None
 
-        # Parameter values at "Acceptance Check" edges ``l_hat ,r_hat```
+        # Parameter values at ``Acceptance Check`` edges ``l_hat ,r_hat``
         self._temp_l_hat = None
         self._temp_r_hat = None
 
-        # Log_pdf of the "Acceptance Check" interval edge points
+        # Log_pdf of the ``Acceptance Check`` interval edge points
         # ``l_hat,r_hat``
         self._fx_l_hat = None
         self._fx_r_hat = None
 
-        # Variable used in the "Acceptance Check" procedure to track whether
+        # Variable used in the ``Acceptance Check`` procedure to track whether
         # the intervals that would be generated from the new trial point
         # differ from those leading to the current point.
         self._d = False
 
-        # Flag to initialise the "Acceptance Check"
+        # Flag to initialise the ``Acceptance Check``
         self._init_check = False
 
-        # Flag to control the "Acceptance Check"
+        # Flag to control the ``Acceptance Check``
         self._continue_check = False
 
-        # Mid point between ``l_hat`` and ``r_hat`` used in the "Acceptance
-        # Check"
+        # Mid point between ``l_hat`` and ``r_hat`` used in the ``Acceptance
+        # Check``
         self._m = None
 
-        # Index of parameter "xi" we are updating of the sample
-        # "x = (x1,...,xn)"
+        # Index of parameter ``xi`` we are updating of the sample
+        # ``x = (x1,...,xn)``
         self._active_param_index = 0
 
         # Flags used to calculate log_pdf of initial interval edges ``l,r``
@@ -359,7 +361,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._proposed[self._active_param_index] = (self._l + self._u *
                                                     (self._r - self._l))
 
-        # Set "Acceptance Check" flags for the proposal point
+        # Set ``Acceptance Check`` flags for the proposal point
         self._init_check = True
         self._continue_check = True
 
@@ -544,7 +546,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         p = int(m)
         if p <= 0:
             raise ValueError("""Integer m must be positive to limit the
-                             interval size to "(2^p)*w".""")
+                             interval size to ``(2^p)*w``.""")
         self._p = p
 
     def get_w(self):

@@ -160,21 +160,21 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
-        
+
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Hyperrectangles'
 
     def set_w(self, w):
         """
-        Sets scale vector "w" for generating the hyperrectangle.
+        Sets scale vector ``w`` for generating the hyperrectangle.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
         else:
             w = np.asarray(w)
         if any(n < 0 for n in w):
-            raise ValueError("""Width "w" must be positive for
+            raise ValueError("""Width ``w`` must be positive for
                             interval expansion.""")
         self._w = w
 
@@ -183,14 +183,14 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
         Sets adaptive method for shrinking the hyperrectangle.
         """
         if type(adaptive) != bool:
-            raise ValueError("""Variable should be either "True"
-                              or "False" to set adaptive shrinking
+            raise ValueError("""Variable should be either ``True``
+                              or ``False`` to set adaptive shrinking
                               method""")
         self._adaptive = adaptive
 
     def get_w(self):
         """
-        Returns scale w used for generating the hyperrectangle.
+        Returns scale ``w`` used for generating the hyperrectangle.
         """
         return self._w
 

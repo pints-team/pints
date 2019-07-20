@@ -176,8 +176,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._set_l = False
         self._set_r = False
 
-        # Index of parameter "xi" we are updating of the sample
-        # "x = (x1,...,xn)"
+        # Index of parameter ``xi``` we are updating of the sample
+        # ``x = (x1,...,xn)``
         self._active_param_index = 0
 
         # Probability of overrelaxed step
@@ -592,25 +592,25 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_w(self, w):
         """
-        Sets width "w" for generating the interval.
+        Sets width ``w`` for generating the interval.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
         else:
             w = np.asarray(w)
         if any(n < 0 for n in w):
-            raise ValueError("""Width "w" must be positive for
+            raise ValueError("""Width ``w`` must be positive for
                             interval expansion.""")
         self._w = w
 
     def set_m(self, m):
         """
-        Set integer "m" for limiting interval expansion.
+        Set integer ``m`` for limiting interval expansion.
         """
         m = int(m)
         if m <= 0:
-            raise ValueError("""Integer "m" must be positive to limit the
-                            interval size to "m * w".""")
+            raise ValueError("""Integer ``m`` must be positive to limit the
+                            interval size to ``m * w``.""")
         self._m = m
 
     def set_prob_overrelaxed(self, prob):
@@ -624,11 +624,11 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_a(self, a):
         """
-        Set integer "a" for limiting bisection process in overrelaxed steps.
+        Set integer ``a`` for limiting bisection process in overrelaxed steps.
         """
         a = int(a)
         if a < 0:
-            raise ValueError("""Integer "a" must be positive to limit
+            raise ValueError("""Integer ``a`` must be positive to limit
                                 overrelaxation endpoint accuracy to
                                 ``2^(-a) * w``.""")
         self._a = a
@@ -656,7 +656,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def get_a(self):
         """
-        Returns integer "a" limit overrelaxation endpoint accuracy to
+        Returns integer ``a`` limit overrelaxation endpoint accuracy to
         ``2^(-a) * w``.
         """
         return self._a

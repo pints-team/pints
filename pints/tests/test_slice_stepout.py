@@ -293,8 +293,6 @@ class TestSliceStepout(unittest.TestCase):
         self.assertTrue(mcmc._init_overrelaxation)
         self.assertTrue(mcmc._bisection)
 
-        #print("SLICE: " + str(mcmc._current_log_y)) -4.95
-
         """FIRST PARAMETER"""
         # Expand interval using stepout
         while not mcmc._interval_found:
