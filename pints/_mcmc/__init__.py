@@ -546,10 +546,11 @@ class MCMCController(object):
 
             # Get points
             if self._single_chain:
-                # First MCMC step, create array for initial samples
+                # First step: create array for initial samples
                 if evaluations == 0:
                     xs = [sampler.ask() for sampler in self._samplers]
-                # Ask for log_pdf of points in active samplers
+                # Subsequent steps: ask for log_pdf of points only in active
+                # samplers
                 else:
                     for i, sampler in enumerate(self._samplers):
                         if sampler._active:
@@ -571,34 +572,39 @@ class MCMCController(object):
             # Update chains
             intermediate_step = False
             if self._single_chain:
-                # First iteration
+                # First step: create array of samples
                 if evaluations == self._chains:
                     samples = np.array([
                         s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
 
-                # Subsequent iterations: tell() for active samplers
-                # and deactivate samplers returning valid sample
+                # Subsequent steps: update values for active samplers
+                # until all chains return a sample
                 else:
                     for i, sampler in enumerate(self._samplers):
                         if sampler._active:
                             samples[i] = sampler.tell(fxs[i])
+                            # If a chain returns a sample, deactivate it
                             if not np.isnan(samples[i]).all():
                                 sampler._active = False
 
+                # If at least one chain doesn't return a sample, keep
+                # updating active chains
                 none_found = [np.isnan(x).all() for x in samples]
                 if any(none_found):
                     intermediate_step = True
                 else:
+                    # If all chains have returned a sample, then they
+                    # should all have been deactivated. Reactivate them
+                    # for next MCMC step
                     for i, sampler in enumerate(self._samplers):
                         sampler._active = True
             else:
                 samples = self._samplers[0].tell(fxs)
                 intermediate_step = samples is None
 
-            # If no new samples were added, then no MCMC iteration was
-            # performed, and so the iteration count shouldn't be updated,
-            # logging shouldn't be triggered, and stopping criteria shouldn't
-            # be checked
+            # If at least one chain hasn't returned a sample, the iteration
+            # count shouldn't be updated, logging shouldn't be triggered,
+            # and stopping criteria shouldn't be checked
             if intermediate_step:
                 continue
 
