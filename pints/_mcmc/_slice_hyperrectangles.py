@@ -41,6 +41,9 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
         self._w[self._w == 0] = 1
         self._w = 0.1 * self._w
 
+        # Flag to turn on adaptive shrinking
+        self._adaptive = True
+
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
 
@@ -69,7 +72,7 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
                 self._hyperrectangle_positioned = True
 
         # Sample ith parameter for new proposal
-        for i in range(len(self._proposed)):
+        for i in range(self._n_parameters):
             u = np.random.uniform()
             self._proposed[i] = (self._L[i] + u * (self._R[i] - self._L[i]))
 
@@ -86,7 +89,12 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
 
         # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        fx, grad = reply
+
+        # Check reply, copy gradient
+        fx = float(fx)
+        grad = pints.vector(grad)
+        assert(grad.shape == (self._n_parameters, ))
 
         # Very first call
         if self._current is None:
@@ -124,12 +132,35 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
 
         # Shrinking
         else:
-            for i, x_1 in enumerate(self._proposed):
-                if x_1 < self._current[i]:
-                    self._L[i] = x_1
-                else:
-                    self._R[i] = x_1
+            # Adaptive shrinking: shrink in the direction ``index``
+            # in which ``(R_i - L_i) |G_i|`` is maximised
+            if self._adaptive:
+                # Store products ``(R_i - L_i) |G_i|``
+                temp = np.zeros(self._n_parameters)
+                for i in range(self._n_parameters):
+                    temp[i] = (self._R[i] - self._L[i]) * np.abs(grad[i])
 
+                # Index which maximises ``(R_i - L_i) |G_i|``
+                index = np.argmax(temp)
+
+                # Shrink only in the direction ``index``
+                if self._proposed[index] < self._current[index]:
+                    self._L[index] = self._proposed[index]
+                else:
+                    self._R[index] = self._proposed[index]
+
+            # Shrink homogeneously in all directions
+            else:
+                for i, x_1 in enumerate(self._proposed):
+                    if x_1 < self._current[i]:
+                        self._L[i] = x_1
+                    else:
+                        self._R[i] = x_1
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
+        
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Hyperrectangles'
@@ -147,11 +178,27 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
                             interval expansion.""")
         self._w = w
 
+    def set_adaptive_shrinking(self, adaptive):
+        """
+        Sets adaptive method for shrinking the hyperrectangle.
+        """
+        if type(adaptive) != bool:
+            raise ValueError("""Variable should be either "True"
+                              or "False" to set adaptive shrinking
+                              method""")
+        self._adaptive = adaptive
+
     def get_w(self):
         """
         Returns scale w used for generating the hyperrectangle.
         """
         return self._w
+
+    def get_adaptive_shrinking(self):
+        """
+        Returns True/False if adaptive shrinking is on/off.
+        """
+        return self._adaptive
 
     def get_current_slice_height(self):
         """
@@ -161,11 +208,12 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+        return 2
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[w]``.
+        The hyper-parameter vector is ``[w, adaptive]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_w(x[0])
+        self.set_adaptive_shrinking(x[1])
