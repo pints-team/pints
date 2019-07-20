@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Tests the basic methods of the Slice Sampling with Doubling routine.
 #
