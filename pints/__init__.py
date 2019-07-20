@@ -204,6 +204,7 @@ from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
+from ._mcmc._slice_hyperrectangles import SliceHyperrectanglesMCMC
 
 
 #
