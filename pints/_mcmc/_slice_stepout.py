@@ -77,13 +77,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     Intuitively, we uniformly sample a trial point from the interval ``I``,
     and subsequently shrink the interval each time a trial point is rejected.
 
-    To avoid floating-point underflow, we implement the suggestion advanced
-    in [1] pp.712. We use the log pdf of the un-normalised posterior
-    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
-    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
-    ``\epsilon \sim \text{exp}(1)`` and define the slice as
-    S = {x : z < g(x)}.
-
     The following implementation includes the possibility of carrying out
     ``overrelaxed`` slice sampling steps, as described in [1] pp. 726
     Overrelaxed steps increase sampling efficiency in highly correlated
@@ -120,6 +113,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     The probability of pursuing an overrelaxed step, ``_prob_overrelaxed`` (0
     as default), and the number of bisection iterations, ``a``, are
     hyperparameters.
+
+    To avoid floating-point underflow, we implement the suggestion advanced
+    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.

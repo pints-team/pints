@@ -31,6 +31,8 @@ class TestSliceHyperrectangles(unittest.TestCase):
         x0 = np.array([2, 4])
         mcmc = pints.SliceHyperrectanglesMCMC(x0)
 
+        mcmc.set_adaptive_shrinking(True)
+
         # Test attributes initialisation
         self.assertFalse(mcmc._running)
         self.assertFalse(mcmc._ready_for_tell)
@@ -50,6 +52,8 @@ class TestSliceHyperrectangles(unittest.TestCase):
         # Create mcmc
         x0 = np.array([2., 4.])
         mcmc = pints.SliceHyperrectanglesMCMC(x0)
+
+        mcmc.set_adaptive_shrinking(True)
 
         # Ask should fail if _ready_for_tell flag is True
         with self.assertRaises(RuntimeError):
@@ -103,6 +107,8 @@ class TestSliceHyperrectangles(unittest.TestCase):
         x0 = np.array([2., 4.])
         mcmc = pints.SliceHyperrectanglesMCMC(x0)
 
+        mcmc.set_adaptive_shrinking(True)
+
         # First MCMC step
         x = mcmc.ask()
         fx, grad = log_pdf.evaluateS1(x)
@@ -131,9 +137,12 @@ class TestSliceHyperrectangles(unittest.TestCase):
         # Set scales
         mcmc.set_w(5)
 
+        # Adaptive shrink
+        mcmc.set_adaptive_shrinking(True)
+
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 10000:
+        while len(chain) < 100:
             x = mcmc.ask()
             fx, grad = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, grad))
@@ -171,9 +180,9 @@ class TestSliceHyperrectangles(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
 
         # Test setting hyperparameters
-        mcmc.set_hyper_parameters([3, False])
+        mcmc.set_hyper_parameters([3, True])
         self.assertTrue((np.all(mcmc._w == np.array([3, 3]))))
-        self.assertFalse(mcmc._adaptive)
+        self.assertTrue(mcmc._adaptive)
 
     def test_logistic(self):
         """
@@ -220,7 +229,7 @@ class TestSliceHyperrectangles(unittest.TestCase):
                                     method=pints.SliceHyperrectanglesMCMC)
 
         # Add stopping criterion
-        mcmc.set_max_iterations(1000)
+        mcmc.set_max_iterations(100)
 
         # Set up modest logging
         mcmc.set_log_to_screen(True)

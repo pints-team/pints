@@ -17,8 +17,68 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
-    Implements Hyperrectangles-based Multivariate Slice Sampling,
-    as described in [1].
+    Implements Hyperrectangles-based Multivariate Slice Sampling, as described
+    in [1].
+
+    Generates samples by sampling uniformly from the area of an axis-aligned
+    hyperrectangle: ``H = {x: L_i < x_i < R_i for all i = 1, ..., n}``, with
+    ``n`` being the number of sample dimensions. Here, ``L_i`` and ``R_i``
+    define  the extent of the hyperrectangle along the axis for variable
+    ``x_i``.
+
+    Sampling follows:
+
+    1. Draw a real value, ``y``, uniformly from ``(0, f (x_0))``, thereby
+       defining the slice ``S = {x : y < f (x)}``.
+    2. Find a hyperrectangle, ``H = (L_1, R_1) ×···× (L_n, R_n)``, around
+       ``x_0``, which preferably contains at least a big part of the slice.
+    3. Draw the new point, ``x_1``, from the part of the slice within this
+       hyperrectangle.
+
+    The implementation uses estimates, ``w_i``, of the relative scales of the
+    variables to randomly position an hyperrectangle with such dimensions
+    uniformly over positions that lead to ``H`` containing ``x_0``. The
+    algorithm consists of the following steps, as described in [1] Fig. 8.
+    pp.723:
+
+    1. ``y \sim uniform(0, f(x_0))``
+    2. for ``i = 1`` to ``n``:
+        a. ``U_i \sim uniform(0,1)``
+        b. ``L_i = x_{0_i} - w_i * U_i``
+        c. ``L_i + w_i``
+    3. Repeat:
+        a. for ``i = 1`` to ``n``:
+            - ``U_i \sim uniform(0,1)``
+            - ``x_{1_i} = L_i + U_i * (R_i - L_i)``
+        b. if ``y < f(x_1)``, exit
+        c. for ``i = 1`` to ``n``:
+            - if ``x_{1_i} < x_{0_i}``, ``L_i = x_{1_i}``
+            - else, ``R_i = x_{1_i}``
+
+    In the presented algorithm, the hyperrectangle is homogeneously
+    shrunk in all directions when a proposal is drawn outside the slice,
+    until an acceptable sample is found.
+
+    The following implementation includes the option of executing an
+    adaptive shrinkage procedure along only one axis determined from
+    the gradient and the current dimensions of the hyperrectangle,
+    as described in [1] pp. 722. Specifically, only the axis corresponding
+    to variable ``x_i`` is shrunk, where ``i`` maximises ``(R_i - L_i) |G_i|``,
+    where ``G_i`` is the gradient of ``f(x)``, evaluated at the last rejected
+    sample. The axis for which this change is thought to be largest is likely
+    to be the best one to shrink in order to eliminate points outside the
+    slice.
+
+    To avoid floating-point underflow, we implement the suggestion advanced
+    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
+
+    [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
+    pp.705-767.
+
     """
 
     def __init__(self, x0, sigma0=None):
@@ -43,7 +103,7 @@ class SliceHyperrectanglesMCMC(pints.SingleChainMCMC):
         self._w = 0.1 * self._w
 
         # Flag to turn on adaptive shrinking
-        self._adaptive = True
+        self._adaptive = False
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
