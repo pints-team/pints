@@ -21,3 +21,6 @@ interface, that can be used to sample from an unknown
     mala_mcmc
     metropolis_mcmc
     population_mcmc
+    slice_stepout_mcmc
+    slice_doubling_mcmc
+    slice_hyperrectangles_mcmc
