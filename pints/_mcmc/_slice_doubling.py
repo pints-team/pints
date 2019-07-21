@@ -27,14 +27,14 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     If the distribution is univariate, sampling follows:
 
-    1) Calculate the pdf (``f(x0)``) of the current sample (``x0``).
-    2) Draw a real value (``y``) uniformly from (0, f(x0)), defining a
-    horizontal ``slice``: S = {x: y < f (x)}. Note that ``x0`` is
-    always within S.
-    3) Find an interval (``I = (L, R)``) around ``x0`` that contains all,
-    or much, of the slice.
-    4) Draw a new point (``x1``) from the part of the slice
-    within this interval.
+    1. Calculate the pdf (``f(x0)``) of the current sample (``x0``).
+    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+       horizontal ``slice``: S = {x: y < f (x)}. Note that ``x0`` is
+       always within S.
+    3. Find an interval (``I = (L, R)``) around ``x0`` that contains all,
+       or much, of the slice.
+    4. Draw a new point (``x1``) from the part of the slice
+       within this interval.
 
     If the distribution is multivariate, we apply the univariate algorithm to
     each variable in turn, where the other variables are set at their
@@ -72,9 +72,9 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             a. ``U \sim uniform(0, 1)``
             b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
             c. if ``y < f(x_1)`` and ``Accept(x_1)``, exit loop
-            else
-                if ``x_1 < x_0``, ``\bar{L} = x_1``
-                else ``\bar{R} = x_1``
+               else:
+               if ``x_1 < x_0``, ``\bar{L} = x_1``
+               else ``\bar{R} = x_1``
 
     Intuitively, we uniformly sample a trial point from the interval ``I``,
     and subsequently shrink the interval each time a trial point is rejected.
@@ -92,11 +92,11 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         2. while ``\hat{R} - \hat{L} > 1.1w``:
             a. M = ``(\hat{L} + \hat{R})/2``
             b. if {``x_0 < M`` and ``x_1 >= M``} or
-                  {``x_0 >= M`` and `` x_1 < M``}, ``D = True``
+               {``x_0 >= M`` and `` x_1 < M``}, ``D = True``
             c. if ``x_1 < M``, `\hat{R} = M``
                else, `\hat{L} = M``
             d. if ``D`` and ``y >= f(\hat{L})`` and ``y >= f(\hat{R})``,
-                reject proposal
+               reject proposal
         3. If the proposal is not rejected in the previous loop, accept it
 
     The multiplication by ``1.1`` in the ``while`` condition in Step 2 guards

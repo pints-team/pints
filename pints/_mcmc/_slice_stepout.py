@@ -27,14 +27,14 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     If the distribution is univariate, sampling follows:
 
-    1) Calculate the pdf (``f(x0)``) of the current sample (``x0``).
-    2) Draw a real value (``y``) uniformly from (0, f(x0)), defining a
-    horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
-    always within S.
-    3) Find an interval (``I = (L, R)``) around ``x0`` that contains all,
-    or much, of the slice.
-    4) Draw a new point (``x1``) from the part of the slice
-    within this interval.
+    1. Calculate the pdf (``f(x0)``) of the current sample (``x0``).
+    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+       horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
+       always within S.
+    3. Find an interval (``I = (L, R)``) around ``x0`` that contains all,
+       or much, of the slice.
+    4. Draw a new point (``x1``) from the part of the slice
+       within this interval.
 
     If the distribution is multivariate, we apply the univariate algorithm to
     each variable in turn, where the other variables are set at their
@@ -50,8 +50,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     4. ``V \sim uniform(0, 1)``
     5. ``J = floor(mV)``
     6. ``K = (m - 1) - J``
-    6. while ``J > 0`` and ``y < f(L)``, ``L = L - w`` and ``J = J - 1``
-    7. while ``K > 0`` and ``y < f(R)``, ``R = R + w`` and ``K = K - 1``
+    7. while ``J > 0`` and ``y < f(L)``, ``L = L - w`` and ``J = J - 1``
+    8. while ``K > 0`` and ``y < f(R)``, ``R = R + w`` and ``K = K - 1``
 
     Intuitively, the interval ``I`` is estimated by expanding the initial
     interval by a width ``w`` in each direction until both edges fall outside
@@ -70,9 +70,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         a. ``U \sim uniform(0, 1)``
         b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
         c. if ``y < f(x_1)`` accept ``x_1`` and exit loop,
-           else
-            if ``x_1 < x_0``, ``\bar{L} = x_1``
-            else ``\bar{R} = x_1``
+           else:
+           if ``x_1 < x_0``, ``\bar{L} = x_1``
+           else ``\bar{R} = x_1``
 
     Intuitively, we uniformly sample a trial point from the interval ``I``,
     and subsequently shrink the interval each time a trial point is rejected.
@@ -85,7 +85,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     S = {x : z < g(x)}.
 
     The following implementation includes the possibility of carrying out
-    ``overrelaxed`` slice sampling steps, as described in [1] pp. 726-729.
+    ``overrelaxed`` slice sampling steps, as described in [1] pp. 726
     Overrelaxed steps increase sampling efficiency in highly correlated
     unimodal distributions by suppressing the random walk behaviour of
     single-variable slice sampling: each variable is still updated in turn,
@@ -102,7 +102,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     1. ``\bar{L} = L``,``\bar{R} = R``,``\bar{w} = w``, ``\bar{a} = a``
     2. while ``R - L < 1.1 * w``:
-        a. ``M = (\bar{L} + \bar{R}) / 2
+        a. ``M = (\bar{L} + \bar{R}) / 2``
         b. if ``\bar{a} = 0 `` or ``y < f(M)``, exit loop
         c. if ``x_0 > M``, ``\bar{L} = M``
            else, ``\bar{R} = M``
