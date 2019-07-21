@@ -42,10 +42,13 @@ relevant code.
 - [Population MCMC](./sampling-population-mcmc.ipynb)
 - [Slice Sampling - Stepout MCMC](./sampling-slice-stepout.ipynb)
 - [Slice Sampling - Doubling MCMC](./sampling-slice-doubling.ipynb)
+- [Slice Sampling - Overrelaxation MCMC](./sampling-slice-overrelaxation.ipynb)
+- [Slice Sampling - Hyperrectangles MCMC](./sampling-slice-hyperrectangles.ipynb)
 
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Slice Sampling - Adaptive Hyperrectangles MCMC](./sampling-slice-adaptive-hyperrectangles.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
