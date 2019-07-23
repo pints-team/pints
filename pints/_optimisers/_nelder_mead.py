@@ -165,7 +165,9 @@ class NelderMead(pints.Optimiser):
     def ask(self):
         """ See: :meth:`pints.Optimiser.ask()`. """
 
-        # Ready for tell now
+        # Check ask/tell
+        if self._ready_for_tell:
+            raise Exception('ask() not called twice')
         self._ready_for_tell = True
 
         # Initialise

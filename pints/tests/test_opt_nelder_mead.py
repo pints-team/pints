@@ -72,6 +72,19 @@ class TestNelderMead(unittest.TestCase):
         self.assertEqual(list(opt.xbest()), list(x))
         self.assertEqual(opt.fbest(), float('inf'))
 
+        # Not running
+        self.assertFalse(opt.running())
+
+        # Running
+        xs = opt.ask()
+        fxs = [r(x) for x in xs]
+        self.assertTrue(opt.running())
+        opt.tell(fxs)
+        self.assertTrue(opt.running())
+        xs = opt.ask()
+        fxs = [r(x) for x in xs]
+        opt.tell(fxs)
+
         # Tell before ask
         self.assertRaisesRegex(
             Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
@@ -88,6 +101,51 @@ class TestNelderMead(unittest.TestCase):
         opt = method(np.array([0, 1.01]))
         self.assertIn('Nelder-Mead', opt.name())
 
+    def test_zeros_in_x(self):
+        # Tests if the method copes with zeros in x0 (which can go wrong
+        # depending on the initialisation method).
+
+        r = pints.toy.RosenbrockError()
+        x0 = [0, 0]
+        opt = pints.OptimisationController(r, x0, method=method)
+        opt.set_log_to_screen(False)
+        x, f = opt.run()
+        self.assertTrue(np.all(x == np.array([1, 1])))
+        self.assertEqual(f, 0)
+
+    def test_bad_tell(self):
+        # Tests errors if wrong sizes are passed to tell
+
+        r = pints.toy.RosenbrockError()
+        e = pints.SequentialEvaluator(r)
+        x0 = [0, 0]
+
+        # Give wrong initial number
+        opt = method(x0)
+        xs = opt.ask()
+        fxs = e.evaluate(xs)
+        self.assertRaisesRegex(
+            ValueError, 'of length \(1 \+ n_parameters\)', opt.tell, fxs[:-1])
+
+        # Give wrong intermediate answer
+        opt = method(x0)
+        opt.tell(e.evaluate(opt.ask()))
+        x = opt.ask()[0]
+        fx = e.evaluate([x])
+        self.assertRaisesRegex(
+            ValueError, 'only a single evaluation', opt.tell, [fx, fx])
+
+        # Give wrong answer in shrink step
+        with self.assertRaisesRegex(ValueError, 'length n_parameters'):
+            opt = method(x0)
+            for i in range(500):
+                opt.tell(e.evaluate(opt.ask()))
+                if opt._shrink:
+                    xs = opt.ask()
+                    fxs = e.evaluate(xs)
+                    opt.tell(fxs[:-1])
+                    break
+
     def test_rosenbrock(self):
         # Tests the actions of the optimiser against a stored result
 
@@ -98,8 +156,11 @@ class TestNelderMead(unittest.TestCase):
         opt.set_log_to_screen(True)
 
         with StreamCapture() as c:
-            opt.run()
+            x, f = opt.run()
             log = c.text()
+
+        self.assertTrue(np.all(x == np.array([1, 1])))
+        self.assertEqual(f, 0)
 
         exp_lines = (
             'Minimising error measure',
