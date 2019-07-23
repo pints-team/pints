@@ -167,7 +167,7 @@ class NelderMead(pints.Optimiser):
 
         # Check ask/tell
         if self._ready_for_tell:
-            raise Exception('ask() not called twice')
+            raise Exception('ask() called twice')
         self._ready_for_tell = True
 
         # Initialise
