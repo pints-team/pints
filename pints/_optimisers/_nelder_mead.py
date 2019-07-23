@@ -131,12 +131,12 @@ class NelderMead(pints.Optimiser):
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(NelderMead, self).__init__(x0, sigma0, boundaries)
 
-        if self._boundaries:
-            raise NotImplementedError(
-                'Boundaries have not been implemented (yet)')
-            # TODO: Might work quite well if the initial simplex is chosen to
-            # be within boundaries, and subsequent points outside are simply
-            # given f = inf
+        if self._boundaries is not None:
+            import logging
+            logging.basicConfig()
+            log = logging.getLogger(__name__)
+            log.warning(
+                'Nelder-Mead optimisation does not support boundaries.')
 
         # Parameters for reflection, expansion, and contraction
         # Other choices can be made, as long as -1 < di < 0 < do < dr < de
@@ -174,7 +174,6 @@ class NelderMead(pints.Optimiser):
 
             # Initialise simplex, reticulate splines
             # TODO: Use sigma here?
-            # TODO: Check boundaries when creating
             n = self._n_parameters
             self._xs = np.zeros((n + 1, n))
             self._xs[0] = self._x0
@@ -269,10 +268,11 @@ class NelderMead(pints.Optimiser):
         # Reflection point or contraction/expansion point returned
         if len(fx) != 1:
             raise ValueError('Expecting only a single evaluation')
+        fx = fx[0]
 
         # Set reflection point
         if self._fr is None:
-            self._fr = fx[0]
+            self._fr = fx
 
         # Determine operation
         expand = self._fr < self._fs[0]
@@ -295,9 +295,9 @@ class NelderMead(pints.Optimiser):
                 return
 
             # Accept or reject expansion
-            if fx[0] <= self._fr:
+            if fx <= self._fr:
                 self._xs[-1] = self._xp
-                self._fs[-1] = fx[0]
+                self._fs[-1] = fx
             else:
                 self._xs[-1] = self._xr
                 self._fs[-1] = self._fr
@@ -316,9 +316,9 @@ class NelderMead(pints.Optimiser):
             return
 
         # Accept contraction, or shrink
-        if ((fx[0] <= self._fr) if outside else (fx[0] < self._fs[-1])):
+        if ((fx <= self._fr) if outside else (fx < self._fs[-1])):
             self._xs[-1] = self._xp
-            self._fs[-1] = fx[0]
+            self._fs[-1] = fx
 
             # Reset and return: ask will set xr, get f(xr)
             self._xp = self._xr = self._fr = None

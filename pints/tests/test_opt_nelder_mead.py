@@ -7,13 +7,13 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import unittest
 import numpy as np
+import unittest
+import sys
 
 import pints
 import pints.toy
 
-#from shared import CircularBoundaries
 from shared import StreamCapture
 
 debug = False
@@ -51,36 +51,14 @@ class TestNelderMead(unittest.TestCase):
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
 
-    '''
-    def test_bounded(self):
-        # Runs an optimisation with boundaries.
+    @unittest.skipIf(sys.hexversion < 0x03040000, 'Python < 3.4')
+    def test_bounded_warning(self):
+        # Boundaries are not supported
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
-        b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
-        opt.set_log_to_screen(debug)
-        found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-3)
-
-        # Circular boundaries
-        # Start near edge, to increase chance of out-of-bounds occurring.
-        b = CircularBoundaries([0, 0], 1)
-        x = [0.99, 0]
-        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
-        opt.set_log_to_screen(debug)
-        found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-3)
-
-    def test_bounded_and_sigma(self):
-        # Runs an optimisation without boundaries and sigma.
-        r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
-        opt.set_threshold(1e-3)
-        opt.set_log_to_screen(debug)
-        found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-3)
-    '''
+        with self.assertLogs(level='WARN'):
+            pints.OptimisationController(r, x, boundaries=b, method=method)
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
