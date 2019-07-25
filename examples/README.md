@@ -49,6 +49,8 @@ relevant code.
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
 - [Slice Sampling - Adaptive Hyperrectangles MCMC](./sampling-slice-adaptive-hyperrectangles.ipynb)
+- [Slice Sampling - Covariance Adaptive: Rank Shrinking MCMC](./sampling-slice-rank-shrinking.ipynb)
+- [Slice Sampling - Covariance Adaptive: Covariance Matching MCMC](./sampling-slice-covariance-matching.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)

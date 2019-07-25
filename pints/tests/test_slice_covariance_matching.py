@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Tests the basic methods of the Slice Sampling routine with Hyperrectangles.
+# Tests the basic methods of the Covariance-Adaptive Slice Sampling:
+# Covariance Matching.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -17,12 +18,12 @@ import pints.toy as toy
 debug = False
 
 
-class TestSliceHyperrectangles(unittest.TestCase):
+class TestSliceCovarianceMatching(unittest.TestCase):
     """
-    Tests the basic methods of the Hyperrectangles-based Slice Sampling
+    Tests the basic methods of the Slice Sampling Covariance Matching
     routine.
 
-    Please refer to the _slice_hyperrectangles.py script in ..\_mcmc
+    Please refer to the _slice_covariance_matching.py script in ..\_mcmc
     """
     def test_initialisation(self):
         """
@@ -30,31 +31,29 @@ class TestSliceHyperrectangles(unittest.TestCase):
         """
         # Create mcmc
         x0 = np.array([2, 4])
-        mcmc = pints.SliceHyperrectanglesMCMC(x0)
-
-        mcmc.set_adaptive_shrinking(True)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
 
         # Test attributes initialisation
         self.assertFalse(mcmc._running)
         self.assertFalse(mcmc._ready_for_tell)
-        self.assertFalse(mcmc._hyperrectangle_positioned)
-
         self.assertEqual(mcmc._current, None)
         self.assertEqual(mcmc._current_log_y, None)
         self.assertEqual(mcmc._proposed, None)
+        self.assertEqual(mcmc._proposed_pdf, None)
+        self.assertEqual(mcmc._proposed_pdf, None)
+        self.assertTrue(np.all(mcmc._c_bar_star == np.zeros(2)))
+        self.assertTrue(np.all(
+            mcmc._F == mcmc._sigma_c ** (-1) * np.identity(2)))
+        self.assertTrue(np.all(
+            mcmc._R == mcmc._sigma_c ** (-1) * np.identity(2)))
 
     def test_first_run(self):
-        """
-        Tests the very first run of the sampler.
-        """
         # Create log pdf
         log_pdf = toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
 
         # Create mcmc
         x0 = np.array([2., 4.])
-        mcmc = pints.SliceHyperrectanglesMCMC(x0)
-
-        mcmc.set_adaptive_shrinking(True)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
 
         # Ask should fail if _ready_for_tell flag is True
         with self.assertRaises(RuntimeError):
@@ -98,9 +97,7 @@ class TestSliceHyperrectangles(unittest.TestCase):
         self.assertTrue(mcmc._current_log_y < mcmc._current_log_pdf)
 
     def test_mcmc_step(self):
-        """
-        Test sampler's step with adaptive shrinking
-        """
+
         # Set seed
         np.random.seed(2)
 
@@ -109,28 +106,75 @@ class TestSliceHyperrectangles(unittest.TestCase):
 
         # Create mcmc
         x0 = np.array([2., 4.])
-        mcmc = pints.SliceHyperrectanglesMCMC(x0)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
 
-        mcmc.set_adaptive_shrinking(True)
+        # Set initial crumb standard deviation
+        mcmc.set_sigma_c(1)
 
-        # First MCMC step
+        # First iteration - 2.95
         x = mcmc.ask()
         fx, grad = log_pdf.evaluateS1(x)
         sample_0 = mcmc.tell((fx, grad))
         self.assertTrue(np.all(sample_0 == x0))
-        self.assertFalse(mcmc._hyperrectangle_positioned)
+        self.assertTrue(np.all(mcmc._current == x0))
+        self.assertTrue(np.all(mcmc._proposed == x0))
+        self.assertEqual(mcmc._current_log_pdf, fx)
+        self.assertEqual(mcmc._M, fx)
+        self.assertTrue(mcmc._current_log_pdf >= mcmc._current_log_y)
+        self.assertFalse(mcmc._calculate_fx_u)
+        self.assertFalse(mcmc._sent_proposal)
+        self.assertTrue(np.all(mcmc._c_bar_star == 0))
 
-        # Next step
+        # Second iteration
         x = mcmc.ask()
+        self.assertTrue(np.all(mcmc._c_bar_star == mcmc._c))
+        self.assertTrue(mcmc._calculate_fx_u)
+        self.assertTrue(mcmc._sent_proposal)
+        self.assertTrue(np.all(mcmc._proposed == x))
         fx, grad = log_pdf.evaluateS1(x)
         sample_1 = mcmc.tell((fx, grad))
-        self.assertTrue(np.all(sample_1 is not None))
-        self.assertTrue(np.all(mcmc._current == mcmc._proposed))
+        self.assertEqual(sample_1, None)
+        self.assertTrue(mcmc._calculate_fx_u)
+
+        # Third iteration
+        x = mcmc.ask()
+        self.assertTrue(np.all(mcmc._u == x))
+        self.assertFalse(mcmc._calculate_fx_u)
+        fx, grad = log_pdf.evaluateS1(x)
+        sample_2 = mcmc.tell((fx, grad))
+        self.assertEqual(fx, mcmc._log_fx_u)
+        self.assertTrue(np.all(mcmc._current == x0))
+        self.assertEqual(sample_2, None)
+        self.assertFalse(mcmc._calculate_fx_u)
+
+        # Fourth iteration
+        x = mcmc.ask()
+        fx, grad = log_pdf.evaluateS1(x)
+        self.assertTrue(mcmc._calculate_fx_u)
+        self.assertTrue(mcmc._sent_proposal)
+        sample_3 = mcmc.tell((fx, grad))
+        self.assertEqual(sample_3, None)
+        self.assertTrue(mcmc._calculate_fx_u)
+
+        # Fifth iteration
+        x = mcmc.ask()
+        self.assertFalse(mcmc._calculate_fx_u)
+        self.assertTrue(np.all(mcmc._u == x))
+        fx, grad = log_pdf.evaluateS1(x)
+        sample_4 = mcmc.tell((fx, grad))
+        self.assertEqual(sample_4, None)
+
+        # Sixth iteration
+        x = mcmc.ask()
+        fx, grad = log_pdf.evaluateS1(x)
+        sample_5 = mcmc.tell((fx, grad))
+        self.assertTrue(np.all(mcmc._current == sample_5))
+        self.assertEqual(mcmc._M, fx)
+        self.assertTrue((mcmc._current_log_y < mcmc._M))
+        self.assertFalse(mcmc._calculate_fx_u)
+        self.assertTrue(np.all(mcmc._c_bar_star == np.zeros(2)))
 
     def test_run(self):
-        """
-        Test full MCMC chain on Gaussian toy problem.
-        """
         # Set seed for monitoring
         np.random.seed(2)
 
@@ -139,17 +183,11 @@ class TestSliceHyperrectangles(unittest.TestCase):
 
         # Create mcmc
         x0 = np.array([1, 1])
-        mcmc = pints.SliceHyperrectanglesMCMC(x0)
-
-        # Set scales
-        mcmc.set_w(5)
-
-        # Adaptive shrink
-        mcmc.set_adaptive_shrinking(True)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 10000:
             x = mcmc.ask()
             fx, grad = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, grad))
@@ -157,28 +195,27 @@ class TestSliceHyperrectangles(unittest.TestCase):
                 chain.append(np.copy(sample))
 
         # Fit Multivariate Gaussian to chain samples
-        # print(np.mean(chain, axis=0))
-        # print(np.cov(chain, rowvar=0))
+        # (np.mean(chain, axis=0))
+        # (np.cov(chain, rowvar=0))
 
     def test_basic(self):
-        """
-        Test basic methods of the class.
-        """
         # Create mcmc
         x0 = np.array([1, 1])
-        mcmc = pints.SliceHyperrectanglesMCMC(x0)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
 
         # Test name
-        self.assertEqual(mcmc.name(), 'Slice Sampling - Hyperrectangles')
+        self.assertEqual(
+            mcmc.name(), 'Slice Sampling - Covariance Adaptive:' +
+            ' ' + 'Covariance Matching')
 
         # Test set_w
-        mcmc.set_w(2)
-        self.assertTrue(np.all(mcmc._w == np.array([2, 2])))
+        mcmc.set_sigma_c(3)
+        self.assertEqual(mcmc._sigma_c, 3)
         with self.assertRaises(ValueError):
-            mcmc.set_w(-1)
+            mcmc.set_sigma_c(-1)
 
         # Test get_w
-        self.assertTrue(np.all(mcmc.get_w() == np.array([2, 2])))
+        self.assertEqual(mcmc.get_sigma_c(), 3)
 
         # Test current_slice height
         self.assertEqual(mcmc.get_current_slice_height(), mcmc._current_log_y)
@@ -187,62 +224,7 @@ class TestSliceHyperrectangles(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
 
         # Test setting hyperparameters
-        mcmc.set_hyper_parameters([3, True])
-        self.assertTrue((np.all(mcmc._w == np.array([3, 3]))))
-        self.assertTrue(mcmc._adaptive)
+        mcmc.set_hyper_parameters([10, 10])
+        self.assertEqual(mcmc._sigma_c, 10)
+        self.assertEqual(mcmc._theta, 10)
 
-    def test_logistic(self):
-        """
-        Test sampler on a logistic task.
-        """
-        # Load a forward model
-        model = toy.LogisticModel()
-
-        times = np.linspace(0, 1000, 50)
-
-        # Create some toy data
-        real_parameters = np.array([0.015, 500])
-        org_values = model.simulate(real_parameters, times)
-
-        # Add noise
-        np.random.seed(1)
-        noise = 10
-        values = org_values + np.random.normal(0, noise, org_values.shape)
-
-        # Create an object with links to the model and time series
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Create a log-likelihood function
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise)
-
-        # Create a uniform prior over the parameters
-        log_prior = pints.UniformLogPrior(
-            [0.01, 400],
-            [0.02, 600]
-        )
-
-        # Create a posterior log-likelihood (log(likelihood * prior))
-        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
-
-        # Choose starting points for 3 mcmc chains
-        xs = [
-            real_parameters * 1.01,
-            real_parameters * 0.9,
-            real_parameters * 1.1,
-        ]
-
-        # Create mcmc routine
-        mcmc = pints.MCMCController(log_posterior, len(xs), xs,
-                                    method=pints.SliceHyperrectanglesMCMC)
-
-        # Add stopping criterion
-        mcmc.set_max_iterations(100)
-
-        # Set up modest logging
-        mcmc.set_log_to_screen(True)
-        mcmc.set_log_interval(100)
-
-        # Run!
-        print('Running...')
-        mcmc.run()
-        print('Done!')
