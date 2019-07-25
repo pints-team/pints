@@ -42,10 +42,8 @@ class TestSliceCovarianceMatching(unittest.TestCase):
         self.assertEqual(mcmc._proposed_pdf, None)
         self.assertEqual(mcmc._proposed_pdf, None)
         self.assertTrue(np.all(mcmc._c_bar_star == np.zeros(2)))
-        self.assertTrue(np.all(
-            mcmc._F == mcmc._sigma_c ** (-1) * np.identity(2)))
-        self.assertTrue(np.all(
-            mcmc._R == mcmc._sigma_c ** (-1) * np.identity(2)))
+        self.assertEqual(mcmc._F, None)
+        self.assertEqual(mcmc._R, None)
 
     def test_first_run(self):
         # Create log pdf
@@ -228,3 +226,63 @@ class TestSliceCovarianceMatching(unittest.TestCase):
         self.assertEqual(mcmc._sigma_c, 10)
         self.assertEqual(mcmc._theta, 10)
 
+    def test_logistic(self):
+        """
+        Test sampler on a logistic task.
+        """
+        # Set seed for monitoring
+        np.random.seed(2)
+
+        # Load a forward model
+        model = toy.LogisticModel()
+
+        # Create some toy data
+        real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        org_values = model.simulate(real_parameters, times)
+
+        # Add noise
+        noise = 10
+        values = org_values + np.random.normal(0, noise, org_values.shape)
+        real_parameters = np.array(real_parameters + [noise])
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a log-likelihood function (adds an extra parameter!)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Create a uniform prior over both the parameters and the new
+        # noise variable
+        log_prior = pints.UniformLogPrior(
+            [0.01, 400, noise * 0.1],
+            [0.02, 600, noise * 100],
+        )
+
+        # Create a posterior log-likelihood (log(likelihood * prior))
+        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
+
+        # Choose starting points for 3 mcmc chains
+        num_chains = 1
+        xs = [real_parameters * (1 + 0.1 * np.random.rand())]
+
+        # Create mcmc routine
+        mcmc = pints.MCMCController(
+            log_posterior, num_chains, xs,
+            method=pints.SliceCovarianceMatchingMCMC)
+
+        # Create mcmc
+        for sampler in mcmc.samplers():
+            sampler.set_sigma_c(0.001)
+
+        # Add stopping criterion
+        mcmc.set_max_iterations(100)
+
+        # Set up modest logging
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_interval(500)
+
+        # Run!
+        print('Running...')
+        mcmc.run()
+        print('Done!')

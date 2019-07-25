@@ -46,8 +46,8 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         self._c_bar_star = np.zeros(self._n_parameters)
 
         # Define Cholesky upper triangles: F for W_k and R_k for Lambda_k
-        self._R = self._sigma_c ** (-1) * np.identity(self._n_parameters)
-        self._F = self._sigma_c ** (-1) * np.identity(self._n_parameters)
+        self._R = None
+        self._F = None
 
         # Unnormalised gradient calculated at rejected proposal
         self._G = None
@@ -162,6 +162,10 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             self._proposed = np.array(self._current, copy=True)
             self._current_log_pdf = fx
             self._M = fx
+
+            # Define Cholesky upper triangles: F for W_k and R_k for Lambda_k
+            self._R = self._sigma_c ** (-1) * np.identity(self._n_parameters)
+            self._F = self._sigma_c ** (-1) * np.identity(self._n_parameters)
 
             # Sample height of the slice log_y for next iteration
             e = np.random.exponential(1)
