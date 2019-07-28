@@ -531,9 +531,13 @@ class MCMCController(object):
         # TODO Pre-allocate?
         chains = []
 
+        # Initiate array of indices of active samplers
+        i_active_samplers = list(range(self._chains))
+
         # Start sampling
         timer = pints.Timer()
         running = True
+
         while running:
             # Initial phase
             # Note: self._initial_phase_iterations is None when no initial
@@ -546,26 +550,19 @@ class MCMCController(object):
 
             # Get points
             if self._single_chain:
-                # First step: create array for initial samples
-                if evaluations == 0:
-                    xs = [sampler.ask() for sampler in self._samplers]
-                # Subsequent steps: ask for log_pdf of points only in active
-                # samplers
-                else:
-                    for i, sampler in enumerate(self._samplers):
-                        if sampler._active:
-                            xs[i] = sampler.ask()
+                # Ask for log_pdf of points only in active samplers
+                xs = []
+                for i in i_active_samplers:
+                    xs.append(self._samplers[i].ask())
             else:
                 xs = self._samplers[0].ask()
 
-            # Calculate logpdfs
+            # Calculate logpdfs of points in active samplers
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
             if self._single_chain:
-                for i, sampler in enumerate(self._samplers):
-                    if sampler._active:
-                        evaluations += 1
+                evaluations += len(i_active_samplers)
             else:
                 evaluations += len(fxs)
 
@@ -580,12 +577,13 @@ class MCMCController(object):
                 # Subsequent steps: update values for active samplers
                 # until all chains return a sample
                 else:
-                    for i, sampler in enumerate(self._samplers):
-                        if sampler._active:
-                            samples[i] = sampler.tell(fxs[i])
-                            # If a chain returns a sample, deactivate it
-                            if not np.isnan(samples[i]).all():
-                                sampler._active = False
+                    temp = i_active_samplers[:]
+                    for i in range(len(temp)):
+                        samples[temp[i]] = (
+                            self._samplers[temp[i]].tell(fxs[i]))
+                        # If a chain returns a sample, deactivate it
+                        if not np.isnan(samples[temp[i]]).all():
+                            i_active_samplers.remove(temp[i])
 
                 # If at least one chain doesn't return a sample, keep
                 # updating active chains
@@ -596,8 +594,7 @@ class MCMCController(object):
                     # If all chains have returned a sample, then they
                     # should all have been deactivated. Reactivate them
                     # for next MCMC step
-                    for i, sampler in enumerate(self._samplers):
-                        sampler._active = True
+                    i_active_samplers = list(range(self._chains))
             else:
                 samples = self._samplers[0].tell(fxs)
                 intermediate_step = samples is None

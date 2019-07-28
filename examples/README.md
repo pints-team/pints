@@ -44,6 +44,7 @@ relevant code.
 - [Slice Sampling - Doubling MCMC](./sampling-slice-doubling.ipynb)
 - [Slice Sampling - Overrelaxation MCMC](./sampling-slice-overrelaxation.ipynb)
 - [Slice Sampling - Hyperrectangles MCMC](./sampling-slice-hyperrectangles.ipynb)
+- [Slice Sampling - Generalised Elliptical MCMC](./sampling-slice-generalised-elliptical.ipynb)
 
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)

@@ -207,6 +207,7 @@ from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_hyperrectangles import SliceHyperrectanglesMCMC
 from ._mcmc._slice_shrink_rank import SliceShrinkRankMCMC
 from ._mcmc._slice_covariance_matching import SliceCovarianceMatchingMCMC
+from ._mcmc._slice_generalised_elliptical import SliceGeneralisedEllipticalMCMC
 
 
 #

@@ -26,3 +26,4 @@ interface, that can be used to sample from an unknown
     slice_hyperrectangles_mcmc
     slice_rank_shrinking_mcmc
     slice_covariance_matching_mcmc
+    slice_generalised_elliptical_mcmc
