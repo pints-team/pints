@@ -624,7 +624,7 @@ class TestSliceDoubling(unittest.TestCase):
             sampler.set_w(20)
 
         # Set maximum number of iterations
-        mcmc.set_max_iterations(100)
+        mcmc.set_max_iterations(500)
 
         # Disable logging
         mcmc.set_log_to_screen(False)
