@@ -168,6 +168,7 @@ from ._optimisers import (
     TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
+from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES

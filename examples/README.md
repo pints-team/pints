@@ -23,6 +23,9 @@ relevant code.
 - [SNES](./optimisation-snes.ipynb)
 - [XNES](./optimisation-xnes.ipynb)
 
+### Local optimisers
+- [Nelder-Mead](./optimisation-nelder-mead.ipynb)
+
 ### Further optimisation
 - [Ask-and-tell interface](./optimisation-ask-and-tell.ipynb)
 - [Convenience methods fmin() and curve\_fit()](./optimisation-convenience.ipynb)
