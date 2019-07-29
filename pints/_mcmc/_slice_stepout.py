@@ -516,7 +516,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Reset active parameter indices
             if self._active_param_index == len(self._proposed) - 1:
-
                 self._active_param_index = 0
 
                 # The accepted sample becomes the new current sample
@@ -597,8 +596,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
-        else:
-            w = np.asarray(w)
         if any(n < 0 for n in w):
             raise ValueError("""Width ``w`` must be positive for
                             interval expansion.""")
@@ -646,7 +643,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         return self._m
 
-    def get_prob_overrelaxed(self, prob):
+    def get_prob_overrelaxed(self):
         """
         Returns probability of carrying out an overrelaxed step.
         """

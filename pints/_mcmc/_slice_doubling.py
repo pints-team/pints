@@ -533,8 +533,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
-        else:
-            w = np.asarray(w)
         if any(n < 0 for n in w):
             raise ValueError("""Width w must be positive
                             for interval expansion.""")

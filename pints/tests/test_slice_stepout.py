@@ -211,6 +211,7 @@ class TestSliceStepout(unittest.TestCase):
 
         mcmc.set_prob_overrelaxed(1)
         self.assertEqual(mcmc._prob_overrelaxed, 1)
+        self.assertEqual(mcmc.get_prob_overrelaxed(), 1)
 
     def test_logistic(self):
         """
@@ -382,7 +383,7 @@ class TestSliceStepout(unittest.TestCase):
         mcmc = pints.SliceStepoutMCMC(x0)
 
         # Set probability of overrelaxed step
-        mcmc.set_prob_overrelaxed(1)
+        mcmc.set_prob_overrelaxed(0.5)
 
         # Run multiple iterations of the sampler
         chain = []
@@ -453,6 +454,31 @@ class TestSliceStepout(unittest.TestCase):
         print('Running...')
         mcmc.run()
         print('Done!')
+
+    def test_normal_steps(self):
+        # Set seed for monitoring
+        np.random.seed(2)
+
+        # Create log pdf
+        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
+
+        # Create mcmc
+        x0 = np.array([1, 1])
+        mcmc = pints.SliceStepoutMCMC(x0)
+        mcmc.set_w(50)
+        mcmc.set_a(1)
+
+        # Set overrelaxation
+        mcmc.set_prob_overrelaxed(0.5)
+
+        # First iteration
+        chain = []
+        while len(chain) < 100:
+            x = mcmc.ask()
+            fx = log_pdf.evaluateS1(x)[0]
+            sample = mcmc.tell(fx)
+            if sample is not None:
+                chain.append(np.copy(sample))
 
 
 if __name__ == '__main__':
