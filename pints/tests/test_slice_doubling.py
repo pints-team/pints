@@ -493,7 +493,7 @@ class TestSliceDoubling(unittest.TestCase):
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 1000:
+        while len(chain) < 100:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
@@ -595,7 +595,7 @@ class TestSliceDoubling(unittest.TestCase):
             sampler.set_w(0.1)
 
         # Add stopping criterion
-        mcmc.set_max_iterations(1000)
+        mcmc.set_max_iterations(100)
 
         # Set up modest logging
         mcmc.set_log_to_screen(True)
@@ -624,7 +624,7 @@ class TestSliceDoubling(unittest.TestCase):
             sampler.set_w(20)
 
         # Set maximum number of iterations
-        mcmc.set_max_iterations(1000)
+        mcmc.set_max_iterations(100)
 
         # Disable logging
         mcmc.set_log_to_screen(False)
