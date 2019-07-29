@@ -493,7 +493,7 @@ class TestSliceDoubling(unittest.TestCase):
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 1000:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
@@ -547,6 +547,9 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue((np.all(mcmc._w == np.array([3, 3]))))
         self.assertEqual(mcmc._p, 100)
 
+        mcmc.set_w([5, 5])
+        self.assertTrue(np.all(mcmc._w == np.array([5, 5])))
+
     def test_logistic(self):
         """
         Test sampler on a logistic task.
@@ -592,11 +595,39 @@ class TestSliceDoubling(unittest.TestCase):
             sampler.set_w(0.1)
 
         # Add stopping criterion
-        mcmc.set_max_iterations(100)
+        mcmc.set_max_iterations(1000)
 
         # Set up modest logging
         mcmc.set_log_to_screen(True)
         mcmc.set_log_interval(500)
+
+        # Run!
+        print('Running...')
+        mcmc.run()
+        print('Done!')
+
+    def test_multimodal_run(self):
+        """
+        Test multiple MCMC iterations of the sample
+        """
+        # Set seed for monitoring
+        np.random.seed(1)
+
+        # Create problem
+        log_pdf = pints.toy.MultimodalGaussianLogPDF(
+            modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
+        x0 = np.random.uniform([2, 2], [8, 8], size=(4, 2))
+        mcmc = pints.MCMCController(
+            log_pdf, 4, x0, method=pints.SliceDoublingMCMC)
+
+        for sampler in mcmc.samplers():
+            sampler.set_w(20)
+
+        # Set maximum number of iterations
+        mcmc.set_max_iterations(1000)
+
+        # Disable logging
+        mcmc.set_log_to_screen(False)
 
         # Run!
         print('Running...')

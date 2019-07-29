@@ -178,6 +178,9 @@ class TestSliceStepout(unittest.TestCase):
         # Test set_a
         mcmc.set_a(40)
         self.assertEqual(mcmc._a, 40)
+        self.assertEqual(mcmc.get_a(), 40)
+        with self.assertRaises(ValueError):
+            mcmc.set_a(-30)
         with self.assertRaises(ValueError):
             mcmc.set_prob_overrelaxed(-1)
 
@@ -202,6 +205,12 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc._m, 100)
         self.assertEqual(mcmc._prob_overrelaxed, 0.7)
         self.assertEqual(mcmc._a, 50)
+
+        mcmc.set_w([5, 5])
+        self.assertTrue(np.all(mcmc._w == np.array([5, 5])))
+
+        mcmc.set_prob_overrelaxed(1)
+        self.assertEqual(mcmc._prob_overrelaxed, 1)
 
     def test_logistic(self):
         """
@@ -248,7 +257,7 @@ class TestSliceStepout(unittest.TestCase):
             sampler.set_w(0.1)
 
         # Add stopping criterion
-        mcmc.set_max_iterations(100)
+        mcmc.set_max_iterations(1000)
 
         # Set up modest logging
         mcmc.set_log_to_screen(True)
@@ -377,7 +386,7 @@ class TestSliceStepout(unittest.TestCase):
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 1000:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
@@ -387,6 +396,63 @@ class TestSliceStepout(unittest.TestCase):
         # Fit Multivariate Gaussian to chain samples
         np.mean(chain, axis=0)
         np.cov(chain, rowvar=0)
+
+    def test_multimodal_run(self):
+        """
+        Test multiple MCMC iterations of the sample
+        """
+        # Set seed for monitoring
+        np.random.seed(1)
+
+        # Create problem
+        log_pdf = pints.toy.MultimodalGaussianLogPDF(
+            modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
+        x0 = np.random.uniform([2, 2], [8, 8], size=(4, 2))
+        mcmc = pints.MCMCController(
+            log_pdf, 4, x0, method=pints.SliceStepoutMCMC)
+
+        for sampler in mcmc.samplers():
+            sampler.set_w(20)
+
+        # Set maximum number of iterations
+        mcmc.set_max_iterations(1000)
+
+        # Disable logging
+        mcmc.set_log_to_screen(False)
+
+        # Run!
+        print('Running...')
+        mcmc.run()
+        print('Done!')
+
+    def test_multimodal_overrelaxed_run(self):
+        """
+        Test multiple MCMC iterations of the sample
+        """
+        # Set seed for monitoring
+        np.random.seed(1)
+
+        # Create problem
+        log_pdf = pints.toy.MultimodalGaussianLogPDF(
+            modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
+        x0 = np.random.uniform([2, 2], [8, 8], size=(4, 2))
+        mcmc = pints.MCMCController(
+            log_pdf, 4, x0, method=pints.SliceStepoutMCMC)
+
+        for sampler in mcmc.samplers():
+            sampler.set_w(20)
+            sampler.set_prob_overrelaxed = 0.98
+
+        # Set maximum number of iterations
+        mcmc.set_max_iterations(1000)
+
+        # Disable logging
+        mcmc.set_log_to_screen(False)
+
+        # Run!
+        print('Running...')
+        mcmc.run()
+        print('Done!')
 
 
 if __name__ == '__main__':

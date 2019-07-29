@@ -650,10 +650,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         Returns probability of carrying out an overrelaxed step.
         """
-        prob = float(prob)
-        if prob < 0 or prob > 1:
-            raise ValueError("""Probability must be positive and <= 1.""")
-        self._prob_overrelaxed = prob
+        return self._prob_overrelaxed
 
     def get_a(self):
         """
