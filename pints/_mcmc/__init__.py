@@ -84,6 +84,9 @@ class SingleChainMCMC(MCMCSampler):
         # Get number of parameters
         self._n_parameters = len(self._x0)
 
+        # State of sampler
+        self._active = True
+
         # Check initial standard deviation
         if sigma0 is None:
             # Get representative parameter value for each parameter
@@ -528,9 +531,13 @@ class MCMCController(object):
         # TODO Pre-allocate?
         chains = []
 
+        # Initiate array of indices of active samplers
+        i_active_samplers = list(range(self._chains))
+
         # Start sampling
         timer = pints.Timer()
         running = True
+
         while running:
             # Initial phase
             # Note: self._initial_phase_iterations is None when no initial
@@ -543,39 +550,63 @@ class MCMCController(object):
 
             # Get points
             if self._single_chain:
-                xs = [sampler.ask() for sampler in self._samplers]
+                # Ask for log_pdf of points only in active samplers
+                xs = []
+                for i in i_active_samplers:
+                    xs.append(self._samplers[i].ask())
             else:
                 xs = self._samplers[0].ask()
 
-            # Calculate logpdfs
+            # Calculate logpdfs of points in active samplers
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
-            evaluations += len(fxs)
+            if self._single_chain:
+                evaluations += len(i_active_samplers)
+            else:
+                evaluations += len(fxs)
 
             # Update chains
             intermediate_step = False
             if self._single_chain:
-                samples = np.array([
-                    s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
+                # First step: create array of samples
+                if evaluations == self._chains:
+                    samples = np.array([
+                        s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
 
-                none_found = [x is None for x in samples]
+                # Subsequent steps: update values for active samplers
+                # until all chains return a sample
+                else:
+                    temp = i_active_samplers[:]
+                    for i in range(len(temp)):
+                        samples[temp[i]] = (
+                            self._samplers[temp[i]].tell(fxs[i]))
+                        # If a chain returns a sample, deactivate it
+                        if not np.isnan(samples[temp[i]]).all():
+                            i_active_samplers.remove(temp[i])
+
+                # If at least one chain doesn't return a sample, keep
+                # updating active chains
+                none_found = [np.isnan(x).all() for x in samples]
                 if any(none_found):
-                    assert(all(none_found))     # Can't mix None w. samples
                     intermediate_step = True
+                else:
+                    # If all chains have returned a sample, then they
+                    # should all have been deactivated. Reactivate them
+                    # for next MCMC step
+                    i_active_samplers = list(range(self._chains))
             else:
                 samples = self._samplers[0].tell(fxs)
                 intermediate_step = samples is None
 
-            # If no new samples were added, then no MCMC iteration was
-            # performed, and so the iteration count shouldn't be updated,
-            # logging shouldn't be triggered, and stopping criteria shouldn't
-            # be checked
+            # If at least one chain hasn't returned a sample, the iteration
+            # count shouldn't be updated, logging shouldn't be triggered,
+            # and stopping criteria shouldn't be checked
             if intermediate_step:
                 continue
 
             # Add new samples to the chains
-            chains.append(samples)
+            chains.append(np.array(samples, copy=True))
 
             # Write samples to disk
             for k, chain_logger in enumerate(chain_loggers):
