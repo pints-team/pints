@@ -12,6 +12,7 @@ import unittest
 import numpy as np
 
 import pints
+import pints.toy
 
 debug = False
 
@@ -327,11 +328,12 @@ class TestSliceStepout(unittest.TestCase):
             log_pdf, 4, x0, method=pints.SliceStepoutMCMC)
 
         for sampler in mcmc.samplers():
-            sampler.set_w(20)
-            sampler.set_prob_overrelaxed = 0.5
+            sampler.set_a(2)
+            sampler.set_w(2)
+            sampler.set_prob_overrelaxed(0.5)
 
         # Set maximum number of iterations
-        mcmc.set_max_iterations(300)
+        mcmc.set_max_iterations(500)
 
         # Disable logging
         mcmc.set_log_to_screen(False)
