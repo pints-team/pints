@@ -12,7 +12,6 @@ import unittest
 import numpy as np
 
 import pints
-import pints.toy as toy
 
 debug = False
 
@@ -131,18 +130,17 @@ class TestSliceStepout(unittest.TestCase):
         x0 = np.array([1, 1])
         mcmc = pints.SliceStepoutMCMC(x0)
 
+        mcmc.set_w(30)
+        mcmc.set_a(2)
+
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 300:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(np.copy(sample))
-
-        # Fit Multivariate Gaussian to chain samples
-        np.mean(chain, axis=0)
-        np.cov(chain, rowvar=0)
 
     def test_basic(self):
         """
@@ -212,62 +210,6 @@ class TestSliceStepout(unittest.TestCase):
         mcmc.set_prob_overrelaxed(1)
         self.assertEqual(mcmc._prob_overrelaxed, 1)
         self.assertEqual(mcmc.get_prob_overrelaxed(), 1)
-
-    def test_logistic(self):
-        """
-        Test sampler on a logistic task.
-        """
-        # Load a forward model
-        model = toy.LogisticModel()
-
-        # Create some toy data
-        real_parameters = [0.015, 500]
-        times = np.linspace(0, 1000, 1000)
-        org_values = model.simulate(real_parameters, times)
-
-        # Add noise
-        noise = 10
-        values = org_values + np.random.normal(0, noise, org_values.shape)
-        real_parameters = np.array(real_parameters + [noise])
-
-        # Create an object with links to the model and time series
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Create a log-likelihood function (adds an extra parameter!)
-        log_likelihood = pints.GaussianLogLikelihood(problem)
-
-        # Create a uniform prior over both the parameters and the new
-        # noise variable
-        log_prior = pints.UniformLogPrior(
-            [0.01, 400, noise * 0.1],
-            [0.02, 600, noise * 100],
-        )
-
-        # Create a posterior log-likelihood (log(likelihood * prior))
-        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
-
-        # Choose starting points for 3 mcmc chains
-        num_chains = 1
-        xs = [real_parameters * (1 + 0.1 * np.random.rand())]
-
-        # Create mcmc routine
-        mcmc = pints.MCMCController(
-            log_posterior, num_chains, xs, method=pints.SliceStepoutMCMC)
-
-        for sampler in mcmc.samplers():
-            sampler.set_w(0.1)
-
-        # Add stopping criterion
-        mcmc.set_max_iterations(300)
-
-        # Set up modest logging
-        mcmc.set_log_to_screen(True)
-        mcmc.set_log_interval(500)
-
-        # Run!
-        print('Running...')
-        mcmc.run()
-        print('Done!')
 
     def test_overrelaxed(self):
 
@@ -370,62 +312,6 @@ class TestSliceStepout(unittest.TestCase):
         self.assertTrue(mcmc._first_expansion)
         self.assertFalse(mcmc._interval_found)
 
-    def test_overrelaxed_run(self):
-
-        # Set seed for monitoring
-        np.random.seed(2)
-
-        # Create log pdf
-        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
-
-        # Create mcmc
-        x0 = np.array([1, 1])
-        mcmc = pints.SliceStepoutMCMC(x0)
-
-        # Set probability of overrelaxed step
-        mcmc.set_prob_overrelaxed(0.5)
-
-        # Run multiple iterations of the sampler
-        chain = []
-        while len(chain) < 200:
-            x = mcmc.ask()
-            fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
-            if sample is not None:
-                chain.append(np.copy(sample))
-
-        # Fit Multivariate Gaussian to chain samples
-        np.mean(chain, axis=0)
-        np.cov(chain, rowvar=0)
-
-    def test_multimodal_run(self):
-        """
-        Test multiple MCMC iterations of the sample
-        """
-        # Set seed for monitoring
-        np.random.seed(1)
-
-        # Create problem
-        log_pdf = pints.toy.MultimodalGaussianLogPDF(
-            modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
-        x0 = np.random.uniform([2, 2], [8, 8], size=(4, 2))
-        mcmc = pints.MCMCController(
-            log_pdf, 4, x0, method=pints.SliceStepoutMCMC)
-
-        for sampler in mcmc.samplers():
-            sampler.set_w(20)
-
-        # Set maximum number of iterations
-        mcmc.set_max_iterations(300)
-
-        # Disable logging
-        mcmc.set_log_to_screen(False)
-
-        # Run!
-        print('Running...')
-        mcmc.run()
-        print('Done!')
-
     def test_multimodal_overrelaxed_run(self):
         """
         Test multiple MCMC iterations of the sample
@@ -442,43 +328,16 @@ class TestSliceStepout(unittest.TestCase):
 
         for sampler in mcmc.samplers():
             sampler.set_w(20)
-            sampler.set_prob_overrelaxed = 0.98
+            sampler.set_prob_overrelaxed = 0.5
 
         # Set maximum number of iterations
-        mcmc.set_max_iterations(200)
+        mcmc.set_max_iterations(300)
 
         # Disable logging
         mcmc.set_log_to_screen(False)
 
         # Run!
-        print('Running...')
         mcmc.run()
-        print('Done!')
-
-    def test_normal_steps(self):
-        # Set seed for monitoring
-        np.random.seed(2)
-
-        # Create log pdf
-        log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
-
-        # Create mcmc
-        x0 = np.array([1, 1])
-        mcmc = pints.SliceStepoutMCMC(x0)
-        mcmc.set_w(50)
-        mcmc.set_a(1)
-
-        # Set overrelaxation
-        mcmc.set_prob_overrelaxed(0.5)
-
-        # First iteration
-        chain = []
-        while len(chain) < 200:
-            x = mcmc.ask()
-            fx = log_pdf.evaluateS1(x)[0]
-            sample = mcmc.tell(fx)
-            if sample is not None:
-                chain.append(np.copy(sample))
 
 
 if __name__ == '__main__':

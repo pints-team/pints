@@ -12,7 +12,6 @@ import unittest
 import numpy as np
 
 import pints
-import pints.toy as toy
 
 debug = False
 
@@ -490,19 +489,15 @@ class TestSliceDoubling(unittest.TestCase):
         # Create mcmc
         x0 = np.array([1, 1])
         mcmc = pints.SliceDoublingMCMC(x0)
-
+        mcmc.set_w(20)
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 500:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(sample)
-
-        # Fit Multivariate Gaussian to chain samples
-        np.mean(chain, axis=0)   # [2.01 4.01]
-        np.cov(chain, rowvar=0)  # [[1.00, 0.00][0.00, 2.94]]
 
     def test_basic(self):
         """
@@ -550,62 +545,6 @@ class TestSliceDoubling(unittest.TestCase):
         mcmc.set_w([5, 5])
         self.assertTrue(np.all(mcmc._w == np.array([5, 5])))
 
-    def test_logistic(self):
-        """
-        Test sampler on a logistic task.
-        """
-        # Load a forward model
-        model = toy.LogisticModel()
-
-        # Create some toy data
-        real_parameters = [0.015, 500]
-        times = np.linspace(0, 1000, 1000)
-        org_values = model.simulate(real_parameters, times)
-
-        # Add noise
-        noise = 10
-        values = org_values + np.random.normal(0, noise, org_values.shape)
-        real_parameters = np.array(real_parameters + [noise])
-
-        # Create an object with links to the model and time series
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Create a log-likelihood function (adds an extra parameter!)
-        log_likelihood = pints.GaussianLogLikelihood(problem)
-
-        # Create a uniform prior over both the parameters and the new
-        # noise variable
-        log_prior = pints.UniformLogPrior(
-            [0.01, 400, noise * 0.1],
-            [0.02, 600, noise * 100],
-        )
-
-        # Create a posterior log-likelihood (log(likelihood * prior))
-        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
-
-        # Choose starting points for 3 mcmc chains
-        num_chains = 1
-        xs = [real_parameters * (1 + 0.1 * np.random.rand())]
-
-        # Create mcmc routine
-        mcmc = pints.MCMCController(
-            log_posterior, num_chains, xs, method=pints.SliceDoublingMCMC)
-
-        for sampler in mcmc.samplers():
-            sampler.set_w(0.1)
-
-        # Add stopping criterion
-        mcmc.set_max_iterations(100)
-
-        # Set up modest logging
-        mcmc.set_log_to_screen(True)
-        mcmc.set_log_interval(500)
-
-        # Run!
-        print('Running...')
-        mcmc.run()
-        print('Done!')
-
     def test_multimodal_run(self):
         """
         Test multiple MCMC iterations of the sample
@@ -630,9 +569,7 @@ class TestSliceDoubling(unittest.TestCase):
         mcmc.set_log_to_screen(False)
 
         # Run!
-        print('Running...')
         mcmc.run()
-        print('Done!')
 
 
 if __name__ == '__main__':
