@@ -50,11 +50,62 @@ LOG_FILE = [
 ]
 
 
+class SingleListSampler(pints.SingleChainMCMC):
+    """
+    Returns predetermined samples from a list.
+    First sample can't be None.
+    """
+
+    def set_chain(self, chain):
+        self._chain = list(chain)
+        self._i = 0
+        self._n = len(self._chain)
+
+    def ask(self):
+        return self._chain[0]
+
+    def name(self):
+        return 'SingleListSampler'
+
+    def tell(self, fx):
+        x = self._chain[self._i] if self._i < self._n else None
+        self._i += 1
+        return x
+
+
+class MultiListSampler(pints.MultiChainMCMC):
+    """
+    Returns predetermined samples from a list of chains.
+    Adding a ``None`` in the first list at any point will cause ``None`` to be
+    returned (for all chains) at that iteration.
+    """
+
+    def set_chains(self, chains):
+        self._chains = [list(x) for x in chains]
+        self._i = 0
+        self._n = len(self._chains[0])
+
+    def ask(self):
+        return [chain[0] for chain in self._chains]
+
+    def name(self):
+        return 'MultiListSampler'
+
+    def tell(self, fx):
+        x = None
+        if self._i < self._n:
+            x = [chain[self._i] for chain in self._chains]
+            if x[0] is None:
+                x = None
+            self._i += 1
+        return x
+
+
 class TestMCMCController(unittest.TestCase):
     """
     Tests the MCMCController class.
     """
-
+    '''
     @classmethod
     def setUpClass(cls):
         """ Prepare problem for tests. """
@@ -784,6 +835,181 @@ class TestMCMCController(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+    '''
+
+    def test_output_single_chain_samplers(self):
+        # Tests if single-chain sampler output is stored correctly
+
+        # Run with a given list of chains, return obtained output
+        def run(chains):
+
+            # Filter nones to get expected output
+            expected = np.array(
+                [[x for x in chain if x is not None] for chain in chains])
+
+            # Get initial position
+            x0 = [chain[0] for chain in chains]
+
+            # Create log pdf (unused)
+            f = pints.toy.GaussianLogPDF(mean=x0[0], sigma=x0[0])
+
+            # Set up controller
+            mcmc = pints.MCMCController(
+                f, len(x0), x0, method=SingleListSampler)
+            mcmc.set_log_to_screen(False)
+            mcmc.set_max_iterations(len(expected[0]))
+
+            # Pass chains to samplers
+            for i, sampler in enumerate(mcmc.samplers()):
+                sampler.set_chain(chains[i])
+
+            # Run and return
+            obtained = mcmc.run()
+            return expected, obtained
+
+        # One single-chain sampler, no None objects
+        chains1 = [[[2], [4], [6], [3], [5]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [[[1, 2], [4, 3], [6, 1], [2, 2], [5, 7]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # One single-chain sampler, with None objects
+        chains1 = [[[1], [3], None, [1], None, [5], [2]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [[[1], [3], None, [1], None, [5], None, None, None, [2]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [[[1, 2], [4, 3], None, [6, 1], None, [2, 2], [5, 7]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Multiple single-chain samplers, no None objects
+        chains1 = [
+            [[2], [4], [6], [3], [5]],
+            [[5], [1], [3], [3], [2]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [
+            [[1, 2], [4, 3], [6, 1], [2, 2], [5, 7]],
+            [[4, 3], [1, 1], [3, 5], [1, 4], [4, 7]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Multiple single-chain samplers, None at same index
+        chains1 = [
+            [[2], None, None, [4], [6], None, [3], None, None, [5]],
+            [[5], None, None, [1], [3], None, [3], None, None, [2]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [
+            [[1, 2], None, [4, 3], [6, 1], None, None, None, [2, 2], [5, 7]],
+            [[4, 3], None, [1, 1], [3, 5], None, None, None, [1, 4], [4, 7]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Multiple single-chain samplers, None at different indices
+        chains1 = [
+            [[2], None, None, [4], [6], None, [3], None, None, [5]],
+            [[5], None, None, [1], [3], None, [3], None, None, [2]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [
+            [[1, 2], [4, 3], [6, 1], None, None, None, [2, 2], None, [5, 7]],
+            [[4, 3], None, [1, 1], [3, 5], None, None, [1, 4], [4, 7]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+
+    def test_output_multi_chain_samplers(self):
+        # Tests if multi-chain sampler output is stored correctly
+
+        # Run with a given list of chains, return obtained output
+        def run(chains):
+
+            # Filter nones to get expected output
+            expected = np.array(
+                [[x for x in chain if x is not None] for chain in chains])
+
+            # Get initial position
+            x0 = [chain[0] for chain in chains]
+
+            # Create log pdf (unused)
+            f = pints.toy.GaussianLogPDF(mean=x0[0], sigma=x0[0])
+
+            # Set up controller
+            mcmc = pints.MCMCController(
+                f, len(x0), x0, method=MultiListSampler)
+            mcmc.set_log_to_screen(False)
+            mcmc.set_max_iterations(len(expected[0]))
+
+            # Pass chains to sampler
+            mcmc.sampler().set_chains(chains)
+
+            # Run and return
+            obtained = mcmc.run()
+            return expected, obtained
+
+        # Test with a single chain, no None objects
+        chains1 = [[[2], [2], [6], [3], [0.5]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        chains1 = [[[1, 2], [2, 4], [3, 6], [8, 8], [1, 2]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Test with three chains, no None objects
+        chains1 = [
+            [[1, 2], [2, 4], [3, 6], [8, 8], [1, 2]],
+            [[2, 3], [3, 5], [4, 7], [9, 8], [3, 2]],
+            [[3, 4], [4, 6], [5, 8], [8, 3], [2, 7]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (3, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Test with a single chain, some None objects
+        chains1 = [[[2], None, [2], None, [6], None, None, [3], [0.5]]]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+
+        # Test with two chains, some None objects
+        chains1 = [
+            [[1, 2], [2, 4], None, [3, 6], None, None, [8, 8], None, [1, 2]],
+            [[3, 4], [4, 6], None, [5, 8], None, None, [8, 3], None, [2, 7]],
+        ]
+        chains1, chains2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
 
 
 if __name__ == '__main__':
