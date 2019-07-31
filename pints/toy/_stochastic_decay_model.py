@@ -14,7 +14,7 @@ import pints
 from . import ToyModel
 
 
-class StochasticDecayModel(pints.ForwardModelS1, ToyModel):
+class StochasticDegredationModel(pints.ForwardModel, ToyModel):
 
     """
     Stochastic decay model of a single chemical reaction [1].
@@ -32,7 +32,7 @@ class StochasticDecayModel(pints.ForwardModelS1, ToyModel):
     """
 
     def __init__(self, initial_concentration=20):
-        super(StochasticDecayModel, self).__init__()
+        super(StochasticDegredationModel, self).__init__()
         self._n0 = float(initial_concentration)
         if self._n0 <= 0:
             raise ValueError('Initial concentration must be positive.')
@@ -43,9 +43,6 @@ class StochasticDecayModel(pints.ForwardModelS1, ToyModel):
 
     def simulate(self, parameter):
         """ See :meth:`pints.ForwardModel.simulate()`. """
-        return self._simulate(parameter)
-
-    def _simulate(self, parameter):
         if parameter <= 0:
             raise ValueError('rate constant must be postive')
 
@@ -64,11 +61,9 @@ class StochasticDecayModel(pints.ForwardModelS1, ToyModel):
             A = A - 1
             mol_conc.append(A)
 
-
         return mol_conc, time
 
     def suggested_parameter(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
-
         return 0.1
 
