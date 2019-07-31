@@ -8,9 +8,8 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import os
 import pints
-import numpy as np
+
 
 class ABCSampler(pints.Loggable, pints.TunableMethod):
     """
@@ -32,20 +31,24 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
 
     def tell(self, fx):
         """
-        Performs an iteration of the ABC-rejection algorithm, using the parameters specified by ask.
+        Performs an iteration of the ABC-rejection algorithm, using the
+        parameters specified by ask.
 
         Returns the accepted parameter values, or ``None`` to indicate
-        that no parameters were accepted (tell allows for multiple evaluations per iteration).
+        that no parameters were accepted (tell allows for multiple evaluations
+        per iteration).
 
         """
         raise NotImplementedError
+
 
 class ABCController(object):
     """
     Samples from a :class:`pints.LogPrior`
 
     Properties related to the number of iterations, parallelisation,
-    threshold, and number of parameters to sample can be set directly on the ``ABCController`` object, e.g.::
+    threshold, and number of parameters to sample can be set directly on the
+    ``ABCController`` object, e.g.::
 
         abc.set_max_iterations(1000)
 
@@ -55,7 +58,8 @@ class ABCController(object):
 
     Constructor arguments:
     ``error_measure``
-        An error measure to evaluate on a problem, given a forward model, simulated and observed data, and times
+        An error measure to evaluate on a problem, given a forward model,
+        simulated and observed data, and times
 
     ``log_prior``
         A :class:`LogPrior` function from which parameter values are sampled
@@ -73,12 +77,16 @@ class ABCController(object):
 
         # Check error_measure
         # if not isinstance(error_measure, pints.ErrorMeasure):
-            # raise ValueError('Given error_measure must extend pints.ErrorMeasure')
+        # raise ValueError('Given error_measure must extend
+        # pints.ErrorMeasure')
         self._error_measure = error_measure
 
-        # Check if number of parameters from prior matches that of error measure
-        if self._log_prior.n_parameters() != self._error_measure.n_parameters():
-            raise ValueError('Number of parameters in prior must match number of parameters in model')
+        # Check if number of parameters from prior matches that of error
+        # measure
+        if self._log_prior.n_parameters() != \
+                self._error_measure.n_parameters():
+            raise ValueError('Number of parameters in prior must match number '
+                             'of parameters in model')
 
         # Get number of parameters
         self._n_parameters = self._log_prior.n_parameters()
@@ -144,7 +152,8 @@ class ABCController(object):
 
     def n_target(self):
         """
-        Returns the target number of samples to obtain in the estimated posterior
+        Returns the target number of samples to obtain in the estimated
+        posterior
         """
         return self._n_target
 
@@ -163,7 +172,8 @@ class ABCController(object):
 
     def run(self):
         """
-        Runs the ABC sampler and returns the accepted parameter values which make up the posterior estimate
+        Runs the ABC sampler and returns the accepted parameter values which
+        make up the posterior estimate
         """
         # Check stopping criteria
         has_stopping_criterion = False
@@ -197,13 +207,15 @@ class ABCController(object):
             # Get parameter values sampled from prior
             xs = self._samplers.ask(self._n_draws)
 
-            # Simulate datasets based on sampled parameters and calculate root-mean-squared-error
+            # Simulate datasets based on sampled parameters and calculate
+            # root-mean-squared-error
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
             evaluations += len(fxs)
 
-            # Check RMSE values against a threshold and accept parameters below the threshold
+            # Check RMSE values against a threshold and accept parameters below
+            # the threshold
             accepted_vals = self._samplers.tell(fxs)
 
             # Add new accepted parameters to the estimated posterior

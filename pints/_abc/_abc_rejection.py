@@ -11,12 +11,14 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
+
 class ABCRejection(pints.ABCSampler):
     """
     ABC Rejection.
 
-    Sampling parameters from a user-defined prior distribution, simulating data according to a user-defined model
-    comparing against a user-defined threshold, and accepting or rejecting.
+    Sampling parameters from a user-defined prior distribution, simulating data
+    according to a user-defined model comparing against a user-defined
+    threshold, and accepting or rejecting.
 
     [1] ***Citations Needed***
     """
@@ -47,16 +49,13 @@ class ABCRejection(pints.ABCSampler):
     def tell(self, fx):
         """ See :meth:`ABCSampler.tell()`. """
         if len(self._xs) != len(fx):
-            print('error: number of parameters must equal number of function outputs')
+            raise ValueError('number of parameters must equal number of '
+                             'function outputs')
 
         accepted_samples = []
 
         index = np.where(np.array(fx) < self._threshold)[0]
         accepted_samples.extend(self._xs[index])
-
-        # for index in range(len(fx)):
-           #  if fx[index] < threshold:
-           #      accepted_samples.append(param_vals[index])
 
         return accepted_samples
 

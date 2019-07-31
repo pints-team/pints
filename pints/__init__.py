@@ -203,6 +203,12 @@ from ._mcmc._mala import MALAMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 
+from ._abc import (
+    ABCSampler,
+    ABCController
+)
+
+from ._abc._abc_rejection import ABCRejection
 
 #
 # Nested samplers
