@@ -612,9 +612,76 @@ class TestMCMCController(unittest.TestCase):
             self.assertIn('Writing evaluations to', text)
             self.assertIn('evals_0.csv', text)
 
-        # Test writing chains and evals to disk (with LogPosterior)
+        # Test writing chains and evals to disk
+        # With a LogPosterior - Single chain method
         mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_to_file(False)
+
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                cpath = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
+                epath = d.path('evals.csv')
+                p3 = d.path('evals_0.csv')
+                p4 = d.path('evals_1.csv')
+                p5 = d.path('evals_2.csv')
+
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_log_pdf_filename(epath)
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
+                self.assertTrue(os.path.exists(p3))
+                self.assertTrue(os.path.exists(p4))
+                self.assertTrue(os.path.exists(p5))
+
+                # Test chain files contain the correct values
+                import pints.io as io
+                chains2 = np.array(io.load_samples(cpath, nchains))
+                self.assertTrue(np.all(chains1 == chains2))
+
+                # Test eval files contain the correct values
+                evals2 = np.array(io.load_samples(epath, nchains))
+                evals1 = []
+                for chain in chains1:
+                    logpdfs = np.array([self.log_posterior(x) for x in chain])
+                    logpriors = np.array([self.log_prior(x) for x in chain])
+                    loglikelihoods = logpdfs - logpriors
+                    evals = np.array([logpdfs, loglikelihoods, logpriors]).T
+                    evals1.append(evals)
+                evals1 = np.array(evals1)
+                self.assertTrue(np.all(evals1 == evals2))
+
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
+            self.assertIn('Writing evaluations to', text)
+            self.assertIn('evals_0.csv', text)
+
+        # Test writing chains and evals to disk
+        # With a LogPosterior - multi-chain method
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.DifferentialEvolutionMCMC)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
         mcmc.set_log_to_file(False)
