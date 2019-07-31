@@ -9,6 +9,8 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
+import scipy
+from scipy.interpolate import interp1d
 import pints
 
 from . import ToyModel
@@ -48,13 +50,13 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         if parameters <= 0:
             raise ValueError('rate constant must be positive')
 
-        k = [float(parameters)]
+        k = np.array([float(parameters)])
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
         if self._n0 == 0:
             return np.zeros(times.shape)
-        a = self._n0
+        a = np.array([float(self._n0)])
 
         t = 0
         mol_conc = [a]
@@ -64,11 +66,11 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         # reaction and decreasing concentration by 1 at that time
         while a > 0:
             r = np.random.uniform(0, 1)
-            tao = (1 / (a * k)) * np.log(1 / r)
+            tao = ((1 / (a * k)) * np.log(1 / r))[0]
             t += tao
             time.append(t)
             a = a - 1
-            mol_conc.append(a)
+            mol_conc.append(a[0])
 
         # Interpolate as step function, decreasing mol_conc by 1 at each
         # reaction time point
