@@ -592,7 +592,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_width(self, w):
         """
-        Sets the width ``w`` for generating the interval. This can either
+        Sets the width for generating the interval. This can either
         be a single number or an array with the same number of elements
         as the number of variables to update.
         """
@@ -603,13 +603,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 raise ValueError('Array of widths should have the same'
                                  'dimensions as the samples.')
         if any(n < 0 for n in w):
-            raise ValueError('Width w must be positive'
+            raise ValueError('Width must be positive'
                              'for interval expansion.')
         self._w = w
 
     def set_expansion_steps(self, m):
         """
-        Set integer ``m`` for limiting interval expansion.
+        Set integer for limiting the interval expansion.
         """
         m = int(m)
         if m <= 0:
@@ -628,24 +628,24 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_bisection_steps(self, a):
         """
-        Set integer ``a`` for limiting bisection process in overrelaxed steps.
+        Set integer for limiting the bisection process in overrelaxed steps.
         """
         a = int(a)
         if a < 0:
-            raise ValueError('Integer ``a`` must be positive to limit'
+            raise ValueError('Integer must be positive to limit'
                              'overrelaxation endpoint accuracy to'
-                             '``2^(-a) * w``.')
+                             '``2^(-bisection steps) * width``.')
         self._a = a
 
     def get_width(self):
         """
-        Returns width w used for generating the interval.
+        Returns width used for generating the interval.
         """
         return self._w
 
     def get_expansion_steps(self):
         """
-        Returns integer m used for limiting interval expansion.
+        Returns integer used for limiting interval expansion.
         """
         return self._m
 
@@ -657,8 +657,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def get_bisection_steps(self):
         """
-        Returns integer ``a`` limit overrelaxation endpoint accuracy to
-        ``2^(-a) * w``.
+        Returns integer limit overrelaxation endpoint accuracy to
+        ``2^(-bisection steps) * width``.
         """
         return self._a
 
@@ -668,7 +668,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def get_current_slice_height(self):
         """
-        Returns current log_y used to define the current slice.
+        Returns current height value used to define the current slice.
         """
         return self._current_log_y
 
@@ -678,7 +678,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[w, m, prob_overrelaxed, a]``.
+        The hyper-parameter vector is ``[width, expansion steps,
+        prob_overrelaxed, bisection steps]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_width(x[0])

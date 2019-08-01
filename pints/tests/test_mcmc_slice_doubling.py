@@ -50,6 +50,7 @@ class TestSliceDoubling(unittest.TestCase):
         # Test first iteration of tell(). The first point in the chain
         # should be x0
         sample = mcmc.tell(fx)
+
         self.assertTrue(np.all(sample == x0))
 
         # We update the _current_log_pdf value used to generate the new slice
@@ -60,8 +61,10 @@ class TestSliceDoubling(unittest.TestCase):
             mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
 
         # Tell should fail when _ready_for_tell is False
-        with self.assertRaises(RuntimeError):
-            mcmc.tell(fx)
+        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(
+            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_basic(self):
         """
@@ -79,6 +82,8 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue(np.all(mcmc.get_width() == np.array([2, 2])))
         with self.assertRaises(ValueError):
             mcmc.set_width(-1)
+        with self.assertRaises(ValueError):
+            mcmc.set_width([3, 3, 3, 3])
 
         # Test set_expansion_steps(), get_expansion_steps()
         mcmc.set_expansion_steps(3)
@@ -112,13 +117,13 @@ class TestSliceDoubling(unittest.TestCase):
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 100:
+        while len(chain) < 150:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(np.copy(sample))
-        self.assertEqual(np.shape(chain), (100, 2))
+        self.assertEqual(np.shape(chain), (150, 2))
 
 
 if __name__ == '__main__':

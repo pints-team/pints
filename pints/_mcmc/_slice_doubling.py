@@ -525,7 +525,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def set_width(self, w):
         """
-        Sets the width ``w`` for generating the interval. This can either
+        Sets the width for generating the interval. This can either
         be a single number or an array with the same number of elements
         as the number of variables to update.
         """
@@ -536,13 +536,13 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 raise ValueError('Array of widths should have the same'
                                  'dimensions as the samples.')
         if any(n < 0 for n in w):
-            raise ValueError('Width w must be positive'
+            raise ValueError('Width must be positive'
                              'for interval expansion.')
         self._w = w
 
     def set_expansion_steps(self, p):
         """
-        Set integer ``p`` for limiting interval expansion.
+        Set integer for limiting interval expansion.
         """
         p = int(p)
         if p <= 0:
@@ -552,13 +552,13 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def get_width(self):
         """
-        Returns width ``w`` used for generating the interval.
+        Returns width used for generating the interval.
         """
         return self._w
 
     def get_expansion_steps(self):
         """
-        Returns integer ``p`` used for limiting interval expansion.
+        Returns integer used for limiting interval expansion.
         """
         return self._p
 
@@ -568,7 +568,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def get_current_slice_height(self):
         """
-        Returns current used to define the current slice.
+        Returns current height value used to define the current slice.
         """
         return self._current_log_y
 
@@ -578,7 +578,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[w, p]``.
+        The hyper-parameter vector is ``[width, expansion steps]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_width(x[0])
