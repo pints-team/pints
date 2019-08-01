@@ -63,8 +63,9 @@ class TestSliceDoubling(unittest.TestCase):
         # Tell should fail when _ready_for_tell is False
         mcmc = pints.SliceDoublingMCMC(x0)
         mcmc.ask()
-        self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+        with self.assertRaises(ValueError):
+            fx = np.inf
+            mcmc.tell(fx)
         with self.assertRaises(RuntimeError):
             mcmc.tell(fx)
 
@@ -110,12 +111,12 @@ class TestSliceDoubling(unittest.TestCase):
     def test_multimodal_run(self):
         # Create log pdf
         log_pdf = pints.toy.MultimodalGaussianLogPDF(
-            modes=[[0, 10], [10, 7], [5, 4], [13, 12]])
+            modes=[[1, 1], [1, 4], [5, 4], [1, 4]])
 
         # Create mcmc
         x0 = np.array([1, 1])
         mcmc = pints.SliceDoublingMCMC(x0)
-        mcmc.set_width(30)
+        mcmc.set_width(2)
 
         # Run multiple iterations of the sampler
         chain = []

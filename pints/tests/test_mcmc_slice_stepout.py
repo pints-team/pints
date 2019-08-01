@@ -59,8 +59,9 @@ class TestSliceStepout(unittest.TestCase):
         # Tell() should fail when _ready_for_tell is False
         mcmc = pints.SliceStepoutMCMC(x0)
         mcmc.ask()
-        self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+        with self.assertRaises(ValueError):
+            fx = np.inf
+            mcmc.tell(fx)
         with self.assertRaises(RuntimeError):
             mcmc.tell(fx)
 
