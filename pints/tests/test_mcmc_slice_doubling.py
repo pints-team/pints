@@ -61,10 +61,12 @@ class TestSliceDoubling(unittest.TestCase):
             mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
 
         # Tell should fail when _ready_for_tell is False
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.SliceDoublingMCMC(x0)
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+        with self.assertRaises(RuntimeError):
+            mcmc.tell(fx)
 
     def test_basic(self):
         """
@@ -108,22 +110,22 @@ class TestSliceDoubling(unittest.TestCase):
     def test_multimodal_run(self):
         # Create log pdf
         log_pdf = pints.toy.MultimodalGaussianLogPDF(
-            modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
+            modes=[[0, 10], [10, 7], [5, 4], [13, 12]])
 
         # Create mcmc
         x0 = np.array([1, 1])
         mcmc = pints.SliceDoublingMCMC(x0)
-        mcmc.set_width(20)
+        mcmc.set_width(30)
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 150:
+        while len(chain) < 200:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(np.copy(sample))
-        self.assertEqual(np.shape(chain), (150, 2))
+        self.assertEqual(np.shape(chain), (500, 2))
 
 
 if __name__ == '__main__':

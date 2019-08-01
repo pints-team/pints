@@ -57,10 +57,12 @@ class TestSliceStepout(unittest.TestCase):
             mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
 
         # Tell() should fail when _ready_for_tell is False
-        mcmc = pints.HamiltonianMCMC(x0)
+        mcmc = pints.SliceStepoutMCMC(x0)
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+        with self.assertRaises(RuntimeError):
+            mcmc.tell(fx)
 
     def test_basic(self):
         """
@@ -123,12 +125,12 @@ class TestSliceStepout(unittest.TestCase):
         mcmc = pints.SliceStepoutMCMC(x0)
 
         mcmc.set_prob_overrelaxed(0.6)
-        mcmc.set_width(15)
+        mcmc.set_width(30)
         mcmc.set_bisection_steps(2)
 
         # Run multiple iterations of the sampler
         chain = []
-        while len(chain) < 150:
+        while len(chain) < 100:
             x = mcmc.ask()
             fx = log_pdf.evaluateS1(x)[0]
             sample = mcmc.tell(fx)
