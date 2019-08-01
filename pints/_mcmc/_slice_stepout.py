@@ -15,8 +15,6 @@ import numpy as np
 
 class SliceStepoutMCMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`SingleChainMCMC`
-
     Implements Slice Sampling with Stepout, as described in [1]. This is a
     univariate method, which is applied in a Slice-Sampling-within-Gibbs
     framework to allow MCMC sampling from multivariate models.
@@ -123,6 +121,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
+
+    *Extends:* :class:`SingleChainMCMC`
     """
 
     def __init__(self, x0, sigma0=None):
@@ -138,7 +138,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._proposed = None
         self._overrelaxed_step = False
 
-        # Default initial interval width w used in the Stepout procedure
+        # Default initial interval width ``w`` used in the Stepout procedure
         # to expand the interval
         self._w = np.abs(self._x0)
         self._w[self._w == 0] = 1
@@ -590,25 +590,31 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Stepout'
 
-    def set_w(self, w):
+    def set_width(self, w):
         """
-        Sets width ``w`` for generating the interval.
+        Sets the width ``w`` for generating the interval. This can either
+        be a single number or an array with the same number of elements
+        as the number of variables to update.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
+        if type(w) == list or np.array:
+            if np.shape(w) != np.shape(self._x0):
+                raise ValueError('Array of widths should have the same'
+                                 'dimensions as the samples.')
         if any(n < 0 for n in w):
-            raise ValueError("""Width ``w`` must be positive for
-                            interval expansion.""")
+            raise ValueError('Width w must be positive'
+                             'for interval expansion.')
         self._w = w
 
-    def set_m(self, m):
+    def set_expansion_steps(self, m):
         """
         Set integer ``m`` for limiting interval expansion.
         """
         m = int(m)
         if m <= 0:
-            raise ValueError("""Integer ``m`` must be positive to limit the
-                            interval size to ``m * w``.""")
+            raise ValueError('Integer ``m`` must be positive to limit the'
+                             'interval size to ``m * w``.')
         self._m = m
 
     def set_prob_overrelaxed(self, prob):
@@ -620,24 +626,24 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             raise ValueError("""Probability must be positive and <= 1.""")
         self._prob_overrelaxed = prob
 
-    def set_a(self, a):
+    def set_bisection_steps(self, a):
         """
         Set integer ``a`` for limiting bisection process in overrelaxed steps.
         """
         a = int(a)
         if a < 0:
-            raise ValueError("""Integer ``a`` must be positive to limit
-                                overrelaxation endpoint accuracy to
-                                ``2^(-a) * w``.""")
+            raise ValueError('Integer ``a`` must be positive to limit'
+                             'overrelaxation endpoint accuracy to'
+                             '``2^(-a) * w``.')
         self._a = a
 
-    def get_w(self):
+    def get_width(self):
         """
         Returns width w used for generating the interval.
         """
         return self._w
 
-    def get_m(self):
+    def get_expansion_steps(self):
         """
         Returns integer m used for limiting interval expansion.
         """
@@ -649,7 +655,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         return self._prob_overrelaxed
 
-    def get_a(self):
+    def get_bisection_steps(self):
         """
         Returns integer ``a`` limit overrelaxation endpoint accuracy to
         ``2^(-a) * w``.
@@ -675,7 +681,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         The hyper-parameter vector is ``[w, m, prob_overrelaxed, a]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_w(x[0])
-        self.set_m(x[1])
+        self.set_width(x[0])
+        self.set_expansion_steps(x[1])
         self.set_prob_overrelaxed(x[2])
-        self.set_a(x[3])
+        self.set_bisection_steps(x[3])

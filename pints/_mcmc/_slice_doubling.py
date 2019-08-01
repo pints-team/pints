@@ -15,8 +15,6 @@ import numpy as np
 
 class SliceDoublingMCMC(pints.SingleChainMCMC):
     """
-    *Extends:* :class:`SingleChainMCMC`
-
     Implements Slice Sampling with Doubling, as described in [1]. This is a
     univariate method, which is applied in a Slice-Sampling-within-Gibbs
     framework to allow MCMC sampling from multivariate models.
@@ -114,6 +112,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
+
+    *Extends:* :class:`SingleChainMCMC`
     """
 
     def __init__(self, x0, sigma0=None):
@@ -132,7 +132,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # Flag used to store the log_pdf of the proposed sample
         self._sent_proposal = False
 
-        # Default initial interval width w used in the Doubling procedure
+        # Default initial interval width ``w`` used in the Doubling procedure
         # to expand the interval
         self._w = np.abs(self._x0)
         self._w[self._w == 0] = 1
@@ -202,10 +202,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         # edges ``l_hat,r_hat``
         self._init_left_hat = False
         self._init_right_hat = False
-
-        self._u = None
-        self._v = None
-        self._e = None
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -527,46 +523,52 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Doubling'
 
-    def set_w(self, w):
+    def set_width(self, w):
         """
-        Sets width w for generating the interval.
+        Sets the width ``w`` for generating the interval. This can either
+        be a single number or an array with the same number of elements
+        as the number of variables to update.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
+        if type(w) == list or np.array:
+            if np.shape(w) != np.shape(self._x0):
+                raise ValueError('Array of widths should have the same'
+                                 'dimensions as the samples.')
         if any(n < 0 for n in w):
-            raise ValueError("""Width w must be positive
-                            for interval expansion.""")
+            raise ValueError('Width w must be positive'
+                             'for interval expansion.')
         self._w = w
 
-    def set_p(self, m):
+    def set_expansion_steps(self, p):
         """
-        Set integer m for limiting interval expansion.
+        Set integer ``p`` for limiting interval expansion.
         """
-        p = int(m)
+        p = int(p)
         if p <= 0:
-            raise ValueError("""Integer m must be positive to limit the
-                             interval size to ``(2^p)*w``.""")
+            raise ValueError('Integer p must be positive to limit the'
+                             'interval size to ``(2^p)*w``.')
         self._p = p
 
-    def get_w(self):
+    def get_width(self):
         """
-        Returns width w used for generating the interval.
+        Returns width ``w`` used for generating the interval.
         """
         return self._w
 
-    def get_p(self):
+    def get_expansion_steps(self):
         """
-        Returns integer p used for limiting interval expansion.
+        Returns integer ``p`` used for limiting interval expansion.
         """
         return self._p
 
-    def current_log_pdf(self):
+    def get_current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return self._current_log_pdf
 
-    def current_slice_height(self):
+    def get_current_slice_height(self):
         """
-        Returns current log_y used to define the current slice.
+        Returns current used to define the current slice.
         """
         return self._current_log_y
 
@@ -579,5 +581,5 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         The hyper-parameter vector is ``[w, p]``.
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_w(x[0])
-        self.set_p(x[1])
+        self.set_width(x[0])
+        self.set_expansion_steps(x[1])
