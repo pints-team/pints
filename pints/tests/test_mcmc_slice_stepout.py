@@ -136,7 +136,7 @@ class TestSliceStepout(unittest.TestCase):
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(np.copy(sample))
-        self.assertEqual(np.shape(chain), (150, 2))
+        self.assertEqual(np.shape(chain), (100, 2))
 
 
 if __name__ == '__main__':

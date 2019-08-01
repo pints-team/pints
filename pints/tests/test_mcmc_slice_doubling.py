@@ -125,7 +125,7 @@ class TestSliceDoubling(unittest.TestCase):
             sample = mcmc.tell(fx)
             if sample is not None:
                 chain.append(np.copy(sample))
-        self.assertEqual(np.shape(chain), (500, 2))
+        self.assertEqual(np.shape(chain), (200, 2))
 
 
 if __name__ == '__main__':
