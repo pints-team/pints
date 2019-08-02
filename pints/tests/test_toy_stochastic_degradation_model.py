@@ -47,31 +47,29 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertEqual(values[0], 20)
         self.assertEqual(values[-1], 0)
 
-    def test_simulate_stochastically(self):
+    def test_simulate(self):
+        model = pints.toy.StochasticDegradationModel(20)
         parameters = [0.1]
-        time, mol_count = model.simulate_stochastically(parameters)
-        self.assertTrue(np.all(mol_count ==
+        times = np.linspace(0, 100, 101)
+        values = model.simulate(parameters, times)
+
+        # Test output of Gillespie algorithm
+        self.assertTrue(np.all(self._mol_count ==
                                np.array(range(20, -1, -1))))
 
-    def test_interpolate_function(self):
-        model = pints.toy.StochasticDegradationModel(20)
-        times = np.linspace(0, 100, 101)
-        parameters = [0.1]
-
-        values = model.simulate(parameters, times)
+        # Test interpolation function
         # Check exact time points from stochastic simulation
-        self.assertTrue(np.all(model._interp_func(self._time) ==
+        self.assertTrue(np.all(self._interp_func(self._time) ==
                                self._mol_count))
 
         # Check simulate function returns expected values
         self.assertTrue(np.all(values[np.where(times < self._time[1])] == 20))
 
         # Check interpolation function works as expected
-        self.assertTrue(model._interp_func(np.random.uniform(self._time[0],
-                                           self._time[1])) == 20)
-        self.assertTrue(model._interp_func(np.random.uniform(self._time[1],
-                                           self._time[2])) == 19)
-
+        self.assertTrue(self._interp_func(np.random.uniform(self._time[0],
+                                          self._time[1])) == 20)
+        self.assertTrue(self._interp_func(np.random.uniform(self._time[1],
+                                          self._time[2])) == 19)
 
     def test_errors(self):
         model = pints.toy.StochasticDegradationModel(20)
@@ -81,21 +79,23 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertRaises(ValueError, model.simulate, parameters, times)
         self.assertRaises(ValueError, model.deterministic_mean, parameters,
                           times)
-        self.assertRaises(ValueError, model.simulate_stochastically,
-                          parameters)
+        self.assertRaises(ValueError, model.deterministic_variance, parameters
+                          times)
 
         times_2 = np.linspace(-10, 10, 21)
         parameters_2 = 0.1
         self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
         self.assertRaises(ValueError, model.deterministic_mean, parameters_2,
                           times_2)
+        self.assertRaises(ValueError, model.deterministic_variance,
+                          parameters_2, times_2)
 
         # this model should have 1 parameter
         parameters_3 = [0.1, 1]
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
         self.assertRaises(ValueError, model.deterministic_mean, parameters_3,
                           times)
-        self.assertRaises(ValueError, model.simulate_stochastically,
+        self.assertRaises(ValueError, model.deterministic_variance,
                           parameters_3, times)
 
         # Initial value can't be negative
