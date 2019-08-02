@@ -19,13 +19,13 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
     """
     Stochastic degradation model of a single chemical reaction starting from
-    an initial concentration n_0 and degrading to 0 according to the following
-    model:
+    an initial concentration :math:: n0 and degrading to 0 according to the
+    following model:
     .. math::
     $A rightarrow{\text{k}} 0 $ [1]
 
     The model is simulated according to the Gillespie algorithm [2]:
-    1. Sample a random value r from a uniform distribution: r ~ unif(0,1)
+    1. Sample a random value r from a uniform distribution: :math:: r ~ unif(0,1)
     2. Calculate the time ($\tau$) until the next single reaction as follows:
        .. math::
        $\tau = \frac{1}{A(t)k}*ln{\frac{1}{r}}$ [1]
@@ -50,13 +50,21 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         if self._n0 < 0:
             raise ValueError('Initial concentration cannot be negative.')
 
+        self._interp_func = None
+        self._mol_count = []
+        self._time = []
+
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 1
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
-        if parameters <= 0:
+        if len(parameters) != self.n_parameters():
+            raise ValueError('This model should have only 1 parameter.')
+        k = parameters[0]
+
+        if k <= 0:
             raise ValueError('Rate constant must be positive.')
 
         times = np.asarray(times)
@@ -65,58 +73,65 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         if self._n0 == 0:
             return np.zeros(times.shape)
 
-        [time, mol_count] = self.StochasticSimulationAlgorithm(parameters)
+        time, mol_count = self.simulate_stochastically(parameters)
 
         # Interpolate as step function, decreasing mol_count by 1 at each
         # reaction time point
-        f1 = interp1d(time, mol_count, kind='previous')
+        self._interp_func = interp1d(time, mol_count, kind='previous')
 
-        # Compute concentration ('a') values at given time points using f1
+        # Compute concentration values at given time points using f1
         # at any time beyond the last reaction, concentration = 0
-        values = f1(times[np.where(times <= max(time))])
+        values = self._interp_func(times[np.where(times <= max(time))])
         zero_vector = np.zeros(len(times[np.where(times > max(time))]))
         values = np.concatenate((values, zero_vector))
 
         return values
 
-    def StochasticSimulationAlgorithm(self, parameters):
+    def simulate_stochastically(self, parameters):
+        """ Stochastic simulation according to Gillespie algorithm"""
+        if len(parameters) != self.n_parameters():
+            raise ValueError('This model should have only 1 parameter.')
+        k = parameters[0]
         t = 0
-        if parameters <= 0:
+        if k <= 0:
             raise ValueError('Rate constant must be positive.')
-        k = np.array([float(parameters)])
 
-        a = np.array([float(self._n0)])
-        mol_count = [a[0]]
-        time = [t]
+        a = self._n0
+        self._mol_count = [a]
+        self._time = [t]
 
         # Run stochastic degradation algorithm, calculating time until next
         # reaction and decreasing concentration by 1 at that time
-        while a[0] > 0:
+        while a > 0:
             r = np.random.uniform(0, 1)
-            tao = ((1 / (a * k)) * np.log(1 / r))[0]
-            t += tao
-            time.append(t)
-            a[0] = a[0] - 1
-            mol_count.append(a[0])
+            t += (1 / (a * k)) * np.log(1 / r)
+            self._time.append(t)
+            a = a - 1
+            self._mol_count.append(a)
 
-        return time, mol_count
+        return self._time, self._mol_count
 
-    def DeterministicMean(self, parameters, times):
-        if parameters <= 0:
+    def deterministic_mean(self, parameters, times):
+        """ Calculates deterministic mean of infinitely many stochastic
+        simulations, which follows :math:: n0*exp(-kt)"""
+        if len(parameters) != self.n_parameters():
+            raise ValueError('This model should have only 1 parameter.')
+        k = parameters[0]
+
+        if k <= 0:
             raise ValueError('Rate constant must be positive.')
-        k = parameters
 
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
 
-        mean = self._n0*np.exp(-k*times)
+        mean = self._n0 * np.exp(-k * times)
 
         return mean
 
-    def suggested_parameter(self):
+    def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
-        return 0.1
+        return np.array([0.1])
 
     def suggested_times(self):
         """ See "meth:`pints.toy.ToyModel.suggested_times()`."""
