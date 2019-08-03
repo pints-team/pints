@@ -1,6 +1,9 @@
 # Slow notebooks
 sampling-ellipsoidal-nested-rejection-sampling.ipynb
 sampling-hamiltonian-mcmc.ipynb
+sampling-slice-doubling.ipynb
+sampling-slice-overrelaxation.ipynb
+sampling-slice-stepout.ipynb
 stats-autoregressive-moving-average-errors.ipynb
 toy-model-beeler-reuter-ap.ipynb
 toy-model-fitzhugh-nagumo.ipynb
