@@ -55,11 +55,11 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue(np.all(sample == x0))
 
         # We update the _current_log_pdf value used to generate the new slice
-        self.assertEqual(mcmc.get_current_log_pdf(), fx)
+        self.assertEqual(mcmc.current_log_pdf(), fx)
 
         # Check that the new slice has been constructed appropriately
         self.assertTrue(
-            mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
+            mcmc.current_slice_height() < mcmc.current_log_pdf())
 
         # Tell() should fail when fx is infinite
         mcmc = pints.SliceDoublingMCMC(x0)
@@ -83,32 +83,32 @@ class TestSliceDoubling(unittest.TestCase):
         # Test name
         self.assertEqual(mcmc.name(), 'Slice Sampling - Doubling')
 
-        # Test set_width(), get_width()
+        # Test set_width(), width()
         mcmc.set_width(2)
-        self.assertTrue(np.all(mcmc.get_width() == np.array([2, 2])))
+        self.assertTrue(np.all(mcmc.width() == np.array([2, 2])))
         mcmc.set_width([5, 8])
-        self.assertTrue(np.all(mcmc.get_width() == np.array([5, 8])))
+        self.assertTrue(np.all(mcmc.width() == np.array([5, 8])))
         with self.assertRaises(ValueError):
             mcmc.set_width(-1)
         with self.assertRaises(ValueError):
             mcmc.set_width([3, 3, 3, 3])
 
-        # Test set_expansion_steps(), get_expansion_steps()
+        # Test set_expansion_steps(), expansion_steps()
         mcmc.set_expansion_steps(3)
-        self.assertEqual(mcmc.get_expansion_steps(), 3.)
+        self.assertEqual(mcmc.expansion_steps(), 3.)
         with self.assertRaises(ValueError):
             mcmc.set_expansion_steps(-1)
 
         # Test current_slice height
-        self.assertEqual(mcmc.get_current_slice_height(), mcmc._current_log_y)
+        self.assertEqual(mcmc.current_slice_height(), mcmc._current_log_y)
 
         # Test number of hyperparameters
         self.assertEqual(mcmc.n_hyper_parameters(), 2)
 
         # Test setting hyperparameters
         mcmc.set_hyper_parameters([3, 100])
-        self.assertTrue((np.all(mcmc.get_width() == np.array([3, 3]))))
-        self.assertEqual(mcmc.get_expansion_steps(), 100)
+        self.assertTrue((np.all(mcmc.width() == np.array([3, 3]))))
+        self.assertEqual(mcmc.expansion_steps(), 100)
 
     def test_multimodal_run(self):
         # Create log pdf

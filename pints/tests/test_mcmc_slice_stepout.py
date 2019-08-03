@@ -51,11 +51,11 @@ class TestSliceStepout(unittest.TestCase):
         self.assertTrue(np.all(sample == x0))
 
         # We update the _current_log_pdf value used to generate the new slice
-        self.assertEqual(mcmc.get_current_log_pdf(), fx)
+        self.assertEqual(mcmc.current_log_pdf(), fx)
 
         # Check that the new slice has been constructed appropriately
         self.assertTrue(
-            mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
+            mcmc.current_slice_height() < mcmc.current_log_pdf())
 
         # Tell() should fail when fx is infinite
         mcmc = pints.SliceStepoutMCMC(x0)
@@ -79,33 +79,33 @@ class TestSliceStepout(unittest.TestCase):
         # Test name
         self.assertEqual(mcmc.name(), 'Slice Sampling - Stepout')
 
-        # Test set_width(), get_width()
+        # Test set_width(), width()
         mcmc.set_width(2)
-        self.assertTrue(np.all(mcmc.get_width() == np.array([2, 2])))
+        self.assertTrue(np.all(mcmc.width() == np.array([2, 2])))
         mcmc.set_width([3, 5])
-        self.assertTrue(np.all(mcmc.get_width() == np.array([3, 5])))
+        self.assertTrue(np.all(mcmc.width() == np.array([3, 5])))
         with self.assertRaises(ValueError):
             mcmc.set_width(-1)
         with self.assertRaises(ValueError):
             mcmc.set_width([3, 3, 3, 3])
 
-        # Test set_expansion_steps(), get_expansion_steps()
+        # Test set_expansion_steps(), expansion_steps()
         mcmc.set_expansion_steps(3)
-        self.assertEqual(mcmc.get_expansion_steps(), 3.)
+        self.assertEqual(mcmc.expansion_steps(), 3.)
         with self.assertRaises(ValueError):
             mcmc.set_expansion_steps(-1)
 
-        # Test set_prob_overrelaxed(), get_prob_overrelaxed()
+        # Test set_prob_overrelaxed(), prob_overrelaxed()
         mcmc.set_prob_overrelaxed(.5)
-        self.assertEqual(mcmc.get_prob_overrelaxed(), .5)
+        self.assertEqual(mcmc.prob_overrelaxed(), .5)
         with self.assertRaises(ValueError):
             mcmc.set_prob_overrelaxed(-1)
         with self.assertRaises(ValueError):
             mcmc.set_prob_overrelaxed(4)
 
-        # Test set_bisection_steps(), get_bisection_steps()
+        # Test set_bisection_steps(), bisection_steps()
         mcmc.set_bisection_steps(40)
-        self.assertEqual(mcmc.get_bisection_steps(), 40)
+        self.assertEqual(mcmc.bisection_steps(), 40)
         with self.assertRaises(ValueError):
             mcmc.set_bisection_steps(-30)
 
@@ -114,10 +114,10 @@ class TestSliceStepout(unittest.TestCase):
 
         # Test setting hyperparameters
         mcmc.set_hyper_parameters([3, 100, .7, 50])
-        self.assertTrue((np.all(mcmc.get_width() == np.array([3, 3]))))
-        self.assertEqual(mcmc.get_expansion_steps(), 100)
-        self.assertEqual(mcmc.get_prob_overrelaxed(), 0.7)
-        self.assertEqual(mcmc.get_bisection_steps(), 50)
+        self.assertTrue((np.all(mcmc.width() == np.array([3, 3]))))
+        self.assertEqual(mcmc.expansion_steps(), 100)
+        self.assertEqual(mcmc.prob_overrelaxed(), 0.7)
+        self.assertEqual(mcmc.bisection_steps(), 50)
 
     def test_multimodal_overrelaxed_run(self):
         # Create log pdf
