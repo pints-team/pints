@@ -609,8 +609,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         m = int(m)
         if m <= 0:
-            raise ValueError('Integer ``m`` must be positive to limit the'
-                             'interval size to ``m * w``.')
+            raise ValueError('Integer must be positive to limit the'
+                             'interval size to ``integer * width``.')
         self._m = m
 
     def set_prob_overrelaxed(self, prob):
@@ -630,7 +630,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         if a < 0:
             raise ValueError('Integer must be positive to limit'
                              'overrelaxation endpoint accuracy to'
-                             '``2^(-bisection steps) * width``.')
+                             '``2 ^ (-bisection steps) * width``.')
         self._a = a
 
     def get_width(self):

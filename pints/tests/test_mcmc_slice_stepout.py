@@ -56,12 +56,14 @@ class TestSliceStepout(unittest.TestCase):
         self.assertTrue(
             mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
 
-        # Tell() should fail when _ready_for_tell is False
+        # Tell() should fail when fx is infinite
         mcmc = pints.SliceStepoutMCMC(x0)
         mcmc.ask()
         with self.assertRaises(ValueError):
             fx = np.inf
             mcmc.tell(fx)
+
+        # Tell() should fail when _ready_for_tell is False
         with self.assertRaises(RuntimeError):
             mcmc.tell(fx)
 
@@ -86,7 +88,7 @@ class TestSliceStepout(unittest.TestCase):
         with self.assertRaises(ValueError):
             mcmc.set_width([3, 3, 3, 3])
 
-        # Test set_expansion_steps(), set_expansion_steps()
+        # Test set_expansion_steps(), get_expansion_steps()
         mcmc.set_expansion_steps(3)
         self.assertEqual(mcmc.get_expansion_steps(), 3.)
         with self.assertRaises(ValueError):
@@ -100,7 +102,7 @@ class TestSliceStepout(unittest.TestCase):
         with self.assertRaises(ValueError):
             mcmc.set_prob_overrelaxed(4)
 
-        # Test set_a(), get_a()
+        # Test set_bisection_steps(), get_bisection_steps()
         mcmc.set_bisection_steps(40)
         self.assertEqual(mcmc.get_bisection_steps(), 40)
         with self.assertRaises(ValueError):

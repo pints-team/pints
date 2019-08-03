@@ -542,8 +542,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """
         p = int(p)
         if p <= 0:
-            raise ValueError('Integer p must be positive to limit the'
-                             'interval size to ``(2^p)*w``.')
+            raise ValueError('Integer must be positive to limit the'
+                             'interval size to ``(2 ^ integer) * width``.')
         self._p = p
 
     def get_width(self):

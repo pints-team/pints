@@ -60,12 +60,14 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertTrue(
             mcmc.get_current_slice_height() < mcmc.get_current_log_pdf())
 
-        # Tell should fail when _ready_for_tell is False
+        # Tell() should fail when fx is infinite
         mcmc = pints.SliceDoublingMCMC(x0)
         mcmc.ask()
         with self.assertRaises(ValueError):
             fx = np.inf
             mcmc.tell(fx)
+
+        # Tell() should fail when _ready_for_tell is False
         with self.assertRaises(RuntimeError):
             mcmc.tell(fx)
 
@@ -83,6 +85,8 @@ class TestSliceDoubling(unittest.TestCase):
         # Test set_width(), get_width()
         mcmc.set_width(2)
         self.assertTrue(np.all(mcmc.get_width() == np.array([2, 2])))
+        mcmc.set_width([5, 8])
+        self.assertTrue(np.all(mcmc.get_width() == np.array([5, 8])))
         with self.assertRaises(ValueError):
             mcmc.set_width(-1)
         with self.assertRaises(ValueError):
@@ -104,9 +108,6 @@ class TestSliceDoubling(unittest.TestCase):
         mcmc.set_hyper_parameters([3, 100])
         self.assertTrue((np.all(mcmc.get_width() == np.array([3, 3]))))
         self.assertEqual(mcmc.get_expansion_steps(), 100)
-
-        mcmc.set_width([5, 5])
-        self.assertTrue(np.all(mcmc.get_width() == np.array([5, 5])))
 
     def test_multimodal_run(self):
         # Create log pdf
