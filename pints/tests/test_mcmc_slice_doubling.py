@@ -20,13 +20,12 @@ debug = False
 
 class TestSliceDoubling(unittest.TestCase):
     """
-    Tests the basic methods of the Slice Sampling with Doubling routine.
+    Tests the Slice Sampling with Doubling routine.
     """
 
     def test_first_run(self):
-        """
-        Tests the very first run of the sampler.
-        """
+        # Tests the very first run of the sampler.
+
         # Create log pdf
         log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
 
@@ -73,9 +72,8 @@ class TestSliceDoubling(unittest.TestCase):
             mcmc.tell(fx)
 
     def test_basic(self):
-        """
-        Test basic methods of the class.
-        """
+        # Test basic methods of the class.
+
         # Create mcmc
         x0 = np.array([1, 1])
         mcmc = pints.SliceDoublingMCMC(x0)

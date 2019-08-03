@@ -20,13 +20,12 @@ debug = False
 
 class TestSliceStepout(unittest.TestCase):
     """
-    Tests the basic methods of the Slice Sampling with Stepout routine.
+    Tests the Slice Sampling with Stepout routine.
     """
 
     def test_first_run(self):
-        """
-        Tests the very first run of the sampler.
-        """
+        # Tests the very first run of the sampler.
+
         # Create log pdf
         log_pdf = pints.toy.GaussianLogPDF([2, 4], [[1, 0], [0, 3]])
 
@@ -69,9 +68,8 @@ class TestSliceStepout(unittest.TestCase):
             mcmc.tell(fx)
 
     def test_basic(self):
-        """
-        Test basic methods of the class.
-        """
+        # Test basic methods of the class.
+
         # Create mcmc
         x0 = np.array([1, 1])
         mcmc = pints.SliceStepoutMCMC(x0)
@@ -120,6 +118,7 @@ class TestSliceStepout(unittest.TestCase):
         self.assertEqual(mcmc.bisection_steps(), 50)
 
     def test_multimodal_overrelaxed_run(self):
+
         # Create log pdf
         log_pdf = pints.toy.MultimodalGaussianLogPDF(
             modes=[[0, 2], [0, 7], [5, 0], [4, 4]])
