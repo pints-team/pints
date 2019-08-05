@@ -1,5 +1,4 @@
 #
-#
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
@@ -13,6 +12,7 @@ import numpy as np
 import math
 import sys
 import pints
+
 
 class CMAES(pints.PopulationBasedOptimiser):
     """
@@ -102,14 +102,14 @@ class CMAES(pints.PopulationBasedOptimiser):
         if self._boundaries is not None:
             self._manual_boundaries = True
 
-            # CMA-ES wants a single standard deviation as input, use the smallest
+        # CMA-ES needs a single standard deviation as input, use the smallest
         # in the vector (if the user passed in a scalar, this will be the
         # value used). THIS IS ALSO THE STEP SIZE
         self._sigma0 = np.min(self._sigma0)
 
         # Eigenvectors
         self._B = np.identity(self._n_parameters)
-        # SquareRoot of Diagnonal of EigenValues
+        # SquareRoot of Diagonal of EigenValues
         self._D = np.identity(self._n_parameters)
         # Cov-matrix (also identity)
         self._C = self._B.dot(self._D).dot(self._D.T).dot(self._B.T)
@@ -132,7 +132,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._muEffMinus = np.sum(self._W[self._parent_pop_size:]) ** 2 / np.sum(
             np.square(self._W[self._parent_pop_size:]))
 
-        # cumulation, evolution paths, used to update Cov matrix and sigma)
+        # cummulation, evolution paths, used to update Cov matrix and sigma)
         self._pc = np.zeros(self._n_parameters)
         self._psig = np.zeros(self._n_parameters)
 
@@ -141,7 +141,7 @@ class CMAES(pints.PopulationBasedOptimiser):
 
         # Decay rate of the evolution path for C
         self._ccov = (4 + self._muEff / self._n_parameters) / (
-                    self._n_parameters + 4 + 2 * self._muEff / self._n_parameters)
+                self._n_parameters + 4 + 2 * self._muEff / self._n_parameters)
 
         # Decay rate of the evolution path for sigma
         self._csig = (2 + self._muEff) / (self._n_parameters + 5 + self._muEff)
@@ -155,12 +155,12 @@ class CMAES(pints.PopulationBasedOptimiser):
                         , 1 - self._c1)
 
         # Damping of the step-size (sigma0) update
-        self._dsig = 1 + 2 * max(0, math.sqrt((self._muEff - 1) / (self._n_parameters + 1)) - 1) + self._csig
+        self._dsig = 1 + 2 * max(0., math.sqrt((self._muEff - 1) / (self._n_parameters + 1)) - 1) + self._csig
 
         # Parameters from the Table 1 of [1]
-        alphaMu = 1 + self._c1 / self._cmu
-        alphaMuEff = 1 + 2 * self._muEffMinus / (self._muEff + 2)
-        alphaPosDef = (1 - self._c1 - self._cmu) / (self._n_parameters * self._cmu)
+        alpha_mu = 1 + self._c1 / self._cmu
+        alpha_mueff = 1 + 2 * self._muEffMinus / (self._muEff + 2)
+        alpha_pos_def = (1 - self._c1 - self._cmu) / (self._n_parameters * self._cmu)
 
         # Rescaling the weights
         sum_pos = sum([self._W[i] if self._W[i] > 0 else 0 for i in range(self._population_size)])
@@ -168,7 +168,7 @@ class CMAES(pints.PopulationBasedOptimiser):
 
         self._W = [self._W[i] / sum_pos
                    if self._W[i] >= 0
-                   else self._W[i] * min(alphaMu, alphaMuEff, alphaPosDef) / -sum_neg
+                   else self._W[i] * min(alpha_mu, alpha_mueff, alpha_pos_def) / -sum_neg
                    for i in range(self._population_size)]
 
         # CMAES always seeds np.random, whether you ask it too or not, so to
@@ -192,7 +192,8 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     def stop(self):
         diag_D = np.diagonal(self._D)
-        # We use the condition number defined in the pycma code at https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/evolution_strategy.py#L2965
+        # We use the condition number defined in the pycma code at
+        # https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/evolution_strategy.py#L2965
         if (np.max(diag_D) / np.min(diag_D)) ** 2 > 1e14:
             return 'Ill-conditionned covariance matrix'
         return False
@@ -213,12 +214,11 @@ class CMAES(pints.PopulationBasedOptimiser):
 
         # Get the best xs according to the fx results
         order = np.argsort(fx)
-        xs_bests = np.array(self._xs[order])
+        xs_bests = np.array(self._user_xs[order])
         zs_bests = np.array(self._zs[order])
         ys_bests = np.array(self._ys[order])  # = np.array((xs_bests - self._x0) / self._sigma0)
 
         # Update the mean
-        old_x0 = self._x0
         self._x0 = self._x0 + self._cm * np.sum(np.multiply((xs_bests[:self._parent_pop_size] - self._x0).T,
                                                             self._W[:self._parent_pop_size]).T, 0)
 
@@ -234,7 +234,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Note that self._B.dot(zmeans) = self._B.dot(np.linalg.inv(self._D)).dot(self._B.T).dot(ymeans)
         self._psig = (1 - self._csig) * self._psig + norm_cst_sig * self._B.dot(zmeans)
 
-        # note that at https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/sigma_adaptation.py#L71
+        # In https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/sigma_adaptation.py#L71
         # They are NOT using exp_size_N0I, but rather a term based on n (number of params)
         exp_size_N0I = (math.sqrt(2) * math.gamma((self._n_parameters + 1) / 2) / math.gamma(self._n_parameters / 2))
 
@@ -250,7 +250,8 @@ class CMAES(pints.PopulationBasedOptimiser):
 
         # Weight changes taken from the tutorial (no explanation is given for the change)
         # these weights are used for the rank mu update only
-        # They allow to keep positive definiteness according to https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/purecma.py#L419
+        # They allow to keep positive definiteness according to
+        # https://github.com/CMA-ES/pycma/blob/3abf6900e04d0619f4bfba989dde9e093fa8e1ba/cma/purecma.py#L419
         temp_weights = [self._W[i] if self._W[i] >= 0
                         else self._W[i] * self._n_parameters / (np.linalg.norm(self._B * zs_bests[i]) ** 2)
                         for i in range(self._population_size)]
@@ -260,10 +261,10 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Add the rank 1 update using the Evolution path
         # Add the rank-mu update
         rank1 = self._c1 * np.outer(self._pc, self._pc)
-        rankMu = self._cmu * np.sum(np.multiply(np.array([np.outer(y, y) for y in ys_bests]).T,
+        rankmu = self._cmu * np.sum(np.multiply(np.array([np.outer(y, y) for y in ys_bests]).T,
                                                 temp_weights).T, 0)
 
-        self._C = (1 + delta_sig * self._c1 - self._c1 - self._cmu * sum(self._W)) * self._C + rank1 + rankMu
+        self._C = (1 + delta_sig * self._c1 - self._c1 - self._cmu * sum(self._W)) * self._C + rank1 + rankmu
 
         # Update of the step size
         # Here we are simply looking at the ratio of the length of the evolution path
