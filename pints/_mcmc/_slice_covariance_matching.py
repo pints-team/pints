@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Slice Sampling - Covariance Adaptive: Covariance Matching
+# Slice Sampling - Covariance Adaptive: Covariance Matching MCMC Method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -15,6 +15,54 @@ import numpy as np
 
 class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
     """
+    Implements Covariance-Adaptive Slice Sampling by Covariance Matching,
+    as described in [1]. This is an adaptive multivariate method which
+    uses additional points, called "crumbs", and rejected proposals to
+    guide the selection of samples.
+
+    It generates samples by sampling uniformly from the volume underneath the
+    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
+    and by definying a Markov chain.
+
+    Sampling follows:
+
+    1. Calculate the pdf (``f(x_0)``) of the current sample (``x_0``).
+    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+       horizontal “slice”: S = {x: y < f(x)}. Note that ``x_0`` is
+       always within S.
+    3. Draw the first crumb (``c_1``) from a Gaussian distribution with
+       mean ``x_0`` and precision matrix ``W_1``.
+    4. Draw a new point (``x_1``) from a Gaussian distribution with mean
+       ``c_1`` and precision matrix ``W_2``.
+
+    New crumbs are drawn until a new proposal is accepted. In particular,
+    after sampling ``k`` crumbs from Gaussian distributions with mean ``x0``
+    and precision matrices (``W_1``, ..., ``W_k``), the distribution for the
+    ``k``th proposal sample is:
+
+    1. ``xk \sim Normal(\bar{c}_k, \Lambda^{-1}_k)
+
+    where:
+
+    2. ``\Lambda^_k = W_1 + ... + W_k``
+    3. ``\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)``
+
+    This method attempts to find the ``k + 1``th crumb precision matrix
+    (``W_{k + 1}``) so that the distribution for the ``k + 1``th proposal
+    point has the same conditional variance as uniform sampling from the slice
+    ``S`` in the direction of the gradient of ``f(x)`` evaluated at the last
+    rejected proposal (``x_k``).
+
+    To avoid floating-point underflow, we implement the suggestion advanced
+    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    (``log f(x)``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) - \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < log f(x)}.
+
+    [1] Thompson, M. and Neal, R.M., 2010. Covariance-adaptive slice sampling.
+    arXiv preprint arXiv:1003.3201.
+
     *Extends:* :class:`SingleChainMCMC`
     """
 
@@ -49,7 +97,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         self._R = None
         self._F = None
 
-        # Unnormalised gradient calculated at rejected proposal
+        # Un-normalised gradient calculated at rejected proposal
         self._G = None
 
         # Normalised gradient calculated at rejected proposal
@@ -61,7 +109,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # Parameter to control variance precision
         self._theta = 1
 
-    # Define function for Cholesky rank one update
+    # Function which calculates Cholesky rank one updates
     def _chud(self, matrix, vector):
         V = np.dot(matrix.transpose(), matrix) + np.outer(vector, vector)
         chol = np.linalg.cholesky(V).transpose()
@@ -112,7 +160,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # Draw second p-variate
         z = np.random.multivariate_normal(mean, cov)
 
-        # Draw sample: x
+        # Draw sample
         self._proposed = c_bar + np.dot(np.linalg.inv(self._R), z)
 
         # Set flag indicating we have created a new proposal. This is used to
@@ -126,6 +174,59 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # Send trial point for checks
         self._ready_for_tell = True
         return np.array(self._proposed, copy=True)
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return np.copy(self._current_log_pdf)
+
+    def current_slice_height(self):
+        """
+        Returns current log_y used to define the current slice.
+        """
+        return self._current_log_y
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Slice Sampling - Covariance-Adaptive: Covariance Matching'
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[sigma_c, theta]``.
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_sigma_c(x[0])
+        self.set_theta(x[1])
+
+    def set_sigma_c(self, sigma_c):
+        """
+        Sets standard deviation of initial crumb.
+        """
+        sigma_c = float(sigma_c)
+        if sigma_c < 0:
+            raise ValueError('Inital crumb standard deviation'
+                             'must be positive.')
+        self._sigma_c = sigma_c
+
+    def set_theta(self, theta):
+        """
+        Sets parameter to control how fast the precision of the
+        proposal distribution increases.
+        """
+        self._theta = float(theta)
+
+    def sigma_c(self):
+        """
+        Returns standard deviation of initial crumb.
+        """
+        return self._sigma_c
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -141,7 +242,6 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         fx = float(fx)
         grad = pints.vector(grad)
-        assert(grad.shape == (self._n_parameters, ))
 
         # If this is the log_pdf of a new point, save the value and use it
         # to check ``f(x_1) >= y``
@@ -163,7 +263,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             self._current_log_pdf = fx
             self._M = fx
 
-            # Define Cholesky upper triangles: F for W_k and R_k for Lambda_k
+            # Define Cholesky upper triangles: F_k for W_k and R_k for Lambda_k
             self._R = self._sigma_c ** (-1) * np.identity(self._n_parameters)
             self._F = self._sigma_c ** (-1) * np.identity(self._n_parameters)
 
@@ -195,7 +295,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             # Return accepted sample
             return np.array(self._proposed, copy=True)
 
-        # If proposal is rejected, we define new covariance matrix for
+        # If proposal is rejected, we a define new covariance matrix for
         # next proposal distribution
         else:
             if self._calculate_fx_u:
@@ -215,7 +315,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             else:
                 self._log_fx_u = fx
 
-                # Calculate kappa
+                # Calculate ``\kappa``
                 kappa = (-2.) * self._delta ** (-2.) * (
                     self._log_fx_u - self._proposed_pdf - self._delta *
                     np.linalg.norm(self._G))
@@ -224,7 +324,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
                 lxu = (0.5 * (np.linalg.norm(self._G) ** 2 / kappa) +
                        self._proposed_pdf)
 
-                # Update M
+                # Update ``M``
                 self._M = max(self._M, lxu)
 
                 # Calculate conditional variance of new distribution
@@ -246,60 +346,9 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
 
                 return None
 
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Slice Sampling - Covariance Adaptive: Covariance Matching'
-
-    def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
-        return True
-
-    def set_sigma_c(self, sigma_c):
+    def theta(self):
         """
-        Sets standard deviation of initial crumb.
+        Returns the parameter used to control how fast the precision of
+        the proposal distribution increases.
         """
-        sigma_c = float(sigma_c)
-        if sigma_c < 0:
-            raise ValueError("""Inital crumb standard deviationn
-                             must be positive.""")
-        self._sigma_c = sigma_c
-
-    def set_theta(self, theta):
-        """
-        Sets parameter to control how fast the precision of the
-        distribution increases.
-        """
-        self._theta = float(theta)
-
-    def get_sigma_c(self):
-        """
-        Returns standard deviation of initial crumb.
-        """
-        return self._sigma_c
-
-    def get_theta(self):
-        """
-        Returns the parameter used to control how fast the precision
-        distribution increases.
-        """
-        return self._sigma_c
-
-    def get_current_slice_height(self):
-        """
-        Returns current log_y used to define the current slice.
-        """
-        return self._current_log_y
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[sigma_c, theta]``.
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_sigma_c(x[0])
-        self.set_theta(x[1])
-
-
+        return self._theta
