@@ -11,6 +11,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import os
 import pints
+import pints.io
 import pints.toy
 import unittest
 import numpy as np
@@ -48,6 +49,77 @@ LOG_FILE = [
     '3     12     0         0         0.5        0:00.0',
     '10    30     0.1       0.1       0.2        0:00.0',
 ]
+
+
+class SingleListSampler(pints.SingleChainMCMC):
+    """
+    Returns predetermined samples from a list.
+    First sample can't be None.
+    """
+
+    def set_chain(self, chain):
+        self._chain = list(chain)
+        self._i = 0
+        self._n = len(self._chain)
+
+    def ask(self):
+        x = self._chain[self._i] if self._i < self._n else None
+        if x is None:
+            x = self._chain[0]
+        return x
+
+    def name(self):
+        return 'SingleListSampler'
+
+    def tell(self, fx):
+        x = self._chain[self._i] if self._i < self._n else None
+        self._i += 1
+        return x
+
+
+class MultiListSampler(pints.MultiChainMCMC):
+    """
+    Returns predetermined samples from a list of chains.
+    Adding a ``None`` in the first list at any point will cause ``None`` to be
+    returned (for all chains) at that iteration.
+    First sample can't be None.
+    """
+
+    def set_chains(self, chains):
+        self._chains = [list(x) for x in chains]
+        self._i = 0
+        self._n = len(self._chains[0])
+
+    def ask(self):
+        x = [chain[self._i] for chain in self._chains]
+        if x[0] is None:
+            x = [chain[0] for chain in self._chains]
+        return x
+
+    def name(self):
+        return 'MultiListSampler'
+
+    def tell(self, fx):
+        x = None
+        if self._i < self._n:
+            x = [chain[self._i] for chain in self._chains]
+            if x[0] is None:
+                x = None
+            self._i += 1
+        return x
+
+
+class SumDistribution(pints.LogPDF):
+    """ Distribution where p(x) = 1 + sum(x) """
+
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
+    def __call__(self, x):
+        return 1 + np.sum(x)
+
+    def n_parameters(self):
+        return self._n_parameters
 
 
 class TestMCMCController(unittest.TestCase):
@@ -540,9 +612,76 @@ class TestMCMCController(unittest.TestCase):
             self.assertIn('Writing evaluations to', text)
             self.assertIn('evals_0.csv', text)
 
-        # Test writing chains and evals to disk (with LogPosterior)
+        # Test writing chains and evals to disk
+        # With a LogPosterior - Single chain method
         mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
         mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_to_file(False)
+
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                cpath = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
+                epath = d.path('evals.csv')
+                p3 = d.path('evals_0.csv')
+                p4 = d.path('evals_1.csv')
+                p5 = d.path('evals_2.csv')
+
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_log_pdf_filename(epath)
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
+                self.assertTrue(os.path.exists(p3))
+                self.assertTrue(os.path.exists(p4))
+                self.assertTrue(os.path.exists(p5))
+
+                # Test chain files contain the correct values
+                import pints.io as io
+                chains2 = np.array(io.load_samples(cpath, nchains))
+                self.assertTrue(np.all(chains1 == chains2))
+
+                # Test eval files contain the correct values
+                evals2 = np.array(io.load_samples(epath, nchains))
+                evals1 = []
+                for chain in chains1:
+                    logpdfs = np.array([self.log_posterior(x) for x in chain])
+                    logpriors = np.array([self.log_prior(x) for x in chain])
+                    loglikelihoods = logpdfs - logpriors
+                    evals = np.array([logpdfs, loglikelihoods, logpriors]).T
+                    evals1.append(evals)
+                evals1 = np.array(evals1)
+                self.assertTrue(np.all(evals1 == evals2))
+
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
+            self.assertIn('Writing evaluations to', text)
+            self.assertIn('evals_0.csv', text)
+
+        # Test writing chains and evals to disk
+        # With a LogPosterior - multi-chain method
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.DifferentialEvolutionMCMC)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
         mcmc.set_log_to_file(False)
@@ -784,6 +923,284 @@ class TestMCMCController(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+
+    def test_output_single_chain_samplers(self):
+        # Tests if single-chain sampler output is stored correctly
+
+        # Run with a given list of chains, return obtained output
+        def run(chains):
+
+            # Filter nones to get expected output
+            expected = np.array(
+                [[x for x in chain if x is not None] for chain in chains])
+
+            # Get initial position
+            x0 = [chain[0] for chain in chains]
+
+            # Create log pdf
+            f = SumDistribution(len(x0[0]))
+
+            # Get expected evaluations
+            exp_evals = np.array(
+                [[[f(x)] for x in chain] for chain in expected])
+
+            # Set up controller
+            nc = len(x0)
+            mcmc = pints.MCMCController(f, nc, x0, method=SingleListSampler)
+            mcmc.set_log_to_screen(False)
+            mcmc.set_max_iterations(len(expected[0]))
+
+            # Pass chains to samplers
+            for i, sampler in enumerate(mcmc.samplers()):
+                sampler.set_chain(chains[i])
+
+            # Run, while logging to disk
+            with TemporaryDirectory() as d:
+                # Store chains
+                chain_path = d.path('chain.csv')
+                mcmc.set_chain_filename(chain_path)
+
+                # Store log pdfs
+                evals_path = d.path('evals.csv')
+                mcmc.set_log_pdf_filename(evals_path)
+
+                # Run
+                obtained = mcmc.run()
+
+                # Load chains and log_pdfs
+                disk_samples = np.array(pints.io.load_samples(chain_path, nc))
+                disk_evals = np.array(pints.io.load_samples(evals_path, nc))
+
+            # Return expected and obtained values
+            return expected, obtained, disk_samples, exp_evals, disk_evals
+
+        # One single-chain sampler, no None objects
+        chains1 = [[[2], [4], [6], [3], [5]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [[[1, 2], [4, 3], [6, 1], [2, 2], [5, 7]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # One single-chain sampler, with None objects
+        chains1 = [[[1], [3], None, [1], None, [5], [2]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [[[1], [3], None, [1], None, [5], None, None, None, [2]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [[[1, 2], [4, 3], None, [6, 1], None, [2, 2], [5, 7]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Multiple single-chain samplers, no None objects
+        chains1 = [
+            [[2], [4], [6], [3], [5]],
+            [[5], [1], [3], [3], [2]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [
+            [[1, 2], [4, 3], [6, 1], [2, 2], [5, 7]],
+            [[4, 3], [1, 1], [3, 5], [1, 4], [4, 7]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Multiple single-chain samplers, None at same index
+        chains1 = [
+            [[2], None, None, [4], [6], None, [3], None, None, [5]],
+            [[5], None, None, [1], [3], None, [3], None, None, [2]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [
+            [[1, 2], None, [4, 3], [6, 1], None, None, None, [2, 2], [5, 7]],
+            [[4, 3], None, [1, 1], [3, 5], None, None, None, [1, 4], [4, 7]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Multiple single-chain samplers, None at different indices
+
+        chains1 = [
+            [[2], None, None, [4], [6], None, [3], None, None, [5]],
+            [[5], None, None, [1], [3], None, [3], None, None, [2]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [
+            [[1, 2], [4, 3], [6, 1], None, None, None, [2, 2], None, [5, 7]],
+            [[4, 3], None, [1, 1], [3, 5], None, None, [1, 4], [4, 7]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+    def test_output_multi_chain_samplers(self):
+        # Tests if multi-chain sampler output is stored correctly
+
+        # Run with a given list of chains, return obtained output
+        def run(chains):
+
+            # Filter nones to get expected output
+            expected = np.array(
+                [[x for x in chain if x is not None] for chain in chains])
+
+            # Get initial positions
+            x0 = [chain[0] for chain in chains]
+
+            # Create log pdf
+            f = SumDistribution(len(x0[0]))
+
+            # Get expected evaluations
+            exp_evals = np.array(
+                [[[f(x)] for x in chain] for chain in expected])
+
+            # Set up controller
+            nc = len(x0)
+            mcmc = pints.MCMCController(f, nc, x0, method=MultiListSampler)
+            mcmc.set_log_to_screen(False)
+            mcmc.set_max_iterations(len(expected[0]))
+
+            # Pass chains to sampler
+            mcmc.sampler().set_chains(chains)
+
+            # Run, while logging to disk
+            with TemporaryDirectory() as d:
+                # Store chains
+                chain_path = d.path('chain.csv')
+                mcmc.set_chain_filename(chain_path)
+
+                # Store log pdfs
+                evals_path = d.path('evals.csv')
+                mcmc.set_log_pdf_filename(evals_path)
+
+                # Run
+                obtained = mcmc.run()
+
+                # Load chains and log_pdfs
+                disk_samples = np.array(pints.io.load_samples(chain_path, nc))
+                disk_evals = np.array(pints.io.load_samples(evals_path, nc))
+
+            # Return expected and obtained values
+            return expected, obtained, disk_samples, exp_evals, disk_evals
+
+        # Test with a single chain, no None objects
+        chains1 = [[[2], [2], [6], [3], [0.5]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        chains1 = [[[1, 2], [2, 4], [3, 6], [8, 8], [1, 2]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Test with three chains, no None objects
+        chains1 = [
+            [[1, 2], [2, 4], [3, 6], [8, 8], [1, 2]],
+            [[2, 3], [3, 5], [4, 7], [9, 8], [3, 2]],
+            [[3, 4], [4, 6], [5, 8], [8, 3], [2, 7]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (3, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (3, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (3, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Test with a single chain, some None objects
+        chains1 = [[[2], None, [2], None, [6], None, None, [3], [0.5]]]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (1, 5, 1))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (1, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+        # Test with two chains, some None objects
+        chains1 = [
+            [[1, 2], [2, 4], None, [3, 6], None, None, [8, 8], None, [1, 2]],
+            [[3, 4], [4, 6], None, [5, 8], None, None, [8, 3], None, [2, 7]],
+        ]
+        chains1, chains2, chains3, log_pdfs1, log_pdfs2 = run(chains1)
+        self.assertEqual(chains2.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains2))
+        self.assertEqual(chains3.shape, (2, 5, 2))
+        self.assertTrue(np.all(chains1 == chains3))
+        self.assertEqual(log_pdfs2.shape, (2, 5, 1))
+        self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
 
 if __name__ == '__main__':

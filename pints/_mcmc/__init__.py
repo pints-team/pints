@@ -228,9 +228,10 @@ class MultiChainMCMC(MCMCSampler):
         Performs an iteration of the MCMC algorithm, using the evaluations
         ``fxs`` of the points previously specified by ``ask``.
 
-        Returns either the next sample in the chain, or ``None`` to indicate
-        that no new sample should be added to the chain (this is used to
-        implement methods that require multiple evaluations per iteration).
+        Returns either a list of new samples, or ``None`` to indicate that no
+        new samples should be added to the chains at this iteration (this is
+        used to implement methods that require multiple evaluations per
+        iteration).
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
@@ -524,9 +525,19 @@ class MCMCController(object):
                 sampler._log_init(logger)
             logger.add_time('Time m:s')
 
-        # Create chains
-        # TODO Pre-allocate?
-        chains = []
+        # Create chains (pre-allocate)
+        samples = np.zeros(
+            (self._chains, self._max_iterations, self._n_parameters))
+
+        # Some samplers need intermediate steps, where None is returned instead
+        # of a sample. Samplers can run asynchronously, so that one returns
+        # None while another returns a sample.
+        # To deal with this, we maintain a list of 'active' samplers that have
+        # not reach `max_iterations` yet, and store the number of samples we
+        # have in each chain.
+        if self._single_chain:
+            active = list(range(self._chains))
+            n_samples = [0] * self._chains
 
         # Start sampling
         timer = pints.Timer()
@@ -543,7 +554,7 @@ class MCMCController(object):
 
             # Get points
             if self._single_chain:
-                xs = [sampler.ask() for sampler in self._samplers]
+                xs = [self._samplers[i].ask() for i in active]
             else:
                 xs = self._samplers[0].ask()
 
@@ -554,18 +565,67 @@ class MCMCController(object):
             evaluations += len(fxs)
 
             # Update chains
-            intermediate_step = False
             if self._single_chain:
-                samples = np.array([
-                    s.tell(fxs[i]) for i, s in enumerate(self._samplers)])
 
-                none_found = [x is None for x in samples]
-                if any(none_found):
-                    assert(all(none_found))     # Can't mix None w. samples
-                    intermediate_step = True
+                # Check and update the individual chains
+                fxs_iterator = iter(fxs)
+                for i in list(active):  # (active may be modified)
+                    fx = next(fxs_iterator)
+                    y = self._samplers[i].tell(fx)
+                    if y is not None:
+                        samples[i][n_samples[i]] = y
+                        n_samples[i] += 1
+
+                        # Stop adding samples if maximum number reached
+                        if n_samples[i] == self._max_iterations:
+                            active.remove(i)
+
+                        # Write evaluations to disk
+                        if self._evaluation_files:
+                            # Check if accepted, if so, update log_pdf and
+                            # prior to be logged
+                            accepted = np.all(y == xs[i])
+                            if accepted:
+                                current_logpdf[i] = fx
+                                if prior is not None:
+                                    current_prior[i] = prior(y)
+
+                            # Log most recently accepted samples values
+                            eval_loggers[i].log(current_logpdf[i])
+                            if prior is not None:
+                                eval_loggers[i].log(
+                                    current_logpdf[i] - current_prior[i])
+                                eval_loggers[i].log(current_prior[i])
+
+                # This is an intermediate step until the slowest sampler has
+                # produced a new sample since the last `iteration`.
+                intermediate_step = min(n_samples) <= iteration
+
             else:
-                samples = self._samplers[0].tell(fxs)
-                intermediate_step = samples is None
+
+                # Get all chains samples at once
+                ys = self._samplers[0].tell(fxs)
+                intermediate_step = ys is None
+                if not intermediate_step:
+                    samples[:, iteration] = ys
+
+                    # Write evaluations to disk
+                    if self._evaluation_files:
+                        for i, eval_logger in enumerate(eval_loggers):
+                            # Check if accepted, if so, update log_pdf and
+                            # prior to be logged
+                            accepted = np.all(xs[i] == ys[i])
+                            if accepted:
+                                current_logpdf[i] = fxs[i]
+                                if prior is not None:
+                                    current_prior[i] = prior(ys[i])
+
+                            # Log most recently accepted samples values
+                            eval_logger.log(current_logpdf[i])
+                            if prior is not None:
+                                eval_logger.log(
+                                    current_logpdf[i] - current_prior[i])
+                                eval_logger.log(current_prior[i])
 
             # If no new samples were added, then no MCMC iteration was
             # performed, and so the iteration count shouldn't be updated,
@@ -574,24 +634,9 @@ class MCMCController(object):
             if intermediate_step:
                 continue
 
-            # Add new samples to the chains
-            chains.append(samples)
-
             # Write samples to disk
-            for k, chain_logger in enumerate(chain_loggers):
-                chain_logger.log(*samples[k])
-
-            # Write evaluations to disk
-            if self._evaluation_files:
-                for k, eval_logger in enumerate(eval_loggers):
-                    if np.all(xs[k] == samples[k]):
-                        current_logpdf[k] = fxs[k]
-                        if prior is not None:
-                            current_prior[k] = prior(xs[k])
-                    eval_logger.log(current_logpdf[k])
-                    if prior is not None:
-                        eval_logger.log(current_logpdf[k] - current_prior[k])
-                        eval_logger.log(current_prior[k])
+            for i, chain_logger in enumerate(chain_loggers):
+                chain_logger.log(*samples[i][iteration])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -611,18 +656,12 @@ class MCMCController(object):
             # Update iteration count
             iteration += 1
 
-            #
-            # Check stopping criteria
-            #
-
-            # Maximum number of iterations
+            # Check requested number of samples
             if (self._max_iterations is not None and
                     iteration >= self._max_iterations):
                 running = False
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
-
-            # TODO Add more stopping criteria
 
         # Log final state and show halt message
         if logging:
@@ -633,13 +672,8 @@ class MCMCController(object):
             if self._log_to_screen:
                 print(halt_message)
 
-        # Swap axes in chains, to get indices
-        #  [chain, iteration, parameter]
-        chains = np.array(chains)
-        chains = chains.swapaxes(0, 1)
-
         # Return generated chains
-        return chains
+        return samples
 
     def sampler(self):
         """
