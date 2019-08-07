@@ -58,15 +58,15 @@ class TestSliceHyperrectangles(unittest.TestCase):
             mcmc.current_slice_height() < mcmc.current_log_pdf())
 
         # Tell() should fail when fx is infinite
-        mcmc = pints.SliceStepoutMCMC(x0)
+        mcmc = pints.SliceHyperrectanglesMCMC(x0)
         mcmc.ask()
         with self.assertRaises(ValueError):
             fx = np.inf
-            mcmc.tell(fx)
+            mcmc.tell((fx, grad))
 
         # Tell() should fail when _ready_for_tell is False
         with self.assertRaises(RuntimeError):
-            mcmc.tell(fx)
+            mcmc.tell((fx, grad))
 
     def test_basic(self):
         # Test basic methods of the class.
@@ -95,6 +95,9 @@ class TestSliceHyperrectangles(unittest.TestCase):
         mcmc.set_hyper_parameters([3, 1])
         self.assertTrue((np.all(mcmc.width() == np.array([3, 3]))))
         self.assertEqual(mcmc.adaptive_shrinking(), True)
+
+        # Test sensitivities
+        self.assertTrue(mcmc.needs_sensitivities())
 
     def test_run(self):
         # Tests complete adaptive and non-adaptive runs.
