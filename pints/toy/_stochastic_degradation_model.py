@@ -39,8 +39,11 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     The initial concentration :math:`A(0) = n_0` can be set using the
     (optional) named constructor arg ``initial_concentration``
 
-    [1] Erban et al., 2007
-    [2] Gillespie, 1976
+    [1] A Practical Guide to Stochastic Simulations of Reaction Diffusion
+    Processes. Erban, Radek (2007). arXiv:0704.1908 [q-bio.SC]
+    [2] A general method for numerically simulating the stochastic time
+    evolution of coupled chemical reactions. Gillespie, Daniel (1976).
+    Journal of Computational Physics
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
