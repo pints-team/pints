@@ -72,14 +72,11 @@ class CMAES(pints.PopulationBasedOptimiser):
             if isinstance(self._boundaries, pints.RectangularBoundaries):
                 upper = self._boundaries.upper()
                 lower = self._boundaries.lower()
-            else:
-                upper = self._boundaries[0]
-                lower = self._boundaries[1]
-            # Manual boundaries? Then pass only xs that are within bounds
-            self.user_xs = [[x[i] % upper[i] + lower[i] for i in range(len(x))] for x in self._xs]
+            self._user_xs = [[x[i] % upper[i] + lower[i] for i in range(len(x))] for x in self._xs]
         else:
             self._user_xs = self._xs
 
+        self._user_xs = np.array(self._user_xs)
         # Set as read-only and return
         self._user_xs.setflags(write=False)
         return self._user_xs
