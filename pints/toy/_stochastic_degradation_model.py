@@ -61,6 +61,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
+        parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
         k = parameters[0]
@@ -104,6 +105,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     def deterministic_mean(self, parameters, times):
         """ Calculates deterministic mean of infinitely many stochastic
         simulations, which follows :math:: n0*exp(-kt)"""
+        parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
         k = parameters[0]
@@ -122,6 +124,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     def deterministic_variance(self, parameters, times):
         """ Calculates deterministic variance of infinitely many stochastic
         simulations, which follows :math:: exp(-2kt)(-1 + exp(kt)) * n0"""
+        parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
         k = parameters[0]
