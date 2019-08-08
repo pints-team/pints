@@ -57,15 +57,18 @@ class TestSliceCovarianceMatching(unittest.TestCase):
             mcmc.current_slice_height() < mcmc.current_log_pdf())
 
         # Tell() should fail when fx is infinite
-        mcmc = pints.SliceStepoutMCMC(x0)
+        mcmc = pints.SliceCovarianceMatchingMCMC(x0)
         mcmc.ask()
         with self.assertRaises(ValueError):
             fx = np.inf
-            mcmc.tell(fx)
+            mcmc.tell((fx, grad))
 
         # Tell() should fail when _ready_for_tell is False
         with self.assertRaises(RuntimeError):
-            mcmc.tell(fx)
+            mcmc.tell((fx, grad))
+
+        # Test sensitivities
+        self.assertTrue(mcmc.needs_sensitivities())
 
     def test_basic(self):
         # Test basic methods of the class.
