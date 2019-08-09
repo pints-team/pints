@@ -150,4 +150,3 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     def suggested_times(self):
         """ See "meth:`pints.toy.ToyModel.suggested_times()`."""
         return np.linspace(0, 100, 101)
-
