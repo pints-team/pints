@@ -28,8 +28,8 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     1. Sample a random value r from a uniform distribution:
     :math:: r ~ unif(0,1)
     2. Calculate the time ($\tau$) until the next single reaction as follows:
-       .. math::
-       $\tau = \frac{1}{A(t)k}*ln{\frac{1}{r}}$ [1]
+    .. math::
+    $\tau = \frac{1}{A(t)k} * ln{\frac{1}{r}} $ [1]
     3. Update the molecule count at time t + .. math:: $\tau$ as:
     .. math:: $A(t + \tau) = A(t)-1$
     4. Return to step (1) until molecule count reaches 0
@@ -121,7 +121,6 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
             raise ValueError('Negative times are not allowed.')
 
         mean = self._n0 * np.exp(-k * times)
-
         return mean
 
     def deterministic_variance(self, parameters, times):
@@ -140,7 +139,6 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
             raise ValueError('Negative times are not allowed.')
 
         variance = np.exp(-2 * k * times) * (-1 + np.exp(k * times)) * self._n0
-
         return variance
 
     def suggested_parameters(self):
