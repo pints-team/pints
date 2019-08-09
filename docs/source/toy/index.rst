@@ -34,4 +34,6 @@ Some toy classes provide extra functionality defined in the
     simple_egg_box_logpdf
     toy_classes
     twisted_gaussian_logpdf
+    stochastic_degradation_model
+
 
