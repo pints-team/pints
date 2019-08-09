@@ -68,9 +68,9 @@ class TestStochasticDegradation(unittest.TestCase):
 
         # Check interpolation function works as expected
         self.assertTrue(model._interp_func(np.random.uniform(model._time[0],
-                                          model._time[1])) == 20)
+                                           model._time[1])) == 20)
         self.assertTrue(model._interp_func(np.random.uniform(model._time[1],
-                                          model._time[2])) == 19)
+                                           model._time[2])) == 19)
 
     def test_errors(self):
         model = pints.toy.StochasticDegradationModel(20)
