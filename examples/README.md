@@ -50,6 +50,7 @@ relevant code.
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Slice Sampling: Covariance Matching MCMC](./sampling-slice-covariance-matching-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
