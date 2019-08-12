@@ -50,6 +50,7 @@ relevant code.
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Slice Sampling: Rank Shrinking MCMC](./sampling-slice-rank-shrinking-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
