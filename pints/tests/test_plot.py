@@ -120,9 +120,8 @@ class TestPlot(unittest.TestCase):
         self.samples3 = mcmc.run()
 
     def test_function(self):
-        """
-        Tests the function function.
-        """
+        # Tests the function function.
+
         # Test it can plot without error
         pints.plot.function(self.log_posterior, self.real_parameters)
 
@@ -132,39 +131,41 @@ class TestPlot(unittest.TestCase):
         # Check invalid lower bound
         self.assertRaisesRegexp(
             ValueError,
-            'Lower bounds must have same number of parameters as function\.',
+            'Lower bounds must have same number of parameters as function',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower[:-1], self.upper
         )
         # Check invalid upper bound
         self.assertRaisesRegexp(
             ValueError,
-            'Upper bounds must have same number of parameters as function\.',
+            'Upper bounds must have same number of parameters as function',
             pints.plot.function, self.log_posterior,
             self.real_parameters, self.lower, self.upper[:-1]
         )
 
         # Check evaluations gives no error
-        pints.plot.function(self.log_posterior, self.real_parameters,
-                            evaluations=5)
+        pints.plot.function(
+            self.log_posterior, self.real_parameters, evaluations=5)
 
         # Check invalid function input
         self.assertRaisesRegexp(
-            ValueError, 'Given function must be pints\.LogPDF or ' +
-            'pints\.ErrorMeasure\.', pints.plot.function, self.real_parameters,
-            self.real_parameters
+            ValueError,
+            r'Given function must be pints\.LogPDF or pints\.ErrorMeasure\.',
+            pints.plot.function, self.real_parameters, self.real_parameters
         )
 
         # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Given point \`x\` must have same number of parameters'
-            + ' as function\.', pints.plot.function, self.log_posterior,
-            list(self.real_parameters) + [0]
+            ValueError,
+            r'Given point \`x\` must have same number of parameters as func',
+            pints.plot.function,
+            self.log_posterior, list(self.real_parameters) + [0]
         )
 
         # Check invalid evaluations input
         self.assertRaisesRegexp(
-            ValueError, 'Number of evaluations must be greater than zero\.',
+            ValueError,
+            r'Number of evaluations must be greater than zero\.',
             pints.plot.function, self.log_posterior,
             self.real_parameters, evaluations=-1
         )
@@ -176,9 +177,8 @@ class TestPlot(unittest.TestCase):
                             self.lower3, self.upper3)
 
     def test_function_between_points(self):
-        """
-        Tests the function_between_points function.
-        """
+        # Tests the function_between_points function.
+
         # Test it can plot without error
         pints.plot.function_between_points(self.log_posterior,
                                            self.real_parameters * 0.8,
@@ -203,8 +203,8 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid function input
         self.assertRaisesRegexp(
-            ValueError, 'Given function must be pints\.LogPDF or ' +
-            'pints\.ErrorMeasure\.', pints.plot.function_between_points,
+            ValueError, r'Given function must be pints\.LogPDF or ' +
+            r'pints\.ErrorMeasure\.', pints.plot.function_between_points,
             self.real_parameters,
             self.real_parameters * 1.2,
             self.real_parameters * 0.8
@@ -212,8 +212,8 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid n_param input
         self.assertRaisesRegexp(
-            ValueError, 'Both points must have the same number of parameters'
-            + ' as the given function\.', pints.plot.function_between_points,
+            ValueError, r'Both points must have the same number of parameters'
+            r' as the given function\.', pints.plot.function_between_points,
             self.log_posterior,
             list(self.real_parameters) + [0],
             self.real_parameters * 0.8
@@ -221,7 +221,7 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid padding input
         self.assertRaisesRegexp(
-            ValueError, 'Padding cannot be negative\.',
+            ValueError, r'Padding cannot be negative\.',
             pints.plot.function_between_points,
             self.log_posterior,
             self.real_parameters * 1.2,
@@ -231,7 +231,7 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid evaluations input
         self.assertRaisesRegexp(
-            ValueError, 'The number of evaluations must be 3 or greater\.',
+            ValueError, r'The number of evaluations must be 3 or greater\.',
             pints.plot.function_between_points,
             self.log_posterior,
             self.real_parameters * 1.2,
@@ -245,9 +245,8 @@ class TestPlot(unittest.TestCase):
                                            self.upper3)
 
     def test_histogram(self):
-        """
-        Tests the histogram function.
-        """
+        # Tests the histogram function.
+
         few_samples = self.samples[:, ::10, :]
         # Test it can plot without error
         fig, axes = pints.plot.histogram(self.samples,
@@ -263,16 +262,18 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid samples input
         self.assertRaisesRegexp(
-            ValueError, 'All samples must have the same number of' +
-            ' parameters\.', pints.plot.histogram,
+            ValueError,
+            r'All samples must have the same number of parameters\.',
+            pints.plot.histogram,
             [self.samples[0, :, :], self.samples[1:, :, :-1]]
         )
 
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
-            ValueError, 'Length of \`ref\_parameters\` must be same as' +
-            ' number of parameters\.', pints.plot.histogram,
-            self.samples, [self.real_parameters[0]]
+            ValueError,
+            r'Length of \`ref\_parameters\` must be same as number of'
+            r' parameters\.',
+            pints.plot.histogram, self.samples, [self.real_parameters[0]]
         )
 
         # Test it works with single parameter
@@ -282,9 +283,8 @@ class TestPlot(unittest.TestCase):
                              ref_parameters=self.real_parameters3)
 
     def test_trace(self):
-        """
-        Tests the trace function.
-        """
+        # Tests the trace function.
+
         few_samples = self.samples[:, ::10, :]
         # Test it can plot without error
         fig, axes = pints.plot.trace(self.samples,
@@ -298,16 +298,16 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid samples input
         self.assertRaisesRegexp(
-            ValueError, 'All samples must have the same number of' +
-            ' parameters\.', pints.plot.trace,
-            [self.samples[0, :, :], self.samples[1:, :, :-1]]
+            ValueError,
+            r'All samples must have the same number of parameters\.',
+            pints.plot.trace, [self.samples[0, :, :], self.samples[1:, :, :-1]]
         )
 
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
-            ValueError, 'Length of \`ref\_parameters\` must be same as' +
-            ' number of parameters\.', pints.plot.trace,
-            self.samples, [self.real_parameters[0]]
+            ValueError,
+            r'Length of \`ref\_parameters\` must be same as number of',
+            pints.plot.trace, self.samples, [self.real_parameters[0]]
         )
 
         # Test it works with single parameter
@@ -317,25 +317,23 @@ class TestPlot(unittest.TestCase):
                          ref_parameters=self.real_parameters3)
 
     def test_autocorrelation(self):
-        """
-        Tests the autocorrelation function.
-        """
+        # Tests the autocorrelation function.
+
         # Test it can plot without error
         pints.plot.autocorrelation(self.samples[0], max_lags=20)
 
         # Check invalid input of samples
         self.assertRaisesRegexp(
-            ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_parameters\)\.', pints.plot.autocorrelation, self.samples
+            ValueError, r'\`samples\` must be of shape \(n_sample\,'
+            r' n_parameters\)\.', pints.plot.autocorrelation, self.samples
         )
 
         # Test it works with single parameter
         pints.plot.autocorrelation(self.samples3[0], max_lags=20)
 
     def test_series(self):
-        """
-        Tests the series function.
-        """
+        # Tests the series function.
+
         few_samples = self.samples[0][::30, :]
         # Test it can plot without error
         pints.plot.series(self.samples[0], self.problem)
@@ -344,15 +342,15 @@ class TestPlot(unittest.TestCase):
         pints.plot.series(few_samples, self.problem, thinning=1)
         # Test invalid thinning input
         self.assertRaisesRegexp(
-            ValueError, 'Thinning rate must be \`None\` or an integer' +
-            ' greater than zero\.', pints.plot.series, few_samples,
+            ValueError, r'Thinning rate must be \`None\` or an integer'
+            r' greater than zero\.', pints.plot.series, few_samples,
             self.problem, thinning=0
         )
 
         # Check invalid input of samples
         self.assertRaisesRegexp(
-            ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_parameters\)\.', pints.plot.series, self.samples, self.problem
+            ValueError, r'\`samples\` must be of shape \(n_sample\,'
+            r' n_parameters\)\.', pints.plot.series, self.samples, self.problem
         )
 
         # Check reference parameters gives no error
@@ -360,8 +358,8 @@ class TestPlot(unittest.TestCase):
                           ref_parameters=self.real_parameters)
         # Check invalid reference parameters input
         self.assertRaisesRegexp(
-            ValueError, 'Length of \`ref_parameters\` must be same as number'
-            ' of parameters\.', pints.plot.series, few_samples, self.problem,
+            ValueError, r'Length of \`ref_parameters\` must be same as number'
+            r' of parameters\.', pints.plot.series, few_samples, self.problem,
             self.real_parameters[:-2]
         )
 
@@ -374,15 +372,15 @@ class TestPlot(unittest.TestCase):
         pints.plot.series(few_samples2, self.problem2, thinning=1)
         # Test invalid thinning input
         self.assertRaisesRegexp(
-            ValueError, 'Thinning rate must be \`None\` or an integer greater'
-            ' than zero\.', pints.plot.series, few_samples2, self.problem2,
-            thinning=0
+            ValueError,
+            r'Thinning rate must be \`None\` or an integer greater than zero',
+            pints.plot.series, few_samples2, self.problem2, thinning=0
         )
 
         # Check invalid input of samples
         self.assertRaisesRegexp(
-            ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_parameters\)\.', pints.plot.series, self.samples2,
+            ValueError, r'\`samples\` must be of shape \(n_sample\,'
+            r' n_parameters\)\.', pints.plot.series, self.samples2,
             self.problem2
         )
 
@@ -391,15 +389,16 @@ class TestPlot(unittest.TestCase):
                           ref_parameters=self.real_parameters2)
         # Check invalid reference parameters input
         self.assertRaisesRegexp(
-            ValueError, 'Length of \`ref_parameters\` must be same as number'
-            ' of parameters\.', pints.plot.series, few_samples2, self.problem2,
+            ValueError,
+            r'Length of \`ref_parameters\` must be same as number of'
+            r' parameters\.',
+            pints.plot.series, few_samples2, self.problem2,
             self.real_parameters2[:-2]
         )
 
     def test_pairwise(self):
-        """
-        Tests the pairwise function.
-        """
+        # Tests the pairwise function.
+
         few_samples = self.samples[0][::30, :]
         # Test it can plot without error
         pints.plot.pairwise(self.samples[0],
@@ -415,7 +414,7 @@ class TestPlot(unittest.TestCase):
 
         # Check kde and heatmap error
         self.assertRaisesRegexp(
-            ValueError, 'Cannot use \`kde\` and \`heatmap\` together\.',
+            ValueError, r'Cannot use \`kde\` and \`heatmap\` together\.',
             pints.plot.pairwise, self.samples,
             kde=True, heatmap=True
         )
@@ -431,14 +430,14 @@ class TestPlot(unittest.TestCase):
 
         # Check invalid input of samples
         self.assertRaisesRegexp(
-            ValueError, '\`samples\` must be of shape \(n_sample\,'
-            ' n_parameters\)\.', pints.plot.pairwise, self.samples
+            ValueError, r'\`samples\` must be of shape \(n_sample\,'
+            r' n_parameters\)\.', pints.plot.pairwise, self.samples
         )
 
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
-            ValueError, 'Length of \`ref_parameters\` must be same as number'
-            ' of parameters\.', pints.plot.pairwise,
+            ValueError, r'Length of \`ref_parameters\` must be same as number'
+            r' of parameters\.', pints.plot.pairwise,
             few_samples, ref_parameters=[self.real_parameters[0]]
         )
 
@@ -446,7 +445,7 @@ class TestPlot(unittest.TestCase):
         few_samples3 = self.samples3[0][::30, :]
         # Check this is invalid
         self.assertRaisesRegexp(
-            ValueError, 'Number of parameters must be larger than 2\.',
+            ValueError, r'Number of parameters must be larger than 2\.',
             pints.plot.pairwise, few_samples3
         )
 
