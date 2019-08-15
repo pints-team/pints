@@ -186,7 +186,7 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 ### Using Maths in documentation
 
-LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings::
+LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings:
 
     r"""
         Defines a :math:`\gamma` (log) prior with given shape parameter ``a`` 
