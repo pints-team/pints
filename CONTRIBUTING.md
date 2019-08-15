@@ -184,6 +184,21 @@ In addition, we write a (very) small bit of documentation in separate reStructur
 
 Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs` can be converted to HTML, PDF, and other formats. In particular, we use it to generate the documentation on http://pints.readthedocs.io/
 
+### Using Maths in documentation
+
+LaTeX expressions can be embedded in docstrings, using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings::
+
+    r"""
+        Defines a :math:`\gamma` (log) prior with given shape parameter ``a`` 
+        and rate parameter ``b``, with pdf
+
+        .. math::
+            f(x|a,b)=\frac{b^a x^{a-1} e^{-bx}}{\mathrm{\Gamma}(a)}
+    
+    """
+    
+**Note**: When using maths in docstrings, it's best to define the string as a *raw string*, i.e. by writing ```r""" your stuff here """```. See [https://github.com/pints-team/pints/issues/735].
+
 ### Building the documentation
 
 To test and debug the documentation, it's best to build it locally. To do this, make sure you have the relevant dependencies installed (see [installation](#installation)), navigate to your pints directory in a console, and then type:
