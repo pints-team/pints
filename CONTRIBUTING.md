@@ -186,7 +186,7 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 ### Using Maths in documentation
 
-LaTeX expressions can be embedded in docstrings, using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings::
+LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings::
 
     r"""
         Defines a :math:`\gamma` (log) prior with given shape parameter ``a`` 
@@ -197,7 +197,7 @@ LaTeX expressions can be embedded in docstrings, using the syntax ```:math:`expr
     
     """
     
-**Note**: When using maths in docstrings, it's best to define the string as a *raw string*, i.e. by writing ```r""" your stuff here """```. See [https://github.com/pints-team/pints/issues/735].
+Note that when using maths, it is best to define the docstring in a *raw string*, i.e. by writing ```r""" your stuff here """```. This will allow you to write e.g. `1 + \alpha` instead of `1 + \\alpha` and will stop flake8 from complaining about invalid escape sequences. See https://github.com/pints-team/pints/issues/735.
 
 ### Building the documentation
 
