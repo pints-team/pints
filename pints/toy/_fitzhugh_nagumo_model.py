@@ -18,7 +18,7 @@ from . import ToyModel
 
 class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     r"""
-    Fitzhugh Nagumo model of action potential.
+    Fitzhugh Nagumo model of action potential [1].
 
     Has two states, and three phenomenological parameters: ``a`` , ``b``,
     ``c``. All states are visible
@@ -35,23 +35,34 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     The RHS, jacobian and change in RHS with the parameters are given by
 
     .. math::
-        \mathbf{f}(\mathbf{y},\mathbf{p},t) &= \left[\begin{matrix}
-                    c \left(R - V^{3}/3+V\right)\\
-                    - \frac{1}{c} \\left(R b + V - a\right)\end{matrix}
-                    \right]\\
+        \begin{align}
+        \mathbf{f}(\mathbf{y},\mathbf{p},t) &= 
+            \left[\begin{matrix}
+                c \left(R - V^{3}/3+V\right)\\
+                - \frac{1}{c} \left(R b + V - a\right)
+            \end{matrix}\right]\\
         \frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
-        \left[\begin{matrix} c \left(1- V^{2}\right) & c \\
-                    - \frac{1}{c} & - \frac{b}{c}\end{matrix}\right] \\
+            \left[\begin{matrix}
+                c \left(1- V^{2}\right) & c \\
+                - \frac{1}{c} & - \frac{b}{c}
+            \end{matrix}\right] \\
         \frac{\partial \mathbf{f}}{\partial \mathbf{p}} &=
-                        \left[\begin{matrix}0 & 0 & R - V^{3}/3 + V\\
-                        \frac{1}{c} & - \frac{R}{c} &
-                        \frac{1}{c^{2}} \left(R b + V - a\right)
-                        \end{matrix}\right]
-
+            \left[\begin{matrix}
+                0 & 0 & R - V^{3}/3 + V\\
+                \frac{1}{c} & - \frac{R}{c} &
+                    \frac{1}{c^{2}} \left(R b + V - a\right)
+            \end{matrix}\right]
+        \end{align}
+        
     Arguments:
 
     ``y0``
         The system's initial state
+        
+    References:
+    
+    [1] A kinetic model of the conductance changes in nerve membrane
+    Fitzhugh (1961) Journal of Cellular and Comparative Physiology
 
     *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
     """
