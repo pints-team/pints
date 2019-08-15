@@ -33,8 +33,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
     .. note::
-        This sampler requires a number of chains $n \ge 3$, and
-        recommends $n \ge 1.5 d$
+        This sampler requires a number of chains :math:`n \ge 3`, and
+        recommends :math:`n \ge 1.5 d`.
 
     *Extends:* :class:`MultiChainMCMC`
 
