@@ -197,7 +197,7 @@ LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`ex
     
     """
     
-Note that when using maths, it is best to define the docstring in a *raw string*, i.e. by writing ```r""" your stuff here """```. This will allow you to write e.g. `1 + \alpha` instead of `1 + \\alpha` and will stop flake8 from complaining about invalid escape sequences. See https://github.com/pints-team/pints/issues/735.
+Note that when using maths, it is best to define the docstring in a *raw string*, i.e. by writing ```r""" your stuff here """```. This will allow you to write e.g. `1 + \tau` instead of `1 + \\tau` and will stop flake8 from complaining about invalid escape sequences. See https://github.com/pints-team/pints/issues/735.
 
 ### Building the documentation
 
