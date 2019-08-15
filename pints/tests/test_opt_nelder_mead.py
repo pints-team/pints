@@ -87,12 +87,12 @@ class TestNelderMead(unittest.TestCase):
 
         # Tell before ask
         self.assertRaisesRegex(
-            Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
+            Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
 
         # Ask called twice
         opt.ask()
         self.assertRaisesRegex(
-            Exception, 'ask\(\) called twice', opt.ask)
+            Exception, r'ask\(\) called twice', opt.ask)
 
     def test_hyper_parameter_interface(self):
         # Tests the hyper parameter interface for this optimiser.
@@ -130,7 +130,7 @@ class TestNelderMead(unittest.TestCase):
         xs = opt.ask()
         fxs = e.evaluate(xs)
         self.assertRaisesRegex(
-            ValueError, 'of length \(1 \+ n_parameters\)', opt.tell, fxs[:-1])
+            ValueError, r'of length \(1 \+ n_parameters\)', opt.tell, fxs[:-1])
 
         # Give wrong intermediate answer
         opt = method(x0)
