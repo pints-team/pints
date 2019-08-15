@@ -21,11 +21,13 @@ class AnnulusLogPDF(ToyLogPDF):
     .. math::
         f(x|r_0, \sigma) \propto e^{-(|x|-r_0)^2 / {2\sigma^2}}
 
-    where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm.
+    where :math:`x` is a d-dimensional real, and :math:`|x|` is the Euclidean 
+    norm.
 
     This distribution is roughly a one-dimensional Gaussian distribution
-    centred on ``r0``, that is smeared over the surface of a hypersphere of the
-    same radius. In two dimensions, the density looks like a circular annulus.
+    centred on :math:`r0`, that is smeared over the surface of a hypersphere of
+    the same radius. In two dimensions, the density looks like a circular
+    annulus.
 
     Arguments:
 

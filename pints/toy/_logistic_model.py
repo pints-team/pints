@@ -20,7 +20,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
     Logistic model of population growth [1].
 
     .. math::
-        f(t) &= \frac{k}{1+(k/p_0 - 1)*\exp(-r t)} \\
+        f(t) &= \frac{k}{1+(k/p_0 - 1) \exp(-r t)} \\
         \frac{\partial f(t)}{\partial r} &=
                                 \frac{k t (k / p_0 - 1) \exp(-r t)}
                                       {((k/p_0-1) \exp(-r t) + 1)^2} \\
