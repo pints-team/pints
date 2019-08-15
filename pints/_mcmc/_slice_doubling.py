@@ -14,7 +14,7 @@ import numpy as np
 
 
 class SliceDoublingMCMC(pints.SingleChainMCMC):
-    """
+    r"""
     Implements Slice Sampling with Doubling, as described in [1]. This is a
     univariate method, which is applied in a Slice-Sampling-within-Gibbs
     framework to allow MCMC sampling from multivariate models.

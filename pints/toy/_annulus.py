@@ -15,7 +15,7 @@ from . import ToyLogPDF
 
 
 class AnnulusLogPDF(ToyLogPDF):
-    """
+    r"""
     Toy distribution based on a d-dimensional distribution of the form
 
     .. math::

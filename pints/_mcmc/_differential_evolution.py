@@ -14,7 +14,7 @@ import logging
 
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
-    """
+    r"""
     Uses differential evolution MCMC as described in [1] to do posterior
     sampling from the posterior.
 
