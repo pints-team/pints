@@ -21,7 +21,7 @@ class AnnulusLogPDF(ToyLogPDF):
     .. math::
         f(x|r_0, \sigma) \propto e^{-(|x|-r_0)^2 / {2\sigma^2}}
 
-    where :math:`x` is a d-dimensional real, and :math:`|x|` is the Euclidean 
+    where :math:`x` is a d-dimensional real, and :math:`|x|` is the Euclidean
     norm.
 
     This distribution is roughly a one-dimensional Gaussian distribution

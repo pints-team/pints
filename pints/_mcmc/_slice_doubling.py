@@ -93,7 +93,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                {:math:`x_0 >= M` and :math:` x_1 < M`}, then :math:`D = True`
             c. if :math:`x_1 < M`, then :math:`\hat{R} = M`
                else, :math:`\hat{L} = M`
-            d. if :math:`D` and :math:`y >= f(\hat{L})` and 
+            d. if :math:`D` and :math:`y >= f(\hat{L})` and
                :math:`y >= f(\hat{R})`, then reject proposal
         3. If the proposal is not rejected in the previous loop, accept it
 

@@ -36,11 +36,11 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
 
     .. math::
         \begin{align}
-        \mathbf{f}(\mathbf{y},\mathbf{p},t) &= 
+        \mathbf{f}(\mathbf{y},\mathbf{p},t) &=
             \left[\begin{matrix}
-                c \left(R - V^{3}/3+V\right)\\
+                c \left(R - V^{3}/3+V\right) \\
                 - \frac{1}{c} \left(R b + V - a\right)
-            \end{matrix}\right]\\
+            \end{matrix}\right] \\
         \frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
             \left[\begin{matrix}
                 c \left(1- V^{2}\right) & c \\
@@ -53,14 +53,14 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
                     \frac{1}{c^{2}} \left(R b + V - a\right)
             \end{matrix}\right]
         \end{align}
-        
+
     Arguments:
 
     ``y0``
         The system's initial state
-        
+
     References:
-    
+
     [1] A kinetic model of the conductance changes in nerve membrane
     Fitzhugh (1961) Journal of Cellular and Comparative Physiology
 
