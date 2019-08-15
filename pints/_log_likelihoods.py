@@ -89,7 +89,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
 
     and
 
-    ..math::
+    .. math::
         \epsilon_i = x_i - f_i(\theta)
 
     and
