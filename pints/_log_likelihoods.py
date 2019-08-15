@@ -30,10 +30,10 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         \epsilon_i = x_i - f_i(\theta)
 
     and 
-    
+
     .. math::
         \sigma' = \sigma \sqrt{1-\rho^2}
-        
+
     .
 
     Arguments:
