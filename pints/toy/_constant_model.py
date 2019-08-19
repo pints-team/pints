@@ -13,7 +13,7 @@ import pints
 
 
 class ConstantModel(pints.ForwardModelS1):
-    """
+    r"""
     Toy model that's constant over time, linear over the parameters, mostly
     useful for unit testing.
 
@@ -29,8 +29,8 @@ class ConstantModel(pints.ForwardModelS1):
 
     .. math::
 
-        \\frac{\partial{f_i(t)}}{dp_j} =
-            \\begin{cases} 1, i = j\\\\0, i \\neq j \end{cases}
+        \frac{\partial{f_i(t)}}{dp_j} =
+            \begin{cases} 1, i = j\\0, i \neq j \end{cases}
 
     Arguments:
 
