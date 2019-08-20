@@ -32,6 +32,8 @@ _(Left)_ A noisy experimental time series and a computational forward model.
 _(Right)_ Example code for an optimisation problem.
 The full code can be [viewed here](examples/readme-example.ipynb) but a friendlier, more elaborate, introduction can be found on the [examples page](examples/README.md).
 
+A graphical overview of the methods included in PINTS can be [viewed here](https://pints-team.github.io/pints-methods-overview/).
+
 ### Examples and documentation
 
 Pints comes with a number of [detailed examples](examples/README.md), hosted here on github.
