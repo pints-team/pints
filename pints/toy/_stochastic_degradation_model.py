@@ -29,14 +29,14 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     1. Sample a random value r from a uniform distribution:
     .. math::
 
-        \\r ~ unif(0,1) \\
+        \\r ~ unif(0,1) \\\\
 
     2. Calculate the time ($\tau$) until the next single reaction as follows:
     .. math::
 
         \\tau &= \\frac{1}{A(t)k} * ln{\frac{1}{r}} [1] \\\\
 
-    3. Update the molecule count at time t + .. math:: \\tau as:
+    3. Update the molecule count at time t + :math:: \\tau as:
     .. math::
 
         \\A(t + \\tau) = A(t)-1 \\\\
