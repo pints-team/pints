@@ -21,15 +21,24 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     Stochastic degradation model of a single chemical reaction starting from
     an initial concentration :math:: n0 and degrading to 0 according to the
     following model:
-    .. math:: A \\rightarrow{k} 0 [1] \\\\
+    .. math::
+
+        A \\rightarrow{k} 0 [1] \\\\
 
     The model is simulated according to the Gillespie algorithm [2]:
     1. Sample a random value r from a uniform distribution:
-    :math:: \\r ~ unif(0,1) \\
+    .. math:: \\r ~ unif(0,1) \\
+
     2. Calculate the time ($\tau$) until the next single reaction as follows:
-    :math:: \\tau &= \\frac{1}{A(t)k} * ln{\frac{1}{r}} [1] \\\\
+    .. math::
+
+        \\tau &= \\frac{1}{A(t)k} * ln{\frac{1}{r}} [1] \\\\
+
     3. Update the molecule count at time t + .. math:: \\tau as:
-    :math:: \\A(t + \\tau) = A(t)-1 \\\\
+    .. math::
+
+        \\A(t + \\tau) = A(t)-1 \\\\
+
     4. Return to step (1) until molecule count reaches 0
 
     Has one parameter: Rate constant :math:`k`.
