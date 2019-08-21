@@ -27,7 +27,9 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
     The model is simulated according to the Gillespie algorithm [2]:
     1. Sample a random value r from a uniform distribution:
-    .. math:: \\r ~ unif(0,1) \\
+    .. math::
+
+        \\r ~ unif(0,1) \\
 
     2. Calculate the time ($\tau$) until the next single reaction as follows:
     .. math::
