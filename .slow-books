@@ -1,4 +1,5 @@
 # Slow notebooks
+automatic-differentiation-using-autograd.ipynb
 sampling-ellipsoidal-nested-rejection-sampling.ipynb
 sampling-hamiltonian-mcmc.ipynb
 stats-autoregressive-moving-average-errors.ipynb
