@@ -98,5 +98,6 @@ relevant code.
 
 ## Miscellaneous
 
+- [Automatic differentiation using autograd](./automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./readme-example.ipynb)
 
