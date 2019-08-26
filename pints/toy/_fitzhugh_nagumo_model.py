@@ -15,6 +15,10 @@ from scipy.integrate import odeint
 
 from . import ToyModel
 
+import autograd.numpy as np
+from autograd.scipy.integrate import odeint
+from autograd.builtins import tuple
+
 
 class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     """
@@ -107,17 +111,18 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
 
         """
 
-        a, b, c = [float(x) for x in parameters]
+        a, b, c = parameters #[float(x) for x in parameters]
 
-        times = np.asarray(times)
-        if np.any(times < 0):
-            raise ValueError('Negative times are not allowed.')
+        #times = np.asarray(times)
+        #if np.any(times < 0):
+        #    raise ValueError('Negative times are not allowed.')
 
         def r(y, t, p):
             V, R = y
+            a, b, c = p
             dV_dt = (V - V**3 / 3 + R) * c
             dR_dt = (V - a + b * R) / -c
-            return dV_dt, dR_dt
+            return np.array([dV_dt, dR_dt])
 
         if sensitivities:
             def jac(y):
@@ -151,12 +156,12 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
 
             y0 = np.zeros(8)
             y0[0:2] = self._y0
-            result = odeint(rhs, y0, times, (parameters,))
+            result = odeint(rhs, y0, times, tuple((parameters,)))
             values = result[:, 0:2]
             dvalues_dp = result[:, 2:].reshape((len(times), 2, 3))
             return values, dvalues_dp
         else:
-            values = odeint(r, self._y0, times, (parameters,))
+            values = odeint(r, self._y0, times, tuple((parameters,)))
             return values
 
     def suggested_parameters(self):

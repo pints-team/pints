@@ -13,6 +13,10 @@ import scipy
 
 from . import ToyModel
 
+import autograd.numpy as np
+from autograd.scipy.integrate import odeint
+from autograd.builtins import tuple
+
 
 class LotkaVolterraModel(pints.ForwardModel, ToyModel):
     """
@@ -76,8 +80,8 @@ class LotkaVolterraModel(pints.ForwardModel, ToyModel):
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
-        return scipy.integrate.odeint(
-            self._rhs, self._y0, times, args=(parameters,))
+        return odeint(
+                self._rhs, self._y0, times, tuple((parameters,)))
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
