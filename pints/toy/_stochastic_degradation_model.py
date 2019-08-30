@@ -112,7 +112,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
         return values
 
-    def deterministic_mean(self, parameters, times):
+    def mean(self, parameters, times):
         """ Calculates deterministic mean of infinitely many stochastic
         simulations, which follows :math:: n0*exp(-kt)"""
         parameters = np.asarray(parameters)
@@ -130,7 +130,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         mean = self._n0 * np.exp(-k * times)
         return mean
 
-    def deterministic_variance(self, parameters, times):
+    def variance(self, parameters, times):
         """ Calculates deterministic variance of infinitely many stochastic
         simulations, which follows :math:: exp(-2kt)(-1 + exp(kt)) * n0"""
         parameters = np.asarray(parameters)

@@ -72,31 +72,52 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertTrue(model._interp_func(np.random.uniform(model._time[1],
                                            model._time[2])) == 19)
 
+    def test_mean_variance(self):
+        # test mean
+        model = pints.toy.StochasticDegradationModel(10)
+        v_mean = model.mean([1], [5, 10])
+        self.assertEqual(v_mean[0], 10 * np.exp(-5))
+        self.assertEqual(v_mean[1], 10 * np.exp(-10))
+
+        model = pints.toy.StochasticDegradationModel(20)
+        v_mean = model.mean([5], [7.2])
+        self.assertEqual(v_mean[0], 20 * np.exp(-7.2 * 5))
+
+        # test variance
+        model = pints.toy.StochasticDegradationModel(10)
+        v_var = model.variance([1], [5, 10])
+        self.assertEqual(v_var[0], 10 * (np.exp(5) - 1.0) / np.exp(10))
+        self.assertAlmostEqual(v_var[1], 10 * (np.exp(10) - 1.0) / np.exp(20))
+
+        model = pints.toy.StochasticDegradationModel(20)
+        v_var = model.variance([2.0], [2.0])
+        self.assertAlmostEqual(v_var[0], 20 * (np.exp(4) - 1.0) / np.exp(8))
+
     def test_errors(self):
         model = pints.toy.StochasticDegradationModel(20)
         # parameters, times cannot be negative
         times = np.linspace(0, 100, 101)
         parameters = [-0.1]
         self.assertRaises(ValueError, model.simulate, parameters, times)
-        self.assertRaises(ValueError, model.deterministic_mean, parameters,
+        self.assertRaises(ValueError, model.mean, parameters,
                           times)
-        self.assertRaises(ValueError, model.deterministic_variance, parameters,
+        self.assertRaises(ValueError, model.variance, parameters,
                           times)
 
         times_2 = np.linspace(-10, 10, 21)
         parameters_2 = [0.1]
         self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
-        self.assertRaises(ValueError, model.deterministic_mean, parameters_2,
+        self.assertRaises(ValueError, model.mean, parameters_2,
                           times_2)
-        self.assertRaises(ValueError, model.deterministic_variance,
+        self.assertRaises(ValueError, model.variance,
                           parameters_2, times_2)
 
         # this model should have 1 parameter
         parameters_3 = [0.1, 1]
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
-        self.assertRaises(ValueError, model.deterministic_mean, parameters_3,
+        self.assertRaises(ValueError, model.mean, parameters_3,
                           times)
-        self.assertRaises(ValueError, model.deterministic_variance,
+        self.assertRaises(ValueError, model.variance,
                           parameters_3, times)
 
         # Initial value can't be negative
