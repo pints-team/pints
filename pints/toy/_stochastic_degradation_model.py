@@ -16,7 +16,6 @@ from . import ToyModel
 
 
 class StochasticDegradationModel(pints.ForwardModel, ToyModel):
-
     """
     Stochastic degradation model of a single chemical reaction starting from
     an initial concentration :math:: n0 and degrading to 0 according to the
@@ -34,7 +33,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     2. Calculate the time ($\tau$) until the next single reaction as follows:
     .. math::
 
-        \\tau &= \\frac{1}{A(t)k} * ln{\frac{1}{r}} [1] \\\\
+        \\tau &= \\frac{1}{A(t)k} * ln{\\frac{1}{r}} [1] \\\\
 
     3. Update the molecule count at time t + :math:: \\tau as:
     .. math::
@@ -56,7 +55,6 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
-
     def __init__(self, initial_concentration=20):
         super(StochasticDegradationModel, self).__init__()
         self._n0 = float(initial_concentration)
