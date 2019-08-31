@@ -59,10 +59,10 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertTrue(np.all(values[np.where(times < time[1])] == 20))
 
         # Check interpolation function works as expected
-        temp_time = np.array(np.random.uniform(time[0], time[1]))
+        temp_time = np.array([np.random.uniform(time[0], time[1])])
         self.assertTrue(model.interpolate_mol_counts(time, mol_count,
                                                      temp_time)[0] == 20)
-        temp_time = np.array(np.random.uniform(time[1], time[2]))
+        temp_time = np.array([np.random.uniform(time[1], time[2])])
         self.assertTrue(model.interpolate_mol_counts(time, mol_count,
                                                      temp_time)[0] == 19)
 
