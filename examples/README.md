@@ -84,6 +84,7 @@ relevant code.
 - [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
 - [Repressilator model](./toy-model-repressilator.ipynb)
 - [SIR Epidemiology model](./toy-model-sir.ipynb)
+- [Stochastic Degradation model](./toy-model-stochastic-degradation.ipynb)
 
 ### Distributions
 - [Annulus](./toy-distribution-annulus.ipynb)
