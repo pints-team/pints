@@ -12,7 +12,6 @@ import numpy as np
 import pints
 import pints.toy
 from pints.toy import StochasticDegradationModel
-from scipy.interpolate import interp1d
 
 
 class TestStochasticDegradation(unittest.TestCase):
@@ -60,12 +59,12 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertTrue(np.all(values[np.where(times < time[1])] == 20))
 
         # Check interpolation function works as expected
-        temp_time = np.random.uniform(time[0], time[1])
+        temp_time = np.array(np.random.uniform(time[0], time[1]))
         self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     [temp_time])[0] == 20)
-        temp_time = np.random.uniform(time[1], time[2])
+                                                     temp_time)[0] == 20)
+        temp_time = np.array(np.random.uniform(time[1], time[2]))
         self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     [temp_time])[0] == 19)
+                                                     temp_time)[0] == 19)
 
     def test_mean_variance(self):
         # test mean
