@@ -69,8 +69,10 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 1
 
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
+    def simulate_raw(self, parameters):
+        """
+        Returns raw times, mol counts when reactions occur
+        """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
@@ -79,37 +81,53 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         if k <= 0:
             raise ValueError('Rate constant must be positive.')
 
-        times = np.asarray(times)
-        if np.any(times < 0):
-            raise ValueError('Negative times are not allowed.')
-        if self._n0 == 0:
-            return np.zeros(times.shape)
-
         # Initial time and count
         t = 0
         a = self._n0
 
         # Run stochastic degradation algorithm, calculating time until next
         # reaction and decreasing molecule count by 1 at that time
-        self._mol_count = [a]
-        self._time = [t]
+        mol_count = [a]
+        time = [t]
         while a > 0:
             r = np.random.uniform(0, 1)
             t += -np.log(r) / (a * k)
             a = a - 1
-            self._time.append(t)
-            self._mol_count.append(a)
+            time.append(t)
+            mol_count.append(a)
+        return time, mol_count
 
+    def interpolate_mol_counts(self, time, mol_count, output_times):
+        """
+        Takes raw times and inputs and mol counts and outputs interpolated
+        values at output_times
+        """
         # Interpolate as step function, decreasing mol_count by 1 at each
         # reaction time point
-        interp_func = interp1d(self._time, self._mol_count, kind='previous')
+        interp_func = interp1d(time, mol_count, kind='previous')
 
         # Compute molecule count values at given time points using f1
         # at any time beyond the last reaction, molecule count = 0
-        values = interp_func(times[np.where(times <= self._time[-1])])
-        zero_vector = np.zeros(len(times[np.where(times > self._time[-1])]))
+        values = interp_func(output_times[np.where(output_times <= time[-1])])
+        zero_vector = np.zeros(
+            len(output_times[np.where(output_times > time[-1])])
+        )
         values = np.concatenate((values, zero_vector))
+        return values
 
+    def simulate(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulate()`. """
+        times = np.asarray(times)
+        if np.any(times < 0):
+            raise ValueError('Negative times are not allowed.')
+        if self._n0 == 0:
+            return np.zeros(times.shape)
+
+        # run Gillespie
+        time, mol_count = self.simulate_raw(parameters)
+
+        # interpolate
+        values = self.interpolate_mol_counts(time, mol_count, times)
         return values
 
     def mean(self, parameters, times):

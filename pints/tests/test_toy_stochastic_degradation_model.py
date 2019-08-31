@@ -11,16 +11,16 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
+from pints.toy import StochasticDegradationModel
+from scipy.interpolate import interp1d
 
 
 class TestStochasticDegradation(unittest.TestCase):
     """
     Tests if the stochastic degradation (toy) model works.
     """
-
     def test_start_with_zero(self):
         # Test the special case where the initial molecule count is zero
-        from pints.toy import StochasticDegradationModel
         model = StochasticDegradationModel(0)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1]
@@ -47,28 +47,25 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertTrue(parameters > 0)
 
     def test_simulate(self):
-        model = pints.toy.StochasticDegradationModel(20)
-        parameters = [0.1]
         times = np.linspace(0, 100, 101)
-        values = model.simulate(parameters, times)
-
+        model = StochasticDegradationModel(20)
+        time, mol_count = model.simulate_raw([0.1])
+        values = model.interpolate_mol_counts(time, mol_count, times)
+        self.assertTrue(len(time), len(mol_count))
         # Test output of Gillespie algorithm
-        self.assertTrue(np.all(model._mol_count ==
+        self.assertTrue(np.all(mol_count ==
                                np.array(range(20, -1, -1))))
 
-        # Test interpolation function
-        # Check exact time points from stochastic simulation
-        self.assertTrue(
-            np.all(model._interp_func(model._time) == model._mol_count))
-
         # Check simulate function returns expected values
-        self.assertTrue(np.all(values[np.where(times < model._time[1])] == 20))
+        self.assertTrue(np.all(values[np.where(times < time[1])] == 20))
 
         # Check interpolation function works as expected
-        self.assertTrue(model._interp_func(np.random.uniform(model._time[0],
-                                           model._time[1])) == 20)
-        self.assertTrue(model._interp_func(np.random.uniform(model._time[1],
-                                           model._time[2])) == 19)
+        temp_time = np.random.uniform(time[0], time[1])
+        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
+                                                     [temp_time])[0] == 20)
+        temp_time = np.random.uniform(time[1], time[2])
+        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
+                                                     [temp_time])[0] == 19)
 
     def test_mean_variance(self):
         # test mean
