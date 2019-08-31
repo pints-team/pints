@@ -36,7 +36,7 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertEqual(len(values), len(times))
         self.assertEqual(values[0], 20)
         self.assertEqual(values[-1], 0)
-        self.assertTrue(values[1:] <= values[:-1])
+        self.assertTrue(np.all(values[1:] <= values[:-1]))
 
     def test_suggested(self):
         model = pints.toy.StochasticDegradationModel(20)
