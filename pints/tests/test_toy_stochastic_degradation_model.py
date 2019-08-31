@@ -99,26 +99,20 @@ class TestStochasticDegradation(unittest.TestCase):
         times = np.linspace(0, 100, 101)
         parameters = [-0.1]
         self.assertRaises(ValueError, model.simulate, parameters, times)
-        self.assertRaises(ValueError, model.mean, parameters,
-                          times)
-        self.assertRaises(ValueError, model.variance, parameters,
-                          times)
+        self.assertRaises(ValueError, model.mean, parameters, times)
+        self.assertRaises(ValueError, model.variance, parameters, times)
 
         times_2 = np.linspace(-10, 10, 21)
         parameters_2 = [0.1]
         self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
-        self.assertRaises(ValueError, model.mean, parameters_2,
-                          times_2)
-        self.assertRaises(ValueError, model.variance,
-                          parameters_2, times_2)
+        self.assertRaises(ValueError, model.mean, parameters_2, times_2)
+        self.assertRaises(ValueError, model.variance, parameters_2, times_2)
 
         # this model should have 1 parameter
         parameters_3 = [0.1, 1]
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
-        self.assertRaises(ValueError, model.mean, parameters_3,
-                          times)
-        self.assertRaises(ValueError, model.variance,
-                          parameters_3, times)
+        self.assertRaises(ValueError, model.mean, parameters_3, times)
+        self.assertRaises(ValueError, model.variance, parameters_3, times)
 
         # Initial value can't be negative
         self.assertRaises(ValueError, pints.toy.StochasticDegradationModel, -1)
