@@ -30,10 +30,8 @@ Some toy classes provide extra functionality defined in the
     parabolic_error
     repressilator_model
     rosenbrock
-    sir_model
     simple_egg_box_logpdf
+    sir_model
+    stochastic_degradation_model
     toy_classes
     twisted_gaussian_logpdf
-    stochastic_degradation_model
-
-

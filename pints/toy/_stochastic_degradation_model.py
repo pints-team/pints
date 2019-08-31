@@ -91,23 +91,23 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
         # Run stochastic degradation algorithm, calculating time until next
         # reaction and decreasing molecule count by 1 at that time
-        mol_count = [a]
-        time = [t]
+        self._mol_count = [a]
+        self._time = [t]
         while a > 0:
             r = np.random.uniform(0, 1)
             t += -np.log(r) / (a * k)
             a = a - 1
-            time.append(t)
-            mol_count.append(a)
+            self._time.append(t)
+            self._mol_count.append(a)
 
         # Interpolate as step function, decreasing mol_count by 1 at each
         # reaction time point
-        interp_func = interp1d(time, mol_count, kind='previous')
+        interp_func = interp1d(self._time, self._mol_count, kind='previous')
 
         # Compute molecule count values at given time points using f1
         # at any time beyond the last reaction, molecule count = 0
-        values = interp_func(times[np.where(times <= time[-1])])
-        zero_vector = np.zeros(len(times[np.where(times > time[-1])]))
+        values = interp_func(times[np.where(times <= self._time[-1])])
+        zero_vector = np.zeros(len(times[np.where(times > self._time[-1])]))
         values = np.concatenate((values, zero_vector))
 
         return values
