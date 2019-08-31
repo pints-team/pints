@@ -16,54 +16,54 @@ from . import ToyModel
 
 
 class StochasticDegradationModel(pints.ForwardModel, ToyModel):
-    """
+    r"""
     Stochastic degradation model of a single chemical reaction starting from
-    an initial concentration :math:: n0 and degrading to 0 according to the
-    following model:
+    an initial molecule count :math:`A(0)` and degrading to 0 with a fixed rate
+    :math:`k`:
+
     .. math::
+        A \xrightarrow{k} 0
 
-        A \\rightarrow{k} 0 [1] \\\\
+    Simulations are performed using the Gillespie algorithm [1, 2]:
 
-    The model is simulated according to the Gillespie algorithm [2]:
-    1. Sample a random value r from a uniform distribution:
+    1. Sample a random value :math:`r` from a uniform distribution
+
     .. math::
+        r \sim U(0,1)
 
-        \\r ~ unif(0,1) \\\\
+    2. Calculate the time :math:`\tau` until the next single reaction as
 
-    2. Calculate the time ($\tau$) until the next single reaction as follows:
     .. math::
+        \tau = \frac{-\ln(r)}{A(t) k}
 
-        \\tau &= \\frac{1}{A(t)k} * ln{\\frac{1}{r}} [1] \\\\
+    3. Update the molecule count :math:`A` at time :math:`t + \tau` as:
 
-    3. Update the molecule count at time t + :math:: \\tau as:
     .. math::
+        A(t + \tau) = A(t) - 1
 
-        \\A(t + \\tau) = A(t)-1 \\\\
+    4. Return to step (1) until the molecule count reaches 0
 
-    4. Return to step (1) until molecule count reaches 0
+    The model has one parameter, the rate constant :math:`k`.
 
-    Has one parameter: Rate constant :math:`k`.
-    :math:`r` is a random variable, which is part of the stochastic model
-    The initial concentration :math:`A(0) = n_0` can be set using the
-    (optional) named constructor arg ``initial_concentration``
+    The initial molecule count :math:`A(0)` can be set using the optional
+    constructor argument ``initial_molecule_count``
 
     [1] A Practical Guide to Stochastic Simulations of Reaction Diffusion
-    Processes. Erban, Radek (2007). arXiv:0704.1908 [q-bio.SC]
+    Processes. Erban, Chapman, Maini (2007). arXiv:0704.1908v2 [q-bio.SC]
+    https://arxiv.org/abs/0704.1908
+
     [2] A general method for numerically simulating the stochastic time
-    evolution of coupled chemical reactions. Gillespie, Daniel (1976).
+    evolution of coupled chemical reactions. Gillespie (1976).
     Journal of Computational Physics
+    https://doi.org/10.1016/0021-9991(76)90041-3
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
-    def __init__(self, initial_concentration=20):
+    def __init__(self, initial_molecule_count=20):
         super(StochasticDegradationModel, self).__init__()
-        self._n0 = float(initial_concentration)
+        self._n0 = float(initial_molecule_count)
         if self._n0 < 0:
-            raise ValueError('Initial concentration cannot be negative.')
-
-        self._interp_func = None
-        self._mol_count = []
-        self._time = []
+            raise ValueError('Initial molecule count cannot be negative.')
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
@@ -85,36 +85,38 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         if self._n0 == 0:
             return np.zeros(times.shape)
 
+        # Initial time and count
         t = 0
         a = self._n0
-        self._mol_count = [a]
-        self._time = [t]
 
         # Run stochastic degradation algorithm, calculating time until next
         # reaction and decreasing concentration by 1 at that time
+        mol_count = [a]
+        time = [t]
         while a > 0:
             r = np.random.uniform(0, 1)
-            t += (1 / (a * k)) * np.log(1 / r)
-            self._time.append(t)
+            t += -np.log(r) / (a * k)
             a = a - 1
-            self._mol_count.append(a)
+            time.append(t)
+            mol_count.append(a)
 
         # Interpolate as step function, decreasing mol_count by 1 at each
         # reaction time point
-        self._interp_func = interp1d(self._time, self._mol_count,
-                                     kind='previous')
+        interp_func = interp1d(time, mol_count, kind='previous')
 
         # Compute concentration values at given time points using f1
         # at any time beyond the last reaction, concentration = 0
-        values = self._interp_func(times[np.where(times <= max(self._time))])
-        zero_vector = np.zeros(len(times[np.where(times > max(self._time))]))
+        values = interp_func(times[np.where(times <= time[-1])])
+        zero_vector = np.zeros(len(times[np.where(times > time[-1])]))
         values = np.concatenate((values, zero_vector))
 
         return values
 
     def mean(self, parameters, times):
-        """ Calculates deterministic mean of infinitely many stochastic
-        simulations, which follows :math:: n0*exp(-kt)"""
+        r"""
+        Returns the deterministic mean of infinitely many stochastic
+        simulations, which follows :math:`A(0) \exp(-kt)`.
+        """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
@@ -131,8 +133,10 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
         return mean
 
     def variance(self, parameters, times):
-        """ Calculates deterministic variance of infinitely many stochastic
-        simulations, which follows :math:: exp(-2kt)(-1 + exp(kt)) * n0"""
+        r"""
+        Returns the deterministic variance of infinitely many stochastic
+        simulations, which follows :math:`\exp(-2kt)(-1 + \exp(kt))A(0)`.
+        """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
             raise ValueError('This model should have only 1 parameter.')
