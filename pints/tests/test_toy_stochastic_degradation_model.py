@@ -19,7 +19,7 @@ class TestStochasticDegradation(unittest.TestCase):
     """
 
     def test_start_with_zero(self):
-        # Test the special case where the initial concentration is zero
+        # Test the special case where the initial molecule count is zero
         from pints.toy import StochasticDegradationModel
         model = StochasticDegradationModel(0)
         times = [0, 1, 2, 100, 1000]
@@ -60,8 +60,8 @@ class TestStochasticDegradation(unittest.TestCase):
 
         # Test interpolation function
         # Check exact time points from stochastic simulation
-        self.assertTrue(np.all(model._interp_func(model._time) ==
-                               model._mol_count))
+        self.assertTrue(
+            np.all(model._interp_func(model._time) == model._mol_count))
 
         # Check simulate function returns expected values
         self.assertTrue(np.all(values[np.where(times < model._time[1])] == 20))
