@@ -14,7 +14,7 @@ import numpy as np
 
 
 class SliceStepoutMCMC(pints.SingleChainMCMC):
-    r"""
+    """
     Implements Slice Sampling with Stepout, as described in [1]. This is a
     univariate method, which is applied in a Slice-Sampling-within-Gibbs
     framework to allow MCMC sampling from multivariate models.
@@ -25,31 +25,31 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     If the distribution is univariate, sampling follows:
 
-    1. Calculate the PDF (:math:`f(x0)`) of the current sample (:math:`x0`).
-    2. Draw a real value (:math:`y`) uniformly from :math`(0, f(x0))`, defining
-       a horizontal 'slice' :math:`S = {x: y < f (x)}`. Note that :math:`x0`
-       is always within :math:`S`.
-    3. Find an interval (:math:`I = (L, R)`) around :math:`x0` that contains
-       all, or much, of the slice.
-    4. Draw a new point (:math:`x1`) from the part of the slice within this
-       interval.
+    1. Calculate the pdf (``f(x0)``) of the current sample (``x0``).
+    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+       horizontal “slice”: S = {x: y < f (x)}. Note that ``x0`` is
+       always within S.
+    3. Find an interval (``I = (L, R)``) around ``x0`` that contains all,
+       or much, of the slice.
+    4. Draw a new point (``x1``) from the part of the slice
+       within this interval.
 
     If the distribution is multivariate, we apply the univariate algorithm to
     each variable in turn, where the other variables are set at their
     current values.
 
-    This implementation uses the "Stepout" method to estimate the interval
-    :math:`I = (L, R)`, as described in [1] Fig. 3. pp.715 and consists of the
+    This implementation uses the ``Stepout`` method to estimate the interval
+    ``I = (L, R)``, as described in [1] Fig. 3. pp.715 and consists of the
     following steps:
 
-    1. :math:`U \sim uniform(0, 1)`
-    2. :math:`L = x_0 - wU`
-    3. :math:`R = L + w`
-    4. :math:`V \sim uniform(0, 1)`
-    5. :math:`J = floor(mV)`
-    6. :math:`K = (m - 1) - J`
-    7. while :math:`J > 0` and :math:`y < f(L), L = L - w, J = J - 1`
-    8. while :math:`K > 0` and :math:`y < f(R), R = R + w, K = K - 1`
+    1. ``U \sim uniform(0, 1)``
+    2. ``L = x_0 - wU``
+    3. ``R = L + w``
+    4. ``V \sim uniform(0, 1)``
+    5. ``J = floor(mV)``
+    6. ``K = (m - 1) - J``
+    7. while ``J > 0`` and ``y < f(L)``, ``L = L - w`` and ``J = J - 1``
+    8. while ``K > 0`` and ``y < f(R)``, ``R = R + w`` and ``K = K - 1``
 
     Intuitively, the interval ``I`` is estimated by expanding the initial
     interval by a width ``w`` in each direction until both edges fall outside
@@ -57,26 +57,26 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     ``m`` (an integer, which determines the limit of slice size) and
     ``w`` (the estimate of typical slice width) are hyperparameters.
 
-    To sample from the interval :math:`I = (L, R)`, such that the sample
-    ``x`` satisfies :math:`y < f(x)`, we use the "Shrinkage" procedure, which
+    To sample from the interval ``I = (L, R)``, such that the sample
+    ``x`` satisfies ``y < f(x)``, we use the ``Shrinkage`` procedure, which
     reduces the size of the interval after rejecting a trial point,
     as defined in [1] Fig. 5. pp.716. This algorithm consists of the
     following steps:
 
-    1. :math:`\bar{L} = L` and :math:`\bar{R} = R`
+    1. ``\bar{L} = L`` and ``\bar{R} = R``
     2. Repeat:
-        a. :math:`U \sim uniform(0, 1)`
-        b. :math:`x_1 = \bar{L} + U (\bar{R} - \bar{L})`
-        c. if :math:`y < f(x_1)` accept :math:`x_1` and exit loop,
+        a. ``U \sim uniform(0, 1)``
+        b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
+        c. if ``y < f(x_1)`` accept ``x_1`` and exit loop,
            else:
-           if :math:`x_1 < x_0`, :math:`\bar{L} = x_1`
-           else :math:`\bar{R} = x_1`
+           if ``x_1 < x_0``, ``\bar{L} = x_1``
+           else ``\bar{R} = x_1``
 
     Intuitively, we uniformly sample a trial point from the interval ``I``,
     and subsequently shrink the interval each time a trial point is rejected.
 
     The following implementation includes the possibility of carrying out
-    "overrelaxed" slice sampling steps, as described in [1] pp. 726.
+    ``overrelaxed`` slice sampling steps, as described in [1] pp. 726
     Overrelaxed steps increase sampling efficiency in highly correlated
     unimodal distributions by suppressing the random walk behaviour of
     single-variable slice sampling: each variable is still updated in turn,
@@ -91,35 +91,33 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     for finding ``I`` to infinity. The algorithm consists of the following
     steps:
 
-    1. :math:`\bar{L} = L, \bar{R} = R, \bar{w} = w, \bar{a} = a`
-    2. while :math:`R - L < 1.1 * w`:
-        a. :math:`M = (\bar{L} + \bar{R})/ 2`
-        b. if :math:`\bar{a} = 0 ` or :math:`y < f(M)`, exit loop
-        c. if :math:`x_0 > M`, :math:`\bar{L} = M`
-           else, :math:`\bar{R} = M`
-        d. :math:`\bar{a} = \bar{a} - 1`
-        e. :math:`\bar{w} = \bar{w} / 2`
-    3. :math:`\hat{L} = \bar{L}, \hat{R} = \bar{R}`
-    4. while :math:`\bar{a} > 0`:
-        a. :math:`\bar{a} = \bar{a} - 1`
-        b. :math:`\bar{w} = \bar{w} \ 2`
-        c. if :math:`y >= f(\hat{L} + \bar{w})`, then
-           :math:`\hat{L} = \hat{L} + \bar{w}`
-        d. if :math:`y >= f(\hat{R} - \bar{w})`, then
-           :math:`\hat{R} = \hat{R} - \bar{W}`
-    5. :math:`x_1 = \hat{L} + \hat{R} - x_0`
-    6. if :math:`x_1 < \bar{L}` or :math:`x_1 >= \bar{R}`
-       or :math:`y >= f(x_1)`, then :math:`x_1 = x_0`
+    1. ``\bar{L} = L``,``\bar{R} = R``,``\bar{w} = w``, ``\bar{a} = a``
+    2. while ``R - L < 1.1 * w``:
+        a. ``M = (\bar{L} + \bar{R}) / 2``
+        b. if ``\bar{a} = 0 `` or ``y < f(M)``, exit loop
+        c. if ``x_0 > M``, ``\bar{L} = M``
+           else, ``\bar{R} = M``
+        d. ``\bar{a} = \bar{a} - 1``
+        e. ``\bar{w} = \bar{w} / 2``
+    3. ``\hat{L} = \bar{L}``, ``\hat{R} = \bar{R}``
+    4. while ``\bar{a} > 0``:
+        a. ``\bar{a} = \bar{a} - 1``
+        b. ``\bar{w} = \bar{w} \ 2``
+        c. if ``y >= f(\hat{L} + \bar{w})``, ``\hat{L} = \hat{L} + \bar{w}``
+        d. if ``y >= f(\hat{R} - \bar{w})``, ``\hat{R} = \hat{R} - \bar{W}``
+    5. ``x_1 = \hat{L} + \hat{R} - x_0``
+    6. if ``x_1 < \bar{L}`` or ``x_1 >= \bar{R}`` or ``y >= f(x_1)``, x_1 = x_0
 
-    The probability of pursuing an overrelaxed step and the number of bisection
-    iterations are hyperparameters.
+    The probability of pursuing an overrelaxed step, ``_prob_overrelaxed`` (0
+    as default), and the number of bisection iterations, ``a``, are
+    hyperparameters.
 
     To avoid floating-point underflow, we implement the suggestion advanced
     in [1] pp.712. We use the log pdf of the un-normalised posterior
-    (:math:`g(x) = log(f(x))`) instead of :math:`f(x)`. In doing so, we use an
-    auxiliary variable :math:`z = log(y) = g(x0) − \epsilon`, where
-    :math:`\epsilon \sim \text{exp}(1)` and define the slice as
-    :math:`S = {x : z < g(x)}`.
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.

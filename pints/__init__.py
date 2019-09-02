@@ -205,7 +205,10 @@ from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
-
+from ._mcmc._slice_covariance_matching import SliceCovarianceMatchingMCMC
+from ._mcmc._slice_generalised_elliptical import SliceGeneralisedEllipticalMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_hyperrectangles import SliceHyperrectanglesMCMC
 
 #
 # Nested samplers

@@ -14,43 +14,43 @@ import numpy as np
 
 
 class SliceDoublingMCMC(pints.SingleChainMCMC):
-    r"""
+    """
     Implements Slice Sampling with Doubling, as described in [1]. This is a
     univariate method, which is applied in a Slice-Sampling-within-Gibbs
     framework to allow MCMC sampling from multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
-    posterior (:math:`f`). It does so by introducing an auxiliary variable
-    (:math:`y`) and by definying a Markov chain.
+    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
+    and by definying a Markov chain.
 
     If the distribution is univariate, sampling follows:
 
-    1. Calculate the pdf (:math:`f(x0)`) of the current sample (:math:`x0`).
-    2. Draw a real value (:math:`y`) uniformly from (0, f(x0)), defining a
-       horizontal "slice": :math:`S = {x: y < f (x)}`. Note that :math:`x0` is
+    1. Calculate the pdf (``f(x0)``) of the current sample (``x0``).
+    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
+       horizontal ``slice``: S = {x: y < f (x)}. Note that ``x0`` is
        always within S.
-    3. Find an interval (:math:`I = (L, R)`) around :math:`x0` that contains
-       all, or much, of the slice.
-    4. Draw a new point (:math:`x1`) from the part of the slice
+    3. Find an interval (``I = (L, R)``) around ``x0`` that contains all,
+       or much, of the slice.
+    4. Draw a new point (``x1``) from the part of the slice
        within this interval.
 
     If the distribution is multivariate, we apply the univariate algorithm to
     each variable in turn, where the other variables are set at their
     current values.
 
-    This implementation uses the "Doubling" method to estimate the interval
-    :math:`I = (L, R)`, as described in [1] Fig. 4. pp.715 and consists of the
+    This implementation uses the ``Doubling`` method to estimate the interval
+    ``I = (L, R)``, as described in [1] Fig. 4. pp.715 and consists of the
     following steps:
 
-    1. :math:`U \sim uniform(0, 1)`
-    2. :math:`L = x_0 - wU`
-    3. :math:`R = L + w`
-    4. :math:`K = p`
-    5. while :math:`K > 0` and :math:`{y < f(L) or y < f(R)}`:
-        a. :math:`V \sim uniform(0, 1)`
-        b. if :math:`V < 0.5`, then :math:`L = L - (R - L)`
-           else, :math:`R = R + (R - L)`
-    6. :math:`K = K - 1`
+    1. ``U \sim uniform(0, 1)``
+    2. ``L = x_0 - wU``
+    3. ``R = L + w``
+    4. ``K = p``
+    5. while ``K > 0`` and ``{y < f(L) or y < f(R)}``:
+        a. ``V \sim uniform(0, 1)``
+        b. if ``V < 0.5``, ``L = L - (R - L)``
+           else, ``R = R + (R - L)``
+    6. ``K = K - 1``
 
     Intuitively, the interval ``I`` is estimated by expanding the initial
     interval by producing a sequence of intervals, each twice the size
@@ -59,20 +59,20 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
     ``p`` (an integer, which determines the limit of slice size) and
     ``w`` (the estimate of typical slice width) are hyperparameters.
 
-    To sample from the interval :math:`I = (L, R)`, such that the sample
-    :math:`x` satisfies :math:`y < f(x)`, we use the "Shrinkage" procedure,
-    which reduces the size of the interval after rejecting a trial point,
+    To sample from the interval ``I = (L, R)``, such that the sample
+    ``x`` satisfies ``y < f(x)``, we use the ``Shrinkage`` procedure, which
+    reduces the size of the interval after rejecting a trial point,
     as defined in [1] Fig. 5. pp.716. This algorithm consists of the
     following steps:
 
-    1. :math:`\bar{L} = L` and :math:`\bar{R} = R`
+    1. ``\bar{L} = L`` and ``\bar{R} = R``
         2. Repeat:
-            a. :math:`U \sim uniform(0, 1)`
-            b. :math:`x_1 = \bar{L} + U (\bar{R} - \bar{L})`
-            c. if :math:`y < f(x_1)` and :math:`Accept(x_1)`, exit loop
+            a. ``U \sim uniform(0, 1)``
+            b. ``x_1 = \bar{L} + U (\bar{R} - \bar{L})``
+            c. if ``y < f(x_1)`` and ``Accept(x_1)``, exit loop
                else:
-               if :math:`x_1 < x_0`, then :math:`\bar{L} = x_1`
-               else :math:`\bar{R} = x_1`
+               if ``x_1 < x_0``, ``\bar{L} = x_1``
+               else ``\bar{R} = x_1``
 
     Intuitively, we uniformly sample a trial point from the interval ``I``,
     and subsequently shrink the interval each time a trial point is rejected.
@@ -86,15 +86,15 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
     checking that none of them has both ends outside the slice. The algorithm
     is described in [1] Fig. 6. pp.717 and it consists of the following steps:
 
-    1. :math:`\hat{L} = L` and :math:`\hat{R} = R` and :math:`D = False`
-        2. while :math:`\hat{R} - \hat{L} > 1.1w`:
-            a. M = :math:`(\hat{L} + \hat{R})/2`
-            b. if {:math:`x_0 < M` and :math:`x_1 >= M`} or
-               {:math:`x_0 >= M` and :math:` x_1 < M`}, then :math:`D = True`
-            c. if :math:`x_1 < M`, then :math:`\hat{R} = M`
-               else, :math:`\hat{L} = M`
-            d. if :math:`D` and :math:`y >= f(\hat{L})` and
-               :math:`y >= f(\hat{R})`, then reject proposal
+    1. ``\hat{L} = L`` and ``\hat{R} = R`` and ``D = False``
+        2. while ``\hat{R} - \hat{L} > 1.1w``:
+            a. M = ``(\hat{L} + \hat{R})/2``
+            b. if {``x_0 < M`` and ``x_1 >= M``} or
+               {``x_0 >= M`` and `` x_1 < M``}, ``D = True``
+            c. if ``x_1 < M``, `\hat{R} = M``
+               else, `\hat{L} = M``
+            d. if ``D`` and ``y >= f(\hat{L})`` and ``y >= f(\hat{R})``,
+               reject proposal
         3. If the proposal is not rejected in the previous loop, accept it
 
     The multiplication by ``1.1`` in the ``while`` condition in Step 2 guards
@@ -105,10 +105,10 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     To avoid floating-point underflow, we implement the suggestion advanced
     in [1] pp.712. We use the log pdf of the un-normalised posterior
-    (:math:`g(x) = log(f(x))`) instead of :math:`f(x)`. In doing so, we use an
-    auxiliary variable :math:`z = log(y) = g(x0) − \epsilon`, where
-    :math:`\epsilon \sim \text{exp}(1)` and define the slice as
-    :math:`S = {x : z < g(x)}`.
+    (``g(x) = log(f(x))``) instead of ``f(x)``. In doing so, we use an
+    auxiliary variable ``z = log(y) = g(x0) − \epsilon``, where
+    ``\epsilon \sim \text{exp}(1)`` and define the slice as
+    S = {x : z < g(x)}.
 
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
@@ -402,7 +402,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         p = int(p)
         if p <= 0:
             raise ValueError('Integer must be positive to limit the'
-                             'interval size to ``(2 ** integer) * width``.')
+                             'interval size to ``(2 ^ integer) * width``.')
         self._p = p
 
     def set_hyper_parameters(self, x):
