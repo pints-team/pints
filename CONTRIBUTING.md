@@ -151,9 +151,9 @@ Guidelines for writing unit tests:
 
 1. Unit tests should test a very small block of code (e.g. a single method)
 1b. When writing tests, start from the simplest case, and then work up
-2. Unit tests _test the public API_ (i.e. they never access private methods or variables). They test _if_ the code does what it promises to do, not _how_ it does it.
+2. Unit tests _test the public API_ (i.e. they never access private methods or variables). They test _if_ the code does what it promises to do, not _how_ it does it. For example, after running `my_object.set_x(4)`, you might check if `my_object.x()` returns 4, but you never check if `my_object._x == 4`: how the object stores its data is its own business.
 3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
-4. If you're testing something stochastic, seed the number generator as part of the test
+4. If you're testing something stochastic, seed the number generator as part of the test, i.e. with `np.random.seed(1)`.
 
 ### Running more tests
 
