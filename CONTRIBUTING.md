@@ -151,9 +151,9 @@ Guidelines for writing unit tests:
 
 1. Unit tests should test a very small block of code (e.g. a single method)
 1b. When writing tests, start from the simplest case, and then work up
-2. Unit tests _test the public API_, that is, they never access private methods or variables, or and should now nothing of how the code accomplishes what it does. They simply test if it does what it says on the tin.
-3. If you're testing something stochastic, seed the number generator as part of the test
-4. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
+2. Unit tests _test the public API_ (i.e. hey never access private methods or variables). They test _if_ the code does what it promises to do, not _how_ it does it.
+3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
+4. If you're testing something stochastic, seed the number generator as part of the test
 
 ### Running more tests
 
