@@ -147,6 +147,14 @@ Every new feature should have its own test. To create ones, have a look at the `
 
 Next, add some simple (and speedy!) tests of your main features. If these run without exceptions that's a good start! Next, check the output of your methods using any of these [assert methods](https://docs.python.org/3.3/library/unittest.html#assert-methods).
 
+Guidelines for writing unit tests:
+
+1. Unit tests should test a very small block of code (e.g. a single method)
+1b. When writing tests, start from the simplest case, and then work up
+2. Unit tests _test the public API_, that is, they never access private methods or variables, or and should now nothing of how the code accomplishes what it does. They simply test if it does what it says on the tin.
+3. If you're testing something stochastic, seed the number generator as part of the test
+4. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
+
 ### Running more tests
 
 If you want to check your tests on Python 2 and 3, use
