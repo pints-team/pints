@@ -224,8 +224,8 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         """
         Samples from soft kinetic energy pdf defined in [1]
         """
-        u = np.random.uniform()
-        return self._f([u])[0]
+        us = np.random.uniform(size=self._n_parameters)
+        return np.array([self._f([u])[0] for u in us])
 
     def set_epsilon(self, epsilon):
         """
@@ -287,8 +287,7 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         if self._frog_iteration == 0:
 
             # Sample random momentum for current point using identity cov
-            self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._n_parameters), np.eye(self._n_parameters))
+            self._current_momentum = self._sample_momentum()
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)

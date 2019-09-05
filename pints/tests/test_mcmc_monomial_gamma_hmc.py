@@ -118,6 +118,11 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertAlmostEqual(derivs[1], 0.77273306758997307)
         self.assertAlmostEqual(len(derivs), 2)
 
+        # sample momentum from ke function
+        mom = model._sample_momentum()
+        self.assertEqual(len(mom), 2)
+        self.assertTrue(mom[0] != mom[1])
+
     def test_set_hyper_parameters(self):
         """
         Tests the parameter interface for this sampler.
@@ -161,19 +166,37 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
         a = 1.9
+        f = mcmc._f
+        z = mcmc._z
         mcmc.set_a(a)
+        f1 = mcmc._f
+        z1 = mcmc._z
         self.assertEqual(mcmc.a(), a)
         self.assertRaises(ValueError, mcmc.set_a, -0.9)
+        self.assertTrue(z != z1)
+        self.assertTrue(f([0.5])[0] != f1([0.5])[0])
 
         c = 3.5
+        f = mcmc._f
+        z = mcmc._z
         mcmc.set_c(c)
+        f1 = mcmc._f
+        z1 = mcmc._z
         self.assertEqual(mcmc.c(), c)
         self.assertRaises(ValueError, mcmc.set_c, -0.1)
+        self.assertTrue(z != z1)
+        self.assertTrue(f([0.5])[0] != f1([0.5])[0])
 
         m = 2.9
+        f = mcmc._f
+        z = mcmc._z
         mcmc.set_m(m)
+        f1 = mcmc._f
+        z1 = mcmc._z
         self.assertEqual(mcmc.m(), m)
         self.assertRaises(ValueError, mcmc.set_m, -1.8)
+        self.assertTrue(z != z1)
+        self.assertTrue(f([0.5])[0] != f1([0.5])[0])
 
 
 if __name__ == '__main__':
