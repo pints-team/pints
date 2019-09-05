@@ -55,8 +55,6 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
 
-
-
     def test_logging(self):
         """
         Test logging includes name and custom fields.

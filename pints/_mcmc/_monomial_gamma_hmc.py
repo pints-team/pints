@@ -19,7 +19,7 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
     *Extends:* :class:`SingleChainMCMC`
 
     Implements Monomial Gamma HMC as described in [1] - a generalisation
-    of HMC as described in [2].
+    of HMC as described in [2] - involving a non-physical kinetic energy term.
 
     Uses a physical analogy of a particle moving across a landscape under
     Hamiltonian dynamics to aid efficient exploration of parameter space.

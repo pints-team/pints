@@ -20,6 +20,7 @@ interface, that can be used to sample from an unknown
     hamiltonian_mcmc
     mala_mcmc
     metropolis_mcmc
+    monomial_gamma_hmc_mcmc
     population_mcmc
     slice_doubling_mcmc
     slice_stepout_mcmc
