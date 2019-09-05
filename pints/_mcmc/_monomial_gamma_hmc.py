@@ -34,11 +34,12 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
     The Hamiltonian is given by,
 
         H(q,p) =       U(q)       +        KE(p)
-               = -log(p(q|X)p(q)) + Sigma_i=1^d (|p_i|^a) / 2m_i,
+               = -log(p(q|X)p(q)) +
+                 Sigma_i=1^d (-g(p_i) + (2/c) * log(1 + e^(cg(p))))
 
     where ``d`` is the dimensionality of model and ``m_i`` is the 'mass' given
-    to each particle (often chosen to be 1 as default). Note that
-    the generalised kinetic energy equals the standard HMC case when a=1/2.
+    to each particle (often chosen to be 1 as default). Note the KE term
+    is the 'soft' version described in [1].
 
     To numerically integrate Hamilton's equations, it is essential to use a
     sympletic discretisation routine, of which the most typical approach is
@@ -140,8 +141,8 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         self._z = integrate.quad(
             lambda p: np.exp(-self._K(p, self._a, self._c, self._m)),
             -float('Inf'), float('Inf'))[0]
-        self._f = self.__inverse_cdf_calculator(self._a, self._c,
-                                                self._m, self._z)
+        self._f = self._inverse_cdf_calculator(self._a, self._c,
+                                               self._m, self._z)
 
     def _g(self, p, a, m):
         """
@@ -155,6 +156,15 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         """
         return -self._g(p, a, m) + (2.0 / c) * np.log(
             1.0 + np.exp(c * self._g(p, a, m)))
+
+    def _K_deriv(self, p, a, c, m):
+        """
+        Derivative of soft kinetic energy function defined in [1]
+        """
+        abs_p = np.abs(p)
+        sign_p = np.sign(p)
+        tanh = np.tanh(0.5 * c * abs_p**(1.0 / a) * sign_p / m)
+        return abs_p**(-2 + 1.0 / a) * p * sign_p * tanh / (a * m)
 
     def _pdf(self, p, a, c, m, z):
         """
@@ -290,7 +300,7 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Hamiltonian Monte Carlo'
+        return 'Monomial-Gamma Hamiltonian Monte Carlo'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
