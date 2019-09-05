@@ -101,6 +101,17 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
+    def test_kinetic_energy(self):
+        """
+        Tests kinetic energy values and derivatives
+        """
+        x0 = np.array([2, 2])
+        model = pints.MonomialGammaHMCMCMC(x0)
+
+        # derivatives
+        self.assertAlmosEqual(model._K_deriv(1.3, 0.5, 0.3, 1.3),
+                         0.38513079718715132)
+
     def test_set_hyper_parameters(self):
         """
         Tests the parameter interface for this sampler.

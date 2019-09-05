@@ -139,7 +139,7 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         function defined in [1]
         """
         self._z = integrate.quad(
-            lambda p: np.exp(-self._K(p, self._a, self._c, self._m)),
+            lambda p: np.exp(-self._K_indiv(p, self._a, self._c, self._m)),
             -float('Inf'), float('Inf'))[0]
         self._f = self._inverse_cdf_calculator(self._a, self._c,
                                                self._m, self._z)
@@ -150,27 +150,41 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         """
         return (1.0 / m) * np.sign(p) * np.abs(p)**(1.0 / a)
 
-    def _K(self, p, a, c, m):
+    def _K_indiv(self, p, a, c, m):
         """
         Soft kinetic energy function defined in [1]
+        for individual momentum component
         """
         return -self._g(p, a, m) + (2.0 / c) * np.log(
             1.0 + np.exp(c * self._g(p, a, m)))
 
-    def _K_deriv(self, p, a, c, m):
+    def _K(self, v_p, a, c, m):
+        """
+        Soft kinetic energy function defined in [1]
+        """
+        return np.sum([self._K_indiv(p, a, c, m) for p in v_p])
+
+    def _K_deriv_indiv(self, p, a, c, m):
         """
         Derivative of soft kinetic energy function defined in [1]
+        for individual momentum component
         """
         abs_p = np.abs(p)
         sign_p = np.sign(p)
         tanh = np.tanh(0.5 * c * abs_p**(1.0 / a) * sign_p / m)
         return abs_p**(-2 + 1.0 / a) * p * sign_p * tanh / (a * m)
 
+    def _K_deriv(self, v_p, a, c, m):
+        """
+        Derivative of soft kinetic energy function defined in [1]
+        """
+        return np.array([self._K_deriv_indiv(p, a, c, m) for p in v_p])
+
     def _pdf(self, p, a, c, m, z):
         """
         Auxillary kinetic energy probability density defined in [1]
         """
-        return (1.0 / z) * np.exp(-self._K(p, a, c, m))
+        return (1.0 / z) * np.exp(-self._K_indiv(p, a, c, m))
 
     def _cdf(self, p, a, c, m, z):
         """
@@ -267,7 +281,9 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
             self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
         # Perform a leapfrog step for the position
-        self._position += self._scaled_epsilon * self._momentum
+        self._position += self._scaled_epsilon * (
+            self._K_deriv(self._momentum, self._a, self._c, self._m)
+        )
 
         # Ask for the pdf and gradient of the current leapfrog position
         # Using this, the leapfrog step for the momentum is performed in tell()
@@ -405,9 +421,10 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
             current_U = self._current_energy
-            current_K = np.sum(self._current_momentum**2 / 2)
+            current_K = self._K(self._current_momentum, self._a,
+                                self._c, self._m)
             proposed_U = energy
-            proposed_K = np.sum(self._momentum**2 / 2)
+            proposed_K = self._K(self._momentum, self._a, self._c, self._m)
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
