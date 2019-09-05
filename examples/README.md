@@ -50,6 +50,7 @@ relevant code.
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Monomial-Gamma HMC MCMC](./sampling-monomial-gamma-hmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
@@ -101,4 +102,3 @@ relevant code.
 
 - [Automatic differentiation using autograd](./automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./readme-example.ipynb)
-
