@@ -106,6 +106,24 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
         self._m = 1.0
         self._initialise_ke()
 
+    def a(self):
+        """
+        Returns `a` in kinetic energy function
+        """
+        return self._a
+
+    def c(self):
+        """
+        Returns `c` in kinetic energy function
+        """
+        return self._c
+
+    def m(self):
+        """
+        Returns `m` in kinetic energy function
+        """
+        return self._m
+
     def set_a(self, a):
         """
         Sets `a` in kinetic energy function
@@ -474,13 +492,17 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 5
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
+        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size,
+        a, c, mass]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_leapfrog_steps(x[0])
         self.set_leapfrog_step_size(x[1])
+        self.set_a(x[2])
+        self.set_c(x[3])
+        self.set_m(x[4])

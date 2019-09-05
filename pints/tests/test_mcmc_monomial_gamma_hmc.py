@@ -108,9 +108,17 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
         model = pints.MonomialGammaHMCMCMC(x0)
 
+        # kinetic energy
+        ke = model._K([-3.5, 0.5], 1.5, 1.7, 0.7)
+        self.assertAlmostEqual(4.4280785731741243, ke)
+
         # derivatives
-        self.assertAlmosEqual(model._K_deriv(1.3, 0.5, 0.3, 1.3),
-                         0.38513079718715132)
+        self.assertAlmostEqual(model._K_deriv_indiv(1.3, 0.5, 0.3, 1.3),
+                               0.38513079718715132)
+        derivs = model._K_deriv_indiv([-3.5, 0.5], 1.5, 1.7, 0.7)
+        self.assertAlmostEqual(derivs[0], -0.62264078154277391)
+        self.assertAlmostEqual(derivs[1], 0.77273306758997307)
+        self.assertAlmostEqual(len(derivs), 2)
 
     def test_set_hyper_parameters(self):
         """
@@ -133,10 +141,13 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([n + 2, 2])
+        self.assertEqual(mcmc.n_hyper_parameters(), 5)
+        mcmc.set_hyper_parameters([n + 2, 2, 0.4, 2.3, 1.3])
         self.assertEqual(mcmc.leapfrog_steps(), n + 2)
         self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+        self.assertEqual(mcmc.a(), 0.4)
+        self.assertEqual(mcmc.c(), 2.3)
+        self.assertEqual(mcmc.m(), 1.3)
 
         mcmc.set_epsilon(0.4)
         self.assertEqual(mcmc.epsilon(), 0.4)
@@ -150,6 +161,21 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         mcmc.set_leapfrog_step_size([1.5, 3])
         self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
+
+        a = 1.9
+        mcmc.set_a(a)
+        self.assertEqual(mcmc.a(), a)
+        self.assertRaises(ValueError, mcmc.set_a, -0.9)
+
+        c = 3.5
+        mcmc.set_c(c)
+        self.assertEqual(mcmc.c(), c)
+        self.assertRaises(ValueError, mcmc.set_c, -0.1)
+
+        m = 2.9
+        mcmc.set_m(m)
+        self.assertEqual(mcmc.m(), m)
+        self.assertRaises(ValueError, mcmc.set_m, -1.8)
 
 
 if __name__ == '__main__':
