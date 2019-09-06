@@ -45,7 +45,13 @@ class GaussianLogPDF(ToyLogPDF):
             raise ValueError(
                 'Sigma must have same dimension as mean, or be a square matrix'
                 ' with the same dimension as the mean.')
-
+        # check whether covariance matrix is positive semidefinite
+        if not np.all(np.linalg.eigvals(sigma) >= 0):
+            raise ValueError('Covariance matrix must be positive ' +
+                             'semidefinite.')
+        # check if matrix is symmetric
+        if not np.allclose(sigma, sigma.T, atol=1e-8):
+            raise ValueError('Covariance matrix must be symmetric.')
         # Store
         self._mean = mean
         self._sigma = sigma
