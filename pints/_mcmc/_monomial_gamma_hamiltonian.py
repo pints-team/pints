@@ -52,8 +52,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     .. math::
         p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) dU(q_i)/ dq_i\\
         q_i(t + \epsilon) &= q_i(t) + \epsilon d K(p_i(t + \epsilon/2))/dp_i\\
-        p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
-                            (\epsilon/2) dU(q_i(t + \epsilon))/ dq_i.
 
     The derivative of the soft kinetic energy term is given by,
 
