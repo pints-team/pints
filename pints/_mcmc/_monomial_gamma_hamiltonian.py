@@ -27,18 +27,19 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     particle's motion is dictated by solutions to Hamilton's equations,
 
     .. math::
-        dq_i/dt =   partial_d H/partial_d p_i,
-        dp_i/dt = - partial_d H/partial_d q_i.
+        dq_i/dt =   \partial H/\partial p_i,
+        dp_i/dt = - \partial H/\partial q_i.
 
     The Hamiltonian is given by,
 
     .. math::
-        H(q,p) =       U(q)       +        KE(p)
+        H(q,p) =       U(q)       +        K(p)
                = -log(p(q|X)p(q)) +
-                 Sigma_i=1^d (-g(p_i) + (2/c) * log(1 + e^(cg(p))))
+                 \Sigma_{i=1}^{d} (
+                 -g(p_i) + (2/c) \text{log}(1 + \text{exp}(cg(p_i))))
 
     where ``d`` is the dimensionality of model, ``U`` is the potential
-    energy and ``KE`` is the kinetic energy term. Note the KE term
+    energy and ``K`` is the kinetic energy term. Note the kinetic energy
     is the 'soft' version described in [1], where,
 
     .. math::
@@ -49,16 +50,16 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     the leapfrog method,
 
     .. math::
-        p_i(t + epsilon) = p_i(t) + epsilon dp_i(t)/dt
-                         = p_i(t) - epsilon partial_d U(q)/dq_i,
-        q_i(t + epsilon) = q_i(t) + epsilon dq_i(t)/dt
-                         = q_i(t) + epsilon partial_d KE(p_i)/dp_i.
+        p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) dU(q_i)/ dq_i\\
+        q_i(t + \epsilon) &= q_i(t) + \epsilon d K(p_i(t + \epsilon/2))/dp_i\\
+        p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
+                            (\epsilon/2) dU(q_i(t + \epsilon))/ dq_i.
 
-    The derivative of the soft KE term is given by,
+    The derivative of the soft kinetic energy term is given by,
 
     .. math::
-        partial_d KE(p_i)/dp_i =
-        |p_i|^{-2 + 1 / a}|p_i|\text{sign}(p_i) \times
+        d K(p_i)/dp_i =
+        |p_i|^{-1 + 1 / a}\text{sign}(p_i) \times
         \text{tanh}(c|p_i|^{1/a}\text{sign}(p_i) / {2 m_i}) / {a m_i}
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
