@@ -18,7 +18,7 @@ from shared import StreamCapture
 debug = False
 
 
-class TestMonomialGammaHMCMCMC(unittest.TestCase):
+class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
     """
     Tests the basic methods of the Monomial-gamma HMC MCMC routine.
     """
@@ -31,7 +31,7 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         # Create mcmc
         x0 = np.array([2, 2])
         sigma = [[3, 0], [0, 3]]
-        mcmc = pints.MonomialGammaHMCMCMC(x0, sigma)
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0, sigma)
 
         # This method needs sensitivities
         self.assertTrue(mcmc.needs_sensitivities())
@@ -63,7 +63,7 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
         mcmc = pints.MCMCController(
-            log_pdf, 2, x0, method=pints.MonomialGammaHMCMCMC)
+            log_pdf, 2, x0, method=pints.MonomialGammaHamiltonianMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
@@ -78,14 +78,14 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
-        mcmc = pints.MonomialGammaHMCMCMC(x0)
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
         self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
 
         # Repeated asks
         self.assertRaises(RuntimeError, mcmc.ask)
 
         # Tell without ask
-        mcmc = pints.MonomialGammaHMCMCMC(x0)
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Repeated tells should fail
@@ -94,7 +94,7 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, log_pdf.evaluateS1(x))
 
         # Bad starting point
-        mcmc = pints.MonomialGammaHMCMCMC(x0)
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
@@ -104,7 +104,7 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         Tests kinetic energy values and derivatives
         """
         x0 = np.array([2, 2])
-        model = pints.MonomialGammaHMCMCMC(x0)
+        model = pints.MonomialGammaHamiltonianMCMC(x0)
 
         # kinetic energy
         ke = model._K([-3.5, 0.5], 1.5, 1.7, 0.7)
@@ -128,7 +128,7 @@ class TestMonomialGammaHMCMCMC(unittest.TestCase):
         Tests the parameter interface for this sampler.
         """
         x0 = np.array([2, 2])
-        mcmc = pints.MonomialGammaHMCMCMC(x0)
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
 
         # Test leapfrog parameters
         n = mcmc.leapfrog_steps()

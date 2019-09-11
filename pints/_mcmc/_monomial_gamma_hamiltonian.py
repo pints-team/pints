@@ -14,7 +14,7 @@ from scipy import integrate
 from scipy import interpolate
 
 
-class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
+class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     """
     *Extends:* :class:`SingleChainMCMC`
 
@@ -62,7 +62,7 @@ class MonomialGammaHMCMCMC(pints.SingleChainMCMC):
 
     """
     def __init__(self, x0, sigma0=None):
-        super(MonomialGammaHMCMCMC, self).__init__(x0, sigma0)
+        super(MonomialGammaHamiltonianMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
