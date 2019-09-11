@@ -66,6 +66,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     [1] Towards Unifying Hamiltonian Monte Carlo and Slice Sampling
     Yizhe Zhang, Xiangyu Wang, Changyou Chen, Ricardo Henao, Kai Fan,
     Lawrence Cari.
+
     [2] MCMC using Hamiltonian dynamics
     Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
