@@ -1,5 +1,5 @@
 *******************************
-Monomial-Gamma HAMILTONIAN MCMC
+Monomial-Gamma Hamiltonian MCMC
 *******************************
 
 .. currentmodule:: pints
