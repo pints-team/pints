@@ -15,8 +15,6 @@ import pints.toy
 
 from shared import StreamCapture
 
-debug = False
-
 
 class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
     """
@@ -26,7 +24,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create log pdf
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
 
         # Create mcmc
         x0 = np.array([2, 2])
@@ -59,7 +57,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         """
         Test logging includes name and custom fields.
         """
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
         mcmc = pints.MCMCController(
@@ -74,7 +72,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
 
     def test_flow(self):
 
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
@@ -105,6 +103,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         """
         x0 = np.array([2, 2])
         model = pints.MonomialGammaHamiltonianMCMC(x0)
+        model.ask()
 
         # kinetic energy
         ke = model._K([-3.5, 0.5], 1.5, 1.7, 0.7)
@@ -150,7 +149,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
         self.assertEqual(mcmc.a(), 0.4)
         self.assertEqual(mcmc.c(), 2.3)
-        self.assertEqual(mcmc.m(), 1.3)
+        self.assertEqual(mcmc.mass(), 1.3)
 
         mcmc.set_epsilon(0.4)
         self.assertEqual(mcmc.epsilon(), 0.4)
@@ -190,18 +189,14 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         m = 2.9
         f = mcmc._f
         z = mcmc._z
-        mcmc.set_m(m)
+        mcmc.set_mass(m)
         f1 = mcmc._f
         z1 = mcmc._z
-        self.assertEqual(mcmc.m(), m)
-        self.assertRaises(ValueError, mcmc.set_m, -1.8)
+        self.assertEqual(mcmc.mass(), m)
+        self.assertRaises(ValueError, mcmc.set_mass, -1.8)
         self.assertTrue(z != z1)
         self.assertTrue(f([0.5])[0] != f1([0.5])[0])
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
