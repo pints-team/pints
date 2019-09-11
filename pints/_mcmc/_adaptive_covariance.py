@@ -1,8 +1,8 @@
 #
-# Adaptive covariance MCMC method
+# Base class for Adaptive covariance MCMC methods
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
+#  Copyright (c) 2017-2018, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -14,18 +14,11 @@ import numpy as np
 
 class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     """
-    Adaptive covariance MCMC, as described in [1, 2].
+    Base class for single chain MCMC methods that adapt a covariance matrix
+    when running, in order to control the acceptance rate.
 
-    Using a covariance matrix, that is tuned so that the acceptance rate of the
-    MCMC steps converges to a user specified value.
-
-    [1] Uncertainty and variability in models of the cardiac action potential:
-    Can we build trustworthy models?
-    Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
-    Mirams (2015) Journal of Molecular and Cellular Cardiology
-
-    [2] An adaptive Metropolis algorithm
-    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
+    In all cases ``self._adaptations^-eta`` is used to control decay of
+    adaptation
 
     *Extends:* :class:`SingleChainMCMC`
     """
@@ -58,25 +51,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._initialise()
 
-        # Propose new point
-        if self._proposed is None:
-
-            # Note: Gaussian distribution is symmetric
-            #  N(x|y, sigma) = N(y|x, sigma) so that we can drop the proposal
-            #  distribution term from the acceptance criterion
-            self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._loga) * self._sigma)
-
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -96,6 +70,8 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Adaptation
         self._loga = 0
         self._adaptations = 2
+        self._gamma = 1
+        self._eta = 0.6
 
         # Acceptance rate monitoring
         self._iterations = 0
@@ -103,6 +79,16 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
         # Update sampler state
         self._running = True
+
+    def set_eta(self, eta):
+        """
+        Updates ``eta`` which controls the rate of adaptation decay
+        ``adaptations**(-eta)``, where ``eta > 0`` to ensure asymptotic
+        ergodicity.
+        """
+        if eta <= 0:
+            raise ValueError('eta should be greater than zero')
+        self._eta = eta
 
     def in_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
@@ -116,10 +102,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
 
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Adaptive covariance MCMC'
-
     def needs_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return True
@@ -131,6 +113,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
+
         # Check if we had a proposal
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
@@ -151,70 +134,64 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._iterations += 1
 
+            # Initialise X and Y
+            self._X = np.copy(self._proposed)
+            self._Y = np.copy(self._proposed)
+
             # Clear proposal
             self._proposed = None
+
+            # Set alpha probability to zero
+            self._alpha = 0
+
+            # Set r to zero
+            self._r = float('-Inf')
 
             # Return first point for chain
             return self._current
 
         # Check if the proposed point can be accepted
-        accepted = 0
-        if np.isfinite(fx):
-            u = np.log(np.random.uniform(0, 1))
-            if u < fx - self._current_log_pdf:
-                accepted = 1
-                self._current = self._proposed
-                self._current_log_pdf = fx
+        self._accepted = 0
+        self._r = fx - self._current_log_pdf
+        self._X = self._current
+        self._Y = self._proposed
 
-        # Clear proposal
-        self._proposed = None
+    def _update_mu(self):
+        """
+        Updates the current running mean used to calculate the sample
+        covariance matrix of proposals. Note that this default is overidden in
+        some of the methods
+        """
+        raise NotImplementedError
 
-        # Adapt covariance matrix
-        if self._adaptive:
-            # Set gamma based on number of adaptive iterations
-            gamma = self._adaptations ** -0.6
-            self._adaptations += 1
+    def _update_sigma(self):
+        """
+        Updates the covariance matrix used to generate proposals.
+        Note that this default is overidden in some of the methods
+        """
+        raise NotImplementedError
 
-            # Update mu, log acceptance rate, and covariance matrix
-            self._mu = (1 - gamma) * self._mu + gamma * self._current
-            self._loga += gamma * (accepted - self._target_acceptance)
-            dsigm = np.reshape(
-                self._current - self._mu, (self._n_parameters, 1))
-            self._sigma = (
-                (1 - gamma) * self._sigma + gamma * np.dot(dsigm, dsigm.T))
-
-        # Update acceptance rate (only used for output!)
-        self._acceptance = ((self._iterations * self._acceptance + accepted) /
-                            (self._iterations + 1))
-
-        # Increase iteration count
-        self._iterations += 1
-
-        # Return new point for chain
-        return self._current
-
-    def replace(self, current, current_log_pdf, proposed=None):
+    def replace(self, x, fx):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
-
-        # At least one round of ask-and-tell must have been run
-        if (not self._running) or self._current_log_pdf is None:
+        # Must already be running
+        if not self._running:
             raise RuntimeError(
                 'Replace can only be used when already running.')
 
+        # Must be after tell, before ask
+        if self._proposed is not None:
+            raise RuntimeError(
+                'Replace can only be called after tell / before ask.')
+
         # Check values
-        current = pints.vector(current)
-        if len(current) != self._n_parameters:
-            raise ValueError('Point `current` has the wrong dimensions.')
-        current_log_pdf = float(current_log_pdf)
-        if proposed is not None:
-            proposed = pints.vector(proposed)
-            if len(proposed) != self._n_parameters:
-                raise ValueError('Point `proposed` has the wrong dimensions.')
+        x = pints.vector(x)
+        if not len(x) == len(self._current):
+            raise ValueError('Dimension mismatch in `x`.')
+        fx = float(fx)
 
         # Store
-        self._current = current
-        self._current_log_pdf = current_log_pdf
-        self._proposed = proposed
+        self._current = x
+        self._current_log_pdf = fx
 
     def set_target_acceptance_rate(self, rate=0.234):
         """
@@ -232,4 +209,3 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         Returns the target acceptance rate.
         """
         return self._target_acceptance
-
