@@ -17,8 +17,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     Base class for single chain MCMC methods that adapt a covariance matrix
     when running, in order to control the acceptance rate.
 
-    In all cases ``self._adaptations^-eta`` is used to control decay of
-    adaptation
+    In all cases ``eta`` is used to control decay of adaptation.
 
     *Extends:* :class:`SingleChainMCMC`
     """
@@ -134,10 +133,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._iterations += 1
 
-            # Initialise X and Y
-            self._X = np.copy(self._proposed)
-            self._Y = np.copy(self._proposed)
-
             # Clear proposal
             self._proposed = None
 
@@ -153,8 +148,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Check if the proposed point can be accepted
         self._accepted = 0
         self._r = fx - self._current_log_pdf
-        self._X = self._current
-        self._Y = self._proposed
 
     def _update_mu(self):
         """

@@ -17,10 +17,12 @@ interface, that can be used to sample from an unknown
     differential_evolution_mcmc
     dream_mcmc
     emcee_hammer_mcmc
+    global_adaptive_covariance_mcmc
     hamiltonian_mcmc
     mala_mcmc
     metropolis_mcmc
     monomial_gamma_hamiltonian_mcmc
     population_mcmc
+    remi_ac_mcmc
     slice_doubling_mcmc
     slice_stepout_mcmc
