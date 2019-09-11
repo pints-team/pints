@@ -13,9 +13,7 @@ import numpy as np
 
 
 class HamiltonianMCMC(pints.SingleChainMCMC):
-    """
-    *Extends:* :class:`SingleChainMCMC`
-
+    r"""
     Implements Hamiltonian Monte Carlo as described in [1].
 
     Uses a physical analogy of a particle moving across a landscape under
@@ -25,13 +23,15 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     supplements the position (``q_i``) of the particle in parameter space. The
     particle's motion is dictated by solutions to Hamilton's equations,
 
-        dq_i/dt =   partial_d H/partial_d p_i,
-        dp_i/dt = - partial_d H/partial_d q_i.
+    .. math::
+        dq_i/dt &=   \partial H/\partial p_i\\
+        dp_i/dt &= - \partial H/\partial q_i.
 
     The Hamiltonian is given by,
 
-        H(q,p) =       U(q)       +        KE(p)
-               = -log(p(q|X)p(q)) + Sigma_i=1^d p_i^2/2m_i,
+    .. math::
+        H(q,p) &=       U(q)       +        KE(p)\\
+               &= -log(p(q|X)p(q)) + \Sigma_{i=1}^{d} p_i^2/2m_i,
 
     where ``d`` is the dimensionality of model and ``m_i`` is the 'mass' given
     to each particle (often chosen to be 1 as default).
@@ -40,10 +40,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     sympletic discretisation routine, of which the most typical approach is
     the leapfrog method,
 
-        p_i(t + epsilon) = p_i(t) + epsilon dp_i(t)/dt
-                         = p_i(t) - epsilon partial_d U(q)/d_q_i,
-        q_i(t + epsilon) = q_i(t) + epsilon dq_i(t)/dt
-                         = q_i(t) + epsilon p_i(t) / m_i.
+    .. math::
+        p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) d U(q_i(t))/dq_i\\
+        q_i(t + \epsilon) &= q_i(t) + \epsilon p_i(t + \epsilon/2) / m_i\\
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
     [1], since we allow different epsilon according to dimension.
@@ -52,6 +51,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
 
+    *Extends:* :class:`SingleChainMCMC`
     """
     def __init__(self, x0, sigma0=None):
         super(HamiltonianMCMC, self).__init__(x0, sigma0)
