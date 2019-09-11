@@ -214,11 +214,11 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         Initialises functions needed for sampling from soft kinetic energy
         function defined in [1].
         """
-        self._z = integrate.quad(
+        z = integrate.quad(
             lambda p: np.exp(-self._K_indiv(p, self._a, self._c, self._m)),
             -float('Inf'), float('Inf'))[0]
         self._f = self._inverse_cdf_calculator(self._a, self._c,
-                                               self._m, self._z)
+                                               self._m, z)
 
     def _inverse_cdf_calculator(self, a, c, m, z, pmax=100):
         """
@@ -323,7 +323,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         if a <= 0:
             raise ValueError("a must be positive")
         self._a = a
-        self._initialise_ke()
 
     def set_c(self, c):
         """
@@ -332,7 +331,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         if c <= 0:
             raise ValueError("c must be positive")
         self._c = c
-        self._initialise_ke()
 
     def set_epsilon(self, epsilon):
         """
@@ -380,7 +378,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         if m <= 0:
             raise ValueError("Mass must be positive")
         self._m = m
-        self._initialise_ke()
 
     def set_hyper_parameters(self, x):
         """
