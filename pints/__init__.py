@@ -207,6 +207,12 @@ from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
 
+from ._abc import (
+    ABCSampler,
+    ABCController
+)
+
+from ._abc._abc_rejection import ABCRejection
 
 #
 # Nested samplers
