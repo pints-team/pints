@@ -31,8 +31,6 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(GlobalAdaptiveCovarianceMCMC, self).tell(fx)
 
-        self._alpha = np.minimum(1, np.exp(self._r))
-
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < self._r:
@@ -65,6 +63,6 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         Updates the covariance matrix used to generate proposals.
         Note that this default is overidden in some of the methods
         """
-        dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
+        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
         self._sigma = ((1 - self._gamma) * self._sigma +
                        self._gamma * np.dot(dsigm, dsigm.T))

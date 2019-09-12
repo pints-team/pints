@@ -136,9 +136,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             # Clear proposal
             self._proposed = None
 
-            # Set alpha probability to zero
-            self._alpha = 0
-
             # Set r to zero
             self._r = float('-Inf')
 
