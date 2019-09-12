@@ -15,22 +15,28 @@ import numpy as np
 class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 4 in [1],
-    (with gamma = self._adaptations ^ -eta which isn't specified
-    in the paper)
+    (with gamma = adaptation_count^-eta which isn't specified
+    in the paper).
 
-    Initialises mu0 and sigma0 used in proposal N(mu0, lambda * sigma0_t)
-    For iteration t = 0:n_iter:
-      - Sample Y_t+1 ~ N(theta_t, lambda_t * sigma0)
-      - Calculate alpha(theta_t, Y_t+1) =
-                                        min(1, p(Y_t+1|data) / p(theta_t|data))
-      - Set theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
-      theta_t+1 = theta_t
-      - Update mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
-      - Update sigma_t+1 = sigma_t +
-                gamma_t+1 * ((theta_t+1 - mu_t)(theta_t+1 - mu_t)' - sigma_t)
-      - Update log lambda_t+1 = log lambda_t +
-                gamma_t+1 * (alpha(theta_t, Y_t+1) - self._target_acceptance)
-    endfor
+    Initialises::
+
+        mu
+        Sigma
+        adaptation_count = 0
+
+    In each adaptive iteration (t)::
+
+        Sample theta* ~ N(theta_t, lambda * Sigma)
+        alpha = min(1, p(theta*|data) / p(theta_t|data))
+        u ~ uniform(0, 1)
+        if alpha > u:
+            theta_(t+1) = theta*
+        else:
+            theta_(t+1) = theta_t
+        mu += gamma * (theta_(t+1) - mu)
+        Sigma += gamma * ((theta_(t+1) - mu)(theta_(t+1) - mu) - Sigma)
+        log lambda += gamma * (alpha - self._target_acceptance)
+        gamma = adaptation_count^-eta
 
     [1] A tutorial on adaptive MCMC
     Christophe Andrieu and Johannes Thoms, Statistical Computing,
@@ -69,6 +75,8 @@ class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
         super(GlobalACMCMC, self).tell(fx)
+
+        self._alpha = np.minimum(1, np.exp(self._r))
 
         self._log_lambda += (self._gamma *
                              (self._alpha - self._target_acceptance))

@@ -200,6 +200,7 @@ from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._global_adaptive_covariance import GlobalAdaptiveCovarianceMCMC
+from ._mcmc._global_ac import GlobalACMCMC
 from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
