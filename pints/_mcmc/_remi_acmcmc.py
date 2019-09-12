@@ -37,7 +37,8 @@ class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         else:
             theta_(t+1) = theta_t
             accepted = 0
-        Sigma = (1 - gamma) Sigma + (theta_(t+1) - mu)^t (theta_(t+1) - mu)
+        Sigma = (1 - gamma) Sigma + transpose[(theta_(t+1) - mu)]
+                                              (theta_(t+1) - mu)
         mu = (1 - gamma) mu + gamma theta_(t+1)
         log(a) += gamma (accepted - target_acceptance_rate)
 
