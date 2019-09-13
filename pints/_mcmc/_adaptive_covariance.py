@@ -31,6 +31,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         self._current = None
         self._current_log_pdf = None
         self._proposed = None
+        self._r = None
 
         # Default settings
         self.set_target_acceptance_rate()

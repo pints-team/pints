@@ -1,7 +1,7 @@
 **************
-Global AC MCMC
+Simple AC MCMC
 **************
 
 .. currentmodule:: pints
 
-.. autoclass:: GlobalACMCMC
+.. autoclass:: SimpleACMCMC

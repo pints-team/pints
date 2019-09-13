@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
+class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, as described by Algorithm 4 in [1],
     (with gamma = adaptation_count^-eta which isn't specified
@@ -45,11 +45,11 @@ class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(GlobalACMCMC, self).__init__(x0, sigma0)
+        super(SimpleACMCMC, self).__init__(x0, sigma0)
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(GlobalACMCMC, self).ask()
+        super(SimpleACMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -69,12 +69,12 @@ class GlobalACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         """
         See :meth: `AdaptiveCovarianceMCMC._initialise()`.
         """
-        super(GlobalACMCMC, self)._initialise()
+        super(SimpleACMCMC, self)._initialise()
         self._log_lambda = 0
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(GlobalACMCMC, self).tell(fx)
+        super(SimpleACMCMC, self).tell(fx)
 
         self._alpha = np.minimum(1, np.exp(self._r))
 
