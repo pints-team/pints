@@ -67,10 +67,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         self._mu = np.array(self._x0, copy=True)
         self._sigma = np.array(self._sigma0, copy=True)
 
-        # Adaptation
-        self._loga = 0
-        self._adaptations = 2
+        # initial number of adaptations (must start at 1 otherwise fails)
+        self._adaptations = 1
+        # initial decay rate in adaptation
         self._gamma = 1
+        # determines decay rate in adaptation
         self._eta = 0.6
 
         # Acceptance rate monitoring
