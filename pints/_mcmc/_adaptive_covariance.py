@@ -2,7 +2,7 @@
 # Base class for Adaptive covariance MCMC methods
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -27,11 +27,20 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Set initial state
         self._running = False
 
-        # Current point and proposed point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = None
-        self._r = None
+        # Set initial mu and sigma
+        self._mu = np.array(self._x0, copy=True)
+        self._sigma = np.array(self._sigma0, copy=True)
+
+        # initial number of adaptations (must start at 1 otherwise fails)
+        self._adaptations = 1
+        # initial decay rate in adaptation
+        self._gamma = 1
+        # determines decay rate in adaptation
+        self._eta = 0.6
+
+        # Acceptance rate monitoring
+        self._iterations = 0
+        self._acceptance = 0
 
         # Default settings
         self.set_target_acceptance_rate()
@@ -57,29 +66,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """
         if self._running:
             raise RuntimeError('Already initialised.')
-
-        # Propose x0 as first point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = self._x0
-
-        # Set initial mu and sigma
-        self._mu = np.array(self._x0, copy=True)
-        self._sigma = np.array(self._sigma0, copy=True)
-
-        # initial number of adaptations (must start at 1 otherwise fails)
-        self._adaptations = 1
-        # initial decay rate in adaptation
-        self._gamma = 1
-        # determines decay rate in adaptation
-        self._eta = 0.6
-
-        # Acceptance rate monitoring
-        self._iterations = 0
-        self._acceptance = 0
-
         # Update sampler state
         self._running = True
+
+        # Current point and proposed point
+        self._current = None
+        self._current_log_pdf = None
+        self._proposed = None
+        self._log_acceptance_ratio = None
 
     def set_eta(self, eta):
         """
@@ -139,14 +133,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             self._proposed = None
 
             # Set r to zero
-            self._r = float('-Inf')
+            self._log_acceptance_ratio = float('-Inf')
 
             # Return first point for chain
             return self._current
 
         # Check if the proposed point can be accepted
         self._accepted = 0
-        self._r = fx - self._current_log_pdf
+        self._log_acceptance_ratio = fx - self._current_log_pdf
 
     def _update_mu(self):
         """

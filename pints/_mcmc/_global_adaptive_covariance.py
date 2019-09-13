@@ -33,7 +33,7 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
 
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
-            if u < self._r:
+            if u < self._log_acceptance_ratio:
                 self._accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
