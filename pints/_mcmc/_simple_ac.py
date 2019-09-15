@@ -62,6 +62,7 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         super(SimpleACMCMC, self).__init__(x0, sigma0)
         self._log_lambda = 0
         self._binary_accept = True
+        self._accepted = True
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -69,7 +70,6 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
 
         # Propose new point
         if self._proposed is None:
-            print(self._current)
             self._proposed = (
                 np.random.multivariate_normal(self._current,
                                               ((np.exp(self._log_lambda) *
@@ -102,10 +102,10 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         super(SimpleACMCMC, self).tell(fx)
 
         if self._binary_accept:
+            self._acceptance_prob = self._accepted
+        else:
             self._acceptance_prob = (
                 np.minimum(1, np.exp(self._log_acceptance_ratio)))
-        else:
-            self._acceptance_prob = self._accepted
         self._log_lambda += (self._gamma *
                              (self._acceptance_prob - self._target_acceptance))
 

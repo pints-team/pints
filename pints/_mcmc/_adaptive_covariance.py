@@ -72,7 +72,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Current point and proposed point
         self._current = None
         self._current_log_pdf = None
-        self._proposed = None
+        self._proposed = self._x0
         self._log_acceptance_ratio = None
 
     def set_eta(self, eta):
