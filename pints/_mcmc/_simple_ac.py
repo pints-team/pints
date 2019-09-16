@@ -106,8 +106,10 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         else:
             self._acceptance_prob = (
                 np.minimum(1, np.exp(self._log_acceptance_ratio)))
-        self._log_lambda += (self._gamma *
-                             (self._acceptance_prob - self._target_acceptance))
+        if self._adaptive:
+            self._log_lambda += (self._gamma *
+                                 (self._acceptance_prob -
+                                  self._target_acceptance))
 
         # Return new point for chain
         return self._current
