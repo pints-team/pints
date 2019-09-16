@@ -44,7 +44,7 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         # Adapt covariance matrix
         if self._adaptive:
             # Set gamma based on number of adaptive iterations
-            self._gamma = self._adaptations ** -self._eta
+            self._gamma = (self._adaptations + 1) ** -self._eta
             self._adaptations += 1
             self._update_mu()
             self._update_sigma()
