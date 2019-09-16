@@ -31,6 +31,7 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(GlobalAdaptiveCovarianceMCMC, self).tell(fx)
 
+        self._accepted = 0
         if np.isfinite(fx):
             u = np.log(np.random.uniform(0, 1))
             if u < self._log_acceptance_ratio:

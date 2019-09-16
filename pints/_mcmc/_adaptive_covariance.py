@@ -75,6 +75,14 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         self._proposed = self._x0
         self._log_acceptance_ratio = None
 
+    def eta(self):
+        """
+        Returns ``eta`` which controls the rate of adaptation decay
+        ``adaptations**(-eta)``, where ``eta > 0`` to ensure asymptotic
+        ergodicity.
+        """
+        return self._eta
+
     def set_eta(self, eta):
         """
         Updates ``eta`` which controls the rate of adaptation decay
@@ -139,7 +147,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
             return self._current
 
         # Check if the proposed point can be accepted
-        self._accepted = 0
         self._log_acceptance_ratio = fx - self._current_log_pdf
 
     def _update_mu(self):

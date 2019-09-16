@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the basic methods of the adaptive covariance base class.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -60,36 +60,27 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
-    def test_method(self):
+    def test_instantiation(self):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
+        self.assertEqual(0.6, mcmc.eta())
+        self.assertEqual(0.234, mcmc.target_acceptance_rate())
+        self.assertTrue(mcmc.in_initial_phase())
 
-        # Configure
-        mcmc.set_target_acceptance_rate(0.3)
-        mcmc.set_initial_phase(True)
+    def test_ask_tell(self):
 
-        # Perform short run
-        rate = []
-        chain = []
-        for i in range(100):
-            x = mcmc.ask()
-            fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
-            if i == 20:
-                mcmc.set_initial_phase(False)
-            if i >= 50:
-                chain.append(sample)
-            rate.append(mcmc.acceptance_rate())
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+        # ask only initialises
+        x0 = self.real_parameters * 1.1
+        mcmc = pints.AdaptiveCovarianceMCMC(x0)
+        mcmc.ask()
+        self.assertTrue(mcmc._running)
 
-        chain = np.array(chain)
-        rate = np.array(rate)
-        self.assertEqual(chain.shape[0], 50)
-        self.assertEqual(chain.shape[1], len(x0))
-        self.assertEqual(rate.shape[0], 100)
+        # tell
+        mcmc._proposed = None
+        self.assertRaises(RuntimeError, 'Tell called before proposal was set.',
+                          mcmc.tell, 0.0)
 
     def test_replace(self):
 
@@ -128,12 +119,6 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Test initial proposal is first point
         x0 = self.real_parameters
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
-        self.assertTrue(mcmc.ask() is mcmc._x0)
-
-        # Double initialisation
-        mcmc = pints.AdaptiveCovarianceMCMC(x0)
-        mcmc.ask()
-        self.assertRaises(RuntimeError, mcmc._initialise)
 
         # Tell without ask
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
@@ -170,6 +155,8 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
+        mcmc.set_eta(0.3)
+        self.assertEqual(mcmc.eta(), 0.3)
 
     def test_logging(self):
         """
