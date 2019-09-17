@@ -169,27 +169,28 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """
         raise NotImplementedError
 
-    def replace(self, x, fx):
+    def replace(self, current, current_log_pdf, proposed=None):
         """ See :meth:`pints.SingleChainMCMC.replace()`. """
-        # Must already be running
-        if not self._running:
+
+        # At least one round of ask-and-tell must have been run
+        if (not self._running) or self._current_log_pdf is None:
             raise RuntimeError(
                 'Replace can only be used when already running.')
 
-        # Must be after tell, before ask
-        if self._proposed is not None:
-            raise RuntimeError(
-                'Replace can only be called after tell / before ask.')
-
         # Check values
-        x = pints.vector(x)
-        if not len(x) == len(self._current):
-            raise ValueError('Dimension mismatch in `x`.')
-        fx = float(fx)
+        current = pints.vector(current)
+        if len(current) != self._n_parameters:
+            raise ValueError('Point `current` has the wrong dimensions.')
+        current_log_pdf = float(current_log_pdf)
+        if proposed is not None:
+            proposed = pints.vector(proposed)
+            if len(proposed) != self._n_parameters:
+                raise ValueError('Point `proposed` has the wrong dimensions.')
 
         # Store
-        self._current = x
-        self._current_log_pdf = fx
+        self._current = current
+        self._current_log_pdf = current_log_pdf
+        self._proposed = proposed
 
     def set_target_acceptance_rate(self, rate=0.234):
         """

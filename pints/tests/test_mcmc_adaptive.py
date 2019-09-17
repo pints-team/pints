@@ -12,8 +12,6 @@ import pints.toy as toy
 import unittest
 import numpy as np
 
-from shared import StreamCapture
-
 # Consistent unit testing in Python 2 and 3
 try:
     unittest.TestCase.assertRaisesRegex
@@ -101,7 +99,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # New position must have correct size
         self.assertRaisesRegex(
-            ValueError, 'Dimension mismatch in `x`',
+            ValueError, 'Point `current` has the wrong dimensions',
             mcmc.replace, [1, 2], 1)
 
         # Proposal can be changed too
@@ -142,20 +140,6 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
         mcmc.set_eta(0.3)
         self.assertEqual(mcmc.eta(), 0.3)
-
-    def test_logging(self):
-        """
-        Test logging includes name and acceptance rate.
-        """
-        x = [self.real_parameters] * 3
-        mcmc = pints.MCMCController(
-            self.log_posterior, 3, x, method=pints.AdaptiveCovarianceMCMC)
-        mcmc.set_max_iterations(5)
-        with StreamCapture() as c:
-            mcmc.run()
-        text = c.text()
-        self.assertIn('Adaptive covariance', text)
-        self.assertIn('Accept.', text)
 
 
 if __name__ == '__main__':
