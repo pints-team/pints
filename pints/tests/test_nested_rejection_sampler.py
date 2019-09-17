@@ -85,6 +85,16 @@ class TestNestedRejectionSampler(unittest.TestCase):
         self.assertEqual(sampler.n_active_points(), x)
         self.assertRaisesRegex(
             ValueError, 'greater than 5', sampler.set_n_active_points, 5)
+        self.assertEqual(sampler.name(), 'Nested rejection sampler')
+        self.assertTrue(not sampler.needs_initial_phase())
+
+    def test_ask(self):
+        """
+        Tests ask.
+        """
+        sampler = pints.NestedRejectionSampler(self.log_prior)
+        pts = sampler.ask()
+        self.assertTrue(np.isfinite(self.log_likelihood(pts)))
 
 
 if __name__ == '__main__':
