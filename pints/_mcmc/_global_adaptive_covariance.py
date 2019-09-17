@@ -20,13 +20,6 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
 
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """
-    def __init__(self, x0, sigma0=None):
-        super(GlobalAdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
-
-    def ask(self):
-        """ See :meth:`SingleChainMCMC.ask()`. """
-        super(GlobalAdaptiveCovarianceMCMC, self).ask()
-
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         super(GlobalAdaptiveCovarianceMCMC, self).tell(fx)
