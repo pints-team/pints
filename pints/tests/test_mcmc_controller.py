@@ -28,26 +28,26 @@ except AttributeError:
 debug = False
 
 LOG_SCREEN = [
-    'Using Adaptive covariance MCMC',
+    'Using Simple adaptive covariance MCMC',
     'Generating 3 chains.',
     'Running in sequential mode.',
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
     '0     3      0         0         0          0:00.0',
-    '1     6      0         0         0.5        0:00.0',
-    '2     9      0         0         0.333      0:00.0',
-    '3     12     0         0         0.5        0:00.0',
+    '1     6      0         0         0          0:00.0',
+    '2     9      0         0         0          0:00.0',
+    '3     12     0         0         0          0:00.0',
     'Initial phase completed.',
-    '10    30     0.1       0.1       0.2        0:00.0',
+    '10    30     0         0         0          0:00.0',
     'Halting: Maximum number of iterations (10) reached.',
 ]
 
 LOG_FILE = [
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
     '0     3      0         0         0          0:00.0',
-    '1     6      0         0         0.5        0:00.0',
-    '2     9      0         0         0.333      0:00.0',
-    '3     12     0         0         0.5        0:00.0',
-    '10    30     0.1       0.1       0.2        0:00.0',
+    '1     6      0         0         0          0:00.0',
+    '2     9      0         0         0          0:00.0',
+    '3     12     0         0         0          0:00.0',
+    '10    30     0         0         0          0:00.0',
 ]
 
 

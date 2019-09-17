@@ -37,7 +37,7 @@ relevant code.
 ## Sampling
 
 ### MCMC without gradients
-- [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
+- [Simple Adaptive Covariance MCMC](./sampling-adaptive-covariance-simple-ac.ipynb)
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
 - [DREAM MCMC](./sampling-dream-mcmc.ipynb)
 - [Emcee Hammer](./sampling-emcee-hammer.ipynb)
