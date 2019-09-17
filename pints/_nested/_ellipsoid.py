@@ -39,7 +39,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         L_min = min(L)
         indexmin = min_index(L)
 
-    Run rejection sampling for ``rejection_samples`` to generate
+    Run rejection sampling for ``n_rejection_samples`` to generate
     an initial sample, along with updated values of ``L_min`` and
     ``indexmin``.
 
@@ -120,7 +120,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # Initial phase of rejection sampling
         # Number of nested rejection samples before starting ellipsoidal
         # sampling
-        self.set_rejection_samples()
+        self.set_n_rejection_samples()
         self.set_initial_phase(True)
 
         self._needs_sensitivities = False
@@ -144,7 +144,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def set_alpha(self, alpha):
         """
         Sets alpha which controls rate of decline of enlargement factor
-        with iteration.
+        with iteration  (when `dynamic_enlargement_factor` is true).
         """
         if alpha < 0 or alpha > 1:
             raise ValueError('alpha must be between 0 and 1.')
@@ -153,7 +153,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def alpha(self):
         """
         Returns alpha which controls rate of decline of enlargement factor
-        with iteration.
+        with iteration (when `dynamic_enlargement_factor` is true).
         """
         return self._alpha
 
@@ -183,12 +183,12 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         """
         return self._enlargement_factor
 
-    def rejection_samples(self):
+    def n_rejection_samples(self):
         """
         Returns the number of rejection sample used in the algorithm (see
-        :meth:`set_rejection_samples()`).
+        :meth:`set_n_rejection_samples()`).
         """
-        return self._rejection_samples
+        return self._n_rejection_samples
 
     def ask(self):
         """
@@ -197,7 +197,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         sampling regime).
         """
         i = self._accept_count
-        if (i + 1) % self._rejection_samples == 0:
+        if (i + 1) % self._n_rejection_samples == 0:
             self._rejection_phase = False
             # determine bounding ellipsoid
             self._A, self._centroid = self._minimum_volume_ellipsoid(
@@ -208,7 +208,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             self._proposed = self._log_prior.sample()[0]
         else:
             # update bounding ellipsoid if sufficient samples taken
-            if ((i + 1 - self._rejection_samples)
+            if ((i + 1 - self._n_rejection_samples)
                     % self._ellipsoid_update_gap == 0):
                 self._A, self._centroid = self._minimum_volume_ellipsoid(
                     self._m_active[:, :self._n_parameters])
@@ -234,14 +234,14 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             raise ValueError('Enlargement factor must exceed 1.')
         self._enlargement_factor = enlargement_factor
 
-    def set_rejection_samples(self, rejection_samples=200):
+    def set_n_rejection_samples(self, rejection_samples=200):
         """
         Sets the number of rejection samples to take, which will be assigned
         weights and ultimately produce a set of posterior samples.
         """
         if rejection_samples < 0:
             raise ValueError('Must have non-negative rejection samples.')
-        self._rejection_samples = rejection_samples
+        self._n_rejection_samples = rejection_samples
 
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
         """
@@ -331,7 +331,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Nested ellipsoidal rejection sampler'
+        return 'Nested ellipsoidal sampler'
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
@@ -346,7 +346,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_n_active_points(x[0])
-        self.set_rejection_samples(x[1])
+        self.set_n_rejection_samples(x[1])
         self.set_enlargement_factor(x[2])
         self.set_ellipsoid_update_gap(x[3])
         self.set_dynamic_enlargement_factor(x[4])

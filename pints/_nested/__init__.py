@@ -434,8 +434,9 @@ class NestedController(object):
                     logger.log(i_message, self._sampler._n_evals, timer.time(),
                                self._diff,
                                float(
-                        self._sampler._accept_count /
-                        (self._sampler._n_evals - self._sampler._n_active_points)))
+                               self._sampler._accept_count /
+                               (self._sampler._n_evals -
+                                self._sampler._n_active_points)))
 
                     # Choose next logging point
                     if i_message > message_warm_up:
