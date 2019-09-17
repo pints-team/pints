@@ -65,6 +65,10 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._initialise()
 
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
+
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
