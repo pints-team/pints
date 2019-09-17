@@ -91,6 +91,16 @@ class TestNestedController(unittest.TestCase):
             ValueError, 'same number of parameters',
             pints.NestedController, self.log_likelihood, log_prior)
 
+        # test that ellipsoidal sampling used by default
+        sampler = pints.NestedController(self.log_likelihood, self.log_prior)
+        self.assertEqual(sampler._sampler.name(), 'Nested ellipsoidal sampler')
+        self.assertRaisesRegex(
+            ValueError,
+            'Given method must extend pints.NestedSampler.',
+            pints.NestedController,
+            self.log_likelihood, self.log_prior,
+            pints.DifferentialEvolutionMCMC)
+
     def test_logging(self):
         """ Tests logging to screen and file. """
 
@@ -158,6 +168,13 @@ class TestNestedController(unittest.TestCase):
         sampler.set_log_to_screen(False)
         sampler.run()
 
+    def test_nested_sampler(self):
+        """
+        Tests `NestedSampler`.
+        """
+        sampler = pints.NestedSampler(self.log_prior)
+        self.assertTrue(not sampler.needs_initial_phase())
+
     def test_getters_and_setters(self):
         """
         Tests various get() and set() methods.
@@ -181,6 +198,14 @@ class TestNestedController(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'greater than zero',
             sampler.set_n_posterior_samples, 0)
+        self.assertRaises(ValueError, sampler.sample_from_posterior, 0)
+
+        # Marginal likelihood threshold
+        self.assertRaises(ValueError,
+                          sampler.set_marginal_log_likelihood_threshold,
+                          0)
+        sampler.set_marginal_log_likelihood_threshold(3.0)
+        self.assertEqual(sampler.marginal_log_likelihood_threshold(), 3.0)
 
 
 if __name__ == '__main__':

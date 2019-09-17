@@ -259,12 +259,19 @@ class NestedController(object):
 
     def set_marginal_log_likelihood_threshold(self, threshold):
         """
-        Sets criterion for determining convergence in estimate of marginal
+        Sets threshold for determining convergence in estimate of marginal
         log likelihood which leads to early termination of the algorithm.
         """
         if threshold <= 0:
             raise ValueError('Convergence threshold must be positive.')
         self._marginal_log_likelihood_threshold = threshold
+
+    def marginal_log_likelihood_threshold(self):
+        """
+        Returns threshold for determining convergence in estimate of marginal
+        log likelihood which leads to early termination of the algorithm.
+        """
+        return self._marginal_log_likelihood_threshold
 
     def iterations(self):
         """
