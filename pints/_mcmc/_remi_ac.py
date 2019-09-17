@@ -12,11 +12,9 @@ import pints
 import numpy as np
 
 
-class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
+class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, which is either algorithm 4 in [1]
-    (if ``binary_accept`` is false) or the algorithm in SOM of [2]
-    (if ``binary_accept`` is true). By default, ``binary_accept`` is true.
+    Adaptive Metropolis MCMC, which is algorithm in SOM of [1].
 
     Initialise::
 
@@ -39,19 +37,14 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
             theta_(t+1) = theta_t
             accepted = 0
 
-        if binary_accept = 1:
-            alpha = accepted
+        alpha = accepted
 
         mu = (1 - gamma) mu + gamma theta_(t+1)
         Sigma = (1 - gamma) Sigma + gamma (theta_(t+1) - mu)(theta_(t+1) - mu)
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    [1] A tutorial on adaptive MCMC
-    Christophe Andrieu and Johannes Thoms, Statistical Computing,
-    2008, 18: 343-373
-
-    [2] Uncertainty and variability in models of the cardiac action potential:
+    [1] Uncertainty and variability in models of the cardiac action potential:
     Can we build trustworthy models?
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
@@ -59,14 +52,14 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(SimpleACMCMC, self).__init__(x0, sigma0)
+        super(RemiACMCMC, self).__init__(x0, sigma0)
         self._log_lambda = 0
         self._binary_accept = True
         self._accepted = True
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(SimpleACMCMC, self).ask()
+        super(RemiACMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -82,30 +75,11 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Return proposed point
         return self._proposed
 
-    def binary_accept(self):
-        """
-        Returns binary_accept which determines whether algorithm [2]
-        (if binary_accept is true) or algorithm [1] (if binary_accept is false)
-        is used.
-        """
-        return self._binary_accept
-
-    def set_binary_accept(self, binary_accept):
-        """
-        Determines whether algorithm [2] (if binary_accept is true) or
-        algorithm [1] (if binary_accept is false) is used.
-        """
-        self._binary_accept = bool(binary_accept)
-
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(SimpleACMCMC, self).tell(fx)
+        super(RemiACMCMC, self).tell(fx)
 
-        if self._binary_accept:
-            self._acceptance_prob = self._accepted
-        else:
-            self._acceptance_prob = (
-                np.minimum(1, np.exp(self._log_acceptance_ratio)))
+        self._acceptance_prob = self._accepted
         if self._adaptive:
             self._log_lambda += (self._gamma *
                                  (self._acceptance_prob -
@@ -116,17 +90,16 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Simple adaptive covariance MCMC'
+        return 'Remi adaptive covariance MCMC'
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 1
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[eta, binary_accept]``.
+        The hyper-parameter vector is ``[eta]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_eta(x[0])
-        self.set_binary_accept(x[1])

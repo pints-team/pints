@@ -37,12 +37,13 @@ relevant code.
 ## Sampling
 
 ### MCMC without gradients
-- [Simple Adaptive Covariance MCMC](./sampling-adaptive-covariance-simple-ac.ipynb)
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
 - [DREAM MCMC](./sampling-dream-mcmc.ipynb)
 - [Emcee Hammer](./sampling-emcee-hammer.ipynb)
+- [Haario Adaptive Covariance MCMC](./sampling-adaptive-covariance-haario.ipynb)
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Remi Adaptive Covariance MCMC](./sampling-adaptive-covariance-remi.ipynb)
 - [Slice Sampling: Stepout MCMC](./sampling-slice-stepout-mcmc.ipynb)
 - [Slice Sampling: Doubling MCMC](./sampling-slice-doubling-mcmc.ipynb)
 - [Slice Sampling: Overrelaxation MCMC](./sampling-slice-overrelaxation-mcmc.ipynb)

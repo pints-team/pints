@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the simple adaptive covariance MCMC routine.
+# Tests the basic methods of the Remi adaptive covariance MCMC routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -21,7 +21,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestSimpleACMCMC(unittest.TestCase):
+class TestRemiACMCMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
     """
@@ -64,7 +64,7 @@ class TestSimpleACMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
 
         # Configure
         mcmc.set_target_acceptance_rate(0.3)
@@ -94,7 +94,7 @@ class TestSimpleACMCMC(unittest.TestCase):
     def test_replace(self):
 
         x0 = self.real_parameters * 1.1
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
 
         # One round of ask-tell must have been run
         self.assertRaisesRegex(
@@ -127,20 +127,20 @@ class TestSimpleACMCMC(unittest.TestCase):
 
         # Test initial proposal is first point
         x0 = self.real_parameters
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         self.assertTrue(mcmc.ask() is mcmc._x0)
 
         # Double initialisation
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         mcmc.ask()
         self.assertRaises(RuntimeError, mcmc._initialise)
 
         # Tell without ask
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Repeated asks should return same point
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         # Get into accepting state
         mcmc.set_initial_phase(False)
         for i in range(100):
@@ -154,7 +154,7 @@ class TestSimpleACMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, 1)
 
         # Bad starting point
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
@@ -162,26 +162,22 @@ class TestSimpleACMCMC(unittest.TestCase):
 
         # Test setting acceptance rate
         x0 = self.real_parameters
-        mcmc = pints.SimpleACMCMC(x0)
+        mcmc = pints.RemiACMCMC(x0)
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
         self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(1)
-        self.assertEqual(mcmc.binary_accept(), True)
-        mcmc.set_binary_accept(False)
-        self.assertEqual(mcmc.binary_accept(), False)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
 
         # test hyperparameter setters and getters
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1, 0])
-        mcmc.set_hyper_parameters([0.3, 0])
+        self.assertEqual(mcmc.n_hyper_parameters(), 1)
+        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1])
+        mcmc.set_hyper_parameters([0.3])
         self.assertEqual(mcmc.eta(), 0.3)
-        self.assertTrue(not mcmc.binary_accept())
 
-        self.assertEqual(mcmc.name(), 'Simple adaptive covariance MCMC')
+        self.assertEqual(mcmc.name(), 'Remi adaptive covariance MCMC')
 
     def test_logging(self):
         """
@@ -189,12 +185,12 @@ class TestSimpleACMCMC(unittest.TestCase):
         """
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
-            self.log_posterior, 3, x, method=pints.SimpleACMCMC)
+            self.log_posterior, 3, x, method=pints.RemiACMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
-        self.assertIn('Simple adaptive covariance MCMC', text)
+        self.assertIn('Remi adaptive covariance MCMC', text)
         self.assertIn('Accept.', text)
 
 

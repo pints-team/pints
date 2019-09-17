@@ -28,7 +28,7 @@ except AttributeError:
 debug = False
 
 LOG_SCREEN = [
-    'Using Simple adaptive covariance MCMC',
+    'Using Remi adaptive covariance MCMC',
     'Generating 3 chains.',
     'Running in sequential mode.',
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
@@ -253,7 +253,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.SimpleACMCMC)
+            method=pints.RemiACMCMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
@@ -358,7 +358,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.SimpleACMCMC)
+            method=pints.RemiACMCMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(debug)
 
