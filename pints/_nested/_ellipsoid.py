@@ -201,7 +201,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             self._rejection_phase = False
             # determine bounding ellipsoid
             self._A, self._centroid = self._minimum_volume_ellipsoid(
-                self._m_active[:, :self._dimension]
+                self._m_active[:, :self._n_parameters]
             )
 
         if self._rejection_phase:
@@ -211,7 +211,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             if ((i + 1 - self._rejection_samples)
                     % self._ellipsoid_update_gap == 0):
                 self._A, self._centroid = self._minimum_volume_ellipsoid(
-                    self._m_active[:, :self._dimension])
+                    self._m_active[:, :self._n_parameters])
             # From Feroz-Hobson (2008) below eq. (14)
             if self._dynamic_enlargement_factor:
                 self._enlargement_factor *= (
