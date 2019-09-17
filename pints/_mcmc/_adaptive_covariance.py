@@ -48,6 +48,11 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         # Adaptive mode: disabled during initial phase
         self._adaptive = False
 
+        self._current = None
+        self._current_log_pdf = None
+        self._proposed = None
+        self._log_acceptance_ratio = None
+
     def acceptance_rate(self):
         """
         Returns the current (measured) acceptance rate.

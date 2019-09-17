@@ -79,8 +79,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # tell
         mcmc._proposed = None
-        self.assertRaises(RuntimeError, 'Tell called before proposal was set.',
-                          mcmc.tell, 0.0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0.0)
 
     def test_replace(self):
 
@@ -102,7 +101,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # New position must have correct size
         self.assertRaisesRegex(
-            ValueError, '`current` has the wrong dimensions',
+            ValueError, 'Dimension mismatch in `x`',
             mcmc.replace, [1, 2], 1)
 
         # Proposal can be changed too
@@ -123,20 +122,6 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         # Tell without ask
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
-
-        # Repeated asks should return same point
-        mcmc = pints.AdaptiveCovarianceMCMC(x0)
-        # Get into accepting state
-        mcmc.set_initial_phase(False)
-        for i in range(100):
-            mcmc.tell(self.log_posterior(mcmc.ask()))
-        x = mcmc.ask()
-        for i in range(10):
-            self.assertTrue(x is mcmc.ask())
-
-        # Repeated tells should fail
-        mcmc.tell(1)
-        self.assertRaises(RuntimeError, mcmc.tell, 1)
 
         # Bad starting point
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
