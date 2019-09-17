@@ -113,3 +113,7 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
 
         # Return new point for chain
         return self._current
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Simple adaptive covariance MCMC'

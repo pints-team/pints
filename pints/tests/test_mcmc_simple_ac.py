@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the global adaptive covariance base class.
+# Tests the basic methods of the simple adaptive covariance MCMC routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -12,6 +12,8 @@ import pints.toy as toy
 import unittest
 import numpy as np
 
+from shared import StreamCapture
+
 # Consistent unit testing in Python 2 and 3
 try:
     unittest.TestCase.assertRaisesRegex
@@ -19,7 +21,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestAdaptiveCovarianceMCMC(unittest.TestCase):
+class TestSimpleACMCMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
     """
@@ -58,31 +60,41 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
-    def test_instantiation(self):
+    def test_method(self):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
-        self.assertEqual(0.6, mcmc.eta())
-        self.assertEqual(0.234, mcmc.target_acceptance_rate())
-        self.assertTrue(mcmc.in_initial_phase())
+        mcmc = pints.SimpleACMCMC(x0)
 
-    def test_ask_tell(self):
+        # Configure
+        mcmc.set_target_acceptance_rate(0.3)
+        mcmc.set_initial_phase(True)
 
-        # ask only initialises
-        x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
-        mcmc.ask()
-        self.assertTrue(mcmc._running)
+        # Perform short run
+        rate = []
+        chain = []
+        for i in range(100):
+            x = mcmc.ask()
+            fx = self.log_posterior(x)
+            sample = mcmc.tell(fx)
+            if i == 20:
+                mcmc.set_initial_phase(False)
+            if i >= 50:
+                chain.append(sample)
+            rate.append(mcmc.acceptance_rate())
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
 
-        # tell
-        mcmc._proposed = None
-        self.assertRaises(RuntimeError, mcmc.tell, 0.0)
+        chain = np.array(chain)
+        rate = np.array(rate)
+        self.assertEqual(chain.shape[0], 50)
+        self.assertEqual(chain.shape[1], len(x0))
+        self.assertEqual(rate.shape[0], 100)
 
     def test_replace(self):
 
         x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.SimpleACMCMC(x0)
 
         # One round of ask-tell must have been run
         self.assertRaisesRegex(
@@ -99,7 +111,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # New position must have correct size
         self.assertRaisesRegex(
-            ValueError, 'Point `current` has the wrong dimensions',
+            ValueError, '`current` has the wrong dimensions',
             mcmc.replace, [1, 2], 1)
 
         # Proposal can be changed too
@@ -115,14 +127,34 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Test initial proposal is first point
         x0 = self.real_parameters
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.SimpleACMCMC(x0)
+        self.assertTrue(mcmc.ask() is mcmc._x0)
+
+        # Double initialisation
+        mcmc = pints.SimpleACMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(RuntimeError, mcmc._initialise)
 
         # Tell without ask
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.SimpleACMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
+        # Repeated asks should return same point
+        mcmc = pints.SimpleACMCMC(x0)
+        # Get into accepting state
+        mcmc.set_initial_phase(False)
+        for i in range(100):
+            mcmc.tell(self.log_posterior(mcmc.ask()))
+        x = mcmc.ask()
+        for i in range(10):
+            self.assertTrue(x is mcmc.ask())
+
+        # Repeated tells should fail
+        mcmc.tell(1)
+        self.assertRaises(RuntimeError, mcmc.tell, 1)
+
         # Bad starting point
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.SimpleACMCMC(x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
@@ -130,7 +162,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Test setting acceptance rate
         x0 = self.real_parameters
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.SimpleACMCMC(x0)
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
         self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
@@ -138,8 +170,20 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
-        mcmc.set_eta(0.3)
-        self.assertEqual(mcmc.eta(), 0.3)
+
+    def test_logging(self):
+        """
+        Test logging includes name and acceptance rate.
+        """
+        x = [self.real_parameters] * 3
+        mcmc = pints.MCMCController(
+            self.log_posterior, 3, x, method=pints.SimpleACMCMC)
+        mcmc.set_max_iterations(5)
+        with StreamCapture() as c:
+            mcmc.run()
+        text = c.text()
+        self.assertIn('Simple adaptive covariance MCMC', text)
+        self.assertIn('Accept.', text)
 
 
 if __name__ == '__main__':

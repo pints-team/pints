@@ -19,7 +19,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestAdaptiveCovarianceMCMC(unittest.TestCase):
+class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
     """
