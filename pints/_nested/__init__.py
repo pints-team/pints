@@ -27,11 +27,13 @@ class NestedSampler(pints.TunableMethod):
 
         # Initialise active point containers
         self._n_active_points = 400
-        self._dimension = self._log_prior.n_parameters()
-        self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
+        self._n_parameters = self._log_prior.n_parameters()
+        self._m_active = np.zeros((self._n_active_points,
+                                   self._n_parameters + 1))
         self._min_index = None
 
         self._accept_count = 0
+        self._n_evals = 0
 
     def needs_sensitivities(self):
         """
@@ -54,14 +56,15 @@ class NestedSampler(pints.TunableMethod):
         Whether to accept point if its likelihood exceeds the current
         minimum threshold.
         """
+        self._n_evals += 1
         if np.isnan(fx) or fx < self._running_log_likelihood:
             return None
         else:
             self._m_active[self._min_index, :] = np.concatenate(
                 (self._proposed, np.array([fx])))
-            self._min_index = np.argmin(self._m_active[:, self._dimension])
+            self._min_index = np.argmin(self._m_active[:, self._n_parameters])
             self._set_running_log_likelihood(
-                np.min(self._m_active[:, self._dimension])
+                np.min(self._m_active[:, self._n_parameters])
             )
             self._accept_count += 1
             return self._proposed
@@ -111,7 +114,8 @@ class NestedSampler(pints.TunableMethod):
         if active_points <= 5:
             raise ValueError('Number of active points must be greater than 5.')
         self._n_active_points = active_points
-        self._m_active = np.zeros((self._n_active_points, self._dimension + 1))
+        self._m_active = np.zeros((self._n_active_points,
+                                   self._n_parameters + 1))
 
     def n_active_points(self):
         """
@@ -130,11 +134,11 @@ class NestedSampler(pints.TunableMethod):
         Sets initial active points matrix.
         """
         for i, fx in enumerate(v_fx):
-            self._m_active[i, self._dimension] = fx
+            self._m_active[i, self._n_parameters] = fx
         self._m_active[:, :-1] = m_initial
-        self._min_index = np.argmin(self._m_active[:, self._dimension])
+        self._min_index = np.argmin(self._m_active[:, self._n_parameters])
         self._set_running_log_likelihood(
-            self._m_active[self._min_index, self._dimension])
+            self._m_active[self._min_index, self._n_parameters])
 
     def min_index(self):
         """ Returns index of sample with lowest log-likelihood. """
@@ -151,7 +155,7 @@ class NestedSampler(pints.TunableMethod):
         raise NotImplementedError
 
 
-class NestedSampling(object):
+class NestedController(object):
     """
     Uses nested sampling to sample from a posterior distribution.
 
@@ -201,9 +205,6 @@ class NestedSampling(object):
 
         # Total number of posterior samples
         self._posterior_samples = 1000
-
-        # Total number of likelihood evaluations made
-        self._n_evals = 0
 
         # Convergence criterion in log-evidence
         self._marginal_log_likelihood_threshold = 0.5
@@ -341,18 +342,19 @@ class NestedSampling(object):
             logger.add_float('Delta_log(z)')
             logger.add_float('Acceptance rate')
 
-        d = self._dimension
+        d = self._n_parameters
         m_initial = self._log_prior.sample(n_active_points)
         v_fx = np.zeros(n_active_points)
         for i in range(0, n_active_points):
             # Calculate likelihood
             v_fx[i] = evaluator.evaluate([m_initial[i, :]])[0]
-            self._n_evals += 1
+            self._sampler._n_evals += 1
 
             # Show progress
             if logging and i >= next_message:
                 # Log state
-                logger.log(0, self._n_evals, timer.time(), self._diff, 1.0)
+                logger.log(0, self._sampler._n_evals,
+                           timer.time(), self._diff, 1.0)
 
                 # Choose next logging point
                 if i > message_warm_up:
@@ -400,7 +402,6 @@ class NestedSampling(object):
             while self._sampler.tell(log_likelihood) is None:
                 proposed = self._sampler.ask()
                 log_likelihood = evaluator.evaluate([proposed])[0]
-                self._n_evals += 1
 
             # Check whether within convergence threshold
             if i > 2:
@@ -430,10 +431,11 @@ class NestedSampling(object):
                 i_message += 1
                 if i_message >= next_message:
                     # Log state
-                    logger.log(i_message, self._n_evals, timer.time(),
+                    logger.log(i_message, self._sampler._n_evals, timer.time(),
                                self._diff,
-                               float(self._n_evals /
-                                     self._sampler._accept_count))
+                               float(
+                        self._sampler._accept_count /
+                        (self._sampler._n_evals - self._sampler._n_active_points)))
 
                     # Choose next logging point
                     if i_message > message_warm_up:
@@ -459,7 +461,7 @@ class NestedSampling(object):
 
         # Calculate probabilities (can this be used to calculate effective
         # sample size as in importance sampling?) of each particle
-        self._vP = np.exp(self._m_samples_all[:, self._dimension]
+        self._vP = np.exp(self._m_samples_all[:, self._n_parameters]
                           - self._log_Z) * self._w
 
         # Draw posterior samples
@@ -492,7 +494,7 @@ class NestedSampling(object):
         # Include active particles in sample
         m_active = self._sampler.active_points()
         self._v_log_Z[self._iterations] = logsumexp(m_active[:,
-                                                    self._dimension])
+                                                    self._n_parameters])
         self._w[self._iterations:] = float(self._X[self._iterations]) / float(
             self._sampler.n_active_points())
         self._m_samples_all = np.vstack((self._m_inactive, m_active))
@@ -582,7 +584,7 @@ class NestedSampling(object):
         [1] "Nested Sampling for General Bayesian Computation", John Skilling,
         Bayesian Analysis 1:4 (2006).
         """
-        self._log_vP = (self._m_samples_all[:, self._dimension]
+        self._log_vP = (self._m_samples_all[:, self._n_parameters]
                         - self._log_Z + np.log(self._w))
         return np.exp(-np.sum(self._vP * self._log_vP))
 
