@@ -69,7 +69,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         #
         # Default settings
         #
-        self._method = pints.AdaptiveCovarianceMCMC
+        self._method = pints.SimpleACMCMC
         self._needs_initial_phase = True
         self._in_initial_phase = True
 
@@ -294,4 +294,3 @@ class PopulationMCMC(pints.SingleChainMCMC):
         distribution is ``p(theta|data) ^ (1 - T)``.
         """
         return self._schedule
-

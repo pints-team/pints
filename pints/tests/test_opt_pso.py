@@ -229,7 +229,7 @@ class TestPSO(unittest.TestCase):
         # Test invalid method
         self.assertRaisesRegex(
             ValueError, 'subclass', pints.OptimisationController, r, [1, 1],
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.SimpleACMCMC)
 
     def test_set_hyper_parameters(self):
         # Tests the hyper-parameter interface for this optimiser.

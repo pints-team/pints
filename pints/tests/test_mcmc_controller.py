@@ -253,7 +253,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.SimpleACMCMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
@@ -358,7 +358,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.SimpleACMCMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(debug)
 

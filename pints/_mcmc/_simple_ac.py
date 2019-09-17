@@ -56,7 +56,7 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
     Mirams (2015) Journal of Molecular and Cellular Cardiology
 
-    *Extends:* :class:`AdaptiveCovarianceMCMC`
+    *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
         super(SimpleACMCMC, self).__init__(x0, sigma0)
