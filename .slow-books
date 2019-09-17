@@ -2,6 +2,7 @@
 automatic-differentiation-using-autograd.ipynb
 sampling-ellipsoidal-nested-rejection-sampling.ipynb
 sampling-hamiltonian-mcmc.ipynb
+sampling-monomial-gamma-hmc.ipynb
 sampling-slice-doubling-mcmc.ipynb
 sampling-slice-overrelaxation-mcmc.ipynb
 sampling-slice-stepout-mcmc.ipynb
