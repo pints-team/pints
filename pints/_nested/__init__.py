@@ -79,7 +79,7 @@ class NestedSampler(pints.TunableMethod):
         """
         Returns ``True`` if this method needs an initial phase, for example
         ellipsoidal nested sampling has a period of running rejection
-        sampling before it starts to fit ellipsoids to points
+        sampling before it starts to fit ellipsoids to points.
         """
         return False
 
@@ -137,7 +137,7 @@ class NestedSampler(pints.TunableMethod):
             self._m_active[self._min_index, self._dimension])
 
     def min_index(self):
-        """ Returns index of sample with lowest log-likelihood """
+        """ Returns index of sample with lowest log-likelihood. """
         return self._min_index
 
     def n_hyper_parameters(self):
@@ -153,7 +153,7 @@ class NestedSampler(pints.TunableMethod):
 
 class NestedSampling(object):
     """
-    Uses nested sampling to sample from a posterior distribution
+    Uses nested sampling to sample from a posterior distribution.
 
     Arguments:
 

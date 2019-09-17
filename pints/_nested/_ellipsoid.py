@@ -14,7 +14,7 @@ import numpy as np
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
-    """
+    r"""
     Creates a nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
 
@@ -22,14 +22,90 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     drawn around surviving particles (typically with an enlargement factor to
     avoid missing prior mass), and then random samples are drawn from within
     the bounds of the ellipsoid. By sampling in the space of surviving
-    particles, the efficiency of this algorithm should be better than simple
-    rejection sampling.
+    particles, the efficiency of this algorithm aims to improve upon simple
+    rejection sampling. This algorithm has the following steps:
+
+    Initialise::
+
+        Z_0 = 0
+        X_0 = 1
+
+    Draw samples from prior::
+
+        for i in 1:n_active_points:
+            theta_i ~ p(theta), i.e. sample from the prior
+            L_i = p(theta_i|X)
+        endfor
+        L_min = min(L)
+        indexmin = min_index(L)
+
+    Run rejection sampling for ``rejection_samples`` to generate
+    an initial sample, along with updated values of ``L_min`` and
+    ``indexmin``.
+
+    Fit active points using a minimum volume bounding ellipse. In our approach,
+    we do this with the following procedure (which we term
+    ``minimum_volume_ellipsoid`` in what follows) that returns the positive
+    definite matrix A with centre c that define the ellipsoid
+    by :math:`(x - c)^t A (x - c) = 1`::
+
+        cov = covariance(transpose(active_points))
+        cov_inv = inv(cov)
+        c = mean(points)
+        for i in n_active_points:
+            dist[i] = (points[i] - c) * cov_inv * (points[i] - c)
+        endfor
+        enlargement_factor = max(dist)
+        A = (1.0 / enlargement_factor) * cov_inv
+        return A, c
+
+    From then on, in each iteration (t), the following occurs::
+
+        if mod(t, ellipsoid_update_gap) == 0:
+            A, c = minimum_volume_ellipsoid(active_points)
+        else:
+            if dynamic_enlargement_factor:
+                enlargement_factor *= (
+                    exp(-(t + 1) / n_active_points)**alpha
+                )
+            endif
+        endif
+        theta* = ellipsoid_sample(enlargement_factor, A, c)
+        while p(theta*|X) < L_min:
+            theta* = ellipsoid_sample(enlargement_factor, A, c)
+        endwhile
+        theta_indexmin = theta*
+        L_indexmin = p(theta*|X)
+
+    If the parameter ``dynamic_enlargement_factor`` is true, the enlargement
+    factor is shrunk as the sampler runs, to avoid inefficiencies in later
+    iterations. By default, the enlargement factor begins at 1.1.
+
+    In ``ellipsoid_sample``, a point is drawn uniformly from within the minimum
+    volume ellipsoid, whose volume is increased by a factor
+    ``enlargement_factor``.
+
+    At the end of iterations, there is a final ``Z`` increment::
+
+        Z = Z + (1 / n_active_points) * (L_1 + L_2 + ..., + L_n_active_points)
+
+    The posterior samples are generated as described in [2] on page 849 by
+    weighting each dropped sample in proportion to the volume of the
+    posterior region it was sampled from. That is, the probability
+    for drawing a given sample j is given by::
+
+        p_j = L_j * w_j / Z
+
+    where j = 1, ..., n_iterations.
 
     *Extends:* :class:`NestedSampler`
 
     [1] "A nested sampling algorithm for cosmological model selection",
     Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
-    arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
+    arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006.
+
+    [2] "Nested Sampling for General Bayesian Computation", John Skilling,
+    Bayesian Analysis 1:4 (2006).
     """
 
     def __init__(self, log_prior):
@@ -61,23 +137,23 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def dynamic_enlargement_factor(self):
         """
-        Returns dynamic enlargement factor
+        Returns dynamic enlargement factor.
         """
         return self._dynamic_enlargement_factor
 
     def set_alpha(self, alpha):
         """
         Sets alpha which controls rate of decline of enlargement factor
-        with iteration
+        with iteration.
         """
         if alpha < 0 or alpha > 1:
-            raise ValueError('alpha must be between 0 and 1')
+            raise ValueError('alpha must be between 0 and 1.')
         self._alpha = alpha
 
     def alpha(self):
         """
         Returns alpha which controls rate of decline of enlargement factor
-        with iteration
+        with iteration.
         """
         return self._alpha
 
@@ -142,7 +218,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                     np.exp(-(i + 1) / self._n_active_points)**self._alpha
                 )
             # propose by sampling within ellipsoid
-            self._proposed = self._reject_ellipsoid_sample(
+            self._proposed = self._ellipsoid_sample(
                 self._enlargement_factor, self._A, self._centroid)
 
         return self._proposed
@@ -172,8 +248,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         Sets the frequency with which the minimum volume ellipsoid is
         re-estimated as part of the nested rejection sampling algorithm. A
         higher rate of this parameter means each sample will be more
-        efficiently produced, yet the cost of re-computing the ellipsoid means
-        it is often desirable to compute this every n iterates.
+        efficiently produced, yet the cost of re-computing the ellipsoid
+        may mean it is better to update this not each iteration -- instead,
+        with gaps of ``ellipsoid_update_gap`` between each update. By default,
+        the ellipse is updated every 100 iterations.
         """
         ellipsoid_update_gap = int(ellipsoid_update_gap)
         if ellipsoid_update_gap <= 1:
@@ -196,19 +274,19 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
         return A, c
 
-    def _reject_ellipsoid_sample(
+    def _ellipsoid_sample(
             self, enlargement_factor, A, centroid):
         """
-        Draws from the enlarged bounding ellipsoid
+        Draws from the enlarged bounding ellipsoid.
         """
         return self._draw_from_ellipsoid(
             np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
         """
-        Draw `npts` random uniform points from within an ellipsoid with a
-        covariance matrix covmat and a centroid cent, as per:
-        http://www.astro.gla.ac.uk/~matthew/blog/?p=368
+        Draw ``npts`` random uniform points from within an ellipsoid with a
+        covariance matrix covmat and a centroid cent (as per:
+        http://www.astro.gla.ac.uk/~matthew/blog/?p=368).
         """
         try:
             ndims = covmat.shape[0]
@@ -253,7 +331,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Nested Ellipsoidal Rejection Sampler'
+        return 'Nested ellipsoidal rejection sampler'
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """

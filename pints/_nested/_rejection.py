@@ -19,9 +19,9 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     This is the simplest form of nested sampler and involves using
     rejection sampling from the prior as described in the algorithm on page 839
-    in [1] to estimate the marginal likelihood and generate weights,
-    preliminary samples (with their respective likelihoods), required to
-    generate posterior samples. The algorithm is given by the following steps:
+    in [1] to estimate the marginal likelihood. In doing so,
+    this algorithm also generates posterior samples as a by-product.
+    The algorithm is given by the following steps:
 
     Initialise::
 
@@ -49,16 +49,18 @@ class NestedRejectionSampler(pints.NestedSampler):
         theta_indexmin = theta*
         L_indexmin = p(theta*|X)
 
-    At the end of iterations, final Z increment::
+    At the end of iterations, there is a final ``Z`` increment::
 
-    Z = Z + (1 / n_active_points) * (L_1 + L_2 + ..., + L_n_active_points)
+        Z = Z + (1 / n_active_points) * (L_1 + L_2 + ..., + L_n_active_points)
 
     The posterior samples are generated as described in [1] on page 849 by
     weighting each dropped sample in proportion to the volume of the
     posterior region it was sampled from. That is, the probability
-    for drawing a given sample is given by::
+    for drawing a given sample j is given by::
 
-        p_i = L_i * w_i / Z
+        p_j = L_j * w_j / Z
+
+    where j = 1, ..., n_iterations.
 
     *Extends:* :class:`NestedSampler`
 
@@ -83,7 +85,7 @@ class NestedRejectionSampler(pints.NestedSampler):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[# active points]``
+        The hyper-parameter vector is ``[n_active_points]``
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
