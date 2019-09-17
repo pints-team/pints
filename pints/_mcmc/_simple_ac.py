@@ -117,3 +117,16 @@ class SimpleACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Simple adaptive covariance MCMC'
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[eta, binary_accept]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_eta(x[0])
+        self.set_binary_accept(x[1])

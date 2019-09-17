@@ -174,6 +174,15 @@ class TestSimpleACMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
 
+        # test hyperparameter setters and getters
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1, 0])
+        mcmc.set_hyper_parameters([0.3, 0])
+        self.assertEqual(mcmc.eta(), 0.3)
+        self.assertTrue(not mcmc.binary_accept())
+
+        self.assertEqual(mcmc.name(), 'Simple adaptive covariance MCMC')
+
     def test_logging(self):
         """
         Test logging includes name and acceptance rate.

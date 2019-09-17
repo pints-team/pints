@@ -135,6 +135,7 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
+        self.assertRaises(ValueError, mcmc.set_eta, -0.1)
         mcmc.set_eta(0.3)
         self.assertEqual(mcmc.eta(), 0.3)
 
