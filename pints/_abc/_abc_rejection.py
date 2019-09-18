@@ -1,5 +1,5 @@
 #
-# Adaptive covariance MCMC method
+# ABC Rejection method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
