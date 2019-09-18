@@ -128,6 +128,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # Dynamically vary the enlargement factor
         self._dynamic_enlargement_factor = False
         self._alpha = 1
+        self._A = None
+        self._centroid = None
 
     def set_dynamic_enlargement_factor(self, dynamic_enlargement_factor):
         """

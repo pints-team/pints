@@ -139,6 +139,25 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertTrue(not sampler.in_initial_phase())
         self.assertEqual(sampler.name(), 'Nested ellipsoidal sampler')
 
+    def test_ask_tell(self):
+        """ Tests ask and tell """
+
+        # test that ellipses are estimated
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        A1 = sampler._A
+        c1 = sampler._centroid
+        sampler.set_n_rejection_samples(2)
+        pt = sampler.ask()
+        fx = self.log_likelihood(pt)
+        sampler.tell(fx)
+        pt = sampler.ask()
+        fx = self.log_likelihood(pt)
+        sampler.tell(fx)
+        A2 = sampler._A
+        c2 = sampler._centroid
+        self.assertTrue(not np.array_equal(A1, A2))
+        self.assertTrue(not np.array_equal(c1, c2))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
