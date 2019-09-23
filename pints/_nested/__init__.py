@@ -31,7 +31,6 @@ class NestedSampler(pints.TunableMethod):
         self._m_active = np.zeros((self._n_active_points,
                                    self._n_parameters + 1))
         self._min_index = None
-
         self._accept_count = 0
         self._n_evals = 0
 
@@ -56,18 +55,51 @@ class NestedSampler(pints.TunableMethod):
         Whether to accept point if its likelihood exceeds the current
         minimum threshold.
         """
-        self._n_evals += 1
-        if np.isnan(fx) or fx < self._running_log_likelihood:
-            return None
+        # if running in parallel
+        if isinstance(fx, list):
+            a_len = len(fx)
+            self._n_evals += a_len
+            results = []
+            for i in range(a_len):
+                if np.isnan(fx[i]) or fx[i] < self._running_log_likelihood:
+                    results.append(None)
+                else:
+                    results.append(fx[i])
+            n_non_none = sum(x is not None for x in results)
+            if n_non_none == 0:
+                return None
+            elif n_non_none == 1:
+                proposed = next(item for item in results if item is not None)
+                winners = np.array([[]])
+            else:
+                # select at random from multiple non-nones
+                fx_short = [i for i in results if i]
+                idex = [results.index(i) for i in fx_short]
+                proposed_short = [self._proposed[i] for i in idex]
+                fx_temp = np.random.choice(fx_short)
+                index_temp = results.index(fx_temp)
+                proposed = self._proposed[index_temp]
+                proposed_short.remove(proposed)
+                fx_short.remove(fx_temp)
+                winners = np.column_stack((proposed_short, fx_short))
         else:
-            self._m_active[self._min_index, :] = np.concatenate(
-                (self._proposed, np.array([fx])))
-            self._min_index = np.argmin(self._m_active[:, self._n_parameters])
-            self._set_running_log_likelihood(
-                np.min(self._m_active[:, self._n_parameters])
-            )
-            self._accept_count += 1
-            return self._proposed
+            self._n_evals += 1
+            if np.isnan(fx) or fx < self._running_log_likelihood:
+                return None
+            else:
+                proposed = self._proposed
+                fx_temp = fx
+                winners = np.array([[]])
+
+        self._m_active[self._min_index, :] = np.concatenate(
+            (proposed, np.array([fx_temp])))
+        self._min_index = np.argmin(
+            self._m_active[:, self._n_parameters])
+        self._set_running_log_likelihood(
+            np.min(self._m_active[:, self._n_parameters])
+        )
+        self._accept_count += 1
+        return proposed, winners
 
     def in_initial_phase(self):
         """
@@ -400,6 +432,30 @@ class NestedController(object):
                     self._next_message = self._message_interval * (
                         1 + self._i_message // self._message_interval)
 
+    def _asker(self, m_previous_winners):
+        """
+        Uses matrix of previous points to propose new points and, if
+        necessary, ask from sampler.
+        """
+        if len(m_previous_winners) > 0:
+            a_shape = m_previous_winners.shape[0]
+            n_diff = self._n_workers - a_shape
+            if n_diff >= 0:
+                indices = np.random.choice(a_shape,
+                                           self._n_workers, replace=False)
+                proposed = m_previous_winners[indices, :]
+            else:
+                n_remaining = np.abs(n_diff)
+                indices = np.arange(a_shape)
+                proposed_extra = self._sampler.ask(n_remaining)
+                proposed = [m_previous_winners[indices, :],
+                            proposed_extra]
+        else:
+            proposed = self._sampler.ask(self._n_workers)
+            indices = []
+
+        return proposed, indices
+
     def run(self):
         """
         Runs the nested sampling routine and returns a tuple of the
@@ -442,6 +498,7 @@ class NestedController(object):
         # Run!
         self._X[0] = 1.0
         self._i_message = self._n_active_points - 1
+        m_previous_winners = []
         for i in range(0, self._iterations):
             self._i = i
             a_min_index = self._sampler.min_index()
@@ -453,17 +510,26 @@ class NestedController(object):
             self._v_log_Z[i] = self._sampler.running_log_likelihood()
             self._m_inactive[i, :] = self._sampler._m_active[a_min_index, :]
 
-            # Use some method to propose new samples
-            proposed = self._sampler.ask()
+            # Propose new samples
+            proposed, m_previous_winners = self._asker(m_previous_winners)
 
             # Evaluate their fit
-            log_likelihood = self._evaluator.evaluate([proposed])[0]
-
-            # Until log-likelihood exceeds current threshold keep drawing
-            # samples
-            while self._sampler.tell(log_likelihood) is None:
-                proposed = self._sampler.ask()
+            if self._n_workers > 1:
+                log_likelihood = self._evaluator.evaluate(proposed)
+            else:
                 log_likelihood = self._evaluator.evaluate([proposed])[0]
+            sample, winners = self._sampler.tell(log_likelihood)
+            while proposed is None:
+                sample = self._sampler.ask(self._n_workers)
+                log_likelihood = self._evaluator.evaluate([proposed])[0]
+                if self._n_workers > 1:
+                    log_likelihood = self._evaluator.evaluate(proposed)
+                else:
+                    log_likelihood = self._evaluator.evaluate([proposed])[0]
+                sample, winners = self._sampler.tell(log_likelihood)
+            if winners.size > 1:
+                m_previous_winners.append(winners)
+                m_previous_winners = np.concatenate(m_previous_winners)
 
             # Check whether within convergence threshold
             if i > 2:
