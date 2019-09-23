@@ -73,10 +73,9 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         x0 = self.real_parameters * 1.1
         mcmc = pints.AdaptiveCovarianceMCMC(x0)
         mcmc.ask()
-        self.assertTrue(mcmc._running)
 
         # tell
-        mcmc._proposed = None
+        mcmc = pints.AdaptiveCovarianceMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0.0)
 
     def test_replace(self):

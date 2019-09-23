@@ -14,9 +14,8 @@ import numpy as np
 
 class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
     """
-    Base class for single chain MCMC methods that globally adapt a
-    proposal covariance matrix when running, in order to control the
-    acceptance rate.
+    Base class for single chain MCMC methods that globally adapt a proposal
+    covariance matrix when running, in order to control the acceptance rate.
 
     *Extends:* :class:`AdaptiveCovarianceMCMC`
     """

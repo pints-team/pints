@@ -14,7 +14,10 @@ import numpy as np
 
 class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, which is algorithm 4 in [1].
+    Adaptive Metropolis MCMC, which is algorithm 4 in [1] and is described in
+    the text in [2]. Differs from ``RemiACMCMC`` only through its use of
+    ``alpha`` in the updating of ``log_lambda`` (rather than a binary
+    accept/reject).
 
     Initialise::
 
@@ -43,8 +46,11 @@ class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         gamma = adaptation_count^-eta
 
     [1] A tutorial on adaptive MCMC
-    Christophe Andrieu and Johannes Thoms, Statistical Computing,
-    2008, 18: 343-373
+    Christophe Andrieu and Johannes Thoms, Statistical Computing, 2008,
+    18: 343-373.
+
+    [2] An adaptive Metropolis algorithm
+    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli.
 
     *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
     """
@@ -72,32 +78,24 @@ class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Return proposed point
         return self._proposed
 
-    def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(HaarioACMCMC, self).tell(fx)
-
-        self._acceptance_prob = (
-            np.minimum(1, np.exp(self._log_acceptance_ratio)))
-        if self._adaptive:
-            self._log_lambda += (self._gamma *
-                                 (self._acceptance_prob -
-                                  self._target_acceptance))
-
-        # Return new point for chain
-        return self._current
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Haario adaptive covariance MCMC'
 
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+    def tell(self, fx):
+        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
+        super(HaarioACMCMC, self).tell(fx)
 
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[eta]``.
+        _acceptance_prob = (
+            np.minimum(1, np.exp(self._log_acceptance_ratio)))
+        if self._adaptive:
+            self._log_lambda += (self._gamma *
+                                 (_acceptance_prob -
+                                  self._target_acceptance))
 
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_eta(x[0])
+        # Return new point for chain
+        return self._current

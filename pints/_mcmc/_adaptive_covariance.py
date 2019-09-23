@@ -63,26 +63,12 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """ See :meth:`SingleChainMCMC.ask()`. """
         # Initialise on first call
         if not self._running:
-            self._initialise()
+            self._running = True
+            self._proposed = self._x0
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return self._current_log_pdf
-
-    def _initialise(self):
-        """
-        Initialises the routine before the first iteration.
-        """
-        if self._running:
-            raise RuntimeError('Already initialised.')
-        # Update sampler state
-        self._running = True
-
-        # Current point and proposed point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = self._x0
-        self._log_acceptance_ratio = None
 
     def eta(self):
         """
@@ -91,16 +77,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         ergodicity.
         """
         return self._eta
-
-    def set_eta(self, eta):
-        """
-        Updates ``eta`` which controls the rate of adaptation decay
-        ``adaptations**(-eta)``, where ``eta > 0`` to ensure asymptotic
-        ergodicity.
-        """
-        if eta <= 0:
-            raise ValueError('eta should be greater than zero')
-        self._eta = eta
 
     def in_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
@@ -118,10 +94,68 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return True
 
+    def replace(self, current, current_log_pdf, proposed=None):
+        """ See :meth:`pints.SingleChainMCMC.replace()`. """
+
+        # At least one round of ask-and-tell must have been run
+        if (not self._running) or self._current_log_pdf is None:
+            raise RuntimeError(
+                'Replace can only be used when already running.')
+
+        # Check values
+        current = pints.vector(current)
+        if len(current) != self._n_parameters:
+            raise ValueError('Point `current` has the wrong dimensions.')
+        current_log_pdf = float(current_log_pdf)
+        if proposed is not None:
+            proposed = pints.vector(proposed)
+            if len(proposed) != self._n_parameters:
+                raise ValueError('Point `proposed` has the wrong dimensions.')
+
+        # Store
+        self._current = current
+        self._current_log_pdf = current_log_pdf
+        self._proposed = proposed
+
+    def set_eta(self, eta):
+        """
+        Updates ``eta`` which controls the rate of adaptation decay
+        ``adaptations**(-eta)``, where ``eta > 0`` to ensure asymptotic
+        ergodicity.
+        """
+        if eta <= 0:
+            raise ValueError('eta should be greater than zero')
+        self._eta = eta
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[eta]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_eta(x[0])
+
     def set_initial_phase(self, initial_phase):
         """ See :meth:`pints.MCMCSampler.set_initial_phase()`. """
         # No adaptation during initial phase
         self._adaptive = not bool(initial_phase)
+
+    def set_target_acceptance_rate(self, rate=0.234):
+        """
+        Sets the target acceptance rate.
+        """
+        rate = float(rate)
+        if rate <= 0:
+            raise ValueError('Target acceptance rate must be greater than 0.')
+        elif rate > 1:
+            raise ValueError('Target acceptance rate cannot exceed 1.')
+        self._target_acceptance = rate
+
+    def target_acceptance_rate(self):
+        """
+        Returns the target acceptance rate.
+        """
+        return self._target_acceptance
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -161,54 +195,12 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     def _update_mu(self):
         """
         Updates the current running mean used to calculate the sample
-        covariance matrix of proposals. Note that this default is overidden in
-        some of the methods
+        covariance matrix of proposals.
         """
         raise NotImplementedError
 
     def _update_sigma(self):
         """
         Updates the covariance matrix used to generate proposals.
-        Note that this default is overidden in some of the methods
         """
         raise NotImplementedError
-
-    def replace(self, current, current_log_pdf, proposed=None):
-        """ See :meth:`pints.SingleChainMCMC.replace()`. """
-
-        # At least one round of ask-and-tell must have been run
-        if (not self._running) or self._current_log_pdf is None:
-            raise RuntimeError(
-                'Replace can only be used when already running.')
-
-        # Check values
-        current = pints.vector(current)
-        if len(current) != self._n_parameters:
-            raise ValueError('Point `current` has the wrong dimensions.')
-        current_log_pdf = float(current_log_pdf)
-        if proposed is not None:
-            proposed = pints.vector(proposed)
-            if len(proposed) != self._n_parameters:
-                raise ValueError('Point `proposed` has the wrong dimensions.')
-
-        # Store
-        self._current = current
-        self._current_log_pdf = current_log_pdf
-        self._proposed = proposed
-
-    def set_target_acceptance_rate(self, rate=0.234):
-        """
-        Sets the target acceptance rate.
-        """
-        rate = float(rate)
-        if rate <= 0:
-            raise ValueError('Target acceptance rate must be greater than 0.')
-        elif rate > 1:
-            raise ValueError('Target acceptance rate cannot exceed 1.')
-        self._target_acceptance = rate
-
-    def target_acceptance_rate(self):
-        """
-        Returns the target acceptance rate.
-        """
-        return self._target_acceptance

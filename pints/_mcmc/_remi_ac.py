@@ -14,7 +14,8 @@ import numpy as np
 
 class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, which is algorithm in SOM of [1].
+    Adaptive Metropolis MCMC, which is algorithm in the supplementary
+    materials of [1].
 
     Initialise::
 
@@ -75,31 +76,23 @@ class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
         # Return proposed point
         return self._proposed
 
-    def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(RemiACMCMC, self).tell(fx)
-
-        self._acceptance_prob = self._accepted
-        if self._adaptive:
-            self._log_lambda += (self._gamma *
-                                 (self._acceptance_prob -
-                                  self._target_acceptance))
-
-        # Return new point for chain
-        return self._current
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Remi adaptive covariance MCMC'
 
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+    def tell(self, fx):
+        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
+        super(RemiACMCMC, self).tell(fx)
 
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[eta]``.
+        _acceptance_prob = self._accepted
+        if self._adaptive:
+            self._log_lambda += (self._gamma *
+                                 (_acceptance_prob -
+                                  self._target_acceptance))
 
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_eta(x[0])
+        # Return new point for chain
+        return self._current
