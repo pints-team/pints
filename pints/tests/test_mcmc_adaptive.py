@@ -11,6 +11,7 @@ import pints
 import pints.toy as toy
 import unittest
 import numpy as np
+from shared import StreamCapture
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -122,6 +123,38 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
+        # Test initial proposal is first point
+        x0 = self.real_parameters
+        mcmc = pints.HaarioACMCMC(x0)
+        self.assertTrue(mcmc.ask() is mcmc._x0)
+
+        # Double initialisation
+        mcmc = pints.HaarioACMCMC(x0)
+        mcmc.ask()
+
+        # Tell without ask
+        mcmc = pints.HaarioACMCMC(x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0)
+
+        # Repeated asks should return same point
+        mcmc = pints.HaarioACMCMC(x0)
+        # Get into accepting state
+        mcmc.set_initial_phase(False)
+        for i in range(100):
+            mcmc.tell(self.log_posterior(mcmc.ask()))
+        x = mcmc.ask()
+        for i in range(10):
+            self.assertTrue(x is mcmc.ask())
+
+        # Repeated tells should fail
+        mcmc.tell(1)
+        self.assertRaises(RuntimeError, mcmc.tell, 1)
+
+        # Bad starting point
+        mcmc = pints.HaarioACMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+
     def test_options(self):
 
         # Test setting acceptance rate
@@ -137,6 +170,23 @@ class TestAdaptiveCovarianceMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_eta, -0.1)
         mcmc.set_eta(0.3)
         self.assertEqual(mcmc.eta(), 0.3)
+
+    def test_logging(self):
+        """
+        Test logging includes acceptance rate, evaluations, iterations and
+        time.
+        """
+        x = [self.real_parameters] * 3
+        mcmc = pints.MCMCController(
+            self.log_posterior, 3, x, method=pints.RemiACMCMC)
+        mcmc.set_max_iterations(5)
+        with StreamCapture() as c:
+            mcmc.run()
+        text = c.text()
+        self.assertIn('Accept.', text)
+        self.assertIn('Eval.', text)
+        self.assertIn('Iter.', text)
+        self.assertIn('Time m:s', text)
 
 
 if __name__ == '__main__':

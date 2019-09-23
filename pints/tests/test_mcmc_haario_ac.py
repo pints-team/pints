@@ -91,40 +91,6 @@ class TestHaarioACMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
         self.assertEqual(rate.shape[0], 100)
 
-    def test_flow(self):
-
-        # Test initial proposal is first point
-        x0 = self.real_parameters
-        mcmc = pints.HaarioACMCMC(x0)
-        self.assertTrue(mcmc.ask() is mcmc._x0)
-
-        # Double initialisation
-        mcmc = pints.HaarioACMCMC(x0)
-        mcmc.ask()
-
-        # Tell without ask
-        mcmc = pints.HaarioACMCMC(x0)
-        self.assertRaises(RuntimeError, mcmc.tell, 0)
-
-        # Repeated asks should return same point
-        mcmc = pints.HaarioACMCMC(x0)
-        # Get into accepting state
-        mcmc.set_initial_phase(False)
-        for i in range(100):
-            mcmc.tell(self.log_posterior(mcmc.ask()))
-        x = mcmc.ask()
-        for i in range(10):
-            self.assertTrue(x is mcmc.ask())
-
-        # Repeated tells should fail
-        mcmc.tell(1)
-        self.assertRaises(RuntimeError, mcmc.tell, 1)
-
-        # Bad starting point
-        mcmc = pints.HaarioACMCMC(x0)
-        mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
-
     def test_options(self):
 
         # Test setting acceptance rate
@@ -148,7 +114,7 @@ class TestHaarioACMCMC(unittest.TestCase):
 
     def test_logging(self):
         """
-        Test logging includes name and acceptance rate.
+        Test logging includes name.
         """
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
@@ -158,7 +124,6 @@ class TestHaarioACMCMC(unittest.TestCase):
             mcmc.run()
         text = c.text()
         self.assertIn('Haario adaptive covariance MCMC', text)
-        self.assertIn('Accept.', text)
 
 
 if __name__ == '__main__':
