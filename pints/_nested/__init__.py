@@ -129,7 +129,7 @@ class NestedSampler(pints.TunableMethod):
         """
         return self._m_active
 
-    def initialise_active_points(self, m_initial, v_fx):
+    def _initialise_active_points(self, m_initial, v_fx):
         """
         Sets initial active points matrix.
         """
@@ -287,6 +287,119 @@ class NestedController(object):
         """
         return self._posterior_samples
 
+    def _initialise_parallel(self, f):
+        """
+        Initialises parallel runners.
+        """
+        # Create evaluator object
+        if self._parallel:
+            # Use at most n_workers workers
+            n_workers = self._n_workers
+            evaluator = pints.ParallelEvaluator(
+                f, n_workers=n_workers)
+        else:
+            evaluator = pints.SequentialEvaluator(f)
+        return evaluator
+
+    def _initialise_sensitivities(self):
+        """
+        Initialises sensitivities if they are needed.
+        """
+        f = self._log_likelihood
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+        return f
+
+    def _initialise_logger(self):
+        """
+        Initialises logger.
+        """
+        # Start logging
+        self._logging = self._log_to_screen or self._log_filename
+        if self._logging:
+            # Create timer
+            self._timer = pints.Timer()
+
+            if self._log_to_screen:
+                # Show current settings
+                print('Running ' + self._sampler.name())
+                print('Number of active points: ' +
+                      str(self._n_active_points))
+                print('Total number of iterations: ' + str(self._iterations))
+                print('Total number of posterior samples: ' + str(
+                    self._posterior_samples))
+
+            # Set up logger
+            self._logger = pints.Logger()
+            if not self._log_to_screen:
+                self._logger.set_stream(None)
+            if self._log_filename:
+                self._logger.set_filename(self._log_filename,
+                                          csv=self._log_csv)
+
+            # Add fields to log
+            self._logger.add_counter('Iter.', max_value=self._iterations)
+            self._logger.add_counter('Eval.', max_value=self._iterations * 10)
+            #TODO: Add other informative fields ?
+            self._logger.add_time('Time m:s')
+            self._logger.add_float('Delta_log(z)')
+            self._logger.add_float('Acceptance rate')
+
+    def _initial_points(self):
+        """
+        Generates initial active points.
+        """
+        m_initial = self._log_prior.sample(self._n_active_points)
+        v_fx = np.zeros(self._n_active_points)
+        for i in range(0, self._n_active_points):
+            # Calculate likelihood
+            v_fx[i] = self._evaluator.evaluate([m_initial[i, :]])[0]
+            self._sampler._n_evals += 1
+
+            # Show progress
+            if self._logging and i >= self._next_message:
+                # Log state
+                self._logger.log(0, self._sampler._n_evals,
+                                 self._timer.time(), self._diff, 1.0)
+
+                # Choose next logging point
+                if i > self._message_warm_up:
+                    self._next_message = self._message_interval * (
+                        1 + i // self._message_interval)
+        return v_fx, m_initial
+
+    def _diff_marginal_likelihood(self, i, d):
+        """
+        Calculates difference in marginal likelihood between current and
+        previous iterations.
+        """
+        v_temp = np.concatenate((
+            self._v_log_Z[0:(i - 1)],
+            [np.max(self._sampler._m_active[:, d])]))
+        w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
+        self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
+                                b=self._w[0:(i - 1)]) -
+                      logsumexp(v_temp, b=w_temp))
+
+    def _update_logger(self):
+        """
+        Updates logger if necessary.
+        """
+        if self._logging:
+            self._i_message += 1
+            if self._i_message >= self._next_message:
+                # Log state
+                self._logger.log(self._i_message, self._sampler._n_evals,
+                                 self._timer.time(), self._diff,
+                                 float(self._sampler._accept_count /
+                                       (self._sampler._n_evals -
+                                        self._sampler._n_active_points)))
+
+                # Choose next logging point
+                if self._i_message > self._message_warm_up:
+                    self._next_message = self._message_interval * (
+                        1 + self._i_message // self._message_interval)
+
     def run(self):
         """
         Runs the nested sampling routine and returns a tuple of the
@@ -294,88 +407,30 @@ class NestedController(object):
         """
 
         # Choose method to evaluate
-        f = self._log_likelihood
-        if self._needs_sensitivities:
-            f = f.evaluateS1
+        f = self._initialise_sensitivities()
 
-        # Create evaluator object
-        if self._parallel:
-            # Use at most n_workers workers
-            n_workers = min(self._n_workers, self._chains)
-            evaluator = pints.ParallelEvaluator(
-                f, n_workers=n_workers)
-        else:
-            evaluator = pints.SequentialEvaluator(f)
+        # Set parallel
+        self._evaluator = self._initialise_parallel(f)
 
-        # Check if settings are sensible
-        n_active_points = self._sampler.n_active_points()
-        max_post = 0.25 * (self._iterations + n_active_points)
-        if self._posterior_samples > max_post:
-            raise ValueError(
-                'Number of posterior samples must not exceed 0.25 times (the'
-                ' number of iterations + the number of active points).')
+        self._n_active_points = self._sampler.n_active_points()
 
         # Set up progress reporting
-        next_message = 0
-        message_warm_up = 3
-        message_interval = 20
-
-        # Start logging
-        logging = self._log_to_screen or self._log_filename
-        if logging:
-            # Create timer
-            timer = pints.Timer()
-
-            if self._log_to_screen:
-                # Show current settings
-                print('Running ' + self._sampler.name())
-                print('Number of active points: ' + str(n_active_points))
-                print('Total number of iterations: ' + str(self._iterations))
-                print('Total number of posterior samples: ' + str(
-                    self._posterior_samples))
-
-            # Set up logger
-            logger = pints.Logger()
-            if not self._log_to_screen:
-                logger.set_stream(None)
-            if self._log_filename:
-                logger.set_filename(self._log_filename, csv=self._log_csv)
-
-            # Add fields to log
-            logger.add_counter('Iter.', max_value=self._iterations)
-            logger.add_counter('Eval.', max_value=self._iterations * 10)
-            #TODO: Add other informative fields ?
-            logger.add_time('Time m:s')
-            logger.add_float('Delta_log(z)')
-            logger.add_float('Acceptance rate')
+        self._next_message = 0
+        self._message_warm_up = 3
+        self._message_interval = 20
+        self._initialise_logger()
 
         d = self._n_parameters
-        m_initial = self._log_prior.sample(n_active_points)
-        v_fx = np.zeros(n_active_points)
-        for i in range(0, n_active_points):
-            # Calculate likelihood
-            v_fx[i] = evaluator.evaluate([m_initial[i, :]])[0]
-            self._sampler._n_evals += 1
 
-            # Show progress
-            if logging and i >= next_message:
-                # Log state
-                logger.log(0, self._sampler._n_evals,
-                           timer.time(), self._diff, 1.0)
-
-                # Choose next logging point
-                if i > message_warm_up:
-                    next_message = message_interval * (
-                        1 + i // message_interval)
-
-        self._sampler.initialise_active_points(m_initial, v_fx)
+        v_fx, m_initial = self._initial_points()
+        self._sampler._initialise_active_points(m_initial, v_fx)
 
         # store all inactive points, along with their respective
         # log-likelihoods (hence, d+1)
         self._m_inactive = np.zeros((self._iterations, d + 1))
 
         # store weights
-        self._w = np.zeros(n_active_points + self._iterations)
+        self._w = np.zeros(self._n_active_points + self._iterations)
 
         # store X values (defined in [1])
         self._X = np.zeros(self._iterations + 1)
@@ -386,11 +441,11 @@ class NestedController(object):
 
         # Run!
         self._X[0] = 1.0
-        i_message = n_active_points - 1
+        self._i_message = self._n_active_points - 1
         for i in range(0, self._iterations):
             self._i = i
             a_min_index = self._sampler.min_index()
-            self._X[i + 1] = np.exp(-(i + 1) / n_active_points)
+            self._X[i + 1] = np.exp(-(i + 1) / self._n_active_points)
             if i > 0:
                 self._w[i] = 0.5 * (self._X[i - 1] - self._X[i + 1])
             else:
@@ -402,23 +457,17 @@ class NestedController(object):
             proposed = self._sampler.ask()
 
             # Evaluate their fit
-            log_likelihood = evaluator.evaluate([proposed])[0]
+            log_likelihood = self._evaluator.evaluate([proposed])[0]
 
             # Until log-likelihood exceeds current threshold keep drawing
             # samples
             while self._sampler.tell(log_likelihood) is None:
                 proposed = self._sampler.ask()
-                log_likelihood = evaluator.evaluate([proposed])[0]
+                log_likelihood = self._evaluator.evaluate([proposed])[0]
 
             # Check whether within convergence threshold
             if i > 2:
-                v_temp = np.concatenate((
-                    self._v_log_Z[0:(i - 1)],
-                    [np.max(self._sampler._m_active[:, d])]))
-                w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
-                self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
-                                        b=self._w[0:(i - 1)]) -
-                              logsumexp(v_temp, b=w_temp))
+                self._diff = self._diff_marginal_likelihood(i, d)
                 if (np.abs(self._diff) <
                    self._marginal_log_likelihood_threshold):
                     if self._log_to_screen:
@@ -428,27 +477,14 @@ class NestedController(object):
                     # shorten arrays according to current iteration
                     self._iterations = i
                     self._v_log_Z = self._v_log_Z[0:(self._iterations + 1)]
-                    self._w = self._w[0:(n_active_points + self._iterations)]
+                    self._w = self._w[0:(
+                        self._n_active_points + self._iterations)]
                     self._X = self._X[0:(self._iterations + 1)]
                     self._m_inactive = self._m_inactive[0:self._iterations, :]
                     break
 
             # Show progress
-            if logging:
-                i_message += 1
-                if i_message >= next_message:
-                    # Log state
-                    logger.log(i_message, self._sampler._n_evals, timer.time(),
-                               self._diff,
-                               float(
-                               self._sampler._accept_count /
-                               (self._sampler._n_evals -
-                                self._sampler._n_active_points)))
-
-                    # Choose next logging point
-                    if i_message > message_warm_up:
-                        next_message = message_interval * (
-                            1 + i_message // message_interval)
+            self._update_logger()
 
         # Calculate log_evidence and uncertainty
         self._log_Z = self.marginal_log_likelihood()

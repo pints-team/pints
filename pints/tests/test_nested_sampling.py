@@ -101,6 +101,39 @@ class TestNestedController(unittest.TestCase):
             self.log_likelihood, self.log_prior,
             pints.DifferentialEvolutionMCMC)
 
+        self.assertRaisesRegex(
+            ValueError,
+            'Given method must extend pints.NestedSampler.',
+            pints.NestedController,
+            self.log_likelihood, self.log_prior,
+            0.0)
+
+    def test_parallel(self):
+        """ Test running MCMC with parallisation. """
+
+        mcmc = pints.NestedController(self.log_likelihood,
+                                      self.log_prior)
+        # Test with auto-detected number of worker processes
+        self.assertFalse(mcmc.parallel())
+        mcmc.set_parallel(True)
+        self.assertTrue(mcmc.parallel())
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], nchains)
+        self.assertEqual(chains.shape[1], niterations)
+        self.assertEqual(chains.shape[2], nparameters)
+
+        # Test with fixed number of worker processes
+        mcmc.set_parallel(2)
+        mcmc.set_log_to_screen(True)
+        self.assertIs(mcmc._parallel, True)
+        self.assertEqual(mcmc._n_workers, 2)
+        with StreamCapture() as c:
+            chains = mcmc.run()
+        self.assertIn('with 2 worker', c.text())
+        self.assertEqual(chains.shape[0], nchains)
+        self.assertEqual(chains.shape[1], niterations)
+        self.assertEqual(chains.shape[2], nparameters)
+
     def test_logging(self):
         """ Tests logging to screen and file. """
 
