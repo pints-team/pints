@@ -467,7 +467,7 @@ class NestedController(object):
 
             # Check whether within convergence threshold
             if i > 2:
-                self._diff = self._diff_marginal_likelihood(i, d)
+                self._diff_marginal_likelihood(i, d)
                 if (np.abs(self._diff) <
                    self._marginal_log_likelihood_threshold):
                     if self._log_to_screen:
