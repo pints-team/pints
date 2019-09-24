@@ -93,6 +93,11 @@ language = None
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = []
 
+# Suppress warnings about unused footnotes (i.e. citations of papers)
+suppress_warnings = [
+    'ref.footnote',
+]
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
@@ -116,7 +121,7 @@ html_theme_options = {
     # See: https://alabaster.readthedocs.io/en/latest/customization.html
 
     'fixed_sidebar': True,
-    'page_width' : '1280px',
+    'page_width': '1280px',
     'sidebar_width': '320px',
 }
 
