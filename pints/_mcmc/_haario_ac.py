@@ -12,11 +12,11 @@ import pints
 import numpy as np
 
 
-class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
+class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, which is algorithm 4 in [1] and is described in
-    the text in [2]. Differs from ``RemiACMCMC`` only through its use of
-    ``alpha`` in the updating of ``log_lambda`` (rather than a binary
+    the text in [2]. Differs from ``HaarioBardenetACMC`` only through its use
+    of ``alpha`` in the updating of ``log_lambda`` (rather than a binary
     accept/reject).
 
     Initialise::
@@ -55,14 +55,14 @@ class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(HaarioACMCMC, self).__init__(x0, sigma0)
+        super(HaarioACMC, self).__init__(x0, sigma0)
         self._log_lambda = 0
         self._binary_accept = True
         self._accepted = True
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(HaarioACMCMC, self).ask()
+        super(HaarioACMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -88,7 +88,7 @@ class HaarioACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(HaarioACMCMC, self).tell(fx)
+        super(HaarioACMC, self).tell(fx)
 
         _acceptance_prob = (
             np.minimum(1, np.exp(self._log_acceptance_ratio)))

@@ -21,7 +21,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestRemiACMCMC(unittest.TestCase):
+class TestHaarioBardenetACMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
     """
@@ -64,7 +64,7 @@ class TestRemiACMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.RemiACMCMC(x0)
+        mcmc = pints.HaarioBardenetACMC(x0)
 
         # Configure
         mcmc.set_target_acceptance_rate(0.3)
@@ -95,7 +95,7 @@ class TestRemiACMCMC(unittest.TestCase):
 
         # Test setting acceptance rate
         x0 = self.real_parameters
-        mcmc = pints.RemiACMCMC(x0)
+        mcmc = pints.HaarioBardenetACMC(x0)
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
         self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
@@ -118,7 +118,7 @@ class TestRemiACMCMC(unittest.TestCase):
         """
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
-            self.log_posterior, 3, x, method=pints.RemiACMCMC)
+            self.log_posterior, 3, x, method=pints.HaarioBardenetACMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()

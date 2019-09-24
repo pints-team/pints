@@ -69,7 +69,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         #
         # Default settings
         #
-        self._method = pints.RemiACMCMC
+        self._method = pints.HaarioBardenetACMC
         self._needs_initial_phase = True
         self._in_initial_phase = True
 

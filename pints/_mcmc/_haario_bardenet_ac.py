@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
+class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
     Adaptive Metropolis MCMC, which is algorithm in the supplementary
     materials of [1].
@@ -53,14 +53,14 @@ class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
     *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
     """
     def __init__(self, x0, sigma0=None):
-        super(RemiACMCMC, self).__init__(x0, sigma0)
+        super(HaarioBardenetACMC, self).__init__(x0, sigma0)
         self._log_lambda = 0
         self._binary_accept = True
         self._accepted = True
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
-        super(RemiACMCMC, self).ask()
+        super(HaarioBardenetACMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
@@ -86,7 +86,7 @@ class RemiACMCMC(pints.GlobalAdaptiveCovarianceMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
-        super(RemiACMCMC, self).tell(fx)
+        super(HaarioBardenetACMC, self).tell(fx)
 
         _acceptance_prob = self._accepted
         if self._adaptive:

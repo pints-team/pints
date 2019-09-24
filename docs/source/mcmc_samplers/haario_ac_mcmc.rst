@@ -1,7 +1,7 @@
-**************
-Haario AC MCMC
-**************
+***********
+Haario ACMC
+***********
 
 .. currentmodule:: pints
 
-.. autoclass:: HaarioACMCMC
+.. autoclass:: HaarioACMC

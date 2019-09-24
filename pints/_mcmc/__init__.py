@@ -250,7 +250,7 @@ class MCMCController(object):
     :class:`MultiChainMCMC` class) is specified at runtime. For example::
 
         mcmc = pints.MCMCController(
-            log_pdf, 3, x0, method=pints.RemiACMCMC)
+            log_pdf, 3, x0, method=pints.HaarioBardenetACMC)
 
     Properties related to the number if iterations, parallelisation, and
     logging can be set directly on the ``MCMCController`` object, e.g.::
@@ -293,7 +293,7 @@ class MCMCController(object):
         ``diag(sigma0)`` will be used.
     ``method``
         The class of :class:`MCMCSampler` to use. If no method is specified,
-        :class:`RemiACMCMC` is used.
+        :class:`HaarioBardenetACMC` is used.
 
     """
 
@@ -326,7 +326,7 @@ class MCMCController(object):
 
         # Set default method
         if method is None:
-            method = pints.RemiACMCMC
+            method = pints.HaarioBardenetACMC
         else:
             try:
                 ok = issubclass(method, pints.MCMCSampler)
@@ -885,7 +885,7 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         ``diag(sigma0)`` will be used.
     ``method``
         The class of :class:`MCMCSampler` to use. If no method is specified,
-        :class:`RemiACMCMC` is used.
+        :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
         log_pdf, chains, x0, sigma0, method).run()
