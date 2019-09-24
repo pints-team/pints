@@ -139,9 +139,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
     def test_other_setters(self):
-        """
-        Tests other setters and getters.
-        """
+        # Tests other setters and getters.
         x0 = np.array([2, 2])
         mcmc = pints.HamiltonianMCMC(x0)
         self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)
