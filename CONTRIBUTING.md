@@ -192,6 +192,75 @@ In addition, we write a (very) small bit of documentation in separate reStructur
 
 Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs` can be converted to HTML, PDF, and other formats. In particular, we use it to generate the documentation on http://pints.readthedocs.io/
 
+### Docstring template
+
+1. Each docstring should start with a single sentence explaining what it does.
+
+2. If desired, this can be followed by a blank line and one or several
+   paragraphs providing a more detailed explanation. These paragraphs can
+   include code snippets or use LaTeX expressions for mathematics (see below).
+
+3. If the class is a subclass of some other PINTS type, it may be good to
+   mention this here. For example:
+   
+        *Extends:* :class:`SingleChainMCMC`
+
+4. Simple arguments can be described textually. For example, a docstring could
+   be a single line "Sets the width parameter to `w`.". For complicated
+   functions or methods it may be good to include a parameters section:
+   
+        Parameters
+        ----------
+        x : int
+            A variable `x` that should be an integer
+        y
+            A variable without a type hint
+            
+   This syntax can also be used for constructor arguments.
+   Note that default values for any arguments are already displayed
+   automatically in the function/method/constructor signature.
+   
+5. Simple return types can be described textually, but complicated return types
+   (which are not encouraged) can use the syntax:
+   
+        Returns
+        -------
+        samples
+            A list of samples.
+        likelihoods
+            A list of their corresponding log-likelihoods
+            
+6. References to literature are highly encouraged, and go at the bottom of the
+   docstring:
+   
+        References
+        ----------
+        .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,
+               Clayton, Mirams (2015) "Uncertainty and variability in models of
+               the cardiac action potential: Can we build trustworthy models?".
+               Journal of Molecular and Cellular Cardiology.
+               https://10.1016/j.yjmcc.2015.11.018
+
+        .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis 
+               algorithm". Bernoulli.
+               https://doi.org/10.2307/3318737
+
+   There is no standard format (e.g. APA style), but authors, titles, years,
+   and journals are recommended, as well as a link based on a
+   [DOI](https://www.doi.org/).
+
+### Using code in documentation
+
+When referencing a variable in a docstring, please use the syntax ` ``x`` `.
+Longer code snippets can be started using this form:
+
+    """
+    An example follows here::
+    
+        print('Hello world')
+
+    """        
+
 ### Using Maths in documentation
 
 LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings:
