@@ -76,8 +76,6 @@ class TestPrior(unittest.TestCase):
         self.assertAlmostEqual(calc_deriv[0], 0.0)
 
     def test_beta_prior_sampling(self):
-        # Just returns samples from the numpy beta distribution so no utility
-        # in verifying shape params - just check it's working as expected
         p1 = pints.BetaLogPrior(0.123, 2.34)
         self.assertEqual(len(p1.sample()), 1)
 
@@ -85,12 +83,23 @@ class TestPrior(unittest.TestCase):
         samples1 = p1.sample(n)
         self.assertEqual(len(samples1), n)
 
+        n = 10000
+        p1 = pints.BetaLogPrior(100, 100)
+        samples = p1.sample(n)
+        self.assertTrue(np.mean(samples) - 0.5 < 0.01)
+
+        p1 = pints.BetaLogPrior(20, 30)
+        samples = p1.sample(n)
+        self.assertTrue(np.mean(samples) - 0.4 < 0.01)
+
     def test_cauchy_prior(self):
         # Test two specific function values
         p1 = pints.CauchyLogPrior(0, 10)
         self.assertEqual(p1([0]), -3.447314978843446)
         p2 = pints.CauchyLogPrior(10, 5)
         self.assertTrue(np.abs(p2([10]) + 2.7541677982835) < 0.001)
+        p3 = pints.CauchyLogPrior(-3, 3.5)
+        self.assertAlmostEqual(p3([1.4]), -3.3454404435815586)
 
         # Test exceptions
         self.assertRaises(ValueError, pints.CauchyLogPrior, 0, 0)
@@ -416,14 +425,19 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p2.n_parameters(), 1)
 
     def test_half_cauchy_prior_sampling(self):
-        # Aren't many tests for Cauchy distributions
-        # because they have no mean or variance!
         p1 = pints.HalfCauchyLogPrior(0, 1000)
         self.assertEqual(len(p1.sample()), 1)
         n = 1000
         v_samples = p1.sample(n)
         self.assertEqual(len(v_samples), n)
         self.assertTrue(np.all(v_samples > 0))
+
+        # test medians
+        p1 = pints.HalfCauchyLogPrior(-3, 10)
+        n = 1000000
+        v_samples = p1.sample(n)
+        print(np.median(v_samples))
+        self.assertTrue(np.abs(np.median(v_samples) - 10.45) < 0.1)
 
     def test_inverse_gamma_prior(self):
 
