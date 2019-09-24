@@ -39,7 +39,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
     ``V``
         Offset (see equation).
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     [1] Adaptive proposal distribution for random walk Metropolis algorithm
     Haario, Saksman, Tamminen (1999) Computational Statistics.

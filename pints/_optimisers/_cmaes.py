@@ -21,7 +21,7 @@ class CMAES(pints.PopulationBasedOptimiser):
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
     [1] https://arxiv.org/pdf/1604.00772.pdf
 

@@ -34,7 +34,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
 
     [1] https://en.wikipedia.org/wiki/Population_growth
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
 
     def __init__(self, initial_population_size=2):

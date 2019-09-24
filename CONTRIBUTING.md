@@ -203,7 +203,7 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 3. If the class is a subclass of some other PINTS type, it may be good to
    mention this here. For example:
    
-        *Extends:* :class:`SingleChainMCMC`
+        Extends :class:`SingleChainMCMC`.
 
 4. Simple arguments can be described textually. For example, a docstring could
    be a single line "Sets the width parameter to `w`.". For complicated

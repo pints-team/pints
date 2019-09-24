@@ -48,7 +48,7 @@ class ConstantModel(pints.ForwardModelS1):
 
     In this example, the returned output is ``[1, 4]`` at every point in time.
 
-    *Extends:* :class:`pints.ForwardModelS1`.
+    Extends :class:`pints.ForwardModelS1`.
     """
 
     def __init__(self, n, force_multi_output=False):

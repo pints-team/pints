@@ -28,7 +28,7 @@ class GaussianLogPDF(ToyLogPDF):
         or a vector (in which case ``diag(sigma)`` will be used. Should be
         symmetric and positive-semidefinite.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
     """
 
     def __init__(self, mean=[0, 0], sigma=[1, 1]):

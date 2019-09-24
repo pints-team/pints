@@ -22,7 +22,7 @@ class RosenbrockError(pints.ErrorMeasure):
     .. math::
         f(x,y) = (1 - x)^2 + 100(y - x^2)^2
 
-    *Extends:* :class:`pints.ErrorMeasure`.
+    Extends :class:`pints.ErrorMeasure`.
     """
     def __init__(self):
         self._a = 1
@@ -51,7 +51,7 @@ class RosenbrockLogPDF(ToyLogPDF):
     .. math::
         f(x,y) = -log[1 + (1 - x)^2 + 100(y - x^2)^2 ]
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self):
         self._f = RosenbrockError()

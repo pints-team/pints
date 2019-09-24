@@ -33,7 +33,7 @@ class LotkaVolterraModel(pints.ForwardModel, ToyModel):
         The initial population, given as a vector ``[a, b]`` such that
         ``a >= 0`` and ``b >= 0``.
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
     """

@@ -20,7 +20,7 @@ class ParabolicError(pints.ErrorMeasure):
     .. math::
         f(x) = (x - c)^s
 
-    *Extends:* :class:`pints.ErrorMeasure`.
+    Extends :class:`pints.ErrorMeasure`.
     """
     def __init__(self, c=[0, 0]):
         self._c = pints.vector(c)

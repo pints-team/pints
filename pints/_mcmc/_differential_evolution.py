@@ -36,7 +36,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         This sampler requires a number of chains :math:`n \ge 3`, and
         recommends :math:`n \ge 1.5 d`.
 
-    *Extends:* :class:`MultiChainMCMC`
+    Extends :class:`MultiChainMCMC`.
 
     [1] "A Markov Chain Monte Carlo version of the genetic algorithm
     Differential Evolution: easy Bayesian computing for real parameter spaces"

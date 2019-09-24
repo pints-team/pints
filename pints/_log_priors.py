@@ -34,7 +34,7 @@ class BetaLogPrior(pints.LogPrior):
 
         p = pints.BetaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -113,7 +113,7 @@ class CauchyLogPrior(pints.LogPrior):
     ``scale``
         The scale of the distribution.
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -158,7 +158,7 @@ class ComposedLogPrior(pints.LogPrior):
     where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
     itself.
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, *priors):
         # Check if sub-priors given
@@ -239,7 +239,7 @@ class ExponentialLogPrior(pints.LogPrior):
 
         p = pints.ExponentialLogPrior(0.5)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, rate):
         # Parse input arguments
@@ -299,7 +299,7 @@ class GammaLogPrior(pints.LogPrior):
 
         p = pints.GammaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -373,7 +373,7 @@ class GaussianLogPrior(pints.LogPrior):
 
         p = pints.GaussianLogPrior(0, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, mean, sd):
         # Parse input arguments
@@ -431,7 +431,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     ``scale``
         The scale of the distribution.
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -487,7 +487,7 @@ class InverseGammaLogPrior(pints.LogPrior):
 
         p = pints.InverseGammaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -563,7 +563,7 @@ class LogNormalLogPrior(pints.LogPrior):
 
         p = pints.LogNormalLogPrior(0, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
 
     def __init__(self, log_mean, scale):
@@ -634,7 +634,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         p = pints.MultivariateGaussianLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, mean, cov):
         # Check input
@@ -716,7 +716,7 @@ class StudentTLogPrior(pints.LogPrior):
     ``scale``
         The scale of the distribution.
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, location, df, scale):
         # Test inputs
@@ -795,7 +795,7 @@ class UniformLogPrior(pints.LogPrior):
 
         p = pints.UniformLogPrior(RectangularBoundaries([0, 1, 2], [4, 5, 6]))
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments

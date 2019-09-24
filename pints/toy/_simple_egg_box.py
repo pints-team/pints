@@ -27,7 +27,7 @@ class SimpleEggBoxLogPDF(ToyLogPDF):
         The first mode will be located at ``(d, d)``, ``(-d, d)``, (-d, -d)``,
         and ``(d, -d)``, where ``d = r * sigma``.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, sigma=2, r=4):
 

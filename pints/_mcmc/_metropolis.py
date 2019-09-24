@@ -19,7 +19,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     Standard Metropolis using multivariate Gaussian distribution as proposal
     step, also known as Metropolis Random Walk MCMC.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
 
     [1] Equation of state calculations by fast computing machines
     Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and

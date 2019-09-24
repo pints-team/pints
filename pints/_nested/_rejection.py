@@ -34,7 +34,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     randomly sampling the preliminary point, accounting for their weights and
     likelihoods.
 
-    *Extends:* :class:`NestedSampler`
+    Extends :class:`NestedSampler`.
 
     [1] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).

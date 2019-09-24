@@ -56,7 +56,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     Here b > 0, b* > 0,  1 >= p_g >= 0, 1 >= CR >= 0.
 
-    *Extends:* :class:`MultiChainMCMC`
+    Extends :class:`MultiChainMCMC`.
 
     .. [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
         Evolution with Self-Adaptive Randomized Subspace Sampling",

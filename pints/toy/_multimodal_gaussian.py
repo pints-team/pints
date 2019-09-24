@@ -44,7 +44,7 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
         A list of covariance matrices, one for each mode. If not set, a unit
         matrix will be used for each.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, modes=None, covariances=None):
 

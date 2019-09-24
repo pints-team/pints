@@ -45,7 +45,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
             plt.plot(t, v)
         plt.show()
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     References:
 

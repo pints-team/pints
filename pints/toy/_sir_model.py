@@ -50,7 +50,7 @@ class SIRModel(pints.ForwardModel, ToyModel):
     ``y0``
         The system's initial state, must have 3 entries all >=0.
 
-    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
 
     References:
 

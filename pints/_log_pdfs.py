@@ -57,7 +57,7 @@ class LogPrior(LogPDF):
     points ``theta`` in parameter space sums to 1), but this is not a strict
     requirement.
 
-    *Extends:* :class:`LogPDF`
+    Extends :class:`LogPDF`.
     """
     def sample(self, n=1):
         """
@@ -91,7 +91,7 @@ class ProblemLogLikelihood(LogPDF):
     ``problem``
         The time-series problem this log-likelihood is defined for.
 
-    *Extends:* :class:`LogPDF`
+    Extends :class:`LogPDF`.
     """
     def __init__(self, problem):
         super(ProblemLogLikelihood, self).__init__()
@@ -123,7 +123,7 @@ class LogPosterior(LogPDF):
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
 
-    *Extends:* :class:`LogPDF`
+    Extends :class:`LogPDF`.
     """
     def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__()
@@ -210,7 +210,7 @@ class SumOfIndependentLogPDFs(LogPDF):
             pints.GaussianLogLikelihood(problem2),
         ])
 
-    *Extends:* :class:`LogPDF`
+    Extends :class:`LogPDF`.
     """
     def __init__(self, log_likelihoods):
         super(SumOfIndependentLogPDFs, self).__init__()

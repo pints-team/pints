@@ -28,7 +28,7 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         must be between ```-1 / (dimension - 1) and 1`` so that the
         covariance matrix is positive semi-definite.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)

@@ -34,7 +34,7 @@ class NealsFunnelLogPDF(ToyLogPDF):
         The dimensionality of funnel (by default equal to 10) which must
         exceed 1.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     [1] R. Neal, Annals of statistics , 705 (2003)
     """

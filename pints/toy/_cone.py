@@ -34,7 +34,7 @@ class ConeLogPDF(ToyLogPDF):
         The power to which ``|x|`` is raised in the exponential term, which
         must be positive.
 
-    *Extends:* :class:`pints.LogPDF`.
+    Extends :class:`pints.LogPDF`.
     """
     def __init__(self, dimensions=2, beta=1):
         if dimensions < 1:

@@ -57,7 +57,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     Journal of Computational Physics
     https://doi.org/10.1016/0021-9991(76)90041-3
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
     def __init__(self, initial_molecule_count=20):
         super(StochasticDegradationModel, self).__init__()

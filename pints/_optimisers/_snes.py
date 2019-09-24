@@ -26,7 +26,7 @@ class SNES(pints.PopulationBasedOptimiser):
     It treats each dimension separately, making it suitable for higher
     dimensions.
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
     [1] Schaul, Glasmachers, Schmidhuber (2011) High dimensions and heavy tails
     for natural evolution strategies.

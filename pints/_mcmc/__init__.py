@@ -73,7 +73,7 @@ class SingleChainMCMC(MCMCSampler):
         An optional (initial) covariance matrix, i.e., a guess of the
         covariance of the distribution to estimate, around ``x0``.
 
-    *Extends:* :class:`MCMCSampler`
+    Extends :class:`MCMCSampler`.
     """
 
     def __init__(self, x0, sigma0=None):
@@ -167,7 +167,7 @@ class MultiChainMCMC(MCMCSampler):
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
 
-    *Extends:* :class:`MCMCSampler`
+    Extends :class:`MCMCSampler`.
     """
 
     def __init__(self, chains, x0, sigma0=None):

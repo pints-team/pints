@@ -36,21 +36,19 @@ class ForwardModel(object):
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``.
 
-        Arguments:
+        Returns a sequence of length ``n_times`` (for single output problems)
+        or a NumPy array of shape ``(n_times, n_outputs)`` (for multi-output
+        problems), representing the values of the model at the given ``times``.
 
-        ``parameters``
-            An ordered list of parameter values.
-        ``times``
+        Parameters
+        ----------
+        parameters
+            An ordered sequence of parameter values.
+        times
             The times at which to evaluate. Must be an ordered sequence,
             without duplicates, and without negative values.
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
-
-        Returns:
-
-        A sequence of length ``n_times`` (for single output problems) or a
-        NumPy array of shape ``(n_times, n_outputs)`` (for multi-output
-        problems), representing the values of the model at the given ``times``.
         """
         raise NotImplementedError
 
@@ -68,7 +66,7 @@ class ForwardModelS1(ForwardModel):
     the first-order derivative of the simulated values with respect to the
     parameters.
 
-    Derived from :class:`pints.ForwardModel`.
+    Extends :class:`pints.ForwardModel`.
     """
 
     def __init__(self):

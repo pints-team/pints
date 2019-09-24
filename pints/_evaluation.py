@@ -167,7 +167,7 @@ multiprocessing.html#all-platforms>`_ for details).
     safe itself: It should not be used by more than a single thread/process at
     a time.
 
-    *Extends:* :class:`Evaluator`
+    Extends :class:`Evaluator`.
     """
     def __init__(
             self, function,
@@ -392,7 +392,7 @@ class SequentialEvaluator(Evaluator):
 
     Returns a list containing the calculated function evaluations.
 
-    *Extends:* :class:`Evaluator`
+    Extends :class:`Evaluator`.
     """
     def __init__(self, function, args=None):
         super(SequentialEvaluator, self).__init__(function, args)
@@ -441,7 +441,7 @@ class _Worker(multiprocessing.Process):
         This flag will be set by the worker whenever it encounters an
         error.
 
-    *Extends:* ``multiprocessing.Process``
+    Extends ``multiprocessing.Process``.
     """
     def __init__(
             self, function, args, tasks, results, max_tasks, errors, error):

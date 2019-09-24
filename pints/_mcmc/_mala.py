@@ -70,7 +70,7 @@ class MALAMCMC(pints.SingleChainMCMC):
     where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial value
     of `sigma0`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
 
     [1] Girolami, M. and Calderhead, B., 2011. Riemann manifold langevin and
     hamiltonian monte carlo methods. Journal of the Royal Statistical Society:

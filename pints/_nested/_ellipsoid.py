@@ -32,7 +32,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     particles, the efficiency of this algorithm should be better than simple
     rejection sampling.
 
-    *Extends:* :class:`NestedSampler`
+    Extends :class:`NestedSampler`.
 
     [1] "A nested sampling algorithm for cosmological model selection",
     Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.

@@ -43,7 +43,7 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         single-output problem two parameters are added (rho, sigma),
         for a multi-output problem 2 * ``n_outputs`` parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem):
@@ -104,7 +104,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         single-output problem three parameters are added (rho, phi, sigma),
         for a multi-output problem 3 * ``n_outputs`` parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem):
@@ -194,7 +194,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     ``upper``
         The upper limit on the uniform prior om `sigma`.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem, lower, upper):
@@ -299,7 +299,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         ``sigma`` is scale, for a multi-output problem ``n_outputs``
         parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem):
@@ -359,7 +359,7 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
         The standard devation(s) of the noise. Can be a single value or a
         sequence of sigma's for each output. Must be greater than zero.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem, sigma):
@@ -457,7 +457,7 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
         single-output problem a single parameter is added, for a multi-output
         problem ``n_outputs`` parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem):
@@ -536,7 +536,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
 
     This log-likelihood operates on both single and multi-output problems.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, log_likelihood):
@@ -594,7 +594,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         ``nu`` is the degrees of freedom and ``sigma`` is scale, for a
         multi-output problem ``2 * n_outputs`` parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
     """
 
     def __init__(self, problem):

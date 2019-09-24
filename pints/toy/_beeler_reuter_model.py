@@ -40,7 +40,7 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
         (Optional) The initial condition of the observables ``v`` and ``cai``,
         where ``cai >= 0``.
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
     def __init__(self, y0=None):
         if y0 is None:

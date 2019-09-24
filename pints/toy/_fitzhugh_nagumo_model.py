@@ -64,7 +64,7 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     [1] A kinetic model of the conductance changes in nerve membrane
     Fitzhugh (1961) Journal of Cellular and Comparative Physiology
 
-    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
     """
 
     def __init__(self, y0=None):

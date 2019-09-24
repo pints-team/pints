@@ -24,7 +24,7 @@ class XNES(pints.PopulationBasedOptimiser):
     xNES stands for Exponential Natural Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems [1].
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
     [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
     evolution strategies.

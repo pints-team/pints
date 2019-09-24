@@ -40,7 +40,7 @@ class AnnulusLogPDF(ToyLogPDF):
         The width of the annulus; approximately the standard deviation
         of normed distance.
 
-    *Extends:* :class:`pints.LogPDF`.
+    Extends :class:`pints.LogPDF`.
     """
     def __init__(self, dimensions=2, r0=10, sigma=1):
         if dimensions < 1:

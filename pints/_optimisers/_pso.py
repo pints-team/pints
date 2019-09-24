@@ -67,7 +67,7 @@ class PSO(pints.PopulationBasedOptimiser):
                     v[i,j] += al * (p[i,j] - x[i,j]) + ag * (pg[i,j]  - x[i,j])
                     x[i,j] += v[i,j]
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
     References:
 

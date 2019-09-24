@@ -75,7 +75,7 @@ class ProbabilityBasedError(ErrorMeasure):
     ``log_pdf``
         A :class:`LogPDF` object.
 
-    *Extends:* :class:`ErrorMeasure`
+    Extends :class:`ErrorMeasure`.
     """
     def __init__(self, log_pdf):
         super(ProbabilityBasedError, self).__init__()
@@ -132,7 +132,7 @@ class SumOfErrors(ErrorMeasure):
         ]
         e2 = pints.SumOfErrors(errors, weights)
 
-    *Extends:* :class:`ErrorMeasure`
+    Extends :class:`ErrorMeasure`.
     """
     def __init__(self, error_measures, weights=None):
         super(SumOfErrors, self).__init__()
@@ -214,7 +214,7 @@ class MeanSquaredError(ProblemErrorMeasure):
         (Optional) A sequence of (float) weights, exactly one per problem
         output. If no weights are specified all sums will be weighted equally.
 
-    *Extends:* :class:`ProblemErrorMeasure`
+    Extends :class:`ProblemErrorMeasure`.
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
@@ -254,7 +254,7 @@ class RootMeanSquaredError(ProblemErrorMeasure):
     ``problem``
         A :class:`pints.SingleOutputProblem`
 
-    *Extends:* :class:`ProblemErrorMeasure`
+    Extends :class:`ProblemErrorMeasure`.
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
@@ -280,7 +280,7 @@ class SumOfSquaresError(ProblemErrorMeasure):
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
 
-     *Extends:* :class:`ErrorMeasure`
+    Extends :class:`ErrorMeasure`.
     """
     def __init__(self, problem, weights=None):
         super(SumOfSquaresError, self).__init__(problem)

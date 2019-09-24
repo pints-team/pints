@@ -51,7 +51,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
     Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
     """
     def __init__(self, x0, sigma0=None):
         super(HamiltonianMCMC, self).__init__(x0, sigma0)

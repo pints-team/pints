@@ -19,7 +19,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     Using a covariance matrix, that is tuned so that the acceptance rate of the
     MCMC steps converges to a user specified value.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
 
     References
     ----------

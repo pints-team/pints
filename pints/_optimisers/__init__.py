@@ -185,7 +185,7 @@ class PopulationBasedOptimiser(Optimiser):
     Base class for optimisers that work by moving multiple points through the
     search space.
 
-    *Extends:* :class:`Optimiser`
+    Extends :class:`Optimiser`.
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):

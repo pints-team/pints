@@ -113,7 +113,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
     [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
     pp.705-767.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
     """
 
     def __init__(self, x0, sigma0=None):

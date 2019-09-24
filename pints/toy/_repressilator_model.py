@@ -47,7 +47,7 @@ class RepressilatorModel(pints.ForwardModel, ToyModel):
     ``y0``
         The system's initial state, must have 6 entries all >=0.
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     References:
 
