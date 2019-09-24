@@ -209,6 +209,13 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         """
         return (1 / m) * np.sign(p) * np.abs(p)**(1 / a)
 
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
     def _initialise_ke(self):
         """
         Initialises functions needed for sampling from soft kinetic energy
@@ -341,6 +348,16 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
             raise ValueError('epsilon must be positive for leapfrog algorithm')
         self._epsilon = epsilon
         self._set_scaled_epsilon()
+
+    def set_hamiltonian_threshold(self, hamiltonian_threshold):
+        """
+        Sets threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        if hamiltonian_threshold < 0:
+            raise ValueError('Threshold for divergent iterations must be ' +
+                             'non-negative.')
+        self._hamiltonian_threshold = hamiltonian_threshold
 
     def set_leapfrog_steps(self, steps):
         """

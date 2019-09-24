@@ -179,6 +179,19 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(mcmc.mass(), m)
         self.assertRaises(ValueError, mcmc.set_mass, -1.8)
 
+    def test_other_setters(self):
+        """
+        Tests other setters and getters.
+        """
+        x0 = np.array([2, 2])
+        mcmc = pints.HamiltonianMCMC(x0)
+        self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)
+        threshold1 = mcmc.hamiltonian_threshold()
+        self.assertEqual(threshold1, 10**3)
+        threshold2 = 10
+        mcmc.set_hamiltonian_threshold(threshold2)
+        self.assertEqual(mcmc.hamiltonian_threshold(), threshold2)
+
 
 if __name__ == '__main__':
     unittest.main()
