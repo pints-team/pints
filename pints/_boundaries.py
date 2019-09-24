@@ -20,6 +20,11 @@ class Boundaries(object):
         """
         Returns ``True`` if and only if the given point in parameter space is
         within the boundaries.
+
+        Parameters
+        ----------
+        parameters
+            A point in parameter space
         """
         raise NotImplementedError
 
@@ -41,6 +46,11 @@ class Boundaries(object):
 
         *Note that implementing :meth:`sample()` is optional, so some boundary
         types may not support it.*
+
+        Parameters
+        ----------
+        n : int
+            The number of points to sample
         """
         raise NotImplementedError
 

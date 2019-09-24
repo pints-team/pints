@@ -19,15 +19,19 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     Using a covariance matrix, that is tuned so that the acceptance rate of the
     MCMC steps converges to a user specified value.
 
-    [1] Uncertainty and variability in models of the cardiac action potential:
-    Can we build trustworthy models?
-    Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
-    Mirams (2015) Journal of Molecular and Cellular Cardiology
-
-    [2] An adaptive Metropolis algorithm
-    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli
-
     *Extends:* :class:`SingleChainMCMC`
+
+    References
+    ----------
+    .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,
+           Clayton, Mirams (2015) "Uncertainty and variability in models of the
+           cardiac action potential: Can we build trustworthy models?"
+           Journal of Molecular and Cellular Cardiology.
+           https://10.1016/j.yjmcc.2015.11.018
+
+    .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis algorithm"
+           Bernoulli.
+           https://doi.org/10.2307/3318737
     """
     def __init__(self, x0, sigma0=None):
         super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)

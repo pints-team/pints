@@ -21,7 +21,6 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import pints
 import sphinx
-import guzzle_sphinx_theme
 
 # -- General configuration ------------------------------------------------
 
@@ -34,8 +33,13 @@ import guzzle_sphinx_theme
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    # 'sphinx.ext.autosummary',
+    # 'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    # 'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
 ]
 
 # Autodoc defaults
@@ -65,7 +69,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Pints'
-copyright = u'2017, Pints Authors'
+copyright = u'2019, Pints Authors'
 author = u'Pints Authors'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -101,32 +105,26 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'alabaster'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+
+    # See: https://alabaster.readthedocs.io/en/latest/customization.html
+
+    'fixed_sidebar': True,
+    'page_width' : '1280px',
+    'sidebar_width': '320px',
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
 
-# Guzzle theme
-
-html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = 'guzzle_sphinx_theme'
-
-# Register the theme as an extension to generate a sitemap.xml
-extensions.append("guzzle_sphinx_theme")
-
-# Guzzle theme options (see theme.conf for more information)
-html_theme_options = {
-    # Set the name of the project to appear in the sidebar
-    "project_nav_name": project,
-}
 
 # -- Options for HTMLHelp output ------------------------------------------
 

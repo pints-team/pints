@@ -58,10 +58,10 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     *Extends:* :class:`MultiChainMCMC`
 
-    [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
-    Evolution with Self-Adaptive Randomized Subspace Sampling",
-    2009, Vrugt et al.,
-    International Journal of Nonlinear Sciences and Numerical Simulation.
+    .. [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
+        Evolution with Self-Adaptive Randomized Subspace Sampling",
+        2009, Vrugt et al.,
+        International Journal of Nonlinear Sciences and Numerical Simulation.
     """
 
     def __init__(self, chains, x0, sigma0=None):
