@@ -67,7 +67,7 @@ class NestedSampler(pints.TunableMethod):
                     results.append(fx[i])
             n_non_none = sum(x is not None for x in results)
             if n_non_none == 0:
-                return None
+                return None, np.array([[]])
             elif n_non_none == 1:
                 proposed = next(item for item in results if item is not None)
                 winners = np.array([[]])
@@ -79,14 +79,14 @@ class NestedSampler(pints.TunableMethod):
                 fx_temp = np.random.choice(fx_short)
                 index_temp = results.index(fx_temp)
                 proposed = self._proposed[index_temp]
-                proposed_short.remove(proposed)
+                del proposed_short[index_temp]
                 fx_short.remove(fx_temp)
                 winners = np.transpose(
-                    np.vstack([np.transpose(proposed_short), fx_temp]))
+                    np.vstack([np.transpose(proposed_short), fx_short]))
         else:
             self._n_evals += 1
             if np.isnan(fx) or fx < self._running_log_likelihood:
-                return None
+                return None, np.array([[]])
             else:
                 proposed = self._proposed
                 fx_temp = fx
@@ -433,30 +433,6 @@ class NestedController(object):
                     self._next_message = self._message_interval * (
                         1 + self._i_message // self._message_interval)
 
-    def _asker(self, m_previous_winners):
-        """
-        Uses matrix of previous points to propose new points and, if
-        necessary, ask from sampler.
-        """
-        if len(m_previous_winners) > 0:
-            a_shape = m_previous_winners.shape[0]
-            n_diff = self._n_workers - a_shape
-            if n_diff >= 0:
-                indices = np.random.choice(a_shape,
-                                           self._n_workers, replace=False)
-                proposed = m_previous_winners[indices, :]
-            else:
-                n_remaining = np.abs(n_diff)
-                indices = np.arange(a_shape)
-                proposed_extra = self._sampler.ask(n_remaining)
-                proposed = [m_previous_winners[indices, :],
-                            proposed_extra]
-        else:
-            proposed = self._sampler.ask(self._n_workers)
-            indices = []
-
-        return proposed, indices
-
     def run(self):
         """
         Runs the nested sampling routine and returns a tuple of the
@@ -499,9 +475,10 @@ class NestedController(object):
         # Run!
         self._X[0] = 1.0
         self._i_message = self._n_active_points - 1
-        m_previous_winners = []
         i_winners = 0
+        m_previous_winners = []
         for i in range(0, self._iterations):
+            i_iter_complete = 0
             self._i = i
             a_min_index = self._sampler.min_index()
             self._X[i + 1] = np.exp(-(i + 1) / self._n_active_points)
@@ -516,35 +493,54 @@ class NestedController(object):
             if i_winners > 0:
                 m_previous_winners = m_previous_winners[(
                     m_previous_winners[:, self._n_parameters] >
-                    self._sampler.running_log_likelihood()),
-                    :self._n_parameters]
-            if m_previous_winners.shape[0] > 0:
-                index = np.random.choice(m_previous_winners.shape,
-                                         1, replace=False)
-                proposed = m_previous_winners[index, :self._n_parameters]
-                fx_temp = m_previous_winners[index, self._n_parameters]
-                m_previous_winners = np.delete(m_previous_winners, index, 0)
-            else:
+                    self._sampler.running_log_likelihood()), :]
+                if m_previous_winners.shape[0] > 0:
+                    index = np.random.choice(m_previous_winners.shape[0],
+                                             1, replace=False)
+                    proposed = m_previous_winners[index, :self._n_parameters]
+                    fx_temp = m_previous_winners[index, self._n_parameters]
+                    m_previous_winners = np.delete(m_previous_winners,
+                                                   index, 0)
+                    self._sampler._m_active[self._sampler._min_index, :] = (
+                        np.concatenate((proposed[0], fx_temp))
+                    )
+                    self._sampler._min_index = np.argmin(
+                        self._sampler._m_active[:, self._n_parameters])
+                    self._sampler._set_running_log_likelihood(
+                        np.min(self._sampler._m_active[:, self._n_parameters])
+                    )
+                    self._sampler._accept_count += 1
+                    i_iter_complete = 1
+            if i_iter_complete == 0:
                 # Propose new samples
-                proposed, indices = self._asker(m_previous_winners)
+                proposed = self._sampler.ask(self._n_workers)
                 # Evaluate their fit
                 if self._n_workers > 1:
                     log_likelihood = self._evaluator.evaluate(proposed)
                 else:
                     log_likelihood = self._evaluator.evaluate([proposed])[0]
                 sample, winners = self._sampler.tell(log_likelihood)
-                while proposed is None:
-                    sample = self._sampler.ask(self._n_workers)
+                while sample is None:
+                    proposed = self._sampler.ask(self._n_workers)
+                    # print(proposed)
                     log_likelihood = self._evaluator.evaluate([proposed])[0]
                     if self._n_workers > 1:
                         log_likelihood = self._evaluator.evaluate(proposed)
                     else:
-                        log_likelihood = self._evaluator.evaluate([proposed])[0]
+                        log_likelihood = self._evaluator.evaluate(
+                            [proposed])[0]
                     sample, winners = self._sampler.tell(log_likelihood)
-                if winners.size > 1:
-                    m_previous_winners = [m_previous_winners,
-                                          winners]
-                    m_previous_winners = np.concatenate(m_previous_winners)
+                if winners.size > 0:
+                    # print(sample)
+                    # print(m_previous_winners)
+                    # print(winners)
+                    if i_winners == 0:
+                        m_previous_winners = winners
+                        i_winners = 1
+                    else:
+                        m_previous_winners = [m_previous_winners,
+                                              winners]
+                        m_previous_winners = np.concatenate(m_previous_winners)
 
             # Check whether within convergence threshold
             if i > 2:

@@ -76,7 +76,10 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         Proposes new point(s) by sampling from the prior.
         """
-        self._proposed = self._log_prior.sample(n_points)[0]
+        if n_points > 1:
+            self._proposed = self._log_prior.sample(n_points)
+        else:
+            self._proposed = self._log_prior.sample(n_points)[0]
         return self._proposed
 
     def n_hyper_parameters(self):
