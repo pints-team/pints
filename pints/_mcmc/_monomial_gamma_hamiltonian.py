@@ -209,6 +209,13 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         """
         return (1 / m) * np.sign(p) * np.abs(p)**(1 / a)
 
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
     def _initialise_ke(self):
         """
         Initialises functions needed for sampling from soft kinetic energy
@@ -342,6 +349,29 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         self._epsilon = epsilon
         self._set_scaled_epsilon()
 
+    def set_hamiltonian_threshold(self, hamiltonian_threshold):
+        """
+        Sets threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        if hamiltonian_threshold < 0:
+            raise ValueError('Threshold for divergent iterations must be ' +
+                             'non-negative.')
+        self._hamiltonian_threshold = hamiltonian_threshold
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size,
+        a, c, mass]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_leapfrog_steps(x[0])
+        self.set_leapfrog_step_size(x[1])
+        self.set_a(x[2])
+        self.set_c(x[3])
+        self.set_mass(x[4])
+
     def set_leapfrog_steps(self, steps):
         """
         Sets the number of leapfrog steps to carry out for each iteration.
@@ -378,19 +408,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         if m <= 0:
             raise ValueError("Mass must be positive")
         self._m = m
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size,
-        a, c, mass]``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_leapfrog_steps(x[0])
-        self.set_leapfrog_step_size(x[1])
-        self.set_a(x[2])
-        self.set_c(x[3])
-        self.set_mass(x[4])
 
     def _set_scaled_epsilon(self):
         """
