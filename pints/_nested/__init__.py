@@ -69,7 +69,9 @@ class NestedSampler(pints.TunableMethod):
             if n_non_none == 0:
                 return None, np.array([[]])
             elif n_non_none == 1:
-                proposed = next(item for item in results if item is not None)
+                fx_temp = next(item for item in results if item is not None)
+                index = results.index(fx_temp)
+                proposed = self._proposed[index]
                 winners = np.array([[]])
             else:
                 # select at random from multiple non-nones
@@ -79,7 +81,8 @@ class NestedSampler(pints.TunableMethod):
                 fx_temp = np.random.choice(fx_short)
                 index_temp = results.index(fx_temp)
                 proposed = self._proposed[index_temp]
-                del proposed_short[index_temp]
+                index1 = fx_short.index(fx_temp)
+                del proposed_short[index1]
                 fx_short.remove(fx_temp)
                 winners = np.transpose(
                     np.vstack([np.transpose(proposed_short), fx_short]))
@@ -522,8 +525,6 @@ class NestedController(object):
                 sample, winners = self._sampler.tell(log_likelihood)
                 while sample is None:
                     proposed = self._sampler.ask(self._n_workers)
-                    # print(proposed)
-                    log_likelihood = self._evaluator.evaluate([proposed])[0]
                     if self._n_workers > 1:
                         log_likelihood = self._evaluator.evaluate(proposed)
                     else:
