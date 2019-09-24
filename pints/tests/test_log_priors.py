@@ -86,11 +86,11 @@ class TestPrior(unittest.TestCase):
         n = 10000
         p1 = pints.BetaLogPrior(100, 100)
         samples = p1.sample(n)
-        self.assertTrue(np.mean(samples) - 0.5 < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 0.5) < 0.01)
 
         p1 = pints.BetaLogPrior(20, 30)
         samples = p1.sample(n)
-        self.assertTrue(np.mean(samples) - 0.4 < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 0.4) < 0.01)
 
     def test_cauchy_prior(self):
         # Test two specific function values
