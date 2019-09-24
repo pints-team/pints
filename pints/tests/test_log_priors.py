@@ -604,17 +604,15 @@ class TestPrior(unittest.TestCase):
         # Basic test
         covariance = [[1]]
         p = pints.MultivariateGaussianLogPrior(mean, covariance)
-        p([0])
-        p([-1])
-        p([11])
+        self.assertEqual(p([0]), -0.5 * np.log(2 * np.pi))
 
         # 5d tests
         mean = [1, 2, 3, 4, 5]
         covariance = np.diag(mean)
         p = pints.MultivariateGaussianLogPrior(mean, covariance)
         self.assertRaises(ValueError, p, [1, 2, 3])
-        p([1, 2, 3, 4, 5])
-        p([-1, 2, -3, 4, -5])
+        self.assertAlmostEqual(p([1, 2, 3, 4, 5]), -6.988438537414387)
+        self.assertAlmostEqual(p([-1, 2, -3, 4, -5]), -24.988438537414385)
 
         # Test mean
         for idx, component in enumerate(mean):
