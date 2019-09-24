@@ -121,7 +121,7 @@ class TestPrior(unittest.TestCase):
         p1 = pints.CauchyLogPrior(-4.7, 10)
         n = 1000000
         v_samples = p1.sample(n)
-        self.assertTrue(np.abs(np.median(v_samples) - -4.695) < 0.05)
+        self.assertTrue(np.abs(np.median(v_samples) - -4.695) < 0.1)
 
     def test_composed_prior(self):
         import pints
