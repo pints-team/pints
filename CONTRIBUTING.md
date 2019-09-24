@@ -233,6 +233,10 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 6. References to literature are highly encouraged, and go at the bottom of the
    docstring:
    
+        Adaptive covariance MCMC based on Haario et al. [1]_, [2]_.
+        
+        (rest of the docstring goes here)
+   
         References
         ----------
         .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,

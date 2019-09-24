@@ -14,7 +14,7 @@ import numpy as np
 
 class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     """
-    Adaptive covariance MCMC, as described in [1, 2].
+    Adaptive covariance MCMC [1]_, [2]_.
 
     Using a covariance matrix, that is tuned so that the acceptance rate of the
     MCMC steps converges to a user specified value.
