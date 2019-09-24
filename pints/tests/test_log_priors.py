@@ -114,11 +114,14 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p2.n_parameters(), 1)
 
     def test_cauchy_prior_sampling(self):
-        # Aren't many tests for Cauchy distributions
-        # because they have no mean or variance!
         p1 = pints.CauchyLogPrior(0, 1000)
         self.assertEqual(len(p1.sample()), 1)
         self.assertEqual(len(p1.sample(100)), 100)
+
+        p1 = pints.CauchyLogPrior(-4.7, 10)
+        n = 1000000
+        v_samples = p1.sample(n)
+        self.assertTrue(np.abs(np.median(v_samples) - -4.695) < 0.05)
 
     def test_composed_prior(self):
         import pints
@@ -436,7 +439,6 @@ class TestPrior(unittest.TestCase):
         p1 = pints.HalfCauchyLogPrior(-3, 10)
         n = 1000000
         v_samples = p1.sample(n)
-        print(np.median(v_samples))
         self.assertTrue(np.abs(np.median(v_samples) - 10.45) < 0.1)
 
     def test_inverse_gamma_prior(self):

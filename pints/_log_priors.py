@@ -445,6 +445,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # Cache constants
         self._norm_factor = -np.log(np.arctan(location / scale) / np.pi + 0.5)
+        self._arctan = np.arctan(self._location / self._scale) / np.pi
 
     def __call__(self, x):
         if x[0] > 0:
@@ -462,8 +463,18 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return scipy.stats.halfcauchy.rvs(loc=self._location,
-                                          scale=self._scale, size=(n, 1))
+
+        # use inverse transform sampling
+        us = np.random.uniform(0, 1, n)
+        return np.array([self._inverse_cdf(u) for u in us])
+
+    def _inverse_cdf(self, u):
+        """ Inverse CDF of half-Cauchy. """
+        arctan = self._arctan
+        return (
+            self._location + self._scale * (
+                np.tan(np.pi * (-arctan + u * (0.5 + arctan)))
+            ))
 
 
 class InverseGammaLogPrior(pints.LogPrior):
