@@ -532,15 +532,11 @@ class NestedController(object):
                             [proposed])[0]
                     sample, winners = self._sampler.tell(log_likelihood)
                 if winners.size > 0:
-                    # print(sample)
-                    # print(m_previous_winners)
-                    # print(winners)
                     if i_winners == 0:
                         m_previous_winners = winners
                         i_winners = 1
                     else:
-                        m_previous_winners = [m_previous_winners,
-                                              winners]
+                        m_previous_winners = [m_previous_winners, winners]
                         m_previous_winners = np.concatenate(m_previous_winners)
 
             # Check whether within convergence threshold
