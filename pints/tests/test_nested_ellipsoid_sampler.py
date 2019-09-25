@@ -142,9 +142,9 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
         A1 = np.copy(sampler._A)
         c1 = sampler._centroid
-        sampler.set_n_rejection_samples(5)
-        sampler.set_ellipsoid_update_gap(2)
-        for i in range(20):
+        sampler.set_n_rejection_samples(20)
+        sampler.set_ellipsoid_update_gap(10)
+        for i in range(100):
             pt = sampler.ask(1)
             fx = self.log_likelihood(pt)
             sampler.tell(fx)
