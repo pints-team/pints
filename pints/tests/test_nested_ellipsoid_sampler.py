@@ -142,14 +142,12 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
         A1 = np.copy(sampler._A)
         c1 = sampler._centroid
-        sampler.set_n_rejection_samples(20)
+        sampler.set_n_rejection_samples(100)
         sampler.set_ellipsoid_update_gap(10)
-        for i in range(100):
+        for i in range(5000):
             pt = sampler.ask(1)
             fx = self.log_likelihood(pt)
             sampler.tell(fx)
-            # bit hacky but can't see another way
-            sampler._accept_count += 1
         A2 = sampler._A
         c2 = sampler._centroid
         self.assertTrue(not np.array_equal(A1, A2))
