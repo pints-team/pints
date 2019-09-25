@@ -307,12 +307,12 @@ class TestNestedController(unittest.TestCase):
         self.assertFalse(sampler.parallel())
         sampler.set_parallel(True)
         self.assertTrue(sampler.parallel())
-        sampler.set_iterations(100)
+        sampler.set_iterations(200)
         sampler.set_log_to_screen(False)
         sampler.set_marginal_log_likelihood_threshold(100000)
         sampler.run()
         m_inactive = sampler.inactive_points()
-        self.assertTrue(m_inactive.shape[0] < 100)
+        self.assertTrue(m_inactive.shape[0] < 200)
 
 
 if __name__ == '__main__':

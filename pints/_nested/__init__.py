@@ -526,7 +526,8 @@ class NestedController(object):
                 while sample is None:
                     proposed = self._sampler.ask(self._n_workers)
                     if self._n_workers > 1:
-                        log_likelihood = self._evaluator.evaluate(proposed)
+                        log_likelihood = (              # pragma: no cover
+                            self._evaluator.evaluate(proposed))
                     else:
                         log_likelihood = self._evaluator.evaluate(
                             [proposed])[0]
@@ -545,8 +546,9 @@ class NestedController(object):
                 if (np.abs(self._diff) <
                    self._marginal_log_likelihood_threshold):
                     if self._log_to_screen:
-                        print('Convergence obtained with Delta_z = ' +
-                              str(self._diff))
+                        print(                              # pragma: no cover
+                            'Convergence obtained with Delta_z = ' +
+                            str(self._diff))
 
                     # shorten arrays according to current iteration
                     self._iterations = i
