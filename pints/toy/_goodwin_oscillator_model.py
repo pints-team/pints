@@ -15,8 +15,21 @@ from . import ToyModel
 
 
 class GoodwinOscillatorModel(pints.ForwardModel, ToyModel):
-    """
-    Three-state Goodwin oscillator toy model [1]_, [2]_.
+    r"""
+    Three-state Goodwin oscillator toy model introduced in [1]_, [2]_, but
+    best described in [3]_. The model considers level of mRNA, ``x``, which
+    is translated into protein ``y``, which, in turn, stimulated production of
+    protein ``z`` that inhibits production of mRNA. The ODE system is described
+    by the following equations,
+
+    .. math::
+        \dot{x} = 1 / (1 + z^{10}) - m1 x
+
+        \dot{y} = k2 x - m2 y
+
+        \dot{z} = k3 y - m3 z
+
+    Parameters are ``[k2, k3, m1, m2, m3]``.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
@@ -29,6 +42,10 @@ class GoodwinOscillatorModel(pints.ForwardModel, ToyModel):
     .. [2] Mathematics of cellular control processes I. Negative feedback to
            one gene. Griffith (1968) Journal of theoretical biology.
            https://doi.org/10.1016/0022-5193(68)90189-6
+
+    .. [3] Estimating Bayes factors via thermodynamic integration and
+           population MCMC. Ben Calderhead and Mark Girolami, 2009,
+           Computational Statistics and Data Analysis.
     """
 
     def n_outputs(self):
@@ -66,4 +83,3 @@ class GoodwinOscillatorModel(pints.ForwardModel, ToyModel):
         """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
 
         return np.linspace(0, 100, 200)
-
