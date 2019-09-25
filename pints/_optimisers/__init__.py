@@ -284,9 +284,9 @@ class OptimisationController(object):
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
         this information.
-    boundaries=None
+    boundaries
         An optional set of boundaries on the parameter space.
-    method=None
+    method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
     """
@@ -769,7 +769,12 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
 
-    Returns a tuple ``(xbest, fbest)``.
+    Returns
+    -------
+    xbest : numpy array
+        The best parameter set obtained
+    fbest : float
+        The corresponding score.
     """
     return OptimisationController(
         function, x0, sigma0, boundaries, method).run()
