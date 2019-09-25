@@ -140,15 +140,16 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
 
         # test that ellipses are estimated
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
-        A1 = sampler._A
+        A1 = np.copy(sampler._A)
         c1 = sampler._centroid
-        sampler.set_n_rejection_samples(2)
-        pt = sampler.ask(1)
-        fx = self.log_likelihood(pt)
-        sampler.tell(fx)
-        pt = sampler.ask(1)
-        fx = self.log_likelihood(pt)
-        sampler.tell(fx)
+        sampler.set_n_rejection_samples(5)
+        sampler.set_ellipsoid_update_gap(2)
+        for i in range(20):
+            pt = sampler.ask(1)
+            fx = self.log_likelihood(pt)
+            sampler.tell(fx)
+            # bit hacky but can't see another way
+            sampler._accept_count += 1
         A2 = sampler._A
         c2 = sampler._centroid
         self.assertTrue(not np.array_equal(A1, A2))
