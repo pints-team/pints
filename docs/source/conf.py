@@ -117,7 +117,9 @@ html_theme_options = {
 
     # See: https://alabaster.readthedocs.io/en/latest/customization.html
 
-    'fixed_sidebar': True,
+    # Fixed sidebar is unusable: Doesn't have its own scrollbar!
+    # 'fixed_sidebar': True,
+
     'page_width': '1280px',
     'sidebar_width': '320px',
 }
