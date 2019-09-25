@@ -214,7 +214,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 4
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -265,12 +265,15 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
+        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size,
+        mass, c]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_leapfrog_steps(x[0])
         self.set_leapfrog_step_size(x[1])
+        self.set_mass(x[2])
+        self.set_speed_light(x[3])
 
     def set_leapfrog_steps(self, steps):
         """
@@ -303,10 +306,10 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
     def set_mass(self, mass):
         """ Sets scalar mass. """
-        if mass <= 0:
-            raise ValueError('Mass must be positive.')
         if isinstance(mass, list):
             raise ValueError('Mass must be scalar.')
+        if mass <= 0:
+            raise ValueError('Mass must be positive.')
         self._mass = mass
 
     def set_speed_light(self, c):
