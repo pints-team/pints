@@ -63,7 +63,6 @@ setup(
     ],
     extras_require={
         'docs': [
-            'guzzle-sphinx-theme',      # Nice theme for docs
             'sphinx>=1.5, !=1.7.3',     # For doc generation
         ],
         'dev': [

@@ -19,16 +19,16 @@ class GaussianLogPDF(ToyLogPDF):
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``mean``
+    Parameters
+    ----------
+    mean
         The distribution mean (specified as a vector).
-    ``sigma``
+    sigma
         The distribution's covariance matrix. Can be given as either a matrix
         or a vector (in which case ``diag(sigma)`` will be used. Should be
         symmetric and positive-semidefinite.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
 
     def __init__(self, mean=[0, 0], sigma=[1, 1]):

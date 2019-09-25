@@ -16,7 +16,7 @@ from . import ToyLogPDF
 
 class TwistedGaussianLogPDF(ToyLogPDF):
     """
-    Twisted multivariate Gaussian 'banana' with un-normalised density [1]:
+    Twisted multivariate Gaussian 'banana' with un-normalised density [1]_:
 
     .. math::
         p(x_1, x_2, x_3, ..., x_n) \\propto
@@ -28,21 +28,24 @@ class TwistedGaussianLogPDF(ToyLogPDF):
     .. math::
         \\phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimension``
+    Parameters
+    ----------
+    dimension : int
         Problem dimension (``n``), must be 2 or greater.
-    ``b``
+    b : float
         "Bananicity": ``b = 0.01`` induces mild non-linearity in target
         density, while non-linearity for ``b = 0.1`` is high.
         Must be greater than or equal to zero.
-    ``V``
+    V : float
         Offset (see equation).
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
-
-    [1] Adaptive proposal distribution for random walk Metropolis algorithm
-    Haario, Saksman, Tamminen (1999) Computational Statistics.
+    References
+    ----------
+    .. [1] Adaptive proposal distribution for random walk Metropolis algorithm
+           Haario, Saksman, Tamminen (1999) Computational Statistics.
+           https://doi.org/10.1007/s001800050022
     """
     def __init__(self, dimension=10, b=0.1, V=100):
         # Check dimension

@@ -24,7 +24,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
     .. math::
         A \xrightarrow{k} 0
 
-    Simulations are performed using the Gillespie algorithm [1, 2]:
+    Simulations are performed using Gillespie's algorithm [1]_, [2]_:
 
     1. Sample a random value :math:`r` from a uniform distribution
 
@@ -45,19 +45,24 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
 
     The model has one parameter, the rate constant :math:`k`.
 
-    The initial molecule count :math:`A(0)` can be set using the optional
-    constructor argument ``initial_molecule_count``
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    [1] A Practical Guide to Stochastic Simulations of Reaction Diffusion
-    Processes. Erban, Chapman, Maini (2007). arXiv:0704.1908v2 [q-bio.SC]
-    https://arxiv.org/abs/0704.1908
+    Parameters
+    ----------
+    initial_molecule_count
+        The initial molecule count :math:`A(0)`.
 
-    [2] A general method for numerically simulating the stochastic time
-    evolution of coupled chemical reactions. Gillespie (1976).
-    Journal of Computational Physics
-    https://doi.org/10.1016/0021-9991(76)90041-3
+    References
+    ----------
+    .. [1] A Practical Guide to Stochastic Simulations of Reaction Diffusion
+           Processes. Erban, Chapman, Maini (2007).
+           arXiv:0704.1908v2 [q-bio.SC]
+           https://arxiv.org/abs/0704.1908
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    .. [2] A general method for numerically simulating the stochastic time
+           evolution of coupled chemical reactions. Gillespie (1976).
+           Journal of Computational Physics
+           https://doi.org/10.1016/0021-9991(76)90041-3
     """
     def __init__(self, initial_molecule_count=20):
         super(StochasticDegradationModel, self).__init__()

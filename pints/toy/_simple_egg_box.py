@@ -19,15 +19,16 @@ class SimpleEggBoxLogPDF(ToyLogPDF):
     Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``sigma``
+    Parameters
+    ----------
+    sigma : float
         The variance of each mode.
-    ``r``
-        The first mode will be located at ``(d, d)``, ``(-d, d)``, (-d, -d)``,
-        and ``(d, -d)``, where ``d = r * sigma``.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    r : float
+        Determines the positions of the modes, which will be located at
+        ``(d, d)``, ``(-d, d)``, ``(-d, -d)``, and ``(d, -d)``, where
+        ``d = r * sigma``.
     """
     def __init__(self, sigma=2, r=4):
 

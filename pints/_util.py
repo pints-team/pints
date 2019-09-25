@@ -2,7 +2,7 @@
 # Utility classes for Pints
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -24,7 +24,9 @@ class Timer(object):
     """
     Provides accurate timing.
 
-    Example::
+    Example
+    -------
+    ::
 
         timer = pints.Timer()
         print(timer.format(timer.time()))
@@ -79,6 +81,7 @@ def vector(x):
     """
     Copies ``x`` and returns a 1d read-only numpy array of floats with shape
     ``(n,)``.
+
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
     """
     if np.isscalar(x):
@@ -98,7 +101,8 @@ def matrix2d(x):
     """
     Copies ``x`` and returns a 2d read-only numpy array of floats with shape
     ``(m, n)``.
-    Raises a ``ValueError`` if ``x`` has an incompatible shape
+
+    Raises a ``ValueError`` if ``x`` has an incompatible shape.
     """
     x = np.array(x, copy=True, dtype=float)
     if x.ndim == 1:

@@ -18,8 +18,6 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     when running, in order to control the acceptance rate.
 
     In all cases ``eta`` is used to control decay of adaptation.
-
-    *Extends:* :class:`SingleChainMCMC`
     """
     def __init__(self, x0, sigma0=None):
         super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
