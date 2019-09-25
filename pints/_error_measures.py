@@ -70,12 +70,12 @@ class ProbabilityBasedError(ErrorMeasure):
     Changes the sign of a :class:`LogPDF` to use it as an error. Minimising
     this error will maximise the probability.
 
-    Arguments:
-
-    ``log_pdf``
-        A :class:`LogPDF` object.
-
     Extends :class:`ErrorMeasure`.
+
+    Parameters
+    ----------
+    log_pdf : pints.LogPDF
+        The LogPDF to base this error on.
     """
     def __init__(self, log_pdf):
         super(ProbabilityBasedError, self).__init__()
@@ -107,11 +107,13 @@ class SumOfErrors(ErrorMeasure):
     Calculates a sum of :class:`ErrorMeasure` objects, all defined on the same
     parameter space.
 
-    Arguments:
+    Extends :class:`ErrorMeasure`.
 
-    ``error_measures``
+    Parameters
+    ----------
+    error_measures
         A sequence of error measures.
-    ``weights``
+    weights
         An optional sequence of (float) weights, exactly one per error measure.
         If no weights are specified all sums will be weighted equally.
 
@@ -132,7 +134,6 @@ class SumOfErrors(ErrorMeasure):
         ]
         e2 = pints.SumOfErrors(errors, weights)
 
-    Extends :class:`ErrorMeasure`.
     """
     def __init__(self, error_measures, weights=None):
         super(SumOfErrors, self).__init__()
@@ -205,16 +206,16 @@ class MeanSquaredError(ProblemErrorMeasure):
     where ``n`` is the product of the number of times in the time series and
     the number of outputs of the problem.
 
-    Arguments:
+    Extends :class:`ProblemErrorMeasure`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
-    ``weights``
-        (Optional) A sequence of (float) weights, exactly one per problem
+    weights
+        An optional sequence of (float) weights, exactly one per problem
         output. If no weights are specified all sums will be weighted equally.
-
-    Extends :class:`ProblemErrorMeasure`.
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
@@ -249,12 +250,12 @@ class RootMeanSquaredError(ProblemErrorMeasure):
     Calculates a root mean squared error (RMSE):
     ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
 
-    Arguments:
-
-    ``problem``
-        A :class:`pints.SingleOutputProblem`
-
     Extends :class:`ProblemErrorMeasure`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`pints.SingleOutputProblem`
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
@@ -274,13 +275,13 @@ class SumOfSquaresError(ProblemErrorMeasure):
     """
     Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
 
-    Arguments:
+    Extends :class:`ErrorMeasure`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
-
-    Extends :class:`ErrorMeasure`.
     """
     def __init__(self, problem, weights=None):
         super(SumOfSquaresError, self).__init__(problem)

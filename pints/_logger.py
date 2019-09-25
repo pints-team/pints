@@ -70,19 +70,19 @@ class Logger(object):
         """
         Adds a field for positive integers.
 
-        Arguments:
+        Returns this :class:`Logger` object.
 
-        ``name``
+        Parameters
+        ----------
+        name : str
             This field's name. Will be displayed in the header.
-        ``width``
+        width : int
             A hint for the width of this column. If numbers exceed this width
             layout will break, but no information will be lost.
-        ``max_value``
+        max_value : int|None
             A hint for the maximum number this field will need to display.
-        ``file_only``
+        file_only : boolean
             If set to ``True``, this field will not be shown on screen.
-
-        Returns this :class:`Logger` object.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -113,16 +113,16 @@ class Logger(object):
         """
         Adds a field for floating point number.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``width``
-            A hint for the field's width. The minimum width is 7.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        width : int
+            A hint for the field's width. The minimum width is 7.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -164,17 +164,17 @@ class Logger(object):
         """
         Adds a field for a (positive or negative) integer.
 
-        Arguments:
+        Returns this :class:`Logger` object.
 
-        ``name``
+        Parameters
+        ----------
+        name : str
             This field's name. Will be displayed in the header.
-        ``width``
+        width : int
             A hint for the width of this column. If numbers exceed this width
             layout will break, but no information will be lost.
-        ``file_only``
+        file_only : boolean
             If set to ``True``, this field will not be shown on screen.
-
-        Returns this :class:`Logger` object.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -202,14 +202,14 @@ class Logger(object):
         """
         Adds a field for a maximum precision floating point number.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -247,16 +247,16 @@ class Logger(object):
         """
         Adds a field showing (at most ``width`` characters of) string values.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``width``
-            The maximum width for strings to display.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        width : int
+            The maximum width for strings to display.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -282,14 +282,14 @@ class Logger(object):
         """
         Adds a field showing a formatted time (given in seconds).
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
