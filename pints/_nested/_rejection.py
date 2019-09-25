@@ -26,7 +26,7 @@ class NestedRejectionSampler(pints.NestedSampler):
     The posterior samples are generated as described in [1]_ on page 849 by
     randomly sampling the preliminary point, accounting for their weights and
     likelihoods.
-    
+
     Initialise::
 
         Z = 0

@@ -108,10 +108,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
            https://doi.org/10.1086/501068
     """
 
-    [2] "Nested Sampling for General Bayesian Computation", John Skilling,
-    Bayesian Analysis 1:4 (2006).
-    """
-
     def __init__(self, log_prior):
         super(NestedEllipsoidSampler, self).__init__(log_prior)
 
