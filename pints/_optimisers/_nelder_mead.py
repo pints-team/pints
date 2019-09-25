@@ -113,7 +113,7 @@ class NelderMead(pints.Optimiser):
 
     where ys is a parameter (typically ys = 0.5).
 
-    The initialisation of the initial simplex was copied from [3].
+    The initialisation of the initial simplex was copied from [3]_.
 
     References
     ----------

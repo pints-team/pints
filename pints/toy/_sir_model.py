@@ -17,19 +17,19 @@ from . import ToyModel
 
 
 class SIRModel(pints.ForwardModel, ToyModel):
-    """
+    r"""
     The SIR model of infectious disease models the number of susceptible (S),
-    infected (I), and recovered (R) people in a population [1, 2].
+    infected (I), and recovered (R) people in a population [1]_, [2]_.
 
-    The particular model given here is analysed in [3], and is described by the
-    following three-state ODE:
+    The particular model given here is analysed in [3],_ and is described by
+    the following three-state ODE:
 
     .. math::
-        \\dot{S} = -\\gamma S I
+        \dot{S} = -\gamma S I
 
-        \\dot{I} = \\gamma S I - v I
+        \dot{I} = \gamma S I - v I
 
-        \\dot{R} = v I
+        \dot{R} = v I
 
     Where the parameters are ``gamma`` (infection rate), and ``v``, recovery
     rate. In addition, we assume the initial value of S, ``S0``, is unknwon,
@@ -43,32 +43,35 @@ class SIRModel(pints.ForwardModel, ToyModel):
     happen much slower than the spread of the (non-lethal) disease.
 
     Real data is included via :meth:`suggested_values`, which was taken from
-    [3,4,5].
-
-    Arguments:
-
-    ``y0``
-        The system's initial state, must have 3 entries all >=0.
+    [3]_, [4]_, [5]_.
 
     Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
 
-    References:
+    Parameters
+    ----------
+    y0
+        The system's initial state, must have 3 entries all >=0.
 
-    [1] A Contribution to the Mathematical Theory of Epidemics. Kermack,
-    McKendrick (1927) Proceedings of the Royal Society A.
+    References
+    ----------
+    .. [1] A Contribution to the Mathematical Theory of Epidemics. Kermack,
+           McKendrick (1927) Proceedings of the Royal Society A.
+           https://doi.org/10.1098/rspa.1927.0118
 
-    [2] https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
+    .. [2] https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 
-    [3] Approximate Bayesian computation scheme for parameter inference and
-    model selection in dynamical systems. Toni, Welch, Strelkowa, Ipsen, Stumpf
-    (2009) J. R. Soc. Interface.
+    .. [3] Approximate Bayesian computation scheme for parameter inference and
+           model selection in dynamical systems. Toni, Welch, Strelkowa, Ipsen,
+           Stumpf (2009) J. R. Soc. Interface.
+           https://doi.org/10.1098/rsif.2008.0172
 
-    [4] A mathematical model of common-cold epidemics on Tristan da Cunha.
-    Hammond, Tyrrell (1971) Epidemiology & Infection.
+    .. [4] A mathematical model of common-cold epidemics on Tristan da Cunha.
+           Hammond, Tyrrell (1971) Epidemiology & Infection.
+           https://doi.org/10.1017/S0022172400021677
 
-    [5] Common colds on Tristan da Cunha. Shybli, Gooch, Lewis, Tyrell (1971)
-    Epidemiology & Infection.
-
+    .. [5] Common colds on Tristan da Cunha. Shybli, Gooch, Lewis, Tyrell
+           (1971) Epidemiology & Infection.
+           https://doi.org/10.1017/S0022172400021483
     """
 
     def __init__(self, y0=None):
@@ -127,7 +130,7 @@ class SIRModel(pints.ForwardModel, ToyModel):
     def suggested_values(self):
         """
         Returns the data from a common-cold outbreak on the remote island of
-        Tristan da Cunha, as given in [3,4,5].
+        Tristan da Cunha, as given in [3]_, [4]_, [5]_.
         """
         # Toni et al.
         return np.array([

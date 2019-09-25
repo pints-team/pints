@@ -17,7 +17,7 @@ from . import ToyModel
 class LogisticModel(pints.ForwardModelS1, ToyModel):
 
     r"""
-    Logistic model of population growth [1].
+    Logistic model of population growth [1]_.
 
     .. math::
         f(t) &= \frac{k}{1+(k/p_0 - 1) \exp(-r t)} \\
@@ -28,13 +28,19 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
                                           {p_0 ((k/p_0-1)\exp(-r t) + 1)^2}
                                          + \frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
 
-    Has two parameters: A growth rate :math:`r` and a carrying capacity
-    :math:`k`. The initial population size :math:`f(0) = p_0` can be set using
-    the (optional) named constructor arg ``initial_population_size``
-
-    [1] https://en.wikipedia.org/wiki/Population_growth
+    Has two model parameters: A growth rate :math:`r` and a carrying capacity
+    :math:`k`.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+
+    Parameters
+    ----------
+    initial_population_size : int
+        Sets the initial population size :math:`f(0)`.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Population_growth
     """
 
     def __init__(self, initial_population_size=2):

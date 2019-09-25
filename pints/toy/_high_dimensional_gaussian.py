@@ -19,16 +19,16 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     High-dimensional multivariate Gaussian log pdf, with off-diagonal
     correlations.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimension``
+    Parameters
+    ----------
+    dimension : int
         Dimensions of Gaussian distribution.
-    ``rho``
+    rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
         covariance matrix is positive semi-definite.
-
-    Extends :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)

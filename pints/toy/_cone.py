@@ -15,26 +15,26 @@ from . import ToyLogPDF
 
 
 class ConeLogPDF(ToyLogPDF):
-    """
+    r"""
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
 
-        f(x) \\propto e^{-|x|^\\beta}
+        f(x) \propto e^{-|x|^\beta}
 
     where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm. The
     mean and variance that are returned relate to expectations on ``|x|`` not
     the multidimensional ``x``.
 
-    Arguments:
+    Extends :class:`pints.LogPDF`.
 
-    ``dimensions``
+    Parameters
+    ----------
+    dimensions : int
         The dimensionality of the cone.
-    ``beta``
+    beta : float
         The power to which ``|x|`` is raised in the exponential term, which
         must be positive.
-
-    Extends :class:`pints.LogPDF`.
     """
     def __init__(self, dimensions=2, beta=1):
         if dimensions < 1:

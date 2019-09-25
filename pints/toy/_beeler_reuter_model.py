@@ -17,7 +17,7 @@ from . import ToyModel
 class ActionPotentialModel(pints.ForwardModel, ToyModel):
     """
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
-    (AP) [1].
+    (AP) [1]_.
 
     This model describes several ion currents, each with a maximum conductance
     parameter, that together give rise to the cardiac AP and calcium transient.
@@ -29,18 +29,20 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
     directly, users should provide the natural log of the maximum conductances.
     This makes the parameters easier to find for optimisation algorithms.
 
-    References:
-
-    [1] Reconstruction of the action potential of ventricular myocardial
-    fibres. Beeler, Reuter (1977) Journal of Physiology
-
-    Arguments:
-
-    ``y0``
-        (Optional) The initial condition of the observables ``v`` and ``cai``,
-        where ``cai >= 0``.
-
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+
+    Parameters
+    ----------
+    y0
+        The initial state of the observables ``v`` and ``cai``, where
+        ``cai >= 0``.
+        If not given, the defaults are -84.622 and 2e-7.
+
+    References
+    ----------
+    .. [1] Reconstruction of the action potential of ventricular myocardial
+           fibres. Beeler, Reuter (1977) Journal of Physiology
+           https://doi.org/10.1113/jphysiol.1977.sp011853
     """
     def __init__(self, y0=None):
         if y0 is None:
