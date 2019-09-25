@@ -65,15 +65,15 @@ class SingleChainMCMC(MCMCSampler):
     Abstract base class for MCMC methods that generate a single markov chain,
     via an ask-and-tell interface.
 
-    Arguments:
+    Extends :class:`MCMCSampler`.
 
-    ``x0``
+    Parameters
+    ----------
+    x0
         An starting point in the parameter space.
-    ``sigma0=None``
+    sigma0
         An optional (initial) covariance matrix, i.e., a guess of the
         covariance of the distribution to estimate, around ``x0``.
-
-    Extends :class:`MCMCSampler`.
     """
 
     def __init__(self, x0, sigma0=None):
@@ -151,23 +151,23 @@ class MultiChainMCMC(MCMCSampler):
     Abstract base class for MCMC methods that generate multiple markov chains,
     via an ask-and-tell interface.
 
-    Arguments:
+    Extends :class:`MCMCSampler`.
 
-    ``chains``
+    Parameters
+    ----------
+    chains : int
         The number of MCMC chains to generate.
-    ``x0``
+    x0
         A sequence of starting points. Can be a list of lists, a 2-dimensional
         array, or any other structure such that ``x0[i]`` is the starting point
         for chain ``i``.
-    ``sigma0=None``
+    sigma0
         An optional initial covariance matrix, i.e., a guess of the covariance
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
-
-    Extends :class:`MCMCSampler`.
     """
 
     def __init__(self, chains, x0, sigma0=None):
@@ -275,7 +275,6 @@ class MCMCController(object):
 
     Parameters
     ----------
-
     log_pdf : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
         space.
@@ -295,7 +294,6 @@ class MCMCController(object):
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`AdaptiveCovarianceMCMC` is used.
-
     """
 
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
@@ -771,14 +769,13 @@ class MCMCController(object):
         """
         Changes the frequency with which messages are logged.
 
-        Arguments:
-
-        ``interval``
+        Parameters
+        ----------
+        iters : int
             A log message will be shown every ``iters`` iterations.
-        ``warm_up``
+        warm_up : int
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
-
         """
         iters = int(iters)
         if iters < 1:
@@ -866,8 +863,8 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
     Sample from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
     (MCMC) method.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     log_pdf : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
         space.

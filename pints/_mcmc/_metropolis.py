@@ -14,16 +14,20 @@ import numpy as np
 
 class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
-    Metropolis Random Walk MCMC, as described in [1].
+    Metropolis Random Walk MCMC, as described in [1]_.
 
     Standard Metropolis using multivariate Gaussian distribution as proposal
     step, also known as Metropolis Random Walk MCMC.
 
     Extends :class:`SingleChainMCMC`.
 
-    [1] Equation of state calculations by fast computing machines
-    Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and
-    Teller, E. (1953) The journal of chemical physics, 21(6), pp.1087-1092
+    References
+    ----------
+    .. [1] "Equation of state calculations by fast computing machines".
+           Metropolis, N., Rosenbluth, A.W., Rosenbluth, M.N., Teller, A.H. and
+           Teller, E. (1953) The journal of chemical physics, 21(6),
+           pp.1087-1092
+           https://doi.org/10.1063/1.1699114
     """
 
     def __init__(self, x0, sigma0=None):

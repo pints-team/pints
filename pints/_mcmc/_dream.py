@@ -15,7 +15,7 @@ import numpy as np
 class DreamMCMC(pints.MultiChainMCMC):
     """
     Uses differential evolution adaptive Metropolis (DREAM) MCMC as described
-    in [1] to do posterior sampling from the posterior.
+    in [1]_ to perform posterior sampling from the posterior.
 
     In each step of the algorithm N chains are evolved using the following
     steps:
@@ -58,10 +58,13 @@ class DreamMCMC(pints.MultiChainMCMC):
 
     Extends :class:`MultiChainMCMC`.
 
+    References
+    ----------
     .. [1] "Accelerating Markov Chain Monte Carlo Simulation by Differential
-        Evolution with Self-Adaptive Randomized Subspace Sampling",
-        2009, Vrugt et al.,
-        International Journal of Nonlinear Sciences and Numerical Simulation.
+           Evolution with Self-Adaptive Randomized Subspace Sampling",
+           2009, Vrugt et al., International Journal of Nonlinear Sciences and
+           Numerical Simulation.
+           https://doi.org/10.1515/IJNSNS.2009.10.3.273
     """
 
     def __init__(self, chains, x0, sigma0=None):

@@ -14,67 +14,70 @@ import scipy.stats
 
 
 class MALAMCMC(pints.SingleChainMCMC):
-    """
+    r"""
     Metropolis-Adjusted Langevin Algorithm (MALA), an MCMC sampler as described
-    in [1].
+    in [1]_.
 
     This method involves simulating Langevin diffusion such that the solution
     to the time evolution equation (the Fokker-Planck PDE) is a stationary
     distribution that equals the target density (in Bayesian problems, the
     posterior distribution). The stochastic differential equation (SDE) given
-    below ensures that if :math:`u(\\theta, 0) = \\pi(\\theta)`,
-    then :math:`\\partial u / \\partial t = 0`,
+    below ensures that if :math:`u(\theta, 0) = \pi(\theta)`,
+    then :math:`\partial u / \partial t = 0`,
 
     .. math::
-        \\mathrm{d}\\Theta_t = 1/2 \\nabla \\; \\text{log} \\pi(\\Theta_t)
-            \\mathrm{d}t + \\mathrm{d}W_t
+        \mathrm{d}\Theta_t = 1/2 \nabla \; \text{log} \pi(\Theta_t)
+            \mathrm{d}t + \mathrm{d}W_t
 
-    where :math:`\\pi(\\theta)` is the target density and :math:`W` is
+    where :math:`\pi(\theta)` is the target density and :math:`W` is
     a standard multivariate Wiener process.
 
     In general, the above SDE cannot be solved exactly and the below
     first-order Euler discretisation is used instead,
 
     .. math::
-        \\theta^* = \\theta_t + \\epsilon^2 1/2 \\nabla \\;
-            \\text{log} \\pi(\\theta_t) + \\epsilon z
+        \theta^* = \theta_t + \epsilon^2 1/2 \nabla \;
+            \text{log} \pi(\theta_t) + \epsilon z
 
-    where :math:`z \\sim \\mathcal{N}(0, I)` resulting in a mean
-    :math:`\\mu(\\theta^*) = \\theta_t + \\epsilon^2 1/2 \\nabla \\;
-    \\text{log} \\pi(\\theta_t)`.
+    where :math:`z \sim \mathcal{N}(0, I)` resulting in a mean
+    :math:`\mu(\theta^*) = \theta_t + \epsilon^2 1/2 \nabla \;
+    \text{log} \pi(\theta_t)`.
 
     To correct for first-order integration error that is introduced from
     discretisation, a Metropolis-Hastings acceptance probability is calculated
     after a step,
 
     .. math::
-        \\alpha = \\frac{\\pi(\\theta^*)q(\\theta_t|\\theta^*)}{\\pi(\\theta^*)
-            q(\\theta^*|\\theta_t)}
+        \alpha = \frac{\pi(\theta^*)q(\theta_t|\theta^*)}{\pi(\theta^*)
+            q(\theta^*|\theta_t)}
 
-    where :math:`q(\\theta_2|\\theta_1) =
-    \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon I)` and
-    :math:`\\theta^*` is accepted with probability
-    :math:`\\text{min}(1, \\alpha)`.
+    where :math:`q(\theta_2|\theta_1) =
+    \mathcal{N}(\theta_2|\mu(\theta_1), \epsilon I)` and
+    :math:`\theta^*` is accepted with probability
+    :math:`\text{min}(1, \alpha)`.
 
-    Here we consider a slight variant of the above method discussed in [1],
+    Here we consider a slight variant of the above method discussed in [1]_,
     which is to use a preconditioning matrix :math:`M` to allow differing
     degrees of freedom in each dimension.
 
     .. math::
-        \\theta^* = \\theta_t + \\epsilon'^2 1/2 \\nabla \\;
-            \\text{log} \\pi(\\theta_t) + \\epsilon' z
+        \theta^* = \theta_t + \epsilon'^2 1/2 \nabla \;
+            \text{log} \pi(\theta_t) + \epsilon' z
 
-    leading to :math:`q(\\theta_2|\\theta_1) =
-    \\mathcal{N}(\\theta_2|\\mu(\\theta_1), \\epsilon')`.
+    leading to :math:`q(\theta_2|\theta_1) =
+    \mathcal{N}(\theta_2|\mu(\theta_1), \epsilon')`.
 
-    where :math:`\\epsilon' = \\epsilon sqrt{M}` is given by the initial value
-    of `sigma0`.
+    where :math:`\epsilon' = \epsilon \sqrt{M}` is given by the initial value
+    of ``sigma0``.
 
     Extends :class:`SingleChainMCMC`.
 
-    [1] Girolami, M. and Calderhead, B., 2011. Riemann manifold langevin and
-    hamiltonian monte carlo methods. Journal of the Royal Statistical Society:
-    Series B (Statistical Methodology), 73(2), pp.123-214.
+    References
+    ----------
+    .. [1] Girolami, M. and Calderhead, B., 2011. Riemann manifold langevin and
+           hamiltonian monte carlo methods. Journal of the Royal Statistical
+           Society: Series B (Statistical Methodology), 73(2), pp.123-214.
+           https://doi.org/10.1111/j.1467-9868.2010.00765.x
     """
 
     def __init__(self, x0, sigma0=None):

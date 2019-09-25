@@ -16,8 +16,8 @@ from scipy import interpolate
 
 class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Monomial Gamma HMC as described in [1] - a generalisation
-    of HMC as described in [2] - involving a non-physical kinetic energy term.
+    Implements Monomial Gamma HMC as described in [1]_ - a generalisation
+    of HMC as described in [2]_ - involving a non-physical kinetic energy term.
 
     Uses a physical analogy of a particle moving across a landscape under
     Hamiltonian dynamics to aid efficient exploration of parameter space.
@@ -61,17 +61,21 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         \text{tanh}(c|p_i|^{1/a}\text{sign}(p_i) / {2 m_i}) / {a m_i}
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
-    [2], since we allow different epsilon according to dimension.
-
-    [1] Towards Unifying Hamiltonian Monte Carlo and Slice Sampling
-    Yizhe Zhang, Xiangyu Wang, Changyou Chen, Ricardo Henao, Kai Fan,
-    Lawrence Cari.
-
-    [2] MCMC using Hamiltonian dynamics
-    Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
-    Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
+    [2]_, since we allow different epsilon according to dimension.
 
     Extends :class:`SingleChainMCMC`.
+
+    References
+    ----------
+    .. [1] Towards Unifying Hamiltonian Monte Carlo and Slice Sampling
+           Yizhe Zhang, Xiangyu Wang, Changyou Chen, Ricardo Henao, Kai Fan,
+           Lawrence Cari.
+           Advances in Neural Information Processing Systems (NIPS)
+
+
+    .. [2] MCMC using Hamiltonian dynamics
+           Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
+           Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
     """
     def __init__(self, x0, sigma0=None):
         super(MonomialGammaHamiltonianMCMC, self).__init__(x0, sigma0)
@@ -182,7 +186,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
 
     def _cdf(self, p, a, c, m, z):
         """
-        Auxillary kinetic energy cumulative density defined in [1].
+        Auxillary kinetic energy cumulative density defined in [1]_.
         """
         return integrate.quad(lambda p1: self._pdf(p1, a, c, m, z),
                               -float('Inf'), p)[0]
@@ -212,7 +216,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     def _initialise_ke(self):
         """
         Initialises functions needed for sampling from soft kinetic energy
-        function defined in [1].
+        function defined in [1]_.
         """
         z = integrate.quad(
             lambda p: np.exp(-self._K_indiv(p, self._a, self._c, self._m)),
@@ -231,20 +235,20 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
 
     def _K(self, v_p, a, c, m):
         """
-        Soft kinetic energy function defined in [1].
+        Soft kinetic energy function defined in [1]_.
         """
         return np.sum([self._K_indiv(p, a, c, m) for p in v_p])
 
     def _K_deriv(self, v_p, a, c, m):
         """
-        Derivative of soft kinetic energy function defined in [1].
+        Derivative of soft kinetic energy function defined in [1]_.
         """
         return np.array([self._K_deriv_indiv(p, a, c, m) for p in v_p])
 
     def _K_deriv_indiv(self, p, a, c, m):
         """
-        Derivative of soft kinetic energy function defined in [1]
-        for individual momentum component.
+        Derivative of soft kinetic energy function defined in [1]_ for
+        individual momentum component.
         """
         abs_p = np.abs(p)
         sign_p = np.sign(p)
@@ -253,8 +257,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
 
     def _K_indiv(self, p, a, c, m):
         """
-        Soft kinetic energy function defined in [1]
-        for individual momentum component.
+        Soft kinetic energy function defined in [1]_ for individual momentum
+        component.
         """
         return -self._g(p, a, m) + (2.0 / c) * np.log(
             1.0 + np.exp(c * self._g(p, a, m)))
@@ -299,13 +303,13 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
 
     def _pdf(self, p, a, c, m, z):
         """
-        Auxillary kinetic energy probability density defined in [1].
+        Auxillary kinetic energy probability density defined in [1]_.
         """
         return (1.0 / z) * np.exp(-self._K_indiv(p, a, c, m))
 
     def _sample_momentum(self):
         """
-        Samples from soft kinetic energy pdf defined in [1].
+        Samples from soft kinetic energy pdf defined in [1]_.
         """
         us = np.random.uniform(size=self._n_parameters)
         return np.array([self._f([u])[0] for u in us])
