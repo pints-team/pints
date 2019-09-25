@@ -24,7 +24,9 @@ class Timer(object):
     """
     Provides accurate timing.
 
-    Example::
+    Example
+    -------
+    ::
 
         timer = pints.Timer()
         print(timer.format(timer.time()))

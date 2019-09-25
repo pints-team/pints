@@ -255,7 +255,9 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
    
 7. Longer code snippets can go at the very end of a docstring
 
-        Examples::
+        Examples
+        --------
+        ::
 
             errors = [
                 pints.MeanSquaredError(problem1),

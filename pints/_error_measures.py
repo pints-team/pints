@@ -117,7 +117,9 @@ class SumOfErrors(ErrorMeasure):
         An optional sequence of (float) weights, exactly one per error measure.
         If no weights are specified all sums will be weighted equally.
 
-    Examples::
+    Examples
+    --------
+    ::
 
         errors = [
             pints.MeanSquaredError(problem1),

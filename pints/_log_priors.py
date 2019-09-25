@@ -106,14 +106,14 @@ class CauchyLogPrior(pints.LogPrior):
 
         p = pints.CauchyLogPrior(0, 5)
 
-    Arguments:
-
-    ``location``
-        The center of the distribution.
-    ``scale``
-        The scale of the distribution.
-
     Extends :class:`LogPrior`.
+
+    Parameters
+    ----------
+    location
+        The center of the distribution.
+    scale
+        The scale of the distribution.
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -424,14 +424,14 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         p = pints.HalfCauchyLogPrior(0, 5)
 
-    Arguments:
-
-    ``location``
-        The center of the distribution.
-    ``scale``
-        The scale of the distribution.
-
     Extends :class:`LogPrior`.
+
+    Parameters
+    ----------
+    location
+        The center of the distribution.
+    scale
+        The scale of the distribution.
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -707,16 +707,16 @@ class StudentTLogPrior(pints.LogPrior):
 
         p = pints.StudentTLogPrior(0, 3, 1)
 
-    Arguments:
-
-    ``location``
-        The center of the distribution.
-    ``df``
-        The number of degrees of freedom of the distribution.
-    ``scale``
-        The scale of the distribution.
-
     Extends :class:`LogPrior`.
+
+    Parameters
+    ----------
+    location
+        The center of the distribution.
+    df : int
+        The number of degrees of freedom of the distribution.
+    scale
+        The scale of the distribution.
     """
     def __init__(self, location, df, scale):
         # Test inputs

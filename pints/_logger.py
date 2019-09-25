@@ -24,7 +24,9 @@ class Logger(object):
     """
     Logs numbers to screen and/or a file.
 
-    Example::
+    Example
+    -------
+    ::
 
         log = pints.Logger()
         log.add_counter('id', width=2)
