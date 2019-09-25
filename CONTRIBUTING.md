@@ -230,8 +230,8 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
         likelihoods
             A list of their corresponding log-likelihoods
             
-6. References to literature are highly encouraged, and go at the bottom of the
-   docstring:
+6. References to literature are highly encouraged, and go near the bottom of
+   the docstring:
    
         Adaptive covariance MCMC based on Haario et al. [1]_, [2]_.
         
@@ -252,6 +252,25 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
    There is no standard format (e.g. APA style), but authors, titles, years,
    and journals are recommended, as well as a link based on a
    [DOI](https://www.doi.org/).
+   
+7. Longer code snippets can go at the very end of a docstring
+
+        Examples::
+
+            errors = [
+                pints.MeanSquaredError(problem1),
+                pints.MeanSquaredError(problem2),
+            ]
+            
+            # Equally weighted
+            e1 = pints.SumOfErrors(errors)
+
+            # Differrent weights:
+            weights = [
+                1.0,
+                2.7,
+            ]
+            e2 = pints.SumOfErrors(errors, weights)
 
 ### Using code in documentation
 
