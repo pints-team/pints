@@ -106,24 +106,23 @@ class TestRelativisticMCMC(unittest.TestCase):
         model.ask()
 
         # kinetic energy
-        mc2 = 100
-        momentum = [1, 2]
+        mc2 = 100.0
+        momentum = [1.0, 2.0]
         squared = np.sum(np.array(momentum)**2)
-        ke1 = mc2 * (squared / mc2 + 1)**0.5
+        ke1 = mc2 * (squared / mc2 + 1.0)**0.5
         ke2 = model._K(momentum)
         self.assertEqual(ke1, ke2)
 
-        c = 1
-        m = 1
+        c = 1.0
+        m = 1.0
         mc2 = m * c**2
         squared = np.sum(np.array(momentum)**2)
-        ke1 = mc2 * (squared / mc2 + 1)**0.5
+        ke1 = mc2 * (squared / mc2 + 1.0)**0.5
         model = pints.RelativisticMCMC(x0)
         model.set_speed_light(c)
         model.ask()
         ke2 = model._K(momentum)
         self.assertEqual(ke1, ke2)
-
 
     def test_set_hyper_parameters(self):
         """
