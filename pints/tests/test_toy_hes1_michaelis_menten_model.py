@@ -69,6 +69,5 @@ class TestHes1Model(unittest.TestCase):
         self.assertTrue(np.abs(values[100] - 5.420749626561355) < 0.0001)
 
 
-
 if __name__ == '__main__':
     unittest.main()

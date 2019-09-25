@@ -62,6 +62,5 @@ class TestFitzhughNagumoModel(unittest.TestCase):
                         0.000001)
 
 
-
 if __name__ == '__main__':
     unittest.main()
