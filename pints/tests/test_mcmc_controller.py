@@ -28,7 +28,7 @@ except AttributeError:
 debug = False
 
 LOG_SCREEN = [
-    'Using Remi adaptive covariance MCMC',
+    'Using Haario-Bardenet adaptive covariance MCMC',
     'Generating 3 chains.',
     'Running in sequential mode.',
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
@@ -161,7 +161,7 @@ class TestMCMCController(unittest.TestCase):
             cls.log_likelihood, cls.log_prior)
 
     def test_single(self):
-        """ Test with a SingleChainMCMC method. """
+        # Test with a SingleChainMCMC method.
 
         # One chain
         nchains = 1
@@ -262,6 +262,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
     def test_multi(self):
+        # Test with a multi-chain method
 
         # Set up problem for 10 chains
         x0 = np.array(self.real_parameters)
@@ -326,7 +327,7 @@ class TestMCMCController(unittest.TestCase):
             method=meth)
 
     def test_stopping(self):
-        """ Test different stopping criteria. """
+        # Test different stopping criteria.
 
         nchains = 1
         xs = [np.array(self.real_parameters) * 1.1]
@@ -347,7 +348,7 @@ class TestMCMCController(unittest.TestCase):
             ValueError, 'At least one stopping criterion', mcmc.run)
 
     def test_parallel(self):
-        """ Test running MCMC with parallisation. """
+        # Test running MCMC with parallisation.
 
         xs = []
         for i in range(10):
@@ -384,6 +385,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
     def test_logging(self):
+        # Test logging functions
 
         np.random.seed(1)
         xs = []
@@ -449,6 +451,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_log_interval, 0)
 
     def test_initial_phase(self):
+        # Test if the initial phase functions work
 
         # 2 chains
         x0 = np.array(self.real_parameters) * 1.1
@@ -492,6 +495,7 @@ class TestMCMCController(unittest.TestCase):
             self.assertFalse(sampler.in_initial_phase())
 
     def test_live_chain_and_eval_logging(self):
+        # Test logging to disk and screen
 
         np.random.seed(1)
         xs = []
