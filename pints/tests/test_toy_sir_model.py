@@ -10,6 +10,7 @@
 import unittest
 import pints
 import pints.toy
+import numpy as np
 
 
 class TestSIRModel(unittest.TestCase):
@@ -44,6 +45,20 @@ class TestSIRModel(unittest.TestCase):
         # Populations are never negative
         self.assertRaises(
             ValueError, pints.toy.SIRModel, [1, 1, -1])
+
+    def test_values(self):
+        # value-based tests of model solution
+        S0 = 100
+        parameters = [0.05, 0.4, S0]
+        times = np.linspace(0, 10, 101)
+        model = pints.toy.SIRModel([S0, 10, 1])
+        values = model.simulate(parameters, times)
+        self.assertEqual(values[0, 0], 10)
+        self.assertEqual(values[0, 1], 1)
+        self.assertTrue(np.abs(values[1, 0] - 15.615371537443046) < 0.0001)
+        self.assertTrue(np.abs(values[1, 1] - 1.505277693501407) < 0.0001)
+        self.assertTrue(np.abs(values[100, 0] - 2.4573888452817902) < 0.0001)
+        self.assertTrue(np.abs(values[100, 1] - 108.54246598629017) < 0.0001)
 
 
 if __name__ == '__main__':

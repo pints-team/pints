@@ -156,4 +156,3 @@ class SIRModel(pints.ForwardModel, ToyModel):
             [1, 36],    # day 20
             [0, 37],    # day 21
         ])
-
