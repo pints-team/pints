@@ -51,6 +51,7 @@ relevant code.
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling-monomial-gamma-hmc.ipynb)
+- [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
