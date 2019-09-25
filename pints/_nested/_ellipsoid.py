@@ -192,7 +192,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         """
         return self._n_rejection_samples
 
-    def ask(self):
+    def ask(self, n_points):
         """
         If in initial phase, then uses rejection sampling. Afterwards,
         points are drawn from within an ellipse (needs to be in uniform
@@ -207,7 +207,10 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             )
 
         if self._rejection_phase:
-            self._proposed = self._log_prior.sample()[0]
+            if n_points > 1:
+                self._proposed = self._log_prior.sample(n_points)
+            else:
+                self._proposed = self._log_prior.sample(n_points)[0]
         else:
             # update bounding ellipsoid if sufficient samples taken
             if ((i + 1 - self._n_rejection_samples)
@@ -221,8 +224,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 )
             # propose by sampling within ellipsoid
             self._proposed = self._ellipsoid_sample(
-                self._enlargement_factor, self._A, self._centroid)
-
+                self._enlargement_factor, self._A, self._centroid, n_points)
         return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):
@@ -277,12 +279,17 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         return A, c
 
     def _ellipsoid_sample(
-            self, enlargement_factor, A, centroid):
+            self, enlargement_factor, A, centroid, n_points):
         """
         Draws from the enlarged bounding ellipsoid.
         """
-        return self._draw_from_ellipsoid(
-            np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
+        if n_points > 1:
+            return self._draw_from_ellipsoid(
+                np.linalg.inv((1 / enlargement_factor) * A),
+                centroid, n_points)
+        else:
+            return self._draw_from_ellipsoid(
+                np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
         """
