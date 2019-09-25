@@ -15,14 +15,13 @@ class NestedSampler(pints.TunableMethod):
     """
     Abstract base class for nested samplers.
 
-    Arguments:
-
-    ``log_likelihood``
+    Parameters
+    ----------
+    log_likelihood
         A :class:`LogPDF` function that evaluates points in the parameter
         space.
-    ``log_prior``
+    log_prior
         A :class:`LogPrior` function on the same parameter space.
-
     """
 
     def __init__(self, log_likelihood, log_prior):
@@ -53,8 +52,8 @@ class NestedSampler(pints.TunableMethod):
 
     def run(self):
         """
-        Runs the nested sampling routine and returns a tuple of the
-        posterior samples and an estimate of the marginal likelihood.
+        Runs the nested sampling routine and returns a tuple of the posterior
+        samples and an estimate of the marginal likelihood.
         """
         raise NotImplementedError
 

@@ -21,23 +21,26 @@ except ImportError:  # pragma: no cover
 
 class NestedRejectionSampler(pints.NestedSampler):
     """
-    Creates a nested sampler that estimates the marginal likelihood
-    and generates samples from the posterior.
+    Creates a nested sampler that estimates the marginal likelihood and
+    generates samples from the posterior.
 
-    This is the simplest form of nested sampler and involves using
-    rejection sampling from the prior as described in the algorithm on page 839
-    in [1] to estimate the marginal likelihood and generate weights,
-    preliminary samples (with their respective likelihoods), required to
-    generate posterior samples.
+    This is the simplest form of nested sampler and involves using rejection
+    sampling from the prior as described in the algorithm on page 839 in [1]_
+    to estimate the marginal likelihood and generate weights, preliminary
+    samples (with their respective likelihoods), required to generate posterior
+    samples.
 
-    The posterior samples are generated as described in [1] on page 849 by
+    The posterior samples are generated as described in [1]_ on page 849 by
     randomly sampling the preliminary point, accounting for their weights and
     likelihoods.
 
     Extends :class:`NestedSampler`.
 
-    [1] "Nested Sampling for General Bayesian Computation", John Skilling,
-    Bayesian Analysis 1:4 (2006).
+    References
+    ----------
+    .. [1] "Nested Sampling for General Bayesian Computation", John Skilling,
+           Bayesian Analysis 1:4 (2006).
+           https://doi.org/10.1214/06-BA127
     """
 
     def __init__(self, log_likelihood, log_prior):
@@ -227,10 +230,11 @@ class NestedRejectionSampler(pints.NestedSampler):
 
         Hyper-parameter vector is: ``[active_points_rate]``
 
-        Arguments:
-
-        ``x`` an array of length ``n_hyper_parameters`` used to set the
-              hyper-parameters
+        Parameters
+        ----------
+        x
+            An array of length ``n_hyper_parameters`` used to set the
+            hyper-parameters
         """
 
         self.set_active_points_rate(x[0])
