@@ -91,9 +91,9 @@ class TestNestedRejectionSampler(unittest.TestCase):
         self.assertTrue(np.isfinite(self.log_likelihood(pts)))
 
         # test multiple points being asked and tell'd
-        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        sampler = pints.NestedRejectionSampler(self.log_prior)
         pts = sampler.ask(50)
-        self.assertTrue(len(pts), 50)
+        self.assertEqual(len(pts), 50)
         fx = [self.log_likelihood(pt) for pt in pts]
         proposed = sampler.tell(fx)
         self.assertTrue(len(proposed) > 1)

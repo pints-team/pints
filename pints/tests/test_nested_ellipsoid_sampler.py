@@ -158,10 +158,23 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         # test multiple points being asked and tell'd
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
         pts = sampler.ask(50)
-        self.assertTrue(len(pts), 50)
+        self.assertEqual(len(pts), 50)
         fx = [self.log_likelihood(pt) for pt in pts]
         proposed = sampler.tell(fx)
         self.assertTrue(len(proposed) > 1)
+
+        # test that None is returned
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        pts = sampler.ask(1)
+        fx = np.nan
+        sample, other = sampler.tell(fx)
+        self.assertEqual(sample, None)
+
+        # test if fx has one None and one non-none
+        pts = sampler.ask(2)
+        fx = [np.nan, -20]
+        sample, other = sampler.tell(fx)
+        self.assertEqual(sample[0], pts[1][0])
 
     def test_dynamic_enlargement_factor(self):
         # tests dynamic enlargement factor runs
@@ -173,6 +186,14 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         sampler.run()
         ef2 = sampler._sampler.enlargement_factor()
         self.assertTrue(ef2 < ef1)
+
+    def test_sensitivities(self):
+        # tests whether sensitivities bit runs
+        sampler = pints.NestedController(self.log_likelihood,
+                                         self.log_prior)
+        # hacky but currently no samplers need sensitivities
+        sampler._needs_sensitivities = True
+        sampler._initialise_sensitivities()
 
 
 if __name__ == '__main__':
