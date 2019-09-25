@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the Remi adaptive covariance MCMC routine.
+# Tests the basic methods of the Haario-Bardenet adaptive covariance MCMC
+# routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -110,7 +111,8 @@ class TestHaarioBardenetACMC(unittest.TestCase):
         mcmc.set_hyper_parameters([0.3])
         self.assertEqual(mcmc.eta(), 0.3)
 
-        self.assertEqual(mcmc.name(), 'Remi adaptive covariance MCMC')
+        self.assertEqual(
+            mcmc.name(), 'Haario-Bardenet adaptive covariance MCMC')
 
     def test_logging(self):
         """
@@ -123,7 +125,7 @@ class TestHaarioBardenetACMC(unittest.TestCase):
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
-        self.assertIn('Remi adaptive covariance MCMC', text)
+        self.assertIn('Haario-Bardenet adaptive covariance MCMC', text)
 
 
 if __name__ == '__main__':
