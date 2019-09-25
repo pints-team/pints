@@ -238,14 +238,15 @@ class TestNestedController(unittest.TestCase):
         logLikelihood1 = sampler.log_likelihood_vector()
         self.assertEqual(len(logLikelihood1), 400 + 100)
         self.assertTrue(ess1 > 0)
-        sampler.set_iterations(2000)
+        iter = 2000
+        sampler.set_iterations(iter)
         sampler.set_n_posterior_samples(100)
         sampler.set_log_to_screen(False)
         sampler.run()
         ess2 = sampler.effective_sample_size()
         self.assertTrue(ess2 > ess1)
         logLikelihood2 = sampler.log_likelihood_vector()
-        self.assertEqual(len(logLikelihood2), 400 + 2000)
+        self.assertEqual(len(logLikelihood2), 400 + iter)
 
         # marginal likelihood
         ess_sd1 = sampler.marginal_log_likelihood_standard_deviation()
@@ -260,10 +261,58 @@ class TestNestedController(unittest.TestCase):
 
         # prior space
         prior_space = sampler.prior_space()
-        self.assertEqual(len(prior_space), 2000 + 1)
+        self.assertEqual(len(prior_space), iter + 1)
         for elem in prior_space:
             self.assertTrue(elem >= 0)
             self.assertTrue(elem <= 1)
+
+        # Acive points
+        sampler.set_iterations(100)
+        sampler.set_log_to_screen(False)
+        sampler.set_parallel(2)
+        sampler.run()
+        active_points = sampler.active_points()
+        self.assertEqual(active_points.shape[0], 400)
+        inactive_points = sampler.inactive_points()
+        self.assertEqual(inactive_points.shape[0], 100)
+
+    def test_nones(self):
+        # test handing of nones
+        # test that None is returned
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        pts = sampler.ask(1)
+        fx = np.nan
+        sample, other = sampler.tell(fx)
+        self.assertEqual(sample, None)
+
+        # test that None is returned
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        pts = sampler.ask(1)
+        fx = [np.nan, np.nan]
+        sample, other = sampler.tell(fx)
+        self.assertEqual(sample, None)
+
+        # test if fx has one None and one non-none
+        pts = sampler.ask(2)
+        fx = [np.nan, -20]
+        sample, other = sampler.tell(fx)
+        self.assertEqual(sample[0], pts[1][0])
+
+    def test_early_termination(self):
+        # tests that nested sampling terminates early with a large
+        # threshold
+        sampler = pints.NestedController(self.log_likelihood,
+                                         self.log_prior)
+        # Test with auto-detected number of worker processes
+        self.assertFalse(sampler.parallel())
+        sampler.set_parallel(True)
+        self.assertTrue(sampler.parallel())
+        sampler.set_iterations(100)
+        sampler.set_log_to_screen(False)
+        sampler.set_marginal_log_likelihood_threshold(100000)
+        sampler.run()
+        m_inactive = sampler.inactive_points()
+        self.assertTrue(m_inactive.shape[0] < 100)
 
 
 if __name__ == '__main__':

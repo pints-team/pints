@@ -161,18 +161,11 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         proposed = sampler.tell(fx)
         self.assertTrue(len(proposed) > 1)
 
-        # test that None is returned
+        # test multiple ask points after rejection samples
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
-        pts = sampler.ask(1)
-        fx = np.nan
-        sample, other = sampler.tell(fx)
-        self.assertEqual(sample, None)
-
-        # test if fx has one None and one non-none
-        pts = sampler.ask(2)
-        fx = [np.nan, -20]
-        sample, other = sampler.tell(fx)
-        self.assertEqual(sample[0], pts[1][0])
+        sampler.set_n_rejection_samples(10)
+        for i in range(100):
+            self.assertEqual(len(sampler.ask(20)), 20)
 
     def test_dynamic_enlargement_factor(self):
         # tests dynamic enlargement factor runs
