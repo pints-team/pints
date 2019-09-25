@@ -1,8 +1,8 @@
 #
-# Adaptive covariance MCMC method
+# Adaptive covariance MCMC method by Haario
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -14,9 +14,11 @@ import numpy as np
 
 class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, which is algorithm 4 in [1] and is described in
-    the text in [2]. Differs from ``HaarioBardenetACMC`` only through its use
-    of ``alpha`` in the updating of ``log_lambda`` (rather than a binary
+    Adaptive Metropolis MCMC, which is algorithm 4 in [1]_ and is described in
+    the text in [2]_.
+
+    This algorithm differs from :class:`HaarioBardenetACMC` only through its
+    use of ``alpha`` in the updating of ``log_lambda`` (rather than a binary
     accept/reject).
 
     Initialise::
@@ -45,14 +47,17 @@ class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    [1] A tutorial on adaptive MCMC
-    Christophe Andrieu and Johannes Thoms, Statistical Computing, 2008,
-    18: 343-373.
+    Extends :class:`GlobalAdaptiveCovarianceMCMC`.
 
-    [2] An adaptive Metropolis algorithm
-    Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli.
+    References
+    ----------
+    .. [1] A tutorial on adaptive MCMC
+           Christophe Andrieu and Johannes Thoms, Statistical Computing, 2008,
+           18: 343-373.
+           https://doi.org/10.1007/s11222-008-9110-y
 
-    *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
+    .. [2] An adaptive Metropolis algorithm
+           Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli.
     """
     def __init__(self, x0, sigma0=None):
         super(HaarioACMC, self).__init__(x0, sigma0)

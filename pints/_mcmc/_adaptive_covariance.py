@@ -1,5 +1,5 @@
 #
-# Base class for Adaptive covariance MCMC methods
+# Base class for adaptive covariance MCMC methods
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.

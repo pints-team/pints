@@ -1,8 +1,8 @@
 #
-# Base class for Adaptive covariance MCMC methods
+# Base class for global adaptive covariance MCMC methods
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -17,7 +17,7 @@ class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
     Base class for single chain MCMC methods that globally adapt a proposal
     covariance matrix when running, in order to control the acceptance rate.
 
-    *Extends:* :class:`AdaptiveCovarianceMCMC`
+    Extends :class:`AdaptiveCovarianceMCMC`.
     """
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """

@@ -1,8 +1,8 @@
 #
-# Adaptive covariance MCMC method
+# Haario-Bardenet adaptive covariance MCMC method
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -14,8 +14,8 @@ import numpy as np
 
 class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
     """
-    Adaptive Metropolis MCMC, which is algorithm in the supplementary
-    materials of [1].
+    Adaptive Metropolis MCMC, which is algorithm in the supplementary materials
+    of [1]_, which in turn is based on [2]_.
 
     Initialise::
 
@@ -45,12 +45,19 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    [1] Uncertainty and variability in models of the cardiac action potential:
-    Can we build trustworthy models?
-    Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan, Clayton,
-    Mirams (2015) Journal of Molecular and Cellular Cardiology
+    Extends :class:`GlobalAdaptiveCovarianceMCMC`.
 
-    *Extends:* :class:`GlobalAdaptiveCovarianceMCMC`
+    References
+    ----------
+    .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,
+           Clayton, Mirams (2015) "Uncertainty and variability in models of the
+           cardiac action potential: Can we build trustworthy models?"
+           Journal of Molecular and Cellular Cardiology.
+           https://10.1016/j.yjmcc.2015.11.018
+
+    .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis algorithm"
+           Bernoulli.
+           https://doi.org/10.2307/3318737
     """
     def __init__(self, x0, sigma0=None):
         super(HaarioBardenetACMC, self).__init__(x0, sigma0)
@@ -82,7 +89,7 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Remi adaptive covariance MCMC'
+        return 'Haario-Bardenet adaptive covariance MCMC'
 
     def tell(self, fx):
         """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
