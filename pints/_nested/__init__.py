@@ -195,12 +195,12 @@ class NestedController(object):
     """
     Uses nested sampling to sample from a posterior distribution.
 
-    Arguments:
-
-    ``log_likelihood``
+    Parameters
+    ----------
+    log_likelihood
         A :class:`LogPDF` function that evaluates points in the parameter
         space.
-    ``log_prior``
+    log_prior
         A :class:`LogPrior` function on the same parameter space.
     """
 
@@ -438,8 +438,8 @@ class NestedController(object):
 
     def run(self):
         """
-        Runs the nested sampling routine and returns a tuple of the
-        posterior samples and an estimate of the marginal likelihood.
+        Runs the nested sampling routine and returns a tuple of the posterior
+        samples and an estimate of the marginal likelihood.
         """
 
         # Choose method to evaluate

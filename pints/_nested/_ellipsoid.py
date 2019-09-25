@@ -18,7 +18,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     Creates a nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
 
-    This is the form of nested sampler described in [1], where an ellipsoid is
+    This is the form of nested sampler described in [1]_, where an ellipsoid is
     drawn around surviving particles (typically with an enlargement factor to
     avoid missing prior mass), and then random samples are drawn from within
     the bounds of the ellipsoid. By sampling in the space of surviving
@@ -98,11 +98,15 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     where j = 1, ..., n_iterations.
 
-    *Extends:* :class:`NestedSampler`
+    Extends :class:`NestedSampler`.
 
-    [1] "A nested sampling algorithm for cosmological model selection",
-    Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
-    arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006.
+    References
+    ----------
+    .. [1] "A nested sampling algorithm for cosmological model selection",
+           Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
+           arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
+           https://doi.org/10.1086/501068
+    """
 
     [2] "Nested Sampling for General Bayesian Computation", John Skilling,
     Bayesian Analysis 1:4 (2006).
@@ -297,8 +301,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def _draw_from_ellipsoid(self, covmat, cent, npts):
         """
         Draw ``npts`` random uniform points from within an ellipsoid with a
-        covariance matrix covmat and a centroid cent (as per:
-        http://www.astro.gla.ac.uk/~matthew/blog/?p=368).
+        covariance matrix covmat and a centroid cent, as per:
+        http://www.astro.gla.ac.uk/~matthew/blog/?p=368
         """
         try:
             ndims = covmat.shape[0]
