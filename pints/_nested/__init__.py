@@ -319,7 +319,7 @@ class NestedController(object):
     def n_posterior_samples(self):
         """
         Returns the number of posterior samples that will be returned (see
-        :meth:`set_posterior_samples()`).
+        :meth:`set_n_posterior_samples()`).
         """
         return self._posterior_samples
 
@@ -632,7 +632,7 @@ class NestedController(object):
         F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
         """
         if not self._log_Z_called:
-            self._marginal_log_likelihood()
+            self.marginal_log_likelihood()
         log_L_minus_Z = self._v_log_Z - self._log_Z
         log_Z_sd = logsumexp(log_L_minus_Z,
                              b=self._w[0:(self._iterations + 1)] *

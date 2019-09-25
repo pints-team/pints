@@ -57,7 +57,7 @@ class TestNestedRejectionSampler(unittest.TestCase):
             problem, cls.noise)
 
     def test_construction_errors(self):
-        """ Tests if invalid constructor calls are picked up. """
+        # Tests if invalid constructor calls are picked up.
 
         # First arg must be a log likelihood
         self.assertRaisesRegex(
@@ -65,17 +65,13 @@ class TestNestedRejectionSampler(unittest.TestCase):
             pints.NestedRejectionSampler, self.log_likelihood)
 
     def test_hyper_params(self):
-        """
-        Tests the hyper parameter interface is working.
-        """
+        # Tests the hyper parameter interface is working.
         sampler = pints.NestedRejectionSampler(self.log_prior)
         self.assertEqual(sampler.n_hyper_parameters(), 1)
         sampler.set_hyper_parameters([220])
 
     def test_getters_and_setters(self):
-        """
-        Tests various get() and set() methods.
-        """
+        # Tests various get() and set() methods.
         sampler = pints.NestedRejectionSampler(self.log_prior)
 
         # Active points
@@ -89,12 +85,18 @@ class TestNestedRejectionSampler(unittest.TestCase):
         self.assertTrue(not sampler.needs_initial_phase())
 
     def test_ask(self):
-        """
-        Tests ask.
-        """
+        # Tests ask.
         sampler = pints.NestedRejectionSampler(self.log_prior)
-        pts = sampler.ask()
+        pts = sampler.ask(1)
         self.assertTrue(np.isfinite(self.log_likelihood(pts)))
+
+        # test multiple points being asked and tell'd
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        pts = sampler.ask(50)
+        self.assertTrue(len(pts), 50)
+        fx = [self.log_likelihood(pt) for pt in pts]
+        proposed = sampler.tell(fx)
+        self.assertTrue(len(proposed) > 1)
 
 
 if __name__ == '__main__':

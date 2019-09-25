@@ -60,7 +60,7 @@ class TestNestedController(unittest.TestCase):
             problem, cls.noise)
 
     def test_quick_run(self):
-        """ Test a single run. """
+        # Test a single run.
 
         sampler = pints.NestedController(
             self.log_likelihood, self.log_prior)
@@ -72,7 +72,7 @@ class TestNestedController(unittest.TestCase):
         self.assertEqual(samples.shape, (10, 2))
 
     def test_construction_errors(self):
-        """ Tests if invalid constructor calls are picked up. """
+        # Tests if invalid constructor calls are picked up.
 
         # First arg must be a log likelihood
         self.assertRaisesRegex(
@@ -109,33 +109,25 @@ class TestNestedController(unittest.TestCase):
             0.0)
 
     def test_parallel(self):
-        """ Test running MCMC with parallisation. """
+        # Test running sampling with parallisation.
 
-        mcmc = pints.NestedController(self.log_likelihood,
-                                      self.log_prior)
+        sampler = pints.NestedController(self.log_likelihood,
+                                         self.log_prior)
         # Test with auto-detected number of worker processes
-        self.assertFalse(mcmc.parallel())
-        mcmc.set_parallel(True)
-        self.assertTrue(mcmc.parallel())
-        chains = mcmc.run()
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        self.assertFalse(sampler.parallel())
+        sampler.set_parallel(True)
+        self.assertTrue(sampler.parallel())
+        sampler.set_iterations(10)
+        sampler.set_log_to_screen(False)
+        sampler.run()
 
         # Test with fixed number of worker processes
-        mcmc.set_parallel(2)
-        mcmc.set_log_to_screen(True)
-        self.assertIs(mcmc._parallel, True)
-        self.assertEqual(mcmc._n_workers, 2)
-        with StreamCapture() as c:
-            chains = mcmc.run()
-        self.assertIn('with 2 worker', c.text())
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        sampler.set_parallel(2)
+        sampler.set_log_to_screen(True)
+        self.assertEqual(sampler.parallel(), 2)
 
     def test_logging(self):
-        """ Tests logging to screen and file. """
+        # Tests logging to screen and file.
 
         # No logging
         with StreamCapture() as c:
@@ -191,9 +183,7 @@ class TestNestedController(unittest.TestCase):
             self.assertTrue(pattern.match(line))
 
     def test_settings_check(self):
-        """
-        Tests the settings check at the start of a run.
-        """
+        # Tests the settings check at the start of a run.
         sampler = pints.NestedController(
             self.log_likelihood, self.log_prior)
         sampler.set_n_posterior_samples(2)
@@ -202,16 +192,12 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
 
     def test_nested_sampler(self):
-        """
-        Tests `NestedSampler`.
-        """
+        # Tests `NestedSampler`.
         sampler = pints.NestedSampler(self.log_prior)
         self.assertTrue(not sampler.needs_initial_phase())
 
     def test_getters_and_setters(self):
-        """
-        Tests various get() and set() methods.
-        """
+        # Tests various get() and set() methods.
         sampler = pints.NestedController(
             self.log_likelihood, self.log_prior)
 
@@ -239,6 +225,45 @@ class TestNestedController(unittest.TestCase):
                           0)
         sampler.set_marginal_log_likelihood_threshold(3.0)
         self.assertEqual(sampler.marginal_log_likelihood_threshold(), 3.0)
+
+        # Acive points
+        sampler.set_iterations(100)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+        active_points = sampler.active_points()
+        self.assertEqual(active_points.shape[0], 400)
+
+        # effective sample size and log-likelihood vector
+        ess1 = sampler.effective_sample_size()
+        logLikelihood1 = sampler.log_likelihood_vector()
+        self.assertEqual(len(logLikelihood1), 400 + 100)
+        self.assertTrue(ess1 > 0)
+        sampler.set_iterations(2000)
+        sampler.set_n_posterior_samples(100)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+        ess2 = sampler.effective_sample_size()
+        self.assertTrue(ess2 > ess1)
+        logLikelihood2 = sampler.log_likelihood_vector()
+        self.assertEqual(len(logLikelihood2), 400 + 2000)
+
+        # marginal likelihood
+        ess_sd1 = sampler.marginal_log_likelihood_standard_deviation()
+        self.assertTrue(ess_sd1 > 0)
+        sampler._log_Z_called = False
+        ess_sd2 = sampler.marginal_log_likelihood_standard_deviation()
+        self.assertEqual(ess_sd1, ess_sd2)
+
+        # number of posterior samples
+        m_posterior_samples = sampler.posterior_samples()
+        self.assertEqual(m_posterior_samples.shape[0], 100)
+
+        # prior space
+        prior_space = sampler.prior_space()
+        self.assertEqual(len(prior_space), 2000 + 1)
+        for elem in prior_space:
+            self.assertTrue(elem >= 0)
+            self.assertTrue(elem <= 1)
 
 
 if __name__ == '__main__':

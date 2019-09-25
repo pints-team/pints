@@ -116,6 +116,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
         # Enlargement factor for ellipsoid
         self.set_enlargement_factor()
+        self._f0 = self._enlargement_factor - 1
 
         # Initial phase of rejection sampling
         # Number of nested rejection samples before starting ellipsoidal
@@ -127,7 +128,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
         # Dynamically vary the enlargement factor
         self._dynamic_enlargement_factor = False
-        self._alpha = 1
+        self._alpha = 0.2
         self._A = None
         self._centroid = None
 
@@ -219,9 +220,11 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                     self._m_active[:, :self._n_parameters])
             # From Feroz-Hobson (2008) below eq. (14)
             if self._dynamic_enlargement_factor:
-                self._enlargement_factor *= (
+                f = (
+                    self._f0 *
                     np.exp(-(i + 1) / self._n_active_points)**self._alpha
                 )
+                self._enlargement_factor = 1 + f
             # propose by sampling within ellipsoid
             self._proposed = self._ellipsoid_sample(
                 self._enlargement_factor, self._A, self._centroid, n_points)

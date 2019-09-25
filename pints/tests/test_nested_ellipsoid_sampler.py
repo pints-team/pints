@@ -57,7 +57,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             problem, cls.noise)
 
     def test_construction_errors(self):
-        """ Tests if invalid constructor calls are picked up. """
+        # Tests if invalid constructor calls are picked up.
 
         # First arg must be a log likelihood
         self.assertRaisesRegex(
@@ -65,9 +65,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
             pints.NestedEllipsoidSampler, self.log_likelihood)
 
     def test_hyper_params(self):
-        """
-        Tests the hyper parameter interface is working.
-        """
+        # Tests the hyper parameter interface is working.
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
         self.assertEqual(sampler.n_hyper_parameters(), 6)
         sampler.set_hyper_parameters([220, 130, 2.0, 133, 1, 0.8])
@@ -79,9 +77,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertTrue(sampler.alpha(), 0.8)
 
     def test_getters_and_setters(self):
-        """
-        Tests various get() and set() methods.
-        """
+        # Tests various get() and set() methods.
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
 
         # Active points
@@ -128,7 +124,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         # alpha
         self.assertRaises(ValueError, sampler.set_alpha, -0.2)
         self.assertRaises(ValueError, sampler.set_alpha, 1.2)
-        self.assertEqual(sampler.alpha(), 1)
+        self.assertEqual(sampler.alpha(), 0.2)
         sampler.set_alpha(0.4)
         self.assertEqual(sampler.alpha(), 0.4)
 
@@ -140,23 +136,42 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         self.assertEqual(sampler.name(), 'Nested ellipsoidal sampler')
 
     def test_ask_tell(self):
-        """ Tests ask and tell """
+        # Tests ask and tell
 
         # test that ellipses are estimated
         sampler = pints.NestedEllipsoidSampler(self.log_prior)
         A1 = sampler._A
         c1 = sampler._centroid
         sampler.set_n_rejection_samples(2)
-        pt = sampler.ask()
+        pt = sampler.ask(1)
         fx = self.log_likelihood(pt)
         sampler.tell(fx)
-        pt = sampler.ask()
+        pt = sampler.ask(1)
         fx = self.log_likelihood(pt)
         sampler.tell(fx)
         A2 = sampler._A
         c2 = sampler._centroid
         self.assertTrue(not np.array_equal(A1, A2))
         self.assertTrue(not np.array_equal(c1, c2))
+
+        # test multiple points being asked and tell'd
+        sampler = pints.NestedEllipsoidSampler(self.log_prior)
+        pts = sampler.ask(50)
+        self.assertTrue(len(pts), 50)
+        fx = [self.log_likelihood(pt) for pt in pts]
+        proposed = sampler.tell(fx)
+        self.assertTrue(len(proposed) > 1)
+
+    def test_dynamic_enlargement_factor(self):
+        # tests dynamic enlargement factor runs
+        sampler = pints.NestedController(self.log_likelihood,
+                                         self.log_prior)
+        sampler._sampler.set_dynamic_enlargement_factor(1)
+        sampler.set_log_to_screen(False)
+        ef1 = sampler._sampler.enlargement_factor()
+        sampler.run()
+        ef2 = sampler._sampler.enlargement_factor()
+        self.assertTrue(ef2 < ef1)
 
 
 if __name__ == '__main__':
