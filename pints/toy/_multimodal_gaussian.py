@@ -33,18 +33,18 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
         # 2d with 3 modes
         f = pints.toy.MultimodalGaussianLogPDF([[0, 0], [5, 5], [5, 0]])
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``modes``
+    Parameters
+    ----------
+    modes
         A list of points that will form the modes of the distribution. Must all
         have the same dimension.
         If not set, the method will revert to the bimodal distribution
         described above.
-    ``covariances``
+    covariances
         A list of covariance matrices, one for each mode. If not set, a unit
         matrix will be used for each.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, modes=None, covariances=None):
 

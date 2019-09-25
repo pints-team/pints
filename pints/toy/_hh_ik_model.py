@@ -18,7 +18,7 @@ from . import ToyModel
 class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
     """
     Toy model based on the potassium current experiments used for Hodgkin and
-    Huxley's 1952 model of the action potential of a squid's giant axon.
+    Huxley's 1952 model of the action potential of a squid's giant axon [1]_.
 
     A voltage-step protocol is created and applied to an axon, and the elicited
     potassium current is given as model output.
@@ -45,13 +45,19 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
             plt.plot(t, v)
         plt.show()
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    References:
+    Parameters
+    ----------
+    initial_condition : float
+        The initial value of the state variable.
 
-    [1] A quantitative description of membrane currents and its application to
-    conduction and excitation in nerve
-    Hodgkin, Huxley (1952d) Journal of Physiology
+    References
+    ----------
+    .. [1] A quantitative description of membrane currents and its application
+           to conduction and excitation in nerve.
+           Hodgkin, Huxley (1952d) Journal of Physiology.
+           https://doi.org/10.1113/jphysiol.1964.sp007378
     """
     def __init__(self, initial_condition=0.3):
         super(HodgkinHuxleyIKModel, self).__init__()

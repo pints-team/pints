@@ -18,7 +18,7 @@ from . import ToyModel
 
 class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     r"""
-    Fitzhugh Nagumo model of action potential [1].
+    Fitzhugh-Nagumo model of the action potential [1]_.
 
     Has two states, and three phenomenological parameters: ``a`` , ``b``,
     ``c``. All states are visible
@@ -54,17 +54,19 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
             \end{matrix}\right]
         \end{align}
 
-    Arguments:
+    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
 
-    ``y0``
-        The system's initial state
+    Parameters
+    ----------
+    y0
+        The system's initial state. If not given, the default ``[-1, 1]`` is
+        used.
 
-    References:
-
-    [1] A kinetic model of the conductance changes in nerve membrane
-    Fitzhugh (1961) Journal of Cellular and Comparative Physiology
-
-    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    References
+    ----------
+    .. [1] A kinetic model of the conductance changes in nerve membrane
+           Fitzhugh (1961) Journal of Cellular and Comparative Physiology.
+           https://doi.org/10.1002/jcp.1030660518
     """
 
     def __init__(self, y0=None):
@@ -100,22 +102,19 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
         sensitivities (`sensitivities == true`) or without
         (`sensitivities == false`)
 
-        Arguments:
-
-        ``parameters``
+        Parameters
+        ----------
+        parameters
             The three phenomenological parameters: ``a`` , ``b``, ``c``.
-
-        ``times``
+        times
             The times at which to calculate the model output / sensitivities
-
-        ``sensitivities``
+        sensitivities
             If set to `true` the function returns the model outputs and
             sensitivities `(values,sensitivities)`. If set to `false` the
             function only returns the model outputs `values`. See
             :meth:`pints.ForwardModel.simulate()` and
             :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
-
         """
 
         a, b, c = [float(x) for x in parameters]

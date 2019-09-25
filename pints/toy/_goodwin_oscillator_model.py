@@ -16,15 +16,19 @@ from . import ToyModel
 
 class GoodwinOscillatorModel(pints.ForwardModel, ToyModel):
     """
-    Three-state Goodwin oscillator toy model [1, 2].
+    Three-state Goodwin oscillator toy model [1]_, [2]_.
 
-    [1] Oscillatory behavior in enzymatic control processes.
-    Goodwin (1965) Advances in enzyme regulation.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    [2] Mathematics of cellular control processes I. Negative feedback to one
-    gene. Griffith (1968) Journal of theoretical biology.
+    References
+    ----------
+    .. [1] Oscillatory behavior in enzymatic control processes.
+           Goodwin (1965) Advances in enzyme regulation.
+           https://doi.org/10.1016/0065-2571(65)90067-1
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    .. [2] Mathematics of cellular control processes I. Negative feedback to
+           one gene. Griffith (1968) Journal of theoretical biology.
+           https://doi.org/10.1016/0022-5193(68)90189-6
     """
 
     def n_outputs(self):

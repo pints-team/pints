@@ -14,7 +14,7 @@ import numpy as np
 
 class HamiltonianMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Hamiltonian Monte Carlo as described in [1].
+    Implements Hamiltonian Monte Carlo as described in [1]_.
 
     Uses a physical analogy of a particle moving across a landscape under
     Hamiltonian dynamics to aid efficient exploration of parameter space.
@@ -45,13 +45,15 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         q_i(t + \epsilon) &= q_i(t) + \epsilon p_i(t + \epsilon/2) / m_i\\
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
-    [1], since we allow different epsilon according to dimension.
+    [1]_, since we allow different epsilon according to dimension.
 
-    [1] MCMC using Hamiltonian dynamics
-    Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
-    Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
+    Extends :class:`SingleChainMCMC`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    References
+    ----------
+    .. [1] "MCMC using Hamiltonian dynamics". Radford M. Neal, Chapter 5 of the
+           Handbook of Markov Chain Monte Carlo by Steve Brooks, Andrew Gelman,
+           Galin Jones, and Xiao-Li Meng.
     """
     def __init__(self, x0, sigma0=None):
         super(HamiltonianMCMC, self).__init__(x0, sigma0)
