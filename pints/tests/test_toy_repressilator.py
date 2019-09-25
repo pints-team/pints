@@ -10,6 +10,7 @@
 import unittest
 import pints
 import pints.toy
+import numpy as np
 
 
 class TestRepressilatorModel(unittest.TestCase):
@@ -40,6 +41,21 @@ class TestRepressilatorModel(unittest.TestCase):
         # Concentrations are never negative
         self.assertRaises(
             ValueError, pints.toy.RepressilatorModel, [1, 1, 1, -1, 1, 1])
+
+    def test_values(self):
+        # value-based tests of repressilator model
+        times = np.linspace(0, 10, 101)
+        parameters = [2, 900, 6, 1.5]
+        y0 = [5, 3, 1, 2, 3.5, 2.5]
+        model = pints.toy.RepressilatorModel(y0)
+        values = model.simulate(parameters, times)
+        self.assertTrue(np.array_equal(values[0, :], y0[:3]))
+        self.assertTrue(np.abs(values[1, 0] - 18.888382825819164) < 0.0001)
+        self.assertTrue(np.abs(values[1, 1] - 13.776228102052464) < 0.0001)
+        self.assertTrue(np.abs(values[1, 2] - 9.057632102958687) < 0.0001)
+        self.assertTrue(np.abs(values[100, 0] - 14.750990313606831) < 0.0001)
+        self.assertTrue(np.abs(values[100, 1] - 16.55494171821406) < 0.0001)
+        self.assertTrue(np.abs(values[100, 2] - 16.606880796923882) < 0.0001)
 
 
 if __name__ == '__main__':
