@@ -110,7 +110,7 @@ class TestRelativisticMCMC(unittest.TestCase):
         momentum = [1.0, 2.0]
         squared = np.sum(np.array(momentum)**2)
         ke1 = mc2 * (squared / mc2 + 1.0)**0.5
-        ke2 = model._K(momentum)
+        ke2 = model._kinetic_energy(momentum)
         self.assertEqual(ke1, ke2)
 
         c = 1.0
@@ -119,9 +119,9 @@ class TestRelativisticMCMC(unittest.TestCase):
         squared = np.sum(np.array(momentum)**2)
         ke1 = mc2 * (squared / mc2 + 1.0)**0.5
         model = pints.RelativisticMCMC(x0)
-        model.set_speed_light(c)
+        model.set_speed_of_light(c)
         model.ask()
-        ke2 = model._K(momentum)
+        ke2 = model._kinetic_energy(momentum)
         self.assertEqual(ke1, ke2)
 
     def test_set_hyper_parameters(self):
@@ -150,7 +150,7 @@ class TestRelativisticMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_steps(), n + 2)
         self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
         self.assertEqual(mcmc.mass(), 0.4)
-        self.assertEqual(mcmc.speed_light(), 2.3)
+        self.assertEqual(mcmc.speed_of_light(), 2.3)
 
         mcmc.set_epsilon(0.4)
         self.assertEqual(mcmc.epsilon(), 0.4)
@@ -166,9 +166,9 @@ class TestRelativisticMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
         c = 3.5
-        mcmc.set_speed_light(c)
-        self.assertEqual(mcmc.speed_light(), c)
-        self.assertRaises(ValueError, mcmc.set_speed_light, -0.1)
+        mcmc.set_speed_of_light(c)
+        self.assertEqual(mcmc.speed_of_light(), c)
+        self.assertRaises(ValueError, mcmc.set_speed_of_light, -0.1)
 
         m = 2.9
         mcmc.set_mass(m)

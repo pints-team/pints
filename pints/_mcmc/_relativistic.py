@@ -149,9 +149,10 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
         # Perform a leapfrog step for the position
+        squared = np.sum(np.array(self._momentum)**2)
+        relativistic_mass = self._mass * np.sqrt(squared / self._mc2 + 1)
         self._position += (
-            self._scaled_epsilon * (self._relativistic_mass()**(-1)) *
-            self._momentum)
+            self._scaled_epsilon * self._momentum / relativistic_mass)
 
         # Ask for the pdf and gradient of the current leapfrog position
         # Using this, the leapfrog step for the momentum is performed in tell()
@@ -201,7 +202,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._mcmc_acceptance)
 
-    def _K(self, momentum):
+    def _kinetic_energy(self, momentum):
         """
         Kinetic energy or relativistic particle, which is defined in [1]_.
         """
@@ -209,7 +210,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         return self._mc2 * (squared / self._mc2 + 1)**0.5
 
     def mass(self):
-        """ Returns mass. """
+        """ Returns ``mass`` which is the rest mass of particle. """
         return self._mass
 
     def n_hyper_parameters(self):
@@ -223,11 +224,6 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
-
-    def _relativistic_mass(self):
-        """ Calculates relativistic mass. """
-        squared = np.sum(np.array(self._momentum)**2)
-        return self._mass * (squared / self._mc2 + 1)**0.5
 
     def scaled_epsilon(self):
         """
@@ -273,7 +269,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         self.set_leapfrog_steps(x[0])
         self.set_leapfrog_step_size(x[1])
         self.set_mass(x[2])
-        self.set_speed_light(x[3])
+        self.set_speed_of_light(x[3])
 
     def set_leapfrog_steps(self, steps):
         """
@@ -312,14 +308,14 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             raise ValueError('Mass must be positive.')
         self._mass = mass
 
-    def set_speed_light(self, c):
-        """ Sets speed of light. """
+    def set_speed_of_light(self, c):
+        """ Sets `speed of light`. """
         if c <= 0:
             raise ValueError('Speed of light must be positive.')
         self._c = c
 
-    def speed_light(self):
-        """ Returns speed of light. """
+    def speed_of_light(self):
+        """ Returns `speed of light`. """
         return self._c
 
     def tell(self, reply):
@@ -386,9 +382,9 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
             current_U = self._current_energy
-            current_K = self._K(self._current_momentum)
+            current_K = self._kinetic_energy(self._current_momentum)
             proposed_U = energy
-            proposed_K = self._K(self._momentum)
+            proposed_K = self._kinetic_energy(self._momentum)
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
