@@ -38,7 +38,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
     model.
 
     During simulation, the membrane potential :math:`V` is varied by holding it
-    at -90mV for 90ms, then at a "step potential" for 10ms. The step potentials
+    at -75mV for 90ms, then at a "step potential" for 10ms. The step potentials
     are based on the values used in the original paper, and are -69, -64, -56,
     -49, -43, -37, -24, -12, 1, 13, 25, and 34mV.
     The protocol is applied in the interval :math:`t = [0, 1200]`, so sampling
