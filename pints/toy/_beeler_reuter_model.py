@@ -214,7 +214,8 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
               self._x10]
 
         solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length)
+            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length,
+            rtol=self._rtol, atol=self._atol)
 
         # Return all states
         return solved_states
