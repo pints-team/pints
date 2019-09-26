@@ -70,7 +70,7 @@ class TestLogLikelihood(unittest.TestCase):
         # Test multi-output derivatives
         y1, dy1 = unscaled.evaluateS1(p)
         y2, dy2 = scaled.evaluateS1(p)
-        self.assertAlmostEqual(y1, unscaled(p))
+        self.assertAlmostEqual(y1, unscaled(p), places=6)
         self.assertEqual(dy1.shape, (3, ))
         self.assertAlmostEqual(y2, scaled(p))
         self.assertEqual(dy2.shape, (3, ))
@@ -618,7 +618,7 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Note: y and ll(x) differ a bit, because the solver acts slightly
         # different when evaluating with and without sensitivities!
-        self.assertTrue(np.abs(y - ll(x)) < 1e-6)
+        self.assertAlmostEqual(y, ll(x), places=3)
 
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
