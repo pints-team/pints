@@ -13,11 +13,11 @@ interface, that can be used to sample from an unknown
 
     running
     base_classes
-    adaptive_covariance_mcmc
+    adaptive_covariance_mc
     differential_evolution_mcmc
     dream_mcmc
     emcee_hammer_mcmc
-    global_adaptive_covariance_mcmc
+    global_adaptive_covariance_mc
     haario_ac_mcmc
     haario_bardenet_ac_mcmc
     hamiltonian_mcmc

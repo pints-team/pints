@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
+class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMC):
     """
     Adaptive Metropolis MCMC, which is algorithm in the supplementary materials
     of [1]_, which in turn is based on [2]_.
@@ -45,7 +45,7 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    Extends :class:`GlobalAdaptiveCovarianceMCMC`.
+    Extends :class:`GlobalAdaptiveCovarianceMC`.
 
     References
     ----------
@@ -92,7 +92,7 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMCMC):
         return 'Haario-Bardenet adaptive covariance MCMC'
 
     def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
+        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
         super(HaarioBardenetACMC, self).tell(fx)
 
         _acceptance_prob = self._accepted

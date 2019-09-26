@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
+class HaarioACMC(pints.GlobalAdaptiveCovarianceMC):
     """
     Adaptive Metropolis MCMC, which is algorithm 4 in [1]_ and is described in
     the text in [2]_.
@@ -47,7 +47,7 @@ class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    Extends :class:`GlobalAdaptiveCovarianceMCMC`.
+    Extends :class:`GlobalAdaptiveCovarianceMC`.
 
     References
     ----------
@@ -92,7 +92,7 @@ class HaarioACMC(pints.GlobalAdaptiveCovarianceMCMC):
         return 'Haario adaptive covariance MCMC'
 
     def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
+        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
         super(HaarioACMC, self).tell(fx)
 
         _acceptance_prob = (

@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
+class AdaptiveCovarianceMC(pints.SingleChainMCMC):
     """
     Base class for single chain MCMC methods that adapt a covariance matrix
     when running, in order to control the acceptance rate.
@@ -20,7 +20,7 @@ class AdaptiveCovarianceMCMC(pints.SingleChainMCMC):
     In all cases ``eta`` is used to control decay of adaptation.
     """
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
+        super(AdaptiveCovarianceMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False

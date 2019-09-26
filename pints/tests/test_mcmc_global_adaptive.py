@@ -19,7 +19,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
+class TestGlobalAdaptiveCovarianceMC(unittest.TestCase):
     """
     Tests the basic methods of the adaptive covariance MCMC routine.
     """
@@ -62,7 +62,7 @@ class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Create mcmc
         x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
         self.assertEqual(0.6, mcmc.eta())
         self.assertEqual(0.234, mcmc.target_acceptance_rate())
         self.assertTrue(mcmc.in_initial_phase())
@@ -71,7 +71,7 @@ class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # ask only initialises
         x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
         mcmc.ask()
         self.assertTrue(mcmc._running)
 
@@ -82,7 +82,7 @@ class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
     def test_replace(self):
 
         x0 = self.real_parameters * 1.1
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
 
         # One round of ask-tell must have been run
         self.assertRaisesRegex(
@@ -115,14 +115,14 @@ class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Test initial proposal is first point
         x0 = self.real_parameters
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
 
         # Tell without ask
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Bad starting point
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
@@ -130,7 +130,7 @@ class TestGlobalAdaptiveCovarianceMCMC(unittest.TestCase):
 
         # Test setting acceptance rate
         x0 = self.real_parameters
-        mcmc = pints.GlobalAdaptiveCovarianceMCMC(x0)
+        mcmc = pints.GlobalAdaptiveCovarianceMC(x0)
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
         self.assertEqual(mcmc.target_acceptance_rate(), 0.5)

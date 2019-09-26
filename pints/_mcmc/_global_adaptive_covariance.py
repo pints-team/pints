@@ -12,16 +12,16 @@ import pints
 import numpy as np
 
 
-class GlobalAdaptiveCovarianceMCMC(pints.AdaptiveCovarianceMCMC):
+class GlobalAdaptiveCovarianceMC(pints.AdaptiveCovarianceMC):
     """
     Base class for single chain MCMC methods that globally adapt a proposal
     covariance matrix when running, in order to control the acceptance rate.
 
-    Extends :class:`AdaptiveCovarianceMCMC`.
+    Extends :class:`AdaptiveCovarianceMC`.
     """
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
-        super(GlobalAdaptiveCovarianceMCMC, self).tell(fx)
+        super(GlobalAdaptiveCovarianceMC, self).tell(fx)
 
         self._accepted = 0
         if np.isfinite(fx):
