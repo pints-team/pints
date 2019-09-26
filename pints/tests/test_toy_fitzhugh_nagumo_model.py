@@ -56,10 +56,8 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         times = np.linspace(0, 20, 201)
         model = pints.toy.FitzhughNagumoModel(y0)
         values = model.simulate(parameters, times)
-        self.assertTrue(np.abs(values[200, 0] - 1.6757257661845268) <
-                        0.000001)
-        self.assertTrue(np.abs(values[200, 1] - -0.22614224385943715) <
-                        0.000001)
+        self.assertAlmostEqual(values[200, 0], 1.675726, places=6)
+        self.assertAlmostEqual(values[200, 1], -0.226142, places=6)
 
 
 if __name__ == '__main__':

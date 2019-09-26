@@ -55,10 +55,10 @@ class TestSIRModel(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertEqual(values[0, 0], 10)
         self.assertEqual(values[0, 1], 1)
-        self.assertTrue(np.abs(values[1, 0] - 15.615371537443046) < 0.0001)
-        self.assertTrue(np.abs(values[1, 1] - 1.505277693501407) < 0.0001)
-        self.assertTrue(np.abs(values[100, 0] - 2.4573888452817902) < 0.0001)
-        self.assertTrue(np.abs(values[100, 1] - 108.54246598629017) < 0.0001)
+        self.assertAlmostEqual(values[1, 0], 15.61537, places=5)
+        self.assertAlmostEqual(values[1, 1], 1.50528, places=5)
+        self.assertAlmostEqual(values[100, 0], 2.45739, places=5)
+        self.assertAlmostEqual(values[100, 1], 108.542466, places=5)
 
 
 if __name__ == '__main__':

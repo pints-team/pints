@@ -36,12 +36,9 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         self.assertEqual(values[0, 0], 0.0054)
         self.assertEqual(values[0, 1], 0.053)
         self.assertEqual(values[0, 2], 1.93)
-        self.assertTrue(np.abs(values[100, 0] - 0.006185184571581936) <
-                        0.000001)
-        self.assertTrue(np.abs(values[100, 1] - 0.17795471614069058) <
-                        0.000001)
-        self.assertTrue(np.abs(values[100, 2] - 2.607452708069333) <
-                        0.000001)
+        self.assertAlmostEqual(values[100, 0], 0.0061854, places=6)
+        self.assertAlmostEqual(values[100, 1], 0.1779547, places=6)
+        self.assertAlmostEqual(values[100, 2], 2.6074527, places=6)
 
 
 if __name__ == '__main__':

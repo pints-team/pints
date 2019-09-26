@@ -65,8 +65,8 @@ class TestHes1Model(unittest.TestCase):
         model = pints.toy.Hes1Model(y0=y0, implicit_parameters=iparameters)
         values = model.simulate(parameters, times)
         self.assertEqual(values[0], y0)
-        self.assertTrue(np.abs(values[1] - 7.011333096336491) < 0.0001)
-        self.assertTrue(np.abs(values[100] - 5.420749626561355) < 0.0001)
+        self.assertAlmostEqual(values[1], 7.011333, places=6)
+        self.assertAlmostEqual(values[100], 5.420750, places=6)
 
 
 if __name__ == '__main__':

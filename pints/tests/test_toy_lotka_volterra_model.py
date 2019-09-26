@@ -50,11 +50,10 @@ class TestLotkaVolterraModel(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertEqual(values[0, 0], x0)
         self.assertEqual(values[0, 1], y0)
-        self.assertTrue(np.abs(values[1, 0] - 1.9294938874573144) < 0.0001)
-        self.assertTrue(np.abs(values[1, 1] - 4.8065419518727595) < 0.0001)
-        self.assertTrue(np.abs(values[100, 0] - 1.2777621132036345) < 0.0001)
-        self.assertTrue(np.abs(values[100, 1] - 0.0005294772711015946) <
-                        0.0001)
+        self.assertAlmostEqual(values[1, 0], 1.929494, places=6)
+        self.assertAlmostEqual(values[1, 1], 4.806542, places=6)
+        self.assertAlmostEqual(values[100, 0], 1.277762, places=6)
+        self.assertAlmostEqual(values[100, 1], 0.000529, places=6)
 
 
 if __name__ == '__main__':

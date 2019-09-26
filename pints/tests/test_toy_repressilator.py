@@ -50,12 +50,12 @@ class TestRepressilatorModel(unittest.TestCase):
         model = pints.toy.RepressilatorModel(y0)
         values = model.simulate(parameters, times)
         self.assertTrue(np.array_equal(values[0, :], y0[:3]))
-        self.assertTrue(np.abs(values[1, 0] - 18.888382825819164) < 0.0001)
-        self.assertTrue(np.abs(values[1, 1] - 13.776228102052464) < 0.0001)
-        self.assertTrue(np.abs(values[1, 2] - 9.057632102958687) < 0.0001)
-        self.assertTrue(np.abs(values[100, 0] - 14.750990313606831) < 0.0001)
-        self.assertTrue(np.abs(values[100, 1] - 16.55494171821406) < 0.0001)
-        self.assertTrue(np.abs(values[100, 2] - 16.606880796923882) < 0.0001)
+        self.assertAlmostEqual(values[1, 0], 18.88838, places=5)
+        self.assertAlmostEqual(values[1, 1], 13.77623, places=5)
+        self.assertAlmostEqual(values[1, 2], 9.05763, places=5)
+        self.assertAlmostEqual(values[100, 0], 14.75099, places=5)
+        self.assertAlmostEqual(values[100, 1], 16.55494, places=5)
+        self.assertAlmostEqual(values[100, 2], 16.60688, places=5)
 
 
 if __name__ == '__main__':
