@@ -31,10 +31,13 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
     To aid in inference, a parameter transformation is used: instead of
     specifying the maximum conductances directly, their natural logarithm
     should be used.
-    In other words, the parameter vector passed to :meth`simulate()` should
+    In other words, the parameter vector passed to :meth:`simulate()` should
     contain the logarithm of the five conductances.
 
-    As observable outputs, we use the AP and the calcium transient.
+    As outputs, we use the AP and the calcium transient, as these are the only
+    two states (out of the total of eight) with a physically observable
+    counterpart.
+    This makes this a fairly hard problem.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
