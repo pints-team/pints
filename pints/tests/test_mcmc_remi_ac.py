@@ -131,6 +131,28 @@ class TestHaarioBardenetACMC(unittest.TestCase):
         mcmc = pints.AdaptiveCovarianceMCMC(self.real_parameters)
         self.assertIn('Haario-Bardenet', mcmc.name())
 
+        # Perform short run
+        mcmc.set_target_acceptance_rate(0.3)
+        mcmc.set_initial_phase(True)
+        rate = []
+        chain = []
+        for i in range(100):
+            x = mcmc.ask()
+            fx = self.log_posterior(x)
+            sample = mcmc.tell(fx)
+            if i == 20:
+                mcmc.set_initial_phase(False)
+            if i >= 50:
+                chain.append(sample)
+            rate.append(mcmc.acceptance_rate())
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+        chain = np.array(chain)
+        rate = np.array(rate)
+        self.assertEqual(chain.shape[0], 50)
+        self.assertEqual(chain.shape[1], len(self.real_parameters))
+        self.assertEqual(rate.shape[0], 100)
+
 
 if __name__ == '__main__':
     unittest.main()
