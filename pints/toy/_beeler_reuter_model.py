@@ -17,12 +17,15 @@ from . import ToyModel
 class ActionPotentialModel(pints.ForwardModel, ToyModel):
     """
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
-    (AP) [1]_.
+    (AP).
+
+    This model is written as an ODE with 8 states and several intermediary
+    variables: for the full model equations, please see the original paper
+    [1]_.
 
     The model contains 5 ionic currents, each described by a sub-model with
     several kinetic parameters, and a maximum conductance parameter that
     determines its magnitude.
-
     Only the 5 conductance parameters are varied in this :class:`ToyModel`, all
     other parameters are fixed and assumed to be known.
     To aid in inference, a parameter transformation is used: instead of
