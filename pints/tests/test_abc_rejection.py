@@ -86,6 +86,8 @@ class TestABCRejection(unittest.TestCase):
     def test_setters_and_getters(self):
         # test setting and getting
         abc = pints.ABCRejection(self.log_prior)
+        self.assertEqual('Rejection ABC', abc.name())
+
 
 if __name__ == '__main__':
     unittest.main()
