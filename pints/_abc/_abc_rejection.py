@@ -22,15 +22,10 @@ class ABCRejection(pints.ABCSampler):
 
     [1] ***Citations Needed***
     """
-    def __init__(self, log_prior, threshold):
+    def __init__(self, log_prior):
 
-        # Set log_prior
         self._log_prior = log_prior
-
-        # Set threshold
-        self._threshold = threshold
-
-        # Initialize param_vals
+        self._threshold = 1
         self._xs = None
 
     def name(self):
@@ -49,7 +44,8 @@ class ABCRejection(pints.ABCSampler):
             if np.sum(accepted) == 0:
                 return None
             else:
-                return [self._xs[c] for c, x in enumerate(accepted) if x]
+                return [self._xs[c].tolist() for c, x in
+                        enumerate(accepted) if x]
         else:
             if fx < self._threshold:
                 return self._xs

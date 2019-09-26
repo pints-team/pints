@@ -9,6 +9,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
+import numpy as np
 
 
 class ABCSampler(pints.Loggable, pints.TunableMethod):
@@ -91,8 +92,6 @@ class ABCController(object):
         # Get number of parameters
         self._n_parameters = self._log_prior.n_parameters()
 
-        # Don't check initial standard deviation: done by samplers!
-
         # Set default method
         if method is None:
             method = pints.ABCRejection
@@ -104,38 +103,59 @@ class ABCController(object):
             if not ok:
                 raise ValueError('Given method must extend pints.ABCSampler.')
 
-        # Parallelisation
+        # Initialisation
         self._parallel = False
         self._n_workers = 1
-        self.set_parallel()
-
-        #
-        # Stopping criteria
-        #
-
-        # Maximum iterations
-        self._max_iterations = None
-        self.set_max_iterations()
-
-        # Threshold value
-        self._threshold = 1.5
-        self.set_threshold()
-
-        # Number of parameter samples in posterior estimate
+        self._max_iterations = 10000
         self._n_target = 500
-        self.set_n_target()
+        self._sampler = method(log_prior)
+        self._log_to_screen = True
+        self._log_filename = None
+        self._log_csv = False
+        self.set_log_interval()
 
-        # Number of draws per iteration
-        self._n_draws = 1
-        self.set_n_draws()
+    def set_log_interval(self, iters=20, warm_up=3):
+        """
+        Changes the frequency with which messages are logged.
 
-        # TODO: Add more stopping criteria
+        Arguments:
 
-        # Create sampler(s)
+        ``interval``
+            A log message will be shown every ``iters`` iterations.
+        ``warm_up``
+            A log message will be shown every iteration, for the first
+            ``warm_up`` iterations.
 
-        # Using n individual samplers (Note that it is possible to have
-        # _n_samplers=1)
-        self._samplers = method(log_prior, self._threshold)
+        """
+        iters = int(iters)
+        if iters < 1:
+            raise ValueError('Interval must be greater than zero.')
+        warm_up = max(0, int(warm_up))
+
+        self._message_interval = iters
+        self._message_warm_up = warm_up
+
+    def set_log_to_file(self, filename=None, csv=False):
+        """
+        Enables progress logging to file when a filename is passed in, disables
+        it if ``filename`` is ``False`` or ``None``.
+
+        The argument ``csv`` can be set to ``True`` to write the file in comma
+        separated value (CSV) format. By default, the file contents will be
+        similar to the output on screen.
+        """
+        if filename:
+            self._log_filename = str(filename)
+            self._log_csv = True if csv else False
+        else:
+            self._log_filename = None
+            self._log_csv = False
+
+    def set_log_to_screen(self, enabled):
+        """
+        Enables or disables progress logging to screen.
+        """
+        self._log_to_screen = True if enabled else False
 
     def max_iterations(self):
         """
@@ -150,12 +170,6 @@ class ABCController(object):
         posterior.
         """
         return self._n_target
-
-    def n_draws(self):
-        """
-        Returns the number of draws per iteration.
-        """
-        return self._n_draws
 
     def parallel(self):
         """
@@ -185,50 +199,10 @@ class ABCController(object):
         # Create evaluator object
         if self._parallel:
             # Use at most n_workers workers
-            n_workers = min(self._n_workers, self._chains)
+            n_workers = self._n_workers
             evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
             evaluator = pints.SequentialEvaluator(f)
-
-        # Initial phase
-        if self._needs_initial_phase:
-            for sampler in self._samplers:
-                sampler.set_initial_phase(True)
-
-        # Write chains to disk
-        chain_loggers = []
-        if self._chain_files:
-            for filename in self._chain_files:
-                cl = pints.Logger()
-                cl.set_stream(None)
-                cl.set_filename(filename, True)
-                for k in range(self._n_parameters):
-                    cl.add_float('p' + str(k))
-                chain_loggers.append(cl)
-
-        # Write evaluations to disk
-        eval_loggers = []
-        if self._evaluation_files:
-            # Bayesian inference on a log-posterior? Then separate out the
-            # prior so we can calculate the loglikelihood
-            prior = None
-            if isinstance(self._log_pdf, pints.LogPosterior):
-                prior = self._log_pdf.log_prior()
-
-            # Set up loggers
-            for filename in self._evaluation_files:
-                cl = pints.Logger()
-                cl.set_stream(None)
-                cl.set_filename(filename, True)
-                if prior:
-                    # Logposterior in first column, to be consistent with the
-                    # non-bayesian case
-                    cl.add_float('logposterior')
-                    cl.add_float('loglikelihood')
-                    cl.add_float('logprior')
-                else:
-                    cl.add_float('logpdf')
-                eval_loggers.append(cl)
 
         # Set up progress reporting
         next_message = 0
@@ -237,20 +211,12 @@ class ABCController(object):
         logging = self._log_to_screen or self._log_filename
         if logging:
             if self._log_to_screen:
-                print('Using ' + str(self._samplers[0].name()))
-                print('Generating ' + str(self._chains) + ' chains.')
+                print('Using ' + str(self._sampler.name()))
                 if self._parallel:
                     print('Running in parallel with ' + str(n_workers) +
                           ' worker processess.')
                 else:
                     print('Running in sequential mode.')
-                if self._chain_files:
-                    print(
-                        'Writing chains to ' + self._chain_files[0] + ' etc.')
-                if self._evaluation_files:
-                    print(
-                        'Writing evaluations to ' + self._evaluation_files[0]
-                        + ' etc.')
 
             # Set up logger
             logger = pints.Logger()
@@ -261,46 +227,42 @@ class ABCController(object):
 
             # Add fields to log
             max_iter_guess = max(self._max_iterations or 0, 10000)
-            max_eval_guess = max_iter_guess * self._chains
+            max_eval_guess = max_iter_guess
             logger.add_counter('Iter.', max_value=max_iter_guess)
             logger.add_counter('Eval.', max_value=max_eval_guess)
-            for sampler in self._samplers:
-                sampler._log_init(logger)
+            logger.add_counter('')
+            self._sampler._log_init(logger)
             logger.add_time('Time m:s')
 
         # Start sampling
         timer = pints.Timer()
         running = True
 
-        # Initialize samples
         samples = []
-
         while running:
             # Sample until a given sample is accepted
-            xs = self._samplers.ask(self._n_draws)
+            xs = self._sampler.ask(self._n_workers)
             fxs = evaluator.evaluate(xs)
-            evaluations += self._n_draws
-            accepted_vals = self._samplers.tell(fxs)
+            evaluations += self._n_workers
+            accepted_vals = self._sampler.tell(fxs)
             if accepted_vals is not None:
                 accepted_count += len(accepted_vals)
             while accepted_vals is None:
-                xs = self._samplers.ask(self._n_draws)
+                xs = self._sampler.ask(self._n_workers)
                 fxs = evaluator.evaluate(xs)
-                accepted_vals = self._samplers.tell(fxs)
-                accepted_count += len(accepted_vals)
-
-            # Add new accepted parameters to the estimated posterior
-            samples.append(accepted_vals)
-
-            # Update iteration count
+                accepted_vals = self._sampler.tell(fxs)
+                evaluations += self._n_workers
+                if accepted_vals is not None:
+                    accepted_count += len(accepted_vals)
+            for val in accepted_vals:
+                samples.append(val)
             iteration += 1
 
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
                 logger.log(iteration, evaluations)
-                for sampler in self._samplers:
-                    sampler._log_write(logger)
+                self._sampler._log_write(logger)
                 logger.log(timer.time())
 
                 # Choose next logging point
@@ -321,17 +283,21 @@ class ABCController(object):
                 halt_message = ('Halting: target number of samples ('
                                 + str(accepted_count) + ') reached.')
 
-            # Log final state and show halt message
-            if logging:
-                logger.log(iteration, evaluations)
-                for sampler in self._samplers:
-                    sampler._log_write(logger)
-                logger.log(timer.time())
-                if self._log_to_screen:
-                    print(halt_message)
-
-        timer.time()
+        # Log final state and show halt message
+        if logging:
+            logger.log(iteration, evaluations)
+            self._sampler._log_write(logger)
+            logger.log(timer.time())
+            if self._log_to_screen:
+                print(halt_message)
+        samples = np.array(samples)
         return samples
+
+    def sampler(self):
+        """
+        Returns the underlying sampler object.
+        """
+        return self._sampler
 
     def set_max_iterations(self, iterations=10000):
         """
@@ -353,12 +319,6 @@ class ABCController(object):
         Sets a target number of samples
         """
         self._n_target = n_target
-
-    def set_n_draws(self, n_draws=1):
-        """
-        Sets the number of draws per iteration
-        """
-        self._n_draws = n_draws
 
     def set_parallel(self, parallel=False):
         """
