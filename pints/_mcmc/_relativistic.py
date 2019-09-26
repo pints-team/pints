@@ -204,7 +204,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
     def _kinetic_energy(self, momentum):
         """
-        Kinetic energy or relativistic particle, which is defined in [1]_.
+        Kinetic energy of relativistic particle, which is defined in [1]_.
         """
         squared = np.sum(np.array(momentum)**2)
         return self._mc2 * (squared / self._mc2 + 1)**0.5
