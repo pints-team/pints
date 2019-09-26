@@ -618,7 +618,7 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Note: y and ll(x) differ a bit, because the solver acts slightly
         # different when evaluating with and without sensitivities!
-        self.assertTrue(np.abs(y - ll(x) < 1e-6))
+        self.assertTrue(np.abs(y - ll(x)) < 1e-6)
 
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
