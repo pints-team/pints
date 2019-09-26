@@ -21,7 +21,7 @@ class TestHodgkinHuxleyIKModel(unittest.TestCase):
     def test_creation(self):
 
         # Test simple creation
-        model = pints.toy.HodgkinHuxleyIKModel()
+        pints.toy.HodgkinHuxleyIKModel()
 
         # Test initial condition out of bounds
         self.assertRaises(ValueError, pints.toy.HodgkinHuxleyIKModel, 0)
@@ -47,7 +47,6 @@ class TestHodgkinHuxleyIKModel(unittest.TestCase):
         model = pints.toy.HodgkinHuxleyIKModel()
         p0 = model.suggested_parameters()
         times = model.suggested_times()
-
 
         # Run
         values = model.simulate(p0, times)
