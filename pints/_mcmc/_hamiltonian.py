@@ -43,6 +43,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     .. math::
         p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) d U(q_i(t))/dq_i\\
         q_i(t + \epsilon) &= q_i(t) + \epsilon p_i(t + \epsilon/2) / m_i\\
+        p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
+                             (\epsilon/2) d U(q_i(t + \epsilon))/dq_i
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
     [1]_, since we allow different epsilon according to dimension.

@@ -1,5 +1,5 @@
 #
-# Monomial gamma HMC MCMC method
+# Relativistic MCMC method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -10,14 +10,11 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-from scipy import integrate
-from scipy import interpolate
 
 
-class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
+class RelativisticMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Monomial Gamma HMC as described in [1]_ - a generalisation
-    of HMC as described in [2]_ - involving a non-physical kinetic energy term.
+    Implements Relativistic Monte Carlo as described in [1]_.
 
     Uses a physical analogy of a particle moving across a landscape under
     Hamiltonian dynamics to aid efficient exploration of parameter space.
@@ -27,60 +24,49 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     particle's motion is dictated by solutions to Hamilton's equations,
 
     .. math::
-        dq_i/dt =   \partial H/\partial p_i,
-        dp_i/dt = - \partial H/\partial q_i.
+        dq_i/dt &=   \partial H/\partial p_i\\
+        dp_i/dt &= - \partial H/\partial q_i.
 
     The Hamiltonian is given by,
 
     .. math::
-        H(q,p) =       U(q)       +        K(p)
-               = -log(p(q|X)p(q)) +
-                 \Sigma_{i=1}^{d} (
-                 -g(p_i) + (2/c) \text{log}(1 + \text{exp}(cg(p_i))))
+        H(q,p) &=       U(q)       +        KE(p)\\
+               &= -\text{log}(p(q|X)p(q)) +
+                    mc^2 (\Sigma_{i=1}^{d} p_i^2 / (mc^2) + 1)^{0.5}
 
-    where ``d`` is the dimensionality of model, ``U`` is the potential
-    energy and ``K`` is the kinetic energy term. Note the kinetic energy
-    is the 'soft' version described in [1], where,
-
-    .. math::
-        g(p_i) = (1 / m_i) \text{sign}|p_i|^{1 / a}
+    where ``d`` is the dimensionality of model, ``m`` is the scalar 'mass'
+    given to each particle (chosen to be 1 as default) and ``c`` is the
+    speed of light (chosen to be 10 by default).
 
     To numerically integrate Hamilton's equations, it is essential to use a
     sympletic discretisation routine, of which the most typical approach is
     the leapfrog method,
 
     .. math::
-        p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) dU(q_i)/ dq_i\\
-        q_i(t + \epsilon) &= q_i(t) + \epsilon d K(p_i(t + \epsilon/2))/dp_i\\
+        p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) d U(q_i(t))/dq_i\\
+        q_i(t + \epsilon) &= q_i(t) +
+                    \epsilon M^{-1}(p_i(t + \epsilon/2)) p_i(t + \epsilon/2)\\
         p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
-                             (\epsilon/2) dU(q_i + \epsilon)/ dq_i
+                                (\epsilon/2) d U(q_i(t + \epsilon))/dq_i
 
-    The derivative of the soft kinetic energy term is given by,
+    where relativistic mass (a scalar) is,
 
     .. math::
-        d K(p_i)/dp_i =
-        |p_i|^{-1 + 1 / a}\text{sign}(p_i) \times
-        \text{tanh}(c|p_i|^{1/a}\text{sign}(p_i) / {2 m_i}) / {a m_i}
+        M(p) = m (\Sigma_{i=1}^{d} p_i^2 / (mc^2) + 1)^{0.5}
 
-    In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
-    [2]_, since we allow different epsilon according to dimension.
+    In particular, the algorithm we implement follows eqs. in section 2.1 of
+    [1]_.
 
     Extends :class:`SingleChainMCMC`.
 
     References
     ----------
-    .. [1] Towards Unifying Hamiltonian Monte Carlo and Slice Sampling
-           Yizhe Zhang, Xiangyu Wang, Changyou Chen, Ricardo Henao, Kai Fan,
-           Lawrence Cari.
-           Advances in Neural Information Processing Systems (NIPS)
-
-
-    .. [2] MCMC using Hamiltonian dynamics
-           Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
-           Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
+    .. [1] "Relativistic Monte Carlo". Xiaoyu Lu, Valerio Perrone,
+            Leonard Hasenclever, Yee Whye Teh, Sebastian J. Vollmer,
+            2017, Proceedings of Machine Learning Research.
     """
     def __init__(self, x0, sigma0=None):
-        super(MonomialGammaHamiltonianMCMC, self).__init__(x0, sigma0)
+        super(RelativisticMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -108,6 +94,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         # Default integration step size for leapfrog algorithm
         self._epsilon = 0.1
         self._step_size = None
+        self._mass = 1
+        self._c = 10
         self.set_leapfrog_step_size(np.diag(self._sigma0))
 
         # Divergence checking
@@ -118,17 +106,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         # (currently set to match Stan)
         self._hamiltonian_threshold = 10**3
 
-        # Estimate quantities needed for sampling from the ke distribution
-        self._a = 1.0
-        self._c = 0.2
-        self._m = 1.0
-
-    def a(self):
-        """
-        Returns ``a`` in kinetic energy function.
-        """
-        return self._a
-
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
         # Check ask/tell pattern
@@ -138,7 +115,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._running = True
-            self._initialise_ke()
+            self._mc2 = self._mass * self._c**2
 
         # Notes:
         #  Ask is responsible for updating the position, which is the point
@@ -160,7 +137,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         if self._frog_iteration == 0:
 
             # Sample random momentum for current point using identity cov
-            self._current_momentum = self._sample_momentum()
+            self._current_momentum = np.random.multivariate_normal(
+                np.zeros(self._n_parameters), np.eye(self._n_parameters))
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -171,27 +149,15 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
             self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
         # Perform a leapfrog step for the position
-        self._position += self._scaled_epsilon * (
-            self._K_deriv(self._momentum, self._a, self._c, self._m)
-        )
+        squared = np.sum(np.array(self._momentum)**2)
+        relativistic_mass = self._mass * np.sqrt(squared / self._mc2 + 1)
+        self._position += (
+            self._scaled_epsilon * self._momentum / relativistic_mass)
 
         # Ask for the pdf and gradient of the current leapfrog position
         # Using this, the leapfrog step for the momentum is performed in tell()
         self._ready_for_tell = True
         return np.array(self._position, copy=True)
-
-    def c(self):
-        """
-        Returns ``c`` in kinetic energy function.
-        """
-        return self._c
-
-    def _cdf(self, p, a, c, m, z):
-        """
-        Auxillary kinetic energy cumulative density defined in [1]_.
-        """
-        return integrate.quad(lambda p1: self._pdf(p1, a, c, m, z),
-                              -float('Inf'), p)[0]
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
@@ -199,21 +165,15 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
 
     def divergent_iterations(self):
         """
-        Returns the iteration number of any divergent iterations.
+        Returns the iteration number of any divergent iterations
         """
         return self._divergent
 
     def epsilon(self):
         """
-        Returns epsilon used in leapfrog algorithm.
+        Returns epsilon used in leapfrog algorithm
         """
         return self._epsilon
-
-    def _g(self, p, a, m):
-        """
-        Helper function used to define soft kinetic energy in [1].
-        """
-        return (1 / m) * np.sign(p) * np.abs(p)**(1 / a)
 
     def hamiltonian_threshold(self):
         """
@@ -221,56 +181,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         next which determines whether an iteration is divergent.
         """
         return self._hamiltonian_threshold
-
-    def _initialise_ke(self):
-        """
-        Initialises functions needed for sampling from soft kinetic energy
-        function defined in [1]_.
-        """
-        z = integrate.quad(
-            lambda p: np.exp(-self._K_indiv(p, self._a, self._c, self._m)),
-            -float('Inf'), float('Inf'))[0]
-        self._f = self._inverse_cdf_calculator(self._a, self._c,
-                                               self._m, z)
-
-    def _inverse_cdf_calculator(self, a, c, m, z, pmax=100):
-        """
-        Estimates empirical cdf.
-        """
-        p = np.linspace(-pmax, pmax, 1000)
-        lcdf = [self._cdf(p[i], a, c, m, z) for i in range(1000)]
-        f = interpolate.interp1d(lcdf, p, fill_value="extrapolate")
-        return f
-
-    def _K(self, v_p, a, c, m):
-        """
-        Soft kinetic energy function defined in [1]_.
-        """
-        return np.sum([self._K_indiv(p, a, c, m) for p in v_p])
-
-    def _K_deriv(self, v_p, a, c, m):
-        """
-        Derivative of soft kinetic energy function defined in [1]_.
-        """
-        return np.array([self._K_deriv_indiv(p, a, c, m) for p in v_p])
-
-    def _K_deriv_indiv(self, p, a, c, m):
-        """
-        Derivative of soft kinetic energy function defined in [1]_ for
-        individual momentum component.
-        """
-        abs_p = np.abs(p)
-        sign_p = np.sign(p)
-        tanh = np.tanh(0.5 * c * abs_p**(1.0 / a) * sign_p / m)
-        return abs_p**(-2 + 1.0 / a) * p * sign_p * tanh / (a * m)
-
-    def _K_indiv(self, p, a, c, m):
-        """
-        Soft kinetic energy function defined in [1]_ for individual momentum
-        component.
-        """
-        return -self._g(p, a, m) + (2.0 / c) * np.log(
-            1.0 + np.exp(c * self._g(p, a, m)))
 
     def leapfrog_steps(self):
         """
@@ -292,62 +202,46 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._mcmc_acceptance)
 
+    def _kinetic_energy(self, momentum):
+        """
+        Kinetic energy of relativistic particle, which is defined in [1]_.
+        """
+        squared = np.sum(np.array(momentum)**2)
+        return self._mc2 * (squared / self._mc2 + 1)**0.5
+
     def mass(self):
-        """
-        Returns mass ``m`` in kinetic energy function.
-        """
-        return self._m
+        """ Returns ``mass`` which is the rest mass of particle. """
+        return self._mass
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 4
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Monomial-Gamma Hamiltonian Monte Carlo'
+        return 'Relativistic MCMC'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 5
-
-    def _pdf(self, p, a, c, m, z):
-        """
-        Auxillary kinetic energy probability density defined in [1]_.
-        """
-        return (1.0 / z) * np.exp(-self._K_indiv(p, a, c, m))
-
-    def _sample_momentum(self):
-        """
-        Samples from soft kinetic energy pdf defined in [1]_.
-        """
-        us = np.random.uniform(size=self._n_parameters)
-        return np.array([self._f([u])[0] for u in us])
-
     def scaled_epsilon(self):
         """
-        Returns scaled epsilon used in leapfrog algorithm.
+        Returns scaled epsilon used in leapfrog algorithm
         """
         return self._scaled_epsilon
 
-    def set_a(self, a):
+    def _set_scaled_epsilon(self):
         """
-        Sets ``a`` in kinetic energy function.
+        Rescales epsilon along the dimensions of step_size
         """
-        if a <= 0:
-            raise ValueError("a must be positive")
-        self._a = a
-
-    def set_c(self, c):
-        """
-        Sets ``c`` in kinetic energy function.
-        """
-        if c <= 0:
-            raise ValueError("c must be positive")
-        self._c = c
+        self._scaled_epsilon = np.zeros(self._n_parameters)
+        for i in range(self._n_parameters):
+            self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
 
     def set_epsilon(self, epsilon):
         """
-        Sets epsilon for the leapfrog algorithm.
+        Sets epsilon for the leapfrog algorithm
         """
         epsilon = float(epsilon)
         if epsilon <= 0:
@@ -368,15 +262,14 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size,
-        a, c, mass]``.
+        mass, c]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_leapfrog_steps(x[0])
         self.set_leapfrog_step_size(x[1])
-        self.set_a(x[2])
-        self.set_c(x[3])
-        self.set_mass(x[4])
+        self.set_mass(x[2])
+        self.set_speed_of_light(x[3])
 
     def set_leapfrog_steps(self, steps):
         """
@@ -407,21 +300,23 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         self._step_size = step_size
         self._set_scaled_epsilon()
 
-    def set_mass(self, m):
-        """
-        Sets mass ``m`` in kinetic energy function.
-        """
-        if m <= 0:
-            raise ValueError("Mass must be positive")
-        self._m = m
+    def set_mass(self, mass):
+        """ Sets scalar mass. """
+        if isinstance(mass, list):
+            raise ValueError('Mass must be scalar.')
+        if mass <= 0:
+            raise ValueError('Mass must be positive.')
+        self._mass = mass
 
-    def _set_scaled_epsilon(self):
-        """
-        Rescales epsilon along the dimensions of step_size.
-        """
-        self._scaled_epsilon = np.zeros(self._n_parameters)
-        for i in range(self._n_parameters):
-            self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
+    def set_speed_of_light(self, c):
+        """ Sets `speed of light`. """
+        if c <= 0:
+            raise ValueError('Speed of light must be positive.')
+        self._c = c
+
+    def speed_of_light(self):
+        """ Returns `speed of light`. """
+        return self._c
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -487,10 +382,9 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
             current_U = self._current_energy
-            current_K = self._K(self._current_momentum, self._a,
-                                self._c, self._m)
+            current_K = self._kinetic_energy(self._current_momentum)
             proposed_U = energy
-            proposed_K = self._K(self._momentum, self._a, self._c, self._m)
+            proposed_K = self._kinetic_energy(self._momentum)
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
