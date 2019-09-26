@@ -19,23 +19,27 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
     (AP) [1]_.
 
-    This model describes several ion currents, each with a maximum conductance
-    parameter, that together give rise to the cardiac AP and calcium transient.
-    In this (non-trivial) 'toy' model, we use the maximum conductances as the
-    parameters, and the AP and calcium transient as observable outputs. All
-    other model parameters are assumed to be known.
+    The model contains 5 ionic currents, each described by a sub-model with
+    several kinetic parameters, and a maximum conductance parameter that
+    determines its magnitude.
 
-    The parameters are _scaled_: instead of passing in the conductances
-    directly, users should provide the natural log of the maximum conductances.
-    This makes the parameters easier to find for optimisation algorithms.
+    Only the 5 conductance parameters are varied in this :class:`ToyModel`, all
+    other parameters are fixed and assumed to be known.
+    To aid in inference, a parameter transformation is used: instead of
+    specifying the maximum conductances directly, their natural logarithm
+    should be used.
+    In other words, the parameter vector passed to :meth`simulate()` should
+    contain the logarithm of the five conductances.
+
+    As observable outputs, we use the AP and the calcium transient.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     Parameters
     ----------
     y0
-        The initial state of the observables ``v`` and ``cai``, where
-        ``cai >= 0``.
+        The initial state of the observables ``V`` and ``Ca_i``, where
+        ``Ca_i`` must be 0 or greater.
         If not given, the defaults are -84.622 and 2e-7.
 
     References
@@ -202,7 +206,8 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
 
     def simulate_all_states(self, parameters, times):
         """
-        Returns all state variables that ``simulate()`` does not return.
+        Runs a simulation and returns all state variables, including the ones
+        that do no have a physically observable counterpart.
         """
         y0 = [self._v0,
               self._cai0,
@@ -221,7 +226,13 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
         return solved_states
 
     def suggested_parameters(self):
-        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
+        """
+        Returns suggested parameters for this model.
+        The returned vector is already log-transformed, and can be passed
+        directly to :meth:`simulate`.
+
+        See :meth:`pints.toy.ToyModel.suggested_parameters()`.
+        """
         # maximum conducances, in mS/cm^2
         g_Na = 4.0
         g_NaC = 0.003
