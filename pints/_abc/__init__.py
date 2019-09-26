@@ -144,22 +144,16 @@ class ABCController(object):
         """
         return self._max_iterations
 
-    def threshold(self):
-        """
-        Returns the threshold below which values are accepted
-        """
-        return self._threshold
-
     def n_target(self):
         """
         Returns the target number of samples to obtain in the estimated
-        posterior
+        posterior.
         """
         return self._n_target
 
     def n_draws(self):
         """
-        Returns the number of draws per iteration
+        Returns the number of draws per iteration.
         """
         return self._n_draws
 
@@ -172,8 +166,7 @@ class ABCController(object):
 
     def run(self):
         """
-        Runs the ABC sampler and returns the accepted parameter values which
-        make up the posterior estimate
+        Runs the ABC sampler.
         """
         # Check stopping criteria
         has_stopping_criterion = False
@@ -184,59 +177,158 @@ class ABCController(object):
         # Iteration and evaluation counting
         iteration = 0
         evaluations = 0
+        accepted_count = 0
 
         # Choose method to evaluate
         f = self._error_measure
 
         # Create evaluator object
         if self._parallel:
-            # Use n_workers
-            n_workers = self._n_workers
-            evaluator = pints.ParallelEvaluator(f, n_workers)
+            # Use at most n_workers workers
+            n_workers = min(self._n_workers, self._chains)
+            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
             evaluator = pints.SequentialEvaluator(f)
+
+        # Initial phase
+        if self._needs_initial_phase:
+            for sampler in self._samplers:
+                sampler.set_initial_phase(True)
+
+        # Write chains to disk
+        chain_loggers = []
+        if self._chain_files:
+            for filename in self._chain_files:
+                cl = pints.Logger()
+                cl.set_stream(None)
+                cl.set_filename(filename, True)
+                for k in range(self._n_parameters):
+                    cl.add_float('p' + str(k))
+                chain_loggers.append(cl)
+
+        # Write evaluations to disk
+        eval_loggers = []
+        if self._evaluation_files:
+            # Bayesian inference on a log-posterior? Then separate out the
+            # prior so we can calculate the loglikelihood
+            prior = None
+            if isinstance(self._log_pdf, pints.LogPosterior):
+                prior = self._log_pdf.log_prior()
+
+            # Set up loggers
+            for filename in self._evaluation_files:
+                cl = pints.Logger()
+                cl.set_stream(None)
+                cl.set_filename(filename, True)
+                if prior:
+                    # Logposterior in first column, to be consistent with the
+                    # non-bayesian case
+                    cl.add_float('logposterior')
+                    cl.add_float('loglikelihood')
+                    cl.add_float('logprior')
+                else:
+                    cl.add_float('logpdf')
+                eval_loggers.append(cl)
+
+        # Set up progress reporting
+        next_message = 0
+
+        # Start logging
+        logging = self._log_to_screen or self._log_filename
+        if logging:
+            if self._log_to_screen:
+                print('Using ' + str(self._samplers[0].name()))
+                print('Generating ' + str(self._chains) + ' chains.')
+                if self._parallel:
+                    print('Running in parallel with ' + str(n_workers) +
+                          ' worker processess.')
+                else:
+                    print('Running in sequential mode.')
+                if self._chain_files:
+                    print(
+                        'Writing chains to ' + self._chain_files[0] + ' etc.')
+                if self._evaluation_files:
+                    print(
+                        'Writing evaluations to ' + self._evaluation_files[0]
+                        + ' etc.')
+
+            # Set up logger
+            logger = pints.Logger()
+            if not self._log_to_screen:
+                logger.set_stream(None)
+            if self._log_filename:
+                logger.set_filename(self._log_filename, csv=self._log_csv)
+
+            # Add fields to log
+            max_iter_guess = max(self._max_iterations or 0, 10000)
+            max_eval_guess = max_iter_guess * self._chains
+            logger.add_counter('Iter.', max_value=max_iter_guess)
+            logger.add_counter('Eval.', max_value=max_eval_guess)
+            for sampler in self._samplers:
+                sampler._log_init(logger)
+            logger.add_time('Time m:s')
+
+        # Start sampling
+        timer = pints.Timer()
+        running = True
 
         # Initialize samples
         samples = []
 
-        # Start sampling
-        timer = pints.Timer()
-
-        while len(samples) < self._n_target:
-
-            # Get parameter values sampled from prior
+        while running:
+            # Sample until a given sample is accepted
             xs = self._samplers.ask(self._n_draws)
-
-            # Simulate datasets based on sampled parameters and calculate
-            # root-mean-squared-error
             fxs = evaluator.evaluate(xs)
-
-            # Update evaluation count
-            evaluations += len(fxs)
-
-            # Check RMSE values against a threshold and accept parameters below
-            # the threshold
+            evaluations += self._n_draws
             accepted_vals = self._samplers.tell(fxs)
+            if accepted_vals is not None:
+                accepted_count += len(accepted_vals)
+            while accepted_vals is None:
+                xs = self._samplers.ask(self._n_draws)
+                fxs = evaluator.evaluate(xs)
+                accepted_vals = self._samplers.tell(fxs)
+                accepted_count += len(accepted_vals)
 
             # Add new accepted parameters to the estimated posterior
-            samples.extend(accepted_vals)
+            samples.append(accepted_vals)
 
             # Update iteration count
             iteration += 1
 
-            #
-            # Check stopping criteria
-            #
+            # Show progress
+            if logging and iteration >= next_message:
+                # Log state
+                logger.log(iteration, evaluations)
+                for sampler in self._samplers:
+                    sampler._log_write(logger)
+                logger.log(timer.time())
 
-            # Maximum number of iterations
+                # Choose next logging point
+                if iteration < self._message_warm_up:
+                    next_message = iteration + 1
+                else:
+                    next_message = self._message_interval * (
+                        1 + iteration // self._message_interval)
+
+            # Check requested number of samples
             if (self._max_iterations is not None and
                     iteration >= self._max_iterations):
-
+                running = False
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
+            elif accepted_count >= self._n_target:
+                running = False
+                halt_message = ('Halting: target number of samples ('
+                                + str(accepted_count) + ') reached.')
 
-                print(halt_message)
-                break
+            # Log final state and show halt message
+            if logging:
+                logger.log(iteration, evaluations)
+                for sampler in self._samplers:
+                    sampler._log_write(logger)
+                logger.log(timer.time())
+                if self._log_to_screen:
+                    print(halt_message)
 
         timer.time()
         return samples
@@ -255,14 +347,6 @@ class ABCController(object):
                 raise ValueError(
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
-
-    def set_threshold(self, threshold=1.5):
-        """
-        Sets a threshold below which to accept simulated values
-        """
-        if threshold <= 0:
-            raise ValueError('Threshold must be positive')
-        self._threshold = threshold
 
     def set_n_target(self, n_target=500):
         """

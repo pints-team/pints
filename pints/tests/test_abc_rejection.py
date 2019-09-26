@@ -60,13 +60,15 @@ class TestABCRejection(unittest.TestCase):
         abc = pints.ABCRejection(self.log_prior, threshold)
 
         # Configure
-        n_draws = 10
+        n_draws = 1
+        niter = 100
 
         # Perform short run using ask and tell framework
         samples = []
-        while len(samples) < self._n_target:
-            x = abc.ask(n_draws)
+        while len(samples) < niter:
+            x = abc.ask(n_draws)[0]
             fx = self.error_measure(x)
+            print(fx)
             sample = abc.tell(fx)
 
             samples.extend(sample)

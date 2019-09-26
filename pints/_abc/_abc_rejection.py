@@ -39,22 +39,36 @@ class ABCRejection(pints.ABCSampler):
 
     def ask(self, n_samples):
         """ See :meth:`ABCSampler.ask()`. """
-
-        # Sample from prior
-        param_vals = self._log_prior.sample(n_samples)
-        self._xs = np.copy(param_vals)
-
-        return param_vals
+        self._xs = self._log_prior.sample(n_samples)
+        return self._xs
 
     def tell(self, fx):
         """ See :meth:`ABCSampler.tell()`. """
-        if len(self._xs) != len(fx):
-            raise ValueError('number of parameters must equal number of '
-                             'function outputs')
+        if isinstance(fx, list):
+            accepted = [a < self._threshold for a in fx]
+            if np.sum(accepted) == 0:
+                return None
+            else:
+                return [self._xs[c] for c, x in enumerate(accepted) if x]
+        else:
+            if fx < self._threshold:
+                return self._xs
+            else:
+                return None
 
-        accepted_samples = []
+    def threshold(self):
+        """
+        Returns threshold error distance that determines if a sample is
+        accepted (is error < threshold).
+        """
+        return self._threshold
 
-        index = np.where(np.array(fx) < self._threshold)[0]
-        accepted_samples.extend(self._xs[index])
-
-        return accepted_samples
+    def set_threshold(self, threshold):
+        """
+        Sets threshold error distance that determines if a sample is accepted]
+        (if error < threshold).
+        """
+        x = float(threshold)
+        if x <= 0:
+            raise ValueError('Threshold must be positive.')
+        self._threshold = threshold

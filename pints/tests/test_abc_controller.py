@@ -9,13 +9,11 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import os
 import pints
 import pints.toy
 import unittest
 import numpy as np
-
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -49,7 +47,7 @@ class TestABCController(unittest.TestCase):
         cls.real_parameters.append(cls.noise)
 
         # Create an object with links to the model and time series
-        problem = pints.SingleOutputProblem(model, times, values)
+        cls.problem = pints.SingleOutputProblem(model, times, values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
@@ -66,7 +64,7 @@ class TestABCController(unittest.TestCase):
         measure do not match"""
         log_prior = pints.UniformLogPrior(
             [0.0, 0, 0],
-            [0.2, 100, 1]
+            [0.2, 100, 1])
 
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           log_prior)
@@ -96,9 +94,9 @@ class TestABCController(unittest.TestCase):
 
         abc.set_threshold()
         self.assertEqual(abc._threshold, 1.5)
-        abc.set_threshold(2))
+        abc.set_threshold(2)
         self.assertEqual(abc._threshold, 2)
-        self.assertRaisesRegex(ValueError, 'negative', abc.set_threshold, -1)
+        self.assertRaisesRegex(ValueError, 'positive', abc.set_threshold, -1)
 
     def test_parallel(self):
         """ Test running ABC with parallisation. """
@@ -107,14 +105,13 @@ class TestABCController(unittest.TestCase):
         for i in range(10):
             f = 0.9 + 0.2 * np.random.rand()
             xs.append(np.array(self.real_parameters) * f)
-        nparameters = len(xs[0])
-        niterations = 1000
+        niterations = 200
         threshold = 1.2
         ntarget = 200
         ndraws = 1
 
         abc = pints.ABCController(
-            self.error_measure, self.log_posterior, method=pints.ABCRejection)
+            self.error_measure, self.log_prior, method=pints.ABCRejection)
         abc.set_max_iterations(niterations)
         abc.set_threshold(threshold)
         abc.set_n_target(ntarget)
@@ -124,27 +121,11 @@ class TestABCController(unittest.TestCase):
         self.assertFalse(abc.parallel())
         abc.set_parallel(True)
         self.assertTrue(abc.parallel())
-        self.assertEqual(abc._n_workers, pints.ParallelEvaluator.cpu_count())     # Check how to test this properly!!!
+        self.assertEqual(abc.parallel(), pints.ParallelEvaluator.cpu_count())
 
         # Test with fixed number of worker processes
         abc.set_parallel(2)
-        self.assertIs(abc._parallel, True)
-        self.assertEqual(abc._n_workers, 2)
-
-        with StreamCapture() as c:
-            chains = mcmc.run()
-        self.assertIn('with 2 worker', c.text())
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
-
-
-
-    def test_deprecated_alias(self):
-
-        mcmc = pints.MCMCSampling(
-            self.log_posterior, 1, [self.real_parameters])
-        self.assertIsInstance(mcmc, pints.MCMCController)
+        self.assertEqual(abc.parallel(), 2)
 
 
 if __name__ == '__main__':
