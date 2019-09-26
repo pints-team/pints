@@ -115,9 +115,8 @@ class TestHaarioBardenetACMC(unittest.TestCase):
             mcmc.name(), 'Haario-Bardenet adaptive covariance MCMC')
 
     def test_logging(self):
-        """
-        Test logging includes name.
-        """
+
+        # Test logging includes name.
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.HaarioBardenetACMC)
@@ -126,6 +125,11 @@ class TestHaarioBardenetACMC(unittest.TestCase):
             mcmc.run()
         text = c.text()
         self.assertIn('Haario-Bardenet adaptive covariance MCMC', text)
+
+    def test_deprecated_alias(self):
+
+        mcmc = pints.AdaptiveCovarianceMCMC(self.real_parameters)
+        self.assertIn('Haario-Bardenet', mcmc.name())
 
 
 if __name__ == '__main__':
