@@ -27,6 +27,7 @@ class ABCRejection(pints.ABCSampler):
         self._log_prior = log_prior
         self._threshold = 1
         self._xs = None
+        self._ready_for_tell = False
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -34,11 +35,18 @@ class ABCRejection(pints.ABCSampler):
 
     def ask(self, n_samples):
         """ See :meth:`ABCSampler.ask()`. """
+        if self._ready_for_tell:
+            raise RuntimeError('ask called before tell.')
         self._xs = self._log_prior.sample(n_samples)
+
+        self._ready_for_tell = True
         return self._xs
 
     def tell(self, fx):
         """ See :meth:`ABCSampler.tell()`. """
+        if not self._ready_for_tell:
+            raise RuntimeError('tell called before ask.')
+        self._ready_for_tell = False
         if isinstance(fx, list):
             accepted = [a < self._threshold for a in fx]
             if np.sum(accepted) == 0:

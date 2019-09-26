@@ -230,7 +230,7 @@ class ABCController(object):
             max_eval_guess = max_iter_guess
             logger.add_counter('Iter.', max_value=max_iter_guess)
             logger.add_counter('Eval.', max_value=max_eval_guess)
-            logger.add_counter('')
+            logger.add_float('Acceptance rate')
             self._sampler._log_init(logger)
             logger.add_time('Time m:s')
 
@@ -261,7 +261,8 @@ class ABCController(object):
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
-                logger.log(iteration, evaluations)
+                logger.log(iteration, evaluations, (
+                           accepted_count / evaluations))
                 self._sampler._log_write(logger)
                 logger.log(timer.time())
 

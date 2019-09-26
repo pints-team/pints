@@ -29,16 +29,10 @@ class TestABCRejection(unittest.TestCase):
         """ Set up problem for tests. """
 
         # Create toy model
-        cls.model = toy.LogisticModel()
-        cls.real_parameters = [0.1, 50]
-        cls.times = np.linspace(0, 100, 100)
+        cls.model = toy.StochasticDegradationModel()
+        cls.real_parameters = [0.1]
+        cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)
-
-        # Add noise
-        cls.noise = 1
-        cls.values += np.random.normal(0, cls.noise, cls.values.shape)
-        cls.real_parameters.append(cls.noise)
-        cls.real_parameters = np.array(cls.real_parameters)
 
         # Create an object (problem) with links to the model and time series
         cls.problem = pints.SingleOutputProblem(
@@ -46,8 +40,8 @@ class TestABCRejection(unittest.TestCase):
 
         # Create a uniform prior over both the parameters
         cls.log_prior = pints.UniformLogPrior(
-            [0, 0],
-            [0.2, 100]
+            [0.0],
+            [0.3]
         )
 
         # Set error measure
@@ -56,37 +50,42 @@ class TestABCRejection(unittest.TestCase):
     def test_method(self):
 
         # Create abc rejection scheme
-        threshold = 1.2
-        abc = pints.ABCRejection(self.log_prior, threshold)
+        abc = pints.ABCRejection(self.log_prior)
 
         # Configure
         n_draws = 1
-        niter = 100
+        niter = 20
 
         # Perform short run using ask and tell framework
         samples = []
         while len(samples) < niter:
             x = abc.ask(n_draws)[0]
             fx = self.error_measure(x)
-            print(fx)
             sample = abc.tell(fx)
-
-            samples.extend(sample)
+            while sample is None:
+                x = abc.ask(n_draws)[0]
+                fx = self.error_measure(x)
+                sample = abc.tell(fx)
+            samples.append(sample)
 
         samples = np.array(samples)
-        self.assertEqual(samples.shape[0], 3)
-        self.assertEqual(samples.shape[1], self._n_target)
+        self.assertEqual(samples.shape[0], niter)
 
-    def test_tell_error(self):
-        # Create abc rejection scheme
-        threshold = 1.2
-        abc = pints.ABCRejection(self.log_prior, threshold)
+    def test_errors(self):
+        # test errors in abc rejection
+        abc = pints.ABCRejection(self.log_prior)
+        abc.ask(1)
+        # test two asks raises error
+        self.assertRaises(RuntimeError, abc.ask, 1)
 
-        # Perform one iteration of ask and tell
-        x = abc.ask(10)
-        fx = [1, 2, 3]
-        self.assertRaises(ValueError, abc.tell, fx)
+        # test tell with large value
+        self.assertEqual(None, abc.tell(100))
+        # test error raised if tell called before ask
+        self.assertRaises(RuntimeError, abc.tell, 2.5)
 
+    def test_setters_and_getters(self):
+        # test setting and getting
+        abc = pints.ABCRejection(self.log_prior)
 
 if __name__ == '__main__':
     unittest.main()
