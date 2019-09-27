@@ -168,6 +168,7 @@ class TestABCController(unittest.TestCase):
         abc.set_parallel(4)
         abc.sampler().set_threshold(100)
         abc.set_n_target(1)
+        abc.run()
 
 
 if __name__ == '__main__':

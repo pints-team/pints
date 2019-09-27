@@ -25,7 +25,7 @@ class RejectionABC(pints.ABCSampler):
     References
     ----------
     .. [1] "Approximate Bayesian Computation (ABC) in practice". Katalin
-           Csillery, Michael G.B.Blum, Oscar E. Gaggiotti, Olivier François
+           Csillery, Michael G.B.Blum, Oscar E. Gaggiotti, Olivier Francois
            (2010) Trends in Ecology & Evolution
            https://doi.org/10.1016/j.tree.2010.04.001
     """
