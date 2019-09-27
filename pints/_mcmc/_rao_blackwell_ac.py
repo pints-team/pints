@@ -37,11 +37,11 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
         bar(theta_t+1) = alpha(theta_t, theta*) theta* +
                             (1 - alpha(theta_t, theta*)) theta_t
 
-   Note that we deviate from the paper in two places:
+   Note that we deviate from the paper in two places::
 
-    - gamma_t = t^-eta
-    - use Y_t+1 ~ N(theta_t, lambda * Sigma0) rather than
-      Y_t+1 ~ N(theta_t, Sigma0)
+        gamma_t = t^-eta
+        Y_t+1 ~ N(theta_t, lambda * Sigma0) rather than
+            Y_t+1 ~ N(theta_t, Sigma0)
 
     Extends :class:`GlobalAdaptiveCovarianceMC`.
 
