@@ -125,6 +125,15 @@ class TestABCController(unittest.TestCase):
         # Invalid log interval
         self.assertRaises(ValueError, abc.set_log_interval, 0)
 
+    def test_controller_extra(self):
+        # tests various controller aspects
+        self.assertRaises(ValueError, pints.ABCController, self.error_measure,
+                          self.error_measure)
+        self.assertRaises(ValueError, pints.ABCController, self.error_measure,
+                          pints.MCMCSampler)
+        self.assertRaises(ValueError, pints.ABCController, self.error_measure,
+                          0.0)
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
