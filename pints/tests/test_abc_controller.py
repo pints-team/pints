@@ -125,6 +125,22 @@ class TestABCController(unittest.TestCase):
         # Invalid log interval
         self.assertRaises(ValueError, abc.set_log_interval, 0)
 
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_log_to_file("temp_file")
+        self.assertEqual(abc.log_filename(), "temp_file")
+
+        # tests logging to screen with parallel
+        with StreamCapture() as capture:
+            abc = pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_parallel(2)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(False)
+            abc.run()
+        self.assertEqual(capture.text(), '')
+
     def test_controller_extra(self):
         # tests various controller aspects
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
@@ -133,6 +149,25 @@ class TestABCController(unittest.TestCase):
                           pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           0.0)
+
+        # test setters
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_n_target(230)
+        self.assertEqual(abc.n_target(), 230)
+
+        sampler = abc.sampler()
+        pt = sampler.ask(1)
+        self.assertEqual(len(pt), 1)
+
+        abc.set_parallel(False)
+        self.assertEqual(abc.parallel(), 0)
+
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_parallel(4)
+        abc.sampler().set_threshold(100)
+        abc.set_n_target(1)
 
 
 if __name__ == '__main__':

@@ -294,6 +294,12 @@ class ABCController(object):
         samples = np.array(samples)
         return samples
 
+    def log_filename(self):
+        """
+        Returns log filename.
+        """
+        return self._log_filename
+
     def sampler(self):
         """
         Returns the underlying sampler object.
