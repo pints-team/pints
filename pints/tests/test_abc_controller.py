@@ -35,25 +35,19 @@ class TestABCController(unittest.TestCase):
         """ Prepare problem for tests. """
 
         # Create toy model
-        model = pints.toy.LogisticModel()
-        cls.real_parameters = [0.1, 50]
-        times = np.linspace(0, 100, 100)
-        values = model.simulate(cls.real_parameters, times)
+        cls.model = pints.toy.StochasticDegradationModel()
+        cls.real_parameters = [0.1]
+        cls.times = np.linspace(0, 10, 10)
+        cls.values = cls.model.simulate(cls.real_parameters, cls.times)
 
-        # Add noise
-        np.random.seed(1)
-        cls.noise = 10
-        values += np.random.normal(0, cls.noise, values.shape)
-        cls.real_parameters.append(cls.noise)
+        # Create an object (problem) with links to the model and time series
+        cls.problem = pints.SingleOutputProblem(
+            cls.model, cls.times, cls.values)
 
-        # Create an object with links to the model and time series
-        cls.problem = pints.SingleOutputProblem(model, times, values)
-
-        # Create a uniform prior over both the parameters and the new noise
-        # variable
+        # Create a uniform prior over both the parameters
         cls.log_prior = pints.UniformLogPrior(
-            [0.0, 0],
-            [0.2, 100]
+            [0.0],
+            [0.3]
         )
 
         # Set error measure
@@ -88,34 +82,11 @@ class TestABCController(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'At least one stopping criterion', abc.run)
 
-    def test_threshold(self):
-        """ Test threshold value is acceptable"""
-        abc = pints.ABCController(self.error_measure, self.log_prior)
-
-        abc.set_threshold()
-        self.assertEqual(abc._threshold, 1.5)
-        abc.set_threshold(2)
-        self.assertEqual(abc._threshold, 2)
-        self.assertRaisesRegex(ValueError, 'positive', abc.set_threshold, -1)
-
     def test_parallel(self):
         """ Test running ABC with parallisation. """
 
-        xs = []
-        for i in range(10):
-            f = 0.9 + 0.2 * np.random.rand()
-            xs.append(np.array(self.real_parameters) * f)
-        niterations = 200
-        threshold = 1.2
-        ntarget = 200
-        ndraws = 1
-
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.ABCRejection)
-        abc.set_max_iterations(niterations)
-        abc.set_threshold(threshold)
-        abc.set_n_target(ntarget)
-        abc.set_n_draws(ndraws)
 
         # Test with auto-detected number of worker processes
         self.assertFalse(abc.parallel())
@@ -126,6 +97,33 @@ class TestABCController(unittest.TestCase):
         # Test with fixed number of worker processes
         abc.set_parallel(2)
         self.assertEqual(abc.parallel(), 2)
+
+    def test_logging(self):
+        # tests logging to screen
+        # No output
+        with StreamCapture() as capture:
+            abc = pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.ABCRejection)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(False)
+            abc.run()
+        self.assertEqual(capture.text(), '')
+
+        # With output to screen
+        np.random.seed(1)
+        with StreamCapture() as capture:
+            pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.ABCRejection)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(True)
+            abc.set_log_to_file(False)
+            abc.run()
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) > 0)
+
+        # Invalid log interval
+        self.assertRaises(ValueError, abc.set_log_interval, 0)
 
 
 if __name__ == '__main__':

@@ -14,13 +14,14 @@ import numpy as np
 
 class ABCRejection(pints.ABCSampler):
     """
-    ABC Rejection.
+    ABC rejection algorithm. In each iteration, the following occurs::
 
-    Sampling parameters from a user-defined prior distribution, simulating data
-    according to a user-defined model comparing against a user-defined
-    threshold, and accepting or rejecting.
+        theta* ~ p(theta), i.e. sample from the prior distribution
+        x ~ p(x|theta*), i.e. sample from the sampling distribution
+        if s(x) < threshold:
+            theta* added to list of samples
 
-    [1] ***Citations Needed***
+    
     """
     def __init__(self, log_prior):
 

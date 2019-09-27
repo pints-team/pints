@@ -87,6 +87,10 @@ class TestABCRejection(unittest.TestCase):
         # test setting and getting
         abc = pints.ABCRejection(self.log_prior)
         self.assertEqual('Rejection ABC', abc.name())
+        self.assertEqual(abc.threshold(), 1)
+        abc.set_threshold(2)
+        self.assertEqual(abc.threshold(), 2)
+        self.assertRaises(ValueError, abc.set_threshold, -3)
 
 
 if __name__ == '__main__':
