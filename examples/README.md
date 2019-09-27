@@ -44,6 +44,7 @@ relevant code.
 - [Haario-Bardenet Adaptive Covariance MCMC](./sampling-adaptive-covariance-haario-bardenet.ipynb)
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Rao-Blackwell Adaptive Covariance MCMC](./sampling-adaptive-covariance-rao-blackwell.ipynb)
 - [Slice Sampling: Stepout MCMC](./sampling-slice-stepout-mcmc.ipynb)
 - [Slice Sampling: Doubling MCMC](./sampling-slice-doubling-mcmc.ipynb)
 - [Slice Sampling: Overrelaxation MCMC](./sampling-slice-overrelaxation-mcmc.ipynb)
