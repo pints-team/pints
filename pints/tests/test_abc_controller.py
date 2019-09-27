@@ -122,6 +122,18 @@ class TestABCController(unittest.TestCase):
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
 
+        # With output to screen
+        np.random.seed(1)
+        with StreamCapture() as capture:
+            pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(True)
+            abc.run()
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) == 0)
+
         # Invalid log interval
         self.assertRaises(ValueError, abc.set_log_interval, 0)
 
@@ -145,6 +157,10 @@ class TestABCController(unittest.TestCase):
         # tests various controller aspects
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           self.error_measure)
+        self.assertRaisesRegex(
+            ValueError, 'Given method must extend pints.ABCSampler',
+            pints.ABCController, self.error_measure,
+            self.log_prior, pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
@@ -163,12 +179,15 @@ class TestABCController(unittest.TestCase):
         abc.set_parallel(False)
         self.assertEqual(abc.parallel(), 0)
 
-        abc = pints.ABCController(
-            self.error_measure, self.log_prior, method=pints.RejectionABC)
-        abc.set_parallel(4)
-        abc.sampler().set_threshold(100)
-        abc.set_n_target(1)
-        abc.run()
+        with StreamCapture() as capture:
+            abc = pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_parallel(4)
+            abc.sampler().set_threshold(100)
+            abc.set_n_target(1)
+            abc.run()
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) > 0)
 
 
 if __name__ == '__main__':
