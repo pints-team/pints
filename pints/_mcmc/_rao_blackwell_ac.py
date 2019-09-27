@@ -21,9 +21,12 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
 
     In each iteration after initial phase (t)::
 
-        Y_t+1 ~ N(theta_t, lambda * Sigma0)
-        alpha(theta_t, Y_t+1) = min(1, p(Y_t+1|data) / p(theta_t|data))
-        theta_t+1 = Y_t+1 with probability alpha(theta_t, Y_t+1); otherwise
+        theta* ~ N(theta_t, lambda * Sigma0)
+        alpha(theta_t, theta*) = min(1, p(theta*|data) / p(theta_t|data))
+        u ~ uniform(0, 1)
+        if alpha(theta_t, theta*) > u:
+            theta_t+1 = theta*
+        else:
             theta_t+1 = theta_t
         mu_t+1 = mu_t + gamma_t+1 * (theta_t+1 - mu_t)
         sigma_t+1 = sigma_t + gamma_t+1 *
@@ -31,7 +34,8 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
 
     where::
 
-        bar(X_t+1) = alpha(X_t, Y_t+1) * Y_t+1 + (1 - alpha(X_t, Y_t+1)) * X_t
+        bar(theta_t+1) = alpha(theta_t, theta*) theta* +
+                            (1 - alpha(theta_t, theta*)) theta_t
 
    Note that we deviate from the paper in two places:
 
