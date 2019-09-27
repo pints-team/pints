@@ -45,7 +45,7 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
 
 class ABCController(object):
     """
-    Samples from a :class:`pints.LogPrior`
+    Samples from a :class:`pints.LogPrior`.
 
     Properties related to the number of iterations, parallelisation,
     threshold, and number of parameters to sample can be set directly on the
@@ -59,15 +59,15 @@ class ABCController(object):
 
     Constructor arguments:
     ``error_measure``
-        An error measure to evaluate on a problem, given a forward model,
-        simulated and observed data, and times
+    An error measure to evaluate on a problem, given a forward model,
+    simulated and observed data, and times
 
     ``log_prior``
-        A :class:`LogPrior` function from which parameter values are sampled
+    A :class:`LogPrior` function from which parameter values are sampled
 
     ``method``
-        The class of :class:`ABCSampler` to use. If no method is specified,
-        :class:`RejectionABC` is used.
+    The class of :class:`ABCSampler` to use. If no method is specified,
+    :class:`RejectionABC` is used.
     """
     def __init__(self, error_measure, log_prior, method=None):
 
