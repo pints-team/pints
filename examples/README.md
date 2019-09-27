@@ -55,6 +55,9 @@ relevant code.
 ### Nested sampling
 - [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
 
+### ABC
+- [Rejection ABC sampling](./sampling-abc-rejection.ipynb)
+
 ### Analysing sampling results
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
 - [Effective sample size](./sampling-effective-sample-size.ipynb)
