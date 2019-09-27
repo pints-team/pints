@@ -86,7 +86,7 @@ class TestABCController(unittest.TestCase):
         """ Test running ABC with parallisation. """
 
         abc = pints.ABCController(
-            self.error_measure, self.log_prior, method=pints.ABCRejection)
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
 
         # Test with auto-detected number of worker processes
         self.assertFalse(abc.parallel())
@@ -103,7 +103,7 @@ class TestABCController(unittest.TestCase):
         # No output
         with StreamCapture() as capture:
             abc = pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.ABCRejection)
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_max_iterations(10)
             abc.set_log_to_screen(False)
             abc.set_log_to_file(False)
@@ -114,7 +114,7 @@ class TestABCController(unittest.TestCase):
         np.random.seed(1)
         with StreamCapture() as capture:
             pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.ABCRejection)
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_max_iterations(10)
             abc.set_log_to_screen(True)
             abc.set_log_to_file(False)

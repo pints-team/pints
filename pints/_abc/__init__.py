@@ -67,7 +67,7 @@ class ABCController(object):
 
     ``method``
         The class of :class:`ABCSampler` to use. If no method is specified,
-        :class:`ABCRejection` is used.
+        :class:`RejectionABC` is used.
     """
     def __init__(self, error_measure, log_prior, method=None):
 
@@ -94,7 +94,7 @@ class ABCController(object):
 
         # Set default method
         if method is None:
-            method = pints.ABCRejection
+            method = pints.RejectionABC
         else:
             try:
                 ok = issubclass(method, pints.ABCSampler)

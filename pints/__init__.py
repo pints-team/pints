@@ -212,7 +212,7 @@ from ._abc import (
     ABCController
 )
 
-from ._abc._abc_rejection import ABCRejection
+from ._abc._abc_rejection import RejectionABC
 
 #
 # Nested samplers

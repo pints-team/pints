@@ -23,6 +23,7 @@ Contents
 
 .. toctree::
 
+    abc_samplers/index
     boundaries
     core_classes_and_methods
     diagnostics
@@ -75,10 +76,10 @@ Sampling
 
    - SMC
 
-#. Likelihood free sampling (Need distance between data and states, e.g. least squares?)
+#. :class:`ABC sampling<ABCSampler>`
 
-   - ABC-MCMC
-   - ABC-SMC
+   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
+     from and an error measure.
 
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 
@@ -134,4 +135,3 @@ To find the appropriate type of Problem to use, see the overview below:
 
    - Single data set: Use a :class:`MultiOutputProblem` and any of the
      appropriate error measures or log-likelihoods
-

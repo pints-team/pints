@@ -19,7 +19,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-class TestABCRejection(unittest.TestCase):
+class TestRejectionABC(unittest.TestCase):
     """
     Tests the basic methods of the ABC Rejection routine.
     """
@@ -50,7 +50,7 @@ class TestABCRejection(unittest.TestCase):
     def test_method(self):
 
         # Create abc rejection scheme
-        abc = pints.ABCRejection(self.log_prior)
+        abc = pints.RejectionABC(self.log_prior)
 
         # Configure
         n_draws = 1
@@ -73,7 +73,7 @@ class TestABCRejection(unittest.TestCase):
 
     def test_errors(self):
         # test errors in abc rejection
-        abc = pints.ABCRejection(self.log_prior)
+        abc = pints.RejectionABC(self.log_prior)
         abc.ask(1)
         # test two asks raises error
         self.assertRaises(RuntimeError, abc.ask, 1)
@@ -85,7 +85,7 @@ class TestABCRejection(unittest.TestCase):
 
     def test_setters_and_getters(self):
         # test setting and getting
-        abc = pints.ABCRejection(self.log_prior)
+        abc = pints.RejectionABC(self.log_prior)
         self.assertEqual('Rejection ABC', abc.name())
         self.assertEqual(abc.threshold(), 1)
         abc.set_threshold(2)

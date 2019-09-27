@@ -12,16 +12,22 @@ import pints
 import numpy as np
 
 
-class ABCRejection(pints.ABCSampler):
+class RejectionABC(pints.ABCSampler):
     """
-    ABC rejection algorithm. In each iteration, the following occurs::
+    Rejection ABC algorithm  See, for example, [1]_. In each iteration of the
+    algorithm, the following steps occur::
 
-        theta* ~ p(theta), i.e. sample from the prior distribution
-        x ~ p(x|theta*), i.e. sample from the sampling distribution
+        theta* ~ p(theta), i.e. sample parameters from prior distribution
+        x ~ p(x|theta*), i.e. sample data from sampling distribution
         if s(x) < threshold:
             theta* added to list of samples
 
-    
+    References
+    ----------
+    .. [1] "Approximate Bayesian Computation (ABC) in practice". Katalin
+           Csilléry, Michael G.B.Blum, Oscar E. Gaggiotti, Olivier François
+           (2010) Trends in Ecology & Evolution
+           https://doi.org/10.1016/j.tree.2010.04.001
     """
     def __init__(self, log_prior):
 
