@@ -55,7 +55,7 @@ Sampling
    - Metropolis-Hastings
    - Adaptive methods
 
-     - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
+     - :class:`AdaptiveCovarianceMC`, works on any :class:`LogPDF`.
 
    - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
    - Differential evolution methods

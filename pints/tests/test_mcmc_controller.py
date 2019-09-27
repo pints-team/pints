@@ -28,26 +28,26 @@ except AttributeError:
 debug = False
 
 LOG_SCREEN = [
-    'Using Adaptive covariance MCMC',
+    'Using Haario-Bardenet adaptive covariance MCMC',
     'Generating 3 chains.',
     'Running in sequential mode.',
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
     '0     3      0         0         0          0:00.0',
-    '1     6      0         0         0.5        0:00.0',
-    '2     9      0         0         0.333      0:00.0',
-    '3     12     0         0         0.5        0:00.0',
+    '1     6      0         0         0          0:00.0',
+    '2     9      0         0         0          0:00.0',
+    '3     12     0         0         0          0:00.0',
     'Initial phase completed.',
-    '10    30     0.1       0.1       0.2        0:00.0',
+    '10    30     0         0         0          0:00.0',
     'Halting: Maximum number of iterations (10) reached.',
 ]
 
 LOG_FILE = [
     'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
     '0     3      0         0         0          0:00.0',
-    '1     6      0         0         0.5        0:00.0',
-    '2     9      0         0         0.333      0:00.0',
-    '3     12     0         0         0.5        0:00.0',
-    '10    30     0.1       0.1       0.2        0:00.0',
+    '1     6      0         0         0          0:00.0',
+    '2     9      0         0         0          0:00.0',
+    '3     12     0         0         0          0:00.0',
+    '10    30     0         0         0          0:00.0',
 ]
 
 
@@ -161,7 +161,7 @@ class TestMCMCController(unittest.TestCase):
             cls.log_likelihood, cls.log_prior)
 
     def test_single(self):
-        """ Test with a SingleChainMCMC method. """
+        # Test with a SingleChainMCMC method.
 
         # One chain
         nchains = 1
@@ -253,7 +253,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.HaarioBardenetACMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
@@ -262,6 +262,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
     def test_multi(self):
+        # Test with a multi-chain method
 
         # Set up problem for 10 chains
         x0 = np.array(self.real_parameters)
@@ -326,7 +327,7 @@ class TestMCMCController(unittest.TestCase):
             method=meth)
 
     def test_stopping(self):
-        """ Test different stopping criteria. """
+        # Test different stopping criteria.
 
         nchains = 1
         xs = [np.array(self.real_parameters) * 1.1]
@@ -347,7 +348,7 @@ class TestMCMCController(unittest.TestCase):
             ValueError, 'At least one stopping criterion', mcmc.run)
 
     def test_parallel(self):
-        """ Test running MCMC with parallisation. """
+        # Test running MCMC with parallisation.
 
         xs = []
         for i in range(10):
@@ -358,7 +359,7 @@ class TestMCMCController(unittest.TestCase):
         niterations = 20
         mcmc = pints.MCMCController(
             self.log_posterior, nchains, xs,
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.HaarioBardenetACMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(debug)
 
@@ -384,6 +385,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
     def test_logging(self):
+        # Test logging functions
 
         np.random.seed(1)
         xs = []
@@ -449,6 +451,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_log_interval, 0)
 
     def test_initial_phase(self):
+        # Test if the initial phase functions work
 
         # 2 chains
         x0 = np.array(self.real_parameters) * 1.1
@@ -492,6 +495,7 @@ class TestMCMCController(unittest.TestCase):
             self.assertFalse(sampler.in_initial_phase())
 
     def test_live_chain_and_eval_logging(self):
+        # Test logging to disk and screen
 
         np.random.seed(1)
         xs = []
