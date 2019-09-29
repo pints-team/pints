@@ -164,7 +164,7 @@ class TestABCController(unittest.TestCase):
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
-                          0.0)
+                          self.log_prior, 0.0)
 
         # test setters
         abc = pints.ABCController(
