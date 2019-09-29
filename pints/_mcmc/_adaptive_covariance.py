@@ -39,6 +39,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         # Acceptance rate monitoring
         self._iterations = 0
         self._acceptance = 0
+        self._accepted_count = 0
 
         # Default settings
         self.set_target_acceptance_rate()
@@ -165,6 +166,9 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         # Ensure fx is a float
         fx = float(fx)
 
+        # Increase iteration count
+        self._iterations += 1
+
         # First point?
         if self._current is None:
             if not np.isfinite(fx):
@@ -174,9 +178,6 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             # Accept
             self._current = self._proposed
             self._current_log_pdf = fx
-
-            # Increase iteration count
-            self._iterations += 1
 
             # Clear proposal
             self._proposed = None

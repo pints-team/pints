@@ -30,6 +30,10 @@ class GlobalAdaptiveCovarianceMC(pints.AdaptiveCovarianceMC):
                 self._accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
+                self._accepted_count += 1
+
+        self._acceptance = (
+            float(self._accepted_count) / float(self._iterations))
 
         # Clear proposal
         self._proposed = None
