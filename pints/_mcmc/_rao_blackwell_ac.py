@@ -15,8 +15,8 @@ import numpy as np
 class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
     """
     Rao-Blackwell adaptive MCMC, as described by Algorithm 3 in [1]_.
-        After initialising mu0 and sigma0, in each iteration after initial
-        phase (t), the following steps occur::
+    After initialising mu0 and sigma0, in each iteration after initial
+    phase (t), the following steps occur::
 
         theta* ~ N(theta_t, lambda * sigma0)
         alpha(theta_t, theta*) = min(1, p(theta*|data) / p(theta_t|data))
