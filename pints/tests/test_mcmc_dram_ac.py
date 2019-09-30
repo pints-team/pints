@@ -160,7 +160,8 @@ class TestDramACMC(unittest.TestCase):
         scale = mcmc.sigma_scale()
         a_min = np.log10(1)
         a_max = np.log10(3.5)
-        scale1 = np.flip(10**np.linspace(a_min, a_max, 4), 0)
+        scale1 = 10**np.linspace(a_min, a_max, 4)
+        scale1 = scale1[::-1]
         self.assertTrue(np.array_equal(scale, scale1))
 
         self.assertEqual(mcmc.name(), (
