@@ -86,14 +86,12 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         super(DramACMC, self).__init__(x0, sigma0)
 
         self._log_lambda = 0
-        self._kernels = 2
-        self._Y = [None] * self._kernels
-        self._Y_log_pdf = np.zeros(self._kernels)
+        self._n_kernels = 2
+        self._Y = [None] * self._n_kernels
+        self._Y_log_pdf = np.zeros(self._n_kernels)
         self._proposal_count = 0
         self._adapt_kernel = True
-
-        # create proposal kernels
-        self.set_sigma_scale(1000)
+        self._before_kernels_set = True
 
     def ask(self):
         """
@@ -102,6 +100,12 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         proposal from a conservative kernel (i.e. with low width).
         """
         super(DramACMC, self).ask()
+        if self._before_kernels_set:
+            self._sigma_base = np.copy(self._sigma)
+            self.set_sigma_scale(1000)
+            self._before_kernels_set = False
+            self._Y = [None] * self._n_kernels
+            self._Y_log_pdf = np.zeros(self._n_kernels)
 
         # Propose new point
         if self._proposed is None:
@@ -155,6 +159,21 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         self._r_log = self._calculate_alpha_log(c, temp_Y,
                                                 temp_log_Y)
 
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Delayed Rejection Adaptive Metropolis (Dram) MCMC'
+
+    def n_kernels(self):
+        """ Returns number of proposal kernels. """
+        return self._n_kernels
+
+    def set_n_kernels(self, n_kernels):
+        """ Sets number of proposal kernels. """
+        if n_kernels < 1:
+            raise ValueError('Number of proposal kernels must be equal to ' +
+                             'or greater than 1.')
+        self._n_kernels = int(n_kernels)
+
     def set_sigma_scale(self, upper, lower=1):
         """
         Set the scale of initial covariance matrix multipliers for each of the
@@ -167,9 +186,9 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         a_min = np.log10(lower)
         a_max = np.log10(upper)
         self._sigma_scale = np.flip(
-            10**np.linspace(a_min, a_max, self._kernels), 0)
-        self._sigma = [self._sigma_scale[i] * self._sigma
-                       for i in range(self._kernels)]
+            10**np.linspace(a_min, a_max, self._n_kernels), 0)
+        self._sigma = [self._sigma_scale[i] * self._sigma_base
+                       for i in range(self._n_kernels)]
 
     def sigma_scale(self):
         """
@@ -223,23 +242,24 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                 self._current_log_pdf = fx
 
         self._proposed = None
-        if self._adaptive:
-            self._gamma = (self._adaptations**-self._eta)
-            self._adaptations += 1
-
-            # Update mu, covariance matrix and log lambda
-            self._update_mu()
-            self._update_sigma()
-            self._log_lambda += (self._gamma *
-                                 (accepted - self._target_acceptance))
 
         # Return new point for chain
         if accepted == 0:
-            # rejected first proposal
-            if self._kernels > 1 and self._proposal_count == 0:
+            # rejected proposal
+            if self._n_kernels > 1 and (
+               self._proposal_count < (self._n_kernels - 1)):
                 self._proposal_count += 1
                 return None
             else:
+                if self._adaptive:
+                    self._gamma = (self._adaptations**-self._eta)
+                    self._adaptations += 1
+
+                    # Update mu, covariance matrix and log lambda
+                    self._update_mu()
+                    self._update_sigma()
+                    self._log_lambda += (self._gamma *
+                                         (accepted - self._target_acceptance))
                 self._proposal_count = 0
         # if accepted or failed on second try
         return self._current
@@ -249,8 +269,8 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         Updates the covariance matrices of the various kernels being used
         according to adaptive Metropolis routine.
         """
-        dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
-        m_sigma_0 = ((1 - self._gamma) * self._sigma +
-                     self._gamma * np.dot(dsigm, dsigm.T))
-        self._sigma = [self._sigma_scale[i] * m_sigma_0
-                       for i in range(self._kernels)]
+        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
+        self._sigma_base = ((1 - self._gamma) * self._sigma_base +
+                            self._gamma * np.dot(dsigm, dsigm.T))
+        self._sigma = [self._sigma_scale[i] * self._sigma_base
+                       for i in range(self._n_kernels)]
