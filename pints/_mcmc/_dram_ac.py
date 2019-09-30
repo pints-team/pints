@@ -61,8 +61,7 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
     If ``k`` proposals have been rejected, the initial point ``theta_0`` is
     returned.
 
-    If ``adaptative=1``, at the end of each iterations, a 'base' proposal
-    kernel is adapted::
+    At the end of each iterations, a 'base' proposal kernel is adapted::
 
         mu = (1 - gamma) mu + gamma theta
         sigma = (1 - gamma) sigma + gamma (theta - mu)(theta - mu)^t
@@ -243,7 +242,6 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
 
         self._proposed = None
 
-        # Return new point for chain
         if accepted == 0:
             # rejected proposal
             if self._n_kernels > 1 and (
@@ -251,17 +249,15 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                 self._proposal_count += 1
                 return None
             else:
-                if self._adaptive:
-                    self._gamma = (self._adaptations**-self._eta)
-                    self._adaptations += 1
-
-                    # Update mu, covariance matrix and log lambda
-                    self._update_mu()
-                    self._update_sigma()
-                    self._log_lambda += (self._gamma *
-                                         (accepted - self._target_acceptance))
                 self._proposal_count = 0
-        # if accepted or failed on second try
+        self._gamma = (self._adaptations**-self._eta)
+        self._adaptations += 1
+
+        # Update mu, covariance matrix and log lambda
+        self._update_mu()
+        self._update_sigma()
+        self._log_lambda += (self._gamma *
+                             (accepted - self._target_acceptance))
         return self._current
 
     def _update_sigma(self):
