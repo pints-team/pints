@@ -152,29 +152,8 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
         temp_log_Y = np.concatenate([[self._current_log_pdf],
                                      self._Y_log_pdf[0:(c + 1)]])
-        alpha_log = temp_log_Y[c + 1] - temp_log_Y[0]
-        if c == 0:
-            self._r_log = min(0, alpha_log)
-        Y_rev = temp_Y[::-1]
-        log_Y_rev = temp_log_Y[::-1]
-        for i in range(c):
-            alpha_log += (
-                stats.multivariate_normal.logpdf(
-                    x=temp_Y[c - i - 1],
-                    mean=temp_Y[c + 1],
-                    cov=self._sigma[c],
-                    allow_singular=True) -
-                stats.multivariate_normal.logpdf(
-                    x=temp_Y[i],
-                    mean=self._current,
-                    cov=self._sigma[0],
-                    allow_singular=True) +
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, temp_Y[0:(i + 2)], temp_log_Y[0:(i + 2)])))
-            )
-        self._r_log = min(0, alpha_log)
+        self._r_log = self._calculate_alpha_log(c, temp_Y,
+                                                temp_log_Y)
 
     def set_sigma_scale(self, upper, lower=1):
         """
