@@ -25,12 +25,12 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
     state of the Markov chain (assuming the current state is theta_0 and that
     there are 2 proposal kernels)::
 
-        theta_1 ~ N(theta_0, scale_1 * sigma0)
+        theta_1 ~ N(theta_0, lambda * scale_1 * sigma)
         alpha_1(theta_0, theta_1) = min(1, p(theta_1|X) / p(theta_0|X))
         u_1 ~ uniform(0, 1)
         if alpha_1(theta_0, theta_1) > u_1:
             return theta_1
-        theta_2 ~ N(theta_0, scale_2 * sigma0)
+        theta_2 ~ N(theta_0, lambda * scale_2 * sigma0)
         alpha_2(theta_0, theta_1, theta_2) =
             min(1, p(theta_2|X) (1 - alpha_1(theta_2, theta_1)) /
                    (p(theta_0|X) (1 - alpha_1(theta_0, theta_1))))
@@ -61,6 +61,19 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
     If ``k`` proposals have been rejected, the initial point ``theta_0`` is
     returned.
 
+    If ``adaptative=1``, at the end of each iterations, a 'base' proposal
+    kernel is adapted::
+
+        mu = (1 - gamma) mu + gamma theta
+        sigma = (1 - gamma) sigma + gamma (theta - mu)(theta - mu)^t
+        log_lambda = log_lambda + gamma (accepted - target_acceptance_rate)
+
+    where ``gamma = adaptations^-eta``, ``theta`` is the current state of
+    the Markov chain and ``accepted`` is a binary indicator for whether any of
+    the series of proposals were accepted. The kernels for the all proposals
+    are then adapted as ``[scale_1, scale_2, ..., scale_k] * sigma``, where the
+    scale factors are set using ``set_sigma_scale``.
+
     *Extends:* :class:`GlobalAdaptiveCovarianceMC`
 
     References
@@ -72,38 +85,60 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
     def __init__(self, x0, sigma0=None):
         super(DramACMCMC, self).__init__(x0, sigma0)
 
+        self._log_lambda = 0
         self._kernels = 2
         self._Y = [None] * self._kernels
         self._Y_log_pdf = np.zeros(self._kernels)
         self._proposal_count = 0
-        self._adapt_kernel = np.repeat(True, self._kernels)
-        self._gamma = np.repeat(1.0, self._kernels)
-        self._eta = np.repeat(np.copy(self._eta), self._kernels)
+        self._adapt_kernel = True
 
-        # Set kernels
-        v_mu = np.copy(self._mu)
-        self._mu = [v_mu for i in range(self._kernels)]
-        a_min = np.log10(1)
-        a_max = np.log10(1000)
-        self._sigma_scale = 10**np.linspace(a_min, a_max, self._kernels)
-        m_sigma = np.copy(self._sigma)
-        self._sigma = [
-            self._sigma_scale[i] * m_sigma for i in range(self._kernels)]
+        # create proposal kernels
+        self.set_sigma_scale(1000)
+
+    def _calculate_r_log(self, fx):
+        """
+        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
+        """
+        c = self._proposal_count
+        temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
+        temp_log_Y = np.concatenate([[self._current_log_pdf],
+                                     self._Y_log_pdf[0:(c + 1)]])
+        alpha_log = temp_log_Y[c + 1] - temp_log_Y[0]
+        if c == 0:
+            self._r_log = min(0, alpha_log)
+        Y_rev = temp_Y[::-1]
+        log_Y_rev = temp_log_Y[::-1]
+        for i in range(c):
+            alpha_log += (
+                stats.multivariate_normal.logpdf(
+                    x=temp_Y[c - i - 1],
+                    mean=temp_Y[c + 1],
+                    cov=self._sigma[c],
+                    allow_singular=True) -
+                stats.multivariate_normal.logpdf(
+                    x=temp_Y[i],
+                    mean=self._current,
+                    cov=self._sigma[0],
+                    allow_singular=True) +
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, temp_Y[0:(i + 2)], temp_log_Y[0:(i + 2)])))
+            )
+        self._r_log = min(0, alpha_log)
 
     def ask(self):
         """
-        If first proposal from a position, return
-        a proposal with an ambitious (i.e. large)
-        proposal width; if first is rejected
-        then return a proposal from a conservative
-        kernel (i.e. with low width).
+        If first proposal from a position, return a proposal with an ambitious
+        (i.e. large) proposal width; if first is rejected then return
+        proposal from a conservative kernel (i.e. with low width).
         """
         super(DramACMCMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
             self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._loga) *
+                self._current, np.exp(self._log_lambda) *
                 self._sigma[self._proposal_count])
             self._Y[self._proposal_count] = np.copy(self._proposed)
             # Set as read-only
@@ -112,24 +147,28 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
         # Return proposed point
         return self._proposed
 
-    def set_sigma_scale(self, minK, maxK):
+    def set_sigma_scale(self, upper, lower=1):
         """
-        Set the scale of initial covariance matrix
-        multipliers for each of the kernels:
-        (minK,...,maxK) where the gradations are
-        uniform on the log10 scale.
-        This means that the covariance matrices are:
-        maxK * sigma0,..., MinK * sigma0
-        where n can be modified by ``set_kernels``.
+        Set the scale of initial covariance matrix multipliers for each of the
+        kernels: ``[lower,...,upper]`` where the gradations are uniform on the
+        log10 scale meaning the proposal covariance matrices are:
+        ``[10^upper,..., 10^lower] * sigma``. By default ``lower=1``.
         """
-        if minK > maxK:
-            raise ValueError('Maximum kernel multiplier must ' +
-                             'exceed minimum.')
-        a_min = np.log10(minK)
-        a_max = np.log10(maxK)
-        self._sigma_scale = 10**np.linspace(a_min, a_max, self._kernels)
-        self._sigma = [self._sigma_scale[i] * self._sigma
+        if lower > upper:
+            raise ValueError('Maximum kernel multiplier must exceed minimum.')
+        a_min = np.log10(lower)
+        a_max = np.log10(upper)
+        self._sigma_scale = np.flip(
+            10**np.linspace(a_min, a_max, self._kernels), 0)
+        self._sigma = [self._sigma_scale[i] * self._sigma[0]
                        for i in range(self._kernels)]
+
+    def sigma_scale(self):
+        """
+        Returns scale factors used to multiply a base covariance matrix,
+        resulting in proposal matrices for each accept-reject step.
+        """
+        return self._sigma_scale
 
     def tell(self, fx):
         """
@@ -175,18 +214,16 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
                 self._current = self._proposed
                 self._current_log_pdf = fx
 
-        # Clear proposal
         self._proposed = None
-        # Adapt covariance matrix
-        a_count = np.copy(self._proposal_count)
         if self._adaptive:
-            # Set gamma based on number of adaptive iterations
-            self._gamma[a_count] = (self._adaptations**-self._eta[a_count])
+            self._gamma = (self._adaptations**-self._eta)
             self._adaptations += 1
 
-            # Update mu, log acceptance rate, and covariance matrix
+            # Update mu, covariance matrix and log lambda
             self._update_mu()
             self._update_sigma()
+            self._log_lambda += (self._gamma *
+                                 (accepted - self._target_acceptance))
 
         # Return new point for chain
         if accepted == 0:
@@ -199,60 +236,13 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
         # if accepted or failed on second try
         return self._current
 
-    def _update_mu(self):
-        """
-        Updates the means of the various kernels being used according to
-        adaptive Metropolis routine.
-        """
-        a_count = np.copy(self._proposal_count)
-        if self._adapt_kernel[a_count]:
-            self._mu[a_count] = ((1 - self._gamma[a_count]) *
-                                 self._mu[a_count] +
-                                 self._gamma[a_count] *
-                                 self._current)
-
     def _update_sigma(self):
         """
         Updates the covariance matrices of the various kernels being used
         according to adaptive Metropolis routine.
         """
-        a_count = np.copy(self._proposal_count)
-        if self._adapt_kernel[a_count]:
-            dsigm = np.reshape(self._current - self._mu[a_count],
-                               (self._dimension, 1))
-            self._sigma[a_count] = ((1 - self._gamma[a_count]) *
-                                    self._sigma[a_count] +
-                                    self._gamma[a_count] *
-                                    np.dot(dsigm, dsigm.T))
-
-    def _calculate_r_log(self, fx):
-        """
-        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
-        """
-        c = self._proposal_count
-        temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
-        temp_log_Y = np.concatenate([[self._current_log_pdf],
-                                     self._Y_log_pdf[0:(c + 1)]])
-        alpha_log = temp_log_Y[c + 1] - temp_log_Y[0]
-        if c == 0:
-            self._r_log = min(0, alpha_log)
-        Y_rev = temp_Y[::-1]
-        log_Y_rev = temp_log_Y[::-1]
-        for i in range(c):
-            alpha_log += (
-                stats.multivariate_normal.logpdf(
-                    x=temp_Y[c - i - 1],
-                    mean=temp_Y[c + 1],
-                    cov=self._sigma[c],
-                    allow_singular=True) -
-                stats.multivariate_normal.logpdf(
-                    x=temp_Y[i],
-                    mean=self._current,
-                    cov=self._sigma[0],
-                    allow_singular=True) +
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, temp_Y[0:(i + 2)], temp_log_Y[0:(i + 2)])))
-            )
-        self._r_log = min(0, alpha_log)
+        dsigm = np.reshape(self._current - self._mu, (self._dimension, 1))
+        m_sigma_0 = ((1 - self._gamma) * self._sigma +
+                     self._gamma * np.dot(dsigm, dsigm.T))
+        self._sigma = [self._sigma_scale[i] * m_sigma_0
+                       for i in range(self._kernels)]
