@@ -643,10 +643,8 @@ class TestPrior(unittest.TestCase):
         # 1d sensitivity test
         p = pints.MultivariateGaussianLogPrior(0, [[1]])
         x = [0]
-        y = p(x)
-        self.assertEqual(y, -0.5 * np.log(2 * np.pi))
-        y1, dy = p.evaluateS1(x)
-        self.assertEqual(y, y1)
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
         self.assertTrue(len(dy), 1)
         self.assertEqual(dy[0], 0)
 
