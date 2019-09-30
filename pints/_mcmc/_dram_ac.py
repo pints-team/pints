@@ -86,6 +86,7 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
 
         self._log_lambda = 0
         self._n_kernels = 2
+        self._upper_scale = 1000
         self._Y = [None] * self._n_kernels
         self._Y_log_pdf = np.zeros(self._n_kernels)
         self._proposal_count = 0
@@ -101,10 +102,10 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         super(DramACMC, self).ask()
         if self._before_kernels_set:
             self._sigma_base = np.copy(self._sigma)
-            self.set_sigma_scale(1000)
-            self._before_kernels_set = False
+            self.set_sigma_scale()
             self._Y = [None] * self._n_kernels
             self._Y_log_pdf = np.zeros(self._n_kernels)
+            self._before_kernels_set = False
 
         # Propose new point
         if self._proposed is None:
@@ -166,6 +167,20 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         """ Returns number of proposal kernels. """
         return self._n_kernels
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 3
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[eta, n_kernels, upper_scale]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_eta(x[0])
+        self.set_n_kernels(x[1])
+        self.set_upper_scale(x[2])
+
     def set_n_kernels(self, n_kernels):
         """ Sets number of proposal kernels. """
         if n_kernels < 1:
@@ -173,17 +188,26 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                              'or greater than 1.')
         self._n_kernels = int(n_kernels)
 
-    def set_sigma_scale(self, upper, lower=1):
+    def set_upper_scale(self, upper_scale):
+        """
+        Set the upper scale of initial covariance matrix multipliers for each
+        of the kernels: ``[0,...,upper]`` where the gradations are uniform on
+        the log10 scale meaning the proposal covariance matrices are:
+        ``[10^upper,..., 1] * sigma``.
+        """
+        if upper_scale < 0:
+            raise ValueError('Upper scale must be positive.')
+        self._upper_scale = upper_scale
+
+    def set_sigma_scale(self):
         """
         Set the scale of initial covariance matrix multipliers for each of the
-        kernels: ``[lower,...,upper]`` where the gradations are uniform on the
+        kernels: ``[0,...,upper]`` where the gradations are uniform on the
         log10 scale meaning the proposal covariance matrices are:
-        ``[10^upper,..., 10^lower] * sigma``. By default ``lower=1``.
+        ``[10^upper,..., 1] * sigma``.
         """
-        if lower > upper:
-            raise ValueError('Maximum kernel multiplier must exceed minimum.')
-        a_min = np.log10(lower)
-        a_max = np.log10(upper)
+        a_min = np.log10(1)
+        a_max = np.log10(self._upper_scale)
         self._sigma_scale = np.flip(
             10**np.linspace(a_min, a_max, self._n_kernels), 0)
         self._sigma = [self._sigma_scale[i] * self._sigma_base
@@ -270,3 +294,10 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                             self._gamma * np.dot(dsigm, dsigm.T))
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
+
+    def upper_scale(self):
+        """
+        Returns upper scale limit (see
+        :meth:`pints.DramACMC.set_upper_scale()`).
+        """
+        return self._upper_scale
