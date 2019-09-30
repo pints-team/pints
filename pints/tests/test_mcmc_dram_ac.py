@@ -132,6 +132,12 @@ class TestDramACMC(unittest.TestCase):
         # Test setting acceptance rate
         x0 = self.real_parameters
         mcmc = pints.DramACMC(x0)
+        self.assertRaises(RuntimeError, mcmc.tell, 0.0)
+        x0 = self.real_parameters
+        mcmc = pints.DramACMC(x0)
+        mcmc.ask()
+        self.assertRaises(ValueError, mcmc.tell, -float('inf'))
+
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
         self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
