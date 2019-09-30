@@ -601,17 +601,6 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
 
-        # Basic test
-        covariance = [[1]]
-        p = pints.MultivariateGaussianLogPrior(mean, covariance)
-        x = [0]
-        y = p(x)
-        self.assertEqual(y, -0.5 * np.log(2 * np.pi))
-        y1, dy = p.evaluateS1(x)
-        self.assertEqual(y, y1)
-        self.assertTrue(len(dy), 1)
-        self.assertEqual(dy[0], 0)
-
         # 5d tests
         mean = [1, 2, 3, 4, 5]
         covariance = np.diag(mean)
@@ -650,6 +639,17 @@ class TestPrior(unittest.TestCase):
         self.assertAlmostEqual(dy[0], dy_test[0], places=6)
         self.assertAlmostEqual(dy[1], dy_test[1], places=6)
         self.assertAlmostEqual(dy[2], dy_test[2], places=6)
+
+        # 1d sensitivity test
+        covariance = [[1]]
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
+        x = [0]
+        y = p(x)
+        self.assertEqual(y, -0.5 * np.log(2 * np.pi))
+        y1, dy = p.evaluateS1(x)
+        self.assertEqual(y, y1)
+        self.assertTrue(len(dy), 1)
+        self.assertEqual(dy[0], 0)
 
     def test_multivariate_normal_sampling(self):
         d = 1
