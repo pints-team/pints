@@ -95,6 +95,55 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         # create proposal kernels
         self.set_sigma_scale(1000)
 
+    def ask(self):
+        """
+        If first proposal from a position, return a proposal with an ambitious
+        (i.e. large) proposal width; if first is rejected then return
+        proposal from a conservative kernel (i.e. with low width).
+        """
+        super(DramACMC, self).ask()
+
+        # Propose new point
+        if self._proposed is None:
+            self._proposed = np.random.multivariate_normal(
+                self._current, np.exp(self._log_lambda) *
+                self._sigma[self._proposal_count])
+            self._Y[self._proposal_count] = np.copy(self._proposed)
+            # Set as read-only
+            self._proposed.setflags(write=False)
+
+        # Return proposed point
+        return self._proposed
+
+    def _calculate_alpha_log(self, n, Y, log_Y):
+        """
+        Calculates alpha expression necessary in eq. 3 of Haario et al. for
+        determining accept/reject
+        """
+        alpha_log = log_Y[n + 1] - log_Y[0]
+        if n == 0:
+            return min(0, alpha_log)
+        Y_rev = Y[::-1]
+        log_Y_rev = log_Y[::-1]
+        for i in range(n):
+            alpha_log += (
+                stats.multivariate_normal.logpdf(
+                    x=Y[n - i - 1],
+                    mean=Y[n + 1],
+                    cov=self._sigma[n],
+                    allow_singular=True) -
+                stats.multivariate_normal.logpdf(
+                    x=Y[i],
+                    mean=self._current,
+                    cov=self._sigma[0],
+                    allow_singular=True) +
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
+                np.log(1 - np.exp(self._calculate_alpha_log(
+                    i, Y[0:(i + 2)], log_Y[0:(i + 2)])))
+            )
+        return min(0, alpha_log)
+
     def _calculate_r_log(self, fx):
         """
         Calculates value of logged acceptance ratio (eq. 3 in [1]_).
@@ -126,26 +175,6 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                     i, temp_Y[0:(i + 2)], temp_log_Y[0:(i + 2)])))
             )
         self._r_log = min(0, alpha_log)
-
-    def ask(self):
-        """
-        If first proposal from a position, return a proposal with an ambitious
-        (i.e. large) proposal width; if first is rejected then return
-        proposal from a conservative kernel (i.e. with low width).
-        """
-        super(DramACMC, self).ask()
-
-        # Propose new point
-        if self._proposed is None:
-            self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._log_lambda) *
-                self._sigma[self._proposal_count])
-            self._Y[self._proposal_count] = np.copy(self._proposed)
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
 
     def set_sigma_scale(self, upper, lower=1):
         """
