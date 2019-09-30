@@ -38,8 +38,6 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
 
         # Acceptance rate monitoring
         self._iterations = 0
-        self._acceptance = 0
-        self._accepted_count = 0
 
         # Default settings
         self.set_target_acceptance_rate()
