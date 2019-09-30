@@ -52,7 +52,7 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         n_i = (1 - alpha_1(theta_i, theta_i-1)) *
               (1 - alpha_2(theta_i, theta_i-1, theta_i-2)) *
                ...
-               ((1 - alpha_i-1(theta_i, theta_i-1, ..., theta_0))
+              (1 - alpha_i-1(theta_i, theta_i-1, ..., theta_0))
         d_i = (1 - alpha_1(theta_0, theta_1)) *
               (1 - alpha_2(theta_0, theta_1, theta_2)) *
               ...
