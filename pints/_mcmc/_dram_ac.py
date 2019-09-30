@@ -160,7 +160,7 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         a_max = np.log10(upper)
         self._sigma_scale = np.flip(
             10**np.linspace(a_min, a_max, self._kernels), 0)
-        self._sigma = [self._sigma_scale[i] * self._sigma[0]
+        self._sigma = [self._sigma_scale[i] * self._sigma
                        for i in range(self._kernels)]
 
     def sigma_scale(self):
