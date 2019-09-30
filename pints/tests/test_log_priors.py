@@ -590,16 +590,16 @@ class TestPrior(unittest.TestCase):
         self.assertTrue(0.9 * analyt_mean < sample_mean < 1.1 * analyt_mean)
 
     def test_multivariate_normal_prior(self):
-        # 1d test
-        mean = 0
-        covariance = 1
 
         # Input must be a matrix
         self.assertRaises(
-            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
-        covariance = [1]
+            ValueError, pints.MultivariateGaussianLogPrior, 0, 1)
         self.assertRaises(
-            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
+            ValueError, pints.MultivariateGaussianLogPrior, 0, [1])
+
+        # 1d test
+        p = pints.MultivariateGaussianLogPrior(0, [[1]])
+        self.assertEqual(p([0]), -0.5 * np.log(2 * np.pi))
 
         # 5d tests
         mean = [1, 2, 3, 4, 5]
@@ -641,8 +641,7 @@ class TestPrior(unittest.TestCase):
         self.assertAlmostEqual(dy[2], dy_test[2], places=6)
 
         # 1d sensitivity test
-        covariance = [[1]]
-        p = pints.MultivariateGaussianLogPrior(mean, covariance)
+        p = pints.MultivariateGaussianLogPrior(0, [[1]])
         x = [0]
         y = p(x)
         self.assertEqual(y, -0.5 * np.log(2 * np.pi))
