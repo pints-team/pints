@@ -15,6 +15,7 @@ interface, that can be used to sample from an unknown
     base_classes
     adaptive_covariance_mc
     differential_evolution_mcmc
+    dram_ac_mcmc
     dream_mcmc
     emcee_hammer_mcmc
     global_adaptive_covariance_mc

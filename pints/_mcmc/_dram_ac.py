@@ -13,17 +13,17 @@ import numpy as np
 import scipy.stats as stats
 
 
-class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
+class DramACMC(pints.GlobalAdaptiveCovarianceMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1]_.
     In this method, rejections do not necessarily lead an iteration to end.
-    Instead, if a rejection occurs, another point is proposed although from
-    a narrower (i.e. more conservative) proposal kernel than was used for the
-    first proposal.
+    Instead, if a rejection occurs, another point is proposed although
+    typically from a narrower (i.e. more conservative) proposal kernel than was
+    used for the first proposal.
 
     In this approach, in each iteration, the following steps return the next
-    state of the Markov chain (assuming the current state is theta_0 and that
-    there are 2 proposal kernels)::
+    state of the Markov chain (assuming the current state is ``theta_0`` and
+    that there are 2 proposal kernels)::
 
         theta_1 ~ N(theta_0, lambda * scale_1 * sigma)
         alpha_1(theta_0, theta_1) = min(1, p(theta_1|X) / p(theta_0|X))
@@ -44,17 +44,17 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
     This means that ``k`` accept-reject steps are taken. In each step (``i``),
     the probability that a proposal ``theta_i`` is accepted is::
 
-        alpha_i(theta_0, theta_1, ..., theta_i) = min(1,
-         p(theta_i|X) / p(theta_0|X) * n_i / d_i)
+        alpha_i(theta_0, theta_1, ..., theta_i) = min(1, p(theta_i|X) /
+                                                  p(theta_0|X) * n_i / d_i)
 
     where::
 
-        n_i = (1 - alpha_1(theta_i, theta_i-1))
-              (1 - alpha_2(theta_i, theta_i-1, theta_i-2))
+        n_i = (1 - alpha_1(theta_i, theta_i-1)) *
+              (1 - alpha_2(theta_i, theta_i-1, theta_i-2)) *
                ...
                ((1 - alpha_i-1(theta_i, theta_i-1, ..., theta_0))
-        d_i = (1 - alpha_1(theta_0, theta_1))
-              (1 - alpha_2(theta_0, theta_1, theta_2))
+        d_i = (1 - alpha_1(theta_0, theta_1)) *
+              (1 - alpha_2(theta_0, theta_1, theta_2)) *
               ...
               (1 - alpha_i-1(theta_0, theta_1, ..., theta_i-1))
 
@@ -83,7 +83,7 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
            https://doi.org/10.1007/s11222-006-9438-0
     """
     def __init__(self, x0, sigma0=None):
-        super(DramACMCMC, self).__init__(x0, sigma0)
+        super(DramACMC, self).__init__(x0, sigma0)
 
         self._log_lambda = 0
         self._kernels = 2
@@ -133,7 +133,7 @@ class DramACMCMC(pints.GlobalAdaptiveCovarianceMC):
         (i.e. large) proposal width; if first is rejected then return
         proposal from a conservative kernel (i.e. with low width).
         """
-        super(DramACMCMC, self).ask()
+        super(DramACMC, self).ask()
 
         # Propose new point
         if self._proposed is None:
