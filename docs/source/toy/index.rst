@@ -32,6 +32,7 @@ Some toy classes provide extra functionality defined in the
     repressilator_model
     rosenbrock
     simple_egg_box_logpdf
+    simple_harmonic_osillator
     sir_model
     stochastic_degradation_model
     twisted_gaussian_logpdf
