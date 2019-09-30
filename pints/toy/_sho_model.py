@@ -21,11 +21,11 @@ class SimpleHarmonicOscillatorModel(pints.ForwardModelS1, ToyModel):
     in proportion to its displacement from an equilibrium position,
     and, in addition, a friction force. The system's behaviour is determined by
     a pair of ordinary differential equations for ``[y1(t), y2(t)]``, where
-    ``y1` is the (one-dimensional) position and ``y2`` is the momentum of a
+    ``y1`` is the (one-dimensional) position and ``y2`` is the momentum of a
     particle.
 
     .. math::
-        \frac{dy_1(t)}{dt} &= y_2(t)
+        \frac{dy_1(t)}{dt} &= y_2(t)\\
         \frac{dy_2(t)}{dt} &= -y_1(t) - \theta y_2(t)
 
     For this model, only ``y1`` is returned by the solver.
