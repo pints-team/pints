@@ -210,6 +210,14 @@ class TestMCMCController(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'extend pints.MCMCSampler',
             pints.MCMCController, self.log_posterior, 1, xs, method=12)
+        self.assertRaisesRegex(
+            ValueError, 'Given method cannot be abstract base class',
+            pints.MCMCController, self.log_posterior, 1, xs,
+            method=pints.AdaptiveCovarianceMC)
+        self.assertRaisesRegex(
+            ValueError, 'Given method cannot be abstract base class',
+            pints.MCMCController, self.log_posterior, 1, xs,
+            method=pints.GlobalAdaptiveCovarianceMC)
 
         # Check different sigma0 initialisations
         pints.MCMCController(self.log_posterior, nchains, xs)
