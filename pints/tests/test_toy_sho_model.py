@@ -63,13 +63,16 @@ class TestSimpleHarmonicOscillator(unittest.TestCase):
         self.assertAlmostEqual(sensitivities[1, 0], 0.9097959, places=6)
         self.assertAlmostEqual(sensitivities[1, 1], 0.3032653, places=6)
 
-    def test_suggested_and_n_params(self):
+    def test_suggested(self):
         # tests suggested values
         model = pints.toy.SimpleHarmonicOscillatorModel()
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         self.assertTrue(np.all(np.linspace(0, 50, 100) == times))
         self.assertTrue(np.all([1, 0, 0.15] == parameters))
+
+    def test_n_parameters(self):
+        model = pints.toy.SimpleHarmonicOscillatorModel()
         self.assertEqual(model.n_parameters(), 3)
 
     def test_errors(self):
