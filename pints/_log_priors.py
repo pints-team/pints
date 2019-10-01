@@ -660,11 +660,16 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         self._mean = mean
         self._cov = cov
         self._n_parameters = mean.shape[0]
+        self._cov_inverse = np.linalg.inv(self._cov)
 
     def __call__(self, x):
         return np.log(
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._cov))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """

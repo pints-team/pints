@@ -590,20 +590,15 @@ class TestPrior(unittest.TestCase):
         self.assertTrue(0.9 * analyt_mean < sample_mean < 1.1 * analyt_mean)
 
     def test_multivariate_normal_prior(self):
-        # 1d test
-        mean = 0
-        covariance = 1
 
         # Input must be a matrix
         self.assertRaises(
-            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
-        covariance = [1]
+            ValueError, pints.MultivariateGaussianLogPrior, 0, 1)
         self.assertRaises(
-            ValueError, pints.MultivariateGaussianLogPrior, mean, covariance)
+            ValueError, pints.MultivariateGaussianLogPrior, 0, [1])
 
-        # Basic test
-        covariance = [[1]]
-        p = pints.MultivariateGaussianLogPrior(mean, covariance)
+        # 1d test
+        p = pints.MultivariateGaussianLogPrior(0, [[1]])
         self.assertEqual(p([0]), -0.5 * np.log(2 * np.pi))
 
         # 5d tests
@@ -622,6 +617,36 @@ class TestPrior(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.MultivariateGaussianLogPrior, [1, 2],
             [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+        # Test sensitivities
+        mean = [1, 3]
+        covariance = [[2, 0.5], [0.5, 2]]
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
+        y, dy = p.evaluateS1([4, 5])
+        self.assertEqual(len(dy), 2)
+        self.assertAlmostEqual(y, -5.165421653067172, places=6)
+        dy_test = [-float(4 / 3), -float(2 / 3)]
+        self.assertAlmostEqual(dy[0], dy_test[0], places=6)
+        self.assertAlmostEqual(dy[1], dy_test[1], places=6)
+
+        mean = [-5.5, 6.7, 3.2]
+        covariance = [[3.4, -0.5, -0.7], [-0.5, 2.7, 1.4], [-0.7, 1.4, 5]]
+        p = pints.MultivariateGaussianLogPrior(mean, covariance)
+        y, dy = p.evaluateS1([4.4, 3.5, -3])
+        self.assertEqual(len(dy), 3)
+        self.assertAlmostEqual(y, -20.855279298674258, places=6)
+        dy_test = [-2.709773397444412, 0.27739553170576203, 0.7829609754801692]
+        self.assertAlmostEqual(dy[0], dy_test[0], places=6)
+        self.assertAlmostEqual(dy[1], dy_test[1], places=6)
+        self.assertAlmostEqual(dy[2], dy_test[2], places=6)
+
+        # 1d sensitivity test
+        p = pints.MultivariateGaussianLogPrior(0, [[1]])
+        x = [0]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertTrue(len(dy), 1)
+        self.assertEqual(dy[0], 0)
 
     def test_multivariate_normal_sampling(self):
         d = 1
