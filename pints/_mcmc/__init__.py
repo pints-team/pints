@@ -333,6 +333,9 @@ class MCMCController(object):
                 ok = False
             if not ok:
                 raise ValueError('Given method must extend pints.MCMCSampler.')
+        if method == pints.AdaptiveCovarianceMC or (
+                method == pints.GlobalAdaptiveCovarianceMC):
+            raise ValueError('Given method cannot be abstract base class.')
 
         # Using single chain samplers?
         self._single_chain = issubclass(method, pints.SingleChainMCMC)
