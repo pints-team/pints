@@ -20,18 +20,16 @@ class SimpleHarmonicOscillatorModel(pints.ForwardModelS1, ToyModel):
     Simple harmonic oscillator model for a particle that experiences a force
     in proportion to its displacement from an equilibrium position,
     and, in addition, a friction force. The system's behaviour is determined by
-    a pair of ordinary differential equations for ``[y1(t), y2(t)]``, where
-    ``y1`` is the (one-dimensional) position and ``y2`` is the momentum of a
-    particle.
+    a second order ordinary differential equation (from Newton's second law):
 
     .. math::
-        \frac{dy_1(t)}{dt} &= y_2(t)\\
-        \frac{dy_2(t)}{dt} &= -y_1(t) - \theta y_2(t)
+        \frac{d^2y}{dt^2} = -y(t) - \theta \frac{dy(t)}{dt}
 
-    For this model, only ``y1`` is returned by the solver.
+    Here it has been assumed that the particle has unit mass and that the
+    restoring force has constant of proportionality equal to 1.
 
     The model has three parameters: the initial position of the particle,
-    ``y1(0)``, its initial momentum, ``y2(0)`` and the magnitude of the
+    ``y(0)``, its initial momentum, ``dy/dt(0)`` and the magnitude of the
     friction force, ``theta``.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
