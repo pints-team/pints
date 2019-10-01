@@ -87,6 +87,7 @@ relevant code.
 - [Logistic growth model](./toy-model-logistic.ipynb)
 - [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
 - [Repressilator model](./toy-model-repressilator.ipynb)
+- [Simple Harmonic Oscillator model](./toy-model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy-model-sir.ipynb)
 - [Stochastic Degradation model](./toy-model-stochastic-degradation.ipynb)
 
