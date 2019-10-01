@@ -26,9 +26,9 @@ class TestSimpleHarmonicOscillator(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
         self.assertEqual(values[0], 2.5)
-        self.assertAlmostEqual(values[1], -1.0894215353079635, places=6)
-        self.assertAlmostEqual(values[2], -2.8830890276991097, places=6)
-        self.assertAlmostEqual(values[3], -0.18490979484376613, places=6)
+        self.assertAlmostEqual(values[1], -1.0894215, places=6)
+        self.assertAlmostEqual(values[2], -2.8830890, places=6)
+        self.assertAlmostEqual(values[3], -0.1849098, places=6)
 
         values1, sensitivities = model.simulateS1(parameters, times)
         self.assertTrue(np.all(values == values))
@@ -37,12 +37,9 @@ class TestSimpleHarmonicOscillator(unittest.TestCase):
         self.assertEqual(sensitivities[0, 0], 1)
         self.assertEqual(sensitivities[0, 1], 0)
         self.assertEqual(sensitivities[0, 2], 0)
-        self.assertAlmostEqual(sensitivities[1, 0], 0.5822839107859448,
-                               places=6)
-        self.assertAlmostEqual(sensitivities[1, 1], 0.7271803749350929,
-                               places=6)
-        self.assertAlmostEqual(sensitivities[1, 2], 1.5291373711078136,
-                               places=6)
+        self.assertAlmostEqual(sensitivities[1, 0], 0.5822839, places=6)
+        self.assertAlmostEqual(sensitivities[1, 1], 0.7271804, places=6)
+        self.assertAlmostEqual(sensitivities[1, 2], 1.5291374, places=6)
 
     def test_values_and_sensitivities_criticaldamp(self):
         # test values and sensitivities for critical damping
@@ -52,9 +49,9 @@ class TestSimpleHarmonicOscillator(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
         self.assertEqual(values[0], 1)
-        self.assertAlmostEqual(values[1], 1.6073062482384786, places=6)
-        self.assertAlmostEqual(values[2], 1.581881597037202, places=6)
-        self.assertAlmostEqual(values[3], 1.3276244528831573, places=6)
+        self.assertAlmostEqual(values[1], 1.6073062, places=6)
+        self.assertAlmostEqual(values[2], 1.5818816, places=6)
+        self.assertAlmostEqual(values[3], 1.3276245, places=6)
 
         values1, sensitivities = model.simulateS1(parameters, times)
         self.assertTrue(np.all(values == values))
@@ -63,10 +60,8 @@ class TestSimpleHarmonicOscillator(unittest.TestCase):
         self.assertEqual(sensitivities[0, 0], 1)
         self.assertEqual(sensitivities[0, 1], 0)
         self.assertTrue(np.all(sensitivities[:, 2] == np.zeros(len(times))))
-        self.assertAlmostEqual(sensitivities[1, 0], 0.9097959895689501,
-                               places=6)
-        self.assertAlmostEqual(sensitivities[1, 1], 0.3032653298563167,
-                               places=6)
+        self.assertAlmostEqual(sensitivities[1, 0], 0.9097959, places=6)
+        self.assertAlmostEqual(sensitivities[1, 1], 0.3032653, places=6)
 
     def test_suggested_and_n_params(self):
         # tests suggested values
