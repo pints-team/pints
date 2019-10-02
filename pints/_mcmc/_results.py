@@ -1,12 +1,11 @@
 #
-# MCMC result object
+# MCMC results method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-# Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -17,17 +16,42 @@ from tabulate import tabulate
 
 class MCMCResults(object):
     """
-    Wrapper class calculates key summaries of posterior samples and diagnostic
-    quantities from MCMC chains. These include the posterior mean, standard
-    deviation, quantiles, rhat and effective sample size.
+    Wrapper class that calculates key summaries of posterior samples and
+    diagnostic quantities from MCMC chains. These include the posterior mean,
+    standard deviation, quantiles, rhat, effective sample size and (if
+    running time is supplied) effective samples per second.
+
+    References
+    ----------
+    .. [1] "Inference from iterative simulation using multiple
+            sequences", A Gelman and D Rubin, 1992, Statistical Science.
+    .. [2] "Bayesian data analysis", 3rd edition, CRC Press.,  A Gelman et al.,
+           2014.
     """
 
     def __init__(self, chains, time=None, parameter_names=None):
-        self._chains = chains
+
+        if len(chains) == 1:
+            import logging
+            logging.basicConfig()
+            log = logging.getLogger(__name__)
+            log.warning(
+                'Summaries calculated with one chain may be unreliable.' +
+                ' It is recommended that you rerun sampling with more than' +
+                ' one chain')
+            shapes = chains[0].shape
+            half = int(shapes[0] / 2)
+            first = chains[0][0:half, :]
+            second = chains[0][half:, :]
+            self._chains = [first, second]
+        else:
+            self._chains = chains
         self._num_params = chains[0].shape[1]
+
         if time is not None and float(time) <= 0:
             raise ValueError('Elapsed time must be positive.')
         self._time = time
+
         if parameter_names is not None and (
                 self._num_params != len(parameter_names)):
             raise ValueError(
@@ -37,7 +61,24 @@ class MCMCResults(object):
             parameter_names = (
                 ["param " + str(i + 1) for i in range(self._num_params)])
         self._parameter_names = parameter_names
+
+        self._ess = None
+        self._ess_per_second = None
+        self._mean = None
+        self._quantiles = None
+        self._rhat = None
+        self._std = None
         self._summary_list = []
+        self.make_summary()
+
+    def __str__(self):
+        """
+        Prints posterior summaries for all parameters to the console, including
+        the parameter name, posterior mean, posterior std deviation, the
+        2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
+        sample size (ess) and ess per second of run time.
+        """
+        return self._print_summary()
 
     def chains(self):
         """
@@ -45,39 +86,9 @@ class MCMCResults(object):
         """
         return self._chains
 
-    def mean(self):
-        """
-        Return the posterior means of all parameters.
-        """
-        return self._mean
-
-    def std(self):
-        """
-        Return the posterior standard deviation of all parameters.
-        """
-        return self._std
-
-    def quantiles(self):
-        """
-        Return the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles.
-        """
-        return self._quantiles
-
-    def rhat(self):
-        """
-        Return Gelman and Rubin's [1] rhat value as defined in [1]_.
-
-        [1] "Inference from iterative simulation using multiple
-        sequences", 1992, Gelman and Rubin, Statistical Science.
-        """
-        return self._rhat
-
     def ess(self):
         """
         Return the effective sample size for each parameter as defined in [2]_.
-
-        [2] "Bayesian data analysis", 3rd edition, 2014, Gelman et al.,
-        CRC Press.
         """
         return self._ess
 
@@ -85,11 +96,21 @@ class MCMCResults(object):
         """
         Return the effective sample size (as defined in [2]_) per second of run
         time for each parameter.
-
-        [2] "Bayesian data analysis", 3rd edition, 2014, Gelman et al.,
-        CRC Press.
         """
         return self._ess_per_second
+
+    def extract(self, param_number):
+        """
+        Extracts posterior samples for a given parameter number.
+        """
+        stacked = np.vstack(self._chains)
+        return stacked[:, param_number]
+
+    def extract_all(self):
+        """
+        Return the posterior samples for all parameters.
+        """
+        return np.vstack(self._chains)
 
     def make_summary(self):
         """
@@ -127,7 +148,7 @@ class MCMCResults(object):
                                            self._ess_per_second[i]])
         else:
             for i in range(0, self._num_params):
-                self._summary_list.append(["param " + str(i + 1),
+                self._summary_list.append([self._parameter_names[i],
                                            self._mean[i],
                                            self._std[i],
                                            self._quantiles[0, i],
@@ -138,17 +159,13 @@ class MCMCResults(object):
                                            self._rhat[i],
                                            self._ess[i]])
 
-    def summary(self):
+    def mean(self):
         """
-        Return a list of the parameter name, posterior mean, posterior std
-        deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
-        rhat, effective sample size (ess) and ess per second of run time.
+        Return the posterior means of all parameters.
         """
-        if self._summary_list == []:
-            self.make_summary()
-        return self._summary_list
+        return self._mean
 
-    def print_summary(self):
+    def _print_summary(self):
         """
         Prints posterior summaries for all parameters to the console, including
         the parameter name, posterior mean, posterior std deviation, the
@@ -158,32 +175,49 @@ class MCMCResults(object):
         if self._summary_list == []:
             self.make_summary()
         if self._time is not None:
-            print(tabulate(self._summary_list,
-                  headers=["param", "mean", "std.",
-                           "2.5%", "25%", "50%",
-                           "75%", "97.5%", "rhat",
-                           "ess", "ess per sec."],
-                  numalign="left", floatfmt=".2f"))
+            return tabulate(self._summary_list,
+                            headers=["param", "mean", "std.",
+                                     "2.5%", "25%", "50%",
+                                     "75%", "97.5%", "rhat",
+                                     "ess", "ess per sec."],
+                            numalign="left", floatfmt=".2f")
         else:
-            print(tabulate(self._summary_list,
-                  headers=["param", "mean", "std.",
-                           "2.5%", "25%", "50%",
-                           "75%", "97.5%", "rhat",
-                           "ess"],
-                  numalign="left", floatfmt=".2f"))
+            return tabulate(self._summary_list,
+                            headers=["param", "mean", "std.",
+                                     "2.5%", "25%", "50%",
+                                     "75%", "97.5%", "rhat",
+                                     "ess"],
+                            numalign="left", floatfmt=".2f")
 
-    def extract(self, param_number):
+    def quantiles(self):
         """
-        Extracts posterior samples for a given parameter number.
+        Return the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles.
         """
-        stacked = np.vstack(self._chains)
-        return stacked[:, param_number]
+        return self._quantiles
 
-    def extract_all(self):
+    def rhat(self):
         """
-        Return the posterior samples for all parameters.
+        Return Gelman and Rubin's rhat value as defined in [1]_. If a
+        single chain is used, the chain is split into two halves and rhat
+        is calculated using these two parts.
         """
-        return np.vstack(self._chains)
+        return self._rhat
+
+    def std(self):
+        """
+        Return the posterior standard deviation of all parameters.
+        """
+        return self._std
+
+    def summary(self):
+        """
+        Return a list of the parameter name, posterior mean, posterior std
+        deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
+        rhat, effective sample size (ess) and ess per second of run time.
+        """
+        if self._summary_list == []:
+            self.make_summary()
+        return self._summary_list
 
     def time(self):
         """
