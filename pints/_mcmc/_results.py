@@ -9,7 +9,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints._diagnostics as diagnostics
+import pints
 import numpy as np
 from tabulate import tabulate
 
@@ -121,7 +121,7 @@ class MCMCResults(object):
         self._std = np.std(stacked, axis=0)
         self._quantiles = np.percentile(stacked, [2.5, 25, 50,
                                                   75, 97.5], axis=0)
-        self._ess = diagnostics.effective_sample_size(stacked)
+        self._ess = pints.effective_sample_size(stacked)
         if self._time is not None:
             self._ess_per_second = np.array(self._ess) / self._time
         self._num_chains = len(self._chains)
@@ -129,7 +129,7 @@ class MCMCResults(object):
         # If there is more than 1 chain calculate rhat
         # otherwise return NA
         if self._num_chains > 1:
-            self._rhat = diagnostics.rhat_all_params(self._chains)
+            self._rhat = pints.rhat_all_params(self._chains)
         else:
             self._rhat = np.repeat("NA", self._num_params)
 
