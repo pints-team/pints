@@ -99,19 +99,6 @@ class MCMCResults(object):
         """
         return self._ess_per_second
 
-    def extract(self, param_number):
-        """
-        Extracts posterior samples for a given parameter number.
-        """
-        stacked = np.vstack(self._chains)
-        return stacked[:, param_number]
-
-    def extract_all(self):
-        """
-        Return the posterior samples for all parameters.
-        """
-        return np.vstack(self._chains)
-
     def make_summary(self):
         """
         Calculates posterior summaries for all parameters.
@@ -126,12 +113,7 @@ class MCMCResults(object):
             self._ess_per_second = np.array(self._ess) / self._time
         self._num_chains = len(self._chains)
 
-        # If there is more than 1 chain calculate rhat
-        # otherwise return NA
-        if self._num_chains > 1:
-            self._rhat = pints.rhat_all_params(self._chains)
-        else:
-            self._rhat = np.repeat("NA", self._num_params)
+        self._rhat = pints.rhat_all_params(self._chains)
 
         if self._time is not None:
             for i in range(0, self._num_params):
@@ -172,8 +154,6 @@ class MCMCResults(object):
         2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
         sample size (ess) and ess per second of run time.
         """
-        if self._summary_list == []:
-            self.make_summary()
         if self._time is not None:
             return tabulate(self._summary_list,
                             headers=["param", "mean", "std.",
@@ -215,8 +195,6 @@ class MCMCResults(object):
         deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
         rhat, effective sample size (ess) and ess per second of run time.
         """
-        if self._summary_list == []:
-            self.make_summary()
         return self._summary_list
 
     def time(self):
