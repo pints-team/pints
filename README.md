@@ -16,7 +16,7 @@ PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252
 
 ## Using PINTS
 
-PINTS can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface. 
+PINTS can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface.
 This has just two methods:
 
 ```
@@ -48,7 +48,7 @@ In addition, there is a [full API documentation](http://pints.readthedocs.io/en/
 You'll need the following requirements:
 
 - Python 2.7 or Python 3.5+
-- Python libraries: `cma` `numpy` `matplotlib` `scipy`
+- Python libraries: `cma` `numpy` `matplotlib` `scipy` `tabulate`
 
 These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:
 
