@@ -496,7 +496,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             raise ValueError('Width for interval expansion must be positive.')
         self._w = w
 
-    def tell(self, reply):
+    def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # Check ask/tell pattern
@@ -504,8 +504,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        # Ensure fx is a float
+        fx = float(fx)
 
         # Very first call
         if self._current is None:
