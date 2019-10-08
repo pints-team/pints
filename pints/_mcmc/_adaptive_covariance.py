@@ -21,8 +21,8 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
     will be called by :meth:`ask()`.
 
     Adaptation is implemented with three methods, which are called in
-    sequence, at the end of every ``tell()``: :meth:`_update_mu()`,
-    :meth:`_update_sigma()`, and :meth:`_adapt()`.
+    sequence, at the end of every ``tell()``: :meth:`_adapt_mu()`,
+    :meth:`_adapt_sigma()`, and :meth:`_adapt_internal()`.
     A basic implementation is provided for each, which extending methods can
     choose to override.
 
@@ -75,9 +75,9 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         """
         return self._acceptance_rate
 
-    def _adapt(self, accepted, log_ratio):
+    def _adapt_internal(self, accepted, log_ratio):
         """
-        Adapt internal parameters: called at the end of every ``tell()``.
+        Called at the end of every ``tell()`` to adapt any internal parameters.
 
         Parameters
         ----------
@@ -87,6 +87,27 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             The log of the ratio proposed log pdf / current log pdf
         """
         pass
+
+    def _adapt_mu(self):
+        """
+        Called at the end of every ``tell()`` to adapt the current running mean
+        used to calculate the sample covariance matrix of proposals.
+        """
+        self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
+
+    def _adapt_sigma(self, log_ratio):
+        """
+        Called at the end of every ``tell()`` to adapt the covariance matrix
+        used to generate proposals.
+
+        Parameters
+        ----------
+        log_ratio
+            The log of the ratio proposed log pdf / current log pdf.
+        """
+        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
+        self._sigma = ((1 - self._gamma) * self._sigma +
+                       self._gamma * np.dot(dsigm, dsigm.T))
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -268,36 +289,12 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._adaptations += 1
 
             # Update the proposal distribution
-            self._update_mu()
-            self._update_sigma(log_ratio)
+            self._adapt_mu()
+            self._adapt_sigma(log_ratio)
 
             # Adapt
-            self._adapt(accepted, log_ratio)
+            self._adapt_internal(accepted, log_ratio)
 
         # Return current sample
         return self._current
-
-    def _update_mu(self):
-        """
-        Updates the current running mean used to calculate the sample
-        covariance matrix of proposals.
-
-        Note that this default is overidden in some of the methods.
-        """
-        self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
-
-    def _update_sigma(self, log_ratio):
-        """
-        Updates the covariance matrix used to generate proposals.
-
-        Note that this default is overidden in some of the methods.
-
-        Parameters
-        ----------
-        log_ratio
-            The log of the ratio proposed log pdf / current log pdf.
-        """
-        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
-        self._sigma = ((1 - self._gamma) * self._sigma +
-                       self._gamma * np.dot(dsigm, dsigm.T))
 

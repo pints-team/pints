@@ -63,7 +63,7 @@ class HaarioACMC(pints.AdaptiveCovarianceMC):
         super(HaarioACMC, self).__init__(x0, sigma0)
         self._log_lambda = 0
 
-    def _adapt(self, accepted, log_ratio):
+    def _adapt_internal(self, accepted, log_ratio):
         """ See :meth:`pints.AdaptiveCovarianceMC._adapt()`. """
         p = np.exp(log_ratio) if log_ratio < 0 else 1
         self._log_lambda += self._gamma * (p - self._target_acceptance)

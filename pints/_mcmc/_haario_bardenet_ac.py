@@ -65,7 +65,7 @@ class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
         # Initial log lambda is zero
         self._log_lambda = 0
 
-    def _adapt(self, accepted, log_ratio):
+    def _adapt_internal(self, accepted, log_ratio):
         """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
         p = 1 if accepted else 0
         self._log_lambda += self._gamma * (p - self._target_acceptance)

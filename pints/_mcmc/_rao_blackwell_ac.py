@@ -58,23 +58,7 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         self._X = None
         self._Y = None
 
-    def _generate_proposal(self):
-        """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
-        return np.random.multivariate_normal(
-            self._current, self._lambda * self._sigma)
-
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Rao-Blackwell adaptive covariance MCMC'
-
-    def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
-        self._Y = np.copy(self._proposed)
-        self._X = np.copy(self._current)
-
-        return super(RaoBlackwellACMC, self).tell(fx)
-
-    def _update_sigma(self, log_ratio):
+    def _adapt_sigma(self, log_ratio):
         """
         Updates sigma using Rao-Blackwellised formula::
 
@@ -91,4 +75,20 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         dsigm = np.reshape(X_bar - self._mu, (self._n_parameters, 1))
         self._sigma = ((1 - self._gamma) * self._sigma +
                        self._gamma * np.dot(dsigm, dsigm.T))
+
+    def _generate_proposal(self):
+        """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
+        return np.random.multivariate_normal(
+            self._current, self._lambda * self._sigma)
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Rao-Blackwell adaptive covariance MCMC'
+
+    def tell(self, fx):
+        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
+        self._Y = np.copy(self._proposed)
+        self._X = np.copy(self._current)
+
+        return super(RaoBlackwellACMC, self).tell(fx)
 
