@@ -15,15 +15,13 @@ import pints.toy
 
 from shared import StreamCapture
 
-debug = False
-
 
 class TestMALAMCMC(unittest.TestCase):
     """
     Tests the basic methods of the MALA MCMC routine.
     """
 
-    def test_method(self):
+    def test_short_run(self):
 
         # Create log pdf
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
@@ -32,9 +30,6 @@ class TestMALAMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
         sigma = [[3, 0], [0, 3]]
         mcmc = pints.MALAMCMC(x0, sigma)
-
-        # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
 
         # Perform short run
         chain = []
@@ -53,8 +48,11 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertTrue(mcmc.acceptance_rate() >= 0.0 and
                         mcmc.acceptance_rate() <= 1.0)
 
-        mcmc._proposed = [1, 3]
-        self.assertRaises(RuntimeError, mcmc.tell, (fx, gr))
+    def test_needs_sensitivities(self):
+
+        # This method needs sensitivities
+        mcmc = pints.MALAMCMC(np.array([2, 2]))
+        self.assertTrue(mcmc.needs_sensitivities())
 
     def test_logging(self):
         """
@@ -63,14 +61,13 @@ class TestMALAMCMC(unittest.TestCase):
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
-        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.MALAMCMC)
+        mcmc = pints.MCMCController(log_pdf, 2, x0, method=pints.MALAMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
 
-        self.assertIn('Metropolis-Adjusted Langevin Algorithm (MALA)',
-                      text)
+        self.assertIn('Metropolis-Adjusted Langevin Algorithm (MALA)', text)
         self.assertIn(' Accept.', text)
 
     def test_flow(self):
@@ -80,10 +77,16 @@ class TestMALAMCMC(unittest.TestCase):
 
         # Test initial proposal is first point
         mcmc = pints.MALAMCMC(x0)
-        self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
+        self.assertTrue(np.all(mcmc.ask() == x0))
 
-        # Repeated asks
-        self.assertRaises(RuntimeError, mcmc.ask)
+        # Repeated asks return same point
+        self.assertTrue(np.all(mcmc.ask() == x0))
+        self.assertTrue(np.all(mcmc.ask() == x0))
+        self.assertTrue(np.all(mcmc.ask() == x0))
+        for i in range(5):
+            mcmc.tell(log_pdf.evaluateS1(mcmc.ask()))
+        x1 = mcmc.ask()
+        self.assertTrue(np.all(mcmc.ask() == x1))
 
         # Tell without ask
         mcmc = pints.MALAMCMC(x0)
@@ -105,7 +108,7 @@ class TestMALAMCMC(unittest.TestCase):
         mcmc._running = True
         self.assertRaises(RuntimeError, mcmc._initialise)
 
-    def test_set_hyper_parameters(self):
+    def test_hyper_parameters(self):
         """
         Tests the parameter interface for this sampler.
         """
@@ -134,8 +137,4 @@ class TestMALAMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
