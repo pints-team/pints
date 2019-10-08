@@ -15,9 +15,11 @@ import numpy as np
 
 class SliceDoublingMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Slice Sampling with Doubling, as described in [1]_. This is a
-    univariate method, which is applied in a Slice-Sampling-within-Gibbs
-    framework to allow MCMC sampling from multivariate models.
+    Implements Slice Sampling with Doubling, as described in [1]_.
+
+    This is a univariate method, which is applied in a
+    Slice-Sampling-within-Gibbs framework to allow MCMC sampling from
+    multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (:math:`f`). It does so by introducing an auxiliary variable
@@ -418,13 +420,16 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def set_width(self, w):
         """
-        Sets the width for generating the interval. This can either be a single
-        number or an array with the same number of elements as the number of
-        variables to update.
+        Sets the width for generating the interval.
+
+        This can either be a single number or an array with the same number of
+        elements as the number of variables to update.
         """
         if type(w) == int or float:
             w = np.full((len(self._x0)), w)
-        if any(n < 0 for n in w):
+        else:
+            w = np.array(w, copy=True)
+        if np.any(n < 0 for n in w):
             raise ValueError('Width must be positive'
                              'for interval expansion.')
         self._w = w

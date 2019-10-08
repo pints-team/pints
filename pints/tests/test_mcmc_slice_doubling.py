@@ -21,7 +21,7 @@ class TestSliceDoubling(unittest.TestCase):
     """
 
     def test_ask_tell_flow(self):
-        # Tests the ask-and-tell flow
+        # Tests the ask-and-tell pattern
 
         # Create problem
         x0 = np.array([2, 4])
