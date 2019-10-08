@@ -7,18 +7,13 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import pints
-import pints.toy as toy
-import unittest
+from __future__ import print_function, unicode_literals
 import numpy as np
 import time
-from shared import StreamCapture
+import unittest
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+import pints
+import pints.toy as toy
 
 
 class TestAdaptiveCovarianceMC(unittest.TestCase):
@@ -68,8 +63,8 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
 
         mcmc = pints.MCMCController(cls.log_posterior, 3, xs,
                                     method=pints.HaarioBardenetACMC)
-        mcmc.set_max_iterations(500)
-        mcmc.set_initial_phase_iterations(100)
+        mcmc.set_max_iterations(200)
+        mcmc.set_initial_phase_iterations(50)
         mcmc.set_log_to_screen(False)
 
         start = time.time()
@@ -122,27 +117,32 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertEqual(summary.shape[0], 3)
         self.assertEqual(summary.shape[1], 10)
 
-        with StreamCapture() as c:
-            print(results)
+        text = str(results)
+        names = [
+            'param',
+            'mean',
+            'std.',
+            '2.5%',
+            '25%',
+            '50%',
+            '75%',
+            '97.5%',
+            'rhat',
+            'ess',
+        ]
+        for name in names:
+            self.assertIn(name, text)
 
-        names = ["param", "mean", "std.", "2.5%", "25%", "50%", "75%", "97.5%",
-                 "rhat", "ess"]
-        for i in range(10):
-            self.assertIn(names[i], c.text())
-
-        # tests summary functions when time not given
+        # tests summary functions when time is given
         results = pints.MCMCResults(self.chains, 20)
         summary = np.array(results.summary())
         self.assertEqual(summary.shape[0], 3)
         self.assertEqual(summary.shape[1], 11)
 
-        with StreamCapture() as c:
-            print(results)
-
-        names = ["param", "mean", "std.", "2.5%", "25%", "50%", "75%", "97.5%",
-                 "rhat", "ess", "ess per sec."]
-        for i in range(11):
-            self.assertIn(names[i], c.text())
+        text = str(results)
+        names.append('ess per sec.')
+        for name in names:
+            self.assertIn(name, text)
 
     def test_ess_per_second(self):
         # tests that ess per second is calculated when time is supplied
@@ -157,35 +157,32 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
 
     def test_named_parameters(self):
         # tests that parameter names are used when values supplied
-        parameters = ["rrrr", "kkkk", "ssss"]
-        results = pints.MCMCResults(self.chains,
-                                    parameter_names=parameters)
-        with StreamCapture() as c:
-            print(results)
-
-        for i in range(3):
-            self.assertIn(parameters[i], c.text())
+        parameters = ['rrrr', 'kkkk', 'ssss']
+        results = pints.MCMCResults(
+            self.chains, parameter_names=parameters)
+        text = str(results)
+        for p in parameters:
+            self.assertIn(p, text)
 
         # with time supplied
-        results = pints.MCMCResults(self.chains, time=20,
-                                    parameter_names=parameters)
-        with StreamCapture() as c:
-            print(results)
+        results = pints.MCMCResults(
+            self.chains, time=20, parameter_names=parameters)
+        text = str(results)
+        for p in parameters:
+            self.assertIn(p, text)
 
-        for i in range(3):
-            self.assertIn(parameters[i], c.text())
-
-        # check errors
-        self.assertRaises(ValueError, pints.MCMCResults,
-                          self.chains, parameter_names=["a", "b"])
+        # Number of parameter names must equal number of parameters
+        self.assertRaises(
+            ValueError,
+            pints.MCMCResults, self.chains, parameter_names=['a', 'b'])
 
     def test_single_chain(self):
         # tests that single chain is broken up into two bits
         xs = [self.real_parameters * 0.9]
         mcmc = pints.MCMCController(
             self.log_posterior, 1, xs, method=pints.HaarioBardenetACMC)
-        mcmc.set_max_iterations(500)
-        mcmc.set_initial_phase_iterations(100)
+        mcmc.set_max_iterations(200)
+        mcmc.set_initial_phase_iterations(50)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         results = pints.MCMCResults(chains)

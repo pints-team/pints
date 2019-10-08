@@ -17,9 +17,20 @@ from tabulate import tabulate
 class MCMCResults(object):
     """
     Wrapper class that calculates key summaries of posterior samples and
-    diagnostic quantities from MCMC chains. These include the posterior mean,
-    standard deviation, quantiles, rhat, effective sample size and (if
-    running time is supplied) effective samples per second.
+    diagnostic quantities from MCMC chains.
+
+    These include the posterior mean, standard deviation, quantiles, rhat,
+    effective sample size and (if running time is supplied) effective samples
+    per second.
+
+    Parameters
+    ----------
+    chains
+        An array or list of chains returned by an MCMC sampler.
+    time : float
+        The time taken for the run, in seconds (optional).
+    parameter_names : sequence
+        An optional list of parameter names.
 
     References
     ----------
@@ -31,14 +42,17 @@ class MCMCResults(object):
 
     def __init__(self, chains, time=None, parameter_names=None):
 
+        # Deal with special case where only one chain is provided
         if len(chains) == 1:
             import logging
             logging.basicConfig()
             log = logging.getLogger(__name__)
             log.warning(
-                'Summaries calculated with one chain may be unreliable.' +
-                ' It is recommended that you rerun sampling with more than' +
+                'Summaries calculated with one chain may be unreliable.'
+                ' It is recommended that you rerun sampling with more than'
                 ' one chain')
+
+            # Split chain in half, analyse both
             shapes = chains[0].shape
             half = int(shapes[0] / 2)
             first = chains[0][0:half, :]
@@ -46,22 +60,26 @@ class MCMCResults(object):
             self._chains = [first, second]
         else:
             self._chains = chains
-        self._num_params = chains[0].shape[1]
 
+        # Get number of parameters
+        self._n_parameters = chains[0].shape[1]
+
+        # Check time, if supplied
         if time is not None and float(time) <= 0:
             raise ValueError('Elapsed time must be positive.')
         self._time = time
 
-        if parameter_names is not None and (
-                self._num_params != len(parameter_names)):
-            raise ValueError(
-                'Parameter names list must be same length as number of ' +
-                'sampled parameters')
+        # Check parameter names, if supplied
         if parameter_names is None:
-            parameter_names = (
-                ["param " + str(i + 1) for i in range(self._num_params)])
+            parameter_names = [
+                'param ' + str(i + 1) for i in range(self._n_parameters)]
+        elif self._n_parameters != len(parameter_names):
+            raise ValueError(
+                'Parameter names list must be same length as number of '
+                'sampled parameters')
         self._parameter_names = parameter_names
 
+        # Initialise
         self._ess = None
         self._ess_per_second = None
         self._mean = None
@@ -69,6 +87,9 @@ class MCMCResults(object):
         self._rhat = None
         self._std = None
         self._summary_list = []
+        self._summary_str = None
+
+        # Create summary
         self.make_summary()
 
     def __str__(self):
@@ -78,7 +99,22 @@ class MCMCResults(object):
         2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
         sample size (ess) and ess per second of run time.
         """
-        return self._print_summary()
+        if self._summary_str is None:
+            headers = [
+                'param', 'mean', 'std.',
+                '2.5%', '25%', '50%', '75%', '97.5%',
+                'rhat', 'ess']
+            if self._time is not None:
+                headers.append('ess per sec.')
+
+            self._summary_str = tabulate(
+                self._summary_list,
+                headers=headers,
+                numalign="left",
+                floatfmt=".2f",
+            )
+
+        return self._summary_str
 
     def chains(self):
         """
@@ -104,70 +140,45 @@ class MCMCResults(object):
         Calculates posterior summaries for all parameters.
         """
         stacked = np.vstack(self._chains)
+
+        # Mean, std and quantiles
         self._mean = np.mean(stacked, axis=0)
         self._std = np.std(stacked, axis=0)
-        self._quantiles = np.percentile(stacked, [2.5, 25, 50,
-                                                  75, 97.5], axis=0)
+        self._quantiles = np.percentile(
+            stacked, [2.5, 25, 50, 75, 97.5], axis=0)
+
+        # Rhat
+        self._rhat = pints.rhat_all_params(self._chains)
+
+        # Effective sample size
         self._ess = pints.effective_sample_size(stacked)
         if self._time is not None:
             self._ess_per_second = np.array(self._ess) / self._time
-        self._num_chains = len(self._chains)
 
-        self._rhat = pints.rhat_all_params(self._chains)
+        # Create
+        for i in range(0, self._n_parameters):
+            row = [
+                self._parameter_names[i],
+                self._mean[i],
+                self._std[i],
+                self._quantiles[0, i],
+                self._quantiles[1, i],
+                self._quantiles[2, i],
+                self._quantiles[3, i],
+                self._quantiles[4, i],
+                self._rhat[i],
+                self._ess[i],
+            ]
+            if self._time is not None:
+                row.append(self._ess_per_second[i])
 
-        if self._time is not None:
-            for i in range(0, self._num_params):
-                self._summary_list.append([self._parameter_names[i],
-                                           self._mean[i],
-                                           self._std[i],
-                                           self._quantiles[0, i],
-                                           self._quantiles[1, i],
-                                           self._quantiles[2, i],
-                                           self._quantiles[3, i],
-                                           self._quantiles[4, i],
-                                           self._rhat[i],
-                                           self._ess[i],
-                                           self._ess_per_second[i]])
-        else:
-            for i in range(0, self._num_params):
-                self._summary_list.append([self._parameter_names[i],
-                                           self._mean[i],
-                                           self._std[i],
-                                           self._quantiles[0, i],
-                                           self._quantiles[1, i],
-                                           self._quantiles[2, i],
-                                           self._quantiles[3, i],
-                                           self._quantiles[4, i],
-                                           self._rhat[i],
-                                           self._ess[i]])
+            self._summary_list.append(row)
 
     def mean(self):
         """
         Return the posterior means of all parameters.
         """
         return self._mean
-
-    def _print_summary(self):
-        """
-        Prints posterior summaries for all parameters to the console, including
-        the parameter name, posterior mean, posterior std deviation, the
-        2.5%, 25%, 50%, 75% and 97.5% posterior quantiles, rhat, effective
-        sample size (ess) and ess per second of run time.
-        """
-        if self._time is not None:
-            return tabulate(self._summary_list,
-                            headers=["param", "mean", "std.",
-                                     "2.5%", "25%", "50%",
-                                     "75%", "97.5%", "rhat",
-                                     "ess", "ess per sec."],
-                            numalign="left", floatfmt=".2f")
-        else:
-            return tabulate(self._summary_list,
-                            headers=["param", "mean", "std.",
-                                     "2.5%", "25%", "50%",
-                                     "75%", "97.5%", "rhat",
-                                     "ess"],
-                            numalign="left", floatfmt=".2f")
 
     def quantiles(self):
         """
@@ -195,7 +206,7 @@ class MCMCResults(object):
         deviation, the 2.5%, 25%, 50%, 75% and 97.5% posterior quantiles,
         rhat, effective sample size (ess) and ess per second of run time.
         """
-        return self._summary_list
+        return list(self._summary_list)
 
     def time(self):
         """
