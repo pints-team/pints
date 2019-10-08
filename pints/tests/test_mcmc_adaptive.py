@@ -109,10 +109,14 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertEqual(mcmc.current_log_pdf(), 1.23)
 
     def test_eta(self):
-        # Test eta() method
+        # Test eta getting and setting
 
         mcmc = pints.HaarioACMC(self.real_parameters)
         self.assertEqual(mcmc.eta(), 0.6)
+        mcmc.set_eta(0.1)
+        self.assertEqual(mcmc.eta(), 0.1)
+        mcmc.set_eta(0.4)
+        self.assertEqual(mcmc.eta(), 0.4)
 
     def test_hyper_parameters(self):
         # Tests hyperparameter methods
