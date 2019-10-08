@@ -92,31 +92,20 @@ class TestHaarioBardenetACMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
         self.assertEqual(rate.shape[0], 100)
 
-    def test_options(self):
-
-        # Test setting acceptance rate
-        x0 = self.real_parameters
-        mcmc = pints.HaarioBardenetACMC(x0)
-        self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
-        mcmc.set_target_acceptance_rate(0.5)
-        self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
-        mcmc.set_target_acceptance_rate(1)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
-
-        # test hyperparameter setters and getters
+    def test_hyperparameters(self):
+        # Hyperparameters unchanged from base class
+        mcmc = pints.HaarioBardenetACMC(self.real_parameters)
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1])
-        mcmc.set_hyper_parameters([0.3])
-        self.assertEqual(mcmc.eta(), 0.3)
 
+    def test_name(self):
+        # Test name method
+        mcmc = pints.HaarioBardenetACMC(self.real_parameters)
         self.assertEqual(
             mcmc.name(), 'Haario-Bardenet adaptive covariance MCMC')
 
     def test_logging(self):
-
         # Test logging includes name.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.HaarioBardenetACMC)
