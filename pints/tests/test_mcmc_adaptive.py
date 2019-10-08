@@ -118,6 +118,11 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_eta(0.4)
         self.assertEqual(mcmc.eta(), 0.4)
 
+        self.assertRaisesRegex(
+            ValueError, 'greater than zero', mcmc.set_eta, 0)
+        self.assertRaisesRegex(
+            ValueError, 'greater than zero', mcmc.set_eta, -0.1)
+
     def test_hyper_parameters(self):
         # Tests hyperparameter methods
 
