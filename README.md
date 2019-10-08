@@ -48,7 +48,7 @@ In addition, there is a [full API documentation](http://pints.readthedocs.io/en/
 You'll need the following requirements:
 
 - Python 2.7 or Python 3.5+
-- Python libraries: `cma` `numpy` `matplotlib` `scipy` `tabulate`
+- Python libraries: `cma matplotlib numpy scipy tabulate`
 
 These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:
 
