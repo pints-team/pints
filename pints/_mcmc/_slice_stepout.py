@@ -15,9 +15,11 @@ import numpy as np
 
 class SliceStepoutMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Slice Sampling with Stepout, as described in [1]_. This is a
-    univariate method, which is applied in a Slice-Sampling-within-Gibbs
-    framework to allow MCMC sampling from multivariate models.
+    Implements Slice Sampling with Stepout, as described in [1]_.
+
+    This is a univariate method, which is applied in a
+    Slice-Sampling-within-Gibbs framework to allow MCMC sampling from
+    multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (``f``). It does so by introducing an auxiliary variable (``y``)
