@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the adaptive covariance base class.
 #
@@ -68,8 +68,8 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
 
         mcmc = pints.MCMCController(cls.log_posterior, 3, xs,
                                     method=pints.HaarioBardenetACMC)
-        mcmc.set_max_iterations(1000)
-        mcmc.set_initial_phase_iterations(200)
+        mcmc.set_max_iterations(500)
+        mcmc.set_initial_phase_iterations(100)
         mcmc.set_log_to_screen(False)
 
         start = time.time()
@@ -182,10 +182,10 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
     def test_single_chain(self):
         # tests that single chain is broken up into two bits
         xs = [self.real_parameters * 0.9]
-        mcmc = pints.MCMCController(self.log_posterior, 1, xs,
-                                    method=pints.HaarioBardenetACMC)
-        mcmc.set_max_iterations(1000)
-        mcmc.set_initial_phase_iterations(200)
+        mcmc = pints.MCMCController(
+            self.log_posterior, 1, xs, method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(500)
+        mcmc.set_initial_phase_iterations(100)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         results = pints.MCMCResults(chains)
@@ -217,6 +217,15 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         for i in range(5):
             for j in range(3):
                 self.assertTrue(quantiles[i, j] > 0)
+
+        # Test with odd number of iterations
+        mcmc = pints.MCMCController(
+            self.log_posterior, 1, xs, method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(99)
+        mcmc.set_initial_phase_iterations(40)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        results = pints.MCMCResults(chains)
 
 
 if __name__ == '__main__':
