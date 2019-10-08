@@ -76,17 +76,6 @@ class SingleChainMCMC(MCMCSampler):
         covariance of the distribution to estimate, around ``x0``.
     """
 
-    #
-    # Properties that subclasses can use
-    # ----------------------------------
-    # self._n_parameters
-    #   Number of parameters
-    # self._x0
-    #   Initial position
-    # self._sigma0
-    #   Initial covariance matrix
-    #
-
     def __init__(self, x0, sigma0=None):
 
         # Check initial position
