@@ -1,10 +1,12 @@
 To cite PINTS in publications, please use:
 
-Clerx, M., Robinson, M., Lambert, B., Lei, C. L., Ghosh, S., Mirams, G. R., & Gavaghan, D. J. (2019). 
-Probabilistic Inference on Noisy Time Series (PINTS). 
+Clerx, M., Robinson, M., Lambert, B., Lei, C. L., Ghosh, S., Mirams, G. R., & Gavaghan, D. J. (2019).
+Probabilistic Inference on Noisy Time Series (PINTS).
 Journal of Open Research Software, 7(1), 23.
 
 https://doi.org/10.5334/jors.252
+
+For more information, see also [papers](./papers).
 
 A BibTeX entry for LaTeX users is
 
