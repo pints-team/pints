@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the Slice Sampling with Doubling routine.
+# Tests the basic methods of the slice sampling with doubling routine.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -17,7 +17,7 @@ import pints.toy
 
 class TestSliceDoubling(unittest.TestCase):
     """
-    Tests the Slice Sampling with Doubling routine.
+    Tests the slice sampling with doubling routine.
     """
 
     def test_ask_tell_flow(self):
