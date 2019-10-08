@@ -484,10 +484,14 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         This can either be a single number or an array with the same number of
         elements as the number of variables to update.
         """
-        if type(w) == int or float:
-            w = np.full((len(self._x0)), w)
+        if np.isscalar(w):
+            w = np.ones(self._n_parameters) * w
         else:
             w = np.array(w, copy=True)
+            if len(w) != self._n_parameters:
+                raise ValueError(
+                    'Width for interval expansion must a scalar or an array'
+                    ' of length n_parameters.')
         if np.any(w < 0):
             raise ValueError('Width for interval expansion must be positive.')
         self._w = w
