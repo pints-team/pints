@@ -96,13 +96,14 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if not self._running:
             self._initialise()
 
-        # set gamma to 1
-        if self._iter_count % self._gamma_switch_rate == 0:
-            self._gamma = 1
-        self._iter_count += 1
-
         # Propose new points
         if self._proposed is None:
+
+            # set gamma to 1
+            if self._iter_count % self._gamma_switch_rate == 0:
+                self._gamma = 1
+            self._iter_count += 1
+
             self._proposed = np.zeros(self._current.shape)
             for j in range(self._chains):
                 if self._gaussian_error:
