@@ -59,7 +59,9 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
-    def test_flow(self):
+    def test_ask_tell(self):
+
+        # Test ask-tell flow
 
         # Test initial proposal is first point
         x0 = self.real_parameters
@@ -112,18 +114,15 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc = pints.HaarioACMC(self.real_parameters)
         self.assertEqual(mcmc.eta(), 0.6)
 
-    def test_target_acceptance_rate(self):
-        # Test target_acceptance_rate getting and setting
+    def test_hyper_parameters(self):
+        # Tests hyperparameter methods
 
         mcmc = pints.HaarioACMC(self.real_parameters)
-        self.assertEqual(mcmc.target_acceptance_rate(), 0.234)
-
-        mcmc.set_target_acceptance_rate(0.1)
-        self.assertEqual(mcmc.target_acceptance_rate(), 0.1)
-
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
+        self.assertTrue(mcmc.n_hyper_parameters(), 1)
+        mcmc.set_hyper_parameters([0.1])
+        self.assertEqual(mcmc.eta(), 0.1)
+        mcmc.set_hyper_parameters([0.67])
+        self.assertEqual(mcmc.eta(), 0.67)
 
     def test_initial_phase(self):
         # Test initial phase setting
@@ -137,6 +136,23 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertFalse(mcmc.in_initial_phase())
         mcmc.set_initial_phase(True)
         self.assertTrue(mcmc.in_initial_phase())
+
+    def test_logging(self):
+        """
+        Test logging includes acceptance rate, evaluations, iterations and
+        time.
+        """
+        x = [self.real_parameters] * 3
+        mcmc = pints.MCMCController(
+            self.log_posterior, 3, x, method=pints.HaarioACMC)
+        mcmc.set_max_iterations(5)
+        with StreamCapture() as c:
+            mcmc.run()
+        text = c.text()
+        self.assertIn('Accept.', text)
+        self.assertIn('Eval.', text)
+        self.assertIn('Iter.', text)
+        self.assertIn('Time m:s', text)
 
     def test_replace(self):
         # Tests the replace() method
@@ -171,22 +187,18 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
             ValueError, '`proposed` has the wrong dimensions',
             mcmc.replace, [1, 2, 3], 3, [3, 4])
 
-    def test_logging(self):
-        """
-        Test logging includes acceptance rate, evaluations, iterations and
-        time.
-        """
-        x = [self.real_parameters] * 3
-        mcmc = pints.MCMCController(
-            self.log_posterior, 3, x, method=pints.HaarioACMC)
-        mcmc.set_max_iterations(5)
-        with StreamCapture() as c:
-            mcmc.run()
-        text = c.text()
-        self.assertIn('Accept.', text)
-        self.assertIn('Eval.', text)
-        self.assertIn('Iter.', text)
-        self.assertIn('Time m:s', text)
+    def test_target_acceptance_rate(self):
+        # Test target_acceptance_rate getting and setting
+
+        mcmc = pints.HaarioACMC(self.real_parameters)
+        self.assertEqual(mcmc.target_acceptance_rate(), 0.234)
+
+        mcmc.set_target_acceptance_rate(0.1)
+        self.assertEqual(mcmc.target_acceptance_rate(), 0.1)
+
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
+        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
 
 
 if __name__ == '__main__':
