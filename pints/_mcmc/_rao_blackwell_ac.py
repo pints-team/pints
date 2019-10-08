@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
+class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
     """
     Rao-Blackwell adaptive MCMC, as described by Algorithm 3 in [1]_.
     After initialising mu0 and sigma0, in each iteration after initial
@@ -40,7 +40,7 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
         Y_t+1 ~ N(theta_t, lambda * sigma0) rather than
             Y_t+1 ~ N(theta_t, sigma0)
 
-    Extends :class:`GlobalAdaptiveCovarianceMC`.
+    Extends :class:`AdaptiveCovarianceMC`.
 
     References
     ----------
@@ -58,39 +58,23 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
         self._X = None
         self._Y = None
 
-    def ask(self):
-        """ See :meth:`SingleChainMCMC.ask()`. """
-        super(RaoBlackwellACMC, self).ask()
-
-        # Propose new point
-        if self._proposed is None:
-            self._proposed = np.random.multivariate_normal(
+    def _generate_proposal(self):
+        """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
+        return np.random.multivariate_normal(
                 self._current, self._lambda * self._sigma)
-
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Rao-Blackwell adaptive covariance MCMC'
 
     def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMCMC.tell()`. """
+        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
         self._Y = np.copy(self._proposed)
         self._X = np.copy(self._current)
 
-        super(RaoBlackwellACMC, self).tell(fx)
+        return super(RaoBlackwellACMC, self).tell(fx)
 
-        return self._current
-
-    def _update_sigma(self):
+    def _update_sigma(self, log_ratio):
         """
         Updates sigma using Rao-Blackwellised formula::
 
@@ -102,9 +86,9 @@ class RaoBlackwellACMC(pints.GlobalAdaptiveCovarianceMC):
             bar(X_t+1) = alpha(X_t, Y_t+1) * Y_t+1 +
                             (1 - alpha(X_t, Y_t+1)) * X_t
         """
-        acceptance_prob = (
-            np.minimum(1, np.exp(self._log_acceptance_ratio)))
-        X_bar = acceptance_prob * self._Y + (1.0 - acceptance_prob) * self._X
+        acceptance_prob = min(1, np.exp(log_ratio))
+        X_bar = acceptance_prob * self._Y + (1 - acceptance_prob) * self._X
         dsigm = np.reshape(X_bar - self._mu, (self._n_parameters, 1))
         self._sigma = ((1 - self._gamma) * self._sigma +
                        self._gamma * np.dot(dsigm, dsigm.T))
+

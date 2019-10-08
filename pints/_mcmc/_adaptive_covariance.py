@@ -14,55 +14,98 @@ import numpy as np
 
 class AdaptiveCovarianceMC(pints.SingleChainMCMC):
     """
-    Base class for single chain MCMC methods that adapt a covariance matrix
-    when running, in order to control the acceptance rate.
+    Base class for single chain MCMC methods that globally adapt a proposal
+    covariance matrix when running, in order to control the acceptance rate.
 
-    In all cases ``eta`` is used to control decay of adaptation.
+    Each subclass should provide a method :meth:`_generate_proposal()` that
+    will be called by :meth:`ask()`.
+
+    Adaptation is implemented with three methods, which are called in
+    sequence, at the end of every ``tell()``: :meth:`_update_mu()`,
+    :meth:`_update_sigma()`, and :meth:`_adapt()`.
+    A basic implementation is provided for each, which extending methods can
+    choose to override.
+
+    Extends :class:`SingleChainMCMC`.
     """
+
     def __init__(self, x0, sigma0=None):
         super(AdaptiveCovarianceMC, self).__init__(x0, sigma0)
 
-        # Set initial state
+        # Current running status, used to initialise on first run and check
+        # that certain methods are only called before or during run.
         self._running = False
-
-        # Set initial mu and sigma
-        self._mu = np.array(self._x0, copy=True)
-        self._sigma = np.array(self._sigma0, copy=True)
-
-        # initial number of adaptations (must start at 1 otherwise fails)
-        self._adaptations = 1
-        # initial decay rate in adaptation
-        self._gamma = 1
-        # determines decay rate in adaptation
-        self._eta = 0.6
-
-        # Acceptance rate monitoring
-        self._iterations = 0
-        self._acceptance = 0
-
-        # Default settings
-        self.set_target_acceptance_rate()
 
         # Adaptive mode: disabled during initial phase
         self._adaptive = False
 
+        # Current point and its log PDF
         self._current = None
         self._current_log_pdf = None
+
+        # Proposed point
         self._proposed = None
-        self._log_acceptance_ratio = None
+
+        # Acceptance rate monitoring
+        self._iterations = 0
+        self._adaptations = 1
+
+        # Target acceptance rate
+        self._target_acceptance = None
+        self.set_target_acceptance_rate()
+
+        # Measured acceptance rate
+        self._acceptance_count = 0
+        self._acceptance_rate = 0
+
+        # Parameters used in setting the proposal distributions
+        # See update_mu() and update_sigma()
+        self._mu = np.array(self._x0, copy=True)
+        self._sigma = np.array(self._sigma0, copy=True)
+
+        # Determines decay rate in adaptation
+        self._eta = 0.6
+
+        # Initial decay rate in adaptation
+        self._gamma = 1
 
     def acceptance_rate(self):
         """
         Returns the current (measured) acceptance rate.
         """
-        return self._acceptance
+        return self._acceptance_rate
+
+    def _adapt(self, accepted, log_ratio):
+        """
+        Adapt internal parameters: called at the end of every ``tell()``.
+
+        Parameters
+        ----------
+        accepted : boolean
+            Whether or not the proposal was accepted
+        log_ratio : float
+            The log of the ratio proposed log pdf / current log pdf
+        """
+        pass
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
+
         # Initialise on first call
         if not self._running:
             self._running = True
             self._proposed = self._x0
+
+        # Propose new point
+        if self._proposed is None:
+            # Let subclass generate proposal
+            self._proposed = self._generate_proposal()
+
+            # Set as read-only
+            self._proposed.setflags(write=False)
+
+        # Return proposed point
+        return self._proposed
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
@@ -76,6 +119,12 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         """
         return self._eta
 
+    def _generate_proposal(self):
+        """
+        Should generate and return a proposed point.
+        """
+        raise NotImplementedError
+
     def in_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.in_initial_phase()`. """
         return not self._adaptive
@@ -86,7 +135,11 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
-        logger.log(self._acceptance)
+        logger.log(self._acceptance_rate)
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
 
     def needs_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
@@ -157,13 +210,15 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
-
         # Check if we had a proposal
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
         # Ensure fx is a float
         fx = float(fx)
+
+        # Increase iteration count
+        self._iterations += 1
 
         # First point?
         if self._current is None:
@@ -175,30 +230,74 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._current = self._proposed
             self._current_log_pdf = fx
 
-            # Increase iteration count
-            self._iterations += 1
-
             # Clear proposal
             self._proposed = None
-
-            # Set r to zero
-            self._log_acceptance_ratio = float('-Inf')
 
             # Return first point for chain
             return self._current
 
-        # Check if the proposed point can be accepted
-        self._log_acceptance_ratio = fx - self._current_log_pdf
+        # Calculate log of the ratio of proposed and current log pdf
+        # Can be used in adaptation, regardless of acceptance
+        log_ratio = fx - self._current_log_pdf
+
+        # Accept or reject the point
+        accepted = False
+        if np.isfinite(fx):
+            u = np.log(np.random.uniform(0, 1))
+            if u < log_ratio:
+                accepted = True
+                self._acceptance_count += 1
+
+                # Update current point
+                self._current = self._proposed
+                self._current_log_pdf = fx
+
+        # Calculate acceptance rate
+        self._acceptance_rate = self._acceptance_count / self._iterations
+
+        # Clear proposal
+        self._proposed = None
+
+        # Adapt covariance matrix
+        if self._adaptive:
+
+            # Set gamma based on number of adaptive iterations
+            self._gamma = (self._adaptations + 1) ** -self._eta
+
+            # Update the number of adaptations
+            self._adaptations += 1
+
+            # Update the proposal distribution
+            self._update_mu()
+            self._update_sigma(log_ratio)
+
+            # Adapt
+            self._adapt(accepted, log_ratio)
+
+        # Return current sample
+        return self._current
 
     def _update_mu(self):
         """
         Updates the current running mean used to calculate the sample
         covariance matrix of proposals.
-        """
-        raise NotImplementedError
 
-    def _update_sigma(self):
+        Note that this default is overidden in some of the methods.
+        """
+        self._mu = (1 - self._gamma) * self._mu + self._gamma * self._current
+
+    def _update_sigma(self, log_ratio):
         """
         Updates the covariance matrix used to generate proposals.
+
+        Note that this default is overidden in some of the methods.
+
+        Parameters
+        ----------
+        log_ratio
+            The log of the ratio proposed log pdf / current log pdf.
         """
-        raise NotImplementedError
+        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
+        self._sigma = ((1 - self._gamma) * self._sigma +
+                       self._gamma * np.dot(dsigm, dsigm.T))
+

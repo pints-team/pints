@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMC):
+class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
     """
     Adaptive Metropolis MCMC, which is algorithm in the supplementary materials
     of [1]_, which in turn is based on [2]_.
@@ -45,7 +45,7 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    Extends :class:`GlobalAdaptiveCovarianceMC`.
+    Extends :class:`AdaptiveCovarianceMC`.
 
     References
     ----------
@@ -61,48 +61,23 @@ class HaarioBardenetACMC(pints.GlobalAdaptiveCovarianceMC):
     """
     def __init__(self, x0, sigma0=None):
         super(HaarioBardenetACMC, self).__init__(x0, sigma0)
+
+        # Initial log lambda is zero
         self._log_lambda = 0
-        self._binary_accept = True
-        self._accepted = True
 
-    def ask(self):
-        """ See :meth:`SingleChainMCMC.ask()`. """
-        super(HaarioBardenetACMC, self).ask()
+    def _adapt(self, accepted, log_ratio):
+        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
+        p = 1 if accepted else 0
+        self._log_lambda += self._gamma * (p - self._target_acceptance)
 
-        # Propose new point
-        if self._proposed is None:
-            self._proposed = (
-                np.random.multivariate_normal(self._current,
-                                              ((np.exp(self._log_lambda) *
-                                               self._sigma)))
-            )
-
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+    def _generate_proposal(self):
+        """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
+        return np.random.multivariate_normal(
+            self._current, self._sigma * np.exp(self._log_lambda))
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Haario-Bardenet adaptive covariance MCMC'
-
-    def tell(self, fx):
-        """ See :meth:`pints.AdaptiveCovarianceMC.tell()`. """
-        super(HaarioBardenetACMC, self).tell(fx)
-
-        _acceptance_prob = self._accepted
-        if self._adaptive:
-            self._log_lambda += (self._gamma *
-                                 (_acceptance_prob -
-                                  self._target_acceptance))
-
-        # Return new point for chain
-        return self._current
 
 
 class AdaptiveCovarianceMCMC(HaarioBardenetACMC):
