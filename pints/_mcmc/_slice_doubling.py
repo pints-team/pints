@@ -406,13 +406,15 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """
         p = int(p)
         if p <= 0:
-            raise ValueError('Integer must be positive to limit the'
-                             'interval size to ``(2 ** integer) * width``.')
+            raise ValueError(
+                'Integer must be greater than zero (to limit the interval size'
+                ' to (2 ** integer) * width).')
         self._p = p
 
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[width, expansion steps]``.
+
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_width(x[0])
@@ -429,9 +431,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             w = np.full((len(self._x0)), w)
         else:
             w = np.array(w, copy=True)
-        if np.any(n < 0 for n in w):
-            raise ValueError('Width must be positive'
-                             'for interval expansion.')
+        if np.any(w < 0):
+            raise ValueError('Width for interval expansion must be positive.')
         self._w = w
 
     def tell(self, fx):
@@ -584,6 +585,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def width(self):
         """
-        Returns width used for generating the interval.
+        Returns the width used for generating the interval.
         """
         return np.copy(self._w)
