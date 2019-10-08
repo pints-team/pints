@@ -99,6 +99,7 @@ class TestLogistic(unittest.TestCase):
         parameters = [0.1, 12]
         values = model.simulate(parameters, times)
         self.assertEqual(values[0], p0)
+        self.assertEqual(values[1], 0.5501745273651227)
         for i in range(len(times)):
             self.assertEqual(values[i], (
                 parameters[1] / (1 + (parameters[1] / p0 - 1) *
@@ -106,6 +107,9 @@ class TestLogistic(unittest.TestCase):
 
         # test sensitivities
         values, sensitivities = model.simulateS1(parameters, times)
+        self.assertEqual(sensitivities[1, 0], 0.5249501931516697)
+        self.assertAlmostEqual(sensitivities[1, 1], 0.0002000343976730004,
+                               places=6)
         for i in range(len(times)):
             exp = np.exp(-parameters[0] * times[i])
             exp1 = np.exp(parameters[0] * times[i])
