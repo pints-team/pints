@@ -61,7 +61,7 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
     def _generate_proposal(self):
         """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
         return np.random.multivariate_normal(
-                self._current, self._lambda * self._sigma)
+            self._current, self._lambda * self._sigma)
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
