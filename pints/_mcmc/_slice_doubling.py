@@ -429,7 +429,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                              'for interval expansion.')
         self._w = w
 
-    def tell(self, reply):
+    def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # Check ask/tell pattern
@@ -437,8 +437,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        # Ensure fx is a float
+        fx = float(fx)
 
         # If this is the log_pdf of a new point, save the value and use it
         # to check ``f(x_1) >= y``
