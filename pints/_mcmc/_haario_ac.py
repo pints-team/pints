@@ -65,7 +65,7 @@ class HaarioACMC(pints.AdaptiveCovarianceMC):
 
     def _adapt(self, accepted, log_ratio):
         """ See :meth:`pints.AdaptiveCovarianceMC._adapt()`. """
-        p = min(1, np.exp(log_ratio))
+        p = np.exp(log_ratio) if log_ratio < 0 else 1
         self._log_lambda += self._gamma * (p - self._target_acceptance)
 
     def _generate_proposal(self):

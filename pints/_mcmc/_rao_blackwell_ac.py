@@ -86,7 +86,7 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
             bar(X_t+1) = alpha(X_t, Y_t+1) * Y_t+1 +
                             (1 - alpha(X_t, Y_t+1)) * X_t
         """
-        acceptance_prob = min(1, np.exp(log_ratio))
+        acceptance_prob = np.exp(log_ratio) if log_ratio < 0 else 1
         X_bar = acceptance_prob * self._Y + (1 - acceptance_prob) * self._X
         dsigm = np.reshape(X_bar - self._mu, (self._n_parameters, 1))
         self._sigma = ((1 - self._gamma) * self._sigma +
