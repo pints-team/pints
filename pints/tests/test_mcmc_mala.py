@@ -22,6 +22,7 @@ class TestMALAMCMC(unittest.TestCase):
     """
 
     def test_short_run(self):
+        # Test a short run with MALA
 
         # Create log pdf
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
@@ -45,19 +46,17 @@ class TestMALAMCMC(unittest.TestCase):
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
         self.assertEqual(chain.shape[1], len(x0))
-        self.assertTrue(mcmc.acceptance_rate() >= 0.0 and
-                        mcmc.acceptance_rate() <= 1.0)
+        self.assertTrue(0 <= mcmc.acceptance_rate() <= 1.0)
 
     def test_needs_sensitivities(self):
-
         # This method needs sensitivities
+
         mcmc = pints.MALAMCMC(np.array([2, 2]))
         self.assertTrue(mcmc.needs_sensitivities())
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
@@ -71,6 +70,7 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertIn(' Accept.', text)
 
     def test_flow(self):
+        # Test the ask-and-tell flow
 
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = np.array([2, 2])
@@ -88,7 +88,7 @@ class TestMALAMCMC(unittest.TestCase):
         x1 = mcmc.ask()
         self.assertTrue(np.all(mcmc.ask() == x1))
 
-        # Tell without ask
+        # Tell without ask should fail
         mcmc = pints.MALAMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
@@ -109,29 +109,26 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc._initialise)
 
     def test_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
-        x0 = np.array([2, 2])
-        mcmc = pints.MALAMCMC(x0)
-        self.assertTrue(np.array_equal(
-                        mcmc._scale_vector,
-                        np.diag(mcmc._sigma0))
-                        )
-        self.assertTrue(np.array_equal(mcmc.epsilon(),
-                        0.2 * np.diag(mcmc._sigma0)))
+        # Tests the parameter interface for this sampler.
 
+        mcmc = pints.MALAMCMC(np.array([2, 2]))
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
         mcmc.set_hyper_parameters([[3, 2]])
         self.assertTrue(np.array_equal(mcmc.epsilon(), [3, 2]))
+        mcmc.set_hyper_parameters([[5, 5]])
+        self.assertTrue(np.array_equal(mcmc.epsilon(), [5, 5]))
 
-        mcmc._step_size = 5
-        mcmc._scale_vector = np.array([3, 7])
-        mcmc._epsilon = None
+    def test_epsilon(self):
+        # Test the epsilon methods
+
+        mcmc = pints.MALAMCMC(np.array([2, 2]), np.array([3, 3]))
         mcmc.set_epsilon()
-        self.assertTrue(np.array_equal(mcmc.epsilon(), [15, 35]))
+        x = mcmc.epsilon()
+        self.assertAlmostEqual(x[0], 0.6)
+        self.assertAlmostEqual(x[1], 0.6)
         mcmc.set_epsilon([0.4, 0.5])
-        self.assertTrue(np.array_equal(mcmc.epsilon(), [0.4, 0.5]))
+        self.assertTrue(np.all(mcmc.epsilon() == [0.4, 0.5]))
+
         self.assertRaises(ValueError, mcmc.set_epsilon, 3.0)
         self.assertRaises(ValueError, mcmc.set_epsilon, [-2.0, 1])
 
