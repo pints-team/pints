@@ -15,9 +15,11 @@ import numpy as np
 
 class SliceDoublingMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Slice Sampling with Doubling, as described in [1]_. This is a
-    univariate method, which is applied in a Slice-Sampling-within-Gibbs
-    framework to allow MCMC sampling from multivariate models.
+    Implements Slice Sampling with Doubling, as described in [1]_.
+
+    This is a univariate method, which is applied in a
+    Slice-Sampling-within-Gibbs framework to allow MCMC sampling from
+    multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (:math:`f`). It does so by introducing an auxiliary variable
@@ -404,13 +406,15 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """
         p = int(p)
         if p <= 0:
-            raise ValueError('Integer must be positive to limit the'
-                             'interval size to ``(2 ** integer) * width``.')
+            raise ValueError(
+                'Integer must be greater than zero (to limit the interval size'
+                ' to (2 ** integer) * width).')
         self._p = p
 
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[width, expansion steps]``.
+
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_width(x[0])
@@ -418,18 +422,24 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def set_width(self, w):
         """
-        Sets the width for generating the interval. This can either be a single
-        number or an array with the same number of elements as the number of
-        variables to update.
+        Sets the width for generating the interval.
+
+        This can either be a single number or an array with the same number of
+        elements as the number of variables to update.
         """
-        if type(w) == int or float:
-            w = np.full((len(self._x0)), w)
-        if any(n < 0 for n in w):
-            raise ValueError('Width must be positive'
-                             'for interval expansion.')
+        if np.isscalar(w):
+            w = np.ones(self._n_parameters) * w
+        else:
+            w = pints.vector(w)
+            if len(w) != self._n_parameters:
+                raise ValueError(
+                    'Width for interval expansion must a scalar or an array'
+                    ' of length n_parameters.')
+        if np.any(w < 0):
+            raise ValueError('Width for interval expansion must be positive.')
         self._w = w
 
-    def tell(self, reply):
+    def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # Check ask/tell pattern
@@ -437,8 +447,8 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        # Ensure fx is a float
+        fx = float(fx)
 
         # If this is the log_pdf of a new point, save the value and use it
         # to check ``f(x_1) >= y``
@@ -579,6 +589,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def width(self):
         """
-        Returns width used for generating the interval.
+        Returns the width used for generating the interval.
         """
         return np.copy(self._w)
