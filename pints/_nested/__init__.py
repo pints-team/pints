@@ -144,10 +144,23 @@ class NestedSampler(pints.TunableMethod):
 
     def tell(self, fx):
         """
-        Whether to accept point if its likelihood exceeds the current
-        minimum threshold.
+        If a single evaluation is provided as arguments, a single point is
+        accepted and returned if its likelihood exceeds the current threshold;
+        otherwise None is returned.
+
+        If multiple evaluations are provided as arguments (for example, if
+        running the algorithm in parallel), None is returned if no points
+        have likelihood exceeding threshold; if a single point passes the
+        threshold, it is returned; if multiple points pass, one is selected
+        uniformly at random and returned and the others are stored for later
+        use.
+
+        In all cases, two objects are returned: the proposed point (which may
+        be None) and an array of other points that also pass the threshold
+        (which is empty for single evaluation mode but may be non-empty for
+        multiple evaluation mode).
         """
-        # if running in parallel
+        # if running in parallel, then fx will be a list
         if isinstance(fx, list):
             a_len = len(fx)
             self._n_evals += a_len
@@ -158,15 +171,19 @@ class NestedSampler(pints.TunableMethod):
                 else:
                     results.append(fx[i])
             n_non_none = sum(x is not None for x in results)
+            # if none pass threshold return None and an empty array
             if n_non_none == 0:
                 return None, np.array([[]])
+            # if one passes then return it and an empty array
             elif n_non_none == 1:
                 fx_temp = next(item for item in results if item is not None)
                 index = results.index(fx_temp)
                 proposed = self._proposed[index]
                 winners = np.array([[]])
             else:
-                # select at random from multiple non-nones
+                # if more than a single point passes select at random from
+                # multiple non-nones and return it and an array of the other
+                # points whose likelihood exceeds threshold
                 fx_short = [i for i in results if i]
                 idex = [results.index(i) for i in fx_short]
                 proposed_short = [self._proposed[i] for i in idex]
@@ -178,6 +195,7 @@ class NestedSampler(pints.TunableMethod):
                 fx_short.remove(fx_temp)
                 winners = np.transpose(
                     np.vstack([np.transpose(proposed_short), fx_short]))
+        # for serial evaluation just return point or None and an empty array
         else:
             self._n_evals += 1
             if np.isnan(fx) or fx < self._running_log_likelihood:
@@ -402,8 +420,8 @@ class NestedController(object):
 
     def log_likelihood_vector(self):
         """
-        Returns vector of log likelihoods for each of the
-        stacked [m_active, m_inactive] points.
+        Returns vector of log likelihoods for each of the stacked
+        ``[m_active, m_inactive]`` points.
         """
         return self._m_samples_all[:, -1]
 

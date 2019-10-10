@@ -19,8 +19,6 @@ try:
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
-debug = False
-
 
 class TestNestedEllipsoidSampler(unittest.TestCase):
     """
@@ -184,7 +182,7 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
                                          self.log_prior)
         # hacky but currently no samplers need sensitivities
         sampler._needs_sensitivities = True
-        sampler._initialise_sensitivities()
+        sampler._initialise_callable()
 
 
 if __name__ == '__main__':
