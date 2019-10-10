@@ -227,6 +227,16 @@ class NestedController(object):
         space.
     log_prior
         A :class:`LogPrior` function on the same parameter space.
+
+    References
+    ----------
+    .. [1] "Nested Sampling for General Bayesian Computation", John Skilling,
+           Bayesian Analysis 1:4 (2006).
+           https://doi.org/10.1214/06-BA127
+
+    .. [2] "Multimodal nested sampling: an efficient and robust alternative
+            to Markov chain Monte Carlo methods for astronomical data analyses"
+            F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
     """
 
     def __init__(self, log_likelihood, log_prior, method=None):
@@ -445,11 +455,7 @@ class NestedController(object):
 
     def marginal_log_likelihood_standard_deviation(self):
         """
-        Calculates standard deviation in marginal log likelihood as in [1].
-
-        [1] "Multimodal nested sampling: an efficient and robust alternative
-        to Markov chain Monte Carlo methods for astronomical data analyses",
-        F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
+        Calculates standard deviation in marginal log likelihood as in [2]_.
         """
         if not self._log_Z_called:
             self.marginal_log_likelihood()
