@@ -16,12 +16,19 @@ from scipy.special import logsumexp
 class NestedSampler(pints.TunableMethod):
     """
     Abstract base class for nested samplers.
+
+    Parameters
+    ----------
+        ``n_active_points`` is number of live points within restricted prior
+        space at each iteration.
     """
     def __init__(self, log_prior):
         # Store function
         if not isinstance(log_prior, pints.LogPrior):
             raise ValueError('Given log_prior must extend pints.LogPrior')
+        # prior accessed by subclasses to do prior sampling in ask() step
         self._log_prior = log_prior
+
         self._running_log_likelihood = -float('Inf')
         self._proposed = None
 
@@ -34,21 +41,106 @@ class NestedSampler(pints.TunableMethod):
         self._accept_count = 0
         self._n_evals = 0
 
-    def needs_sensitivities(self):
+    def active_points(self):
         """
-        Determines whether sampler uses sensitivities of the solution.
+        Returns the active points from nested sampling run.
         """
-        return self._needs_sensitivities
-
-    def name(self):
-        """ Name of sampler """
-        raise NotImplementedError
+        return self._m_active
 
     def ask(self):
         """
         Proposes new point at which to evaluate log-likelihood.
         """
         raise NotImplementedError
+
+    def _initialise_active_points(self, m_initial, v_fx):
+        """
+        Sets initial active points matrix.
+        """
+        for i, fx in enumerate(v_fx):
+            self._m_active[i, self._n_parameters] = fx
+        self._m_active[:, :-1] = m_initial
+        self._min_index = np.argmin(self._m_active[:, self._n_parameters])
+        self._set_running_log_likelihood(
+            self._m_active[self._min_index, self._n_parameters])
+
+    def in_initial_phase(self):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method returns ``True`` if the
+        method is currently configured to be in its initial phase. For other
+        methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
+    def min_index(self):
+        """ Returns index of sample with lowest log-likelihood. """
+        return self._min_index
+
+    def n_active_points(self):
+        """
+        Returns the number of active points that will be used in next run.
+        """
+        return self._n_active_points
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        raise NotImplementedError
+
+    def name(self):
+        """ Name of sampler """
+        raise NotImplementedError
+
+    def needs_sensitivities(self):
+        """
+        Determines whether sampler uses sensitivities of the solution.
+        """
+        return self._needs_sensitivities
+
+    def needs_initial_phase(self):
+        """
+        Returns ``True`` if this method needs an initial phase, for example
+        ellipsoidal nested sampling has a period of running rejection
+        sampling before it starts to fit ellipsoids to points.
+        """
+        return False
+
+    def running_log_likelihood(self):
+        """
+        Returns current value of the threshold log-likelihood value.
+        """
+        return self._running_log_likelihood
+
+    def set_n_active_points(self, active_points):
+        """
+        Sets the number of active points for the next run.
+        """
+        active_points = int(active_points)
+        if active_points <= 5:
+            raise ValueError('Number of active points must be greater than 5.')
+        self._n_active_points = active_points
+        self._m_active = np.zeros((self._n_active_points,
+                                   self._n_parameters + 1))
+
+    def set_hyper_parameters(self, x):
+        """
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        raise NotImplementedError
+
+    def set_initial_phase(self, in_initial_phase):
+        """
+        For methods that need an initial phase (see
+        :meth:`needs_initial_phase()`), this method toggles the initial phase
+        algorithm. For other methods a ``NotImplementedError`` is returned.
+        """
+        raise NotImplementedError
+
+    def _set_running_log_likelihood(self, running_log_likelihood):
+        """
+        Updates the current value of the threshold log-likelihood value.
+        """
+        self._running_log_likelihood = running_log_likelihood
 
     def tell(self, fx):
         """
@@ -104,91 +196,6 @@ class NestedSampler(pints.TunableMethod):
         )
         self._accept_count += 1
         return proposed, winners
-
-    def in_initial_phase(self):
-        """
-        For methods that need an initial phase (see
-        :meth:`needs_initial_phase()`), this method returns ``True`` if the
-        method is currently configured to be in its initial phase. For other
-        methods a ``NotImplementedError`` is returned.
-        """
-        raise NotImplementedError
-
-    def needs_initial_phase(self):
-        """
-        Returns ``True`` if this method needs an initial phase, for example
-        ellipsoidal nested sampling has a period of running rejection
-        sampling before it starts to fit ellipsoids to points.
-        """
-        return False
-
-    def set_initial_phase(self, in_initial_phase):
-        """
-        For methods that need an initial phase (see
-        :meth:`needs_initial_phase()`), this method toggles the initial phase
-        algorithm. For other methods a ``NotImplementedError`` is returned.
-        """
-        raise NotImplementedError
-
-    def _set_running_log_likelihood(self, running_log_likelihood):
-        """
-        Updates the current value of the threshold log-likelihood value.
-        """
-        self._running_log_likelihood = running_log_likelihood
-
-    def running_log_likelihood(self):
-        """
-        Returns current value of the threshold log-likelihood value.
-        """
-        return self._running_log_likelihood
-
-    def set_n_active_points(self, active_points):
-        """
-        Sets the number of active points for the next run.
-        """
-        active_points = int(active_points)
-        if active_points <= 5:
-            raise ValueError('Number of active points must be greater than 5.')
-        self._n_active_points = active_points
-        self._m_active = np.zeros((self._n_active_points,
-                                   self._n_parameters + 1))
-
-    def n_active_points(self):
-        """
-        Returns the number of active points that will be used in next run.
-        """
-        return self._n_active_points
-
-    def active_points(self):
-        """
-        Returns the active points from nested sampling run.
-        """
-        return self._m_active
-
-    def _initialise_active_points(self, m_initial, v_fx):
-        """
-        Sets initial active points matrix.
-        """
-        for i, fx in enumerate(v_fx):
-            self._m_active[i, self._n_parameters] = fx
-        self._m_active[:, :-1] = m_initial
-        self._min_index = np.argmin(self._m_active[:, self._n_parameters])
-        self._set_running_log_likelihood(
-            self._m_active[self._min_index, self._n_parameters])
-
-    def min_index(self):
-        """ Returns index of sample with lowest log-likelihood. """
-        return self._min_index
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        raise NotImplementedError
-
-    def set_hyper_parameters(self, x):
-        """
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        raise NotImplementedError
 
 
 class NestedController(object):
@@ -323,9 +330,9 @@ class NestedController(object):
         """
         return self._posterior_samples
 
-    def _initialise_parallel(self, f):
+    def _initialise_evaluator(self, f):
         """
-        Initialises parallel runners.
+        Initialises parallel runners, if desired.
         """
         # Create evaluator object
         if self._parallel:
@@ -337,9 +344,10 @@ class NestedController(object):
             evaluator = pints.SequentialEvaluator(f)
         return evaluator
 
-    def _initialise_sensitivities(self):
+    def _initialise_callable(self):
         """
-        Initialises sensitivities if they are needed.
+        Initialises sensitivities if they are needed; otherwise, returns
+        a callable log likelihood.
         """
         f = self._log_likelihood
         if self._needs_sensitivities:
@@ -443,10 +451,10 @@ class NestedController(object):
         """
 
         # Choose method to evaluate
-        f = self._initialise_sensitivities()
+        f = self._initialise_callable()
 
         # Set parallel
-        self._evaluator = self._initialise_parallel(f)
+        self._evaluator = self._initialise_evaluator(f)
 
         self._n_active_points = self._sampler.n_active_points()
 
