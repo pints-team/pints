@@ -272,63 +272,54 @@ class NestedController(object):
         # Check if sensitivities are required
         self._needs_sensitivities = self._sampler.needs_sensitivities()
 
-    def set_parallel(self, parallel=False):
+    def active_points(self):
         """
-        Enables/disables parallel evaluation.
+        Returns the active points from nested sampling.
+        """
+        return self._sampler.active_points()
 
-        If ``parallel=True``, the method will run using a number of worker
-        processes equal to the detected cpu core count. The number of workers
-        can be set explicitly by setting ``parallel`` to an integer greater
-        than 0.
-        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
-        ``False``.
+    def _diff_marginal_likelihood(self, i, d):
         """
-        if parallel is True:
-            self._parallel = True
-            self._n_workers = pints.ParallelEvaluator.cpu_count()
-        elif parallel >= 1:
-            self._parallel = True
-            self._n_workers = int(parallel)
-        else:
-            self._parallel = False
-            self._n_workers = 1
+        Calculates difference in marginal likelihood between current and
+        previous iterations.
+        """
+        v_temp = np.concatenate((
+            self._v_log_Z[0:(i - 1)],
+            [np.max(self._sampler._m_active[:, d])]))
+        w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
+        self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
+                                b=self._w[0:(i - 1)]) -
+                      logsumexp(v_temp, b=w_temp))
 
-    def parallel(self):
-        """
-        Returns the number of parallel worker processes this routine will be
-        run on, or ``False`` if parallelisation is disabled.
-        """
-        return self._n_workers if self._parallel else False
+    def effective_sample_size(self):
+        r"""
+        Calculates the effective sample size of posterior samples from a
+        nested sampling run using the formula:
 
-    def set_marginal_log_likelihood_threshold(self, threshold):
-        """
-        Sets threshold for determining convergence in estimate of marginal
-        log likelihood which leads to early termination of the algorithm.
-        """
-        if threshold <= 0:
-            raise ValueError('Convergence threshold must be positive.')
-        self._marginal_log_likelihood_threshold = threshold
+        .. math::
+            ESS = exp(-sum_{i=1}^{m} p_i log p_i),
 
-    def marginal_log_likelihood_threshold(self):
+        in other words, the information. Given by eqn. (39) in [1]_.
         """
-        Returns threshold for determining convergence in estimate of marginal
-        log likelihood which leads to early termination of the algorithm.
-        """
-        return self._marginal_log_likelihood_threshold
+        self._log_vP = (self._m_samples_all[:, self._n_parameters]
+                        - self._log_Z + np.log(self._w))
+        return np.exp(-np.sum(self._vP * self._log_vP))
 
-    def iterations(self):
+    def inactive_points(self):
         """
-        Returns the total number of iterations that will be performed in the
-        next run.
+        Returns the inactive points from nested sampling.
         """
-        return self._iterations
+        return self._m_inactive
 
-    def n_posterior_samples(self):
+    def _initialise_callable(self):
         """
-        Returns the number of posterior samples that will be returned (see
-        :meth:`set_n_posterior_samples()`).
+        Initialises sensitivities if they are needed; otherwise, returns
+        a callable log likelihood.
         """
-        return self._posterior_samples
+        f = self._log_likelihood
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+        return f
 
     def _initialise_evaluator(self, f):
         """
@@ -343,16 +334,6 @@ class NestedController(object):
         else:
             evaluator = pints.SequentialEvaluator(f)
         return evaluator
-
-    def _initialise_callable(self):
-        """
-        Initialises sensitivities if they are needed; otherwise, returns
-        a callable log likelihood.
-        """
-        f = self._log_likelihood
-        if self._needs_sensitivities:
-            f = f.evaluateS1
-        return f
 
     def _initialise_logger(self):
         """
@@ -412,37 +393,89 @@ class NestedController(object):
                         1 + i // self._message_interval)
         return v_fx, m_initial
 
-    def _diff_marginal_likelihood(self, i, d):
+    def iterations(self):
         """
-        Calculates difference in marginal likelihood between current and
-        previous iterations.
+        Returns the total number of iterations that will be performed in the
+        next run.
         """
-        v_temp = np.concatenate((
-            self._v_log_Z[0:(i - 1)],
-            [np.max(self._sampler._m_active[:, d])]))
-        w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
-        self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
-                                b=self._w[0:(i - 1)]) -
-                      logsumexp(v_temp, b=w_temp))
+        return self._iterations
 
-    def _update_logger(self):
+    def log_likelihood_vector(self):
         """
-        Updates logger if necessary.
+        Returns vector of log likelihoods for each of the
+        stacked [m_active, m_inactive] points.
         """
-        if self._logging:
-            self._i_message += 1
-            if self._i_message >= self._next_message:
-                # Log state
-                self._logger.log(self._i_message, self._sampler._n_evals,
-                                 self._timer.time(), self._diff,
-                                 float(self._sampler._accept_count /
-                                       (self._sampler._n_evals -
-                                        self._sampler._n_active_points)))
+        return self._m_samples_all[:, -1]
 
-                # Choose next logging point
-                if self._i_message > self._message_warm_up:
-                    self._next_message = self._message_interval * (
-                        1 + self._i_message // self._message_interval)
+    def marginal_log_likelihood(self):
+        """
+        Calculates the marginal log likelihood of nested sampling run.
+        """
+        # Include active particles in sample
+        m_active = self._sampler.active_points()
+        self._v_log_Z[self._iterations] = logsumexp(m_active[:,
+                                                    self._n_parameters])
+        self._w[self._iterations:] = float(self._X[self._iterations]) / float(
+            self._sampler.n_active_points())
+        self._m_samples_all = np.vstack((self._m_inactive, m_active))
+
+        # Determine log evidence
+        log_Z = logsumexp(self._v_log_Z,
+                          b=self._w[0:(self._iterations + 1)])
+        self._log_Z_called = True
+        return log_Z
+
+    def marginal_log_likelihood_standard_deviation(self):
+        """
+        Calculates standard deviation in marginal log likelihood as in [1].
+
+        [1] "Multimodal nested sampling: an efficient and robust alternative
+        to Markov chain Monte Carlo methods for astronomical data analyses",
+        F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
+        """
+        if not self._log_Z_called:
+            self.marginal_log_likelihood()
+        log_L_minus_Z = self._v_log_Z - self._log_Z
+        log_Z_sd = logsumexp(log_L_minus_Z,
+                             b=self._w[0:(self._iterations + 1)] *
+                             log_L_minus_Z)
+        log_Z_sd = np.sqrt(log_Z_sd / self._sampler.n_active_points())
+        return log_Z_sd
+
+    def marginal_log_likelihood_threshold(self):
+        """
+        Returns threshold for determining convergence in estimate of marginal
+        log likelihood which leads to early termination of the algorithm.
+        """
+        return self._marginal_log_likelihood_threshold
+
+    def n_posterior_samples(self):
+        """
+        Returns the number of posterior samples that will be returned (see
+        :meth:`set_n_posterior_samples()`).
+        """
+        return self._posterior_samples
+
+    def parallel(self):
+        """
+        Returns the number of parallel worker processes this routine will be
+        run on, or ``False`` if parallelisation is disabled.
+        """
+        return self._n_workers if self._parallel else False
+
+    def posterior_samples(self):
+        """
+        Returns posterior samples generated during run of nested
+        sampling object.
+        """
+        return self._m_posterior_samples
+
+    def prior_space(self):
+        """
+        Returns a vector of X samples which approximates the proportion
+        of prior space compressed.
+        """
+        return self._X
 
     def run(self):
         """
@@ -582,7 +615,10 @@ class NestedController(object):
 
     def sample_from_posterior(self, posterior_samples):
         """
-        Draws posterior samples based on nested sampling run.
+        Draws posterior samples based on nested sampling run using importance
+        sampling. This function is automatically called in
+        ``NestedController.run()`` but can also be called afterwards to obtain
+        new posterior samples.
         """
         if posterior_samples < 1:
             raise ValueError('Number of posterior samples must be positive.')
@@ -601,61 +637,14 @@ class NestedController(object):
         m_posterior_samples = m_theta[vIndex, :]
         return m_posterior_samples
 
-    def posterior_samples(self):
+    def set_iterations(self, iterations):
         """
-        Returns posterior samples generated during run of nested
-        sampling object.
+        Sets the total number of iterations to be performed in the next run.
         """
-        return self._m_posterior_samples
-
-    def prior_space(self):
-        """
-        Returns a vector of X samples which approximates the proportion
-        of prior space compressed.
-        """
-        return self._X
-
-    def marginal_log_likelihood(self):
-        """
-        Calculates the marginal log likelihood of nested sampling run.
-        """
-        # Include active particles in sample
-        m_active = self._sampler.active_points()
-        self._v_log_Z[self._iterations] = logsumexp(m_active[:,
-                                                    self._n_parameters])
-        self._w[self._iterations:] = float(self._X[self._iterations]) / float(
-            self._sampler.n_active_points())
-        self._m_samples_all = np.vstack((self._m_inactive, m_active))
-
-        # Determine log evidence
-        log_Z = logsumexp(self._v_log_Z,
-                          b=self._w[0:(self._iterations + 1)])
-        self._log_Z_called = True
-        return log_Z
-
-    def marginal_log_likelihood_standard_deviation(self):
-        """
-        Calculates standard deviation in marginal log likelihood as in [1].
-
-        [1] "Multimodal nested sampling: an efficient and robust alternative
-        to Markov chain Monte Carlo methods for astronomical data analyses",
-        F. Feroz and M. P. Hobson, 2008, Mon. Not. R. Astron. Soc.
-        """
-        if not self._log_Z_called:
-            self.marginal_log_likelihood()
-        log_L_minus_Z = self._v_log_Z - self._log_Z
-        log_Z_sd = logsumexp(log_L_minus_Z,
-                             b=self._w[0:(self._iterations + 1)] *
-                             log_L_minus_Z)
-        log_Z_sd = np.sqrt(log_Z_sd / self._sampler.n_active_points())
-        return log_Z_sd
-
-    def log_likelihood_vector(self):
-        """
-        Returns vector of log likelihoods for each of the
-        stacked [m_active, m_inactive] points.
-        """
-        return self._m_samples_all[:, -1]
+        iterations = int(iterations)
+        if iterations < 0:
+            raise ValueError('Number of iterations cannot be negative.')
+        self._iterations = iterations
 
     def set_log_to_file(self, filename=None, csv=False):
         """
@@ -679,14 +668,35 @@ class NestedController(object):
         """
         self._log_to_screen = True if enabled else False
 
-    def set_iterations(self, iterations):
+    def set_marginal_log_likelihood_threshold(self, threshold):
         """
-        Sets the total number of iterations to be performed in the next run.
+        Sets threshold for determining convergence in estimate of marginal
+        log likelihood which leads to early termination of the algorithm.
         """
-        iterations = int(iterations)
-        if iterations < 0:
-            raise ValueError('Number of iterations cannot be negative.')
-        self._iterations = iterations
+        if threshold <= 0:
+            raise ValueError('Convergence threshold must be positive.')
+        self._marginal_log_likelihood_threshold = threshold
+
+    def set_parallel(self, parallel=False):
+        """
+        Enables/disables parallel evaluation.
+
+        If ``parallel=True``, the method will run using a number of worker
+        processes equal to the detected cpu core count. The number of workers
+        can be set explicitly by setting ``parallel`` to an integer greater
+        than 0.
+        Parallelisation can be disabled by setting ``parallel`` to ``0`` or
+        ``False``.
+        """
+        if parallel is True:
+            self._parallel = True
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
+        elif parallel >= 1:
+            self._parallel = True
+            self._n_workers = int(parallel)
+        else:
+            self._parallel = False
+            self._n_workers = 1
 
     def set_n_posterior_samples(self, posterior_samples):
         """
@@ -699,31 +709,21 @@ class NestedController(object):
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
 
-    def effective_sample_size(self):
-        r"""
-        Calculates the effective sample size of posterior samples from a
-        nested sampling run using the formula:
-
-        .. math::
-            ESS = exp(-sum_{i=1}^{m} p_i log p_i),
-
-        in other words, the information. Given by eqn. (39) in [1].
-
-        [1] "Nested Sampling for General Bayesian Computation", John Skilling,
-        Bayesian Analysis 1:4 (2006).
+    def _update_logger(self):
         """
-        self._log_vP = (self._m_samples_all[:, self._n_parameters]
-                        - self._log_Z + np.log(self._w))
-        return np.exp(-np.sum(self._vP * self._log_vP))
+        Updates logger if necessary.
+        """
+        if self._logging:
+            self._i_message += 1
+            if self._i_message >= self._next_message:
+                # Log state
+                self._logger.log(self._i_message, self._sampler._n_evals,
+                                 self._timer.time(), self._diff,
+                                 float(self._sampler._accept_count /
+                                       (self._sampler._n_evals -
+                                        self._sampler._n_active_points)))
 
-    def inactive_points(self):
-        """
-        Returns the inactive points from nested sampling.
-        """
-        return self._m_inactive
-
-    def active_points(self):
-        """
-        Returns the active points from nested sampling.
-        """
-        return self._sampler.active_points()
+                # Choose next logging point
+                if self._i_message > self._message_warm_up:
+                    self._next_message = self._message_interval * (
+                        1 + self._i_message // self._message_interval)
