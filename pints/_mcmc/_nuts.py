@@ -125,19 +125,21 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._current = None            # Aka current_q in the chapter
         self._current_U = None     # Aka U(current_q) = -log_pdf
         self._current_gradient = None
-        self._current_log_pdf = None
         self._current_momentum = None   # Aka current_p
-        self._depth = 0
+        self._Delta_max = 1000
+        self._depth = None
         self._first_leapfrog = True
         self._max_tree_depth = 10
-        self._n = 1
+        self._log_pdf = None
+        self._n = None
         self._n_primed = None
         self._r_minus = None
         self._r_plus = None
-        self._s = 1
+        self._s = None
         self._s_primed = None
         self._theta_minus = None
         self._theta_plus = None
+        self._theta_tilde = None
         self._v = None
 
         # Current point in the leapfrog iterations
@@ -181,16 +183,20 @@ class NUTSMCMC(pints.SingleChainMCMC):
 
         # start NUTS iteration
         if self._within_iteration is False:
+            self._within_iteration = True
             self._current_momentum = np.random.multivariate_normal(
                 np.zeros(self._n_parameters), np.eye(self._n_parameters))
             r_sq = np.linalg.norm(self._current_momentum)**2
-            log_u = self._current_U - 0.5 * r_sq - np.random.exponential(1)
+            log_u = self._log_pdf - (0.5 * r_sq -
+                                     np.random.exponential(1))
             self._theta_minus = np.copy(self._current)
             self._theta_plus = np.copy(self._current)
             self._r_minus = np.copy(self._current_momentum)
             self._r_plus = np.copy(self._current_momentum)
-            self._within_iteration = True
             self._position = np.copy(self._current)
+            self._depth = 0
+            self._n = 1
+            self._s = 1
 
         # terminate iteration if max tree depth reached
         if self._depth < self._max_tree_depth:
@@ -241,15 +247,6 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._within_iteration = False
         return self._position
 
-    def _calculate_s(self, s, theta_plus, theta_minus, r_plus, r_minus):
-        """
-        Calculates s variable as in Algorithm 3 in [1]_.
-        """
-        theta_diff = theta_plus - theta_minus
-        prod_minus = np.dot(theta_diff, r_minus)
-        prod_plus = np.dot(theta_diff, r_plus)
-        return s * int(prod_plus >= 0) * int(prod_minus >= 0)
-
     def build_tree(self, theta, r, log_u, v, j, epsilon):
         """
         Builds tree containing leaves of position-momenta as defined in
@@ -258,9 +255,9 @@ class NUTSMCMC(pints.SingleChainMCMC):
         if j == 0:
             theta_primed, r_primed = self.leapfrog(theta, r, v * epsilon)
             # if in midst of leapfrog then return just theta to evaulate and
-            # pad with -99s to be of same shape as other returns of function
+            # pad with Nones to be of same shape as other returns of function
             if not self._first_leapfrog:
-                return theta_primed, -99, -99, -99, -99, -99, -99
+                return theta_primed, None, None, None, None, None, None
             l_rhs = self._log_pdf - 0.5 * np.linalg.norm(r_primed)**2
             n_primed = int(log_u <= l_rhs)
             s_primed = int(log_u - self._Delta_max <= l_rhs)
@@ -289,6 +286,15 @@ class NUTSMCMC(pints.SingleChainMCMC):
                 n_primed = n_primed + n_primed_1
         return theta_minus, r_minus, theta_plus, r_plus, theta_primed,
         n_primed, s_primed
+
+    def _calculate_s(self, s, theta_plus, theta_minus, r_plus, r_minus):
+        """
+        Calculates s variable as in Algorithm 3 in [1]_.
+        """
+        theta_diff = theta_plus - theta_minus
+        prod_minus = np.dot(theta_diff, r_minus)
+        prod_plus = np.dot(theta_diff, r_plus)
+        return s * int(prod_plus >= 0) * int(prod_minus >= 0)
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
@@ -440,7 +446,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
 
         # Energy = -log_pdf, so flip sign
         U = -neg_U
-        self._current_log_pdf = neg_U
+        self._log_pdf = neg_U
 
         # Very first call
         if self._current is None:
