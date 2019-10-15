@@ -131,6 +131,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._first_leapfrog = True
         self._max_tree_depth = 10
         self._log_pdf = None
+        self._log_u = None
         self._n = None
         self._n_primed = None
         self._r_minus = None
@@ -187,8 +188,8 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._current_momentum = np.random.multivariate_normal(
                 np.zeros(self._n_parameters), np.eye(self._n_parameters))
             r_sq = np.linalg.norm(self._current_momentum)**2
-            log_u = self._log_pdf - (0.5 * r_sq -
-                                     np.random.exponential(1))
+            self._log_u = self._log_pdf - (0.5 * r_sq -
+                                           np.random.exponential(1))
             self._theta_minus = np.copy(self._current)
             self._theta_plus = np.copy(self._current)
             self._r_minus = np.copy(self._current_momentum)
@@ -198,54 +199,21 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._n = 1
             self._s = 1
 
-        # terminate iteration if max tree depth reached
-        if self._depth < self._max_tree_depth:
-            # on first leapfrog move one Euler step and return theta
-            if self._first_leapfrog:
-                if self._s == 1:
-                    self._v = random.sample([-1, 1], 1)[0]
-                    if self._v == -1:
-                        theta, _, _, _, _, _, _ = (
-                            self.build_tree(self._theta_minus, self._r_minus,
-                                            log_u, self._v, self._depth,
-                                            self._scaled_epsilon))
-                    else:
-                        theta, _, _, _, _, _, _ = (
-                            self.build_tree(self._theta_plus, self._r_plus,
-                                            log_u, self._v, self._depth,
-                                            self._scaled_epsilon))
-                return theta
+        # on first leapfrog move one Euler step and return theta
+        assert(self._first_leapfrog)
+        if self._s == 1:
+            self._v = random.sample([-1, 1], 1)[0]
+            if self._v == -1:
+                theta, _, _, _, _, _, _ = (
+                    self.build_tree(self._theta_minus, self._r_minus,
+                                    self._log_u, self._v, self._depth,
+                                    self._scaled_epsilon))
             else:
-                if self._v == -1:
-                    temp_list = self._build_tree(self._theta_minus,
-                                                 self._r_minus, log_u, self._v,
-                                                 self._depth,
-                                                 self._scaled_epsilon)
-                    self._theta_minus = temp_list[0]
-                    self._r_minus = temp_list[1]
-                else:
-                    temp_list = self._build_tree(self._theta_plus,
-                                                 self._r_plus, log_u,
-                                                 self._v, self._depth,
-                                                 self._scaled_epsilon)
-                    self._theta_plus = temp_list[2]
-                    self._r_plus = temp_list[3]
-
-                self._theta_primed = temp_list[4]
-                self._n_primed = temp_list[5]
-                self._s_primed = temp_list[6]
-                if self._s_primed == 1:
-                    u1 = np.random.uniform(0, 1)
-                    n_ratio = self._n_primed / self._n
-                    if n_ratio > u1:
-                        self._position = np.copy(self._theta_primed)
-                self._n += self._n_primed
-                self._s = self._calculate_s(self._s_primed, self._theta_plus,
-                                            self._theta_minus, self._r_plus,
-                                            self._r_minus)
-                self._depth += 1
-        self._within_iteration = False
-        return self._position
+                theta, _, _, _, _, _, _ = (
+                    self.build_tree(self._theta_plus, self._r_plus,
+                                    self._log_u, self._v, self._depth,
+                                    self._scaled_epsilon))
+        return theta
 
     def build_tree(self, theta, r, log_u, v, j, epsilon):
         """
@@ -348,7 +316,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 1
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -474,9 +442,44 @@ class NUTSMCMC(pints.SingleChainMCMC):
         # Set gradient of current leapfrog position
         self._gradient = gradient
 
-        # Not the last iteration? Then return None
-        if self._within_iteration:
-            return None
+        # Do 2nd half of leapfrog and finish first go round while loop in
+        # algorithm 3 in [1]_.
+        assert(not self._first_leapfrog)
+        if self._v == -1:
+            temp_list = self._build_tree(self._theta_minus, self._r_minus,
+                                         self._log_u, self._v, self._depth,
+                                         self._scaled_epsilon)
+            self._theta_minus = temp_list[0]
+            self._r_minus = temp_list[1]
+        else:
+            temp_list = self._build_tree(self._theta_plus, self._r_plus,
+                                         self._log_u, self._v, self._depth,
+                                         self._scaled_epsilon)
+            self._theta_plus = temp_list[2]
+            self._r_plus = temp_list[3]
+
+        self._theta_primed = temp_list[4]
+        self._n_primed = temp_list[5]
+        self._s_primed = temp_list[6]
+        if self._s_primed == 1:
+            u1 = np.random.uniform(0, 1)
+            n_ratio = self._n_primed / self._n
+            if n_ratio > u1:
+                self._position = np.copy(self._theta_primed)
+        self._n += self._n_primed
+        self._s = self._calculate_s(self._s_primed, self._theta_plus,
+                                    self._theta_minus, self._r_plus,
+                                    self._r_minus)
+        self._depth += 1
+
+        # terminate iteration if max tree depth reached
+        if self._depth < self._max_tree_depth:
+            # go back to start of while loop with greater depth in tree
+            if self._s == 1:
+                return None
+
+        # terminate iteration
+        self._within_iteration = False
 
         # Before starting accept/reject procedure, check if the leapfrog
         # procedure has led to a finite momentum and logpdf. If not, reject.
