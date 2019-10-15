@@ -124,7 +124,6 @@ class NUTSMCMC(pints.SingleChainMCMC):
         # Current point in the Markov chain
         self._current = None            # Aka current_q in the chapter
         self._current_U = None     # Aka U(current_q) = -log_pdf
-        self._current_gradient = None
         self._current_momentum = None   # Aka current_p
         self._Delta_max = 1000
         self._depth = None
@@ -141,6 +140,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._theta_minus = None
         self._theta_plus = None
         self._theta_tilde = None
+        self._within_iteration = False
         self._v = None
 
         # Current point in the leapfrog iterations
@@ -171,15 +171,15 @@ class NUTSMCMC(pints.SingleChainMCMC):
         if self._ready_for_tell:
             raise RuntimeError('Ask() called when expecting call to tell().')
 
+        self._ready_for_tell = True
+
         # Initialise on first call
         if not self._running:
             self._running = True
 
         # Very first iteration
         if self._current is None:
-
             # Ask for the pdf and gradient of x0
-            self._ready_for_tell = True
             return np.array(self._x0, copy=True)
 
         # start NUTS iteration
@@ -205,17 +205,17 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._v = random.sample([-1, 1], 1)[0]
             if self._v == -1:
                 theta, _, _, _, _, _, _ = (
-                    self.build_tree(self._theta_minus, self._r_minus,
-                                    self._log_u, self._v, self._depth,
-                                    self._scaled_epsilon))
+                    self._build_tree(self._theta_minus, self._r_minus,
+                                     self._log_u, self._v, self._depth,
+                                     self._scaled_epsilon))
             else:
                 theta, _, _, _, _, _, _ = (
-                    self.build_tree(self._theta_plus, self._r_plus,
-                                    self._log_u, self._v, self._depth,
-                                    self._scaled_epsilon))
+                    self._build_tree(self._theta_plus, self._r_plus,
+                                     self._log_u, self._v, self._depth,
+                                     self._scaled_epsilon))
         return theta
 
-    def build_tree(self, theta, r, log_u, v, j, epsilon):
+    def _build_tree(self, theta, r, log_u, v, j, epsilon):
         """
         Builds tree containing leaves of position-momenta as defined in
         Algorithm 3 in [1]_.
@@ -234,26 +234,26 @@ class NUTSMCMC(pints.SingleChainMCMC):
             theta_plus = theta_primed
             r_plus = r_primed
         else:
-            (theta_minus, r_minus, theta_plus, r_plus, theta_primed_1,
-             n_primed_1, s_primed_1) = self._build_tree(theta, r, log_u, v,
-                                                        j - 1, epsilon)
-            if s_primed_1 == 1:
+            (theta_minus, r_minus, theta_plus, r_plus, theta_primed,
+             n_primed, s_primed) = self._build_tree(theta, r, log_u, v,
+                                                    j - 1, epsilon)
+            if s_primed == 1:
                 if v == -1:
                     (theta_minus, r_minus, _, _, theta_primed_1, n_primed_1,
                      s_primed_1) = self._build_tree(theta_minus, r_minus,
                                                     log_u, v, j - 1, epsilon)
                 else:
-                    _, _, theta_plus, r_plus, theta_primed_1, n_primed_1,
-                    s_primed_1 = self._build_tree(theta_plus, r_plus,
-                                                  log_u, v, j - 1, epsilon)
+                    (_, _, theta_plus, r_plus, theta_primed_1, n_primed_1,
+                     s_primed_1) = self._build_tree(theta_plus, r_plus,
+                                                    log_u, v, j - 1, epsilon)
                 u_1 = np.random.uniform(0, 1)
                 if n_primed_1 / (n_primed + n_primed_1) > u_1:
-                    theta_primed = theta_primed_1
+                    theta_primed = np.copy(theta_primed_1)
                 s_primed = self._calculate_s(s_primed_1, theta_plus,
                                              theta_minus, r_plus, r_minus)
-                n_primed = n_primed + n_primed_1
-        return theta_minus, r_minus, theta_plus, r_plus, theta_primed,
-        n_primed, s_primed
+                n_primed += n_primed_1
+        return (theta_minus, r_minus, theta_plus, r_plus, theta_primed,
+                n_primed, s_primed)
 
     def _calculate_s(self, s, theta_plus, theta_minus, r_plus, r_minus):
         """
@@ -428,7 +428,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._current = self._x0
             self._current_U = U
             self._current
-            self._current_gradient = gradient
+            self._gradient = gradient
 
             # Increase iteration count
             self._mcmc_iteration += 1
@@ -516,7 +516,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
                 accept = np.array_equal(self._position, self._current)
                 self._current = np.copy(self._position)
                 self._current_U = U
-                self._current_gradient = gradient
+                self._gradient = gradient
 
                 # Mark current as read-only, so it can be safely returned
                 self._current.setflags(write=False)
