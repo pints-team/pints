@@ -201,25 +201,27 @@ class NUTSMCMC(pints.SingleChainMCMC):
                     if self._v == -1:
                         theta, _, _, _, _, _, _ = (
                             self.build_tree(self._theta_minus, self._r_minus,
-                                            u, v, self._depth,
+                                            log_u, self._v, self._depth,
                                             self._scaled_epsilon))
                     else:
                         theta, _, _, _, _, _, _ = (
                             self.build_tree(self._theta_plus, self._r_plus,
-                                            u, v, self._depth,
+                                            log_u, self._v, self._depth,
                                             self._scaled_epsilon))
                 return theta
             else:
                 if self._v == -1:
-                    temp_list = build_tree(self._theta_minus, self._r_minus, u,
-                                           v, self._depth,
-                                           self._scaled_epsilon)
+                    temp_list = self._build_tree(self._theta_minus,
+                                                 self._r_minus, log_u, self._v,
+                                                 self._depth,
+                                                 self._scaled_epsilon)
                     self._theta_minus = temp_list[0]
                     self._r_minus = temp_list[1]
                 else:
-                    temp_list = build_tree(self._theta_plus, self._r_plus, u,
-                                           v, self._depth,
-                                           self._scaled_epsilon)
+                    temp_list = self._build_tree(self._theta_plus,
+                                                 self._r_plus, log_u,
+                                                 self._v, self._depth,
+                                                 self._scaled_epsilon)
                     self._theta_plus = temp_list[2]
                     self._r_plus = temp_list[3]
 
@@ -267,31 +269,26 @@ class NUTSMCMC(pints.SingleChainMCMC):
             theta_plus = theta_primed
             r_plus = r_primed
         else:
-            theta_minus, r_minus, theta_plus, r_plus, theta_primed_1,
-                n_primed_1, s_primed_1 = BuildTree(theta, r, u, v,
-                                                   j - 1, epsilon)
-            if s_primed_1 = 1:
-                if v = -1:
-                    theta_minus, r_minus, _, _, theta_primed_1, n_primed_1,
-                        s_primed_1 = BuildTree(theta_minus, r_minus,
-                                               u, v, j - 1, epsilon)
+            (theta_minus, r_minus, theta_plus, r_plus, theta_primed_1,
+             n_primed_1, s_primed_1) = self._build_tree(theta, r, log_u, v,
+                                                        j - 1, epsilon)
+            if s_primed_1 == 1:
+                if v == -1:
+                    (theta_minus, r_minus, _, _, theta_primed_1, n_primed_1,
+                     s_primed_1) = self._build_tree(theta_minus, r_minus,
+                                                    log_u, v, j - 1, epsilon)
                 else:
                     _, _, theta_plus, r_plus, theta_primed_1, n_primed_1,
-                        s_primed_1 = BuildTree(theta_plus, r_plus,
-                                               u, v, j - 1, epsilon)
-                endif
-                u_1 ~ uniform(0, 1)
+                    s_primed_1 = self._build_tree(theta_plus, r_plus,
+                                                  log_u, v, j - 1, epsilon)
+                u_1 = np.random.uniform(0, 1)
                 if n_primed_1 / (n_primed + n_primed_1) > u_1:
                     theta_primed = theta_primed_1
-                endif
-                s_primed = s_primed_1 *
-                           1((theta_plus - theta_minus).r_minus >= 0) *
-                           1((theta_plus - theta_minus).r_plus >= 0)
+                s_primed = self._calculate_s(s_primed_1, theta_plus,
+                                             theta_minus, r_plus, r_minus)
                 n_primed = n_primed + n_primed_1
-            endif
-        endif
         return theta_minus, r_minus, theta_plus, r_plus, theta_primed,
-               n_primed, s_primed
+        n_primed, s_primed
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
@@ -322,7 +319,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
         """
         if self._first_leapfrog:
             self._momentum = r + (epsilon / 2) * self._gradient
-            self._theta_tilde = theta + epsilon * r_tilde
+            self._theta_tilde = theta + epsilon * self._momentum
             self._first_leapfrog = False
         else:
             self._momentum += (epsilon / 2) * self._gradient
@@ -423,7 +420,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
         early.
         """
         max_tree_depth = int(max_tree_depth)
-        if tree_depth <= 0:
+        if max_tree_depth <= 0:
             raise ValueError('Max tree depth must be positive')
         self._max_tree_depth = max_tree_depth
 
@@ -482,7 +479,6 @@ class NUTSMCMC(pints.SingleChainMCMC):
 
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
-            current_U = self._current_U
             current_K = np.sum(self._current_momentum**2 / 2)
             proposed_U = U
             proposed_K = np.sum(self._momentum**2 / 2)
