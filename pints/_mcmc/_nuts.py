@@ -125,13 +125,13 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._current = None            # Aka current_q in the chapter
         self._current_U = None     # Aka U(current_q) = -log_pdf
         self._current_gradient = None
+        self._current_log_pdf = None
         self._current_momentum = None   # Aka current_p
         self._depth = 0
         self._first_leapfrog = True
         self._max_tree_depth = 10
         self._n = 1
         self._n_primed = None
-        self._r = None
         self._r_minus = None
         self._r_plus = None
         self._s = 1
@@ -190,45 +190,54 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._r_minus = np.copy(self._current_momentum)
             self._r_plus = np.copy(self._current_momentum)
             self._within_iteration = True
+            self._position = np.copy(self._current)
 
-        # on first leapfrog move one Euler step and return theta
-        if self._first_leapfrog:
-            if self._s == 1:
-                self._v = random.sample([-1, 1], 1)[0]
-                if self._v == -1:
-                    theta, _, _, _, _, _, _ = (
-                        self.build_tree(self._theta_minus, self._r_minus, u, v,
-                                        self._depth, self._scaled_epsilon))
-                else:
-                    theta, _, _, _, _, _, _ = (
-                        self.build_tree(self._theta_plus, self._r_plus, u, v,
-                                        self._depth, self._scaled_epsilon))
-            return theta
-        else:
-            if self._v == -1:
-                temp_list = build_tree(self._theta_minus, self._r_minus, u,
-                                       v, self._depth, self._scaled_epsilon)
-                self._theta_minus = temp_list[0]
-                self._r_minus = temp_list[1]
+        # terminate iteration if max tree depth reached
+        if self._depth < self._max_tree_depth:
+            # on first leapfrog move one Euler step and return theta
+            if self._first_leapfrog:
+                if self._s == 1:
+                    self._v = random.sample([-1, 1], 1)[0]
+                    if self._v == -1:
+                        theta, _, _, _, _, _, _ = (
+                            self.build_tree(self._theta_minus, self._r_minus,
+                                            u, v, self._depth,
+                                            self._scaled_epsilon))
+                    else:
+                        theta, _, _, _, _, _, _ = (
+                            self.build_tree(self._theta_plus, self._r_plus,
+                                            u, v, self._depth,
+                                            self._scaled_epsilon))
+                return theta
             else:
-                temp_list = build_tree(self._theta_plus, self._r_plus, u,
-                                       v, self._depth, self._scaled_epsilon)
-                self._theta_plus = temp_list[2]
-                self._r_plus = temp_list[3]
+                if self._v == -1:
+                    temp_list = build_tree(self._theta_minus, self._r_minus, u,
+                                           v, self._depth,
+                                           self._scaled_epsilon)
+                    self._theta_minus = temp_list[0]
+                    self._r_minus = temp_list[1]
+                else:
+                    temp_list = build_tree(self._theta_plus, self._r_plus, u,
+                                           v, self._depth,
+                                           self._scaled_epsilon)
+                    self._theta_plus = temp_list[2]
+                    self._r_plus = temp_list[3]
 
-            self._theta_primed = temp_list[4]
-            self._n_primed = temp_list[5]
-            self._s_primed = temp_list[6]
-            if self._s_primed == 1:
-                u1 = np.random.uniform(0, 1)
-                n_ratio = self._n_primed / self._n
-                if n_ratio > u1:
-                    self._current = np.copy(self._theta_primed)
-            self._n += self._n_primed
-            self._s = self._calculate_s(self._s_primed, self._theta_plus,
-                                        self._theta_minus, self._r_plus,
-                                        self._r_minus)
-            self._depth += 1
+                self._theta_primed = temp_list[4]
+                self._n_primed = temp_list[5]
+                self._s_primed = temp_list[6]
+                if self._s_primed == 1:
+                    u1 = np.random.uniform(0, 1)
+                    n_ratio = self._n_primed / self._n
+                    if n_ratio > u1:
+                        self._position = np.copy(self._theta_primed)
+                self._n += self._n_primed
+                self._s = self._calculate_s(self._s_primed, self._theta_plus,
+                                            self._theta_minus, self._r_plus,
+                                            self._r_minus)
+                self._depth += 1
+        self._within_iteration = False
+        return self._position
 
     def _calculate_s(self, s, theta_plus, theta_minus, r_plus, r_minus):
         """
@@ -239,7 +248,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
         prod_plus = np.dot(theta_diff, r_plus)
         return s * int(prod_plus >= 0) * int(prod_minus >= 0)
 
-    def build_tree(self, theta, r, u, v, j, epsilon):
+    def build_tree(self, theta, r, log_u, v, j, epsilon):
         """
         Builds tree containing leaves of position-momenta as defined in
         Algorithm 3 in [1]_.
@@ -250,10 +259,9 @@ class NUTSMCMC(pints.SingleChainMCMC):
             # pad with -99s to be of same shape as other returns of function
             if not self._first_leapfrog:
                 return theta_primed, -99, -99, -99, -99, -99, -99
-            n_primed = int(log(u) <= L(theta_primed) - 0.5 r_primed.r_primed)
-
-            s_primed = 1((L(theta_primed) - 0.5 r_primed.r_primed) >
-                         log u - Delta_max)
+            l_rhs = self._log_pdf - 0.5 * np.linalg.norm(r_primed)**2
+            n_primed = int(log_u <= l_rhs)
+            s_primed = int(log_u - self._Delta_max <= l_rhs)
             theta_minus = theta_primed
             r_minus = r_primed
             theta_plus = theta_primed
@@ -313,13 +321,13 @@ class NUTSMCMC(pints.SingleChainMCMC):
         Performs leapfrog steps as defined in Algorithm 1 in [1]_.
         """
         if self._first_leapfrog:
-            self._r = r + (epsilon / 2) * self._gradient
+            self._momentum = r + (epsilon / 2) * self._gradient
             self._theta_tilde = theta + epsilon * r_tilde
             self._first_leapfrog = False
         else:
-            self._r += (epsilon / 2) * self._gradient
+            self._momentum += (epsilon / 2) * self._gradient
             self._first_leapfrog = True
-        return self._theta_tilde, self._r
+        return self._theta_tilde, self._momentum
 
     def leapfrog_step_size(self):
         """
@@ -433,8 +441,9 @@ class NUTSMCMC(pints.SingleChainMCMC):
         gradient = pints.vector(gradient)
         assert(gradient.shape == (self._n_parameters, ))
 
-        # Energy = -log_pdf, so flip both signs!
+        # Energy = -log_pdf, so flip sign
         U = -neg_U
+        self._current_log_pdf = neg_U
 
         # Very first call
         if self._current is None:
@@ -447,6 +456,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
             # Set current sample, energy, and gradient
             self._current = self._x0
             self._current_U = U
+            self._current
             self._current_gradient = gradient
 
             # Increase iteration count
@@ -495,17 +505,16 @@ class NUTSMCMC(pints.SingleChainMCMC):
                 self._current.setflags(write=False)
                 return self._current
 
-            # Accept/reject
+            # always accepts here
             else:
-                r = np.exp(current_U - proposed_U + current_K - proposed_K)
-                if np.random.uniform(0, 1) < r:
-                    accept = 1
-                    self._current = self._position
-                    self._current_U = U
-                    self._current_gradient = gradient
+                # acceptance handled in ask
+                accept = np.array_equal(self._position, self._current)
+                self._current = np.copy(self._position)
+                self._current_U = U
+                self._current_gradient = gradient
 
-                    # Mark current as read-only, so it can be safely returned
-                    self._current.setflags(write=False)
+                # Mark current as read-only, so it can be safely returned
+                self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
