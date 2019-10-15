@@ -66,8 +66,10 @@ class NUTSMCMC(pints.SingleChainMCMC):
                 n_primed = 1(u <= exp(L(theta_primed) - 0.5 r_primed.r_primed))
                 s_primed = 1((L(theta_primed) - 0.5 r_primed.r_primed) >
                              log u - Delta_max)
-                return theta_primed, r_primed, theta_primed, r_primed,
-                       n_primed, s_primed
+                theta_minus = theta_primed
+                r_minus = r_primed
+                theta_plus = theta_primed
+                r_plus = r_primed
             else:
                 theta_minus, r_minus, theta_plus, r_plus, theta_primed_1,
                     n_primed_1, s_primed_1 = BuildTree(theta, r, u, v,
@@ -120,9 +122,16 @@ class NUTSMCMC(pints.SingleChainMCMC):
 
         # Current point in the Markov chain
         self._current = None            # Aka current_q in the chapter
-        self._current_energy = None     # Aka U(current_q) = -log_pdf
+        self._current_U = None     # Aka U(current_q) = -log_pdf
         self._current_gradient = None
         self._current_momentum = None   # Aka current_p
+        self._s = 1
+        self._n = 1
+        self._j = 0
+        self._theta_minus = None
+        self._theta_plus = None
+        self._r_minus = None
+        self._r_plus = None
 
         # Current point in the leapfrog iterations
         self._momentum = None       # Aka p in the chapter
@@ -160,15 +169,6 @@ class NUTSMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._running = True
 
-        # Notes:
-        #  Ask is responsible for updating the position, which is the point
-        #   returned to the user
-        #  Tell is then responsible for updating the momentum, which uses the
-        #   gradient at this new point
-        #  The MCMC step happens in tell, and does not require any new
-        #   information (it uses the log_pdf and gradient of the final point
-        #   in the leapfrog run).
-
         # Very first iteration
         if self._current is None:
 
@@ -176,39 +176,63 @@ class NUTSMCMC(pints.SingleChainMCMC):
             self._ready_for_tell = True
             return np.array(self._x0, copy=True)
 
-        # First iteration of a run of leapfrog iterations
-        if self._frog_iteration == 0:
+        # start NUTS iteration
+        self._current_momentum = np.random.multivariate_normal(
+            np.zeros(self._n_parameters), np.eye(self._n_parameters))
+        r_sq = np.linalg.norm(self._current_momentum)**2
+        log_u = self._current_U - 0.5 * r_sq - np.random.exponential(1)
 
-            # Sample random momentum for current point using identity cov
-            self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._n_parameters), np.eye(self._n_parameters))
-
-            # First leapfrog position is the current sample in the chain
-            self._position = np.array(self._current, copy=True)
-            self._gradient = np.array(self._current_gradient, copy=True)
-            self._momentum = np.array(self._current_momentum, copy=True)
-
-            # Perform a half-step before starting iteration 0 below
-            self._momentum -= self._scaled_epsilon * self._gradient * 0.5
-
-        # Perform a leapfrog step for the position
-        self._position += self._scaled_epsilon * self._momentum
-
-        # Ask for the pdf and gradient of the current leapfrog position
-        # Using this, the leapfrog step for the momentum is performed in tell()
-        self._ready_for_tell = True
-        return np.array(self._position, copy=True)
+        if self._s == 1:
+            pass
+        else:
+            return self._current
 
     def build_tree(self, theta, r, u, v, j, epsilon):
         """
         Builds tree containing leaves of position-momenta as defined in
         Algorithm 3 in [1]_.
         """
-        pass
+        if j == 0:
+            theta_primed, r_primed = self.Leapfrog(theta, r, v * epsilon)
+
+            n_primed = int(log(u) <= L(theta_primed) - 0.5 r_primed.r_primed)
+
+            s_primed = 1((L(theta_primed) - 0.5 r_primed.r_primed) >
+                         log u - Delta_max)
+            theta_minus = theta_primed
+            r_minus = r_primed
+            theta_plus = theta_primed
+            r_plus = r_primed
+        else:
+            theta_minus, r_minus, theta_plus, r_plus, theta_primed_1,
+                n_primed_1, s_primed_1 = BuildTree(theta, r, u, v,
+                                                   j - 1, epsilon)
+            if s_primed_1 = 1:
+                if v = -1:
+                    theta_minus, r_minus, _, _, theta_primed_1, n_primed_1,
+                        s_primed_1 = BuildTree(theta_minus, r_minus,
+                                               u, v, j - 1, epsilon)
+                else:
+                    _, _, theta_plus, r_plus, theta_primed_1, n_primed_1,
+                        s_primed_1 = BuildTree(theta_plus, r_plus,
+                                               u, v, j - 1, epsilon)
+                endif
+                u_1 ~ uniform(0, 1)
+                if n_primed_1 / (n_primed + n_primed_1) > u_1:
+                    theta_primed = theta_primed_1
+                endif
+                s_primed = s_primed_1 *
+                           1((theta_plus - theta_minus).r_minus >= 0) *
+                           1((theta_plus - theta_minus).r_plus >= 0)
+                n_primed = n_primed + n_primed_1
+            endif
+        endif
+        return theta_minus, r_minus, theta_plus, r_plus, theta_primed,
+               n_primed, s_primed
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return -self._current_energy
+        return -self._current_U
 
     def divergent_iterations(self):
         """
@@ -229,11 +253,17 @@ class NUTSMCMC(pints.SingleChainMCMC):
         """
         return self._hamiltonian_threshold
 
-    def Leapfrog(self):
+    def Leapfrog(self, theta, r, epsilon, gradient):
         """
         Performs leapfrog steps as defined in Algorithm 1 in [1]_.
         """
-        pass
+        if self._first_leapfrog:
+            r_tilde = r + (epsilon / 2) * gradient
+            theta_tilde = theta + epsilon * r_tilde
+            self._first_leapfrog = False
+        else:
+            r_tilde = r + (epsilon / 2) * gradient
+            self._first_leapfrog = True
 
     def leapfrog_step_size(self):
         """
@@ -340,28 +370,28 @@ class NUTSMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
 
         # Unpack reply
-        energy, gradient = reply
+        U, gradient = reply
 
         # Check reply, copy gradient
-        energy = float(energy)
+        U = float(U)
         gradient = pints.vector(gradient)
         assert(gradient.shape == (self._n_parameters, ))
 
         # Energy = -log_pdf, so flip both signs!
-        energy = -energy
+        U = -U
         gradient = -gradient
 
         # Very first call
         if self._current is None:
 
             # Check first point is somewhere sensible
-            if not np.isfinite(energy):
+            if not np.isfinite(U):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
 
             # Set current sample, energy, and gradient
             self._current = self._x0
-            self._current_energy = energy
+            self._current_U = U
             self._current_gradient = gradient
 
             # Increase iteration count
@@ -392,18 +422,18 @@ class NUTSMCMC(pints.SingleChainMCMC):
         # Before starting accept/reject procedure, check if the leapfrog
         # procedure has led to a finite momentum and logpdf. If not, reject.
         accept = 0
-        if np.isfinite(energy) and np.all(np.isfinite(self._momentum)):
+        if np.isfinite(U) and np.all(np.isfinite(self._momentum)):
 
             # Evaluate potential and kinetic energies at start and end of
             # leapfrog trajectory
-            current_U = self._current_energy
+            current_U = self._current_U
             current_K = np.sum(self._current_momentum**2 / 2)
-            proposed_U = energy
+            proposed_U = U
             proposed_K = np.sum(self._momentum**2 / 2)
 
             # Check for divergent iterations by testing whether the
             # Hamiltonian difference is above a threshold
-            div = proposed_U + proposed_K - (self._current_energy + current_K)
+            div = proposed_U + proposed_K - (self._current_U + current_K)
             if np.abs(div) > self._hamiltonian_threshold:  # pragma: no cover
                 self._divergent = np.append(
                     self._divergent, self._mcmc_iteration)
@@ -426,7 +456,7 @@ class NUTSMCMC(pints.SingleChainMCMC):
                 if np.random.uniform(0, 1) < r:
                     accept = 1
                     self._current = self._position
-                    self._current_energy = energy
+                    self._current_U = U
                     self._current_gradient = gradient
 
                     # Mark current as read-only, so it can be safely returned
