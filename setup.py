@@ -60,6 +60,7 @@ setup(
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
         'matplotlib>=1.5',
+        'tabulate',
     ],
     extras_require={
         'docs': [
@@ -73,4 +74,3 @@ setup(
         ],
     },
 )
-
