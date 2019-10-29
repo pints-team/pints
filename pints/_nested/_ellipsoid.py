@@ -233,9 +233,11 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def set_enlargement_factor(self, enlargement_factor=1.1):
         """
         Sets the factor (>1) by which to increase the minimal volume
-        ellipsoidal in rejection sampling. A higher value means it is less
-        likely that areas of high probability mass will be missed. A low value
-        means that rejection sampling is more efficient.
+        ellipsoidal in rejection sampling.
+
+        A higher value means it is less likely that areas of high probability
+        mass will be missed. A low value means that rejection sampling is more
+        efficient.
         """
         if enlargement_factor <= 1:
             raise ValueError('Enlargement factor must exceed 1.')
@@ -253,8 +255,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
         """
         Sets the frequency with which the minimum volume ellipsoid is
-        re-estimated as part of the nested rejection sampling algorithm. A
-        higher rate of this parameter means each sample will be more
+        re-estimated as part of the nested rejection sampling algorithm.
+
+        A higher rate of this parameter means each sample will be more
         efficiently produced, yet the cost of re-computing the ellipsoid
         may mean it is better to update this not each iteration -- instead,
         with gaps of ``ellipsoid_update_gap`` between each update. By default,
@@ -281,8 +284,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
         return A, c
 
-    def _ellipsoid_sample(
-            self, enlargement_factor, A, centroid, n_points):
+    def _ellipsoid_sample(self, enlargement_factor, A, centroid, n_points):
         """
         Draws from the enlarged bounding ellipsoid.
         """

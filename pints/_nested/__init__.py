@@ -19,17 +19,21 @@ class NestedSampler(pints.TunableMethod):
 
     Parameters
     ----------
-        ``n_active_points`` is number of live points within restricted prior
-        space at each iteration.
+    log_prior : pints.LogPrior
+        A logprior to draw proposal samples from.
+
     """
     def __init__(self, log_prior):
-        # Store function
+
+        # Store logprior
         if not isinstance(log_prior, pints.LogPrior):
             raise ValueError('Given log_prior must extend pints.LogPrior')
+
         # prior accessed by subclasses to do prior sampling in ask() step
         self._log_prior = log_prior
 
-        self._running_log_likelihood = -float('Inf')
+        # Current value of the threshold log-likelihood value
+        self._running_log_likelihood = -float('inf')
         self._proposed = None
 
         # Initialise active point containers
@@ -160,8 +164,19 @@ class NestedSampler(pints.TunableMethod):
         (which is empty for single evaluation mode but may be non-empty for
         multiple evaluation mode).
         """
-        # if running in parallel, then fx will be a list
-        if isinstance(fx, list):
+
+        # for serial evaluation just return point or None and an empty array
+        if np.isscalar(fx):
+            self._n_evals += 1
+            if np.isnan(fx) or fx < self._running_log_likelihood:
+                return None, np.array([[]])
+            else:
+                proposed = self._proposed
+                fx_temp = fx
+                winners = np.array([[]])
+
+        # if running in parallel, then fx will be a sequence
+        else:
             a_len = len(fx)
             self._n_evals += a_len
             results = []
@@ -171,19 +186,22 @@ class NestedSampler(pints.TunableMethod):
                 else:
                     results.append(fx[i])
             n_non_none = sum(x is not None for x in results)
+
             # if none pass threshold return None and an empty array
             if n_non_none == 0:
                 return None, np.array([[]])
+
             # if one passes then return it and an empty array
             elif n_non_none == 1:
                 fx_temp = next(item for item in results if item is not None)
                 index = results.index(fx_temp)
                 proposed = self._proposed[index]
                 winners = np.array([[]])
+
+            # if more than a single point passes select at random from multiple
+            # non-nones and return it and an array of the other points whose
+            # likelihood exceeds threshold
             else:
-                # if more than a single point passes select at random from
-                # multiple non-nones and return it and an array of the other
-                # points whose likelihood exceeds threshold
                 fx_short = [i for i in results if i]
                 idex = [results.index(i) for i in fx_short]
                 proposed_short = [self._proposed[i] for i in idex]
@@ -195,23 +213,13 @@ class NestedSampler(pints.TunableMethod):
                 fx_short.remove(fx_temp)
                 winners = np.transpose(
                     np.vstack([np.transpose(proposed_short), fx_short]))
-        # for serial evaluation just return point or None and an empty array
-        else:
-            self._n_evals += 1
-            if np.isnan(fx) or fx < self._running_log_likelihood:
-                return None, np.array([[]])
-            else:
-                proposed = self._proposed
-                fx_temp = fx
-                winners = np.array([[]])
 
         self._m_active[self._min_index, :] = np.concatenate(
             (proposed, np.array([fx_temp])))
         self._min_index = np.argmin(
             self._m_active[:, self._n_parameters])
         self._set_running_log_likelihood(
-            np.min(self._m_active[:, self._n_parameters])
-        )
+            np.min(self._m_active[:, self._n_parameters]))
         self._accept_count += 1
         return proposed, winners
 
@@ -222,10 +230,10 @@ class NestedController(object):
 
     Parameters
     ----------
-    log_likelihood
+    log_likelihood : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
         space.
-    log_prior
+    log_prior : pints.LogPrior
         A :class:`LogPrior` function on the same parameter space.
 
     References
@@ -313,11 +321,13 @@ class NestedController(object):
         """
         v_temp = np.concatenate((
             self._v_log_Z[0:(i - 1)],
-            [np.max(self._sampler._m_active[:, d])]))
+            [np.max(self._sampler._m_active[:, d])]
+        ))
         w_temp = np.concatenate((self._w[0:(i - 1)], [self._X[i]]))
-        self._diff = (logsumexp(self._v_log_Z[0:(i - 1)],
-                                b=self._w[0:(i - 1)]) -
-                      logsumexp(v_temp, b=w_temp))
+        self._diff = (
+            + logsumexp(self._v_log_Z[0:(i - 1)], b=self._w[0:(i - 1)])
+            - logsumexp(v_temp, b=w_temp)
+        )
 
     def effective_sample_size(self):
         r"""
@@ -387,13 +397,12 @@ class NestedController(object):
             if not self._log_to_screen:
                 self._logger.set_stream(None)
             if self._log_filename:
-                self._logger.set_filename(self._log_filename,
-                                          csv=self._log_csv)
+                self._logger.set_filename(
+                    self._log_filename, csv=self._log_csv)
 
             # Add fields to log
             self._logger.add_counter('Iter.', max_value=self._iterations)
             self._logger.add_counter('Eval.', max_value=self._iterations * 10)
-            #TODO: Add other informative fields ?
             self._logger.add_time('Time m:s')
             self._logger.add_float('Delta_log(z)')
             self._logger.add_float('Acceptance rate')

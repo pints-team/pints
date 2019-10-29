@@ -19,8 +19,6 @@ try:
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
-debug = False
-
 
 class TestNestedRejectionSampler(unittest.TestCase):
     """
@@ -100,8 +98,4 @@ class TestNestedRejectionSampler(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
