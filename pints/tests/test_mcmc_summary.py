@@ -73,15 +73,15 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         cls.time = end - start
 
     def test_errors(self):
-        # test errors occur when incorrectly calling MCMCResults
-        self.assertRaises(ValueError, pints.MCMCResults, self.chains, -3)
-        self.assertRaises(ValueError, pints.MCMCResults, self.chains, 0)
-        self.assertRaises(ValueError, pints.MCMCResults, self.chains, 1.5,
+        # test errors occur when incorrectly calling MCMCSummary
+        self.assertRaises(ValueError, pints.MCMCSummary, self.chains, -3)
+        self.assertRaises(ValueError, pints.MCMCSummary, self.chains, 0)
+        self.assertRaises(ValueError, pints.MCMCSummary, self.chains, 1.5,
                           ["param 1"])
 
     def test_running(self):
         # tests that object works as expected
-        results = pints.MCMCResults(self.chains)
+        results = pints.MCMCSummary(self.chains)
         self.assertEqual(results.time(), None)
         self.assertEqual(results.ess_per_second(), None)
         self.assertTrue(len(results.ess()), 3)
@@ -112,7 +112,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
 
     def test_summary(self):
         # tests summary functions when time not given
-        results = pints.MCMCResults(self.chains)
+        results = pints.MCMCSummary(self.chains)
         summary = np.array(results.summary())
         self.assertEqual(summary.shape[0], 3)
         self.assertEqual(summary.shape[1], 10)
@@ -134,7 +134,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
             self.assertIn(name, text)
 
         # tests summary functions when time is given
-        results = pints.MCMCResults(self.chains, 20)
+        results = pints.MCMCSummary(self.chains, 20)
         summary = np.array(results.summary())
         self.assertEqual(summary.shape[0], 3)
         self.assertEqual(summary.shape[1], 11)
@@ -147,7 +147,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
     def test_ess_per_second(self):
         # tests that ess per second is calculated when time is supplied
         t = 10
-        results = pints.MCMCResults(self.chains, t)
+        results = pints.MCMCSummary(self.chains, t)
         self.assertEqual(results.time(), t)
         ess_per_second = results.ess_per_second()
         ess = results.ess()
@@ -158,14 +158,14 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
     def test_named_parameters(self):
         # tests that parameter names are used when values supplied
         parameters = ['rrrr', 'kkkk', 'ssss']
-        results = pints.MCMCResults(
+        results = pints.MCMCSummary(
             self.chains, parameter_names=parameters)
         text = str(results)
         for p in parameters:
             self.assertIn(p, text)
 
         # with time supplied
-        results = pints.MCMCResults(
+        results = pints.MCMCSummary(
             self.chains, time=20, parameter_names=parameters)
         text = str(results)
         for p in parameters:
@@ -174,7 +174,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         # Number of parameter names must equal number of parameters
         self.assertRaises(
             ValueError,
-            pints.MCMCResults, self.chains, parameter_names=['a', 'b'])
+            pints.MCMCSummary, self.chains, parameter_names=['a', 'b'])
 
     def test_single_chain(self):
         # tests that single chain is broken up into two bits
@@ -185,7 +185,11 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_initial_phase_iterations(50)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        results = pints.MCMCResults(chains)
+        results = pints.MCMCSummary(chains)
+        chains1 = results.chains()
+        self.assertEqual(chains[0].shape[0], chains1[0].shape[0])
+        self.assertEqual(chains[0].shape[1], chains1[0].shape[1])
+        self.assertEqual(chains[0][10, 1], chains[0][10, 1])
 
         self.assertEqual(results.time(), None)
         self.assertEqual(results.ess_per_second(), None)
@@ -222,7 +226,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_initial_phase_iterations(40)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        results = pints.MCMCResults(chains)
+        results = pints.MCMCSummary(chains)
 
 
 if __name__ == '__main__':

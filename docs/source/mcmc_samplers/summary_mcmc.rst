@@ -1,7 +1,7 @@
 ************
-MCMC Results
+MCMC Summary
 ************
 
 .. currentmodule:: pints
 
-.. autoclass:: MCMCResults
+.. autoclass:: MCMCSummary

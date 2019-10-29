@@ -1,5 +1,5 @@
 #
-# MCMC results method
+# MCMC summary method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -14,7 +14,7 @@ import numpy as np
 from tabulate import tabulate
 
 
-class MCMCResults(object):
+class MCMCSummary(object):
     """
     Wrapper class that calculates key summaries of posterior samples and
     diagnostic quantities from MCMC chains.
@@ -58,8 +58,10 @@ class MCMCResults(object):
             first = chains[0][0:half, :]
             second = chains[0][half:, :]
             self._chains = [first, second]
+            self._chains_unmodified = chains
         else:
             self._chains = chains
+            self._chains_unmodified = chains
 
         # Get number of parameters
         self._n_parameters = chains[0].shape[1]
@@ -120,7 +122,7 @@ class MCMCResults(object):
         """
         Returns posterior samples from all chains separately.
         """
-        return self._chains
+        return self._chains_unmodified
 
     def ess(self):
         """

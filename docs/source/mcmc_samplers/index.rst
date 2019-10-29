@@ -22,7 +22,6 @@ interface, that can be used to sample from an unknown
     haario_bardenet_ac_mcmc
     hamiltonian_mcmc
     mala_mcmc
-    results_mcmc
     metropolis_mcmc
     monomial_gamma_hamiltonian_mcmc
     population_mcmc
@@ -30,3 +29,4 @@ interface, that can be used to sample from an unknown
     relativistic_mcmc
     slice_doubling_mcmc
     slice_stepout_mcmc
+    summary_mcmc
