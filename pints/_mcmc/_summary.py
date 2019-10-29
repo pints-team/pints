@@ -9,15 +9,16 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+import logging
 import numpy as np
+import pints
 from tabulate import tabulate
 
 
 class MCMCSummary(object):
     """
-    Wrapper class that calculates key summaries of posterior samples and
-    diagnostic quantities from MCMC chains.
+    Calculates and prints key summaries of posterior samples and diagnostic
+    quantities from MCMC chains.
 
     These include the posterior mean, standard deviation, quantiles, rhat,
     effective sample size and (if running time is supplied) effective samples
@@ -30,7 +31,7 @@ class MCMCSummary(object):
     time : float
         The time taken for the run, in seconds (optional).
     parameter_names : sequence
-        An optional list of parameter names.
+        A list of parameter names (optional).
 
     References
     ----------
@@ -42,9 +43,16 @@ class MCMCSummary(object):
 
     def __init__(self, chains, time=None, parameter_names=None):
 
+        # Store unmodified chains
+        # Note: For performance reasons we're not copying the chains, or
+        # enforcing read-only or anything like that: so users will have the
+        # ability to change the contents of ``chains``, and make it go out of
+        # sync with the summary.
+        self._chains = chains
+        self._chains_unmodified = chains
+
         # Deal with special case where only one chain is provided
         if len(chains) == 1:
-            import logging
             logging.basicConfig()
             log = logging.getLogger(__name__)
             log.warning(
@@ -58,10 +66,6 @@ class MCMCSummary(object):
             first = chains[0][0:half, :]
             second = chains[0][half:, :]
             self._chains = [first, second]
-            self._chains_unmodified = chains
-        else:
-            self._chains = chains
-            self._chains_unmodified = chains
 
         # Get number of parameters
         self._n_parameters = chains[0].shape[1]
@@ -92,7 +96,7 @@ class MCMCSummary(object):
         self._summary_str = None
 
         # Create summary
-        self.make_summary()
+        self._make_summary()
 
     def __str__(self):
         """
@@ -112,8 +116,8 @@ class MCMCSummary(object):
             self._summary_str = tabulate(
                 self._summary_list,
                 headers=headers,
-                numalign="left",
-                floatfmt=".2f",
+                numalign='left',
+                floatfmt='.2f',
             )
 
         return self._summary_str
@@ -134,10 +138,13 @@ class MCMCSummary(object):
         """
         Return the effective sample size (as defined in [2]_) per second of run
         time for each parameter.
+
+        This is only defined if a run time was passed in at construction time,
+        if no run time is known ``None`` is returned.
         """
         return self._ess_per_second
 
-    def make_summary(self):
+    def _make_summary(self):
         """
         Calculates posterior summaries for all parameters.
         """
@@ -190,9 +197,9 @@ class MCMCSummary(object):
 
     def rhat(self):
         """
-        Return Gelman and Rubin's rhat value as defined in [1]_. If a
-        single chain is used, the chain is split into two halves and rhat
-        is calculated using these two parts.
+        Return Gelman and Rubin's rhat value as defined in [1]_. If a single
+        chain is used, the chain is split into two halves and rhat is
+        calculated using these two parts.
         """
         return self._rhat
 
