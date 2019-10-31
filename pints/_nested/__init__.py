@@ -428,6 +428,7 @@ class NestedController(object):
                 if i > self._message_warm_up:
                     self._next_message = self._message_interval * (
                         1 + i // self._message_interval)
+        self._next_message = 0
         return v_fx, m_initial
 
     def iterations(self):
@@ -526,7 +527,7 @@ class NestedController(object):
 
         # Set up progress reporting
         self._next_message = 0
-        self._message_warm_up = 3
+        self._message_warm_up = 0
         self._message_interval = 20
         self._initialise_logger()
 
@@ -551,7 +552,7 @@ class NestedController(object):
 
         # Run!
         self._X[0] = 1.0
-        self._i_message = self._n_active_points - 1
+        self._i_message = 0
         i_winners = 0
         m_previous_winners = []
         for i in range(0, self._iterations):
@@ -746,6 +747,8 @@ class NestedController(object):
         """
         Updates logger if necessary.
         """
+        # print(self._i_message)
+        # print(self._next_message)
         if self._logging:
             self._i_message += 1
             if self._i_message >= self._next_message:
