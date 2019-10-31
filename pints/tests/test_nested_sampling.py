@@ -157,7 +157,7 @@ class TestNestedController(unittest.TestCase):
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
-        self.assertEqual(len(lines), 30)
+        self.assertEqual(len(lines), 28)
 
         # Log to file
         with StreamCapture() as c:
@@ -173,7 +173,7 @@ class TestNestedController(unittest.TestCase):
                 with open(filename, 'r') as f:
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
-        self.assertEqual(len(lines), 26)
+        self.assertEqual(len(lines), 23)
         self.assertEqual(lines[0], ('Iter. Eval. Time m:s Delta_log(z) ' +
                                     'Acceptance rate'))
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
