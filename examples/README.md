@@ -56,7 +56,8 @@ relevant code.
 - [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
 
 ### Nested sampling
-- [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
+- [Ellipsoidal nested sampling](./sampling-nested-ellipsoidal-sampling.ipynb)
+- [Rejection nested sampling](./sampling-nested-rejection-sampling.ipynb)
 
 ### Analysing sampling results
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
