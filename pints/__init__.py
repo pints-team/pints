@@ -149,7 +149,9 @@ from ._error_measures import (
 from ._evaluation import (
     evaluate,
     Evaluator,
+    FuturesPoolEvaluator,
     ParallelEvaluator,
+    PoolEvaluator,
     SequentialEvaluator,
 )
 

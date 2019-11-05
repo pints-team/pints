@@ -453,7 +453,7 @@ class _Worker(multiprocessing.Process):
 
     def run(self):
         # Worker processes should never write to stdout or stderr.
-        # This can lead to unsafe situations if they have been redicted to
+        # This can lead to unsafe situations if they have been redirected to
         # a GUI task such as writing to the IDE console.
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
@@ -470,4 +470,82 @@ class _Worker(multiprocessing.Process):
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
+
+
+#
+# Parallel evaluator based on multiprocessing.Pool
+#
+
+class PoolEvaluator(Evaluator):
+    """
+    Parallel evaluator that uses `multiprocessing.Pool` internally.
+    """
+    def __init__(
+            self, function,
+            n_workers=None,
+            max_tasks_per_worker=500,
+            args=None):
+        super(PoolEvaluator, self).__init__(function, args)
+
+        # Create pool
+        self._pool = multiprocessing.Pool(
+            n_workers,
+            initializer=_set_pool_function,
+            initargs=[self._function, self._args],
+            maxtasksperchild=max_tasks_per_worker,
+        )
+
+    def _evaluate(self, positions):
+        """ See :meth:`evaluate()`. """
+        return self._pool.map(_call_pool_function, positions, chunksize=1)
+
+
+# Global function to call and extra (fixed) arguments.
+# Will only ever be set in subprocesses
+_pool_function = None
+_pool_args = None
+
+
+def _set_pool_function(f, args):
+    """
+    Called by subprocesses to set the function to execute and any optional
+    extra arguments.
+    """
+    global _pool_function, _pool_args
+    _pool_function = f
+    _pool_args = args
+
+
+def _call_pool_function(position):
+    """
+    Called by subprocesses to execute the parallelised function.
+    """
+    return _pool_function(position, *_pool_args)
+
+
+#
+# Parallel evaluator based on concurrent.futures.ProcessPoolExecutor
+#
+class FuturesPoolEvaluator(Evaluator):
+    """
+    Parallel evaluator that uses `concurrent.futures.ProcessPoolExecutor`.
+    """
+    def __init__(
+            self, function,
+            n_workers=None,
+            args=None):
+        super(FuturesPoolEvaluator, self).__init__(function, args)
+
+        # Create pool
+        import concurrent.futures
+        self._pool = concurrent.futures.ProcessPoolExecutor(
+            n_workers,
+            initializer=_set_pool_function,
+            initargs=[self._function, self._args],
+        )
+
+    def _evaluate(self, positions):
+        """ See :meth:`evaluate()`. """
+        return list(
+            self._pool.map(_call_pool_function, positions, chunksize=1))
 
