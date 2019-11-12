@@ -844,42 +844,6 @@ class MCMCController(object):
         """
         self._chains_in_memory = bool(store_in_memory)
 
-    def set_log_pdf_filename(self, log_pdf_file):
-        """
-        Write :class:`LogPDF` evaluations to disk as they are generated.
-
-        If an ``evaluation_file`` is specified, a CSV file will be created for
-        each chain, to which :class:`LogPDF` evaluations will be written for
-        every accepted sample. To disable this feature, set
-        ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
-        :class:`LogPosterior`, the individual likelihood and prior will also
-        be stored.
-
-        Filenames for each evaluation file will be derived from
-        ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
-        are 2 chains, then the files ``evals_0.csv`` and ``evals_1.csv`` will
-        be created. Each CSV file will start with a header (e.g.
-        ``"logposterior","loglikelihood","logprior"``) and contain the
-        evaluations for i-th accepted sample on the i-th subsequent line.
-        """
-
-        d = self._n_chains
-        self._evaluation_files = None
-        if log_pdf_file:
-            b, e = os.path.splitext(str(log_pdf_file))
-            self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
-
-    def set_log_pdf_storage(self, store_in_memory=False):
-        """
-        Store :class:`LogPDF` evaluations in memory as they are generated.
-
-        By default, evaluations of the :class:`LogPDF` are not stored. This
-        method can be used to enable storage of the evaluations for the
-        accepted samples.
-        After running, evaluations can be obtained using :meth:`evaluations()`.
-        """
-        self._evaluations_in_memory = bool(store_in_memory)
-
     def set_initial_phase_iterations(self, iterations=200):
         """
         For methods that require an initial phase (e.g. an adaptation-free
@@ -918,6 +882,42 @@ class MCMCController(object):
 
         self._message_interval = iters
         self._message_warm_up = warm_up
+
+    def set_log_pdf_filename(self, log_pdf_file):
+        """
+        Write :class:`LogPDF` evaluations to disk as they are generated.
+
+        If an ``evaluation_file`` is specified, a CSV file will be created for
+        each chain, to which :class:`LogPDF` evaluations will be written for
+        every accepted sample. To disable this feature, set
+        ``evaluation_file=None``. If the ``LogPDF`` being evaluated is a
+        :class:`LogPosterior`, the individual likelihood and prior will also
+        be stored.
+
+        Filenames for each evaluation file will be derived from
+        ``evaluation_file``, e.g. if ``evaluation_file='evals.csv'`` and there
+        are 2 chains, then the files ``evals_0.csv`` and ``evals_1.csv`` will
+        be created. Each CSV file will start with a header (e.g.
+        ``"logposterior","loglikelihood","logprior"``) and contain the
+        evaluations for i-th accepted sample on the i-th subsequent line.
+        """
+
+        d = self._n_chains
+        self._evaluation_files = None
+        if log_pdf_file:
+            b, e = os.path.splitext(str(log_pdf_file))
+            self._evaluation_files = [b + '_' + str(i) + e for i in range(d)]
+
+    def set_log_pdf_storage(self, store_in_memory=False):
+        """
+        Store :class:`LogPDF` evaluations in memory as they are generated.
+
+        By default, evaluations of the :class:`LogPDF` are not stored. This
+        method can be used to enable storage of the evaluations for the
+        accepted samples.
+        After running, evaluations can be obtained using :meth:`evaluations()`.
+        """
+        self._evaluations_in_memory = bool(store_in_memory)
 
     def set_log_to_file(self, filename=None, csv=False):
         """
