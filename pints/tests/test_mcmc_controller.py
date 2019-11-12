@@ -596,7 +596,6 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('Writing evaluations to', text)
             self.assertNotIn('evals_0.csv', text)
 
-
     def test_writing_priors_and_likelihoods(self):
         """ Test writing priors and loglikelihoods - not chains - to disk. """
 
