@@ -93,26 +93,29 @@ class TestMCMCController(unittest.TestCase):
         # Test with a SingleChainMCMC method.
 
         # One chain
-        nchains = 1
+        n_chains = 1
 
         # Test simple run
         x0 = np.array(self.real_parameters) * 1.1
         xs = [x0]
-        nparameters = len(x0)
-        niterations = 10
-        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
-        mcmc.set_max_iterations(niterations)
+        n_parameters = len(x0)
+        n_iterations = 10
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
-        self.assertEqual(len(mcmc.samplers()), nchains)
+        self.assertEqual(len(mcmc.samplers()), n_chains)
         chains = mcmc.run()
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+
+        # Test chains() method
+        self.assertIs(chains, mcmc.chains())
 
         # Check constructor arguments
-        pints.MCMCController(self.log_posterior, nchains, xs)
-        pints.MCMCController(self.log_prior, nchains, xs)
-        pints.MCMCController(self.log_likelihood, nchains, xs)
+        pints.MCMCController(self.log_posterior, n_chains, xs)
+        pints.MCMCController(self.log_prior, n_chains, xs)
+        pints.MCMCController(self.log_likelihood, n_chains, xs)
 
         # Check sampler() method
         self.assertRaises(RuntimeError, mcmc.sampler)
@@ -120,8 +123,8 @@ class TestMCMCController(unittest.TestCase):
         def f(x):
             return x
         self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCController, f,
-            nchains, xs)
+            ValueError, 'extend pints.LogPDF', pints.MCMCController,
+            f, n_chains, xs)
 
         # Test x0 and chain argument
         self.assertRaisesRegex(
@@ -141,19 +144,19 @@ class TestMCMCController(unittest.TestCase):
             pints.MCMCController, self.log_posterior, 1, xs, method=12)
 
         # Check different sigma0 initialisations
-        pints.MCMCController(self.log_posterior, nchains, xs)
+        pints.MCMCController(self.log_posterior, n_chains, xs)
         sigma0 = [0.005, 100, 0.5 * self.noise]
-        pints.MCMCController(self.log_posterior, nchains, xs, sigma0)
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
-        pints.MCMCController(self.log_posterior, nchains, xs, sigma0)
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
-            pints.MCMCController, self.log_posterior, nchains, xs, sigma0)
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
-            pints.MCMCController, self.log_posterior, nchains, xs, sigma0)
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0)
 
         # Test multi-chain with single-chain mcmc
 
@@ -161,34 +164,36 @@ class TestMCMCController(unittest.TestCase):
         x0 = np.array(self.real_parameters) * 1.1
         x1 = np.array(self.real_parameters) * 1.15
         xs = [x0, x1]
-        nchains = len(xs)
-        nparameters = len(x0)
-        niterations = 10
-        mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
-        mcmc.set_max_iterations(niterations)
+        n_chains = len(xs)
+        n_parameters = len(x0)
+        n_iterations = 10
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
 
         # 10 chains
         xs = []
         for i in range(10):
             f = 0.9 + 0.2 * np.random.rand()
             xs.append(np.array(self.real_parameters) * f)
-        nchains = len(xs)
-        nparameters = len(xs[0])
-        niterations = 20
+        n_chains = len(xs)
+        n_parameters = len(xs[0])
+        n_iterations = 20
         mcmc = pints.MCMCController(
-            self.log_posterior, nchains, xs,
+            self.log_posterior, n_chains, xs,
             method=pints.HaarioBardenetACMC)
-        mcmc.set_max_iterations(niterations)
+        mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
 
     def test_multi(self):
         # Test with a multi-chain method
@@ -199,26 +204,29 @@ class TestMCMCController(unittest.TestCase):
         for i in range(10):
             f = 0.9 + 0.2 * np.random.rand()
             xs.append(x0 * f)
-        nchains = len(xs)
-        nparameters = len(xs[0])
-        niterations = 20
+        n_chains = len(xs)
+        n_parameters = len(xs[0])
+        n_iterations = 20
 
         # Test with multi-chain method
         meth = pints.DifferentialEvolutionMCMC
         mcmc = pints.MCMCController(
-            self.log_posterior, nchains, xs, method=meth)
+            self.log_posterior, n_chains, xs, method=meth)
         self.assertEqual(len(mcmc.samplers()), 1)
-        mcmc.set_max_iterations(niterations)
+        mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        self.assertEqual(chains.shape[0], nchains)
-        self.assertEqual(chains.shape[1], niterations)
-        self.assertEqual(chains.shape[2], nparameters)
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+
+        # Test chains() method
+        self.assertIs(chains, mcmc.chains())
 
         # Check constructor arguments
-        pints.MCMCController(self.log_posterior, nchains, xs, method=meth)
-        pints.MCMCController(self.log_prior, nchains, xs, method=meth)
-        pints.MCMCController(self.log_likelihood, nchains, xs, method=meth)
+        pints.MCMCController(self.log_posterior, n_chains, xs, method=meth)
+        pints.MCMCController(self.log_prior, n_chains, xs, method=meth)
+        pints.MCMCController(self.log_likelihood, n_chains, xs, method=meth)
 
         # Test x0 and chain argument
         self.assertRaisesRegex(
@@ -237,22 +245,22 @@ class TestMCMCController(unittest.TestCase):
         self.assertIsInstance(mcmc.sampler(), pints.MultiChainMCMC)
 
         # Check different sigma0 initialisations work
-        pints.MCMCController(self.log_posterior, nchains, xs, method=meth)
+        pints.MCMCController(self.log_posterior, n_chains, xs, method=meth)
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(
-            self.log_posterior, nchains, xs, sigma0, method=meth)
+            self.log_posterior, n_chains, xs, sigma0, method=meth)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
         pints.MCMCController(
-            self.log_posterior, nchains, xs, sigma0, method=meth)
+            self.log_posterior, n_chains, xs, sigma0, method=meth)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
-            pints.MCMCController, self.log_posterior, nchains, xs, sigma0,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             method=meth)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
-            pints.MCMCController, self.log_posterior, nchains, xs, sigma0,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             method=meth)
 
     def test_stopping(self):
@@ -422,6 +430,114 @@ class TestMCMCController(unittest.TestCase):
         mcmc.run()
         for sampler in mcmc._samplers:
             self.assertFalse(sampler.in_initial_phase())
+
+    def test_log_pdf_storage_in_memory_single(self):
+        # Test storing evaluations in memory, with a single-chain method
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+        n_chains = len(xs)
+        n_iterations = 10
+
+        # Single-chain method, using a logposterior
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+
+        # Test shape of returned array
+        evals = mcmc.log_pdfs()
+        self.assertEqual(len(evals.shape), 3)
+        self.assertEqual(evals.shape[0], n_chains)
+        self.assertEqual(evals.shape[1], n_iterations)
+        self.assertEqual(evals.shape[2], 3)
+
+        # Test returned values
+        for i, chain in enumerate(chains):
+            posteriors = [self.log_posterior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 0] == posteriors))
+
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 1] == likelihoods))
+
+            priors = [self.log_prior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 2] == priors))
+
+        # Test with a loglikelihood
+        mcmc = pints.MCMCController(self.log_likelihood, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+        evals = mcmc.log_pdfs()
+        self.assertEqual(evals.shape, (n_chains, n_iterations))
+        for i, chain in enumerate(chains):
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i] == likelihoods))
+
+        # Test disabling again
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        mcmc.set_log_pdf_storage(False)
+        chains = mcmc.run()
+        self.assertIsNone(mcmc.log_pdfs())
+
+    def test_log_pdf_storage_in_memory_multi(self):
+        # Test storing evaluations in memory, with a multi-chain method
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+        n_chains = len(xs)
+        n_iterations = 10
+        meth = pints.DifferentialEvolutionMCMC
+
+        # Test with multi-chain method
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=meth)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+
+        # Test shape of returned array
+        evals = mcmc.log_pdfs()
+        self.assertEqual(len(evals.shape), 3)
+        self.assertEqual(evals.shape[0], n_chains)
+        self.assertEqual(evals.shape[1], n_iterations)
+        self.assertEqual(evals.shape[2], 3)
+
+        # Test returned values
+        for i, chain in enumerate(chains):
+            posteriors = [self.log_posterior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 0] == posteriors))
+
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 1] == likelihoods))
+
+            priors = [self.log_prior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 2] == priors))
+
+        # Test with a loglikelihood
+        mcmc = pints.MCMCController(
+            self.log_likelihood, n_chains, xs, method=meth)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+        evals = mcmc.log_pdfs()
+        self.assertEqual(evals.shape, (n_chains, n_iterations))
+        for i, chain in enumerate(chains):
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i] == likelihoods))
 
     def test_deprecated_alias(self):
 
