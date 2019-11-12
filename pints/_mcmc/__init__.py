@@ -365,6 +365,7 @@ class MCMCController(object):
 
         # Storing chains and evaluations in memory
         self._chains_in_memory = True
+        self._evaluations_in_memory = False
 
         # Writing chains and evaluations to disk
         self._chain_files = None
@@ -419,8 +420,12 @@ class MCMCController(object):
 
     def run(self):
         """
-        Runs the MCMC sampler(s) and returns a number of markov chains, each
-        representing the distribution of the given log-pdf.
+        Runs the MCMC sampler(s) and returns the result.
+
+        By default, this method returns an array of shape ``(n_chains,
+        n_iterations, n_parameters)``.
+        If storing chains to memory has been disabled with
+        :meth:`set_chain_storage`, then ``None`` is returned instead.
         """
         # Check stopping criteria
         has_stopping_criterion = False
