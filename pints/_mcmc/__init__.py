@@ -567,8 +567,10 @@ class MCMCController(object):
             if self._single_chain:
 
                 # Check and update the individual chains
+                xs_iterator = iter(xs)
                 fxs_iterator = iter(fxs)
                 for i in list(active):  # (active may be modified)
+                    x = next(xs_iterator)
                     fx = next(fxs_iterator)
                     y = self._samplers[i].tell(fx)
                     if y is not None:
@@ -583,7 +585,7 @@ class MCMCController(object):
                         if self._evaluation_files:
                             # Check if accepted, if so, update log_pdf and
                             # prior to be logged
-                            accepted = np.all(y == xs[i])
+                            accepted = np.all(y == x)
                             if accepted:
                                 current_logpdf[i] = fx
                                 if prior is not None:
