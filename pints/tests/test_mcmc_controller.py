@@ -1278,7 +1278,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         """ Multiple single-chain samplers, None at different indices. """
         chains1 = [
             [[2], None, [4], [6], None, [3], [5], None, None, None],
-            [[5], None, None, [1], [3], None, [3], None, None, [2]],
+            [[5], None, None, None, [1], [3], None, [3], None, [2]],
         ]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (2, 5, 1))
@@ -1290,7 +1290,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
 
         chains1 = [
             [[1, 2], [4, 3], [6, 1], None, [5, 7], [2, 2], None, None],
-            [[4, 3], None, [1, 1], [3, 5], None, None, [1, 4], [4, 7]],
+            [[4, 3], None, None, [1, 1], [3, 5], None, [1, 4], [4, 7]],
         ]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (2, 5, 2))
