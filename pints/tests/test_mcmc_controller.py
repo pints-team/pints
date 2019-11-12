@@ -481,7 +481,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
         cls.nchains = len(cls.xs)
 
     def test_writing_chains_only(self):
-        """ Test writing chains - not evals to disk (using LogPosterior). """
+        """ Test writing chains - but not evals - to disk. """
 
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -533,6 +533,69 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('chain_0.csv', text)
             self.assertNotIn('Writing evaluations to', text)
             self.assertNotIn('evals_0.csv', text)
+
+    def test_writing_chains_only_no_memory(self):
+        """
+        Test writing chains - but not evals - to disk, without storing chains
+        in memory.
+        """
+
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_to_file(False)
+        mcmc.set_chain_storage(False)
+
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                cpath = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
+                epath = d.path('evals.csv')
+                p3 = d.path('evals_0.csv')
+                p4 = d.path('evals_1.csv')
+                p5 = d.path('evals_2.csv')
+
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_log_pdf_filename(None)
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test chains weren't returned in memory
+                self.assertIsNone(chains1)
+
+                # Test disk contains chains
+                import pints.io as io
+                chains2 = np.array(io.load_samples(cpath, self.nchains))
+                self.assertEqual(
+                    chains2.shape, (self.nchains, 20, len(self.xs)))
+
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
+            self.assertNotIn('Writing evaluations to', text)
+            self.assertNotIn('evals_0.csv', text)
+
 
     def test_writing_priors_and_likelihoods(self):
         """ Test writing priors and loglikelihoods - not chains - to disk. """
@@ -867,7 +930,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('Writing evaluations to', text)
             self.assertIn('evals_0.csv', text)
 
-    def test_disabling_storage(self):
+    def test_disabling_disk_storage(self):
         """ Test if storage can be enabled and then disabled again. """
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)

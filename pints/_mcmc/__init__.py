@@ -528,10 +528,13 @@ class MCMCController(object):
             logger.add_time('Time m:s')
 
         # Pre-allocate array for chains
-        samples = None
         if self._chains_in_memory:
+            # Store full chains
             samples = np.zeros(
                 (self._chains, self._max_iterations, self._n_parameters))
+        else:
+            # Store only the current iteration
+            samples = np.zeros((self._chains, self._n_parameters))
 
         # Some samplers need intermediate steps, where None is returned instead
         # of a sample. Samplers can run asynchronously, so that one returns
@@ -584,6 +587,8 @@ class MCMCController(object):
                         # Store sample in memory
                         if self._chains_in_memory:
                             samples[i][n_samples[i]] = y
+                        else:
+                            samples[i] = y
 
                         # Stop adding samples if maximum number reached
                         n_samples[i] += 1
@@ -622,6 +627,8 @@ class MCMCController(object):
                     # Store samples in memory
                     if self._chains_in_memory:
                         samples[:, iteration] = ys
+                    else:
+                        samples = ys
 
                     # Write evaluations to disk
                     if self._evaluation_files:
@@ -649,8 +656,12 @@ class MCMCController(object):
                 continue
 
             # Write samples to disk
-            for i, chain_logger in enumerate(chain_loggers):
-                chain_logger.log(*samples[i][iteration])
+            if self._chains_in_memory:
+                for i, chain_logger in enumerate(chain_loggers):
+                    chain_logger.log(*samples[i][iteration])
+            else:
+                for i, chain_logger in enumerate(chain_loggers):
+                    chain_logger.log(*samples[i])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -687,7 +698,10 @@ class MCMCController(object):
                 print(halt_message)
 
         # Return generated chains
-        return samples
+        if self._chains_in_memory:
+            return samples
+        else:
+            return None
 
     def sampler(self):
         """
