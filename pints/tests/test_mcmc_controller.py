@@ -481,7 +481,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
         cls.nchains = len(cls.xs)
 
     def test_writing_chains_only(self):
-        """ Test writing chains - but not evals - to disk. """
+        # Test writing chains - but not evals - to disk.
 
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -535,10 +535,8 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('evals_0.csv', text)
 
     def test_writing_chains_only_no_memory_single(self):
-        """
-        Test writing chains - but not evals - to disk, without storing chains
-        in memory, using a single-chain method.
-        """
+        # Test writing chains - but not evals - to disk, without storing chains
+        # in memory, using a single-chain method.
 
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -597,10 +595,8 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('evals_0.csv', text)
 
     def test_writing_chains_only_no_memory_multi(self):
-        """
-        Test writing chains - but not evals - to disk, without storing chains
-        in memory, using a multi-chain method.
-        """
+        # Test writing chains - but not evals - to disk, without storing chains
+        # in memory, using a multi-chain method.
 
         mcmc = pints.MCMCController(
             self.log_posterior, self.nchains, self.xs,
@@ -657,7 +653,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('chain_0.csv', text)
 
     def test_writing_priors_and_likelihoods(self):
-        """ Test writing priors and loglikelihoods - not chains - to disk. """
+        # Test writing priors and loglikelihoods - not chains - to disk.
 
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -719,10 +715,8 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
     def test_writing_chains_likelihoods_and_priors_single(self):
-        """
-        Test writing chains, likelihoods, and priors to disk, using a single
-        chain method.
-        """
+        # Test writing chains, likelihoods, and priors to disk, using a single
+        # chain method.
 
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -788,10 +782,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
     def test_writing_chains_likelihoods_and_priors_multi(self):
-        """
-        Test writing chains, likelihoods, and priors to disk, using a multi
-        chain method.
-        """
+        # Test writing chains, likelihoods, and priors to disk, using a multi
+        # chain method.
+
         mcmc = pints.MCMCController(
             self.log_posterior, self.nchains, self.xs,
             method=pints.DifferentialEvolutionMCMC)
@@ -857,10 +850,8 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
     def test_writing_chains_and_likelihoods_single(self):
-        """
-        Test writing chains and likelihoods to disk, using a single chain
-        method.
-        """
+        # Test writing chains and likelihoods to disk, using a single chain
+        # method.
 
         mcmc = pints.MCMCController(self.log_likelihood, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
@@ -923,7 +914,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
     def test_writing_chains_likelihoods_and_priors_one_chain(self):
-        """ Test with a single chain. """
+        # Test with a single chain.
 
         nchains = 1
         mcmc = pints.MCMCController(self.log_posterior, nchains, self.xs[:1])
@@ -990,7 +981,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertIn('evals_0.csv', text)
 
     def test_disabling_disk_storage(self):
-        """ Test if storage can be enabled and then disabled again. """
+        # Test if storage can be enabled and then disabled again.
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
@@ -1174,7 +1165,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         return expected, obtained, disk_samples, exp_evals, disk_evals
 
     def test_one_sampler_no_nones(self):
-        """ One single-chain sampler, no None objects. """
+        # One single-chain sampler, no None objects.
         chains1 = [[[2], [4], [6], [3], [5]]]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (1, 5, 1))
@@ -1194,7 +1185,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_one_sampler_with_nones(self):
-        """ One single-chain sampler, with None objects. """
+        # One single-chain sampler, with None objects.
         chains1 = [[[1], [3], None, [1], None, [5], [2]]]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (1, 5, 1))
@@ -1223,7 +1214,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_multiple_samplers_no_nones(self):
-        """ Multiple single-chain samplers, no None objects. """
+        # Multiple single-chain samplers, no None objects.
         chains1 = [
             [[2], [4], [6], [3], [5]],
             [[5], [1], [3], [3], [2]],
@@ -1249,7 +1240,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_multiple_samplers_same_index_nones(self):
-        """ Multiple single-chain samplers, None at same index. """
+        # Multiple single-chain samplers, None at same index.
         chains1 = [
             [[2], None, None, [4], [6], None, [3], None, None, [5]],
             [[5], None, None, [1], [3], None, [3], None, None, [2]],
@@ -1275,7 +1266,7 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_multiple_samplers_mixed_index_nones(self):
-        """ Multiple single-chain samplers, None at different indices. """
+        # Multiple single-chain samplers, None at different indices.
         chains1 = [
             [[2], None, [4], [6], None, [3], [5], None, None, None],
             [[5], None, None, None, [1], [3], None, [3], None, [2]],
@@ -1356,7 +1347,7 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
         return expected, obtained, disk_samples, exp_evals, disk_evals
 
     def test_single_chain_no_nones(self):
-        """ Test with a single chain, no None objects. """
+        # Test with a single chain, no None objects.
         chains1 = [[[2], [2], [6], [3], [0.5]]]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (1, 5, 1))
@@ -1376,7 +1367,7 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_multi_chain_no_nones(self):
-        """ Test with three chains, no None objects. """
+        # Test with three chains, no None objects.
         chains1 = [
             [[1, 2], [2, 4], [3, 6], [8, 8], [1, 2]],
             [[2, 3], [3, 5], [4, 7], [9, 8], [3, 2]],
@@ -1391,7 +1382,7 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
 
     def test_single_chain_with_nones(self):
-        """ Test with a single chain, some None objects. """
+        # Test with a single chain, some None objects.
         chains1 = [[[2], None, [2], None, [6], None, None, [3], [0.5]]]
         chains1, chains2, chains3, log_pdfs1, log_pdfs2 = self.go(chains1)
         self.assertEqual(chains2.shape, (1, 5, 1))
