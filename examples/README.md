@@ -106,4 +106,5 @@ relevant code.
 ## Miscellaneous
 
 - [Automatic differentiation using autograd](./automatic-differentiation-using-autograd.ipynb)
+- [Evaluating noise models using autocorrelation plots of the residuals](./plot-residuals-autocorrelation.ipynb)
 - [The example shown on the landing page](./readme-example.ipynb)
