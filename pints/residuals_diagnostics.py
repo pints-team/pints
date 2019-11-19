@@ -14,7 +14,9 @@ def plot_residuals_autocorrelation(parameters,
                                    problem,
                                    max_lag=10,
                                    thinning=None,
-                                   show_confidence=False):
+                                   show_confidence=False,
+                                   significance_level=0.05,
+                                   posterior_interval=0.95):
     """
     Plot the autocorrelation plot of the residuals.
 
@@ -45,10 +47,15 @@ def plot_residuals_autocorrelation(parameters,
         only every nth sample in parameters will be used. If set to None
         (default), some thinning will be applied so that about 200 samples will
         be used.
-    show_confidence
-        Optional bool value (default False). If True, the 95% confidence
-        interval under the hypothesis of uncorrelated Gaussian noise is drawn
-        on the plot.
+    significance_level
+        None or float value (default 0.05). When a significance level is
+        provided, dashed lines for the confidence interval corresponding to
+        that significance level are drawn on the plot. When None, no lines are
+        drawn.
+    posterior_interval
+        Float value (default 0.95). When multiple samples of the parameter
+        values are provided, this gives the size of the credible region of the
+        posterior to plot.
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -62,6 +69,13 @@ def plot_residuals_autocorrelation(parameters,
 
     # Get the number of samples
     n_samples = residuals.shape[0]
+
+    # Calculate the percentiles of the posterior to plot
+    if n_samples > 1:
+        if posterior_interval > 1 or posterior_interval < 0:
+            raise ValueError('posterior interval must fall between 0 and 1')
+        upper_pctle = (0.5 + posterior_interval / 2) * 100
+        lower_pctle = (0.5 - posterior_interval / 2) * 100
 
     # Set up one axes for each output
     fig, axes = plt.subplots(n_outputs,
@@ -78,52 +92,92 @@ def plot_residuals_autocorrelation(parameters,
     for output_idx in range(n_outputs):
 
         if n_samples == 1:
-            # In this case, we are plotting a single autocorrelation value at
-            # each lag. The default matplotlib function can be used.
-            axes[output_idx].acorr(residuals[0, output_idx, :],
-                                   maxlags=max_lag)
+            c = acorr(residuals[0, output_idx, :], max_lag)
+            median_acorr = c[max_lag:]
+            yerr = None
 
         else:
-            # In this case, there are multiple samples, and a boxplot of the
+            # In this case, there are multiple samples, and a point plot of the
             # distribution of autocorrelations is desired. Start by
             # instantiating an empty array to hold autocorrelations for each
             # sample.
             cs = np.zeros((n_samples, max_lag + 1))
 
-            # For each residual vector, get the autocorrelations using the
-            # same matplotlib function -- but dump the plot it makes.
-            null_figure = plt.Figure()
-            null_ax = null_figure.gca()
+            # For each residual vector, get the autocorrelations
             for sample_idx in range(n_samples):
-                _, c, _, _ = null_ax.acorr(residuals[sample_idx,
-                                                     output_idx, :],
-                                           maxlags=max_lag)
+                c = acorr(residuals[sample_idx, output_idx, :], max_lag)
                 cs[sample_idx, :] = c[max_lag:]
 
-            # Draw the boxplots as well as a line connecting the medians.
-            result = axes[output_idx].boxplot(cs,
-                                              positions=np.arange(max_lag + 1))
-            medians = [med_line.get_ydata()[0] for
-                       med_line in result['medians']]
-            axes[output_idx].plot(np.arange(0, max_lag + 1),
-                                  medians,
-                                  color='red')
-            axes[output_idx].axhline(0)
+            # Calculate the necessary percentiles of the sample of
+            # autocorrelations
+            median_acorr = np.median(cs, axis=0)
+            lower_acorr = np.percentile(cs, lower_pctle, axis=0)
+            upper_acorr = np.percentile(cs, upper_pctle, axis=0)
 
+            # Calculate the length of each bar in the point plot
+            yerr = np.vstack((median_acorr - lower_acorr,
+                              upper_acorr - median_acorr))
+
+        # Plot the autocorrelation points and distributions. matplotlib
+        # errorbar is used to handle the distribution lines
+        axes[output_idx].errorbar(np.arange(0, max_lag + 1),
+                                  median_acorr,
+                                  yerr=yerr,
+                                  color='red',
+                                  fmt='o-')
+
+        # Draw the dashed lines showing the confidence interval
+        if significance_level is not None:
+            if significance_level > 1 or significance_level < 0:
+                raise ValueError('significance level must fall between 0 and '
+                                 '1')
+            threshold = scipy.special.ndtri(1 - significance_level / 2)
+            threshold /= math.sqrt(residuals.shape[2])
+            axes[output_idx].axhline(threshold, ls='--', c='k', zorder=-10)
+            axes[output_idx].axhline(-threshold, ls='--', c='k', zorder=-10)
+
+        # Draw a horizontal line at 0 autocorrelation
+        axes[output_idx].axhline(0, color='C0', zorder=-10)
+
+        # Add y-label and adjust limits
         axes[output_idx].set_ylabel('Output %d\nresiduals autocorrelation'
                                     % (output_idx + 1))
         axes[output_idx].set_xlim(-0.5, max_lag + 0.5)
 
-        if show_confidence:
-            significance_level = 0.05
-            threshold = scipy.special.ndtri(1 - significance_level / 2)
-            threshold /= math.sqrt(residuals.shape[2])
-            axes[output_idx].axhline(threshold, ls='--', c='k')
-            axes[output_idx].axhline(-threshold, ls='--', c='k')
-
+    # Add x-label (common to all outputs)
     axes[-1].set_xlabel('Lag')
 
     return fig
+
+
+def acorr(x, max_lag):
+    """
+    Calculate the normalized autocorrelation for a given data series.
+
+    This function uses the same procedure as matplotlib.pyplot.acorr, but it
+    just calculates the autocorrelation without plotting anything.
+
+    Returns the autocorrelation as a numpy array.
+
+    Parameters
+    ----------
+    x
+        A 1d numpy array containing the time series for which to calculate
+        autocorrelation.
+    max_lag
+        An int specifying the highest lag to consider.
+    """
+    import numpy as np
+    c = np.correlate(x, x, mode='full')
+
+    # Normalize
+    c /= np.dot(x, x)
+
+    # Truncate at max_lag in each direction
+    T = len(x)
+    c = c[T - 1 - max_lag:T + max_lag]
+
+    return c
 
 
 def calculate_residuals(parameters, problem, thinning=None):
