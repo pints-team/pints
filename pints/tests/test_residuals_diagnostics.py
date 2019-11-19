@@ -1,5 +1,5 @@
 #
-# Functions for analyzing the residuals and evaluating noise models
+# Test the methods in pints.residuals_diagnostics
 #
 # This file is part of PINTS
 #  Copyright (c) 2017-2019, University of Oxford.

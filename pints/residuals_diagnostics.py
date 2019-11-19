@@ -22,8 +22,11 @@ def plot_residuals_autocorrelation(parameters,
 
     This function can be used to analyze the results of either optimisation or
     MCMC Bayesian inference. When multiple samples of the residuals are present
-    (corresponding to multiple MCMC samples), the plot will illustrate the
-    distribution of autocorrelations across the MCMC samples.
+    (corresponding to multiple MCMC samples), the plot can illustrate the
+    distribution of autocorrelations across the MCMC samples. At each lag,
+    a dot is drawn at the median autocorrelation, and a line is drawn giving
+    the extent of the posterior interval specified as an argument (by default,
+    the 2.5th to the 97.5th percentile).
 
     When multiple outputs are present, one residuals plot will be generated for
     each output.
