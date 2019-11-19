@@ -18,7 +18,7 @@ def plot_residuals_autocorrelation(parameters,
                                    significance_level=0.05,
                                    posterior_interval=0.95):
     """
-    Plot the autocorrelation plot of the residuals.
+    Generate an autocorrelation plot of the residuals.
 
     This function can be used to analyze the results of either optimisation or
     MCMC Bayesian inference. When multiple samples of the residuals are present
@@ -161,8 +161,8 @@ def acorr(x, max_lag):
     """
     Calculate the normalized autocorrelation for a given data series.
 
-    This function uses the same procedure as matplotlib.pyplot.acorr, but it
-    just calculates the autocorrelation without plotting anything.
+    This function uses the same procedure as ``matplotlib.pyplot.acorr``, but
+    it just calculates the autocorrelation without plotting anything.
 
     Returns the autocorrelation as a numpy array.
 
