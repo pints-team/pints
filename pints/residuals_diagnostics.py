@@ -20,11 +20,10 @@ def plot_residuals_autocorrelation(parameters,
     """
     Plot the autocorrelation plot of the residuals.
 
-    This function can be used to analyze the results of either optimization or
+    This function can be used to analyze the results of either optimisation or
     MCMC Bayesian inference. When multiple samples of the residuals are present
-    (corresponding to multiple MCMC samples), the plot will show box-whisker
-    diagrams illustrating the distribution of autocorrelations across the MCMC
-    samples.
+    (corresponding to multiple MCMC samples), the plot will illustrate the
+    distribution of autocorrelations across the MCMC samples.
 
     When multiple outputs are present, one residuals plot will be generated for
     each output.
@@ -34,7 +33,8 @@ def plot_residuals_autocorrelation(parameters,
     Parameters
     ----------
     parameters
-        The parameter values with shape ``(n_samples, n_parameters)``.
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, `n_samples` will be 1.
     problem
         The problem given by a :class:``pints.SingleOutputProblem`` or
         :class:``pints.MultiOutputProblem``, with `n_parameters` greater than
@@ -61,7 +61,7 @@ def plot_residuals_autocorrelation(parameters,
     import numpy as np
     import scipy.special
 
-    # Get the number of problem outputs parameters
+    # Get the number of problem outputs
     n_outputs = problem.n_outputs()
 
     # Get the matrix of residuals values
@@ -70,12 +70,21 @@ def plot_residuals_autocorrelation(parameters,
     # Get the number of samples
     n_samples = residuals.shape[0]
 
-    # Calculate the percentiles of the posterior to plot
+    # If there are multiple samples of the parameters, calculate the
+    # percentiles of the posterior to plot
     if n_samples > 1:
         if posterior_interval > 1 or posterior_interval < 0:
             raise ValueError('posterior interval must fall between 0 and 1')
         upper_pctle = (0.5 + posterior_interval / 2) * 100
         lower_pctle = (0.5 - posterior_interval / 2) * 100
+
+    # Find the location of the confidence interval dotted lines
+    if significance_level is not None:
+        if significance_level > 1 or significance_level < 0:
+            raise ValueError('significance level must fall between 0 and '
+                             '1')
+        threshold = scipy.special.ndtri(1 - significance_level / 2)
+        threshold /= math.sqrt(residuals.shape[2])
 
     # Set up one axes for each output
     fig, axes = plt.subplots(n_outputs,
@@ -128,11 +137,6 @@ def plot_residuals_autocorrelation(parameters,
 
         # Draw the dashed lines showing the confidence interval
         if significance_level is not None:
-            if significance_level > 1 or significance_level < 0:
-                raise ValueError('significance level must fall between 0 and '
-                                 '1')
-            threshold = scipy.special.ndtri(1 - significance_level / 2)
-            threshold /= math.sqrt(residuals.shape[2])
             axes[output_idx].axhline(threshold, ls='--', c='k', zorder=-10)
             axes[output_idx].axhline(-threshold, ls='--', c='k', zorder=-10)
 
