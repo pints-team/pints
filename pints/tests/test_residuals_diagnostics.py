@@ -93,7 +93,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         Test the calculate_residuals function.
         """
         # Test that it runs on an optimisation result
-        pints.residuals_diagnostics.calculate_residuals(
+        fn_residuals = pints.residuals_diagnostics.calculate_residuals(
             np.array([self.found_parameters1]), self.problem1)
 
         # Test that it runs on MCMC samples without thinning
@@ -125,6 +125,14 @@ class TestResidualsDiagnostics(unittest.TestCase):
             thinning=0
         )
 
+        # Test that the calculated residuals are correct. Compare the manual
+        # calculation of model predictions minus actual values to the function
+        # return from above
+        manual_residuals = self.problem1.values() - \
+                           self.problem1.evaluate(self.found_parameters1)
+        fn_residuals = fn_residuals[0, 0, :]
+        self.assertTrue(np.allclose(manual_residuals, fn_residuals))
+
     def test_acorr(self):
         """
         Test the acorr function.
@@ -132,6 +140,21 @@ class TestResidualsDiagnostics(unittest.TestCase):
         # Test that it runs without error
         pints.residuals_diagnostics.acorr(np.random.normal(0, 1, 50), 11)
         pints.residuals_diagnostics.acorr(np.random.normal(0, 1, 49), 10)
+
+        # Test that the autocorrelations are correct. Define a fixed series
+        # with precomputed autocorrelation. The ground truth autocorrelation
+        # was given by the matplotlib.pyplot.acorr function
+        example_series = np.array([-4.16663146, -0.06785731, -5.32403073,
+                        -8.44891444, -5.73192276, 9.24119792, -8.96992,
+                        -6.00931999,  2.93184439, -2.08975285])
+        example_series_acorr_lag5 = np.array([-0.05123492, 0.23477934,
+                        0.39043056, -0.11692329, -0.03192777, 1., -0.03192777,
+                        -0.11692329,  0.39043056,  0.23477934, -0.05123492])
+
+        # Check that the precomputed autocorrelation agrees with the
+        # pints.residuals_diagnostics function
+        self.assertTrue(np.allclose(example_series_acorr_lag5,
+                        pints.residuals_diagnostics.acorr(example_series, 5)))
 
     def test_plot_residuals_autocorrelation(self):
         """
@@ -143,11 +166,14 @@ class TestResidualsDiagnostics(unittest.TestCase):
             self.problem1
         )
 
-        # Test that it runs with an MCMC result
-        pints.residuals_diagnostics.plot_residuals_autocorrelation(
+        # Test that it runs with a multiple output MCMC result
+        fig = pints.residuals_diagnostics.plot_residuals_autocorrelation(
             self.samples2[0],
             self.problem2
         )
+
+        # Test that the multiple output figure has multiple axes
+        self.assertGreaterEqual(len(fig.axes), 2)
 
         # Test an invalid significance level
         self.assertRaisesRegexp(

@@ -21,23 +21,26 @@ def plot_residuals_autocorrelation(parameters,
 
     This function can be used to analyze the results of either optimisation or
     MCMC Bayesian inference. When multiple samples of the residuals are present
-    (corresponding to multiple MCMC samples), the plot can illustrate the
+    (corresponding to multiple MCMC samples), the plot illustrates the
     distribution of autocorrelations across the MCMC samples. At each lag,
-    a dot is drawn at the median autocorrelation, and a line is drawn giving
-    the extent of the posterior interval specified as an argument (by default,
-    the 2.5th to the 97.5th percentile).
+    a point is drawn at the median autocorrelation, and a line is drawn giving
+    the percentile range of the posterior interval specified as an argument (by
+    default, the 2.5th to the 97.5th percentile).
 
     When multiple outputs are present, one residuals plot will be generated for
     each output.
 
-    When a significance level is provided, confidence bounds for the
-    sample autocorrelation are drawn on the plot. Under the assumption that the
-    residuals of length :math:`n` are IID with mean 0 and variance
-    :math:`\sigma^2`, for large :math:`n` the residuals sample autocorrelations
-    are approximately IID Normal(mean=0, variance=1/n). This result is proved
-    in [1]_ (see Theorem 7.2.2 and Example 7.2.1). Therefore, the confidence
-    bounds can be calculated by :math:`\pm z^* n^{-1/2}` for the
-    appropriate critical value :math:`z^*`.
+    When a significance level is provided, confidence bounds for the sample
+    autocorrelations under the assumption of IID residuals are drawn on the
+    plot. Many of the observed residuals autocorrelations falling outside these
+    bounds could imply evidence against the residuals being IID.
+
+    Under the assumption that the residuals of length :math:`n` are IID with
+    mean 0 and variance :math:`\sigma^2`, for large :math:`n` the residuals
+    sample autocorrelations are approximately IID Normal(mean=0, variance=1/n).
+    This result is proved in [1]_ (see Theorem 7.2.2 and Example 7.2.1).
+    Therefore, the confidence bounds can be calculated by :math:`\pm z^*
+    n^{-1/2}` for the appropriate critical value :math:`z^*`.
 
     This function returns a ``matplotlib`` figure.
 
