@@ -14,7 +14,6 @@ def plot_residuals_autocorrelation(parameters,
                                    problem,
                                    max_lag=10,
                                    thinning=None,
-                                   show_confidence=False,
                                    significance_level=0.05,
                                    posterior_interval=0.95):
     """
@@ -37,24 +36,24 @@ def plot_residuals_autocorrelation(parameters,
     ----------
     parameters
         The parameter values with shape ``(n_samples, n_parameters)``. When
-        passing a single best fit parameter vector, `n_samples` will be 1.
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
     problem
         The problem given by a :class:``pints.SingleOutputProblem`` or
-        :class:``pints.MultiOutputProblem``, with `n_parameters` greater than
+        :class:``pints.MultiOutputProblem``, with ``n_parameters`` greater than
         or equal to the ``n_parameters`` of the `parameters`. Extra parameters
         not found in the problem are ignored.
     max_lag
         Optional int value (default 10). The highest lag to plot.
     thinning
-        Optional, integer value (greater than zero). If thinning is set to `n`,
-        only every nth sample in parameters will be used. If set to None
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
         (default), some thinning will be applied so that about 200 samples will
         be used.
     significance_level
-        None or float value (default 0.05). When a significance level is
+        ``None`` or float value (default 0.05). When a significance level is
         provided, dashed lines for the confidence interval corresponding to
-        that significance level are drawn on the plot. When None, no lines are
-        drawn.
+        that significance level are drawn on the plot. When ``None``, no lines
+        are drawn.
     posterior_interval
         Float value (default 0.95). When multiple samples of the parameter
         values are provided, this gives the size of the credible region of the
@@ -204,14 +203,14 @@ def calculate_residuals(parameters, problem, thinning=None):
         passing a single best fit parameter vector, `n_samples` will be 1.
     problem
         The problem given by a :class:``pints.SingleOutputProblem`` or
-        :class:``pints.MultiOutputProblem``, with `n_parameters` greater than
-        or equal to the ``n_parameters`` of the `parameters`. Extra parameters
-        not found in the problem are ignored.
+        :class:``pints.MultiOutputProblem``, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
     thinning
-        Optional, integer value (greater than zero). If thinning is set to `n`,
-        only every nth sample in parameters will be used. If set to None
-        (default), some thinning will be applied so that about 200 samples will
-        be used.
+        Optional, integer value (greater than zero). If thinning is set to
+        ``n``, only every nth sample in parameters will be used. If set to
+        ``None`` (default), some thinning will be applied so that about 200
+        samples will be used.
     """
     import numpy as np
 
