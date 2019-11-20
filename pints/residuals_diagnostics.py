@@ -16,7 +16,7 @@ def plot_residuals_autocorrelation(parameters,
                                    thinning=None,
                                    significance_level=0.05,
                                    posterior_interval=0.95):
-    """
+    r"""
     Generate an autocorrelation plot of the residuals.
 
     This function can be used to analyze the results of either optimisation or
@@ -30,7 +30,16 @@ def plot_residuals_autocorrelation(parameters,
     When multiple outputs are present, one residuals plot will be generated for
     each output.
 
-    Returns a ``matplotlib`` figure.
+    When a significance level is provided, confidence bounds for the
+    sample autocorrelation are drawn on the plot. Under the assumption that the
+    residuals of length :math:`n` are IID with mean 0 and variance
+    :math:`\sigma^2`, for large :math:`n` the residuals sample autocorrelations
+    are approximately IID Normal(mean=0, variance=1/n). This result is proved
+    in [1]_ (see Theorem 7.2.2 and Example 7.2.1). Therefore, the confidence
+    bounds can be calculated by :math:`\pm z^* n^{-1/2}` for the
+    appropriate critical value :math:`z^*`.
+
+    This function returns a ``matplotlib`` figure.
 
     Parameters
     ----------
@@ -58,6 +67,11 @@ def plot_residuals_autocorrelation(parameters,
         Float value (default 0.95). When multiple samples of the parameter
         values are provided, this gives the size of the credible region of the
         posterior to plot.
+
+    References
+    ----------
+    .. [1] Brockwell, P. J., & Davis, R. A. (1991). Time series: Theory and
+           methods (2nd ed.). New York: Springer.
     """
     import matplotlib.pyplot as plt
     import numpy as np
