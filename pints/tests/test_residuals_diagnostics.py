@@ -129,7 +129,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         # calculation of model predictions minus actual values to the function
         # return from above
         manual_residuals = self.problem1.values() - \
-                           self.problem1.evaluate(self.found_parameters1)
+            self.problem1.evaluate(self.found_parameters1)
         fn_residuals = fn_residuals[0, 0, :]
         self.assertTrue(np.allclose(manual_residuals, fn_residuals))
 
@@ -145,11 +145,14 @@ class TestResidualsDiagnostics(unittest.TestCase):
         # with precomputed autocorrelation. The ground truth autocorrelation
         # was given by the matplotlib.pyplot.acorr function
         example_series = np.array([-4.16663146, -0.06785731, -5.32403073,
-                        -8.44891444, -5.73192276, 9.24119792, -8.96992,
-                        -6.00931999,  2.93184439, -2.08975285])
+                                   -8.44891444, -5.73192276, 9.24119792,
+                                   -8.96992, -6.00931999, 2.93184439,
+                                   -2.08975285])
         example_series_acorr_lag5 = np.array([-0.05123492, 0.23477934,
-                        0.39043056, -0.11692329, -0.03192777, 1., -0.03192777,
-                        -0.11692329,  0.39043056,  0.23477934, -0.05123492])
+                                              0.39043056, -0.11692329,
+                                              -0.03192777, 1., -0.03192777,
+                                              -0.11692329, 0.39043056,
+                                              0.23477934, -0.05123492])
 
         # Check that the precomputed autocorrelation agrees with the
         # pints.residuals_diagnostics function
