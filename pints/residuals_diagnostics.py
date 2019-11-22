@@ -175,7 +175,7 @@ def plot_residuals_autocorrelation(parameters,
 
 def acorr(x, max_lag):
     """
-    Calculate the normalized autocorrelation for a given data series.
+    Calculate the normalised autocorrelation for a given data series.
 
     This function uses the same procedure as ``matplotlib.pyplot.acorr``, but
     it just calculates the autocorrelation without plotting anything.
@@ -192,7 +192,7 @@ def acorr(x, max_lag):
     """
     c = np.correlate(x, x, mode='full')
 
-    # Normalize
+    # Normalise
     c /= np.dot(x, x)
 
     # Truncate at max_lag in each direction
