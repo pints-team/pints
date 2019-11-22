@@ -37,7 +37,7 @@ Contents
     nested_samplers/index
     noise_generators
     optimisers/index
-    residuals_diagnostics
+    noise_model_diagnostics
     toy/index
     utilities
 

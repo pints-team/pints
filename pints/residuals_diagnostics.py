@@ -1,5 +1,5 @@
 #
-# Functions for analyzing the residuals and evaluating noise models
+# Functions for analysing the residuals and evaluating noise models
 #
 # This file is part of PINTS
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -8,6 +8,8 @@
 #
 from __future__ import absolute_import, division
 import math
+import numpy as np
+import scipy.special
 
 
 def plot_residuals_autocorrelation(parameters,
@@ -50,10 +52,10 @@ def plot_residuals_autocorrelation(parameters,
         The parameter values with shape ``(n_samples, n_parameters)``. When
         passing a single best fit parameter vector, ``n_samples`` will be 1.
     problem
-        The problem given by a :class:``pints.SingleOutputProblem`` or
-        :class:``pints.MultiOutputProblem``, with ``n_parameters`` greater than
-        or equal to the ``n_parameters`` of the `parameters`. Extra parameters
-        not found in the problem are ignored.
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
     max_lag
         Optional int value (default 10). The highest lag to plot.
     thinning
@@ -77,8 +79,6 @@ def plot_residuals_autocorrelation(parameters,
            methods (2nd ed.). New York: Springer.
     """
     import matplotlib.pyplot as plt
-    import numpy as np
-    import scipy.special
 
     # Get the number of problem outputs
     n_outputs = problem.n_outputs()
@@ -190,7 +190,6 @@ def acorr(x, max_lag):
     max_lag
         An int specifying the highest lag to consider.
     """
-    import numpy as np
     c = np.correlate(x, x, mode='full')
 
     # Normalize
@@ -217,10 +216,10 @@ def calculate_residuals(parameters, problem, thinning=None):
     ----------
     parameters
         The parameter values with shape ``(n_samples, n_parameters)``. When
-        passing a single best fit parameter vector, `n_samples` will be 1.
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
     problem
-        The problem given by a :class:``pints.SingleOutputProblem`` or
-        :class:``pints.MultiOutputProblem``, with ``n_parameters`` greater than
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
         or equal to the ``n_parameters`` of the ``parameters``. Extra
         parameters not found in the problem are ignored.
     thinning
@@ -229,8 +228,6 @@ def calculate_residuals(parameters, problem, thinning=None):
         ``None`` (default), some thinning will be applied so that about 200
         samples will be used.
     """
-    import numpy as np
-
     # Make sure that the parameters argument has the correct shape
     try:
         n_samples, n_params = parameters.shape

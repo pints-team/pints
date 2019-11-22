@@ -6,12 +6,12 @@
 #  For licensing informating, see the LICENSE file distributed with the PINTS
 #  software package.
 #
+import matplotlib
+import numpy as np
 import pints
 import pints.residuals_diagnostics
 import pints.toy as toy
 import unittest
-import numpy as np
-import matplotlib
 
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
@@ -21,77 +21,57 @@ class TestResidualsDiagnostics(unittest.TestCase):
     """
     Tests Pints residuals diagnostics methods.
     """
-    def __init__(self, name):
-        super(TestResidualsDiagnostics, self).__init__(name)
 
+    @classmethod
+    def setUpClass(cls):
         # Create a single output optimization toy model
-        self.model1 = toy.LogisticModel()
-        self.real_parameters1 = [0.015, 500]
-        self.times1 = np.linspace(0, 1000, 100)
-        self.values1 = self.model1.simulate(self.real_parameters1, self.times1)
+        cls.model1 = toy.LogisticModel()
+        cls.real_parameters1 = [0.015, 500]
+        cls.times1 = np.linspace(0, 1000, 100)
+        cls.values1 = cls.model1.simulate(cls.real_parameters1, cls.times1)
 
         # Add noise
-        self.noise1 = 50
-        self.values1 += np.random.normal(0, self.noise1, self.values1.shape)
+        cls.noise1 = 50
+        cls.values1 += np.random.normal(0, cls.noise1, cls.values1.shape)
 
         # Set up optimisation problem
-        self.problem1 = pints.SingleOutputProblem(
-            self.model1, self.times1, self.values1)
-        self.score1 = pints.SumOfSquaresError(self.problem1)
-        self.boundaries1 = pints.RectangularBoundaries([0, 200], [1, 1000])
-        self.x01 = np.array([0.5, 500])
+        cls.problem1 = pints.SingleOutputProblem(
+            cls.model1, cls.times1, cls.values1)
 
-        # Run the optimisation
-        optimiser = pints.OptimisationController(
-            self.score1,
-            self.x01,
-            boundaries=self.boundaries1,
-            method=pints.XNES,
-        )
-        optimiser.set_log_to_screen(False)
-        self.found_parameters1, self.found_value1 = optimiser.run()
+        # Instead of running the optimisation, choose fixed values to serve as
+        # the results
+        cls.found_parameters1 = np.array([0.0149, 494.6])
 
         # Create a multiple output MCMC toy model
-        self.model2 = toy.LotkaVolterraModel()
-        self.real_parameters2 = self.model2.suggested_parameters()
+        cls.model2 = toy.LotkaVolterraModel()
+        cls.real_parameters2 = cls.model2.suggested_parameters()
         # Downsample the times for speed
-        self.times2 = self.model2.suggested_times()[::10]
-        self.values2 = self.model2.simulate(self.real_parameters2, self.times2)
+        cls.times2 = cls.model2.suggested_times()[::10]
+        cls.values2 = cls.model2.simulate(cls.real_parameters2, cls.times2)
 
         # Add noise
-        self.noise2 = 0.05
-        self.values2 += np.random.normal(0, self.noise2, self.values2.shape)
+        cls.noise2 = 0.05
+        cls.values2 += np.random.normal(0, cls.noise2, cls.values2.shape)
 
-        # Create an object with links to the model and time series
-        self.problem2 = pints.MultiOutputProblem(
-            self.model2, self.times2, self.values2)
+        # Set up 2-output MCMC problem
+        cls.problem2 = pints.MultiOutputProblem(
+            cls.model2, cls.times2, cls.values2)
 
-        # Create a uniform prior over both the parameters and the new noise
-        # variable
-        self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
-        # Create a log likelihood
-        self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
-            self.problem2, self.noise2)
-
-        # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior2 = pints.LogPosterior(
-            self.log_likelihood2, self.log_prior2)
-
-        # Run MCMC
-        self.x02 = [
-            self.real_parameters2 * 1.1,
-            self.real_parameters2 * 0.9,
-            self.real_parameters2 * 1.05
-        ]
-        mcmc = pints.MCMCController(self.log_posterior2, 3, self.x02)
-        mcmc.set_max_iterations(300)  # make it as small as possible
-        mcmc.set_log_to_screen(False)
-        self.samples2 = mcmc.run()
+        # Instead of running MCMC, generate three chains which actually contain
+        # independent samples near the true values (faster than MCMC)
+        samples = np.zeros((3, 50, 4))
+        for chain_idx in range(3):
+            for parameter_idx in range(4):
+                if parameter_idx == 0 or parameter_idx == 2:
+                    chain = np.random.normal(3.01, .2, 50)
+                else:
+                    chain = np.random.normal(1.98, .2, 50)
+                samples[chain_idx, :, parameter_idx] = chain
+        cls.samples2 = samples
 
     def test_calculate_residuals(self):
-        """
-        Test the calculate_residuals function.
-        """
+        # Test the calculate_residuals function
+
         # Test that it runs on an optimisation result
         fn_residuals = pints.residuals_diagnostics.calculate_residuals(
             np.array([self.found_parameters1]), self.problem1)
@@ -134,9 +114,8 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertTrue(np.allclose(manual_residuals, fn_residuals))
 
     def test_acorr(self):
-        """
-        Test the acorr function.
-        """
+        # Test the acorr function
+
         # Test that it runs without error
         pints.residuals_diagnostics.acorr(np.random.normal(0, 1, 50), 11)
         pints.residuals_diagnostics.acorr(np.random.normal(0, 1, 49), 10)
@@ -160,9 +139,8 @@ class TestResidualsDiagnostics(unittest.TestCase):
                         pints.residuals_diagnostics.acorr(example_series, 5)))
 
     def test_plot_residuals_autocorrelation(self):
-        """
-        Test the plot residuals autocorrelation function.
-        """
+        # Test the plot residuals autocorrelation function
+
         # Test that it runs with an optimisation result
         pints.residuals_diagnostics.plot_residuals_autocorrelation(
             np.array([self.found_parameters1]),
@@ -197,3 +175,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
             self.problem2,
             posterior_interval=1.5
         )
+
+
+if __name__ == '__main__':
+    unittest.main()

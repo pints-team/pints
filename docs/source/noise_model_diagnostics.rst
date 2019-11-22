@@ -1,11 +1,10 @@
-*********************
-Residuals diagnostics
-*********************
+***********************
+Noise model diagnostics
+***********************
 
 .. module:: pints.residuals_diagnostics
 
-Pints includes functionality to generate diagnostic plots of the residuals.
-These tools may be useful to evaluate the validity of a noise model.
+Pints includes functionality to generate diagnostic plots of the residuals. These tools may be useful to evaluate the validity of a noise model.
 
 Plotting functions:
 
