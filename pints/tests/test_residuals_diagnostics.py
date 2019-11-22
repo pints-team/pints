@@ -24,7 +24,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Create a single output optimization toy model
+        # Create a single output optimisation toy model
         cls.model1 = toy.LogisticModel()
         cls.real_parameters1 = [0.015, 500]
         cls.times1 = np.linspace(0, 1000, 100)

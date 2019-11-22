@@ -21,7 +21,7 @@ def plot_residuals_autocorrelation(parameters,
     r"""
     Generate an autocorrelation plot of the residuals.
 
-    This function can be used to analyze the results of either optimisation or
+    This function can be used to analyse the results of either optimisation or
     MCMC Bayesian inference. When multiple samples of the residuals are present
     (corresponding to multiple MCMC samples), the plot illustrates the
     distribution of autocorrelations across the MCMC samples. At each lag,
