@@ -81,6 +81,10 @@ Naming is hard. In general, we aim for descriptive class, method, and argument n
 
 Class names are CamelCase, and start with an upper case letter, for example `SuperDuperMCMC`. Method and variable names are lower case, and use underscores for word separation, for example `x` or `iteration_count`.
 
+### Spelling
+
+To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references.
+
 ### Python 2 and 3
 
 Python is currently in a long, long transition phase from Python 2 to Python 3. Pints supports both Python 2 (version 2.7 and upwards) and Python 3 (version 3.4 and upwards).
