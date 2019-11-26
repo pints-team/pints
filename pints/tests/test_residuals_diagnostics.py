@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # Test the methods in pints.residuals_diagnostics
 #
@@ -15,6 +16,12 @@ import unittest
 
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
+
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 class TestResidualsDiagnostics(unittest.TestCase):
