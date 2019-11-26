@@ -83,7 +83,7 @@ Class names are CamelCase, and start with an upper case letter, for example `Sup
 
 ### Spelling
 
-To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references. Things not in the PINTS repo can be in any style or language you want!
+To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references.
 
 ### Python 2 and 3
 
