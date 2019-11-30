@@ -209,10 +209,13 @@ from ._mcmc._slice_doubling import SliceDoublingMCMC
 
 from ._abc import (
     ABCSampler,
-    ABCController
+    ABCController,
+    SequentialABCController
 )
 
 from ._abc._abc_rejection import RejectionABC
+from ._abc._abc_smc import ABCSMC
+from ._abc._pertubation_kernels import SphericalGaussianKernel
 
 #
 # Nested samplers
