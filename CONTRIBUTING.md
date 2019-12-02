@@ -164,7 +164,8 @@ Guidelines for writing unit tests:
 If you want to check your tests on Python 2 and 3, use
 
 ```
-$ python run-tests.py --unit2 --unit3
+$ python2 run-tests.py --unit
+$ python3 run-tests.py --unit
 ```
 
 When you commit anything to Pints, these checks will also be run automatically (see [infrastructure](#infrastructure)).
