@@ -33,7 +33,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     def simulate_raw(self, parameters):
         """
-        Returns raw times, mol counts when reactions occur
+        Returns raw times, population sizes when reactions occur
         """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
@@ -95,7 +95,8 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
     def mean(self, parameters, times):
         r"""
         Returns the deterministic mean of infinitely many stochastic
-        simulations, which follows :math:`A(0) \exp(-kt)`.
+        simulations, which follows:
+        :math:`\frac{kC(0)}{C(0) + \exp{-kt}(k - C(0))}`.
         """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():

@@ -50,7 +50,7 @@ class TestStochasticLogistic(unittest.TestCase):
         model = StochasticLogisticModel(1)
         params = [0.1, 50]
         time, values = model.simulate_raw([0.1, 50])
-        values = model.interpolate_mol_counts(time, values, times, params)
+        values = model.interpolate_values(time, values, times, params)
         self.assertTrue(len(time), len(values))
 
         # Test output of Gillespie algorithm
@@ -96,6 +96,10 @@ class TestStochasticLogistic(unittest.TestCase):
         parameters_3 = [0.1]
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
         self.assertRaises(ValueError, model.mean, parameters_3, times)
+
+        # model variance isn't implemented so we should throw a helpful error
+        parameters_4 = [0.1, 50]
+        self.assertRaises(NotImplementedError, model.variance, parameters_4, times)
 
         # Initial value can't be negative
         self.assertRaises(ValueError, pints.toy.StochasticLogisticModel, -1)
