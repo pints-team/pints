@@ -121,7 +121,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         Returns the deterministic variance of infinitely many stochastic
         simulations.
         """
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
