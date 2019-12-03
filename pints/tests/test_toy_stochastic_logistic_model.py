@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests if the stochastic degradation (toy) model works.
+# Tests if the stochastic logistic growth (toy) model works.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -16,7 +16,7 @@ from pints.toy import StochasticLogisticModel
 
 class TestStochasticLogistic(unittest.TestCase):
     """
-    Tests if the stochastic degradation (toy) model works.
+    Tests if the stochastic logistic growth (toy) model works.
     """
     def test_start_with_zero(self):
         # Test the special case where the initial population count is zero
@@ -49,12 +49,12 @@ class TestStochasticLogistic(unittest.TestCase):
         times = np.linspace(0, 100, 101)
         model = StochasticLogisticModel(1)
         params = [0.1, 50]
-        time, mol_count = model.simulate_raw([0.1, 50])
-        values = model.interpolate_mol_counts(time, mol_count, times, params)
-        self.assertTrue(len(time), len(mol_count))
+        time, values = model.simulate_raw([0.1, 50])
+        values = model.interpolate_mol_counts(time, values, times, params)
+        self.assertTrue(len(time), len(values))
 
         # Test output of Gillespie algorithm
-        self.assertTrue(np.all(mol_count ==
+        self.assertTrue(np.all(values ==
                                np.array(range(1, 51))))
 
         # Check simulate function returns expected values
@@ -62,11 +62,11 @@ class TestStochasticLogistic(unittest.TestCase):
 
         # Check interpolation function works as expected
         temp_time = np.array([np.random.uniform(time[0], time[1])])
-        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     temp_time, params)[0] == 1)
+        self.assertTrue(model.interpolate_values(time, values, temp_time,
+                                                 params)[0] == 1)
         temp_time = np.array([np.random.uniform(time[1], time[2])])
-        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     temp_time, params)[0] == 2)
+        self.assertTrue(model.interpolate_values(time, values, temp_time,
+                                                 params)[0] == 2)
 
     def test_mean_variance(self):
         # test mean

@@ -47,33 +47,33 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         t = 0
         a = self._n0
 
-        # Run stochastic logistic birth-only algorithm, calculating time until next
-        # reaction and increasing population count by 1 at that time
+        # Run stochastic logistic birth-only algorithm, calculating time until
+        # next reaction and increasing population count by 1 at that time
         mol_count = [a]
         time = [t]
         while a < k:
             r = np.random.uniform(0, 1)
-            t += np.log(1/r) / (a * b * (1 - a / k))
+            t += np.log(1 / r) / (a * b * (1 - a / k))
             a = a + 1
             time.append(t)
             mol_count.append(a)
         return time, mol_count
 
-    def interpolate_mol_counts(self, time, mol_count, output_times, parameters):
+    def interpolate_values(self, time, pop_size, output_times, parameters):
         """
-        Takes raw times and inputs and mol counts and outputs interpolated
-        values at output_times
+        Takes raw times and population size values as inputs
+        and outputs interpolated values at output_times
         """
-        # Interpolate as step function, decreasing mol_count by 1 at each
-        # reaction time point
-        interp_func = interp1d(time, mol_count, kind='previous')
+        # Interpolate as step function, increasing pop_size by 1 at each
+        # event time point
+        interp_func = interp1d(time, pop_size, kind='previous')
 
-        # Compute molecule count values at given time points using f1
-        # at any time beyond the last reaction, molecule count = 0
+        # Compute population size values at given time points using f1
+        # at any time beyond the last event, pop_size = k
         values = interp_func(output_times[np.where(output_times <= time[-1])])
         zero_vector = np.full(
-            len(output_times[np.where(output_times > time[-1])])
-            , parameters[1])
+            len(output_times[np.where(output_times > time[-1])]),
+            parameters[1])
         values = np.concatenate((values, zero_vector))
         return values
 
@@ -86,10 +86,10 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
             return np.zeros(times.shape)
 
         # run Gillespie
-        time, mol_count = self.simulate_raw(parameters)
+        time, pop_size = self.simulate_raw(parameters)
 
         # interpolate
-        values = self.interpolate_mol_counts(time, mol_count, times, parameters)
+        values = self.interpolate_values(time, pop_size, times, parameters)
         return values
 
     def mean(self, parameters, times):
@@ -112,8 +112,8 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-
-        return (self._n0 * k) / (self._n0 + np.exp(-b * times) * (k - self._n0))
+        c0 = self._n0
+        return (c0 * k) / (c0 + np.exp(-b * times) * (k - c0))
 
     def variance(self, parameters, times):
         r"""
