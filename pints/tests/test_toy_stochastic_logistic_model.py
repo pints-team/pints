@@ -99,7 +99,8 @@ class TestStochasticLogistic(unittest.TestCase):
 
         # model variance isn't implemented so we should throw a helpful error
         parameters_4 = [0.1, 50]
-        self.assertRaises(NotImplementedError, model.variance, parameters_4, times)
+        self.assertRaises(NotImplementedError, model.variance,
+                          parameters_4, times)
 
         # Initial value can't be negative
         self.assertRaises(ValueError, pints.toy.StochasticLogisticModel, -1)

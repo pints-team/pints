@@ -91,6 +91,7 @@ relevant code.
 - [Simple Harmonic Oscillator model](./toy-model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy-model-sir.ipynb)
 - [Stochastic Degradation model](./toy-model-stochastic-degradation.ipynb)
+- [Stochastic Logistic model](./toy-model-stochastic-logistic-growth.ipynb)
 
 ### Distributions
 - [Annulus](./toy-distribution-annulus.ipynb)
