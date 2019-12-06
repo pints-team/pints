@@ -230,3 +230,48 @@ def arma11_unity(rho, theta, sigma, n):
     for i in range(1, n):
         e[i] = (1 - rho) + rho * e[i - 1] + v[i] + theta * v[i - 1]
     return e
+
+
+def multiplicative_gaussian(eta, sigma, f):
+    r"""
+    Generates multiplicative Gaussian noise.
+
+    With multiplicative noise, the measurement error scales with the magnitude
+    of the output. Given a model taking the form,
+
+    .. math::
+        X(t) = f(t; \theta) + \epsilon(t)
+
+    multiplicative Gaussian noise models the noise term as:
+
+    .. math::
+        \epsilon(t) = f(t; \theta)^\eta v(t)
+
+    where v(t) is iid Gaussian:
+
+    .. math::
+        v(t) \sim \text{ iid } N(0, \sigma)
+
+    The output magnitude ``f`` is required as an input to this function. The
+    noise terms are returned in an array of the same length as ``f``.
+
+    Parameters
+    ----------
+    eta
+        The exponential power controlling the rate at which the noise scales
+        with the output
+    sigma
+        The baseline standard deviation of the noise (must be greater than
+        zero)
+    f
+        A numpy array giving the time-series for the output over time
+    """
+    import numpy as np
+
+    if sigma <= 0:
+        raise ValueError('Standard deviation must be positive.')
+
+    f = np.array(f)
+
+    e = np.random.normal(0, sigma, len(f))
+    return f ** eta * e

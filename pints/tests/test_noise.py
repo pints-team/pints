@@ -148,6 +148,27 @@ class TestNoise(unittest.TestCase):
         self.assertTrue(np.abs(np.mean(samples) - 1) < 1)
         self.assertTrue(np.abs(np.std(samples) - 5) < 1)
 
+    def test_multiplicative_gaussian(self):
+
+        # Test construction errors
+        self.assertRaisesRegex(
+            ValueError,
+            'Standard deviation',
+            pn.multiplicative_gaussian,
+            1.0,
+            -1.0,
+            [1, 2, 3]
+        )
+
+        # Test values
+        samples_small_f = pn.multiplicative_gaussian(2.0, 1.0, [1] * 10000)
+        self.assertTrue(np.abs(np.mean(samples_small_f)) < 1)
+        self.assertTrue(np.abs(np.std(samples_small_f) - 1) < 1)
+
+        samples_large_f = pn.multiplicative_gaussian(2.0, 1.0, [2] * 10000)
+        self.assertTrue(np.abs(np.mean(samples_large_f)) < 1)
+        self.assertTrue(np.abs(np.std(samples_large_f) - 4) < 1)
+
 
 if __name__ == '__main__':
     unittest.main()
