@@ -180,7 +180,7 @@ $ python run-tests.py --books
 If notebooks fail because of changes to pints, it can be a bit of a hassle to debug. In these cases, you can create a temporary export of a notebook's Python content using
 
 ```
-$ python run-tests.py --debook examples/notebook-name.ipynb script.py
+$ python run-tests.py -debook examples/notebook-name.ipynb script.py
 ```
 
 
