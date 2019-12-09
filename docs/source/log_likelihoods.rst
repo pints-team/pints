@@ -27,9 +27,10 @@ Example::
 
 .. autoclass:: KnownNoiseLogLikelihood
 
+.. autoclass:: MultiplicativeGaussianLogLikelihood
+
 .. autoclass:: ScaledLogLikelihood
 
 .. autoclass:: StudentTLogLikelihood
 
 .. autoclass:: UnknownNoiseLogLikelihood
-

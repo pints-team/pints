@@ -522,7 +522,7 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 
 
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
-    """Calculates a likelihood assuming the error scales with the output.
+    r"""Calculates a likelihood assuming the error scales with the output.
 
     This likelihood is applicable to a model given by
 
@@ -541,7 +541,10 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
             -\frac{n_t}{2} \log{2 \pi}
             -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
             -\frac{1}{2}\sum_{i=1}^{n_t}
-                \frac{(X_t - f(t_i, \theta))^2}{(f^\eta \sigma)^2}
+                \frac{(X(t_i) - f(t_i, \theta))^2}
+                {(f(t_i, \theta)^\eta \sigma)^2}
+
+    where ``n_t`` is the number of time points in the series.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -550,7 +553,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem two parameters are added (eta, sigma),
-        for a multi-output problem 2 * ``n_outputs`` parameters are added.
+        for a multi-output problem 2 times ``n_outputs`` parameters are added.
     """
 
     def __init__(self, problem):
