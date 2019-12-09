@@ -9,6 +9,7 @@ Pints includes functionality to generate diagnostic plots of the residuals. Thes
 Plotting functions:
 
 - :func:`plot_residuals_autocorrelation`
+- :func:`plot_residuals_vs_output`
 
 Diagnostics:
 
@@ -20,6 +21,8 @@ Plotting functions
 ------------------
 
 .. autofunction:: plot_residuals_autocorrelation
+
+.. autofunction:: plot_residuals_vs_output
 
 Diagnostics
 -----------

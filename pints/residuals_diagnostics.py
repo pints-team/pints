@@ -173,6 +173,89 @@ def plot_residuals_autocorrelation(parameters,
     return fig
 
 
+def plot_residuals_vs_output(parameters, problem, thinning=None):
+    """Draw a plot of the magnitude of residuals versus the solution output.
+
+    This plot is useful to detect any dependence between the error model and
+    the magnitude of the solution. For example, it may help to detect
+    multiplicative Gaussian noise, in which the standard deviation of the error
+    scales with the output.
+
+    When multiple samples of the parameters are provided (from an MCMC chain),
+    the residuals are calculated and plotted relative to the posterior median
+    of the solution outputs.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional, integer value (greater than zero). If thinning is set to
+        ``n``, only every nth sample in parameters will be used. If set to
+        ``None`` (default), some thinning will be applied so that about 200
+        samples will be used.
+    """
+    import matplotlib.pyplot as plt
+
+    # Make sure that the parameters argument has the correct shape
+    try:
+        n_samples, n_params = parameters.shape
+    except ValueError:
+        raise ValueError('`parameters` must be of shape (n_samples,'
+                         + ' n_parameters).')
+
+    n_outputs = problem.n_outputs()
+
+    # Get the thinning level
+    if thinning is None:
+        thinning = max(1, int(n_samples / 200))
+    else:
+        thinning = int(thinning)
+        if thinning < 1:
+            raise ValueError(
+                'Thinning rate must be `None` or an integer greater than'
+                ' zero.')
+
+    # Solve the model for each parameter
+    predicted_values = []
+    for params in parameters[::thinning, :n_params]:
+        predicted_values.append(problem.evaluate(params))
+
+    # Get the posterior median solution
+    posterior_median_values = np.median(predicted_values, axis=0)
+
+    # Calculate the residuals relative to this posterior median
+    residuals = problem.values() - posterior_median_values
+
+    # Set up one axes for each output
+    fig, axes = plt.subplots(n_outputs,
+                             1,
+                             figsize=(6, 4 * n_outputs))
+
+    # If there is only a single axes, place it in a list anyway
+    if n_outputs == 1:
+        axes = [axes]
+
+    # Plot the calculated residuals
+    for output_idx in range(n_outputs):
+        ax = axes[output_idx]
+        ax.scatter(posterior_median_values[output_idx],
+                   np.abs(residuals[output_idx]),
+                   alpha=0.4)
+        ax.set_xlabel('solution magnitude')
+        ax.set_ylabel('residuals (absolute value)')
+
+    return fig
+
+
 def acorr(x, max_lag):
     """
     Calculate the normalised autocorrelation for a given data series.
