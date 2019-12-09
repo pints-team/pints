@@ -235,6 +235,11 @@ def plot_residuals_vs_output(parameters, problem, thinning=None):
     # Calculate the residuals relative to this posterior median
     residuals = problem.values() - posterior_median_values
 
+    # If there is only one output, add the output dimension manually
+    if n_outputs == 1:
+        residuals = residuals[np.newaxis, :]
+        posterior_median_values = posterior_median_values[np.newaxis, :]
+
     # Set up one axes for each output
     fig, axes = plt.subplots(n_outputs,
                              1,
