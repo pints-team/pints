@@ -718,7 +718,8 @@ class TestLogLikelihood(unittest.TestCase):
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         self.assertAlmostEqual(
-            log_likelihood(parameters + [1.0, 2.0, 1.0, 1.0]), -12.176330824267543)
+            log_likelihood(parameters + [1.0, 2.0, 1.0, 1.0]),
+            -12.176330824267543)
 
 
 if __name__ == '__main__':

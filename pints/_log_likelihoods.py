@@ -576,10 +576,12 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         sigma = np.asarray(noise_parameters[1::2])
         function_values = self._problem.evaluate(x[:-m])
 
-        log_likelihood = np.sum(-self._logn
-            - np.sum(np.log(function_values**eta * sigma), axis=0)
-            - 0.5 / sigma**2 * np.sum((self._values - function_values)**2
-                                      / function_values**(2*eta), axis=0))
+        log_likelihood = \
+            np.sum(-self._logn
+                   - np.sum(np.log(function_values**eta * sigma), axis=0)
+                   - 0.5 / sigma**2
+                   * np.sum((self._values - function_values)**2
+                            / function_values ** (2 * eta), axis=0))
 
         return log_likelihood
 
