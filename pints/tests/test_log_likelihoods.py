@@ -695,6 +695,31 @@ class TestLogLikelihood(unittest.TestCase):
                                          0.0, 0.9, 2.0]),
             -214.17034137601107)
 
+    def test_multiplicative_gaussian(self):
+        # Test single output
+        model = pints.toy.ConstantModel(1)
+        parameters = [2]
+        times = np.asarray([1, 2, 3, 4])
+        model.simulate(parameters, times)
+        values = np.asarray([1.9, 2.1, 1.8, 2.2])
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        self.assertAlmostEqual(log_likelihood(parameters + [2.0, 1.0]),
+                               -9.224056577298253)
+
+        # Test multiple output
+        model = pints.toy.ConstantModel(2)
+        parameters = [1, 2]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([[1.1, 0.9, 1.5], [1.5, 2.5, 2.0]]).transpose()
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        self.assertAlmostEqual(
+            log_likelihood(parameters + [1.0, 2.0, 1.0, 1.0]), -12.176330824267543)
+
 
 if __name__ == '__main__':
     unittest.main()
