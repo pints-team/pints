@@ -73,6 +73,7 @@ relevant code.
 - [Cauchy sampling error](./stats-cauchy-sampling-error.ipynb)
 - [Integrated noise model](./sampling-integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats-log-priors.ipynb)
+- [Multiplicative Gaussian noise](./stats-multiplicative-gaussian-errors.ipynb)
 - [Student-t noise model](./stats-student-t-sampling-error.ipynb)
 
 
