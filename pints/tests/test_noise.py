@@ -169,7 +169,6 @@ class TestNoise(unittest.TestCase):
             np.array([[1, 2, 3], [10, 20, 30]])
         )
 
-
         # Test values
         samples_small_f = pn.multiplicative_gaussian(2.0, 1.0, [1] * 10000)
         self.assertTrue(np.abs(np.mean(samples_small_f)) < 1)
