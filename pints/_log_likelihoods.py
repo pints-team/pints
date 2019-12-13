@@ -524,6 +524,9 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""Calculates a likelihood assuming the error scales with the output.
 
+    For each output in the problem, this likelihood introduces two new scalar
+    parameters: an exponential power ``eta`` and a scale ``sigma``.
+
     This likelihood is applicable to a model given by
 
     .. math::
@@ -534,7 +537,10 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     .. math::
         v(t) \sim \text{ iid } N(0, \sigma)
 
-    This model leads to a log likelihood of
+    Note that the scalar parameter ``eta`` controls the exponential dependence
+    of the noise on the function output, while the scalar parameter ``sigma``
+    provides a baseline level of the noise standard deviation. This model leads
+    to a log likelihood of
 
     .. math::
         \log{L(\theta, \sigma, \eta | \boldsymbol{x})} =
@@ -550,7 +556,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     Parameters
     ----------
-    problem
+    ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem two parameters are added (eta, sigma),
         for a multi-output problem 2 times ``n_outputs`` parameters are added.

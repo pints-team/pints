@@ -204,7 +204,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         # Check the message when the input is wrong dimension
         self.assertRaisesRegexp(
             ValueError,
-            r'\`parameters\` must be of shape \(n_samples\, n_parameters\)\.',
+            r'\`parameters\` must be of shape',
             pints.residuals_diagnostics.plot_residuals_vs_output,
             self.samples2,
             self.model2
@@ -213,8 +213,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         # Check the message when the thinning is invalid
         self.assertRaisesRegexp(
             ValueError,
-            r'Thinning rate must be \`None\` or an integer greater than '
-            r'zero\.',
+            'Thinning rate must be',
             pints.residuals_diagnostics.plot_residuals_vs_output,
             self.samples2[0],
             self.problem2,

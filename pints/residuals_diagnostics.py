@@ -189,15 +189,15 @@ def plot_residuals_vs_output(parameters, problem, thinning=None):
 
     Parameters
     ----------
-    parameters
+    ``parameters``
         The parameter values with shape ``(n_samples, n_parameters)``. When
         passing a single best fit parameter vector, ``n_samples`` will be 1.
-    problem
+    ``problem``
         The problem given by a :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
         or equal to the ``n_parameters`` of the ``parameters``. Extra
         parameters not found in the problem are ignored.
-    thinning
+    ``thinning``
         Optional, integer value (greater than zero). If thinning is set to
         ``n``, only every nth sample in parameters will be used. If set to
         ``None`` (default), some thinning will be applied so that about 200

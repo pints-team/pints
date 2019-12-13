@@ -234,7 +234,7 @@ def arma11_unity(rho, theta, sigma, n):
 
 def multiplicative_gaussian(eta, sigma, f):
     r"""
-    Generates multiplicative Gaussian noise.
+    Generates multiplicative Gaussian noise for a single output.
 
     With multiplicative noise, the measurement error scales with the magnitude
     of the output. Given a model taking the form,
@@ -257,21 +257,25 @@ def multiplicative_gaussian(eta, sigma, f):
 
     Parameters
     ----------
-    eta
+    ``eta``
         The exponential power controlling the rate at which the noise scales
-        with the output
-    sigma
+        with the output.
+    ``sigma``
         The baseline standard deviation of the noise (must be greater than
-        zero)
-    f
-        A numpy array giving the time-series for the output over time
+        zero).
+    ``f``
+        A numpy array giving the time-series for the output over time. (Only
+        single time-series are supported.)
     """
     import numpy as np
 
     if sigma <= 0:
-        raise ValueError('Standard deviation must be positive.')
+        raise ValueError('Standard deviation must be greater than zero.')
 
     f = np.array(f)
+
+    if f.ndim > 1:
+        raise ValueError('Only single time-series are supported.')
 
     e = np.random.normal(0, sigma, len(f))
     return f ** eta * e
