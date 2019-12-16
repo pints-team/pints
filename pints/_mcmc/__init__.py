@@ -363,6 +363,9 @@ class MCMCController(object):
         self._log_csv = False
         self.set_log_interval()
 
+        # Storing chains and evaluations in memory
+        self._chains_in_memory = True
+
         # Writing chains and evaluations to disk
         self._chain_files = None
         self._evaluation_files = None
@@ -524,9 +527,14 @@ class MCMCController(object):
                 sampler._log_init(logger)
             logger.add_time('Time m:s')
 
-        # Create chains (pre-allocate)
-        samples = np.zeros(
-            (self._chains, self._max_iterations, self._n_parameters))
+        # Pre-allocate array for chains
+        if self._chains_in_memory:
+            # Store full chains
+            samples = np.zeros(
+                (self._chains, self._max_iterations, self._n_parameters))
+        else:
+            # Store only the current iteration
+            samples = np.zeros((self._chains, self._n_parameters))
 
         # Some samplers need intermediate steps, where None is returned instead
         # of a sample. Samplers can run asynchronously, so that one returns
@@ -565,19 +573,25 @@ class MCMCController(object):
 
             # Update chains
             if self._single_chain:
+                # Single chain
 
                 # Check and update the individual chains
                 xs_iterator = iter(xs)
                 fxs_iterator = iter(fxs)
-                for i in list(active):  # (active may be modified)
+                for i in list(active):  # new list: active may be modified
                     x = next(xs_iterator)
                     fx = next(fxs_iterator)
                     y = self._samplers[i].tell(fx)
+
                     if y is not None:
-                        samples[i][n_samples[i]] = y
-                        n_samples[i] += 1
+                        # Store sample in memory
+                        if self._chains_in_memory:
+                            samples[i][n_samples[i]] = y
+                        else:
+                            samples[i] = y
 
                         # Stop adding samples if maximum number reached
+                        n_samples[i] += 1
                         if n_samples[i] == self._max_iterations:
                             active.remove(i)
 
@@ -603,12 +617,18 @@ class MCMCController(object):
                 intermediate_step = min(n_samples) <= iteration
 
             else:
+                # Multi-chain methods
 
                 # Get all chains samples at once
                 ys = self._samplers[0].tell(fxs)
                 intermediate_step = ys is None
+
                 if not intermediate_step:
-                    samples[:, iteration] = ys
+                    # Store samples in memory
+                    if self._chains_in_memory:
+                        samples[:, iteration] = ys
+                    else:
+                        samples = ys
 
                     # Write evaluations to disk
                     if self._evaluation_files:
@@ -636,8 +656,12 @@ class MCMCController(object):
                 continue
 
             # Write samples to disk
-            for i, chain_logger in enumerate(chain_loggers):
-                chain_logger.log(*samples[i][iteration])
+            if self._chains_in_memory:
+                for i, chain_logger in enumerate(chain_loggers):
+                    chain_logger.log(*samples[i][iteration])
+            else:
+                for i, chain_logger in enumerate(chain_loggers):
+                    chain_logger.log(*samples[i])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -674,7 +698,10 @@ class MCMCController(object):
                 print(halt_message)
 
         # Return generated chains
-        return samples
+        if self._chains_in_memory:
+            return samples
+        else:
+            return None
 
     def sampler(self):
         """
@@ -722,6 +749,17 @@ class MCMCController(object):
         if chain_file:
             b, e = os.path.splitext(str(chain_file))
             self._chain_files = [b + '_' + str(i) + e for i in range(d)]
+
+    def set_chain_storage(self, store_in_memory=True):
+        """
+        Store chains in memory as they are generated.
+
+        By default, all generated chains are stored in memory as they are
+        generated, and returned by :meth:`run()`. This method allows this
+        behaviour to be disabled, which can be useful for very large chains
+        which are already stored to disk (see :meth:`set_chain_filename()`).
+        """
+        self._chains_in_memory = bool(store_in_memory)
 
     def set_log_pdf_filename(self, log_pdf_file):
         """
