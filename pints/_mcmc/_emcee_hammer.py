@@ -104,7 +104,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         return self._proposed
 
     def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdf()`. """
+        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
         return self._current_log_pdfs
 
     def _initialise(self):
