@@ -35,4 +35,5 @@ Some toy classes provide extra functionality defined in the
     simple_harmonic_oscillator_model
     sir_model
     stochastic_degradation_model
+    stochastic_logistic_model
     twisted_gaussian_logpdf
