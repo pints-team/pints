@@ -138,6 +138,7 @@ def nuts_sampler(x0, delta, M_adapt):
     theta = x0
     L, grad_L = (yield theta)
     epsilon = yield from find_reasonable_epsilon(theta, L)
+    print('reasonable epsilon = {}'.format(epsilon))
     mu = np.log(10*epsilon)
     log_epsilon_bar = np.log(1)
     H_bar = 0
@@ -167,9 +168,10 @@ def nuts_sampler(x0, delta, M_adapt):
 
         # adaption
         if m < M_adapt:
-            H_bar = (1 - 1.0/(m+t0)) * (delta - state.alpha / state.n_alpha)
+            H_bar = (1 - 1.0/(m+t0)) * H_bar + 1.0/(m+t0) * (delta - state.alpha/state.n_alpha)
             log_epsilon = mu - (np.sqrt(m)/gamma) * H_bar
             log_epsilon_bar = m**(-kappa) * log_epsilon + (1 - m**(-kappa)) * log_epsilon_bar
+            epsilon = np.exp(log_epsilon)
         elif m == M_adapt:
             epsilon = np.exp(log_epsilon_bar)
 
