@@ -638,6 +638,7 @@ class SequentialABCController(object):
                             # check if theta_star_star is possible under the prior and sample again if not
                             first_time = False
 
+                        # TODO: Convert this to use a rejection sampler
                         fx = evaluator.evaluate([theta_star_star])
                         evaluations += 1
                         if np.random.binomial(1, self._acceptance_kernel(fx[0], epsilon[self._t])):
