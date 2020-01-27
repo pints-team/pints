@@ -214,7 +214,6 @@ from ._abc import (
 )
 
 from ._abc._abc_rejection import RejectionABC
-from ._abc._abc_smc import ABCSMC
 from ._abc._pertubation_kernels import SphericalGaussianKernel
 
 #
