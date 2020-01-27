@@ -451,7 +451,7 @@ class SequentialABCController(object):
         self._epsilon_null = 4
         self._t = 0
         self._rejection_sampler = self._sampler if method == pints.RejectionABC else pints.RejectionABC(log_prior)
-        self._perturbation_kernel = perturbation_kernel or pints.SphericalGaussianKernel(0.003)
+        self._perturbation_kernel = perturbation_kernel or pints.SphericalGaussianKernel(0.001)
         self._acceptance_kernel = acceptance_kernel or (lambda error, epsilon: 1 if error < epsilon else 0)
 
     def set_log_interval(self, iters=20, warm_up=3):
@@ -650,13 +650,8 @@ class SequentialABCController(object):
                             epsilon[self._t] = epsilon[self._t-1] - k
                             print("Hitting max iterations at epsilon="+str(epsilon[self._t]))
                             break
-
-                # After we have self._n_targets samples
-                for i in range(0, self._n_target):
-                    # Calculate weights according to the Toni algorithm
-                    w = np.exp(self._log_prior(samples[self._t][i])) / \
-                        sum([weights[self._t-1][j]*self._perturbation_kernel.p(samples[self._t][i], samples[self._t-1][j]) for j in range(self._n_target)])
-                    weights[self._t].append(w)
+                print("Samples found, weighting")
+                weights[self._t] = self._calculate_weights(samples[self._t - 1], samples[self._t], weights[self._t - 1])
 
             # Normalise weights
             normal = sum(weights[self._t])
@@ -683,6 +678,21 @@ class SequentialABCController(object):
         samples = np.array(samples)
         return samples
 
+    def _calculate_weights(self, new_samples, old_samples, old_weights):
+        return old_weights
+
+    def _calculate_weights_good(self, new_samples, old_samples, old_weights):
+        new_weights = []
+        for i in range(0, self._n_target):
+            # Calculate weights according to the Toni algorithm
+            prior_prob = np.exp(self._log_prior(new_samples[i]))
+
+            # Don't know what the technical name is for this (O(n^2))
+            marginal_weights = [old_weights[j]*self._perturbation_kernel.p(new_samples[j],old_samples[i]) for j in range(len(old_samples))]
+            
+            w = prior_prob / sum(marginal_weights)
+            new_weights.append(w)
+        return new_weights
 
 
         #
