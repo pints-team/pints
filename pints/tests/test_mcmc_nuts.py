@@ -122,11 +122,24 @@ class TestNutsMCMC(unittest.TestCase):
         # number_adaption_steps is non-negative
         self.assertRaises(ValueError, mcmc.set_number_adaption_steps, -100)
 
+        mcmc.set_leapfrog_step_size(0.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
+        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
+        self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, [1, 2, 3])
+
+        mcmc.set_leapfrog_step_size([1.5, 3])
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
+
         # hyper param interface
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([0.1, 2])
+        self.assertEqual(mcmc.n_hyper_parameters(), 3)
+        mcmc.set_hyper_parameters([0.1, 2, 2])
         self.assertEqual(mcmc.delta(), 0.1)
         self.assertEqual(mcmc.number_adaption_steps(), 2)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+        mcmc.set_hyper_parameters([0.1, 2, [4.0, 3.0]])
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 4.0)
+        self.assertEqual(mcmc.leapfrog_step_size()[1], 3.0)
 
 
 if __name__ == '__main__':
