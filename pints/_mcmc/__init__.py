@@ -368,6 +368,7 @@ class MCMCController(object):
         self._evaluations_in_memory = False
         self._samples = None
         self._evaluations = None
+        self._n_evaluations = None
 
         # Writing chains and evaluations to disk
         self._chain_files = None
@@ -468,7 +469,7 @@ class MCMCController(object):
 
         # Iteration and evaluation counting
         iteration = 0
-        n_evaluations = 0
+        self._n_evaluations = 0
 
         # Choose method to evaluate
         f = self._log_pdf
@@ -620,7 +621,7 @@ class MCMCController(object):
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
-            n_evaluations += len(fxs)
+            self._n_evaluations += len(fxs)
 
             # Update chains
             if self._single_chain:
@@ -744,7 +745,7 @@ class MCMCController(object):
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
-                logger.log(iteration, n_evaluations)
+                logger.log(iteration, self._n_evaluations)
                 for sampler in self._samplers:
                     sampler._log_write(logger)
                 logger.log(timer.time())
@@ -768,7 +769,7 @@ class MCMCController(object):
 
         # Log final state and show halt message
         if logging:
-            logger.log(iteration, n_evaluations)
+            logger.log(iteration, self._n_evaluations)
             for sampler in self._samplers:
                 sampler._log_write(logger)
             logger.log(timer.time())
@@ -976,6 +977,14 @@ class MCMCController(object):
         else:
             self._parallel = False
             self._n_workers = 1
+
+    def number_evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't ran yet.
+        """
+        return self._n_evaluations
+
 
 
 class MCMCSampling(MCMCController):

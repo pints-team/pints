@@ -136,7 +136,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
             # Perform a half-step before starting iteration 0 below
             self._momentum -= self._scaled_epsilon * self._gradient * 0.5
-            print('gradient = {}, scaled_epsilon = {}'.format(self._gradient,self._scaled_epsilon))
 
         # Perform a leapfrog step for the position
         self._position += self._scaled_epsilon * self._momentum

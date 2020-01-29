@@ -14,7 +14,33 @@ import numpy as np
 import copy
 
 
-class nuts_state:
+class NutsState:
+    """
+    Class to hold information about the current state of the NUTS hamiltonian
+    integration path
+
+    NUTS builds up the integration path implicitly via recursion up a binary tree, this
+    class handles combining states from different subtrees (see `update`)
+
+    NUTS integrates both backwards ("minus") and forwards ("plus"), so this state must
+    keep track of both end points of the integration path
+
+    Attributes
+    ----------
+
+    theta_minus: float
+        parameter value at the backwards end of the integration path
+
+    theta_plus: float
+        parameter value at the forwards end of the integration path
+
+    r_minus: float
+        momentum value at the backwards end of the integration path
+
+    r_plus: float
+        momentum value at the forwards end of the integration path
+
+    """
     def __init__(self, theta_minus, theta_plus, r_minus, r_plus,
             theta, L, n, s, alpha, n_alpha):
         self.theta_minus = theta_minus
@@ -117,7 +143,7 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
         #print('alpha_dash',alpha_dash)
         n_alpha_dash = 1
         #print('s_dash = {}, u = {}, hamiltonian = {}'.format(s_dash, u, hamiltonian_dash))
-        return nuts_state(
+        return NutsState(
                 theta_dash, theta_dash,
                 r_dash, r_dash,
                 theta_dash, L_dash, n_dash, s_dash,
@@ -183,7 +209,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         #u = np.random.uniform(0, np.exp(hamiltonian0))
         #log_u = np.log(u)
         #print('generated log_u = {}, hamiltonian0 = {}'.format(log_u, hamiltonian0))
-        state = nuts_state(theta, theta, r0, r0, theta, L, 1, 1, None, None)
+        state = NutsState(theta, theta, r0, r0, theta, L, 1, 1, None, None)
         j = 0
         while j < 10 and state.s == 1:
             # pick a direction
@@ -224,7 +250,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         # return current position, log pdf, and average acceptance probability to sampler
         #print('epsilon',step_size)
         #print('n_alpha',state.n_alpha)
-        yield (theta, L, state.alpha/state.n_alpha)
+        yield (theta, L, state.alpha/state.n_alpha, 2**j)
 
         # next step
         m += 1
@@ -251,11 +277,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         super(NoUTurnMCMC, self).__init__(x0, sigma0)
 
         # hyperparameters
-        self._M_adapt = 100
+        self._M_adapt = 500
         self._delta = 0.6
         self._step_size = None
         self.set_leapfrog_step_size(np.diag(self._sigma0))
-        #self.set_leapfrog_step_size(1.0)
 
         # coroutine nuts sampler
         self._nuts = None
@@ -263,8 +288,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # number of mcmc iterations
         self._mcmc_iteration = 0
 
-        # averaged acceptance probability
+        # Logging
+        self._last_log_write = 0
         self._mcmc_acceptance = 0
+        self._n_leapfrog = 0
 
         # current point in chain
         self._current = self._x0
@@ -302,33 +329,34 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # send log likelihood and gradient to nuts coroutine, which returns next theta
-        # value to evaluate at
+        # send log likelihood and gradient to nuts coroutine,
+        # return value is the next theta to evaluate at
         self._next = self._nuts.send(reply)
 
-        # coroutine signals end of current step by sending (theta, L), where
-        # theta is the next point in the chain and L is its log-pdf
+        # coroutine signals end of current step by sending a tuple of
+        # information about the last mcmc step
         if isinstance(self._next, tuple):
-            # extract next point in chain, its logpdf and acceptance
-            # probability
+            # extract next point in chain, its logpdf, the acceptance
+            # probability and the number of leapfrog steps taken during
+            # the last mcmc step
             self._current = self._next[0]
             self._current_logpdf = self._next[1]
-            self._current_acceptance = self._next[2]
+            current_acceptance = self._next[2]
+            current_n_leapfrog = self._next[3]
 
             # Increase iteration count
             self._mcmc_iteration += 1
 
-            if self._mcmc_iteration <= self._M_adapt:
-                # if still adapting report the instantaneous acceptance
-                # probability
-                self._mcmc_acceptance = self._current_acceptance
-            else:
-                # after adaption report the averaged acceptance probability
-                post_adapt_iterations = self._mcmc_iteration - self._M_adapt
-                self._mcmc_acceptance = (
-                    (post_adapt_iterations * self._mcmc_acceptance + self._current_acceptance) /
-                    (post_adapt_iterations + 1)
-                    )
+            # average quantities for logging
+            iterations_since_log = self._mcmc_iteration - self._last_log_write
+            self._mcmc_acceptance = (
+                (iterations_since_log * self._mcmc_acceptance + current_acceptance) /
+                (iterations_since_log + 1)
+                )
+            self._n_leapfrog = (
+                (iterations_since_log * self._n_leapfrog + current_n_leapfrog) /
+                (iterations_since_log + 1)
+                )
 
             # request next point to evaluate
             self._next = next(self._nuts)
@@ -342,10 +370,20 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     def _log_init(self, logger):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Accept.')
+        logger.add_counter('Steps.')
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
-        logger.log(self._mcmc_acceptance)
+        # print nothing if no mcmc iterations since last log
+        if self._last_log_write == self._mcmc_iteration:
+            logger.log(None)
+            logger.log(None)
+        else:
+            logger.log(self._mcmc_acceptance)
+            logger.log(self._n_leapfrog)
+        self._mcmc_acceptance = 0
+        self._n_leapfrog = 0
+        self._last_log_write = self._mcmc_iteration
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
