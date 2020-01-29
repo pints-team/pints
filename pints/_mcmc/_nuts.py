@@ -11,8 +11,6 @@ from __future__ import print_function, unicode_literals
 import asyncio
 import pints
 import numpy as np
-import copy
-
 
 class NutsState:
     """
@@ -154,7 +152,7 @@ class NutsState:
 
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, step_size):
-    """ performs a leapfrog step with step size `epsilon*step_size`"""
+    """ performs a leapfrog step with step size `epsilon*step_size """
     r_new = r + 0.5*epsilon*step_size*grad_L
     theta_new = theta + epsilon*step_size*r_new
     L_new, grad_L_new = (yield theta_new)
@@ -200,7 +198,7 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
                     step_size)
             state_dash.update(state_double_dash, direction=v, root=False)
 
-        return copy.copy(state_dash)
+        return state_dash
 
 
 @asyncio.coroutine
