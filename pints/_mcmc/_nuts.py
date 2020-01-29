@@ -12,6 +12,7 @@ import asyncio
 import pints
 import numpy as np
 
+
 class NutsState:
     """
     Class to hold information about the current state of the NUTS hamiltonian
@@ -72,6 +73,7 @@ class NutsState:
         a count of the points along this path
 
     """
+
     def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha):
         self.theta_minus = theta
         self.theta_plus = theta
@@ -150,6 +152,7 @@ class NutsState:
         self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_minus) >= 0)
         self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_plus) >= 0)
 
+
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, step_size):
     """ performs a leapfrog step with step size `epsilon*step_size """
@@ -185,9 +188,9 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
         alpha_dash = min(1.0, np.exp(comparison))
         n_alpha_dash = 1
         return NutsState(
-                theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
-                alpha_dash, n_alpha_dash
-                )
+            theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
+            alpha_dash, n_alpha_dash
+        )
 
     else:
         # Recursion - implicitly build the left and right subtrees
@@ -195,7 +198,7 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
 
         if state_dash.s == 1:
             state_double_dash = yield from build_tree(state_dash, log_u, v, j-1, epsilon, hamiltonian0,
-                    step_size)
+                                                      step_size)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
@@ -261,14 +264,14 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         j = 0
         while j < 10 and state.s == 1:
             # pick a direction
-            if np.random.randint(0,2):
+            if np.random.randint(0, 2):
                 vj = 1
             else:
                 vj = -1
 
             # recursivly build up tree in that direction
             state_dash = yield from build_tree(state, log_u, vj, j, epsilon, hamiltonian0,
-                    step_size)
+                                               step_size)
             state.update(state_dash, direction=vj, root=True)
 
             #print('vj={}, j = {} and n_dash = {}, s_dash = {}'.format(vj, j,state_dash.n,state_dash.s))
@@ -276,13 +279,15 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
 
         # adaption
         if m < M_adapt:
-            H_bar = (1 - 1.0/(m+t0)) * H_bar + 1.0/(m+t0) * (delta - state.alpha/state.n_alpha)
+            H_bar = (1 - 1.0/(m+t0)) * H_bar + 1.0/(m+t0) * \
+                (delta - state.alpha/state.n_alpha)
             log_epsilon = mu - (np.sqrt(m)/gamma) * H_bar
-            log_epsilon_bar = m**(-kappa) * log_epsilon + (1 - m**(-kappa)) * log_epsilon_bar
+            log_epsilon_bar = m**(-kappa) * log_epsilon + \
+                (1 - m**(-kappa)) * log_epsilon_bar
             epsilon = np.exp(log_epsilon)
         elif m == M_adapt:
             epsilon = np.exp(log_epsilon_bar)
-        #print(epsilon)
+        # print(epsilon)
 
         # update current position
         theta = state.theta
@@ -297,12 +302,13 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         #print('hamiltonian0 = {}, hamiltonian_dash = {}'.format(hamiltonian0,hamiltonian_dash))
 
         # return current position, log pdf, and average acceptance probability to sampler
-        #print('epsilon',step_size)
-        #print('n_alpha',state.n_alpha)
+        # print('epsilon',step_size)
+        # print('n_alpha',state.n_alpha)
         yield (theta, L, state.alpha/state.n_alpha, 2**j)
 
         # next step
         m += 1
+
 
 class NoUTurnMCMC(pints.SingleChainMCMC):
     r"""
@@ -322,6 +328,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
     """
+
     def __init__(self, x0, sigma0=None):
         super(NoUTurnMCMC, self).__init__(x0, sigma0)
 
@@ -364,7 +371,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._nuts = nuts_sampler(self._x0, self._delta, self._M_adapt,
-                    self._step_size)
+                                      self._step_size)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
@@ -401,11 +408,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             self._mcmc_acceptance = (
                 (iterations_since_log * self._mcmc_acceptance + current_acceptance) /
                 (iterations_since_log + 1)
-                )
+            )
             self._n_leapfrog = (
                 (iterations_since_log * self._n_leapfrog + current_n_leapfrog) /
                 (iterations_since_log + 1)
-                )
+            )
 
             # request next point to evaluate
             self._next = next(self._nuts)
@@ -503,7 +510,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         Sets number of adaptions steps in the nuts algorithm
         """
         if self._running:
-            raise RuntimeError('cannot set number of adaption steps while sampler is running')
+            raise RuntimeError(
+                'cannot set number of adaption steps while sampler is running')
         if n < 0:
             raise ValueError('number of adaption steps must be non-negative')
         self._M_adapt = int(n)
@@ -517,6 +525,3 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self.set_delta(x[0])
         self.set_number_adaption_steps(x[1])
         self.set_leapfrog_step_size(x[2])
-
-
-
