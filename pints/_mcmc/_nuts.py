@@ -28,89 +28,138 @@ class NutsState:
     Attributes
     ----------
 
-    theta_minus: float
+    theta_minus: ndarray
         parameter value at the backwards end of the integration path
 
-    theta_plus: float
+    theta_plus: ndarray
         parameter value at the forwards end of the integration path
 
-    r_minus: float
+    r_minus: ndarray
         momentum value at the backwards end of the integration path
 
-    r_plus: float
+    r_plus: ndarray
         momentum value at the forwards end of the integration path
 
+    L_minus: float
+        logpdf value at the backwards end of the integration path
+
+    L_plus: float
+        logpdf value at the forwards end of the integration path
+
+    grad_L_minus: float
+        gradient of logpdf at the backwards end of the integration path
+
+    grad_L_plus: float
+        gradient of logpdf at the forwards end of the integration path
+
+    n: int
+        number of accepted points in the path
+
+    s: int
+        0 if sufficient leapfrog steps have been taken, 1 otherwise
+
+    theta: ndarray
+        the current accepted point along the path
+
+    L: float
+        the logpdf of the current accepted point
+
+    grad_L: float
+        the gradient of the logpdf at the current accepted point
+
+    alpha: float
+        the acceptance probability
+
+    n_alpha: float
+        a count of the points along this path
+
     """
-    def __init__(self, theta_minus, theta_plus, r_minus, r_plus,
-            theta, L, n, s, alpha, n_alpha):
-        self.theta_minus = theta_minus
-        self.theta_plus = theta_plus
-        self.r_minus = r_minus
-        self.r_plus = r_plus
+    def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha):
+        self.theta_minus = theta
+        self.theta_plus = theta
+        self.r_minus = r
+        self.r_plus = r
+        self.L_minus = L
+        self.L_plus = L
+        self.grad_L_minus = grad_L
+        self.grad_L_plus = grad_L
         self.n = n
         self.s = s
         self.theta = theta
         self.L = L
+        self.grad_L = grad_L
         self.alpha = alpha
         self.n_alpha = n_alpha
 
     def update(self, other_state, direction, root):
+        """
+        if root == True, this combines a depth j subtree (`self`) with a depth j+1
+        (`other_state`) subtree, which corresponds to the higher level loop in
+        the nuts algorithm
+
+        if root == False, this combins two subtrees with depth j, which occurs
+        when the nuts algorithm is implicitly building up the tree with the build_tree
+        subroutine
+
+        direction is the current direction of integration, either forwards
+        (direction == 1), or backwards (direction = -1)
+        """
         if direction == -1:
             self.theta_minus = other_state.theta_minus
             self.r_minus = other_state.r_minus
+            self.L_minus = other_state.L_minus
+            self.grad_L_minus = other_state.grad_L_minus
         else:
             self.theta_plus = other_state.theta_plus
             self.r_plus = other_state.r_plus
+            self.L_plus = other_state.L_plus
+            self.grad_L_plus = other_state.grad_L_plus
 
         theta_dash = other_state.theta
         L_dash = other_state.L
+        grad_L_dash = other_state.grad_L
         n_dash = other_state.n
         s_dash = other_state.s
         alpha_dash = other_state.alpha
         n_alpha_dash = other_state.n_alpha
 
+        # if there is any accepted points in the other subtree then test for acceptance
+        # of that subtrees theta
         if n_dash > 0:
             if root:
                 p = int(s_dash == 1)*min(1, n_dash / self.n)
-                #print('accepting with prob',p)
-                #print('root n_dash = {}, n = {}'.format(n_dash,self.n))
             else:
                 p = n_dash / (self.n + n_dash)
 
             if p > 0.0 and np.random.uniform() < p:
                 self.theta = theta_dash
                 self.L = L_dash
+                self.grad_L = grad_L_dash
 
+        # Nots: alpha and n_alpha are only accumulated within build_tree
         if root:
             self.alpha = alpha_dash
             self.n_alpha = n_alpha_dash
         else:
-            #print('adding {} to {}'.format(alpha_dash,self.alpha))
             self.alpha += alpha_dash
             self.n_alpha += n_alpha_dash
 
+        # accumulated number of accepted points
         self.n += n_dash
+
+        # test if the path has done a U-Turn
         self.s *= s_dash
         self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_minus) >= 0)
         self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_plus) >= 0)
-        #print('tests {} {}'.format((self.theta_plus - self.theta_minus).dot(self.r_minus), (self.theta_plus - self.theta_minus).dot(self.r_plus)))
-
-        #print('updating state, new state is theta_minus = {}, theta_plus = {} theta = {}, n = {}, s = {}'.format(self.theta_minus,self.theta_plus,self.theta,self.n,self.s))
 
 @asyncio.coroutine
-def leapfrog(theta, r, epsilon, step_size):
-    #print('leapfrog from ({}, {})'.format(theta,r))
-    #print('theta = ',theta)
-    L, grad_L = (yield theta)
-
-    #print('grad_L = ',grad_L)
+def leapfrog(theta, L, grad_L, r, epsilon, step_size):
+    """ performs a leapfrog step with step size `epsilon*step_size`"""
     r_new = r + 0.5*epsilon*step_size*grad_L
     theta_new = theta + epsilon*step_size*r_new
     L_new, grad_L_new = (yield theta_new)
     r_new += 0.5*epsilon*step_size*grad_L_new
-    #print('leapfrog to ({}, {})'.format(theta_new,r_new))
-    #print('grad_L_new = {}, step_size = {}'.format(grad_L_new, step_size))
-    return L_new, theta_new, r_new
+    return L_new, grad_L_new, theta_new, r_new
 
 
 @asyncio.coroutine
@@ -120,33 +169,25 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
         if v == -1:
             theta = state.theta_minus
             r = state.r_minus
+            L = state.L_minus
+            grad_L = state.grad_L_minus
         else:
             theta = state.theta_plus
             r = state.r_plus
+            L = state.L_plus
+            grad_L = state.grad_L_plus
 
-        L_dash, theta_dash, r_dash = yield from leapfrog(theta, r, v*epsilon, step_size)
-        if np.isnan(r_dash).any():
-            r_dash = np.zeros_like(theta)
+        L_dash, grad_L_dash, theta_dash, r_dash = \
+            yield from leapfrog(theta, L, grad_L, r, v*epsilon, step_size)
         hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
-        #print('theta_dash = {}, log_u = {}, hamiltonian = {}'.format(theta_dash,log_u,hamiltonian_dash))
         n_dash = int(log_u <= hamiltonian_dash)
-        #n_dash = 1
-        #print('n_dash',n_dash)
         comparison = hamiltonian_dash - hamiltonian0
         Delta_max = 1000
         s_dash = int(log_u < Delta_max + hamiltonian_dash)
-        #print('build_tree base case, s_dash = {}'.format(s_dash))
-        #print('comparison',comparison)
-        #print('epsilon',epsilon)
-        #print('step_size',step_size)
         alpha_dash = min(1.0, np.exp(comparison))
-        #print('alpha_dash',alpha_dash)
         n_alpha_dash = 1
-        #print('s_dash = {}, u = {}, hamiltonian = {}'.format(s_dash, u, hamiltonian_dash))
         return NutsState(
-                theta_dash, theta_dash,
-                r_dash, r_dash,
-                theta_dash, L_dash, n_dash, s_dash,
+                theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
                 alpha_dash, n_alpha_dash
                 )
 
@@ -163,25 +204,20 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
 
 
 @asyncio.coroutine
-def find_reasonable_epsilon(theta, L, step_size):
+def find_reasonable_epsilon(theta, L, grad_L, step_size):
     epsilon = 1.0
     r = np.random.normal(size=len(theta))
     hamiltonian = L - 0.5*r.dot(r)
 
-    L_dash, theta_dash, r_dash = yield from leapfrog(theta, r, epsilon, step_size)
-
-    # r_dash could be nan in unfeasable regions
-    if np.isnan(r_dash).any():
-        r_dash[:] = 0.0
+    L_dash, grad_L_dash, theta_dash, r_dash = \
+        yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
     hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
     comparison = hamiltonian_dash - hamiltonian
     alpha = 2 * int(comparison > np.log(0.5)) - 1
-    # sometimes the np.exp(-inf) gives a nan, sometimes 0, not sure why???
     while comparison * alpha > np.log(2) * (-alpha):
         epsilon = 2**alpha * epsilon
-        L_dash, theta_dash, r_dash = yield from leapfrog(theta, r, epsilon, step_size)
-        if np.isnan(r_dash).any():
-            r_dash[:] = 0.0
+        L_dash, grad_L_dash, theta_dash, r_dash = \
+            yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
         hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
         comparison = hamiltonian_dash - hamiltonian
     print('reasonable epsilon',epsilon)
@@ -190,9 +226,15 @@ def find_reasonable_epsilon(theta, L, step_size):
 
 @asyncio.coroutine
 def nuts_sampler(x0, delta, M_adapt, step_size):
+    # Initialise sampler with x0 and calculate logpdf
     theta = x0
     L, grad_L = (yield theta)
-    epsilon = yield from find_reasonable_epsilon(theta, L, step_size)
+
+    # Check first point is somewhere sensible
+    if not np.isfinite(L):
+        raise ValueError(
+            'Initial point for MCMC must have finite logpdf.')
+    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, step_size)
     #epsilon = 1.0
     mu = np.log(10*epsilon)
     log_epsilon_bar = np.log(1)
@@ -209,7 +251,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         #u = np.random.uniform(0, np.exp(hamiltonian0))
         #log_u = np.log(u)
         #print('generated log_u = {}, hamiltonian0 = {}'.format(log_u, hamiltonian0))
-        state = NutsState(theta, theta, r0, r0, theta, L, 1, 1, None, None)
+        state = NutsState(theta, r0, L, grad_L, 1, 1, None, None)
         j = 0
         while j < 10 and state.s == 1:
             # pick a direction
@@ -239,6 +281,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         # update current position
         theta = state.theta
         L = state.L
+        grad_L = state.grad_L
         hamiltonian_dash = L - 0.5*r0.dot(r0)
         #print('j = {}'.format(j))
         #print('nuts accept prob = ',state.alpha/state.n_alpha)
