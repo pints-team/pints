@@ -203,22 +203,30 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
 
 @asyncio.coroutine
 def find_reasonable_epsilon(theta, L, grad_L, step_size):
+    """
+    Pick a reasonable value of epsilon close to when the acceptance
+    probability of the Langevin proposal crosses 0.5.
+    """
+
+    # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
     r = np.random.normal(size=len(theta))
     hamiltonian = L - 0.5*r.dot(r)
-
     L_dash, grad_L_dash, theta_dash, r_dash = \
         yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
     hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
     comparison = hamiltonian_dash - hamiltonian
+
+    # determine wether we are doubling or halving
     alpha = 2 * int(comparison > np.log(0.5)) - 1
+
+    # double or half epsilon until acceptance probability crosses 0.5
     while comparison * alpha > np.log(2) * (-alpha):
         epsilon = 2**alpha * epsilon
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
         hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
         comparison = hamiltonian_dash - hamiltonian
-    print('reasonable epsilon',epsilon)
     return epsilon
 
 
