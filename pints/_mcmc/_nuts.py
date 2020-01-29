@@ -165,6 +165,9 @@ def leapfrog(theta, L, grad_L, r, epsilon, step_size):
 
 @asyncio.coroutine
 def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
+    """
+    Implicitly build up a subtree of depth j for the NUTS sampler
+    """
     if j == 0:
         # Base case - take one leapfrog in the direction v
         if v == -1:
@@ -235,6 +238,21 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
 
 @asyncio.coroutine
 def nuts_sampler(x0, delta, M_adapt, step_size):
+    """
+    The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
+
+    Implemented as a coroutine that continually generating new theta values
+    to evaluate (L, L') at. The end of an mcmc step is signalled by generating
+    a tuple of values (see below)
+
+
+    References
+    ----------
+    .. [1] Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn sampler:
+           adaptively setting path lengths in Hamiltonian Monte Carlo.
+           Journal of Machine Learning Research, 15(1), 1593-1623.
+
+    """
     # Initialise sampler with x0 and calculate logpdf
     theta = x0
     L, grad_L = (yield theta)
@@ -243,27 +261,42 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
     if not np.isfinite(L):
         raise ValueError(
             'Initial point for MCMC must have finite logpdf.')
+
+    # find a good value to start epsilon at
+    # (this will later be refined so that the acceptance probability matches
+    # delta)
     epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, step_size)
-    #epsilon = 1.0
+
+    # default values taken from [1]
     mu = np.log(10*epsilon)
     log_epsilon_bar = np.log(1)
     H_bar = 0
     gamma = 0.05
     t0 = 10
     kappa = 0.75
+
+    # start at iteration 1
     m = 1
 
+    # provide an infinite generator of mcmc steps....
     while True:
+        # randomly sample momentum
         r0 = np.random.normal(size=len(theta))
         hamiltonian0 = L - 0.5*r0.dot(r0)
+
+        # use slice sampling
         log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
-        #u = np.random.uniform(0, np.exp(hamiltonian0))
-        #log_u = np.log(u)
-        #print('generated log_u = {}, hamiltonian0 = {}'.format(log_u, hamiltonian0))
+
+        # create initial integration path state
         state = NutsState(theta, r0, L, grad_L, 1, 1, None, None)
         j = 0
+
+        # build up an integration path with 2^j points, stopping when we either
+        # encounter a U-Turn, or reach a max number of points 2^10
         while j < 10 and state.s == 1:
-            # pick a direction
+
+            # pick a random direction to integrate in
+            # (to maintain detailed balance)
             if np.random.randint(0, 2):
                 vj = 1
             else:
@@ -274,10 +307,9 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
                                                step_size)
             state.update(state_dash, direction=vj, root=True)
 
-            #print('vj={}, j = {} and n_dash = {}, s_dash = {}'.format(vj, j,state_dash.n,state_dash.s))
             j += 1
 
-        # adaption
+        # adapt epsilon using dual averaging
         if m < M_adapt:
             H_bar = (1 - 1.0/(m+t0)) * H_bar + 1.0/(m+t0) * \
                 (delta - state.alpha/state.n_alpha)
@@ -287,23 +319,15 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
             epsilon = np.exp(log_epsilon)
         elif m == M_adapt:
             epsilon = np.exp(log_epsilon_bar)
-        # print(epsilon)
 
-        # update current position
+        # update current position in chain
         theta = state.theta
         L = state.L
         grad_L = state.grad_L
         hamiltonian_dash = L - 0.5*r0.dot(r0)
-        #print('j = {}'.format(j))
-        #print('nuts accept prob = ',state.alpha/state.n_alpha)
-        #print('nuts alpha = ',state.alpha)
-        #print('nuts n_alpha = ',state.n_alpha)
-        #print('my accept prob = ',min(1.0,np.exp(hamiltonian_dash-hamiltonian0)))
-        #print('hamiltonian0 = {}, hamiltonian_dash = {}'.format(hamiltonian0,hamiltonian_dash))
 
-        # return current position, log pdf, and average acceptance probability to sampler
-        # print('epsilon',step_size)
-        # print('n_alpha',state.n_alpha)
+        # signal calling process that mcmc step is complete by passing a tuple
+        # (rather than an ndarray)
         yield (theta, L, state.alpha/state.n_alpha, 2**j)
 
         # next step
