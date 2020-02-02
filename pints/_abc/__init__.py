@@ -539,7 +539,6 @@ class SequentialABCController(object):
 
         # Evaluation counting
         evaluations = 0
-        last_evals = 0
         accepted_count = [0]
 
         # Choose method to evaluate
@@ -575,8 +574,15 @@ class SequentialABCController(object):
                 logger.set_filename(self._log_filename, csv=self._log_csv)
 
             # Add fields to log
-            max_eval_guess = 10000
+            max_eval_guess = 100000
+            max_found_guess = 10000
+
+            logger.add_int('Round')
+            logger.add_float('Threshold')
+            logger.add_counter('Found', max_value=max_found_guess)
             logger.add_counter('Eval.', max_value=max_eval_guess)
+            logger.add_float('Acc. Rate')
+            logger.add_counter('Total Eval.', max_value=max_eval_guess)
             logger.add_time('Time m:s')
 
         # Start sampling
@@ -584,12 +590,14 @@ class SequentialABCController(object):
         running = True
         samples = [[]]
         weights = [[]]
+        round_evals = [0]
         k = self._epsilon_null
         epsilon = [self._epsilon_null]
+        evaluations = 0
+        iterations = 0
         self._rejection_sampler.set_threshold(self._epsilon_null)
         # While we are still cooling
         while k > self._k_min:
-            iterations = 0
             if self._t == 0:
                 # Draw self._n_target points using rejection sampling
                 while accepted_count[self._t] < self._n_target:
@@ -598,7 +606,7 @@ class SequentialABCController(object):
                     # Simulate and get error
                     fxs = evaluator.evaluate(xs)
                     evaluations += self._n_workers
-
+                    round_evals[self._t] += self._n_workers
                     accepted_vals = self._rejection_sampler.tell(fxs)
                     if accepted_vals is not None:
                         accepted_count[self._t] += len(accepted_vals)
@@ -607,10 +615,25 @@ class SequentialABCController(object):
                         fxs = evaluator.evaluate(xs)
                         accepted_vals = self._rejection_sampler.tell(fxs)
                         evaluations += self._n_workers
+                        round_evals[self._t] += self._n_workers
                         if accepted_vals is not None:
                             accepted_count[self._t] += len(accepted_vals)
                     for val in accepted_vals:
                         samples[self._t].append(val)
+
+                    # Show progress
+                    if logging and accepted_count[self._t] >= next_message:
+                        # Log state
+                        logger.log(self._t, epsilon[self._t], accepted_count[self._t], round_evals[self._t], (
+                                accepted_count[self._t] / round_evals[self._t]), evaluations, timer.time())
+
+                        # Choose next logging point
+                        if accepted_count[self._t] < self._message_warm_up:
+                            next_message = accepted_count[self._t] + 1
+                        else:
+                            next_message = self._message_interval * (
+                                1 + accepted_count[self._t] // self._message_interval)
+
 
                 # Once we have the sample then create an intermediate distribution with uniform weights
                 weights[self._t] = np.full(self._n_target, 1/self._n_target)
@@ -630,7 +653,6 @@ class SequentialABCController(object):
                                 print(f"np.random.choice: a (size {len(range(len(samples[self._t-1])))}) and "
                                       f"p (size {len(weights[self._t-1])}) must be the same size")
                                 raise
-                            iterations += 1
                             # perturb using _K_t
                             # TODO: Allow perturbation kernel to adapt to intermediate distributions
                             theta_star_star = self._perturbation_kernel.perturb(theta_star)
@@ -641,18 +663,31 @@ class SequentialABCController(object):
                         # TODO: Convert this to use a rejection sampler
                         fx = evaluator.evaluate([theta_star_star])
                         evaluations += 1
+                        round_evals[self._t]+=1
+                        iterations += 1
                         if np.random.binomial(1, self._acceptance_kernel(fx[0], epsilon[self._t])):
                             samples[self._t].append(theta_star_star)
+                            accepted_count[self._t]+=1
+                            # Show progress
+                            if logging and accepted_count[self._t] >= next_message:
+                                # Log state
+                                logger.log(self._t, epsilon[self._t], accepted_count[self._t], round_evals[self._t], (
+                                        accepted_count[self._t] / round_evals[self._t]), evaluations, timer.time())
+
+                                # Choose next logging point
+                                if accepted_count[self._t] < self._message_warm_up:
+                                    next_message = accepted_count[self._t] + 1
+                                else:
+                                    next_message = self._message_interval * (
+                                        1 + accepted_count[self._t] // self._message_interval)
                             break
                         elif iterations > self._I_max:
                             samples[self._t] = []
                             k = self._cooling_schedule*k
-                            iterations = 0
                             epsilon[self._t] = epsilon[self._t-1] - k
-                            print("Hitting max iterations at epsilon="+str(epsilon[self._t]))
                             break
-                print("Samples found, weighting")
-                weights[self._t] = self._calculate_weights(samples[self._t - 1], samples[self._t], weights[self._t - 1])
+
+                weights[self._t] = self._calculate_weights_good(samples[self._t - 1], samples[self._t], weights[self._t - 1])
 
             # Normalise weights
             normal = sum(weights[self._t])
@@ -662,20 +697,17 @@ class SequentialABCController(object):
             k = min(k, self._cooling_schedule * epsilon[self._t])
             epsilon.append(epsilon[self._t]-k)
 
-            # Advance time
-            print(f"Time {self._t}: {len(samples[self._t])} samples found at threshold {epsilon[self._t]} "
-                  f"within {evaluations-last_evals} evals")
-            last_evals = evaluations
             self._t += 1
+            iterations = 0
             samples.append([])
             weights.append([])
+            round_evals.append(0)
+            next_message = 0
+            accepted_count.append(0)
 
         # Log final state and show halt message
-        if logging:
-            logger.log(evaluations)
-            logger.log(timer.time())
-            if self._log_to_screen:
-                print("Sampling Complete")
+        if logging and self._log_to_screen:
+            print("Sampling Complete")
         samples = np.array(samples)
         return samples
 
