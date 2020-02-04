@@ -51,6 +51,7 @@ relevant code.
 
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
+- [No-U-Turn MCMC](./sampling-nuts-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling-monomial-gamma-hmc.ipynb)
 - [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
