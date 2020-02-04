@@ -490,7 +490,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 3
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """

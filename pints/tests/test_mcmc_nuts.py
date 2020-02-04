@@ -15,8 +15,6 @@ import pints.toy
 
 from shared import StreamCapture
 
-debug = False
-
 class TestNutsMCMC(unittest.TestCase):
     """
     Tests the basic methods of the Hamiltonian MCMC routine.
@@ -143,8 +141,4 @@ class TestNutsMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

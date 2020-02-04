@@ -389,19 +389,18 @@ class Logger(object):
                 v = next(column)
                 if v is None:
                     x = ' ' * width
+                elif dtype == _FLOAT:
+                    x = f1.format(v)
+                    if len(x) > width:
+                        x = f2.format(v)
+                    x += ' ' * (width - len(x))
+                elif dtype == _TIME:
+                    x = self._format_time(v)
+                elif dtype == _TEXT:
+                    x = str(v)[:width]
+                    x += ' ' * (width - len(x))
                 else:
-                    if dtype == _FLOAT:
-                        x = f1.format(v)
-                        if len(x) > width:
-                            x = f2.format(v)
-                        x += ' ' * (width - len(x))
-                    elif dtype == _TIME:
-                        x = self._format_time(v)
-                    elif dtype == _TEXT:
-                        x = str(v)[:width]
-                        x += ' ' * (width - len(x))
-                    else:
-                        x = f1.format(int(v))
+                    x = f1.format(int(v))
                 formatted_row.append(x)
             formatted_rows.append(formatted_row)
 
