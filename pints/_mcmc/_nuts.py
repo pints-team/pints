@@ -2,7 +2,7 @@
 # No-U-Turn Sampler (NUTS) MCMC method
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
+#  Copyright (c) 2017-2020, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -16,13 +16,13 @@ import numpy as np
 class NutsState:
     """
     Class to hold information about the current state of the NUTS hamiltonian
-    integration path
+    integration path.
 
     NUTS builds up the integration path implicitly via recursion up a binary tree, this
-    class handles combining states from different subtrees (see `update`)
+    class handles combining states from different subtrees (see `update`).
 
     NUTS integrates both backwards ("minus") and forwards ("plus"), so this state must
-    keep track of both end points of the integration path
+    keep track of both end points of the integration path.
 
     Attributes
     ----------
@@ -93,16 +93,16 @@ class NutsState:
 
     def update(self, other_state, direction, root):
         """
-        if root == True, this combines a depth j subtree (`self`) with a depth j+1
-        (`other_state`) subtree, which corresponds to the higher level loop in
+        if ``root == True``, this combines a depth j subtree (``self``) with a depth j+1
+        (``other_state``) subtree, which corresponds to the higher level loop in
         the nuts algorithm
 
-        if root == False, this combins two subtrees with depth j, which occurs
+        if ``root == False``, this combins two subtrees with depth j, which occurs
         when the nuts algorithm is implicitly building up the tree with the build_tree
         subroutine
 
         direction is the current direction of integration, either forwards
-        (direction == 1), or backwards (direction = -1)
+        (``direction == 1``), or backwards (``direction = -1``)
         """
         if direction == -1:
             self.theta_minus = other_state.theta_minus
@@ -153,9 +153,13 @@ class NutsState:
         self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_plus) >= 0)
 
 
+# All the functions below are written as coroutines to enable the recursive nuts
+# algorithm to be written using the ask-and-tell interface used by PINTS, see main
+# coroutine function ``nuts_sampler`` for more details
+
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, step_size):
-    """ performs a leapfrog step with step size `epsilon*step_size """
+    """ performs a leapfrog step with step size ``epsilon*step_size`` """
     r_new = r + 0.5*epsilon*step_size*grad_L
     theta_new = theta + epsilon*step_size*r_new
     L_new, grad_L_new = (yield theta_new)
