@@ -89,6 +89,18 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc.tell(log_pdf.evaluateS1(x))
         self.assertRaises(RuntimeError, mcmc.tell, log_pdf.evaluateS1(x))
 
+        # Cannot set delta while running
+        self.assertRaises(RuntimeError, mcmc.set_delta, 0.5)
+
+        # Cannot set number of adpation steps while running
+        self.assertRaises(RuntimeError, mcmc.set_number_adaption_steps, 500)
+
+        # Bad starting point
+        mcmc = pints.NoUTurnMCMC(x0)
+        mcmc.ask()
+        self.assertRaises(
+            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+
     def test_set_hyper_parameters(self):
         """
         Tests the parameter interface for this sampler.
