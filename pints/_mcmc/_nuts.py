@@ -18,11 +18,12 @@ class NutsState:
     Class to hold information about the current state of the NUTS hamiltonian
     integration path.
 
-    NUTS builds up the integration path implicitly via recursion up a binary tree, this
-    class handles combining states from different subtrees (see `update`).
+    NUTS builds up the integration path implicitly via recursion up a binary
+    tree, this class handles combining states from different subtrees (see
+    `update`).
 
-    NUTS integrates both backwards ("minus") and forwards ("plus"), so this state must
-    keep track of both end points of the integration path.
+    NUTS integrates both backwards ("minus") and forwards ("plus"), so this
+    state must keep track of both end points of the integration path.
 
     Attributes
     ----------
@@ -93,13 +94,13 @@ class NutsState:
 
     def update(self, other_state, direction, root):
         """
-        if ``root == True``, this combines a depth j subtree (``self``) with a depth j+1
-        (``other_state``) subtree, which corresponds to the higher level loop in
-        the nuts algorithm
+        if ``root == True``, this combines a depth j subtree (``self``) with a
+        depth j+1 (``other_state``) subtree, which corresponds to the higher
+        level loop in the nuts algorithm
 
-        if ``root == False``, this combins two subtrees with depth j, which occurs
-        when the nuts algorithm is implicitly building up the tree with the build_tree
-        subroutine
+        if ``root == False``, this combins two subtrees with depth j, which
+        occurs when the nuts algorithm is implicitly building up the tree with
+        the build_tree subroutine
 
         direction is the current direction of integration, either forwards
         (``direction == 1``), or backwards (``direction = -1``)
@@ -123,11 +124,11 @@ class NutsState:
         alpha_dash = other_state.alpha
         n_alpha_dash = other_state.n_alpha
 
-        # if there is any accepted points in the other subtree then test for acceptance
-        # of that subtrees theta
+        # if there is any accepted points in the other subtree then test for
+        # acceptance of that subtrees theta
         if n_dash > 0:
             if root:
-                p = int(s_dash == 1)*min(1, n_dash / self.n)
+                p = int(s_dash == 1) * min(1, n_dash / self.n)
             else:
                 p = n_dash / (self.n + n_dash)
 
@@ -149,21 +150,23 @@ class NutsState:
 
         # test if the path has done a U-Turn
         self.s *= s_dash
-        self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_minus) >= 0)
-        self.s *= int((self.theta_plus - self.theta_minus).dot(self.r_plus) >= 0)
+        self.s *= int((self.theta_plus -
+                       self.theta_minus).dot(self.r_minus) >= 0)
+        self.s *= int((self.theta_plus -
+                       self.theta_minus).dot(self.r_plus) >= 0)
 
 
-# All the functions below are written as coroutines to enable the recursive nuts
-# algorithm to be written using the ask-and-tell interface used by PINTS, see main
-# coroutine function ``nuts_sampler`` for more details
+# All the functions below are written as coroutines to enable the recursive
+# nuts algorithm to be written using the ask-and-tell interface used by PINTS,
+# see main coroutine function ``nuts_sampler`` for more details
 
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, step_size):
     """ performs a leapfrog step with step size ``epsilon*step_size`` """
-    r_new = r + 0.5*epsilon*step_size*grad_L
-    theta_new = theta + epsilon*step_size*r_new
+    r_new = r + 0.5 * epsilon * step_size * grad_L
+    theta_new = theta + epsilon * step_size * r_new
     L_new, grad_L_new = (yield theta_new)
-    r_new += 0.5*epsilon*step_size*grad_L_new
+    r_new += 0.5 * epsilon * step_size * grad_L_new
     return L_new, grad_L_new, theta_new, r_new
 
 
@@ -186,8 +189,8 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
             grad_L = state.grad_L_plus
 
         L_dash, grad_L_dash, theta_dash, r_dash = \
-            yield from leapfrog(theta, L, grad_L, r, v*epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
+            yield from leapfrog(theta, L, grad_L, r, v * epsilon, step_size)
+        hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
         n_dash = int(log_u <= hamiltonian_dash)
         comparison = hamiltonian_dash - hamiltonian0
         Delta_max = 1000
@@ -201,11 +204,14 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
 
     else:
         # Recursion - implicitly build the left and right subtrees
-        state_dash = yield from build_tree(state, log_u, v, j-1, epsilon, hamiltonian0, step_size)
+        state_dash = yield from  \
+            build_tree(state, log_u, v, j - 1, epsilon, hamiltonian0,
+                       step_size)
 
         if state_dash.s == 1:
-            state_double_dash = yield from build_tree(state_dash, log_u, v, j-1, epsilon, hamiltonian0,
-                                                      step_size)
+            state_double_dash = yield from \
+                build_tree(state_dash, log_u, v, j - 1, epsilon, hamiltonian0,
+                           step_size)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
@@ -221,10 +227,10 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
     r = np.random.normal(size=len(theta))
-    hamiltonian = L - 0.5*r.dot(r)
+    hamiltonian = L - 0.5 * r.dot(r)
     L_dash, grad_L_dash, theta_dash, r_dash = \
         yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-    hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
+    hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
     comparison = hamiltonian_dash - hamiltonian
 
     # determine whether we are doubling or halving
@@ -235,7 +241,7 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
         epsilon = 2**alpha * epsilon
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5*r_dash.dot(r_dash)
+        hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
         comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
@@ -245,10 +251,11 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
 
-    Implemented as a coroutine that continually generates new theta values to evaluate
-    (L, L') at. Users must send (L, L') back to the coroutine to continue execution. The
-    end of an mcmc step is signalled by generating a tuple of values (theta, L,
-    acceptance probability, number of leapfrog steps)
+    Implemented as a coroutine that continually generates new theta values to
+    evaluate (L, L') at. Users must send (L, L') back to the coroutine to
+    continue execution. The end of an mcmc step is signalled by generating a
+    tuple of values (theta, L, acceptance probability, number of leapfrog
+    steps)
 
 
     References
@@ -273,7 +280,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
     epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, step_size)
 
     # default values taken from [1]
-    mu = np.log(10*epsilon)
+    mu = np.log(10 * epsilon)
     log_epsilon_bar = np.log(1)
     H_bar = 0
     gamma = 0.05
@@ -287,7 +294,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
     while True:
         # randomly sample momentum
         r0 = np.random.normal(size=len(theta))
-        hamiltonian0 = L - 0.5*r0.dot(r0)
+        hamiltonian0 = L - 0.5 * r0.dot(r0)
 
         # use slice sampling
         log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
@@ -308,17 +315,18 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
                 vj = -1
 
             # recursivly build up tree in that direction
-            state_dash = yield from build_tree(state, log_u, vj, j, epsilon, hamiltonian0,
-                                               step_size)
+            state_dash = yield from \
+                build_tree(state, log_u, vj, j, epsilon,
+                           hamiltonian0, step_size)
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
 
         # adapt epsilon using dual averaging
         if m < M_adapt:
-            H_bar = (1 - 1.0/(m+t0)) * H_bar + 1.0/(m+t0) * \
-                (delta - state.alpha/state.n_alpha)
-            log_epsilon = mu - (np.sqrt(m)/gamma) * H_bar
+            H_bar = (1 - 1.0 / (m + t0)) * H_bar + 1.0 / (m + t0) * \
+                (delta - state.alpha / state.n_alpha)
+            log_epsilon = mu - (np.sqrt(m) / gamma) * H_bar
             log_epsilon_bar = m**(-kappa) * log_epsilon + \
                 (1 - m**(-kappa)) * log_epsilon_bar
             epsilon = np.exp(log_epsilon)
@@ -329,11 +337,10 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         theta = state.theta
         L = state.L
         grad_L = state.grad_L
-        hamiltonian_dash = L - 0.5*r0.dot(r0)
 
         # signal calling process that mcmc step is complete by passing a tuple
         # (rather than an ndarray)
-        yield (theta, L, state.alpha/state.n_alpha, 2**j)
+        yield (theta, L, state.alpha / state.n_alpha, 2**j)
 
         # next step
         m += 1
@@ -342,12 +349,12 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
 class NoUTurnMCMC(pints.SingleChainMCMC):
     r"""
 
-    Implements No U-Turn Sampler (NUTS) with dual averaging, as described in Algorithm 6
-    in [1]_. Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
-    log-posterior (NLP) space to generate proposals. Naturally, the particle tends to
-    move to locations of low NLP -- meaning high posterior density. Unlike HMC, NUTS
-    allows the number of steps taken through parameter space to depend on position,
-    allowing local adaptation.
+    Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
+    Algorithm 6 in [1]_. Like Hamiltonian Monte Carlo, NUTS imagines a particle
+    moving over negative log-posterior (NLP) space to generate proposals.
+    Naturally, the particle tends to move to locations of low NLP -- meaning
+    high posterior density. Unlike HMC, NUTS allows the number of steps taken
+    through parameter space to depend on position, allowing local adaptation.
 
     Extends :class:`SingleChainMCMC`.
 
@@ -433,14 +440,14 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             self._mcmc_iteration += 1
 
             # average quantities for logging
-            iterations_since_log = self._mcmc_iteration - self._last_log_write
+            n_it_since_log = self._mcmc_iteration - self._last_log_write
             self._mcmc_acceptance = (
-                (iterations_since_log * self._mcmc_acceptance + current_acceptance) /
-                (iterations_since_log + 1)
+                (n_it_since_log * self._mcmc_acceptance + current_acceptance) /
+                (n_it_since_log + 1)
             )
             self._n_leapfrog = (
-                (iterations_since_log * self._n_leapfrog + current_n_leapfrog) /
-                (iterations_since_log + 1)
+                (n_it_since_log * self._n_leapfrog + current_n_leapfrog) /
+                (n_it_since_log + 1)
             )
 
             # request next point to evaluate
@@ -506,10 +513,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def set_leapfrog_step_size(self, step_size):
         """
-        Sets the step size for the leapfrog algorithm. Note that the absolute value of
-        the step size is unimportant, as it will be scaled by a scalar step size that is
-        generated by the dual averaging algorithm. It is important however to specify
-        the correct ratio of step size between parameter dimensions
+        Sets the step size for the leapfrog algorithm. Note that the absolute
+        value of the step size is unimportant, as it will be scaled by a scalar
+        step size that is generated by the dual averaging algorithm. It is
+        important however to specify the correct ratio of step size between
+        parameter dimensions
         """
         a = np.atleast_1d(step_size)
         if len(a[a < 0]) > 0:
@@ -528,8 +536,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def set_delta(self, delta):
         """
-        Sets delta for the nuts algorithm. This is the goal acceptance probability for
-        the algorithm. Used to set the scalar magnitude of the leapfrog step size
+        Sets delta for the nuts algorithm. This is the goal acceptance
+        probability for the algorithm. Used to set the scalar magnitude of the
+        leapfrog step size
         """
         if self._running:
             raise RuntimeError('cannot set delta while sampler is running')
@@ -539,9 +548,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def set_number_adaption_steps(self, n):
         """
-        Sets number of adaptions steps in the nuts algorithm. This is the number of mcmc
-        steps that are used to determin the best value for epsilon, the scalar magnitude
-        of the leafrog step size
+        Sets number of adaptions steps in the nuts algorithm. This is the
+        number of mcmc steps that are used to determin the best value for
+        epsilon, the scalar magnitude of the leafrog step size
         """
         if self._running:
             raise RuntimeError(
@@ -552,7 +561,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[delta, number_adaption_steps, leapfrog_step_size]``.
+        The hyper-parameter vector is ``[delta, number_adaption_steps,
+        leapfrog_step_size]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """

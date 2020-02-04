@@ -986,7 +986,6 @@ class MCMCController(object):
         return self._n_evaluations
 
 
-
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 

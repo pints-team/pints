@@ -15,6 +15,7 @@ import pints.toy
 
 from shared import StreamCapture
 
+
 class TestNutsMCMC(unittest.TestCase):
     """
     Tests the basic methods of the Hamiltonian MCMC routine.
@@ -35,7 +36,7 @@ class TestNutsMCMC(unittest.TestCase):
 
         # Perform short run
         chain = []
-        for i in range(2*mcmc.number_adaption_steps()):
+        for i in range(2 * mcmc.number_adaption_steps()):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, gr))
@@ -104,7 +105,7 @@ class TestNutsMCMC(unittest.TestCase):
 
         # delta between 0 and 1
         self.assertRaises(ValueError, mcmc.set_delta, -0.1)
-        self.assertRaises(ValueError, mcmc.set_delta,  1.1)
+        self.assertRaises(ValueError, mcmc.set_delta, 1.1)
 
         # Test number of adaption steps
         n = mcmc.number_adaption_steps()
