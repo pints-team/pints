@@ -62,10 +62,6 @@ class BetaLogPrior(pints.LogPrior):
         """ See :meth:`LogPrior.cdf()`. """
         return scipy.stats.beta.cdf(x, self._a, self._b)
 
-    def icdf(self, p):
-        """ See :meth:`LogPrior.cdf()`. """
-        return scipy.stats.beta.ppf(p, self._a, self._b)
-
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
@@ -83,6 +79,10 @@ class BetaLogPrior(pints.LogPrior):
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - np.divide(
                 self._b - 1., 1. - _x)])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.beta.ppf(p, self._a, self._b)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -396,9 +396,17 @@ class GaussianLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.norm.cdf(x, self._mean, self._sd)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         return self(x), self._factor2 * (self._mean - np.asarray(x))
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.norm.ppf(p, self._mean, self._sd)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -865,7 +873,7 @@ class UniformLogPrior(pints.LogPrior):
         return cdfs
 
     def icdf(self, ps):
-        """ See :meth:`LogPrior.cdf()`. """
+        """ See :meth:`LogPrior.icdf()`. """
         if not isinstance(ps, list):
             ps = [ps]
         icdfs = []

@@ -399,6 +399,11 @@ class TestPrior(unittest.TestCase):
         p = pints.NormalLogPrior(mean, std)
         self.assertIsInstance(p, pints.GaussianLogPrior)
 
+    def test_gaussian_prior_cdf_icdf(self):
+        p = pints.GaussianLogPrior(-4, 7.5)
+        self.assertAlmostEqual(p.cdf(3.0), 0.8246760551477705)
+        self.assertAlmostEqual(p.icdf(0.01), -21.447609055306305)
+
     def test_gaussian_prior_sampling(self):
         mean = 10
         std = 2
