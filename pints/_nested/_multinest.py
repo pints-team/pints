@@ -16,7 +16,7 @@ from scipy.cluster.vq import vq
 import random
 
 
-class MultiNestSampler(pints.NestedSampler):
+class MultinestSampler(pints.NestedSampler):
     r"""
     Creates a MultiNest nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
@@ -31,8 +31,7 @@ class MultiNestSampler(pints.NestedSampler):
 
     Initialise::
 
-        Z_0 = 0
-        X_0 = 1
+        Z = 0
 
     Draw samples from prior::
 
@@ -47,39 +46,44 @@ class MultiNestSampler(pints.NestedSampler):
     an initial sample, along with updated values of ``L_min`` and
     ``indexmin``.
 
-    Transform all active points into unit cube via the cumulative distribution
-    function of the priors:
+    Transform all active points into the unit cube via the cumulative
+    distribution function of the priors:
 
-        $u_i = \int_{-\infty}^{\theta_i} \pi(\theta') d\theta'.$
+    .. math::
+        u_i = \int_{-\infty}^{\theta_i} \pi(\theta') d\theta'
 
     Fit transformed active points using minimum volume bounding ellipsoids
-    (that potentially overlap) as described by algorithm 1 in [1]_.
+    (that potentially overlap) as described by Algorithm 1 in [1]_.
     Explicitly, this involves the following steps (which we term
-    ``minimum_bounding_ellipsoid_set`` in what follows)::
+    ``f_s_minimisation`` in what follows)::
 
-        calculate bounding ellipsoid E and its volume V(E)
-        V(S) = exp(-t/n_active_points); t is iteration and S is prior vol. left
-        enlarge E so that V(E) = max(V(E), V(S))
-        using k-means algorithm partition S into S_1 and S_2 containing n_1 and
-            n_2 points
-        (A) find E_1 and E_2 (bounding ellipsoids) and their volumes V(E_1)
-            and V(E_2)
-        enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
-            where V(S_k) = n_k V(S) / n_active_points
-        for all active points:
-            assign u_i to S_k such that h_k(u_i) = min(h_1(u_i), h_2(u_i))
-        endfor
-        where h_k(u_i) = (V(E_k) / V(S_k)) * d(u_i, S_k) and
-            d(u_i, S_k) = (u_i-mu_k)' (f_k C_k)^-1 (u_i-mu_k) is the
-            Mahalanobis distance from u_i to the centroid mu_k; f_k is a factor
-            that ensures it is a bounding ellipsoid; and C_k is the empirical
-            covariance matrix of the subset S_k
-        if no point is reassigned, go to step (B) below; else go back to (A)
-        (B) if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
-            parition S into S_1 and S_2 and repeat algorithm for each subset
-        else:
-            return E as the optimal ellipsoid of set S
-        endif
+        f_s_minimisation(t, u):
+            calculate bounding ellipsoid E and its volume V(E)
+            V(S) = exp(-t/n_active_points); t is iteration and
+                S is prior volume remaining
+            enlarge E so that V(E) = max(V(E), V(S))
+            using k-means algorithm partition S into S_1 and S_2 containing n_1
+                and n_2 points
+            (A) find E_1 and E_2 (bounding ellipsoids) and their volumes V(E_1)
+                and V(E_2)
+            enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
+                where V(S_k) = n_k V(S) / n_active_points
+            for all active points:
+                assign u_i to S_k such that h_k(u_i) = min(h_1(u_i), h_2(u_i))
+            endfor
+            where h_k(u_i) = (V(E_k) / V(S_k)) * d(u_i, S_k) and
+                d(u_i, S_k) = (u_i-mu_k)' (f_k C_k)^-1 (u_i-mu_k) is the
+                Mahalanobis distance from u_i to the centroid mu_k; f_k is a
+                factor that ensures it is a bounding ellipsoid; and C_k is the
+                empirical covariance matrix of the subset S_k
+            if no point is reassigned, go to step (B) below;
+                else go back to (A)
+            (B) if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
+                parition S into S_1 and S_2 and repeat algorithm for
+                    each subset
+            else:
+                return E as the optimal ellipsoid of set S
+            endif
 
     To find the minimum bounding ellipsoid, we use the following procedure
     that returns the positive definite matrix C with centre mu that define the
@@ -99,9 +103,10 @@ class MultiNestSampler(pints.NestedSampler):
 
         V(E_k) = max(V(E_k),
             exp(-(t + 1) / n_active_points) * n_k / n_active_points)
+        V(S_k) = (n_k / n_active_points) * exp(-(t + 1) / n_active_points)
         F(S) = (1 / V(S)) sum_{k=1}^{K} V(E_k)
         if F(S) > f_s_threshold:
-            (E_1,..E_K), (S_1,...,S_K) = minimum_bounding_ellipsoid_set(u)
+            (E_1,..E_K), (S_1,...,S_K) = f_s_minimisation(t, u)
         endif
         L_min = min(L)
         indexmin = min_index(L)
@@ -111,6 +116,10 @@ class MultiNestSampler(pints.NestedSampler):
         Z = Z + L_min * w_t
         theta_indexmin = theta*
         L_indexmin = p(theta*|X)
+
+    In the above, ``F(S)>=1`` is the ratio of the total volume overlapping
+    ellipsoids to the volume of prior space remaining -- it is this
+    functional that is minimised by ``f_s_minimisation``.
 
     To sample from the (potentially) overlapping ellipsoids, we use the
     following steps::
@@ -122,7 +131,7 @@ class MultiNestSampler(pints.NestedSampler):
             while p(theta*|X) < L_min:
                 theta* ~ ellipsoid_sample(E_k)
             endwhile
-            n_e = number_of_ellipsoids(theta*)
+            n_e = count_ellipsoids(theta*)
             v ~ uniform(0, 1)
             if (1 / n_e) < v:
                 theta* = ellipsoids_sample((E_1,..E_K), (S_1,...,S_K), L_min)
@@ -130,7 +139,8 @@ class MultiNestSampler(pints.NestedSampler):
             return theta*
 
     The function ``ellipsoid_sample`` uniformly samples from within an
-    ellipsoid.
+    ellipsoid. The function ``count_ellipsoids`` finds the number of
+    ellipsoids a point is contained within.
 
     At the end of iterations, there is a final ``Z`` increment::
 
@@ -160,7 +170,7 @@ class MultiNestSampler(pints.NestedSampler):
     """
 
     def __init__(self, log_prior):
-        super(MultiNestSampler, self).__init__(log_prior)
+        super(MultinestSampler, self).__init__(log_prior)
 
         # Enlargement factor for ellipsoid
         self.set_enlargement_factor()
@@ -658,7 +668,8 @@ class MultiNestSampler(pints.NestedSampler):
         V_S = np.exp(-t / self._n_active_points)
         for i, A in enumerate(self._A_l):
             # not 100% sure about this next line as not explicitly in text
-            self._V_S_l[i] = self._assignments[i] * V_S / self._n_active_points
+            self._V_S_l[i] = (
+                np.sum(self._assignments == i) * V_S / self._n_active_points)
             enlargement_factor = self._V_S_l[i] / self._V_E_l[i]
             if enlargement_factor > 1:
                 self._V_E_l[i] = self._V_S_l[i]
