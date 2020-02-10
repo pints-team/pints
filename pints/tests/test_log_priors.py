@@ -874,6 +874,28 @@ class TestPrior(unittest.TestCase):
         # Test bad constructor
         self.assertRaises(ValueError, pints.UniformLogPrior, lower)
 
+    def test_uniform_prior_cdf(self):
+        lower = np.array([1, 2])
+        upper = np.array([11, 22])
+        log_prior = pints.UniformLogPrior(lower, upper)
+        self.assertEqual(log_prior.cdf([2, 19.0])[0], 0.1)
+        self.assertEqual(log_prior.cdf([2, 19.0])[1], 0.85)
+        log_prior = pints.UniformLogPrior(1, 3)
+        self.assertEqual(log_prior.cdf(1)[0], 0)
+        self.assertEqual(log_prior.cdf(2)[0], 0.5)
+        self.assertEqual(log_prior.cdf(3)[0], 1.0)
+
+    def test_uniform_prior_icdf(self):
+        lower = np.array([1, 2])
+        upper = np.array([11, 22])
+        log_prior = pints.UniformLogPrior(lower, upper)
+        self.assertEqual(log_prior.icdf([0.4, 0.9])[0], 5.0)
+        self.assertEqual(log_prior.icdf([0.4, 0.9])[1], 20.0)
+        log_prior = pints.UniformLogPrior(1, 3)
+        self.assertEqual(log_prior.icdf(1)[0], 3.0)
+        self.assertEqual(log_prior.icdf(0)[0], 1.0)
+        self.assertEqual(log_prior.icdf(0.75)[0], 2.5)
+
     def test_uniform_prior_sampling(self):
         lower = np.array([1, 2])
         upper = np.array([10, 20])

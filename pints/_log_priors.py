@@ -847,6 +847,39 @@ class UniformLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else -np.inf
 
+    def cdf(self, xs):
+        """ See :meth:`LogPrior.cdf()`. """
+        if not isinstance(xs, list):
+            xs = [xs]
+        cdfs = []
+        for i, x in enumerate(xs):
+            if x > self._boundaries.lower()[i] and (
+                    x < self._boundaries.upper()[i]):
+                cdfs.append((-self._boundaries.lower()[i] + x) /
+                            (-self._boundaries.lower()[i] +
+                             self._boundaries.upper()[i]))
+            elif x >= self._boundaries.upper()[i]:
+                cdfs.append(1.0)
+            else:
+                cdfs.append(0.0)
+        return cdfs
+
+    def icdf(self, ps):
+        """ See :meth:`LogPrior.cdf()`. """
+        if not isinstance(ps, list):
+            ps = [ps]
+        icdfs = []
+        for i, p in enumerate(ps):
+            if p > 0 and p < 1:
+                icdfs.append(
+                    self._boundaries.lower()[i] * (1 - p) +
+                    self._boundaries.upper()[i] * p)
+            elif p <= 0:
+                icdfs.append(self._boundaries.lower()[i])
+            else:
+                icdfs.append(self._boundaries.upper()[i])
+        return icdfs
+
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """
         # Ignoring points on the boundaries (i.e. on the surface of the
