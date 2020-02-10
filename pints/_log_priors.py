@@ -870,7 +870,10 @@ class UniformLogPrior(pints.LogPrior):
                 cdfs.append(1.0)
             else:
                 cdfs.append(0.0)
-        return cdfs
+        if len(cdfs) == 1:
+            return cdfs[0]
+        else:
+            return cdfs
 
     def icdf(self, ps):
         """ See :meth:`LogPrior.icdf()`. """
@@ -886,7 +889,10 @@ class UniformLogPrior(pints.LogPrior):
                 icdfs.append(self._boundaries.lower()[i])
             else:
                 icdfs.append(self._boundaries.upper()[i])
-        return icdfs
+        if len(icdfs) == 1:
+            return icdfs[0]
+        else:
+            return icdfs
 
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """
