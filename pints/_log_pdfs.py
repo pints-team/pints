@@ -59,6 +59,26 @@ class LogPrior(LogPDF):
 
     Extends :class:`LogPDF`.
     """
+    def cdf(self, x):
+        """
+        Returns the cumulative density function at a point ``x``.
+        """
+        raise NotImplementedError
+
+    def icdf(self, p):
+        """
+        Returns the inverse cumulative density function at a cumulative
+        probability ``p``.
+        """
+        raise NotImplementedError
+
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
+        """
+        raise NotImplementedError
+
     def sample(self, n=1):
         """
         Returns ``n`` random samples from the underlying prior distribution.
@@ -69,13 +89,6 @@ class LogPrior(LogPDF):
 
         Note: This method is optional, in the sense that only a subset of
         inference methods require it.
-        """
-        raise NotImplementedError
-
-    def mean(self):
-        """
-        Returns the analytical value of the expectation of a random variable
-        distributed according to this :class:`LogPDF`.
         """
         raise NotImplementedError
 

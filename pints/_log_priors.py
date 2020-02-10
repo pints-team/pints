@@ -58,6 +58,14 @@ class BetaLogPrior(pints.LogPrior):
                                        x[0]) + scipy.special.xlog1py(
                 self._b - 1.0, -x[0]) - self._log_beta
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.beta.cdf(x, self._a, self._b)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.beta.ppf(p, self._a, self._b)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)

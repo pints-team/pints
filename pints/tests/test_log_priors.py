@@ -32,6 +32,18 @@ class TestPrior(unittest.TestCase):
         self.assertAlmostEqual(p1.mean(), 0.04993909866017051)
         self.assertAlmostEqual(p2.mean(), 0.4307116104868914)
 
+        # Test CDFs
+        self.assertAlmostEqual(p1.cdf(0.2), 0.9161569551360381)
+        self.assertAlmostEqual(p1.cdf(0.5), 0.982186394491929)
+        self.assertAlmostEqual(p2.cdf(0.5), 0.6606214580849932)
+        self.assertAlmostEqual(p2.cdf(0.05), 0.001056893325194372)
+
+        # Test inverse-CDFs
+        self.assertAlmostEqual(p1.icdf(0.9), 0.1662966999241491)
+        self.assertAlmostEqual(p1.icdf(0.99), 0.593317052562366)
+        self.assertAlmostEqual(p2.icdf(0.3), 0.33292896683293627)
+        self.assertAlmostEqual(p2.icdf(0.9), 0.6538975170733259)
+
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 1)
 
