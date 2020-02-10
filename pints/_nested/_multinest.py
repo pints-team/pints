@@ -229,8 +229,11 @@ class MultiNestSampler(pints.NestedSampler):
         if (i + 1) % self._n_rejection_samples == 0:
             self._rejection_phase = False
             # determine bounding ellipsoids
+            samples = self._m_active[:, :self._n_parameters]
+            self._m_active_transformed = ([self._transform_to_unit_cube(x)
+                                           for x in samples])
             A, c, F_S = (
-                f_s_minimisation(i, self._m_active[:, :self._n_parameters])
+                f_s_minimisation(i, self._m_active_transformed)
             )
 
         if self._rejection_phase:
@@ -241,10 +244,17 @@ class MultiNestSampler(pints.NestedSampler):
         else:
             A, c, F_S = self._update_ellipsoid_volumes()
             if F_S > self._f_s_threshold:
+                samples = self._m_active[:, :self._n_parameters]
+                self._m_active_transformed = ([self._transform_to_unit_cube(x)
+                                               for x in samples])
                 A, c, F_S = (
                     f_s_minimisation(i, self._m_active[:, :self._n_parameters])
                 )
-            self._proposed = 
+            u = self._sample_overlapping_ellipsoids(n_points, A, c)
+            if n_points > 1:
+                self._proposed = [self._transform_from_unit_cube(x) for x in u]
+            else:
+                self._proposed = self._transform_from_unit_cube(u[0])
 
         return self._proposed
 
@@ -384,9 +394,16 @@ class MultiNestSampler(pints.NestedSampler):
         self.set_dynamic_enlargement_factor(x[4])
         self.set_alpha(x[5])
 
-    def transform_to_unit_cube(self, theta):
+    def _transform_to_unit_cube(self, theta):
         """
         Transforms a given parameter sample to unit cube, using the prior
         cumulative distribution function.
         """
         return self._prior_cdf(theta)
+
+    def _transform_from_unit_cube(self, theta):
+        """
+        Transforms a sample in unit cube, to parameter space using the prior
+        inverse cumulative distribution function.
+        """
+        return self._prior_icdf(theta)
