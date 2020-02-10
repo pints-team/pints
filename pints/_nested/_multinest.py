@@ -13,17 +13,18 @@ import pints
 import numpy as np
 
 
-class NestedEllipsoidSampler(pints.NestedSampler):
+class MultiNestSampler(pints.NestedSampler):
     r"""
-    Creates a nested sampler that estimates the marginal likelihood
+    Creates a MultiNest nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
 
-    This is the form of nested sampler described in [1]_, where an ellipsoid is
-    drawn around surviving particles (typically with an enlargement factor to
-    avoid missing prior mass), and then random samples are drawn from within
-    the bounds of the ellipsoid. By sampling in the space of surviving
-    particles, the efficiency of this algorithm aims to improve upon simple
-    rejection sampling. This algorithm has the following steps:
+    This is the form of nested sampler described in [1]_, where multiple
+    ellipsoids are drawn around surviving particles (typically with an
+    enlargement factor to avoid missing prior mass), and then random samples
+    are drawn from within the bounds of the ellipsoids (accounting for any
+    overlap between them). By sampling in the space of surviving particles,
+    the efficiency of this algorithm aims to improve upon simple rejection
+    sampling. This algorithm has the following steps:
 
     Initialise::
 
@@ -43,53 +44,72 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     an initial sample, along with updated values of ``L_min`` and
     ``indexmin``.
 
-    Fit active points using a minimum volume bounding ellipse. In our approach,
-    we do this with the following procedure (which we term
-    ``minimum_volume_ellipsoid`` in what follows) that returns the positive
-    definite matrix A with centre c that define the ellipsoid
-    by :math:`(x - c)^t A (x - c) = 1`::
+    Transform all active points into unit cube via the cumulative distribution
+    function of the priors:
+
+        $u_i = \int_{-\infty}^{\theta_i} \pi(\theta') d\theta'.$
+
+    Fit transformed active points using minimum volume bounding ellipses (that
+    potentially overlap) as described by algorithm 1 in [1]_. Explicitly, this
+    involves the following steps (which we term
+    ``minimum_bounding_ellipsoid_set`` in what follows)::
+
+        calculate bounding ellipsoid E and its volume V(E)
+        V(S) = exp(-t/n_active_points); t is iteration and S is prior vol. left
+        enlarge E so that V(E) = max(V(E), V(S))
+        using k-means algorithm partition S into S_1 and S_2 containing n_1 and
+        n_2 points
+        (A) find E_1 and E_2 (bounding ellipsoids) and their volumes V(E_1)
+        and V(E_2)
+        enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
+        where V(S_k) = n_k V(S) / n_active_points
+        for all active points:
+            assign u_i to S_k such that h_k(u_i) = min(h_1(u_i), h_2(u_i))
+        endfor
+        where h_k(u_i) = (V(E_k) / V(S_k)) * d(u_i, S_k) and
+        d(u_i, S_k) = (u_i-mu_k)' (f_kC_k)^-1 (u_i-mu_k) is the Mahalanobis
+        distance from u_i to the centroid mu_k; f_k is the enlargement factor;
+        and C_k is the empirical covariance matrix of the subset S_k
+        if no point is reassigned, go to step (B) below; else go back to (A)
+        (B) if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
+            parition S into S_1 and S_2 and repeat algorithm for each subset
+        else:
+            return E as the optimal ellipsoid of set S
+        endif
+
+    To find the minimum bounding ellipsoid, we use the following procedure
+    that returns the positive definite matrix C with centre mu that define the
+    ellipsoid by :math:`(x - mu)^t C (x - mu) = 1`::
 
         cov = covariance(transpose(active_points))
         cov_inv = inv(cov)
-        c = mean(points)
+        mu = mean(points)
         for i in n_active_points:
-            dist[i] = (points[i] - c) * cov_inv * (points[i] - c)
+            dist[i] = (points[i] - mu) * cov_inv * (points[i] - mu)
         endfor
         enlargement_factor = max(dist)
-        A = (1.0 / enlargement_factor) * cov_inv
-        return A, c
+        C = (1.0 / enlargement_factor) * cov_inv
+        return C, mu
 
     From then on, in each iteration (t), the following occurs::
 
-        if mod(t, ellipsoid_update_gap) == 0:
-            A, c = minimum_volume_ellipsoid(active_points)
-        else:
-            if dynamic_enlargement_factor:
-                enlargement_factor *= (
-                    exp(-(t + 1) / n_active_points)**alpha
-                )
-            endif
+        V(E_k) = max(V(E_k),
+            exp(-(t + 1) / n_active_points) * n_k / n_active_points)
+        F(S) = (1 / V(S)) \sum_{k=1}^{K} V(E_k)
+        if F(S) > f_threshold:
+            (E_1,..E_K), (S_1,...,S_K) = minimum_bounding_ellipsoid_set(u)
         endif
         L_min = min(L)
         indexmin = min_index(L)
-        theta* = ellipsoid_sample(enlargement_factor, A, c)
+        theta* = ellipsoids_sample((E_1,..E_K), (S_1,...,S_K))
         while p(theta*|X) < L_min:
-            theta* = ellipsoid_sample(enlargement_factor, A, c)
+            theta* = ellipsoids_sample(enlargement_factor, A, c)
         endwhile
         X_t = exp(-t / n_active_points)
         w_t = X_t - X_t-1
         Z = Z + L_min * w_t
         theta_indexmin = theta*
         L_indexmin = p(theta*|X)
-
-
-    If the parameter ``dynamic_enlargement_factor`` is true, the enlargement
-    factor is shrunk as the sampler runs, to avoid inefficiencies in later
-    iterations. By default, the enlargement factor begins at 1.1.
-
-    In ``ellipsoid_sample``, a point is drawn uniformly from within the minimum
-    volume ellipsoid, whose volume is increased by a factor
-    ``enlargement_factor``.
 
     At the end of iterations, there is a final ``Z`` increment::
 
@@ -108,14 +128,15 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
     References
     ----------
-    .. [1] "A nested sampling algorithm for cosmological model selection",
-           Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
-           arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
-           https://doi.org/10.1086/501068
+    .. [1] "MultiNest: an efficient and robust Bayesian inference tool for
+            cosmology and particle physics."
+            Feroz, F., M. P. Hobson, and M. Bridges.
+            Monthly Notices of the Royal Astronomical Society 398.4 (2009):
+            1601-1614.
     """
 
     def __init__(self, log_prior):
-        super(NestedEllipsoidSampler, self).__init__(log_prior)
+        super(MultiNestSampler, self).__init__(log_prior)
 
         # Gaps between updating ellipsoid
         self.set_ellipsoid_update_gap()
