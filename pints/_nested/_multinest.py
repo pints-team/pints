@@ -178,47 +178,6 @@ class MultiNestSampler(pints.NestedSampler):
 
         self._prior_cdf = log_prior.cdf()
 
-    def set_initial_phase(self, in_initial_phase):
-        """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
-        self._rejection_phase = bool(in_initial_phase)
-
-    def set_f_s_threshold(self, h=1.1):
-        """
-        Sets threshold for ``F_S`` when minimum bounding ellipsoids are refit.
-        """
-        if h <= 1:
-            raise ValueError('F_S threshold factor must exceed 1.')
-        self._f_s_threshold = h
-
-    def needs_initial_phase(self):
-        """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
-        return True
-
-    def in_initial_phase(self):
-        """ See :meth:`pints.NestedSampler.in_initial_phase()`. """
-        return self._rejection_phase
-
-    def ellipsoid_update_gap(self):
-        """
-        Returns the ellipsoid update gap used in the algorithm (see
-        :meth:`set_ellipsoid_update_gap()`).
-        """
-        return self._ellipsoid_update_gap
-
-    def enlargement_factor(self):
-        """
-        Returns the enlargement factor used in the algorithm (see
-        :meth:`set_enlargement_factor()`).
-        """
-        return self._enlargement_factor
-
-    def n_rejection_samples(self):
-        """
-        Returns the number of rejection sample used in the algorithm (see
-        :meth:`set_n_rejection_samples()`).
-        """
-        return self._n_rejection_samples
-
     def ask(self, n_points):
         """
         If in initial phase, then uses rejection sampling. Afterwards,
@@ -257,72 +216,6 @@ class MultiNestSampler(pints.NestedSampler):
                 self._proposed = self._transform_from_unit_cube(u[0])
 
         return self._proposed
-
-    def set_enlargement_factor(self, enlargement_factor=1.1):
-        """
-        Sets the factor (>1) by which to increase the minimal volume
-        ellipsoidal in rejection sampling.
-
-        A higher value means it is less likely that areas of high probability
-        mass will be missed. A low value means that rejection sampling is more
-        efficient.
-        """
-        if enlargement_factor <= 1:
-            raise ValueError('Enlargement factor must exceed 1.')
-        self._enlargement_factor = enlargement_factor
-
-    def set_n_rejection_samples(self, rejection_samples=200):
-        """
-        Sets the number of rejection samples to take, which will be assigned
-        weights and ultimately produce a set of posterior samples.
-        """
-        if rejection_samples < 0:
-            raise ValueError('Must have non-negative rejection samples.')
-        self._n_rejection_samples = rejection_samples
-
-    def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
-        """
-        Sets the frequency with which the minimum volume ellipsoid is
-        re-estimated as part of the nested rejection sampling algorithm.
-
-        A higher rate of this parameter means each sample will be more
-        efficiently produced, yet the cost of re-computing the ellipsoid
-        may mean it is better to update this not each iteration -- instead,
-        with gaps of ``ellipsoid_update_gap`` between each update. By default,
-        the ellipse is updated every 100 iterations.
-        """
-        ellipsoid_update_gap = int(ellipsoid_update_gap)
-        if ellipsoid_update_gap <= 1:
-            raise ValueError('Ellipsoid update gap must exceed 1.')
-        self._ellipsoid_update_gap = ellipsoid_update_gap
-
-    def _minimum_volume_ellipsoid(self, points, tol=0.0):
-        """
-        Finds an approximate minimum bounding ellipse in "center form":
-        ``(x-c).T * A * (x-c) = 1``.
-        """
-        cov = np.cov(np.transpose(points))
-        cov_inv = np.linalg.inv(cov)
-        c = np.mean(points, axis=0)
-        dist = np.zeros(len(points))
-        for i in range(len(points)):
-            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
-                                points[i] - c)
-        enlargement_factor = np.max(dist)
-        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
-        return A, c
-
-    def _ellipsoid_sample(self, enlargement_factor, A, centroid, n_points):
-        """
-        Draws from the enlarged bounding ellipsoid.
-        """
-        if n_points > 1:
-            return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A),
-                centroid, n_points)
-        else:
-            return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
         """
@@ -371,13 +264,134 @@ class MultiNestSampler(pints.NestedSampler):
 
         return pnts
 
-    def name(self):
-        """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Nested ellipsoidal sampler'
+    def ellipsoid_update_gap(self):
+        """
+        Returns the ellipsoid update gap used in the algorithm (see
+        :meth:`set_ellipsoid_update_gap()`).
+        """
+        return self._ellipsoid_update_gap
+
+    def _ellipsoid_sample(self, enlargement_factor, A, centroid, n_points):
+        """
+        Draws from the enlarged bounding ellipsoid.
+        """
+        if n_points > 1:
+            return self._draw_from_ellipsoid(
+                np.linalg.inv((1 / enlargement_factor) * A),
+                centroid, n_points)
+        else:
+            return self._draw_from_ellipsoid(
+                np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
+
+    def enlargement_factor(self):
+        """
+        Returns the enlargement factor used in the algorithm (see
+        :meth:`set_enlargement_factor()`).
+        """
+        return self._enlargement_factor
+
+    def _f_s_minimisation(iteration, u):
+        """
+        Runs ``F(S)`` minimisation and returns minimum bounding ellipsoid
+        covariance matrices, then centroids and value of ``F(S)`` attained.
+        """
+        assignments, A, N, V_E, V_S, c = (
+            f_s_minimisation_steps_1_to_3(iteration, u))
+        assignments_new, A_new_l, V_S_k_l, c_k_l, V_E_k_l = (
+            f_s_minimisation_lines_4_to_13(assignments, u, V_S, 1))
+        # lines 14 onwards
+        A_l_running = []
+        c_l_running = []
+        V_E_k_tot = np.sum(V_E_k_l)
+        if V_E_k_tot < V_E or V_E > 2 * V_S:
+            for i in range(0, 2):
+                u_new = u[np.where(assignments_new == i)]
+                A_l_running, c_l_running = (
+                    f_s_minimisation_lines_2_onwards(
+                        u_new, V_E_k_l[i], V_S_k_l[i], A_new_l[i], c_k_l[i],
+                        A_l_running, c_l_running))
+            V_E_k_l1 = []
+            for j in range(0, len(A_l_running)):
+                V_E_k_l1.append(ellipse_volume_calculator(A_l_running[j]))
+            return A_l_running, c_l_running, np.sum(V_E_k_l1) / V_S
+        else:
+            return [A], [c], V_E / V_S
+
+    def in_initial_phase(self):
+        """ See :meth:`pints.NestedSampler.in_initial_phase()`. """
+        return self._rejection_phase
+
+    def _minimum_volume_ellipsoid(self, points, tol=0.0):
+        """
+        Finds an approximate minimum bounding ellipse in "center form":
+        ``(x-c).T * A * (x-c) = 1``.
+        """
+        cov = np.cov(np.transpose(points))
+        cov_inv = np.linalg.inv(cov)
+        c = np.mean(points, axis=0)
+        dist = np.zeros(len(points))
+        for i in range(len(points)):
+            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
+                                points[i] - c)
+        enlargement_factor = np.max(dist)
+        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
+        return A, c
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 6
+
+    def n_rejection_samples(self):
+        """
+        Returns the number of rejection sample used in the algorithm (see
+        :meth:`set_n_rejection_samples()`).
+        """
+        return self._n_rejection_samples
+
+    def name(self):
+        """ See :meth:`pints.NestedSampler.name()`. """
+        return 'Nested ellipsoidal sampler'
+
+    def needs_initial_phase(self):
+        """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
+        return True
+
+    def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
+        """
+        Sets the frequency with which the minimum volume ellipsoid is
+        re-estimated as part of the nested rejection sampling algorithm.
+
+        A higher rate of this parameter means each sample will be more
+        efficiently produced, yet the cost of re-computing the ellipsoid
+        may mean it is better to update this not each iteration -- instead,
+        with gaps of ``ellipsoid_update_gap`` between each update. By default,
+        the ellipse is updated every 100 iterations.
+        """
+        ellipsoid_update_gap = int(ellipsoid_update_gap)
+        if ellipsoid_update_gap <= 1:
+            raise ValueError('Ellipsoid update gap must exceed 1.')
+        self._ellipsoid_update_gap = ellipsoid_update_gap
+
+    def set_enlargement_factor(self, enlargement_factor=1.1):
+        """
+        Sets the factor (>1) by which to increase the minimal volume
+        ellipsoidal in rejection sampling.
+
+        A higher value means it is less likely that areas of high probability
+        mass will be missed. A low value means that rejection sampling is more
+        efficient.
+        """
+        if enlargement_factor <= 1:
+            raise ValueError('Enlargement factor must exceed 1.')
+        self._enlargement_factor = enlargement_factor
+
+    def set_f_s_threshold(self, h=1.1):
+        """
+        Sets threshold for ``F_S`` when minimum bounding ellipsoids are refit.
+        """
+        if h <= 1:
+            raise ValueError('F_S threshold factor must exceed 1.')
+        self._f_s_threshold = h
 
     def set_hyper_parameters(self, x):
         """
@@ -393,6 +407,19 @@ class MultiNestSampler(pints.NestedSampler):
         self.set_ellipsoid_update_gap(x[3])
         self.set_dynamic_enlargement_factor(x[4])
         self.set_alpha(x[5])
+
+    def set_initial_phase(self, in_initial_phase):
+        """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
+        self._rejection_phase = bool(in_initial_phase)
+
+    def set_n_rejection_samples(self, rejection_samples=200):
+        """
+        Sets the number of rejection samples to take, which will be assigned
+        weights and ultimately produce a set of posterior samples.
+        """
+        if rejection_samples < 0:
+            raise ValueError('Must have non-negative rejection samples.')
+        self._n_rejection_samples = rejection_samples
 
     def _transform_to_unit_cube(self, theta):
         """
