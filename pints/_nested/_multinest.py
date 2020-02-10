@@ -58,18 +58,19 @@ class MultiNestSampler(pints.NestedSampler):
         V(S) = exp(-t/n_active_points); t is iteration and S is prior vol. left
         enlarge E so that V(E) = max(V(E), V(S))
         using k-means algorithm partition S into S_1 and S_2 containing n_1 and
-        n_2 points
+            n_2 points
         (A) find E_1 and E_2 (bounding ellipsoids) and their volumes V(E_1)
-        and V(E_2)
+            and V(E_2)
         enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
-        where V(S_k) = n_k V(S) / n_active_points
+            where V(S_k) = n_k V(S) / n_active_points
         for all active points:
             assign u_i to S_k such that h_k(u_i) = min(h_1(u_i), h_2(u_i))
         endfor
         where h_k(u_i) = (V(E_k) / V(S_k)) * d(u_i, S_k) and
-        d(u_i, S_k) = (u_i-mu_k)' (f_kC_k)^-1 (u_i-mu_k) is the Mahalanobis
-        distance from u_i to the centroid mu_k; f_k is the enlargement factor;
-        and C_k is the empirical covariance matrix of the subset S_k
+            d(u_i, S_k) = (u_i-mu_k)' (f_k C_k)^-1 (u_i-mu_k) is the
+            Mahalanobis distance from u_i to the centroid mu_k; f_k is a factor
+            that ensures it is a bounding ellipsoid; and C_k is the empirical
+            covariance matrix of the subset S_k
         if no point is reassigned, go to step (B) below; else go back to (A)
         (B) if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
             parition S into S_1 and S_2 and repeat algorithm for each subset
@@ -95,27 +96,44 @@ class MultiNestSampler(pints.NestedSampler):
 
         V(E_k) = max(V(E_k),
             exp(-(t + 1) / n_active_points) * n_k / n_active_points)
-        F(S) = (1 / V(S)) \sum_{k=1}^{K} V(E_k)
-        if F(S) > f_threshold:
+        F(S) = (1 / V(S)) sum_{k=1}^{K} V(E_k)
+        if F(S) > f_s_threshold:
             (E_1,..E_K), (S_1,...,S_K) = minimum_bounding_ellipsoid_set(u)
         endif
         L_min = min(L)
         indexmin = min_index(L)
-        theta* = ellipsoids_sample((E_1,..E_K), (S_1,...,S_K))
-        while p(theta*|X) < L_min:
-            theta* = ellipsoids_sample(enlargement_factor, A, c)
-        endwhile
+        theta* = ellipsoids_sample((E_1,..E_K), (S_1,...,S_K), L_min)
         X_t = exp(-t / n_active_points)
         w_t = X_t - X_t-1
         Z = Z + L_min * w_t
         theta_indexmin = theta*
         L_indexmin = p(theta*|X)
 
+    To sample from the (potentially) overlapping ellipsoids, we use the
+    following steps::
+
+        ellipsoids_sample((E_1,..E_K), (S_1,...,S_K), L_min):
+            choose ellipsoid k with probability:
+                p_k = V(E_k) / sum_{k=1}^{K} V(E_k)
+            theta* ~ ellipsoid_sample(E_k)
+            while p(theta*|X) < L_min:
+                theta* ~ ellipsoid_sample(E_k)
+            endwhile
+            n_e = number_of_ellipsoids(theta*)
+            v ~ uniform(0, 1)
+            if (1 / n_e) < v:
+                theta* = ellipsoids_sample((E_1,..E_K), (S_1,...,S_K), L_min)
+            endif
+            return theta*
+
+    The function ``ellipsoid_sample`` uniformly samples from within an
+    ellipsoid.
+
     At the end of iterations, there is a final ``Z`` increment::
 
         Z = Z + (1 / n_active_points) * (L_1 + L_2 + ..., + L_n_active_points)
 
-    The posterior samples are generated as described in [2] on page 849 by
+    The posterior samples are generated as described in [2]_ on page 849 by
     weighting each dropped sample in proportion to the volume of the
     posterior region it was sampled from. That is, the probability
     for drawing a given sample j is given by::
@@ -133,17 +151,16 @@ class MultiNestSampler(pints.NestedSampler):
             Feroz, F., M. P. Hobson, and M. Bridges.
             Monthly Notices of the Royal Astronomical Society 398.4 (2009):
             1601-1614.
+    .. [2] "Nested Sampling for General Bayesian Computation", John Skilling,
+           Bayesian Analysis 1:4 (2006).
+           https://doi.org/10.1214/06-BA127
     """
 
     def __init__(self, log_prior):
         super(MultiNestSampler, self).__init__(log_prior)
 
-        # Gaps between updating ellipsoid
-        self.set_ellipsoid_update_gap()
-
         # Enlargement factor for ellipsoid
         self.set_enlargement_factor()
-        self._f0 = self._enlargement_factor - 1
 
         # Initial phase of rejection sampling
         # Number of nested rejection samples before starting ellipsoidal
@@ -151,45 +168,27 @@ class MultiNestSampler(pints.NestedSampler):
         self.set_n_rejection_samples()
         self.set_initial_phase(True)
 
+        self.set_f_s_threshold()
+
         self._needs_sensitivities = False
 
-        # Dynamically vary the enlargement factor
-        self._dynamic_enlargement_factor = False
         self._alpha = 0.2
         self._A = None
         self._centroid = None
 
-    def set_dynamic_enlargement_factor(self, dynamic_enlargement_factor):
-        """
-        Sets dynamic enlargement factor
-        """
-        self._dynamic_enlargement_factor = bool(dynamic_enlargement_factor)
-
-    def dynamic_enlargement_factor(self):
-        """
-        Returns dynamic enlargement factor.
-        """
-        return self._dynamic_enlargement_factor
-
-    def set_alpha(self, alpha):
-        """
-        Sets alpha which controls rate of decline of enlargement factor
-        with iteration  (when `dynamic_enlargement_factor` is true).
-        """
-        if alpha < 0 or alpha > 1:
-            raise ValueError('alpha must be between 0 and 1.')
-        self._alpha = alpha
-
-    def alpha(self):
-        """
-        Returns alpha which controls rate of decline of enlargement factor
-        with iteration (when `dynamic_enlargement_factor` is true).
-        """
-        return self._alpha
+        self._prior_cdf = log_prior.cdf()
 
     def set_initial_phase(self, in_initial_phase):
         """ See :meth:`pints.NestedSampler.set_initial_phase()`. """
         self._rejection_phase = bool(in_initial_phase)
+
+    def set_f_s_threshold(self, h=1.1):
+        """
+        Sets threshold for ``F_S`` when minimum bounding ellipsoids are refit.
+        """
+        if h <= 1:
+            raise ValueError('F_S threshold factor must exceed 1.')
+        self._f_s_threshold = h
 
     def needs_initial_phase(self):
         """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
@@ -229,9 +228,9 @@ class MultiNestSampler(pints.NestedSampler):
         i = self._accept_count
         if (i + 1) % self._n_rejection_samples == 0:
             self._rejection_phase = False
-            # determine bounding ellipsoid
-            self._A, self._centroid = self._minimum_volume_ellipsoid(
-                self._m_active[:, :self._n_parameters]
+            # determine bounding ellipsoids
+            A, c, F_S = (
+                f_s_minimisation(i, self._m_active[:, :self._n_parameters])
             )
 
         if self._rejection_phase:
@@ -240,21 +239,13 @@ class MultiNestSampler(pints.NestedSampler):
             else:
                 self._proposed = self._log_prior.sample(n_points)[0]
         else:
-            # update bounding ellipsoid if sufficient samples taken
-            if ((i + 1 - self._n_rejection_samples)
-                    % self._ellipsoid_update_gap == 0):
-                self._A, self._centroid = self._minimum_volume_ellipsoid(
-                    self._m_active[:, :self._n_parameters])
-            # From Feroz-Hobson (2008) below eq. (14)
-            if self._dynamic_enlargement_factor:
-                f = (
-                    self._f0 *
-                    np.exp(-(i + 1) / self._n_active_points)**self._alpha
+            A, c, F_S = self._update_ellipsoid_volumes()
+            if F_S > self._f_s_threshold:
+                A, c, F_S = (
+                    f_s_minimisation(i, self._m_active[:, :self._n_parameters])
                 )
-                self._enlargement_factor = 1 + f
-            # propose by sampling within ellipsoid
-            self._proposed = self._ellipsoid_sample(
-                self._enlargement_factor, self._A, self._centroid, n_points)
+            self._proposed = 
+
         return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):
@@ -392,3 +383,10 @@ class MultiNestSampler(pints.NestedSampler):
         self.set_ellipsoid_update_gap(x[3])
         self.set_dynamic_enlargement_factor(x[4])
         self.set_alpha(x[5])
+
+    def transform_to_unit_cube(self, theta):
+        """
+        Transforms a given parameter sample to unit cube, using the prior
+        cumulative distribution function.
+        """
+        return self._prior_cdf(theta)

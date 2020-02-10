@@ -95,7 +95,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
 
         Z = Z + (1 / n_active_points) * (L_1 + L_2 + ..., + L_n_active_points)
 
-    The posterior samples are generated as described in [2] on page 849 by
+    The posterior samples are generated as described in [2]_ on page 849 by
     weighting each dropped sample in proportion to the volume of the
     posterior region it was sampled from. That is, the probability
     for drawing a given sample j is given by::
@@ -112,6 +112,9 @@ class NestedEllipsoidSampler(pints.NestedSampler):
            Pia Mukherjee, David Parkinson, Andrew R. Liddle, 2008.
            arXiv: arXiv:astro-ph/0508461v2 11 Jan 2006
            https://doi.org/10.1086/501068
+    .. [2] "Nested Sampling for General Bayesian Computation", John Skilling,
+           Bayesian Analysis 1:4 (2006).
+           https://doi.org/10.1214/06-BA127
     """
 
     def __init__(self, log_prior):
