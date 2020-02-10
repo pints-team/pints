@@ -11,6 +11,8 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import scipy.special
+from scipy.cluster.vq import vq
 
 
 class MultiNestSampler(pints.NestedSampler):
@@ -49,9 +51,9 @@ class MultiNestSampler(pints.NestedSampler):
 
         $u_i = \int_{-\infty}^{\theta_i} \pi(\theta') d\theta'.$
 
-    Fit transformed active points using minimum volume bounding ellipses (that
-    potentially overlap) as described by algorithm 1 in [1]_. Explicitly, this
-    involves the following steps (which we term
+    Fit transformed active points using minimum volume bounding ellipsoids
+    (that potentially overlap) as described by algorithm 1 in [1]_.
+    Explicitly, this involves the following steps (which we term
     ``minimum_bounding_ellipsoid_set`` in what follows)::
 
         calculate bounding ellipsoid E and its volume V(E)
@@ -175,13 +177,16 @@ class MultiNestSampler(pints.NestedSampler):
         self._alpha = 0.2
         self._A = None
         self._centroid = None
+        A_l = []
+        c_l = []
+        F_S = 1.0
 
         self._prior_cdf = log_prior.cdf()
 
     def ask(self, n_points):
         """
         If in initial phase, then uses rejection sampling. Afterwards,
-        points are drawn from within an ellipse (needs to be in uniform
+        points are drawn from within an ellipsoid (needs to be in uniform
         sampling regime).
         """
         i = self._accept_count
@@ -191,8 +196,8 @@ class MultiNestSampler(pints.NestedSampler):
             samples = self._m_active[:, :self._n_parameters]
             self._m_active_transformed = ([self._transform_to_unit_cube(x)
                                            for x in samples])
-            A, c, F_S = (
-                f_s_minimisation(i, self._m_active_transformed)
+            A_l, c_l, F_S = (
+                self._f_s_minimisation(i, self._m_active_transformed)
             )
 
         if self._rejection_phase:
@@ -201,21 +206,43 @@ class MultiNestSampler(pints.NestedSampler):
             else:
                 self._proposed = self._log_prior.sample(n_points)[0]
         else:
-            A, c, F_S = self._update_ellipsoid_volumes()
+            A_l, c_l, F_S = self._update_ellipsoid_volumes()
             if F_S > self._f_s_threshold:
                 samples = self._m_active[:, :self._n_parameters]
                 self._m_active_transformed = ([self._transform_to_unit_cube(x)
                                                for x in samples])
-                A, c, F_S = (
-                    f_s_minimisation(i, self._m_active[:, :self._n_parameters])
+                A_l, c_l, F_S = (
+                    self._f_s_minimisation(i, self._m_active_transformed)
                 )
-            u = self._sample_overlapping_ellipsoids(n_points, A, c)
+            u = self._sample_overlapping_ellipsoids(n_points, A_l, c_l)
             if n_points > 1:
                 self._proposed = [self._transform_from_unit_cube(x) for x in u]
             else:
                 self._proposed = self._transform_from_unit_cube(u[0])
 
         return self._proposed
+
+    def _comparison_enlargement(self, V_S, V_E, A):
+        """
+        Compares volume of prior space to that of ellispoid. If ``V_E`` exceeds
+        ``V_S``, returns ellipsoid covariance matrix; otherwise, enlarges
+        ellipsoid and returns new covariance matrix.
+        """
+        if V_E > V_S:
+            return A
+        else:
+            enlargement_factor = V_S / V_E
+            return self._enlarge_ellipsoid_A(enlargement_factor, A)
+
+    def _count_ellipsoids(self, x, A_l, c_l):
+        """
+        Count number of ellipsoids point ``x`` is found within.
+        """
+        n_e = 0
+        for i in range(len(A_l)):
+            if self._mahalanobis_distance(x, c_l[i], A_l[i]) <= 1:
+                n_e += 1
+        return n_e
 
     def _draw_from_ellipsoid(self, covmat, cent, npts):
         """
@@ -271,17 +298,30 @@ class MultiNestSampler(pints.NestedSampler):
         """
         return self._ellipsoid_update_gap
 
-    def _ellipsoid_sample(self, enlargement_factor, A, centroid, n_points):
+    def _ellipsoid_sample(self, A, centroid, n_points):
         """
-        Draws from the enlarged bounding ellipsoid.
+        Draws uniformly from the bounding ellipsoid.
         """
         if n_points > 1:
             return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A),
-                centroid, n_points)
+                np.linalg.inv(A), centroid, n_points)
         else:
             return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
+                np.linalg.inv(A), centroid, 1)[0]
+
+    def _ellipsoid_find_volume_calculator(self, a_index, u, assignments):
+        """ Finds volume of a particular ellipsoid. """
+        points = u[np.where(assignments == a_index)]
+        A, c = self._minimum_volume_ellipsoid(points)
+        return A, c, self._ellipsoid_volume_calculator(A)
+
+    def _ellipsoid_volume_calculator(self, A):
+        """ Find volume of ellipsoid given its covariance matrix. """
+        d = A.shape[0]
+        r = np.sqrt(1 / np.linalg.eigvals(A))
+        return (
+            (np.pi**(d / 2.0) / scipy.special.gamma((d / 2.0) + 1.0))
+            * np.prod(r))
 
     def enlargement_factor(self):
         """
@@ -290,15 +330,15 @@ class MultiNestSampler(pints.NestedSampler):
         """
         return self._enlargement_factor
 
-    def _f_s_minimisation(iteration, u):
+    def _f_s_minimisation(self, iteration, u):
         """
         Runs ``F(S)`` minimisation and returns minimum bounding ellipsoid
         covariance matrices, then centroids and value of ``F(S)`` attained.
         """
         assignments, A, N, V_E, V_S, c = (
-            f_s_minimisation_steps_1_to_3(iteration, u))
+            self._f_s_minimisation_steps_1_to_3(iteration, u))
         assignments_new, A_new_l, V_S_k_l, c_k_l, V_E_k_l = (
-            f_s_minimisation_lines_4_to_13(assignments, u, V_S, 1))
+            self._f_s_minimisation_lines_4_to_13(assignments, u, V_S, 1))
         # lines 14 onwards
         A_l_running = []
         c_l_running = []
@@ -307,23 +347,96 @@ class MultiNestSampler(pints.NestedSampler):
             for i in range(0, 2):
                 u_new = u[np.where(assignments_new == i)]
                 A_l_running, c_l_running = (
-                    f_s_minimisation_lines_2_onwards(
+                    self._f_s_minimisation_lines_2_onwards(
                         u_new, V_E_k_l[i], V_S_k_l[i], A_new_l[i], c_k_l[i],
                         A_l_running, c_l_running))
             V_E_k_l1 = []
             for j in range(0, len(A_l_running)):
-                V_E_k_l1.append(ellipse_volume_calculator(A_l_running[j]))
+                V_E_k_l1.append(
+                    self._ellipsoid_volume_calculator(A_l_running[j]))
             return A_l_running, c_l_running, np.sum(V_E_k_l1) / V_S
         else:
             return [A], [c], V_E / V_S
+
+    def _f_s_minimisation_steps_1_to_3(self, i, u):
+        """ Performs steps 1-3 in Algorithm 1 in [1]_."""
+        A, c, V_E = self._step_1(u)
+        N = len(u)
+        A, V_S = self._step_2(i, N, V_E, A)
+        V_E = self._ellipsoid_volume_calculator(A)
+        centers, assignments = self._step_3(u)
+        return assignments, A, N, V_E, V_S, c
+
+    def _f_s_minimisation_lines_2_onwards(self, u, V_E, V_S, A, c, A_l_running,
+                                          c_l_running):
+        A = self._comparison_enlargement(V_S, V_E, A)
+        V_E = self._ellipsoid_volume_calculator(A)
+        centers, assignments = self._step_3(u)
+        assignments_new, A_new_l, V_S_k_l, c_k_l, V_E_k_l = (
+            self._f_s_minimisation_lines_4_to_13(assignments, u, V_S, 1))
+        # lines 14 onwards
+        V_E_k_tot = np.sum(V_E_k_l)
+        if V_E_k_tot < V_E or V_E > 2 * V_S:
+            for i in range(0, 2):
+                u_new = u[np.where(assignments_new == i)]
+                # added this line to prevent too small clusters
+                if len(u_new) < 50:
+                    A_l_running.append(A)
+                    c_l_running.append(c)
+                    return A_l_running, c_l_running
+                A_l_running, c_l_running = (
+                    self._f_s_minimisation_lines_2_onwards(
+                        u_new, V_E_k_l[i], V_S_k_l[i], A_new_l[i], c_k_l[i],
+                        A_l_running, c_l_running))
+            return A_l_running, c_l_running
+        else:
+            A_l_running.append(A)
+            c_l_running.append(c)
+            return A_l_running, c_l_running
+
+    def f_s_minimisation_lines_4_to_13(self, assignments, u, V_S,
+                                       max_recursion):
+        """ Performs steps 4-13 in Algorithm 1 in [1]_."""
+        A_k_l, c_k_l, V_E_l = self._step_4(assignments, u)
+        A_new_l, V_S_k_l, V_E_k_l = self._step_5(assignments, V_E_l, A_k_l,
+                                                 V_S)
+        assignments_new = self._step_6(u, c_k_l, A_k_l, V_E_k_l, V_S_k_l)
+        assignments_new = assignments_new.astype(int)
+        # stops algorithmic oscillation (not in original algorithm)
+        if sum(assignments_new == 0) < 3 or sum(assignments_new == 1) < 3:
+            return assignments, A_k_l, V_S_k_l, c_k_l, V_E_k_l
+        if max_recursion > 10:
+            return assignments_new, A_new_l, V_S_k_l, c_k_l, V_E_k_l
+        if np.array_equal(assignments, assignments_new):
+            return assignments_new, A_new_l, V_S_k_l, c_k_l, V_E_k_l
+        else:
+            return self._f_s_minimisation_lines_4_to_13(assignments_new, u,
+                                                        V_S,
+                                                        max_recursion + 1)
+
+    def f_s_threshold(self):
+        """ Returns threshold for ``F_S``."""
+        return self._f_s_threshold
+
+    def _h_k_calculator(self, point, mean_k, A_k, V_E_k, V_S_k):
+        """ Calculates h_k as in eq. (23) in [1]_."""
+        d = self._mahalanobis_distance(point, mean_k, A_k)
+        return V_E_k * d / V_S_k
 
     def in_initial_phase(self):
         """ See :meth:`pints.NestedSampler.in_initial_phase()`. """
         return self._rejection_phase
 
+    def _mahalanobis_distance(point, mean, A):
+        """
+        Finds Mahalanobis distance between a point and the centroid of
+        of an ellipsoid.
+        """
+        return np.matmul(np.matmul(point - mean, A), point - mean)
+
     def _minimum_volume_ellipsoid(self, points, tol=0.0):
         """
-        Finds an approximate minimum bounding ellipse in "center form":
+        Finds an approximate minimum bounding ellipsoid in "center form":
         ``(x-c).T * A * (x-c) = 1``.
         """
         cov = np.cov(np.transpose(points))
@@ -356,6 +469,11 @@ class MultiNestSampler(pints.NestedSampler):
         """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
         return True
 
+    def _sample_overlapping_ellipsoids(self, n_points, A_l, c_l):
+        """
+        Uniformly sample from bounding ellipsoids accounting for overlap.
+        """
+
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
         """
         Sets the frequency with which the minimum volume ellipsoid is
@@ -365,7 +483,7 @@ class MultiNestSampler(pints.NestedSampler):
         efficiently produced, yet the cost of re-computing the ellipsoid
         may mean it is better to update this not each iteration -- instead,
         with gaps of ``ellipsoid_update_gap`` between each update. By default,
-        the ellipse is updated every 100 iterations.
+        the ellipsoid is updated every 100 iterations.
         """
         ellipsoid_update_gap = int(ellipsoid_update_gap)
         if ellipsoid_update_gap <= 1:
@@ -421,6 +539,66 @@ class MultiNestSampler(pints.NestedSampler):
             raise ValueError('Must have non-negative rejection samples.')
         self._n_rejection_samples = rejection_samples
 
+    def _step_1(self, u):
+        """ Performs step 1 in Algorithm 1 in [1]_."""
+        A, c = self._minimum_volume_ellipsoid(u)
+        V_E = self._ellipsoid_volume_calculator(A)
+        return A, c, V_E
+
+    def _step_2(self, i, N, V_E, A):
+        """ Performs step 2 in Algorithm 1 in [1]_."""
+        V_S = self._V_S_calculator(i, N)
+        return self._comparison_enlargement(V_S, V_E, A), V_S
+
+    def _step_3(u):
+        """ Performs step 3 in Algorithm 1 in [1]_."""
+        centers, assignment = vq.kmeans2(u, 2, minit="points")
+        while sum(assignment == 0) < 3 or sum(assignment == 1) < 3:
+            centers, assignment = (
+                vq.kmeans2(u, 2, minit="points"))
+        return centers, assignment
+
+    def _step_4(self, assignments, u):
+        """ Performs step 4 in Algorithm 1 in [1]_."""
+        A_l = [None] * 2
+        c_l = [None] * 2
+        V_E_l = [None] * 2
+        for i in range(0, 2):
+            A, c, V_E = self._ellipsoid_find_volume_calculator(i, u,
+                                                               assignments)
+            A_l[i] = A
+            c_l[i] = c
+            V_E_l[i] = V_E
+        return A_l, c_l, V_E_l
+
+    def _step_5(self, assignments, V_E_l, A_l, V_S):
+        """ Performs step 5 in Algorithm 1 in [1]_."""
+        A_new_l = [None] * 2
+        V_S_k_l = [None] * 2
+        V_E_k_l = [None] * 2
+        N = len(assignments)
+        for i in range(0, 2):
+            n = np.sum(assignments == i)
+            V_S_k_l[i] = self._V_S_k_calculator(n, N, V_S)
+            A_new_l[i] = (
+                self._comparison_enlargement(V_S_k_l[i], V_E_l[i], A_l[i]))
+            V_E_k_l[i] = self._ellipsoid_volume_calculator(A_new_l[i])
+        return A_new_l, V_S_k_l, V_E_k_l
+
+    def _step_6(self, points, c_k_l, A_k_l, V_E_l, V_S_k_l):
+        """ Performs step 6 in Algorithm 1 in [1]_."""
+        n = len(points)
+        assignments_new = np.zeros(n)
+        for i in range(0, n):
+            h_k_max = float('inf')
+            for j in range(0, 2):
+                h_k = self._h_k_calculator(points[i], c_k_l[j],
+                                           A_k_l[j], V_E_l[j], V_S_k_l[j])
+                if h_k < h_k_max:
+                    assignments_new[i] = j
+                    h_k_max = h_k
+        return assignments_new
+
     def _transform_to_unit_cube(self, theta):
         """
         Transforms a given parameter sample to unit cube, using the prior
@@ -434,3 +612,11 @@ class MultiNestSampler(pints.NestedSampler):
         inverse cumulative distribution function.
         """
         return self._prior_icdf(theta)
+
+    def _V_S_calculator(self, i, N):
+        """ Calculates prior volume remaining."""
+        return np.exp(-float(i) / float(N))
+
+    def _V_S_k_calculator(self, n_k, N, V_S):
+        """ Calculates prior volume remaining for set k."""
+        return n_k * V_S / N
