@@ -12,7 +12,7 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.special
-from scipy.cluster.vq import vq
+import scipy.cluster.vq
 import random
 
 
@@ -195,7 +195,7 @@ class MultinestSampler(pints.NestedSampler):
         self._F_S = 1.0
         self._f_s_minimisation_called = False
 
-        self._prior_cdf = log_prior.cdf()
+        # self._prior_cdf = log_prior.cdf()
 
     def ask(self, n_points):
         """
@@ -328,7 +328,7 @@ class MultinestSampler(pints.NestedSampler):
 
     def _ellipsoid_find_volume_calculator(self, a_index, u, assignments):
         """ Finds volume of a particular ellipsoid. """
-        points = u[np.where(assignments == a_index)]
+        points = np.array(u)[np.where(assignments == a_index)]
         A, c = self._minimum_volume_ellipsoid(points)
         return A, c, self._ellipsoid_volume_calculator(A)
 
@@ -340,7 +340,7 @@ class MultinestSampler(pints.NestedSampler):
             (np.pi**(d / 2.0) / scipy.special.gamma((d / 2.0) + 1.0))
             * np.prod(r))
 
-    def enlarge_ellipsoid_A(enlargement_factor, A):
+    def _enlarge_ellipsoid_A(self, enlargement_factor, A):
         """ Enlarges an ellipsoid via its covariance matrix."""
         return (1 / enlargement_factor) * A
 
@@ -418,8 +418,8 @@ class MultinestSampler(pints.NestedSampler):
             c_l_running.append(c)
             return A_l_running, c_l_running
 
-    def f_s_minimisation_lines_4_to_13(self, assignments, u, V_S,
-                                       max_recursion):
+    def _f_s_minimisation_lines_4_to_13(self, assignments, u, V_S,
+                                        max_recursion):
         """ Performs steps 4-13 in Algorithm 1 in [1]_."""
         A_k_l, c_k_l, V_E_l = self._step_4(assignments, u)
         A_new_l, V_S_k_l, V_E_k_l = self._step_5(assignments, V_E_l, A_k_l,
@@ -451,7 +451,7 @@ class MultinestSampler(pints.NestedSampler):
         """ See :meth:`pints.NestedSampler.in_initial_phase()`. """
         return self._rejection_phase
 
-    def _mahalanobis_distance(point, mean, A):
+    def _mahalanobis_distance(self, point, mean, A):
         """
         Finds Mahalanobis distance between a point and the centroid of
         of an ellipsoid.
@@ -514,7 +514,7 @@ class MultinestSampler(pints.NestedSampler):
         # calculate probabilities as per eq. (24)
         p = []
         V_tot = sum(V_E_l)
-        for i, V_E in V_E_l:
+        for V_E in V_E_l:
             p.append(V_E / V_tot)
         points = []
         for i in range(n_points):
@@ -595,12 +595,12 @@ class MultinestSampler(pints.NestedSampler):
         V_S = self._V_S_calculator(i, N)
         return self._comparison_enlargement(V_S, V_E, A), V_S
 
-    def _step_3(u):
+    def _step_3(self, u):
         """ Performs step 3 in Algorithm 1 in [1]_."""
-        centers, assignment = vq.kmeans2(u, 2, minit="points")
+        centers, assignment = scipy.cluster.vq.kmeans2(u, 2, minit="points")
         while sum(assignment == 0) < 3 or sum(assignment == 1) < 3:
             centers, assignment = (
-                vq.kmeans2(u, 2, minit="points"))
+                scipy.cluster.vq.kmeans2(u, 2, minit="points"))
         return centers, assignment
 
     def _step_4(self, assignments, u):
@@ -649,14 +649,14 @@ class MultinestSampler(pints.NestedSampler):
         Transforms a given parameter sample to unit cube, using the prior
         cumulative distribution function.
         """
-        return self._prior_cdf(theta)
+        return theta
 
     def _transform_from_unit_cube(self, theta):
         """
         Transforms a sample in unit cube, to parameter space using the prior
         inverse cumulative distribution function.
         """
-        return self._prior_icdf(theta)
+        return theta
 
     def _update_ellipsoid_volumes(self, t):
         """ Updates ellipsoids as defined in text on p.1605 of [1]_. """
@@ -674,6 +674,8 @@ class MultinestSampler(pints.NestedSampler):
             if enlargement_factor > 1:
                 self._V_E_l[i] = self._V_S_l[i]
                 A_l.append(self._enlarge_ellipsoid_A(enlargement_factor, A))
+            else:
+                A_l.append(A)
         F_S = sum(self._V_E_l) / V_S
         return A_l, F_S
 
