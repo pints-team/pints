@@ -183,6 +183,7 @@ class MultinestSampler(pints.NestedSampler):
 
         self.set_f_s_threshold()
 
+        self._multiple_ellipsoids = True
         self._needs_sensitivities = False
 
         self._alpha = 0.2
@@ -214,7 +215,6 @@ class MultinestSampler(pints.NestedSampler):
              self._V_S_l) = (
                 self._f_s_minimisation(i, self._m_active_transformed)
             )
-
         if self._rejection_phase:
             if n_points > 1:
                 self._proposed = self._log_prior.sample(n_points)
@@ -236,7 +236,7 @@ class MultinestSampler(pints.NestedSampler):
                 self._proposed = [self._transform_from_unit_cube(x) for x in u]
             else:
                 self._proposed = self._transform_from_unit_cube(u[0])
-
+        self._ellipsoid_count = len(self._A_l)
         return self._proposed
 
     def _comparison_enlargement(self, V_S, V_E, A):
@@ -368,17 +368,21 @@ class MultinestSampler(pints.NestedSampler):
         V_E_k_tot = np.sum(V_E_k_l)
         if V_E_k_tot < V_E or V_E > 2 * V_S:
             for i in range(0, 2):
-                u_new = u[np.where(assignments_new == i)]
+                u_new = np.array(u)[np.where(assignments_new == i)]
                 A_l_running, c_l_running = (
                     self._f_s_minimisation_lines_2_onwards(
                         u_new, V_E_k_l[i], V_S_k_l[i], A_new_l[i], c_k_l[i],
                         A_l_running, c_l_running))
             V_E_k_l1 = []
+            V_S_k_l1 = []
             for j in range(0, len(A_l_running)):
                 V_E_k_l1.append(
                     self._ellipsoid_volume_calculator(A_l_running[j]))
+                V_S_k_l1.append(
+                    self._V_S_k_calculator(np.sum(assignments_new == j),
+                                           N, V_S))
             return (A_l_running, c_l_running, np.sum(V_E_k_l1) / V_S,
-                    assignments_new, V_E_k_l1, V_S_k_l)
+                    assignments_new, V_E_k_l1, V_S_k_l1)
         else:
             return [A], [c], V_E / V_S, assignments_new, [V_E], [V_S]
 
@@ -402,7 +406,7 @@ class MultinestSampler(pints.NestedSampler):
         V_E_k_tot = np.sum(V_E_k_l)
         if V_E_k_tot < V_E or V_E > 2 * V_S:
             for i in range(0, 2):
-                u_new = u[np.where(assignments_new == i)]
+                u_new = np.array(u)[np.where(assignments_new == i)]
                 # added this line to prevent too small clusters
                 if len(u_new) < 50:
                     A_l_running.append(A)
@@ -487,7 +491,7 @@ class MultinestSampler(pints.NestedSampler):
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
-        return 'Nested ellipsoidal sampler'
+        return 'MultiNest sampler'
 
     def needs_initial_phase(self):
         """ See :meth:`pints.NestedSampler.needs_initial_phase()`. """
@@ -504,7 +508,7 @@ class MultinestSampler(pints.NestedSampler):
             if p_accept > np.random.uniform():
                 return test_point
             else:
-                return self._sample_overlapping_ellipsoid(k, A_l)
+                return self._sample_overlapping_ellipsoid(k, A_l, c_l)
         return test_point
 
     def _sample_overlapping_ellipsoids(self, n_points, A_l, c_l, V_E_l):
@@ -666,6 +670,7 @@ class MultinestSampler(pints.NestedSampler):
                 'been calculated')
         A_l = []
         V_S = np.exp(-t / self._n_active_points)
+
         for i, A in enumerate(self._A_l):
             # not 100% sure about this next line as not explicitly in text
             self._V_S_l[i] = (

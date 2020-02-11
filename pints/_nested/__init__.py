@@ -50,6 +50,10 @@ class NestedSampler(pints.TunableMethod):
         self._accept_count = 0
         self._n_evals = 0
 
+        # multiple ellipsoid indicator
+        self._multiple_ellipsoids = False
+        self._ellipsoid_count = 0
+
     def active_points(self):
         """
         Returns the active points from nested sampling run.
@@ -411,6 +415,8 @@ class NestedController(object):
             self._logger.add_time('Time m:s')
             self._logger.add_float('Delta_log(z)')
             self._logger.add_float('Acceptance rate')
+            if self._sampler._multiple_ellipsoids:
+                self._logger.add_float('Ellipsoid count')
 
     def _initial_points(self):
         """
@@ -427,7 +433,7 @@ class NestedController(object):
             if self._logging and i >= self._next_message:
                 # Log state
                 self._logger.log(0, self._sampler._n_evals,
-                                 self._timer.time(), self._diff, 1.0)
+                                 self._timer.time(), self._diff, 1.0, 0.0)
 
                 # Choose next logging point
                 if i > self._message_warm_up:
@@ -762,7 +768,8 @@ class NestedController(object):
                                  self._timer.time(), self._diff,
                                  float(self._sampler._accept_count /
                                        (self._sampler._n_evals -
-                                        self._sampler._n_active_points)))
+                                        self._sampler._n_active_points)),
+                                 self._sampler._ellipsoid_count)
 
                 # Choose next logging point
                 if self._i_message > self._message_warm_up:
