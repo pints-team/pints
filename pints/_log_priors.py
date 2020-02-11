@@ -139,6 +139,14 @@ class CauchyLogPrior(pints.LogPrior):
         _x_sq = (x[0] - self._location) * (x[0] - self._location)
         return -np.log(self._pi_sig + self._pi_on_sig * _x_sq)
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.cauchy.cdf(x, self._location, self._scale)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.cauchy.ppf(p, self._location, self._scale)
+
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
         return np.nan
@@ -192,6 +200,18 @@ class ComposedLogPrior(pints.LogPrior):
             output += prior(x[lo:hi])
         return output
 
+    def cdf(self, x):
+        """
+        See :meth:`LogPrior.cdf()`.
+
+        *This method only works if the underlying :class:`LogPrior` classes all
+        implement the optional method :class:`LogPDF.cdf().`.*
+        """
+        cdfs = []
+        for i, prior in enumerate(self._priors):
+            cdfs.append(prior.cdf(x[i]))
+        return cdfs
+
     def evaluateS1(self, x):
         """
         See :meth:`LogPDF.evaluateS1()`.
@@ -209,6 +229,18 @@ class ComposedLogPrior(pints.LogPrior):
             output += p
             doutput[lo:hi] = np.asarray(dp)
         return output, doutput
+
+    def icdf(self, x):
+        """
+        See :meth:`LogPrior.icdf()`.
+
+        *This method only works if the underlying :class:`LogPrior` classes all
+        implement the optional method :class:`LogPDF.icdf().`.*
+        """
+        icdfs = []
+        for i, prior in enumerate(self._priors):
+            icdfs.append(prior.icdf(x[i]))
+        return icdfs
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """

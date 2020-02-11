@@ -125,6 +125,11 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
 
+    def test_cauchy_cdf_icdf(self):
+        p = pints.CauchyLogPrior(-3, 2)
+        self.assertAlmostEqual(p.cdf(5.5), 0.92644155602673783)
+        self.assertAlmostEqual(p.icdf(0.1), -9.1553670743505062)
+
     def test_cauchy_prior_sampling(self):
         p1 = pints.CauchyLogPrior(0, 1000)
         self.assertEqual(len(p1.sample()), 1)
@@ -193,6 +198,21 @@ class TestPrior(unittest.TestCase):
 
         p = pints.ComposedLogPrior(p1, p2)
         self.assertTrue(np.array_equal(p.mean(), [10, 0]))
+
+    def test_composed_prior_cdf_icdf(self):
+        p1 = pints.GaussianLogPrior(-3, 7)
+        p2 = pints.UniformLogPrior(-4, -1)
+        p = pints.ComposedLogPrior(p1, p2)
+        ps = [p1, p2]
+        xs = [-10, -3]
+        cdfs = p.cdf(xs)
+        for i, cdf in enumerate(cdfs):
+            self.assertEqual(cdf, ps[i].cdf(xs[i]))
+
+        qs = [0.3, 0.75]
+        icdfs = p.icdf(qs)
+        for i, icdf in enumerate(icdfs):
+            self.assertEqual(icdf, ps[i].icdf(qs[i]))
 
     def test_composed_prior_sampling(self):
 
