@@ -480,10 +480,10 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
 
-    def half_cauchy_cdf_icdf(self):
+    def test_half_cauchy_cdf_icdf(self):
         p1 = pints.HalfCauchyLogPrior(-3, 4.5)
         self.assertAlmostEqual(p1.cdf(5.5), 0.504576372137924)
-        self.assertAlmostEqual(p1.icdf(5.5), 12.937927031237367)
+        self.assertAlmostEqual(p1.icdf(0.72), 12.937927031237367)
 
     def test_half_cauchy_prior_sampling(self):
         p1 = pints.HalfCauchyLogPrior(0, 1000)

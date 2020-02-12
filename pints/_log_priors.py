@@ -522,7 +522,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
         return (
             (self._arctan +
              np.arctan((-self._location + x) / self._scale) / np.pi) /
-            0.5 + self._arctan)
+            (0.5 + self._arctan))
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
@@ -543,15 +543,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # use inverse transform sampling
         us = np.random.uniform(0, 1, n)
-        return np.array([self._inverse_cdf(u) for u in us])
-
-    def _inverse_cdf(self, u):
-        """ Inverse CDF of half-Cauchy. """
-        arctan = self._arctan
-        return (
-            self._location + self._scale * (
-                np.tan(np.pi * (-arctan + u * (0.5 + arctan)))
-            ))
+        return np.array([self.icdf(u) for u in us])
 
 
 class InverseGammaLogPrior(pints.LogPrior):
