@@ -765,23 +765,23 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         # note the below does not do anything for index 1 since the first
         # distribution is just a simple marginal
         for j in range(1, self._n_parameters):
-                sigma = self._cov[0:(j + 1), 0:(j + 1)]
-                dims = sigma.shape
-                sigma11 = sigma[dims[0] - 1, dims[1] - 1]
-                sigma22 = sigma[0:(dims[0] - 1), 0:(dims[0] - 1)]
-                sigma12 = sigma[dims[0] - 1, 0:(dims[0] - 1)]
-                sigma21 = sigma[0:(dims[0] - 1), dims[0] - 1]
-                mean = self._mean[0:dims[0]]
-                mu2 = mean[0:(dims[0] - 1)]
-                mu1 = mean[dims[0] - 1]
-                sigma12_sigma22_inv = np.matmul(sigma12,
-                                                np.linalg.inv(sigma22))
-                sigma_bar = np.sqrt(sigma11 - np.matmul(sigma12_sigma22_inv,
-                                                        sigma21))
-                self._sigma12_sigma22_inv_l.append(sigma12_sigma22_inv)
-                self._sigma_bar_l.append(sigma_bar)
-                self._mu1.append(mu1)
-                self._mu2.append(mu2)
+            sigma = self._cov[0:(j + 1), 0:(j + 1)]
+            dims = sigma.shape
+            sigma11 = sigma[dims[0] - 1, dims[1] - 1]
+            sigma22 = sigma[0:(dims[0] - 1), 0:(dims[0] - 1)]
+            sigma12 = sigma[dims[0] - 1, 0:(dims[0] - 1)]
+            sigma21 = sigma[0:(dims[0] - 1), dims[0] - 1]
+            mean = self._mean[0:dims[0]]
+            mu2 = mean[0:(dims[0] - 1)]
+            mu1 = mean[dims[0] - 1]
+            sigma12_sigma22_inv = np.matmul(sigma12,
+                                            np.linalg.inv(sigma22))
+            sigma_bar = np.sqrt(sigma11 - np.matmul(sigma12_sigma22_inv,
+                                                    sigma21))
+            self._sigma12_sigma22_inv_l.append(sigma12_sigma22_inv)
+            self._sigma_bar_l.append(sigma_bar)
+            self._mu1.append(mu1)
+            self._mu2.append(mu2)
 
     def __call__(self, x):
         return np.log(
