@@ -1,5 +1,5 @@
 # Slow notebooks
-sampling-ellipsoidal-nested-rejection-sampling.ipynb
+automatic-differentiation-using-autograd.ipynb
 sampling-hamiltonian-mcmc.ipynb
 sampling-slice-doubling-mcmc.ipynb
 sampling-slice-overrelaxation-mcmc.ipynb

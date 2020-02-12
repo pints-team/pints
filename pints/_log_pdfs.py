@@ -57,7 +57,7 @@ class LogPrior(LogPDF):
     points ``theta`` in parameter space sums to 1), but this is not a strict
     requirement.
 
-    *Extends:* :class:`LogPDF`
+    Extends :class:`LogPDF`.
     """
     def sample(self, n=1):
         """
@@ -86,12 +86,12 @@ class ProblemLogLikelihood(LogPDF):
     indicate the likelihood of an observed (fixed) time-series given a
     particular parameter set (variable).
 
-    Arguments:
+    Extends :class:`LogPDF`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         The time-series problem this log-likelihood is defined for.
-
-    *Extends:* :class:`LogPDF`
     """
     def __init__(self, problem):
         super(ProblemLogLikelihood, self).__init__()
@@ -115,15 +115,15 @@ class LogPosterior(LogPDF):
     particular point in parameter space, the corresponding :class:`LogPDF` will
     not be evaluated.
 
-    Arguments:
+    Extends :class:`LogPDF`.
 
-    ``log_likelihood``
+    Parameters
+    ----------
+    log_likelihood
         A :class:`LogPDF`, defined on the same parameter space.
-    ``log_prior``
+    log_prior
         A :class:`LogPrior`, representing prior knowledge of the parameter
         space.
-
-    *Extends:* :class:`LogPDF`
     """
     def __init__(self, log_likelihood, log_prior):
         super(LogPosterior, self).__init__()
@@ -198,19 +198,21 @@ class SumOfIndependentLogPDFs(LogPDF):
         f(\\theta|D,E) &= \\frac{f(D, E|\\theta)f(\\theta)}{f(D, E)} \\\\
                        &= \\frac{f(D|\\theta)f(E|\\theta)f(\\theta)}{f(D, E)}
 
-    Arguments:
+    Extends :class:`LogPDF`.
 
-    ``log_likelihoods``
+    Parameters
+    ----------
+    log_likelihoods
         A sequence of :class:`LogPDF` objects.
 
-    Example::
+    Example
+    -------
+    ::
 
         log_likelihood = pints.SumOfIndependentLogPDFs([
             pints.GaussianLogLikelihood(problem1),
             pints.GaussianLogLikelihood(problem2),
         ])
-
-    *Extends:* :class:`LogPDF`
     """
     def __init__(self, log_likelihoods):
         super(SumOfIndependentLogPDFs, self).__init__()

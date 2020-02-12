@@ -41,12 +41,12 @@ class TestConstantModel(unittest.TestCase):
         # Output given for a MultiOutputProblem with 1 output
         model = pints.toy.ConstantModel(1, force_multi_output=True)
         times = [0, 1, 2, 10000]
-        parameters = [0]
+        parameters = [-2]
         values = model.simulate(parameters, times)
 
         # Check output shape (n_times, n_outputs) and values
         self.assertEqual(values.shape, (len(times), 1))
-        self.assertTrue(np.all(values == 0))
+        self.assertTrue(np.all(values == -2))
 
     def test_3d(self):
         """ Test three-dimensional case (MultiOutputProblem). """

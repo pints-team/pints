@@ -37,6 +37,7 @@ Contents
     nested_samplers/index
     noise_generators
     optimisers/index
+    noise_model_diagnostics
     toy/index
     utilities
 
@@ -55,7 +56,7 @@ Sampling
    - Metropolis-Hastings
    - Adaptive methods
 
-     - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
+     - :class:`AdaptiveCovarianceMC`, works on any :class:`LogPDF`.
 
    - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
    - Differential evolution methods
@@ -134,4 +135,3 @@ To find the appropriate type of Problem to use, see the overview below:
 
    - Single data set: Use a :class:`MultiOutputProblem` and any of the
      appropriate error measures or log-likelihoods
-
