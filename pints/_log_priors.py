@@ -778,8 +778,6 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
                                                 np.linalg.inv(sigma22))
                 sigma_bar = np.sqrt(sigma11 - np.matmul(sigma12_sigma22_inv,
                                                         sigma21))
-                if sigma_bar.size != 1:
-                    raise RuntimeError("Incorrect dimensions of sigma.")
                 self._sigma12_sigma22_inv_l.append(sigma12_sigma22_inv)
                 self._sigma_bar_l.append(sigma_bar)
                 self._mu1.append(mu1)
