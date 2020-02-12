@@ -647,6 +647,11 @@ class LogNormalLogPrior(pints.LogPrior):
             _shift = _lx - self._log_mean
             return self._offset - _lx - self._1on2sigsq * _shift * _shift
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.lognorm.cdf(x, scale=np.exp(self._log_mean),
+                                       s=self._scale)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         if x[0] < 0.0:
@@ -656,6 +661,11 @@ class LogNormalLogPrior(pints.LogPrior):
             _lx = np.log(_x)
             return self(x), np.asarray(
                 [self._m1onsigsq * np.divide(self._sigsqmmu + _lx, _x)])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.lognorm.ppf(p, scale=np.exp(self._log_mean),
+                                       s=self._scale)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """

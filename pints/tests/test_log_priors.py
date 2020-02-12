@@ -616,6 +616,11 @@ class TestPrior(unittest.TestCase):
             self.assertAlmostEqual(pints_val, scipy_val)
             self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
 
+    def test_log_normal_prior_cdf_icdf(self):
+        p1 = pints.LogNormalLogPrior(-3.5, 7.7)
+        self.assertAlmostEqual(p1.cdf(1.1), 0.6797226585187124)
+        self.assertAlmostEqual(p1.icdf(0.4), 0.004292986243507321)
+
     def test_log_normal_prior_sampling(self):
         mu = -1.234
         sig = 0.456
