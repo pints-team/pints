@@ -16,7 +16,7 @@ import numpy as np
 class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     r"""
     Implements Covariance-Adaptive Slice Sampling by Rank Shrinking,
-    as described in [1]. This is an adaptive multivariate method which uses
+    as described in [1]_. This is an adaptive multivariate method which uses
     additional points, called "crumbs", and rejected proposals to guide the
     selection of samples.
 
@@ -66,10 +66,13 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
     :math:`S = {x : z < log f(x)}`.
 
-    [1] Thompson, M. and Neal, R.M., 2010. Covariance-adaptive slice sampling.
-    arXiv preprint arXiv:1003.3201.
+    Extends :class:`SingleChainMCMC`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    References
+    ----------
+    .. [1] "MCMC using Hamiltonian dynamics". Radford M. Neal, Chapter 5 of the
+           Handbook of Markov Chain Monte Carlo by Steve Brooks, Andrew Gelman,
+           Galin Jones, and Xiao-Li Meng.
     """
 
     def __init__(self, x0, sigma0=None):
