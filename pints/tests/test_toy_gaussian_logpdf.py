@@ -121,8 +121,13 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(L, -4.337877066409345)
         self.assertTrue(np.array_equal(dL, [-2, -1]))
 
-        f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
-        L, dL = f2_2.evaluateS1([-2.5, 1.5])
+        f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [-0.5, 2]])
+        x = [-2.5, 1.5]
+        L, dL = f2_2.evaluateS1(x)
+        self.assertEqual(L, f2_2(x))
+        self.assertAlmostEqual(L, -4.0603030807704972)
+        self.assertAlmostEqual(dL[0], -0.73913043478260865)
+        self.assertAlmostEqual(dL[1], 0.56521739130434778)
 
         # 3d Gaussian
         f3 = pints.toy.GaussianLogPDF([1, 2, 3], [[2, 0, 0],
@@ -131,6 +136,24 @@ class TestGaussianLogPDF(unittest.TestCase):
         L, dL = f3.evaluateS1([0.5, -5, -3])
         self.assertAlmostEqual(L, -25.10903637045394)
         self.assertTrue(np.array_equal(dL, [0.25, 3.5, 3.0]))
+
+        # check incorrect covariance matrices being added
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF, [1, 2], [[1, 0.5],
+                                                             [-0.5, 2]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF,
+                          [1, 2, 3], [[1, 0.5, 0.6],
+                                      [0.5, 2, 0.75],
+                                      [0.59, 0.75, 3]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF, [1, 2], [[1, 2],
+                                                             [2, 2]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF,
+                          [1, 2, 3], [[1, 0.5, 3],
+                                      [0.5, 2, 0.75],
+                                      [0.59, 0.75, 3]])
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ from . import ToyModel
 
 class Hes1Model(pints.ForwardModel, ToyModel):
     """
-    HES1 Michaelis-Menten model of regulatory dynamics [1].
+    HES1 Michaelis-Menten model of regulatory dynamics [1]_.
 
     This model describes the expression level of the transcription factor
     Hes1.
@@ -33,23 +33,26 @@ class Hes1Model(pints.ForwardModel, ToyModel):
     the system. The input order of parameters of interest is
     :math:`\\{ P_0, \\nu, k_1, h \\}`.
 
-    [1] Silk, D., el al. 2011. Designing attractive models via automated
-    identification of chaotic and oscillatory dynamical regimes. Nature
-    communications, 2, p.489.
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    Arguments:
+    References
+    ----------
+    .. [1] Silk, D., el al. 2011. Designing attractive models via automated
+           identification of chaotic and oscillatory dynamical regimes. Nature
+           communications, 2, p.489.
+           https://doi.org/10.1038/ncomms1496
 
-    ``y0``
-        The initial condition of the observable and requires ``y0 >= 0``.
-    ``implicit_parameters``
+    Parameters
+    ----------
+    y0 : float
+        The initial condition of the observable. Requires ``y0 >= 0``.
+    implicit_parameters
         The implicit parameter of the model that is not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
-
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
-            self.set_initial_conditions(2.)
+            self.set_initial_conditions(2)
         else:
             self.set_initial_conditions(y0)
         if implicit_parameters is None:

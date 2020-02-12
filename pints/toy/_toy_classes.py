@@ -15,7 +15,7 @@ class ToyLogPDF(pints.LogPDF):
     """
     Abstract base class for toy distributions.
 
-    *Extends:* :class:`pints.LogPDF`.
+    Extends :class:`pints.LogPDF`.
     """
 
     def distance(self, samples):

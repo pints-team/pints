@@ -91,6 +91,36 @@ class TestLogistic(unittest.TestCase):
         self.assertEqual(dvdp[0, 1], 0)
         self.assertEqual(dvdp[-1, 1], 1.0)
 
+    def test_values(self):
+        # value based tests of logistic model
+        p0 = 0.5
+        model = pints.toy.LogisticModel(p0)
+        times = np.linspace(0, 20, 21)
+        parameters = [0.1, 12]
+        values = model.simulate(parameters, times)
+        self.assertEqual(values[0], p0)
+        self.assertEqual(values[1], 0.5501745273651227)
+        for i in range(len(times)):
+            self.assertEqual(values[i], (
+                parameters[1] / (1 + (parameters[1] / p0 - 1) *
+                                 np.exp(-parameters[0] * times[i]))))
+
+        # test sensitivities
+        values, sensitivities = model.simulateS1(parameters, times)
+        self.assertEqual(sensitivities[1, 0], 0.5249501931516697)
+        self.assertAlmostEqual(sensitivities[1, 1], 0.0002000343976730004,
+                               places=6)
+        for i in range(len(times)):
+            exp = np.exp(-parameters[0] * times[i])
+            exp1 = np.exp(parameters[0] * times[i])
+            k = parameters[1]
+            other = k / p0 - 1
+            c = exp1 - 1
+            self.assertAlmostEqual(exp * k * other * times[i] /
+                                   (1 + exp * other)**2, sensitivities[i, 0])
+            self.assertAlmostEqual(exp1 * c * p0**2 / (k + c * p0)**2,
+                                   sensitivities[i, 1])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -44,7 +44,7 @@ class TestPSO(unittest.TestCase):
         return r, x, s, b
 
     def test_unbounded(self):
-        """ Runs an optimisation without boundaries. """
+        # Runs an optimisation without boundaries.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         opt.set_log_to_screen(debug)
@@ -52,7 +52,7 @@ class TestPSO(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded(self):
-        """ Runs an optimisation with boundaries. """
+        # Runs an optimisation with boundaries.
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
@@ -72,7 +72,7 @@ class TestPSO(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded_and_sigma(self):
-        """ Runs an optimisation without boundaries and sigma. """
+        # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
@@ -80,7 +80,7 @@ class TestPSO(unittest.TestCase):
         #self.assertTrue(found_solution < 1e-3)
 
     def test_ask_tell(self):
-        """ Tests ask-and-tell related error handling. """
+        # Tests ask-and-tell related error handling.
         r, x, s, b = self.problem()
         opt = method(x)
 
@@ -93,7 +93,7 @@ class TestPSO(unittest.TestCase):
 
         # Tell before ask
         self.assertRaisesRegex(
-            Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
+            Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
 
         # Can't change settings while running
         opt.ask()
@@ -101,7 +101,7 @@ class TestPSO(unittest.TestCase):
             Exception, 'during run', opt.set_local_global_balance, 0.1)
 
     def test_logging(self):
-        """ Tests logging for PSO and other optimisers. """
+        # Tests logging for PSO and other optimisers.
         # Use a LogPDF to test if it shows the maximising message!
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
@@ -170,10 +170,9 @@ class TestPSO(unittest.TestCase):
             self.assertTrue(pattern.match(line))
 
     def test_suggest_population_size(self):
-        """
-        Tests the suggested_population_size() method for population based
-        optimisers.
-        """
+        # Tests the suggested_population_size() method for population based
+        # optimisers.
+
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt = opt.optimiser()
@@ -192,7 +191,7 @@ class TestPSO(unittest.TestCase):
         self.assertEquals(opt.suggested_population_size(11) % 11, 0)
 
     def test_creation(self):
-        """ Test optimiser creation. """
+
         # Test basic creation
         r, x, s, b = self.problem()
         method(x)
@@ -220,10 +219,8 @@ class TestPSO(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, 'have dimension 2', method, x, [3, 3, 3])
 
-    def test_optimisation_creation(self):
-        """
-        Test optimisation creation.
-        """
+    def test_controller_creation(self):
+
         # Test invalid dimensions
         r, x, s, b = self.problem()
         self.assertRaisesRegex(
@@ -232,12 +229,11 @@ class TestPSO(unittest.TestCase):
         # Test invalid method
         self.assertRaisesRegex(
             ValueError, 'subclass', pints.OptimisationController, r, [1, 1],
-            method=pints.AdaptiveCovarianceMCMC)
+            method=pints.HaarioBardenetACMC)
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the hyper-parameter interface for this optimiser.
-        """
+        # Tests the hyper-parameter interface for this optimiser.
+
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         m = opt.optimiser()
@@ -254,7 +250,7 @@ class TestPSO(unittest.TestCase):
             ValueError, 'in the range 0-1', m.set_hyper_parameters, [n, 1.5])
 
     def test_name(self):
-        """ Test the name() method. """
+        # Test the name() method.
         opt = method(np.array([0, 1.01]))
         self.assertIn('PSO', opt.name())
 

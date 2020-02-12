@@ -20,6 +20,11 @@ class Boundaries(object):
         """
         Returns ``True`` if and only if the given point in parameter space is
         within the boundaries.
+
+        Parameters
+        ----------
+        parameters
+            A point in parameter space
         """
         raise NotImplementedError
 
@@ -41,6 +46,11 @@ class Boundaries(object):
 
         *Note that implementing :meth:`sample()` is optional, so some boundary
         types may not support it.*
+
+        Parameters
+        ----------
+        n : int
+            The number of points to sample
         """
         raise NotImplementedError
 
@@ -52,14 +62,14 @@ class RectangularBoundaries(Boundaries):
     A point ``x`` is considered within the boundaries if (and only if)
     ``lower <= x < upper``.
 
-    Arguments:
+    Extends :class:`pints.Boundaries`.
 
-    ``lower``
+    Parameters
+    ----------
+    lower
         A 1d array of lower boundaries.
-    ``upper``
+    upper
         The corresponding upper boundaries
-
-    *Extends:* :class:`pints.Boundaries`.
     """
     def __init__(self, lower, upper):
         super(RectangularBoundaries, self).__init__()
@@ -124,18 +134,18 @@ class LogPDFBoundaries(Boundaries):
     Uses a :class:`pints.LogPDF` (e.g. a :class:`LogPrior`) as boundaries),
     accepting log-likelihoods above a given threshold as within bounds.
 
-    Arguments:
-
-    ``log_pdf``
-        A :class:`pints.LogPdf` to use.
-    ``threshold``
-        A threshold to determine whether a given log-prior value counts as
-        within bounds. Anything _above_ the threshold counts as within bounds.
-
     For a :class:`pints.LogPrior` based on :class:`pints.Boundaries`, see
     :class:`pints.UniformLogPrior`.
 
-    *Extends:* :class:`pints.Boundaries`.
+    Extends :class:`pints.Boundaries`.
+
+    Parameters
+    ----------
+    log_pdf
+        A :class:`pints.LogPdf` to use.
+    threshold
+        A threshold to determine whether a given log-prior value counts as
+        within bounds. Anything _above_ the threshold counts as within bounds.
     """
     def __init__(self, log_pdf, threshold=-float('inf')):
         super(LogPDFBoundaries, self).__init__()

@@ -14,32 +14,37 @@ import scipy.special
 
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming AR1 noise model
 
     .. math::
-        \log{L(\\theta, \sigma'|\\boldsymbol{x})} =
-            -\\frac{N}{2}\log{2\pi}
+        \log{L(\theta, \sigma'|\boldsymbol{x})} =
+            -\frac{N}{2}\log{2\pi}
             -N\log{\sigma'}
-            -\\frac{1}{2\sigma'^2}
-                \sum_{i=2}^N{(\\epsilon_i x_i - \\rho \\epsilon_{i-1} )^2}
+            -\frac{1}{2\sigma'^2}
+                \sum_{i=2}^N{(\epsilon_i x_i - \rho \epsilon_{i-1} )^2}
 
     where
 
     .. math::
-        \\epsilon_i = x_i - f_i(\\theta)
+        \epsilon_i = x_i - f_i(\theta)
 
-    and :math:`sigma' = \\frac{sigma} \\sqrt{1-\\rho^2}`.
+    and
 
+    .. math::
+        \sigma' = \sigma \sqrt{1-\rho^2}
 
-    Arguments:
+    .
 
-    ``problem``
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem two parameters are added (rho, sigma),
         for a multi-output problem 2 * ``n_outputs`` parameters are added.
 
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem):
@@ -68,39 +73,39 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming ARMA(1,1) noise model.
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
-            -\\frac{N}{2}\log{2\pi}
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+            -\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
-            -\\frac{1}{2\sigma^2}
-                \sum_{i=3}^N{(\\nu_i - \\phi \\nu_{i-1})^2}
+            -\frac{1}{2\sigma^2}
+                \sum_{i=3}^N{(\nu_i - \phi \nu_{i-1})^2}
 
     where
 
     .. math::
-        \\nu_i = \\epsilon_i - \\rho \\epsilon_{i-1}
-
-    and
-
-    ..math::
-        \\epsilon_i = x_i - f_i(\\theta)
+        \nu_i = \epsilon_i - \rho \epsilon_{i-1}
 
     and
 
     .. math::
-        \\sigma = \\sigma\\sqrt{\\frac{1-\\rho^2}{1 + 2\\phi\\rho + \\phi^2}}`
+        \epsilon_i = x_i - f_i(\theta)
 
-    Arguments:
+    and
 
-    ``problem``
+    .. math::
+        \sigma = \sigma\sqrt{\frac{1-\rho^2}{1 + 2\phi\rho + \phi^2}}`
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem three parameters are added (rho, phi, sigma),
         for a multi-output problem 3 * ``n_outputs`` parameters are added.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem):
@@ -180,17 +185,17 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     in optimisation routines should yield the same estimates as the full
     :class:`pints.GaussianLogLikelihood`.
 
-    Arguments:
+    Extends :class:`ProblemLogLikelihood`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
-    ``lower``
+    lower
         The lower limit on the uniform prior om `sigma`. Must be
         non-negative.
-    ``upper``
+    upper
         The upper limit on the uniform prior om `sigma`.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem, lower, upper):
@@ -275,27 +280,27 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
 
 
 class CauchyLogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming independent Cauchy-distributed noise
     at each time point, and adds one parameter: the scale (``sigma``).
 
     For a noise characterised by ``sigma``, the log-likelihood is of the form:
 
     .. math::
-        \log{L(\\theta, \sigma)} =
+        \log{L(\theta, \sigma)} =
               -N\log \pi - N\log \sigma
               -\sum_{i=1}^N\log(1 +
-            \\frac{x_i - f(\\theta)}{\sigma}^2)
+            \frac{x_i - f(\theta)}{\sigma}^2)
 
-    Arguments:
+    Extends :class:`ProblemLogLikelihood`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem one parameter is added ``sigma``, where
         ``sigma`` is scale, for a multi-output problem ``n_outputs``
         parameters are added.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem):
@@ -335,27 +340,26 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
 
 class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming independent Gaussian noise at each
     time point, using a known value for the standard deviation (sigma) of that
     noise:
 
     .. math::
-        \log{L(\\theta | \sigma,\\boldsymbol{x})} =
-            -\\frac{N}{2}\log{2\pi}
+        \log{L(\theta | \sigma,\boldsymbol{x})} =
+            -\frac{N}{2}\log{2\pi}
             -N\log{\sigma}
-            -\\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\\theta))^2}
+            -\frac{1}{2\sigma^2}\sum_{i=1}^N{(x_i - f_i(\theta))^2}
 
+    Extends :class:`ProblemLogLikelihood`.
 
-    Arguments:
-
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
-    ``sigma``
+    sigma
         The standard devation(s) of the noise. Can be a single value or a
         sequence of sigma's for each output. Must be greater than zero.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem, sigma):
@@ -412,7 +416,7 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
 
 
 class GaussianLogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming independent Gaussian noise at each
     time point, and adds a parameter representing the standard deviation
     (sigma) of the noise on each output.
@@ -420,18 +424,18 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     For a noise level of ``sigma``, the likelihood becomes:
 
     .. math::
-        L(\\theta, \sigma|\\boldsymbol{x})
-            = p(\\boldsymbol{x} | \\theta, \sigma)
-            = \prod_{j=1}^{n_t} \\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
-                -\\frac{(x_j - f_j(\\theta))^2}{2\sigma^2}\\right)
+        L(\theta, \sigma|\boldsymbol{x})
+            = p(\boldsymbol{x} | \theta, \sigma)
+            = \prod_{j=1}^{n_t} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(
+                -\frac{(x_j - f_j(\theta))^2}{2\sigma^2}\right)
 
     leading to a log likelihood of:
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
-            -\\frac{n_t}{2} \log{2\pi}
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+            -\frac{n_t}{2} \log{2\pi}
             -n_t \log{\sigma}
-            -\\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
+            -\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(x_j - f_j(\theta))^2}
 
     where ``n_t`` is the number of time points in the series, ``x_j`` is the
     sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
@@ -439,21 +443,21 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     For a system with ``n_o`` outputs, this becomes
 
     .. math::
-        \log{L(\\theta, \sigma|\\boldsymbol{x})} =
-            -\\frac{n_t n_o}{2}\log{2\pi}
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+            -\frac{n_t n_o}{2}\log{2\pi}
             -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
-            -\sum_{i=1}^{n_o}{\\left[
-                \\frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{(x_j - f_j(\\theta))^2}
-             \\right]}
+            -\sum_{i=1}^{n_o}{\left[
+                \frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{(x_j - f_j(\theta))^2}
+             \right]}
 
-    Arguments:
+    Extends :class:`ProblemLogLikelihood`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem a single parameter is added, for a multi-output
         problem ``n_outputs`` parameters are added.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem):
@@ -525,14 +529,14 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     The returned value will be ``(1 / n) * log_likelihood(x|problem)``, where
     ``n`` is the number of time samples multiplied by the number of outputs.
 
-    Arguments:
-
-    ``log_likelihood``
-        A :class:`ProblemLogLikelihood`.
-
     This log-likelihood operates on both single and multi-output problems.
 
-    *Extends:* :class:`ProblemLogLikelihood`
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    log_likelihood
+        A :class:`ProblemLogLikelihood` to scale.
     """
 
     def __init__(self, log_likelihood):
@@ -565,7 +569,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
 
 
 class StudentTLogLikelihood(pints.ProblemLogLikelihood):
-    """
+    r"""
     Calculates a log-likelihood assuming independent Student-t-distributed
     noise at each time point, and adds two parameters: one representing the
     degrees of freedom (``nu``), the other representing the scale (``sigma``).
@@ -574,23 +578,23 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     the form:
 
     .. math::
-        \log{L(\\theta, \\nu, \sigma|\\boldsymbol{x})} =
-            N\\frac{\\nu}{2}\log(\\nu) - N\log(\sigma) -
-            N\log B(\\nu/2, 1/2)
-            -\\frac{1+\\nu}{2}\sum_{i=1}^N\log(\\nu +
-            \\frac{x_i - f(\\theta)}{\sigma}^2)
+        \log{L(\theta, \nu, \sigma|\boldsymbol{x})} =
+            N\frac{\nu}{2}\log(\nu) - N\log(\sigma) -
+            N\log B(\nu/2, 1/2)
+            -\frac{1+\nu}{2}\sum_{i=1}^N\log(\nu +
+            \frac{x_i - f(\theta)}{\sigma}^2)
 
     where ``B(.,.)`` is a beta function.
 
-    Arguments:
+    Extends :class:`ProblemLogLikelihood`.
 
-    ``problem``
+    Parameters
+    ----------
+    problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem two parameters are added ``(nu, sigma)``, where
         ``nu`` is the degrees of freedom and ``sigma`` is scale, for a
         multi-output problem ``2 * n_outputs`` parameters are added.
-
-    *Extends:* :class:`ProblemLogLikelihood`
     """
 
     def __init__(self, problem):

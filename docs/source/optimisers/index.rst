@@ -15,6 +15,7 @@ or the :class:`OptimisationController` class.
 
     running
     base_classes
+    convenience_methods
     boundary_transformations
     cmaes
     nelder_mead
@@ -22,4 +23,3 @@ or the :class:`OptimisationController` class.
     snes
     xnes
 
-.. autoclass:: OptimisationController
