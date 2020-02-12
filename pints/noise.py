@@ -252,30 +252,63 @@ def multiplicative_gaussian(eta, sigma, f):
     .. math::
         v(t) \sim \text{ iid } N(0, \sigma)
 
-    The output magnitude ``f`` is required as an input to this function. The
-    noise terms are returned in an array of the same length as ``f``.
+    The output magnitudes ``f`` are required as an input to this function. The
+    noise terms are returned in an array of the same shape as ``f``.
 
     Parameters
     ----------
     ``eta``
         The exponential power controlling the rate at which the noise scales
-        with the output.
+        with the output. The argument must be either a float (for single-output
+        or multi-ouput noise) or an array_like of floats (for multi-output
+        noise only, with one value for each output).
     ``sigma``
         The baseline standard deviation of the noise (must be greater than
-        zero).
+        zero). The argument must be either a float (for single-output
+        or multi-ouput noise) or an array_like of floats (for multi-output
+        noise only, with one value for each output).
     ``f``
-        A numpy array giving the time-series for the output over time. (Only
-        single time-series are supported.)
+        A numpy array giving the time-series for the output over time. For
+        multiple outputs, the array should have shape ``(n_outputs, n_times)``.
     """
     import numpy as np
 
-    if sigma <= 0:
-        raise ValueError('Standard deviation must be greater than zero.')
-
     f = np.array(f)
 
-    if f.ndim > 1:
-        raise ValueError('Only single time-series are supported.')
+    # Check the dimensions of the inputs
+    if f.ndim > 2:
+        raise ValueError('f must have be of shape (n_outputs, n_times).')
 
-    e = np.random.normal(0, sigma, len(f))
+    if f.ndim == 2:
+        n_outputs = f.shape[0]
+    else:
+        n_outputs = 1
+
+    if not np.isscalar(eta):
+        eta = np.array(eta)
+        if eta.ndim > 1 or (eta.shape[0] != 1 and eta.shape[0] != n_outputs):
+            raise ValueError('eta must be a scalar or of shape (n_outputs,).')
+
+        # Reshape eta so that it broadcasts to f correctly
+        eta = eta[:, np.newaxis]
+
+    if not np.isscalar(sigma):
+        sigma = np.array(sigma)
+        if sigma.ndim > 1 or (sigma.shape[0] != 1 and
+                              sigma.shape[0] != n_outputs):
+            raise ValueError('sigma must be a scalar or of shape '
+                             '(n_outputs,).')
+
+        # Reshape sigma so that it broadcasts to f correctly
+        sigma = sigma[:, np.newaxis]
+
+    # Check the values of the inputs
+    if np.isscalar(sigma):
+        if sigma <= 0:
+            raise ValueError('Standard deviation must be greater than zero.')
+    else:
+        if np.any(sigma <= 0):
+            raise ValueError('Standard deviation must be greater than zero.')
+
+    e = np.random.normal(0, sigma, f.shape)
     return f ** eta * e
