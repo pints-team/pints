@@ -743,7 +743,34 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._cov))
 
-    def cdf(self, x):
+    def convert_from_unit_cube(self, u):
+        """
+        Converts a sample ``u`` uniformly drawn from the unit cube into one
+        drawn from the prior space, using
+        :meth:`MultivariateGaussianLogPrior.pseudo_icdf()`.
+        """
+        return self.pseudo_icdf(u)
+
+    def convert_to_unit_cube(self, x):
+        """
+        Converts a sample from the prior ``x`` to be drawn uniformly from the
+        unit cube using :meth:`MultivariateGaussianLogPrior.pseudo_cdf()`.
+        """
+        return self.pseudo_cdf(x)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return self._mean
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return self._n_parameters
+
+    def pseudo_cdf(self, x):
         r"""
         Calculates a pseudo-cdf for a multivariate Gaussian as described in
         Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
@@ -778,11 +805,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             u.append(scipy.stats.norm.cdf(x[i], mu, sigma))
         return u
 
-    def evaluateS1(self, x):
-        """ See :meth:`LogPDF.evaluateS1()`. """
-        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
-
-    def icdf(self, u):
+    def pseudo_icdf(self, u):
         r"""
         Calculates a pseudo-icdf for a multivariate Gaussian as described in
         Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
@@ -817,14 +840,6 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
                     (np.array(theta[0:i]) - self._mu2[i - 1]))
             theta.append(scipy.stats.norm.ppf(u[i], mu, sigma))
         return theta
-
-    def mean(self):
-        """ See :meth:`LogPrior.mean()`. """
-        return self._mean
-
-    def n_parameters(self):
-        """ See :meth:`LogPrior.n_parameters()`. """
-        return self._n_parameters
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.call()`. """

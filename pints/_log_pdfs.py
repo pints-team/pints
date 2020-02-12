@@ -65,6 +65,21 @@ class LogPrior(LogPDF):
         """
         raise NotImplementedError
 
+    def convert_from_unit_cube(self, u):
+        """
+        Converts a sample ``u`` uniformly drawn from the unit cube into one
+        drawn from the prior space, typically by transforming using
+        :meth:`LogPrior.icdf()`.
+        """
+        return self._icdf(u)
+
+    def convert_to_unit_cube(self, x):
+        """
+        Converts a sample from the prior ``x`` to be drawn uniformly from the
+        unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
+        """
+        return self._cdf(x)
+
     def icdf(self, p):
         """
         Returns the inverse cumulative density function at a cumulative
