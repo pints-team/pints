@@ -14,55 +14,57 @@ import numpy as np
 
 
 class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
-    """
+    r"""
     Implements Covariance-Adaptive Slice Sampling by Rank Shrinking,
-    as described in [1]. This is an adaptive multivariate method which
-    uses additional points, called "crumbs", and rejected proposals to
-    guide the selection of samples.
+    as described in [1]. This is an adaptive multivariate method which uses
+    additional points, called "crumbs", and rejected proposals to guide the
+    selection of samples.
 
     It generates samples by sampling uniformly from the volume underneath the
-    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
-    and by definying a Markov chain.
+    posterior (:math:`f`). It does so by introducing an auxiliary variable
+    (:math:`y`) and by definying a Markov chain.
 
     Sampling follows:
 
-    1. Calculate the pdf (``f(x_0)``) of the current sample (``x_0``).
-    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
-       horizontal “slice”: S = {x: y < f(x)}. Note that ``x_0`` is
-       always within S.
-    3. Draw the first crumb (``c_1``) from a Gaussian distribution with
-       mean ``x_0`` and precision matrix ``W_1``.
-    4. Draw a new point (``x_1``) from a Gaussian distribution with mean
-       ``c_1`` and precision matrix ``W_2``.
+    1. Calculate the pdf (:math:`f(x_0)`) of the current sample
+    :math:`(x_0)`.
+    2. Draw a real value (:math:`y`) uniformly from :math:`(0, f(x0))`,
+    defining a horizontal “slice”: :math:`S = {x: y < f(x)}`. Note that
+    :math:`x_0` is always within :math:`S`.
+    3. Draw the first crumb (:math:`c_1`) from a Gaussian distribution with
+    mean :math:`x_0` and precision matrix :math:`W_1`.
+    4. Draw a new point (:math:`x_1`) from a Gaussian distribution with mean
+    :math:`c_1` and precision matrix :math:`W_2`.
 
     New crumbs are drawn until a new proposal is accepted. In particular,
-    after sampling ``k`` crumbs from Gaussian distributions with mean ``x0``
-    and precision matrices (``W_1``, ..., ``W_k``), the distribution for the
-    ``k`` th proposal sample is:
+    after sampling :math:`k` crumbs from Gaussian distributions with mean
+    :math:`x0` and precision matrices :math:`(W_1, ..., W_k)`, the distribution
+    for the kth proposal sample is:
 
-    1. ``x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)``
+    .. math::
+        x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)
 
     where:
 
-    2. ``\Lambda_k = W_1 + ... + W_k``
-    3. ``\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)``
+    2. :math:`\Lambda_k = W_1 + ... + W_k`
+    3. :math:`\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)`
 
-    This method aims to conveniently modify the ``k + 1`` th proposal
-    distribution to increase the likelihood of sampling an acceptable point.
-    It does so by calculating the gradient (``g(f(x))``) of the unnormalised
-    posterior (``f(x)``) at the last rejected point (``x_k``).
-    It then sets the conditional variance of the ``k + 1`` proposal
-    distribution in the direction of the gradient ``g(f(x_k))`` to 0.
-    This is reasonable in that the gradient at a proposal probably points in
-    a direction where the variance is small, so it is more efficient to move
-    in a different direction.
+    This method aims to conveniently modify the (k+1)th proposal distribution
+    to increase the likelihood of sampling an acceptable point. It does so by
+    calculating the gradient (:math:`g(f(x))`) of the unnormalised posterior
+    (:math:`f(x)`) at the last rejected point (:math:`x_k`). It then sets the
+    conditional variance of the (k + 1)th proposal distribution in the
+    direction of the gradient :math:`g(f(x_k))` to 0. This is reasonable in
+    that the gradient at a proposal probably points in a direction where the
+    variance is small, so it is more efficient to move in a different
+    direction.
 
     To avoid floating-point underflow, we implement the suggestion advanced
     in [1] pp.712. We use the log pdf of the un-normalised posterior
-    (``log f(x)``) instead of ``f(x)``. In doing so, we use an
-    auxiliary variable ``z = log(y) - \epsilon``, where
-    ``\epsilon \sim \text{exp}(1)`` and define the slice as
-    S = {x : z < log f(x)}.
+    (:math:`\text{log} f(x)`) instead of :math:`f(x)`. In doing so, we use an
+    auxiliary variable :math:`z = log(y) - \epsilon`, where
+    :math:`\epsilon \sim \text{exp}(1)` and define the slice as
+    :math:`S = {x : z < log f(x)}`.
 
     [1] Thompson, M. and Neal, R.M., 2010. Covariance-adaptive slice sampling.
     arXiv preprint arXiv:1003.3201.

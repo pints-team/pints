@@ -203,9 +203,10 @@ from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
-from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
 from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
+
 
 
 #
