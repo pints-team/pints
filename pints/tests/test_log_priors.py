@@ -313,6 +313,11 @@ class TestPrior(unittest.TestCase):
         mean = np.mean(samples1).item()
         self.assertTrue(3. < mean < 4.)
 
+    def test_exponential_prior_cdf_icdf(self):
+        p = pints.ExponentialLogPrior(4.11)
+        self.assertAlmostEqual(p.cdf(0.25), 0.6420994054523911)
+        self.assertAlmostEqual(p.icdf(0.25), 0.06999563806612673)
+
     def test_gamma_prior(self):
 
         # Test input parameters
@@ -367,6 +372,11 @@ class TestPrior(unittest.TestCase):
         p3 = pints.GammaLogPrior(1.0, 1.0)
         calc_val, calc_deriv = p3.evaluateS1([0.0])
         self.assertAlmostEqual(calc_deriv[0], -1.)
+
+    def test_gamma_prior_cdf_icdf(self):
+        p1 = pints.GammaLogPrior(5.0, 0.25)
+        self.assertAlmostEqual(p1.cdf(3.4), 0.0018346464720195225)
+        self.assertAlmostEqual(p1.icdf(0.05), 7.880598272238121)
 
     def test_gamma_prior_sampling(self):
         # Just returns samples from the numpy gamma distribution, but because
@@ -470,6 +480,11 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
 
+    def half_cauchy_cdf_icdf(self):
+        p1 = pints.HalfCauchyLogPrior(-3, 4.5)
+        self.assertAlmostEqual(p1.cdf(5.5), 0.504576372137924)
+        self.assertAlmostEqual(p1.icdf(5.5), 12.937927031237367)
+
     def test_half_cauchy_prior_sampling(self):
         p1 = pints.HalfCauchyLogPrior(0, 1000)
         self.assertEqual(len(p1.sample()), 1)
@@ -540,6 +555,11 @@ class TestPrior(unittest.TestCase):
             self.assertAlmostEqual(calc_val,
                                    scipy.stats.invgamma.logpdf(point, a=a2,
                                                                scale=b2))
+
+    def test_inverse_gamma_prior_cdf_icdf(self):
+        p1 = pints.InverseGammaLogPrior(5.0, 4.0)
+        self.assertAlmostEqual(p1.cdf(3.5), 0.9936442962684809)
+        self.assertAlmostEqual(p1.icdf(0.55), 0.9078166853539807)
 
     def test_inverse_gamma_prior_sampling(self):
         p1 = pints.InverseGammaLogPrior(5.0, 40.)
@@ -821,6 +841,11 @@ class TestPrior(unittest.TestCase):
         for point, deriv in zip(points, p2_derivs):
             calc_val, calc_deriv = p2.evaluateS1([point])
             self.assertAlmostEqual(calc_deriv[0], deriv)
+
+    def test_student_t_prior_cdf_icdf(self):
+        p1 = pints.StudentTLogPrior(4.4, 1.3, 3.0)
+        self.assertAlmostEqual(p1.cdf(-3.4), 0.09239348006197708)
+        self.assertAlmostEqual(p1.icdf(0.67), 6.060216885291837)
 
     def test_student_t_prior_sampling(self):
         p1 = pints.StudentTLogPrior(0, 1000, 1)

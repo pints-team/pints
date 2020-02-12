@@ -298,6 +298,14 @@ class ExponentialLogPrior(pints.LogPrior):
         else:
             return self._log_scale - self._rate * x[0]
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.expon.cdf(x, loc=0, scale=1.0 / self._rate)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.expon.ppf(p, loc=0, scale=1.0 / self._rate)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
@@ -364,6 +372,10 @@ class GammaLogPrior(pints.LogPrior):
             return self._constant + scipy.special.xlogy(self._a - 1.,
                                                         x[0]) - self._b * x[0]
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.gamma.cdf(x, a=self._a, loc=0, scale=1.0 / self._b)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
@@ -379,6 +391,10 @@ class GammaLogPrior(pints.LogPrior):
         else:
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.gamma.ppf(p, a=self._a, loc=0, scale=1.0 / self._b)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -501,6 +517,19 @@ class HalfCauchyLogPrior(pints.LogPrior):
         else:
             return -np.inf
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return (
+            (self._arctan +
+             np.arctan((-self._location + x) / self._scale) / np.pi) /
+            0.5 + self._arctan)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return (self._location +
+                self._scale * np.tan(np.pi * (-self._arctan +
+                                              p * (0.5 + self._arctan))))
+
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
         return np.nan
@@ -570,6 +599,14 @@ class InverseGammaLogPrior(pints.LogPrior):
             return -np.inf
         else:
             return self._k - self._ap1 * np.log(_x) - np.divide(self._b, _x)
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.invgamma.cdf(x, a=self._a, loc=0, scale=self._b)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.invgamma.ppf(p, a=self._a, loc=0, scale=self._b)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -933,6 +970,14 @@ class StudentTLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._samp_const + self._first * (self._log_df - np.log(
             self._df + self._1_sig_sq * (x[0] - self._location) ** 2))
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.t.cdf(x, self._df, self._location, self._scale)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.t.ppf(p, self._df, self._location, self._scale)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
