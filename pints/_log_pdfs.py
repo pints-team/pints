@@ -71,14 +71,14 @@ class LogPrior(LogPDF):
         drawn from the prior space, typically by transforming using
         :meth:`LogPrior.icdf()`.
         """
-        return self._icdf(u)
+        return self.icdf(u)
 
     def convert_to_unit_cube(self, x):
         """
         Converts a sample from the prior ``x`` to be drawn uniformly from the
         unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
         """
-        return self._cdf(x)
+        return self.cdf(x)
 
     def icdf(self, p):
         """

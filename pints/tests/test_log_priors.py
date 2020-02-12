@@ -208,11 +208,17 @@ class TestPrior(unittest.TestCase):
         cdfs = p.cdf(xs)
         for i, cdf in enumerate(cdfs):
             self.assertEqual(cdf, ps[i].cdf(xs[i]))
+        cdfs1 = p.convert_to_unit_cube(xs)
+        self.assertEqual(cdfs[0], cdfs1[0])
+        self.assertEqual(cdfs[1], cdfs1[1])
 
         qs = [0.3, 0.75]
         icdfs = p.icdf(qs)
         for i, icdf in enumerate(icdfs):
             self.assertEqual(icdf, ps[i].icdf(qs[i]))
+        icdfs1 = p.convert_from_unit_cube(qs)
+        self.assertEqual(icdfs[0], icdfs1[0])
+        self.assertEqual(icdfs[1], icdfs1[1])
 
     def test_composed_prior_sampling(self):
 
@@ -688,18 +694,30 @@ class TestPrior(unittest.TestCase):
     def test_multivariate_normal_cdf_icdf(self):
         # 1d
         log_prior = pints.MultivariateGaussianLogPrior([-5], [[3]])
-        self.assertAlmostEqual(log_prior.cdf([-4])[0], 0.71814856917461345)
-        self.assertAlmostEqual(log_prior.icdf([0.3])[0], -5.9082883315254957)
+        self.assertAlmostEqual(log_prior.pseudo_cdf([-4])[0],
+                               0.71814856917461345)
+        self.assertEqual(log_prior.convert_to_unit_cube([-5])[0],
+                         log_prior.pseudo_cdf([-5])[0])
+        self.assertAlmostEqual(log_prior.pseudo_icdf([0.3])[0],
+                               -5.9082883315254957)
+        self.assertEqual(log_prior.convert_from_unit_cube([0.1])[0],
+                         log_prior.pseudo_icdf([0.1])[0])
 
         # 3d
         log_prior = pints.MultivariateGaussianLogPrior(
             mean=[-3, 4, 7],
             cov=[[4, 0.5, 0.1], [0.5, 9, -0.1], [0.1, -0.1, 16]])
-        cdfs = log_prior.cdf([1, 10.5, 3])
+        xs = [1, 10.5, 3]
+        cdfs = log_prior.pseudo_cdf(xs)
+        cdfs1 = log_prior.convert_to_unit_cube(xs)
+        self.assertTrue(np.array_equal(cdfs, cdfs1))
         self.assertAlmostEqual(cdfs[0], 0.97724986805182079)
         self.assertAlmostEqual(cdfs[1], 0.9776241475778038)
         self.assertAlmostEqual(cdfs[2], 0.15714957928562118)
-        icdfs = log_prior.icdf([0.1, 0.05, 0.95])
+        qs = [0.1, 0.05, 0.95]
+        icdfs = log_prior.pseudo_icdf(qs)
+        icdfs1 = log_prior.convert_from_unit_cube(qs)
+        self.assertTrue(np.array_equal(icdfs, icdfs1))
         self.assertAlmostEqual(icdfs[0], -5.5631031310892007)
         self.assertAlmostEqual(icdfs[1], -1.2377850302165871)
         self.assertAlmostEqual(icdfs[2], 13.576429013793563)
