@@ -685,6 +685,25 @@ class TestPrior(unittest.TestCase):
         self.assertTrue(len(dy), 1)
         self.assertEqual(dy[0], 0)
 
+    def test_multivariate_normal_cdf_icdf(self):
+        # 1d
+        log_prior = pints.MultivariateGaussianLogPrior([-5], [[3]])
+        self.assertAlmostEqual(log_prior.cdf([-4])[0], 0.71814856917461345)
+        self.assertAlmostEqual(log_prior.icdf([0.3])[0], -5.9082883315254957)
+
+        # 3d
+        log_prior = pints.MultivariateGaussianLogPrior(
+            mean=[-3, 4, 7],
+            cov=[[4, 0.5, 0.1], [0.5, 9, -0.1], [0.1, -0.1, 16]])
+        cdfs = log_prior.cdf([1, 10.5, 3])
+        self.assertAlmostEqual(cdfs[0], 0.97724986805182079)
+        self.assertAlmostEqual(cdfs[1], 0.9776241475778038)
+        self.assertAlmostEqual(cdfs[2], 0.15714957928562118)
+        icdfs = log_prior.icdf([0.1, 0.05, 0.95])
+        self.assertAlmostEqual(icdfs[0], -5.5631031310892007)
+        self.assertAlmostEqual(icdfs[1], -1.2377850302165871)
+        self.assertAlmostEqual(icdfs[2], 13.576429013793563)
+
     def test_multivariate_normal_sampling(self):
         d = 1
         mean = 2

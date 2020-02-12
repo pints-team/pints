@@ -710,14 +710,113 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         self._n_parameters = mean.shape[0]
         self._cov_inverse = np.linalg.inv(self._cov)
 
+        # Factors needed for pseudo-cdf calculation
+        self._sigma12_sigma22_inv_l = []
+        self._sigma_bar_l = []
+        self._mu1 = []
+        self._mu2 = []
+        # note the below does not do anything for index 1 since the first
+        # distribution is just a simple marginal
+        for j in range(1, self._n_parameters):
+                sigma = self._cov[0:(j + 1), 0:(j + 1)]
+                dims = sigma.shape
+                sigma11 = sigma[dims[0] - 1, dims[1] - 1]
+                sigma22 = sigma[0:(dims[0] - 1), 0:(dims[0] - 1)]
+                sigma12 = sigma[dims[0] - 1, 0:(dims[0] - 1)]
+                sigma21 = sigma[0:(dims[0] - 1), dims[0] - 1]
+                mean = self._mean[0:dims[0]]
+                mu2 = mean[0:(dims[0] - 1)]
+                mu1 = mean[dims[0] - 1]
+                sigma12_sigma22_inv = np.matmul(sigma12,
+                                                np.linalg.inv(sigma22))
+                sigma_bar = np.sqrt(sigma11 - np.matmul(sigma12_sigma22_inv,
+                                                        sigma21))
+                if sigma_bar.size != 1:
+                    raise RuntimeError("Incorrect dimensions of sigma.")
+                self._sigma12_sigma22_inv_l.append(sigma12_sigma22_inv)
+                self._sigma_bar_l.append(sigma_bar)
+                self._mu1.append(mu1)
+                self._mu2.append(mu2)
+
     def __call__(self, x):
         return np.log(
             scipy.stats.multivariate_normal.pdf(
                 x, mean=self._mean, cov=self._cov))
 
+    def cdf(self, x):
+        r"""
+        Calculates a pseudo-cdf for a multivariate Gaussian as described in
+        Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
+        Gaussian is factorised:
+
+        .. math::
+            \pi(\theta_1,\theta_2,...,\theta_d) = \pi_1(\theta_1)
+                \pi_2(\theta_2|\theta_1)...
+                \pi_d(\theta_d|\theta_1, \theta_2,...,\theta_{d-1})
+
+        The cdfs we report are then the values for each individual conditional.
+        For example, for the second component, we calculate:
+
+        .. math::
+            u_2 = \int_{-\infty}^{\theta_2} \pi_2(\theta_2|\theta_1)d\theta_2
+
+        So that we return a vector of cdfs (u_1,u_2,...,u_d).
+        Note that, this function is mainly to facilitate Multinest sampling
+        since the distribution (u_1,u_2,...,u_d) is uniform within the unit
+        cube.
+        """
+        u = []
+        for i in range(self._n_parameters):
+            if i == 0:
+                mu = self._mean[0]
+                sigma = np.sqrt(self._cov[0, 0])
+            else:
+                sigma = self._sigma_bar_l[i - 1]
+                mu = self._mu1[i - 1] + np.matmul(
+                    self._sigma12_sigma22_inv_l[i - 1],
+                    (x[0:i] - self._mu2[i - 1]))
+            u.append(scipy.stats.norm.cdf(x[i], mu, sigma))
+        return u
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         return self(x), -np.matmul(self._cov_inverse, x - self._mean)
+
+    def icdf(self, u):
+        r"""
+        Calculates a pseudo-icdf for a multivariate Gaussian as described in
+        Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
+        Gaussian is factorised:
+
+        .. math::
+            \pi(\theta_1,\theta_2,...,\theta_d) = \pi_1(\theta_1)
+                \pi_2(\theta_2|\theta_1)...
+                \pi_d(\theta_d|\theta_1, \theta_2,...,\theta_{d-1})
+
+        The icdfs we report are then the values for each individual
+        conditional. For example, for the second component, we calculate the
+        theta_2 value that satisfies:
+
+        .. math::
+            u_2 = \int_{-\infty}^{\theta_2} \pi_2(\theta_2|\theta_1)d\theta_2
+
+        So that we return a vector of icdfs (theta_1,theta_2,...,theta_d)
+        Note that, this function is mainly to facilitate Multinest sampling
+        since the distribution (u_1,u_2,...,u_d) is uniform within the unit
+        cube.
+        """
+        theta = []
+        for i in range(self._n_parameters):
+            if i == 0:
+                mu = self._mean[0]
+                sigma = np.sqrt(self._cov[0, 0])
+            else:
+                sigma = self._sigma_bar_l[i - 1]
+                mu = self._mu1[i - 1] + np.matmul(
+                    self._sigma12_sigma22_inv_l[i - 1],
+                    (np.array(theta[0:i]) - self._mu2[i - 1]))
+            theta.append(scipy.stats.norm.ppf(u[i], mu, sigma))
+        return theta
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
