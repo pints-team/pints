@@ -861,7 +861,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         if n_samples == 1:
             return cdfs[0]
         else:
-            return cdfs[1]
+            return cdfs
 
     def pseudo_icdf(self, ps):
         r"""
@@ -918,7 +918,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         if n_samples == 1:
             return icdfs[0]
         else:
-            return icdfs[1]
+            return icdfs
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.call()`. """
@@ -1122,7 +1122,7 @@ class UniformLogPrior(pints.LogPrior):
         if n_samples == 1:
             return cdfs[0]
         else:
-            return cdfs[1]
+            return cdfs
 
     def icdf(self, ps):
         """ See :meth:`LogPrior.icdf()`. """
@@ -1157,7 +1157,7 @@ class UniformLogPrior(pints.LogPrior):
         if n_samples == 1:
             return icdfs[0]
         else:
-            return icdfs[1]
+            return icdfs
 
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """
