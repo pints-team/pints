@@ -15,30 +15,32 @@ from . import ToyLogPDF
 
 
 class AnnulusLogPDF(ToyLogPDF):
-    """
+    r"""
     Toy distribution based on a d-dimensional distribution of the form
 
     .. math::
         f(x|r_0, \sigma) \propto e^{-(|x|-r_0)^2 / {2\sigma^2}}
 
-    where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm.
+    where :math:`x` is a d-dimensional real, and :math:`|x|` is the Euclidean
+    norm.
 
     This distribution is roughly a one-dimensional Gaussian distribution
-    centred on ``r0``, that is smeared over the surface of a hypersphere of the
-    same radius. In two dimensions, the density looks like a circular annulus.
+    centred on :math:`r0`, that is smeared over the surface of a hypersphere of
+    the same radius. In two dimensions, the density looks like a circular
+    annulus.
 
-    Arguments:
+    Extends :class:`pints.LogPDF`.
 
-    ``dimensions``
+    Parameters
+    ----------
+    dimensions : int
         The dimensionality of the space.
-    ``r0``
+    r0 : float
         The radius of the hypersphere and is approximately the mean normed
         distance from the origin.
-    ``sigma``
+    sigma : float
         The width of the annulus; approximately the standard deviation
         of normed distance.
-
-    *Extends:* :class:`pints.LogPDF`.
     """
     def __init__(self, dimensions=2, r0=10, sigma=1):
         if dimensions < 1:

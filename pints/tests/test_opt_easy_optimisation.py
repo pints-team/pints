@@ -64,9 +64,9 @@ class TestEasyOptimisation(unittest.TestCase):
         p0 = [0, 0, 0]
         np.random.seed(1)
         popt = pints.curve_fit(g, x, y, p0, method=pints.XNES)
-        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
-        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
-        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
+        self.assertAlmostEqual(popt[0], 9, places=1)
+        self.assertAlmostEqual(popt[1], 3, places=1)
+        self.assertAlmostEqual(popt[2], 1, places=1)
 
         # Function must be callable
         self.assertRaisesRegexp(
@@ -76,9 +76,9 @@ class TestEasyOptimisation(unittest.TestCase):
         pints.curve_fit(
             g, x, y, p0,
             boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
-        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
-        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
-        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
+        self.assertAlmostEqual(popt[0], 9, places=1)
+        self.assertAlmostEqual(popt[1], 3, places=1)
+        self.assertAlmostEqual(popt[2], 1, places=1)
 
         # Test with parallelisation
         pints.curve_fit(g, x, y, p0, parallel=True, method=pints.XNES)

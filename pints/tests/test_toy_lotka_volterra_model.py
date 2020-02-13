@@ -40,6 +40,21 @@ class TestLotkaVolterraModel(unittest.TestCase):
         self.assertRaises(ValueError, pints.toy.LotkaVolterraModel, [0, -1])
         self.assertRaises(ValueError, pints.toy.LotkaVolterraModel, [-1, -1])
 
+    def test_values(self):
+        # value-based tests of solution
+        x0 = 3
+        y0 = 5
+        model = pints.toy.LotkaVolterraModel([x0, y0])
+        parameters = [1, 2, 2, 0.5]
+        times = np.linspace(0, 5, 101)
+        values = model.simulate(parameters, times)
+        self.assertEqual(values[0, 0], x0)
+        self.assertEqual(values[0, 1], y0)
+        self.assertAlmostEqual(values[1, 0], 1.929494, places=6)
+        self.assertAlmostEqual(values[1, 1], 4.806542, places=6)
+        self.assertAlmostEqual(values[100, 0], 1.277762, places=6)
+        self.assertAlmostEqual(values[100, 1], 0.000529, places=6)
+
 
 if __name__ == '__main__':
     unittest.main()

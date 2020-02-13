@@ -19,16 +19,16 @@ class GaussianLogPDF(ToyLogPDF):
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``mean``
+    Parameters
+    ----------
+    mean
         The distribution mean (specified as a vector).
-    ``sigma``
+    sigma
         The distribution's covariance matrix. Can be given as either a matrix
         or a vector (in which case ``diag(sigma)`` will be used. Should be
         symmetric and positive-semidefinite.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
 
     def __init__(self, mean=[0, 0], sigma=[1, 1]):
@@ -45,7 +45,13 @@ class GaussianLogPDF(ToyLogPDF):
             raise ValueError(
                 'Sigma must have same dimension as mean, or be a square matrix'
                 ' with the same dimension as the mean.')
-
+        # check whether covariance matrix is positive semidefinite
+        if not np.all(np.linalg.eigvals(sigma) >= 0):
+            raise ValueError('Covariance matrix must be positive ' +
+                             'semidefinite.')
+        # check if matrix is symmetric
+        if not np.allclose(sigma, sigma.T, atol=1e-8):
+            raise ValueError('Covariance matrix must be symmetric.')
         # Store
         self._mean = mean
         self._sigma = sigma

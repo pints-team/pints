@@ -16,25 +16,31 @@ from . import ToyModel
 
 class LogisticModel(pints.ForwardModelS1, ToyModel):
 
-    """
-    Logistic model of population growth [1].
+    r"""
+    Logistic model of population growth [1]_.
 
     .. math::
-        f(t) &= \\frac{k}{1+(k/p_0 - 1)*\exp(-r t)} \\\\
-        \\frac{\\partial f(t)}{\\partial r} &=
-                                \\frac{k t (k / p_0 - 1) \exp(-r t)}
-                                      {((k/p_0-1) \exp(-r t) + 1)^2} \\\\
-        \\frac{\\partial f(t)}{ \\partial k} &= \\frac{k \exp(-r t)}
+        f(t) &= \frac{k}{1+(k/p_0 - 1) \exp(-r t)} \\
+        \frac{\partial f(t)}{\partial r} &=
+                                \frac{k t (k / p_0 - 1) \exp(-r t)}
+                                      {((k/p_0-1) \exp(-r t) + 1)^2} \\
+        \frac{\partial f(t)}{ \partial k} &= -\frac{k \exp(-r t)}
                                           {p_0 ((k/p_0-1)\exp(-r t) + 1)^2}
-                                         + \\frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
+                                         + \frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
 
-    Has two parameters: A growth rate :math:`r` and a carrying capacity
-    :math:`k`. The initial population size :math:`f(0) = p_0` can be set using
-    the (optional) named constructor arg ``initial_population_size``
+    Has two model parameters: A growth rate :math:`r` and a carrying capacity
+    :math:`k`.
 
-    [1] https://en.wikipedia.org/wiki/Population_growth
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Parameters
+    ----------
+    initial_population_size : int
+        Sets the initial population size :math:`f(0)`.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Population_growth
     """
 
     def __init__(self, initial_population_size=2):

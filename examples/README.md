@@ -37,12 +37,14 @@ relevant code.
 ## Sampling
 
 ### MCMC without gradients
-- [Adaptive Covariance MCMC](./sampling-adaptive-covariance-mcmc.ipynb)
 - [Differential Evolution MCMC](./sampling-differential-evolution-mcmc.ipynb)
 - [DREAM MCMC](./sampling-dream-mcmc.ipynb)
 - [Emcee Hammer](./sampling-emcee-hammer.ipynb)
+- [Haario Adaptive Covariance MCMC](./sampling-adaptive-covariance-haario.ipynb)
+- [Haario-Bardenet Adaptive Covariance MCMC](./sampling-adaptive-covariance-haario-bardenet.ipynb)
 - [Metropolis Random Walk MCMC](./sampling-metropolis-mcmc.ipynb)
 - [Population MCMC](./sampling-population-mcmc.ipynb)
+- [Rao-Blackwell Adaptive Covariance MCMC](./sampling-adaptive-covariance-rao-blackwell.ipynb)
 - [Slice Sampling: Stepout MCMC](./sampling-slice-stepout-mcmc.ipynb)
 - [Slice Sampling: Doubling MCMC](./sampling-slice-doubling-mcmc.ipynb)
 - [Slice Sampling: Overrelaxation MCMC](./sampling-slice-overrelaxation-mcmc.ipynb)
@@ -50,10 +52,13 @@ relevant code.
 ### MCMC with gradients
 - [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Monomial-Gamma HMC MCMC](./sampling-monomial-gamma-hmc.ipynb)
+- [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
 - [Slice Sampling: Covariance Matching MCMC](./sampling-slice-covariance-matching-mcmc.ipynb)
 
 ### Nested sampling
-- [Ellipsoidal nested rejection sampling](./sampling-ellipsoidal-nested-rejection-sampling.ipynb)
+- [Ellipsoidal nested sampling](./sampling-nested-ellipsoidal-sampling.ipynb)
+- [Rejection nested sampling](./sampling-nested-rejection-sampling.ipynb)
 
 ### Analysing sampling results
 - [Autocorrelation](./plot-mcmc-autocorrelation.ipynb)
@@ -84,7 +89,9 @@ relevant code.
 - [Logistic growth model](./toy-model-logistic.ipynb)
 - [Lotka-Volterra predator-prey model](./toy-model-lotka-volterra.ipynb)
 - [Repressilator model](./toy-model-repressilator.ipynb)
+- [Simple Harmonic Oscillator model](./toy-model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy-model-sir.ipynb)
+- [Stochastic Degradation model](./toy-model-stochastic-degradation.ipynb)
 
 ### Distributions
 - [Annulus](./toy-distribution-annulus.ipynb)
@@ -99,5 +106,6 @@ relevant code.
 
 ## Miscellaneous
 
+- [Automatic differentiation using autograd](./automatic-differentiation-using-autograd.ipynb)
+- [Evaluating noise models using autocorrelation plots of the residuals](./plot-residuals-autocorrelation.ipynb)
 - [The example shown on the landing page](./readme-example.ipynb)
-

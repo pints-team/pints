@@ -13,14 +13,20 @@ interface, that can be used to sample from an unknown
 
     running
     base_classes
-    adaptive_covariance_mcmc
+    adaptive_covariance_mc
     differential_evolution_mcmc
     dream_mcmc
     emcee_hammer_mcmc
+    haario_ac_mcmc
+    haario_bardenet_ac_mcmc
     hamiltonian_mcmc
     mala_mcmc
     metropolis_mcmc
+    monomial_gamma_hamiltonian_mcmc
     population_mcmc
+    rao_blackwell_ac_mcmc
+    relativistic_mcmc
+    slice_covariance_matching
     slice_doubling_mcmc
     slice_stepout_mcmc
-    slice_covariance_matching
+    summary_mcmc

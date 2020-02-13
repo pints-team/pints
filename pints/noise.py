@@ -3,7 +3,7 @@
 # which can then be added to model output to simulate experimental data.
 #
 # This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
+#  Copyright (c) 2017-2019, University of Oxford.
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
@@ -13,16 +13,18 @@ def independent(sigma, shape):
     """
     Generates independent Gaussian noise (``iid N(0,sigma)``).
 
-    Arguments:
-
-    ``sigma``
-        The standard deviation of the noise. Must be zero or greater.
-    ``shape``
-        A tuple (or sequence) defining the shape of the generated noise array.
-
     Returns an array of shape ``shape`` containing the generated noise.
 
-    Example::
+    Parameters
+    ----------
+    sigma
+        The standard deviation of the noise. Must be zero or greater.
+    shape
+        A tuple (or sequence) defining the shape of the generated noise array.
+
+    Example
+    -------
+    ::
 
         values = model.simulate(parameters, times)
         noisy_values = values + noise.independent(5, values.shape)
@@ -44,19 +46,21 @@ def ar1(rho, sigma, n):
 
     where ``v(t) ~ iid N(0, sigma * sqrt(1 - rho^2))``.
 
-    Arguments:
-
-    ``rho``
-        Determines the magnitude of the noise (see above). Must be less than 1.
-    ``sigma``
-        The marginal standard deviation of ``e(t)`` (see above).
-        Must be greater than zero.
-    ``n``
-        The length of the signal. (Only single time-series are supported.)
-
     Returns an array of length ``n`` containing the generated noise.
 
-    Example::
+    Parameters
+    ----------
+    rho
+        Determines the magnitude of the noise (see above). Must be less than 1.
+    sigma
+        The marginal standard deviation of ``e(t)`` (see above).
+        Must be greater than zero.
+    n
+        The length of the signal. (Only single time-series are supported.)
+
+    Example
+    -------
+    ::
 
         values = model.simulate(parameters, times)
         noisy_values = values + noise.ar1(0.9, 5, len(values))
@@ -126,18 +130,22 @@ def ar1_unity(rho, sigma, n):
     Generates noise following an autoregressive order 1 process of mean 1, that
     a vector of simulated data can be multiplied with.
 
-    ``rho``
-        Determines the magnitude of the noise (see :meth:`ar1`). Must be less
-        than or equal to 1.
-    ``sigma``
-        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
-        Must be greater than 0.
-    ``n``
-        The length of the signal. (Only single time-series are supported.)
-
     Returns an array of length ``n`` containing the generated noise.
 
-    Example::
+    Parameters
+    ----------
+    rho
+        Determines the magnitude of the noise (see :meth:`ar1`). Must be less
+        than or equal to 1.
+    sigma
+        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
+        Must be greater than 0.
+    n : int
+        The length of the signal. (Only single time-series are supported.)
+
+    Example
+    -------
+    ::
 
         values = model.simulate(parameters, times)
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
@@ -175,21 +183,25 @@ def arma11_unity(rho, theta, sigma, n):
     and
     ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
 
-    ``rho``
-        Determines the long-run persistence of the noise (see :meth:`ar1`).
-        Must be less than 1.
-    ``theta``
-        Contributes to first order autocorrelation of noise. Must be less
-        than 1.
-    ``sigma``
-        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
-        Must be greater than 0.
-    ``n``
-        The length of the signal. (Only single time-series are supported.)
-
     Returns an array of length ``n`` containing the generated noise.
 
-    Example::
+    Parameters
+    ----------
+    rho
+        Determines the long-run persistence of the noise (see :meth:`ar1`).
+        Must be less than 1.
+    theta
+        Contributes to first order autocorrelation of noise. Must be less
+        than 1.
+    sigma
+        The marginal standard deviation of ``e(t)`` (see :meth:`ar`).
+        Must be greater than 0.
+    n : int
+        The length of the signal. (Only single time-series are supported.)
+
+    Example
+    -------
+    ::
 
         values = model.simulate(parameters, times)
         noisy_values = values * noise.ar1_unity(0.5, 0.8, len(values))
