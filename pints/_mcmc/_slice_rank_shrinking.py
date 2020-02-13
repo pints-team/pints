@@ -29,7 +29,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     1. Calculate the pdf (:math:`f(x_0)`) of the current sample
     :math:`(x_0)`.
     2. Draw a real value (:math:`y`) uniformly from :math:`(0, f(x0))`,
-    defining a horizontal “slice”: :math:`S = {x: y < f(x)}`. Note that
+    defining a horizontal "slice": :math:`S = {x: y < f(x)}`. Note that
     :math:`x_0` is always within :math:`S`.
     3. Draw the first crumb (:math:`c_1`) from a Gaussian distribution with
     mean :math:`x_0` and precision matrix :math:`W_1`.
@@ -101,7 +101,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
     # Function returning the component of vector v orthogonal to the
     # columns of J
-    def P(self, J, v):
+    def _p(self, J, v):
         if not J.any():
             return np.array(v, copy=True)
         else:
@@ -139,10 +139,10 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
         # Sample trial point
         z = np.random.multivariate_normal(mean, cov)
-        self._proposed = self._current + (self.P(self._J,
-                                                 self._c_bar +
-                                                 self._sigma_c /
-                                                 np.sqrt(self._k) * z))
+        self._proposed = self._current + (self._p(self._J,
+                                                  self._c_bar +
+                                                  self._sigma_c /
+                                                  np.sqrt(self._k) * z))
 
         # Send trial point for checks
         self._ready_for_tell = True
@@ -257,7 +257,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
             if self._J.shape[1] < self._n_parameters - 1:
                 # Gradient projection
-                g_star = self.P(self._J, grad)
+                g_star = self._p(self._J, grad)
 
                 # To prevent meaningless adaptations, we only perform this
                 # operation when the angle between the gradient and its
