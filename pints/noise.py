@@ -260,12 +260,12 @@ def multiplicative_gaussian(eta, sigma, f):
     ``eta``
         The exponential power controlling the rate at which the noise scales
         with the output. The argument must be either a float (for single-output
-        or multi-ouput noise) or an array_like of floats (for multi-output
+        or multi-output noise) or an array_like of floats (for multi-output
         noise only, with one value for each output).
     ``sigma``
         The baseline standard deviation of the noise (must be greater than
         zero). The argument must be either a float (for single-output
-        or multi-ouput noise) or an array_like of floats (for multi-output
+        or multi-output noise) or an array_like of floats (for multi-output
         noise only, with one value for each output).
     ``f``
         A numpy array giving the time-series for the output over time. For
