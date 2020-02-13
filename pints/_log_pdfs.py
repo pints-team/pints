@@ -61,29 +61,37 @@ class LogPrior(LogPDF):
     """
     def cdf(self, x):
         """
-        Returns the cumulative density function at a point ``x``.
+        Returns the cumulative density function at point(s) ``x``.
+        Note: ``x`` must be of same dimensions as those of prior parameter
+        space.
         """
         raise NotImplementedError
 
     def convert_from_unit_cube(self, u):
         """
-        Converts a sample ``u`` uniformly drawn from the unit cube into one
+        Converts samples ``u`` uniformly drawn from the unit cube into those
         drawn from the prior space, typically by transforming using
         :meth:`LogPrior.icdf()`.
+        Note: ``u`` must be of same dimensions as those of prior parameter
+        space.
         """
         return self.icdf(u)
 
     def convert_to_unit_cube(self, x):
         """
-        Converts a sample from the prior ``x`` to be drawn uniformly from the
+        Converts samples from the prior ``x`` to be drawn uniformly from the
         unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
+        Note: ``x`` must be of same dimensions as those of prior parameter
+        space.
         """
         return self.cdf(x)
 
     def icdf(self, p):
         """
-        Returns the inverse cumulative density function at a cumulative
-        probability ``p``.
+        Returns the inverse cumulative density function at cumulative
+        probability/probabilities ``p``.
+        Note: ``p`` must be of same dimensions as those of prior parameter
+        space.
         """
         raise NotImplementedError
 

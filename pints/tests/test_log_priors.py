@@ -735,17 +735,27 @@ class TestPrior(unittest.TestCase):
         xs = [1, 10.5, 3]
         cdfs = log_prior.pseudo_cdf(xs)
         cdfs1 = log_prior.convert_to_unit_cube(xs)
+        cdfs2 = log_prior.convert_to_unit_cube(np.array(xs))
         self.assertTrue(np.array_equal(cdfs, cdfs1))
+        self.assertTrue(np.array_equal(cdfs, cdfs2))
         self.assertAlmostEqual(cdfs[0], 0.97724986805182079)
         self.assertAlmostEqual(cdfs[1], 0.9776241475778038)
         self.assertAlmostEqual(cdfs[2], 0.15714957928562118)
         qs = [0.1, 0.05, 0.95]
         icdfs = log_prior.pseudo_icdf(qs)
         icdfs1 = log_prior.convert_from_unit_cube(qs)
+        icdfs2 = log_prior.convert_from_unit_cube(np.array(qs))
         self.assertTrue(np.array_equal(icdfs, icdfs1))
+        self.assertTrue(np.array_equal(icdfs, icdfs2))
         self.assertAlmostEqual(icdfs[0], -5.5631031310892007)
         self.assertAlmostEqual(icdfs[1], -1.2377850302165871)
         self.assertAlmostEqual(icdfs[2], 13.576429013793563)
+
+        # test errors
+        self.assertRaises(ValueError, log_prior.pseudo_cdf, [[1, 2]])
+        self.assertRaises(ValueError, log_prior.pseudo_cdf, [[1, 2, 3, 4]])
+        self.assertRaises(ValueError, log_prior.pseudo_icdf, [[1, 2]])
+        self.assertRaises(ValueError, log_prior.pseudo_icdf, [[1, 2, 3, 4]])
 
     def test_multivariate_normal_sampling(self):
         d = 1
@@ -972,6 +982,12 @@ class TestPrior(unittest.TestCase):
         log_prior = pints.UniformLogPrior(lower, upper)
         self.assertEqual(log_prior.cdf([2, 19.0])[0], 0.1)
         self.assertEqual(log_prior.cdf([2, 19.0])[1], 0.85)
+        self.assertEqual(log_prior.cdf(np.array([2, 19.0]))[1], 0.85)
+
+        # test errors
+        self.assertRaises(ValueError, log_prior.cdf, [[1]])
+        self.assertRaises(ValueError, log_prior.cdf, [[1, 2, 3, 4]])
+
         log_prior = pints.UniformLogPrior(1, 3)
         self.assertEqual(log_prior.cdf(1), 0)
         self.assertEqual(log_prior.cdf(2), 0.5)
@@ -983,6 +999,11 @@ class TestPrior(unittest.TestCase):
         log_prior = pints.UniformLogPrior(lower, upper)
         self.assertEqual(log_prior.icdf([0.4, 0.9])[0], 5.0)
         self.assertEqual(log_prior.icdf([0.4, 0.9])[1], 20.0)
+        self.assertEqual(log_prior.icdf(np.array([0.4, 0.9]))[1], 20.0)
+
+        self.assertRaises(ValueError, log_prior.icdf, [[1]])
+        self.assertRaises(ValueError, log_prior.icdf, [[1, 2, 3, 4]])
+
         log_prior = pints.UniformLogPrior(1, 3)
         self.assertEqual(log_prior.icdf(1), 3.0)
         self.assertEqual(log_prior.icdf(0), 1.0)
