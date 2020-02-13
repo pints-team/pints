@@ -14,33 +14,33 @@ import numpy as np
 
 
 class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
-    """
-    Implements Covariance-Adaptive Slice Sampling by Covariance Matching,
-    as described in [1]. This is an adaptive multivariate method which
-    uses additional points, called "crumbs", and rejected proposals to
-    guide the selection of samples.
+    r"""
+    Implements Covariance-Adaptive Slice Sampling by Covariance Matching, as
+    described in [1]_. This is an adaptive multivariate method which uses
+    additional points, called "crumbs", and rejected proposals to guide the
+    selection of samples.
 
     It generates samples by sampling uniformly from the volume underneath the
-    posterior (``f``). It does so by introducing an auxiliary variable (``y``)
-    and by definying a Markov chain.
+    posterior (:math:`f`). It does so by introducing an auxiliary variable
+    (:math:`y`) and by definying a Markov chain.
 
     Sampling follows:
 
-    1. Calculate the pdf (``f(x_0)``) of the current sample (``x_0``).
-    2. Draw a real value (``y``) uniformly from (0, f(x0)), defining a
-       horizontal “slice”: S = {x: y < f(x)}. Note that ``x_0`` is
-       always within S.
-    3. Draw the first crumb (``c_1``) from a Gaussian distribution with
-       mean ``x_0`` and precision matrix ``W_1``.
-    4. Draw a new point (``x_1``) from a Gaussian distribution with mean
-       ``c_1`` and precision matrix ``W_2``.
+    1. Calculate the pdf (:math:`f(x_0)`) of the current sample (:math:`x_0`).
+    2. Draw a real value (:math:`y`) uniformly from :math:`(0, f(x0))`,
+       defining a horizontal "slice": :math:`S = {x: y < f(x)}`. Note that
+       :math:`x_0` is always within :math:`S`.
+    3. Draw the first crumb (:math:`c_1`) from a Gaussian distribution with
+       mean :math:`x_0` and precision matrix :math:`W_1`.
+    4. Draw a new point (:math:`x_1`) from a Gaussian distribution with mean
+       :math:`c_1` and precision matrix :math:`W_2`.
 
     New crumbs are drawn until a new proposal is accepted. In particular,
-    after sampling ``k`` crumbs from Gaussian distributions with mean ``x0``
-    and precision matrices (``W_1``, ..., ``W_k``), the distribution for the
-    ``k`` th proposal sample is:
+    after sampling :math:`k` crumbs from Gaussian distributions with mean
+    :math:`x_0` and precision matrices :math:`(W_1, ...,W_k)``, the
+    distribution for the kth proposal sample is:
 
-    1. ``x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)``
+    ``x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)``
 
     where:
 
