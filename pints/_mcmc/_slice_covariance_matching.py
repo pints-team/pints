@@ -40,30 +40,31 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
     :math:`x_0` and precision matrices :math:`(W_1, ...,W_k)``, the
     distribution for the kth proposal sample is:
 
-    ``x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)``
+    .. math::
+        x_k \sim Normal(\bar{c}_k, \Lambda^{-1}_k)
 
-    where:
+    where: :math:`\Lambda_k = W_1 + ... + W_k` and
+    :math:`\bar{c}_k = \Lambda^{-1}_k (W_1 c_1 + ... + W_k c_k)`.
 
-    2. ``\Lambda_k = W_1 + ... + W_k``
-    3. ``\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)``
-
-    This method attempts to find the ``k + 1`` th crumb precision matrix
-    (``W_{k + 1}``) so that the distribution for the ``k + 1`` th proposal
+    This method attempts to find the (k+1)th crumb precision matrix
+    (:math:`W_{k + 1}`) so that the distribution for the (k+1)th proposal
     point has the same conditional variance as uniform sampling from the slice
-    ``S`` in the direction of the gradient of ``f(x)`` evaluated at the last
-    rejected proposal (``x_k``).
+    :math:`S` in the direction of the gradient of :math:`f(x)` evaluated at the
+    last rejected proposal (:math:`x_k`).
 
     To avoid floating-point underflow, we implement the suggestion advanced
-    in [1] pp.712. We use the log pdf of the un-normalised posterior
-    (``log f(x)``) instead of ``f(x)``. In doing so, we use an
-    auxiliary variable ``z = log(y) - \epsilon``, where
-    ``\epsilon \sim \text{exp}(1)`` and define the slice as
-    S = {x : z < log f(x)}.
+    in [1]_ pp.712. We use the log pdf of the un-normalised posterior
+    (:math:`log f(x)`) instead of :math:`f(x)`. In doing so, we use an
+    auxiliary variable :math:`z = log(y) - \epsilon`, where
+    :math:`\epsilon \sim \text{exp}(1)` and define the slice as
+    :math:`S = {x : z < log f(x)}`.
 
-    [1] Thompson, M. and Neal, R.M., 2010. Covariance-adaptive slice sampling.
-    arXiv preprint arXiv:1003.3201.
+    Extends :class:`SingleChainMCMC`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    References
+    ----------
+    .. [1] "Covariance-adaptive slice sampling", 2010. Thompson, M. and Neal,
+           R.M., arXiv preprint arXiv:1003.3201.
     """
 
     def __init__(self, x0, sigma0=None):
@@ -74,7 +75,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         self._running = False
         self._ready_for_tell = False
         self._current = None
-        self._proposed_pdf = None
+        self._proposed_log_pdf = None
         self._current_log_y = None
         self._proposed = None
         self._log_fx_u = None
@@ -109,6 +110,13 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # Parameter to control variance precision
         self._theta = 1
 
+        # Cached mean and covariance of z-variates
+        self._mean_z = np.zeros(self._n_parameters)
+        self._cov_z = np.identity(self._n_parameters)
+
+        # convenient cached
+        self._identity_m = np.identity(self._n_parameters)
+
     # Function which calculates Cholesky rank one updates
     def _chud(self, matrix, vector):
         V = np.dot(matrix.transpose(), matrix) + np.outer(vector, vector)
@@ -142,9 +150,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             return np.array(self._u, copy=True)
 
         # Draw first p-variate
-        mean = np.zeros(self._n_parameters)
-        cov = np.identity(self._n_parameters)
-        z = np.random.multivariate_normal(mean, cov)
+        z = np.random.multivariate_normal(self._mean_z, self._cov_z)
 
         # Draw crumb c
         self._c = self._current + np.dot(np.linalg.inv(self._F), z)
@@ -158,7 +164,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             np.linalg.inv(self._R))), self._c_bar_star)
 
         # Draw second p-variate
-        z = np.random.multivariate_normal(mean, cov)
+        z = np.random.multivariate_normal(self._mean_z, self._cov_z)
 
         # Draw sample
         self._proposed = c_bar + np.dot(np.linalg.inv(self._R), z)
@@ -246,7 +252,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
         # If this is the log_pdf of a new point, save the value and use it
         # to check ``f(x_1) >= y``
         if self._sent_proposal:
-            self._proposed_pdf = fx
+            self._proposed_log_pdf = fx
             self._sent_proposal = False
 
         # Very first call
@@ -264,8 +270,8 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             self._M = fx
 
             # Define Cholesky upper triangles: F_k for W_k and R_k for Lambda_k
-            self._R = self._sigma_c ** (-1) * np.identity(self._n_parameters)
-            self._F = self._sigma_c ** (-1) * np.identity(self._n_parameters)
+            self._R = self._sigma_c ** (-1) * self._identity_m
+            self._F = self._sigma_c ** (-1) * self._identity_m
 
             # Sample height of the slice log_y for next iteration
             e = np.random.exponential(1)
@@ -275,7 +281,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
             return np.array(self._current, copy=True)
 
         # Acceptance check
-        if self._proposed_pdf >= self._current_log_y:
+        if self._proposed_log_pdf >= self._current_log_y:
             # The accepted sample becomes the new current sample
             self._current = np.array(self._proposed, copy=True)
 
@@ -288,8 +294,8 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
 
             # Reset parameters
             self._c_bar_star = np.zeros(self._n_parameters)
-            self._F = self._sigma_c ** (-1) * np.identity(self._n_parameters)
-            self._R = self._sigma_c ** (-1) * np.identity(self._n_parameters)
+            self._F = self._sigma_c ** (-1) * self._identity_m
+            self._R = self._sigma_c ** (-1) * self._identity_m
             self._calculate_fx_u = False
 
             # Return accepted sample
@@ -317,12 +323,12 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
 
                 # Calculate ``\kappa``
                 kappa = (-2.) * self._delta ** (-2.) * (
-                    self._log_fx_u - self._proposed_pdf - self._delta *
+                    self._log_fx_u - self._proposed_log_pdf - self._delta *
                     np.linalg.norm(self._G))
 
                 # Peak of parabolic cut through ``x1`` and ``u``
                 lxu = (0.5 * (np.linalg.norm(self._G) ** 2 / kappa) +
-                       self._proposed_pdf)
+                       self._proposed_log_pdf)
 
                 # Update ``M``
                 self._M = max(self._M, lxu)
