@@ -130,15 +130,17 @@ class ToyModel(object):
             raise ValueError('Negative times are not allowed.')
 
         if sensitivities:
-            y0 = np.zeros(self.n_parameters() * self.n_outputs() +
-                          self.n_outputs())
-            y0[0:self.n_outputs()] = self._y0
+            n_params = self.n_parameters()
+            n_outputs = self.n_outputs()
+            y0 = np.zeros(n_params * n_outputs +
+                          n_outputs)
+            y0[0:n_outputs] = self._y0
             result = odeint(self._rhs_S1, y0, times, (parameters,))
-            values = result[:, 0:self.n_outputs()]
+            values = result[:, 0:n_outputs]
             dvalues_dp = (
-                result[:, self.n_outputs():].reshape((len(times),
-                                                      self.n_outputs(),
-                                                      self.n_parameters())))
+                result[:, n_outputs:].reshape((len(times),
+                                               n_outputs,
+                                               n_params)))
             return values, dvalues_dp
         else:
             values = odeint(self._rhs, self._y0, times, (parameters,))
