@@ -151,6 +151,18 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc.set_hyper_parameters([0.1, 2, [4.0, 3.0]])
         self.assertEqual(mcmc.leapfrog_step_size()[0], 4.0)
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3.0)
+        self.assertEqual(len(mcmc.divergent_iterations()), 0)
+
+    def test_other_setters(self):
+        # Tests other setters and getters.
+        x0 = np.array([2, 2])
+        mcmc = pints.NoUTurnMCMC(x0)
+        self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)
+        threshold1 = mcmc.hamiltonian_threshold()
+        self.assertEqual(threshold1, 10**3)
+        threshold2 = 10
+        mcmc.set_hamiltonian_threshold(threshold2)
+        self.assertEqual(mcmc.hamiltonian_threshold(), threshold2)
 
 
 if __name__ == '__main__':

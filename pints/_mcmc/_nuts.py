@@ -73,9 +73,12 @@ class NutsState:
     n_alpha: float
         a count of the points along this path
 
+    divergent: boolean
+        True if one of the points in the tree was divergent
+
     """
 
-    def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha):
+    def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent):
         self.theta_minus = theta
         self.theta_plus = theta
         self.r_minus = r
@@ -91,6 +94,7 @@ class NutsState:
         self.grad_L = grad_L
         self.alpha = alpha
         self.n_alpha = n_alpha
+        self.divergent = divergent
 
     def update(self, other_state, direction, root):
         """
@@ -155,6 +159,9 @@ class NutsState:
         self.s *= int((self.theta_plus -
                        self.theta_minus).dot(self.r_plus) >= 0)
 
+        # propogate divergence up the tree
+        self.divergent |= other_state.divergent
+
 
 # All the functions below are written as coroutines to enable the recursive
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
@@ -171,7 +178,8 @@ def leapfrog(theta, L, grad_L, r, epsilon, step_size):
 
 
 @asyncio.coroutine
-def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
+def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
+               hamiltonian_threshold):
     """
     Implicitly build up a subtree of depth j for the NUTS sampler
     """
@@ -193,25 +201,25 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size):
         hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
         n_dash = int(log_u <= hamiltonian_dash)
         comparison = hamiltonian_dash - hamiltonian0
-        Delta_max = 1000
-        s_dash = int(log_u < Delta_max + hamiltonian_dash)
+        s_dash = int(log_u < hamiltonian_threshold + hamiltonian_dash)
+        divergent = not bool(s_dash)
         alpha_dash = min(1.0, np.exp(comparison))
         n_alpha_dash = 1
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
-            alpha_dash, n_alpha_dash
+            alpha_dash, n_alpha_dash, divergent
         )
 
     else:
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
             build_tree(state, log_u, v, j - 1, epsilon, hamiltonian0,
-                       step_size)
+                       step_size, hamiltonian_threshold)
 
         if state_dash.s == 1:
             state_double_dash = yield from \
                 build_tree(state_dash, log_u, v, j - 1, epsilon, hamiltonian0,
-                           step_size)
+                           step_size, hamiltonian_threshold)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
@@ -247,7 +255,7 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
 
 
 @asyncio.coroutine
-def nuts_sampler(x0, delta, M_adapt, step_size):
+def nuts_sampler(x0, delta, M_adapt, step_size, hamiltonian_threshold):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
 
@@ -300,7 +308,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
         log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
 
         # create initial integration path state
-        state = NutsState(theta, r0, L, grad_L, 1, 1, None, None)
+        state = NutsState(theta, r0, L, grad_L, 1, 1, None, None, False)
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
@@ -317,7 +325,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
             # recursivly build up tree in that direction
             state_dash = yield from \
                 build_tree(state, log_u, vj, j, epsilon,
-                           hamiltonian0, step_size)
+                           hamiltonian0, step_size, hamiltonian_threshold)
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
@@ -340,7 +348,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size):
 
         # signal calling process that mcmc step is complete by passing a tuple
         # (rather than an ndarray)
-        yield (theta, L, state.alpha / state.n_alpha, 2**j)
+        yield (theta, L, state.alpha / state.n_alpha, 2**j, state.divergent)
 
         # next step
         m += 1
@@ -374,6 +382,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._step_size = None
         self.set_leapfrog_step_size(np.diag(self._sigma0))
 
+        # Default threshold for Hamiltonian divergences
+        # (currently set to match Stan)
+        self._hamiltonian_threshold = 10**3
+
         # coroutine nuts sampler
         self._nuts = None
 
@@ -398,6 +410,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._running = False
         self._ready_for_tell = False
 
+        # Divergence checking
+        # Create a vector of divergent iterations
+        self._divergent = np.asarray([], dtype='int')
+
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
         # Check ask/tell pattern
@@ -407,7 +423,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._nuts = nuts_sampler(self._x0, self._delta, self._M_adapt,
-                                      self._step_size)
+                                      self._step_size, self._hamiltonian_threshold)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
@@ -435,6 +451,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             self._current_logpdf = self._next[1]
             current_acceptance = self._next[2]
             current_n_leapfrog = self._next[3]
+            divergent = self._next[4]
 
             # Increase iteration count
             self._mcmc_iteration += 1
@@ -449,6 +466,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                 (n_it_since_log * self._n_leapfrog + current_n_leapfrog) /
                 (n_it_since_log + 1)
             )
+
+            # store divergent iterations
+            if divergent:
+                self._divergent = np.append(
+                    self._divergent, self._mcmc_iteration)
 
             # request next point to evaluate
             self._next = next(self._nuts)
@@ -480,6 +502,29 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return self._current_logpdf
+
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
+    def set_hamiltonian_threshold(self, hamiltonian_threshold):
+        """
+        Sets threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        if hamiltonian_threshold < 0:
+            raise ValueError('Threshold for divergent iterations must be ' +
+                             'non-negative.')
+        self._hamiltonian_threshold = hamiltonian_threshold
+
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations
+        """
+        return self._divergent
 
     def delta(self):
         """
