@@ -142,15 +142,22 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
 
+        # test max tree depth
+        mcmc.set_max_tree_depth(20)
+        self.assertEqual(mcmc.max_tree_depth(), 20)
+        self.assertRaises(ValueError, mcmc.set_max_tree_depth, -1)
+
         # hyper param interface
-        self.assertEqual(mcmc.n_hyper_parameters(), 3)
-        mcmc.set_hyper_parameters([0.1, 2, 2])
+        self.assertEqual(mcmc.n_hyper_parameters(), 4)
+        mcmc.set_hyper_parameters([0.1, 2, 2, 30])
         self.assertEqual(mcmc.delta(), 0.1)
         self.assertEqual(mcmc.number_adaption_steps(), 2)
         self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
-        mcmc.set_hyper_parameters([0.1, 2, [4.0, 3.0]])
+        self.assertEqual(mcmc.max_tree_depth(), 30)
+        mcmc.set_hyper_parameters([0.1, 2, [4.0, 3.0], 40])
         self.assertEqual(mcmc.leapfrog_step_size()[0], 4.0)
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3.0)
+        self.assertEqual(mcmc.max_tree_depth(), 40)
         self.assertEqual(len(mcmc.divergent_iterations()), 0)
 
     def test_other_setters(self):

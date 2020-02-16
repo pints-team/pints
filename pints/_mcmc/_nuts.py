@@ -255,7 +255,8 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
 
 
 @asyncio.coroutine
-def nuts_sampler(x0, delta, M_adapt, step_size, hamiltonian_threshold):
+def nuts_sampler(x0, delta, M_adapt, step_size,
+                 hamiltonian_threshold, max_tree_depth):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
 
@@ -313,7 +314,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size, hamiltonian_threshold):
 
         # build up an integration path with 2^j points, stopping when we either
         # encounter a U-Turn, or reach a max number of points 2^10
-        while j < 10 and state.s == 1:
+        while j < max_tree_depth and state.s == 1:
 
             # pick a random direction to integrate in
             # (to maintain detailed balance)
@@ -381,6 +382,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._delta = 0.6
         self._step_size = None
         self.set_leapfrog_step_size(np.diag(self._sigma0))
+        self._max_tree_depth = 10
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
@@ -423,7 +425,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._nuts = nuts_sampler(self._x0, self._delta, self._M_adapt,
-                                      self._step_size, self._hamiltonian_threshold)
+                                      self._step_size,
+                                      self._hamiltonian_threshold,
+                                      self._max_tree_depth)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
@@ -520,6 +524,24 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                              'non-negative.')
         self._hamiltonian_threshold = hamiltonian_threshold
 
+    def max_tree_depth(self):
+        """
+        Returns the maximum tree depth ``D`` for the algorithm. For each
+        iteration, the number of leapfrog steps will not be greater than
+        ``2^D``
+        """
+        return self._max_tree_depth
+
+    def set_max_tree_depth(self, max_tree_depth):
+        """
+        Sets the maximum tree depth ``D`` for the algorithm. For each
+        iteration, the number of leapfrog steps will not be greater than
+        ``2^D``
+        """
+        if max_tree_depth < 0:
+            raise ValueError('Maximum tree depth must be non-negative.')
+        self._max_tree_depth = max_tree_depth
+
     def divergent_iterations(self):
         """
         Returns the iteration number of any divergent iterations
@@ -546,7 +568,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 3
+        return 4
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -607,10 +629,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[delta, number_adaption_steps,
-        leapfrog_step_size]``.
+        leapfrog_step_size, max_tree_depth]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_delta(x[0])
         self.set_number_adaption_steps(x[1])
         self.set_leapfrog_step_size(x[2])
+        self.set_max_tree_depth(x[3])
