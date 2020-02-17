@@ -111,49 +111,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         # initialise step size
         self.set_epsilon()
 
-    def _initialise(self):
-        """
-        Initialises the routine before the first iteration.
-        """
-        if self._running:
-            raise RuntimeError('Already initialised.')
-
-        # Propose x0 as first point
-        self._current = None
-        self._current_log_pdf = None
-        self._proposed = self._x0
-
-        # Update sampler state
-        self._running = True
-
-    def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
-        return True
-
-    def set_epsilon(self, epsilon=None):
-        """
-        Sets epsilon, which is the effective step size used in proposals.
-        If epsilon not specified, then ``epsilon = 0.2 * diag(sigma0)``
-        will be used.
-        """
-        if epsilon is None:
-            self._epsilon = self._step_size * self._scale_vector
-        else:
-            a = np.atleast_1d(epsilon)
-            if not len(a) == self._n_parameters:
-                raise ValueError('Dimensions of epsilon must be same as ' +
-                                 'number of parameters.')
-            for element in epsilon:
-                if element <= 0:
-                    raise ValueError('Elements of epsilon must exceed 0.')
-            self._epsilon = np.array(epsilon)
-
-    def epsilon(self):
-        """
-        Returns ``epsilon`` which is the effective step size used in proposals.
-        """
-        return self._epsilon
-
     def acceptance_rate(self):
         """
         Returns the current (measured) acceptance rate.
@@ -191,6 +148,79 @@ class MALAMCMC(pints.SingleChainMCMC):
 
         # Return proposed point
         return self._proposed
+
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_log_pdf
+
+    def epsilon(self):
+        """
+        Returns ``epsilon`` which is the effective step size used in proposals.
+        """
+        return self._epsilon
+
+    def _initialise(self):
+        """
+        Initialises the routine before the first iteration.
+        """
+        if self._running:
+            raise RuntimeError('Already initialised.')
+
+        # Propose x0 as first point
+        self._current = None
+        self._current_log_pdf = None
+        self._proposed = self._x0
+
+        # Update sampler state
+        self._running = True
+
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('Accept.')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        logger.log(self._acceptance)
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Metropolis-Adjusted Langevin Algorithm (MALA)'
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def set_epsilon(self, epsilon=None):
+        """
+        Sets epsilon, which is the effective step size used in proposals.
+        If epsilon not specified, then ``epsilon = 0.2 * diag(sigma0)``
+        will be used.
+        """
+        if epsilon is None:
+            self._epsilon = self._step_size * self._scale_vector
+        else:
+            a = np.atleast_1d(epsilon)
+            if not len(a) == self._n_parameters:
+                raise ValueError('Dimensions of epsilon must be same as ' +
+                                 'number of parameters.')
+            for element in epsilon:
+                if element <= 0:
+                    raise ValueError('Elements of epsilon must exceed 0.')
+            self._epsilon = np.array(epsilon)
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[epsilon]``.
+
+        The effective step size (``epsilon``) is ``step_size * scale_vector``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_epsilon(x[0])
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -260,33 +290,3 @@ class MALAMCMC(pints.SingleChainMCMC):
 
         # Return new point for chain
         return self._current
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
-    def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init()`. """
-        logger.add_float('Accept.')
-
-    def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write()`. """
-        logger.log(self._acceptance)
-
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Metropolis-Adjusted Langevin Algorithm (MALA)'
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[epsilon]``.
-
-        The effective step size (``epsilon``) is ``step_size * scale_vector``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_epsilon(x[0])
