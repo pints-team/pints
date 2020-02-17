@@ -522,7 +522,9 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 
 
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
-    r"""Calculates a likelihood assuming the error scales with the output.
+    r"""
+    Calculates a log-likelihood assuming heteroscedastic Gaussian errors, with
+    the magnitude of the error variance scaling with the problem output.
 
     For each output in the problem, this likelihood introduces two new scalar
     parameters: an exponential power ``eta`` and a scale ``sigma``.
@@ -558,7 +560,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     ----------
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem two parameters are added (eta, sigma),
+        single-output problem two parameters are added (``eta``, ``sigma``),
         for a multi-output problem 2 times ``n_outputs`` parameters are added.
     """
 
