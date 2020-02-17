@@ -52,8 +52,10 @@ class NutsState:
     grad_L_plus: float
         gradient of logpdf at the forwards end of the integration path
 
-    n: int
-        number of accepted points in the path
+    n: int or float
+        number of accepted points in the path. If the sampler is using
+        multinomial_sampling then this is is a float which is the weight
+        given to each subtree
 
     s: int
         0 if sufficient leapfrog steps have been taken, 1 otherwise
@@ -78,7 +80,8 @@ class NutsState:
 
     """
 
-    def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent):
+    def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent,
+                 use_multinomial_sampling):
         self.theta_minus = theta
         self.theta_plus = theta
         self.r_minus = r
@@ -95,6 +98,29 @@ class NutsState:
         self.alpha = alpha
         self.n_alpha = n_alpha
         self.divergent = divergent
+
+        if use_multinomial_sampling:
+            self.accumulate_weight = self.accumulate_multinomial_sampling
+            self.probability_of_accept = \
+                self.probability_of_accept_multinomial_sampling
+        else:
+            self.accumulate_weight = self.accumulate_slice_sampling
+            self.probability_of_accept = \
+                self.probability_of_accept_slice_sampling
+
+    # for multinomial_sampling n will be a float, need to take care of
+    # overflow when suming this log probability.
+    def accumulate_multinomial_sampling(self, left_subtree, right_subtree):
+        return np.logaddexp(left_subtree, right_subtree)
+
+    def accumulate_slice_sampling(self, left_subtree, right_subtree):
+        return left_subtree + right_subtree
+
+    def probability_of_accept_multinomial_sampling(self, tree_n, subtree_n):
+        return np.exp(subtree_n - tree_n)
+
+    def probability_of_accept_slice_sampling(self, tree_n, subtree_n):
+        return subtree_n / tree_n
 
     def update(self, other_state, direction, root):
         """
@@ -128,29 +154,39 @@ class NutsState:
         alpha_dash = other_state.alpha
         n_alpha_dash = other_state.n_alpha
 
+        # for non-root merges accumulate tree weightings before probability
+        # calculation
+        if not root:
+            self.n = self.accumulate_weight(self.n, n_dash)
+
         # if there is any accepted points in the other subtree then test for
-        # acceptance of that subtrees theta
-        if n_dash > 0:
-            if root:
-                p = int(s_dash == 1) * min(1, n_dash / self.n)
-            else:
-                p = n_dash / (self.n + n_dash)
+        # acceptance of that subtree's theta
+        # probability of sample being in new tree only greater than 0 if
+        # ``s_dash == 1``.  for non-root we don't need to check this as the new
+        # tree is not built at all when ``s_dash != 1``
+        if root:
+            p = int(s_dash == 1) \
+                * min(1, self.probability_of_accept(self.n, n_dash))
+        else:
+            p = self.probability_of_accept(self.n, n_dash)
 
-            if p > 0.0 and np.random.uniform() < p:
-                self.theta = theta_dash
-                self.L = L_dash
-                self.grad_L = grad_L_dash
+        if p > 0.0 and np.random.uniform() < p:
+            self.theta = theta_dash
+            self.L = L_dash
+            self.grad_L = grad_L_dash
 
-        # Nots: alpha and n_alpha are only accumulated within build_tree
+        # for root merges accumulate tree weightings after probability
+        # calculation
+        if root:
+            self.n = self.accumulate_weight(self.n, n_dash)
+
+        # Notes: alpha and n_alpha are only accumulated within build_tree
         if root:
             self.alpha = alpha_dash
             self.n_alpha = n_alpha_dash
         else:
             self.alpha += alpha_dash
             self.n_alpha += n_alpha_dash
-
-        # accumulated number of accepted points
-        self.n += n_dash
 
         # test if the path has done a U-Turn
         self.s *= s_dash
@@ -179,7 +215,7 @@ def leapfrog(theta, L, grad_L, r, epsilon, step_size):
 
 @asyncio.coroutine
 def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
-               hamiltonian_threshold):
+               hamiltonian_threshold, use_multinomial_sampling):
     """
     Implicitly build up a subtree of depth j for the NUTS sampler
     """
@@ -199,27 +235,33 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, v * epsilon, step_size)
         hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
-        n_dash = int(log_u <= hamiltonian_dash)
+        slice_comparison = log_u - hamiltonian_dash
+        if use_multinomial_sampling:
+            n_dash = -slice_comparison
+        else:
+            n_dash = int(slice_comparison <= 0)
         comparison = hamiltonian_dash - hamiltonian0
-        s_dash = int(log_u < hamiltonian_threshold + hamiltonian_dash)
+        s_dash = int(slice_comparison < hamiltonian_threshold)
         divergent = not bool(s_dash)
         alpha_dash = min(1.0, np.exp(comparison))
         n_alpha_dash = 1
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
-            alpha_dash, n_alpha_dash, divergent
+            alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling
         )
 
     else:
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
             build_tree(state, log_u, v, j - 1, epsilon, hamiltonian0,
-                       step_size, hamiltonian_threshold)
+                       step_size, hamiltonian_threshold,
+                       use_multinomial_sampling)
 
         if state_dash.s == 1:
             state_double_dash = yield from \
                 build_tree(state_dash, log_u, v, j - 1, epsilon, hamiltonian0,
-                           step_size, hamiltonian_threshold)
+                           step_size, hamiltonian_threshold,
+                           use_multinomial_sampling)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
@@ -256,7 +298,8 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
 
 @asyncio.coroutine
 def nuts_sampler(x0, delta, M_adapt, step_size,
-                 hamiltonian_threshold, max_tree_depth):
+                 hamiltonian_threshold, max_tree_depth,
+                 use_multinomial_sampling):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
 
@@ -266,12 +309,33 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     tuple of values (theta, L, acceptance probability, number of leapfrog
     steps)
 
+    Arguments
+    ---------
+
+    x0: ndarray
+        starting point
+    delta: float
+        target acceptance probability (Dual Averaging scheme)
+    M_adapt: int
+        number of adaption steps (Dual Averaging scheme)
+    step_size: ndarray
+        step sizes in each parameter dimension
+    hamiltonian_threshold: float
+        threshold to test divergent iterations
+    max_tree_depth: int
+        maximum tree depth
+    use_multinomial_sampling: bool
+        use multinomial sampling as suggested in [2] instead of slice sampling
+        method used in [1]
 
     References
     ----------
     .. [1] Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn sampler:
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
+
+    .. [2] `A Conceptual Introduction to Hamiltonian Monte Carlo`,
+            Michael Betancourt
 
     """
     # Initialise sampler with x0 and calculate logpdf
@@ -305,11 +369,20 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
         r0 = np.random.normal(size=len(theta))
         hamiltonian0 = L - 0.5 * r0.dot(r0)
 
-        # use slice sampling
-        log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
+        if use_multinomial_sampling:
+            # use multinomial sampling
+            log_u = hamiltonian0
+            # n is a tree weight using a float
+            n = 0.0
+        else:
+            # use slice sampling
+            log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
+            # n is the number of accepted points in the chain
+            n = 1
 
         # create initial integration path state
-        state = NutsState(theta, r0, L, grad_L, 1, 1, None, None, False)
+        state = NutsState(theta, r0, L, grad_L, n, 1, None, None, False,
+                use_multinomial_sampling)
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
@@ -326,7 +399,8 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
             # recursivly build up tree in that direction
             state_dash = yield from \
                 build_tree(state, log_u, vj, j, epsilon,
-                           hamiltonian0, step_size, hamiltonian_threshold)
+                           hamiltonian0, step_size, hamiltonian_threshold,
+                           use_multinomial_sampling)
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
@@ -383,6 +457,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._step_size = None
         self.set_leapfrog_step_size(np.diag(self._sigma0))
         self._max_tree_depth = 10
+        self._use_multinomial_sampling = True
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
@@ -427,7 +502,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             self._nuts = nuts_sampler(self._x0, self._delta, self._M_adapt,
                                       self._step_size,
                                       self._hamiltonian_threshold,
-                                      self._max_tree_depth)
+                                      self._max_tree_depth,
+                                      self._use_multinomial_sampling)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
