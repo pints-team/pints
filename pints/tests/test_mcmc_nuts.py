@@ -7,8 +7,9 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import unittest
 import numpy as np
+import unittest
+import sys
 
 import pints
 import pints.toy
@@ -16,9 +17,10 @@ import pints.toy
 from shared import StreamCapture
 
 
+@unittest.skipIf(sys.hexversion < 0x03030000, 'No NUTS on Python < 3.3')
 class TestNutsMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the Hamiltonian MCMC routine.
+    Tests the basic methods of the No-U-Turn MCMC sampler.
     """
 
     def test_method(self):
