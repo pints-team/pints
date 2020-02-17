@@ -13,7 +13,6 @@ import pints
 import numpy as np
 import scipy.special
 import scipy.cluster.vq
-import random
 
 
 class MultinestSampler(pints.NestedSampler):
@@ -196,7 +195,8 @@ class MultinestSampler(pints.NestedSampler):
         self._F_S = 1.0
         self._f_s_minimisation_called = False
 
-        # self._prior_cdf = log_prior.cdf()
+        self._convert_to_unit_cube = log_prior.convert_to_unit_cube
+        self._convert_from_unit_cube = log_prior.convert_from_unit_cube
 
     def ask(self, n_points):
         """
@@ -209,7 +209,7 @@ class MultinestSampler(pints.NestedSampler):
             self._rejection_phase = False
             # determine bounding ellipsoids
             samples = self._m_active[:, :self._n_parameters]
-            self._m_active_transformed = ([self._transform_to_unit_cube(x)
+            self._m_active_transformed = ([self._convert_to_unit_cube(x)
                                            for x in samples])
             (self._A_l, self._c_l, self._F_S, self._assignments, self._V_E_l,
              self._V_S_l) = (
@@ -224,7 +224,7 @@ class MultinestSampler(pints.NestedSampler):
             self._A_l, self._F_S = self._update_ellipsoid_volumes(i)
             if self._F_S > self._f_s_threshold:
                 samples = self._m_active[:, :self._n_parameters]
-                self._m_active_transformed = ([self._transform_to_unit_cube(x)
+                self._m_active_transformed = ([self._convert_to_unit_cube(x)
                                                for x in samples])
                 (self._A_l, self._c_l, self._F_S, self._assignments,
                  self._V_E_l, self._V_S_l) = (
@@ -233,9 +233,9 @@ class MultinestSampler(pints.NestedSampler):
             u = self._sample_overlapping_ellipsoids(n_points, self._A_l,
                                                     self._c_l, self._V_E_l)
             if n_points > 1:
-                self._proposed = [self._transform_from_unit_cube(x) for x in u]
+                self._proposed = [self._convert_from_unit_cube(x) for x in u]
             else:
-                self._proposed = self._transform_from_unit_cube(u[0])
+                self._proposed = self._convert_from_unit_cube(u[0])
         self._ellipsoid_count = len(self._A_l)
         return self._proposed
 
@@ -522,7 +522,7 @@ class MultinestSampler(pints.NestedSampler):
             p.append(V_E / V_tot)
         points = []
         for i in range(n_points):
-            k = random.choices(list(range(len(p))), weights=p)[0]
+            k = np.random.choice(len(range(len(p))), p=p)
             points.append(self._sample_overlapping_ellipsoid(k, A_l, c_l))
         return points
 
@@ -647,20 +647,6 @@ class MultinestSampler(pints.NestedSampler):
                     assignments_new[i] = j
                     h_k_max = h_k
         return assignments_new
-
-    def _transform_to_unit_cube(self, theta):
-        """
-        Transforms a given parameter sample to unit cube, using the prior
-        cumulative distribution function.
-        """
-        return theta
-
-    def _transform_from_unit_cube(self, theta):
-        """
-        Transforms a sample in unit cube, to parameter space using the prior
-        inverse cumulative distribution function.
-        """
-        return theta
 
     def _update_ellipsoid_volumes(self, t):
         """ Updates ellipsoids as defined in text on p.1605 of [1]_. """
