@@ -50,16 +50,15 @@ class ToyModel(object):
 
     def _dfdp(self, y, t, p):
         """
-        Returns the derivative of the ODE RHS with respect to parameters.
-        This should be a matrix of dimensions ``n_parameters`` by
-        ``n_parameters``.
+        Returns the derivative of the ODE RHS with respect to parameters, this
+        should be a matrix of dimensions ``n_parameters`` by ``n_parameters``.
         """
         raise NotImplementedError
 
     def jacobian(self, y, t, p):
         """
         Returns the Jacobian (the derivative of the RHS ODE with respect to the
-        outputs). This should be a matrix of dimensions ``n_outputs`` by
+        outputs), this should be a matrix of dimensions ``n_outputs`` by
         ``n_outputs``.
         """
         raise NotImplementedError
@@ -67,8 +66,10 @@ class ToyModel(object):
     def suggested_parameters(self):
         """
         Returns an numpy array of the parameter values that are representative
-        of the model. For example, these parameters might reproduce a
-        particular result that the model is famous for.
+        of the model.
+
+        For example, these parameters might reproduce a particular result that
+        the model is famous for.
         """
         raise NotImplementedError
 
@@ -82,15 +83,15 @@ class ToyModel(object):
     def _rhs(self, y, t, p):
         """
         Returns RHS of ODE for numerical integration to obtain outputs and
-        sensitivities. This should be a vector of length ``n_outputs``.
+        sensitivities, this should be a vector of length ``n_outputs``.
         """
         raise NotImplementedError
 
     def _rhs_S1(self, y_and_dydp, t, p):
         """
-        Forms the RHS of ODE for numerical integration to obtain both
-        outputs and sensitivities. This should be a vector of length
-        ``n_outputs`` + ``n_parameters``.
+        Forms the RHS of ODE for numerical integration to obtain both outputs
+        and sensitivities, this should be a vector of length
+        ``n_outputs + n_parameters``.
         """
         y = y_and_dydp[0:self.n_outputs()]
         dydp = y_and_dydp[self.n_outputs():].reshape((self.n_outputs(),
@@ -107,9 +108,8 @@ class ToyModel(object):
 
     def _simulate(self, parameters, times, sensitivities):
         """
-        Private helper function that either simulates the model with
-        sensitivities (`sensitivities == true`) or without
-        (`sensitivities == false`)
+        Private helper function that uses ``scipy.integrate.odeint`` to
+        simulate a model (with or without sensitivities).
 
         Parameters
         ----------
@@ -118,9 +118,9 @@ class ToyModel(object):
         times
             The times at which to calculate the model output / sensitivities.
         sensitivities
-            If set to `true` the function returns the model outputs and
-            sensitivities `(values,sensitivities)`. If set to `false` the
-            function only returns the model outputs `values`. See
+            If set to ``True`` the function returns the model outputs and
+            sensitivities ``(values, sensitivities)``. If set to ``False`` the
+            function only returns the model outputs ``values``. See
             :meth:`pints.ForwardModel.simulate()` and
             :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
@@ -132,15 +132,12 @@ class ToyModel(object):
         if sensitivities:
             n_params = self.n_parameters()
             n_outputs = self.n_outputs()
-            y0 = np.zeros(n_params * n_outputs +
-                          n_outputs)
+            y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
             result = odeint(self._rhs_S1, y0, times, (parameters,))
             values = result[:, 0:n_outputs]
-            dvalues_dp = (
-                result[:, n_outputs:].reshape((len(times),
-                                               n_outputs,
-                                               n_params)))
+            dvalues_dp = (result[:, n_outputs:].reshape(
+                (len(times), n_outputs, n_params)))
             return values, dvalues_dp
         else:
             values = odeint(self._rhs, self._y0, times, (parameters,))
