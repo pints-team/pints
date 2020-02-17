@@ -359,11 +359,15 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     r"""
 
     Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
-    Algorithm 6 in [1]_. Like Hamiltonian Monte Carlo, NUTS imagines a particle
-    moving over negative log-posterior (NLP) space to generate proposals.
-    Naturally, the particle tends to move to locations of low NLP -- meaning
-    high posterior density. Unlike HMC, NUTS allows the number of steps taken
-    through parameter space to depend on position, allowing local adaptation.
+    Algorithm 6 in [1]_.
+
+    Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
+    log-posterior (NLP) space to generate proposals. Naturally, the particle
+    tends to move to locations of low NLP -- meaning high posterior density.
+    Unlike HMC, NUTS allows the number of steps taken through parameter space
+    to depend on position, allowing local adaptation.
+
+    Note: This sampler is only supported on Python versions 3.3 and newer.
 
     Extends :class:`SingleChainMCMC`.
 
