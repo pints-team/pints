@@ -11,10 +11,10 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
-from . import ToyModel
+from . import ToyODEModel
 
 
-class FitzhughNagumoModel(ToyModel, pints.ForwardModelS1):
+class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
     r"""
     Fitzhugh-Nagumo model of the action potential [1]_.
 

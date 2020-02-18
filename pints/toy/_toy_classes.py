@@ -47,22 +47,6 @@ class ToyModel(object):
     Note that toy models should extend both ``ToyModel`` and one of the forward
     model classes, e.g. :class:`pints.ForwardModel`.
     """
-
-    def _dfdp(self, y, t, p):
-        """
-        Returns the derivative of the ODE RHS with respect to parameters, this
-        should be a matrix of dimensions ``n_parameters`` by ``n_parameters``.
-        """
-        raise NotImplementedError
-
-    def jacobian(self, y, t, p):
-        """
-        Returns the Jacobian (the derivative of the RHS ODE with respect to the
-        outputs), this should be a matrix of dimensions ``n_outputs`` by
-        ``n_outputs``.
-        """
-        raise NotImplementedError
-
     def suggested_parameters(self):
         """
         Returns an numpy array of the parameter values that are representative
@@ -80,10 +64,65 @@ class ToyModel(object):
         """
         raise NotImplementedError
 
+    def simulate(self, parameters, times):
+        """ See :meth:`pints.ForwardModel.simulate()`. """
+        raise NotImplementedError
+
+
+class ToyODEModel(ToyModel):
+    """
+    Defines an interface for toy problems where the underlying model is an
+    ordinary differential equation (ODE).
+
+    Note that toy ODE models should extend both ``ToyModel`` and one of the
+    forward model classes, e.g. :class:`pints.ForwardModel`.
+    """
+    def _dfdp(self, y, t, p):
+        """
+        Returns the derivative of the ODE RHS with respect to parameters, this
+        should be a matrix of dimensions ``n_parameters`` by ``n_parameters``.
+
+        Parameters
+        ----------
+        y
+            State vector
+        t
+            Time
+        p
+            Model parameters
+        """
+        raise NotImplementedError
+
+    def jacobian(self, y, t, p):
+        """
+        Returns the Jacobian (the derivative of the RHS ODE with respect to the
+        outputs), this should be a matrix of dimensions ``n_outputs`` by
+        ``n_outputs``.
+
+        Parameters
+        ----------
+        y
+            State vector
+        t
+            Time
+        p
+            Model parameters
+        """
+        raise NotImplementedError
+
     def _rhs(self, y, t, p):
         """
         Returns RHS of ODE for numerical integration to obtain outputs and
         sensitivities, this should be a vector of length ``n_outputs``.
+
+        Parameters
+        ----------
+        y
+            State vector
+        t
+            Time
+        p
+            Model parameters
         """
         raise NotImplementedError
 
@@ -92,6 +131,16 @@ class ToyModel(object):
         Forms the RHS of ODE for numerical integration to obtain both outputs
         and sensitivities, this should be a vector of length
         ``n_outputs + n_parameters``.
+
+        Parameters
+        ----------
+        y_and_dydp
+            Combined vector of states (elements ``0`` to ``n_outputs - 1``) and
+            sensitivities (elements ``n_outputs`` onwards)
+        t
+            Time
+        p
+            Model parameters
         """
         y = y_and_dydp[0:self.n_outputs()]
         dydp = y_and_dydp[self.n_outputs():].reshape((self.n_outputs(),

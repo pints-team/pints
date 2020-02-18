@@ -9,10 +9,10 @@
 from __future__ import print_function
 import numpy as np
 import pints
-from . import ToyModel
+from . import ToyODEModel
 
 
-class GoodwinOscillatorModel(ToyModel, pints.ForwardModelS1):
+class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
     r"""
     Three-state Goodwin oscillator toy model introduced in [1]_, [2]_, but
     best described in [3]_. The model considers level of mRNA, :math:`x`, which
