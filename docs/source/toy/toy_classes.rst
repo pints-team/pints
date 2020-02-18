@@ -8,3 +8,4 @@ Toy base classes
 
 .. autoclass:: ToyModel
 
+.. autoclass:: ToyODEModel
