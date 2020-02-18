@@ -432,8 +432,12 @@ class NestedController(object):
             # Show progress
             if self._logging and i >= self._next_message:
                 # Log state
-                self._logger.log(0, self._sampler._n_evals,
-                                 self._timer.time(), self._diff, 1.0, 0.0)
+                if not self._sampler._multiple_ellipsoids:
+                    self._logger.log(0, self._sampler._n_evals,
+                                     self._timer.time(), self._diff, 1.0)
+                else:
+                    self._logger.log(0, self._sampler._n_evals,
+                                     self._timer.time(), self._diff, 1.0, 0.0)
 
                 # Choose next logging point
                 if i > self._message_warm_up:
