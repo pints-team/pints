@@ -10,11 +10,10 @@ from __future__ import print_function
 import numpy as np
 import pints
 import scipy
+from . import ToyODEModel
 
-from . import ToyModel
 
-
-class Hes1Model(pints.ForwardModel, ToyModel):
+class Hes1Model(ToyODEModel, pints.ForwardModelS1):
     """
     HES1 Michaelis-Menten model of regulatory dynamics [1]_.
 
@@ -59,6 +58,55 @@ class Hes1Model(pints.ForwardModel, ToyModel):
             self.set_implicit_parameters([5., 3., 0.03])
         else:
             self.set_implicit_parameters(implicit_parameters)
+
+    def _dfdp(self, state, time, parameters):
+        """ See :meth:`pints.ToyModel.jacobian()`. """
+        m, p1, p2 = state
+        P0, v, k1, h = parameters
+        p2_over_p0 = p2 / P0
+        p2_over_p0_h = p2_over_p0**h
+        one_plus_p2_expression_sq = (1 + p2_over_p0_h)**2
+        ret = np.empty((self.n_states(), self.n_parameters()))
+        ret[0, 0] = h * p2 * p2_over_p0**(h - 1) / (
+            P0**2 * one_plus_p2_expression_sq)
+        ret[0, 1] = 0
+        ret[0, 2] = 0
+        ret[0, 3] = - (p2_over_p0_h * np.log(p2_over_p0)) / (
+            one_plus_p2_expression_sq
+        )
+        ret[1, 0] = 0
+        ret[1, 1] = m
+        ret[1, 2] = -p1
+        ret[1, 3] = 0
+        ret[2, 0] = 0
+        ret[2, 1] = 0
+        ret[2, 2] = p1
+        ret[2, 3] = 0
+        return ret
+
+    def jacobian(self, state, time, parameters):
+        """ See :meth:`pints.ToyModel.jacobian()`. """
+        m, p1, p2 = state
+        P0, v, k1, h = parameters
+        k_deg = self._kdeg
+        p2_over_p0 = p2 / P0
+        p2_over_p0_h = p2_over_p0**h
+        one_plus_p2_expression_sq = (1 + p2_over_p0_h)**2
+        ret = np.empty((self.n_states(), self.n_states()))
+        ret[0, 0] = -k_deg
+        ret[0, 1] = 0
+        ret[0, 2] = -h * p2_over_p0**(h - 1) / (P0 * one_plus_p2_expression_sq)
+        ret[1, 0] = v
+        ret[1, 1] = -k1 - k_deg
+        ret[1, 2] = 0
+        ret[2, 0] = 0
+        ret[2, 1] = k1
+        ret[2, 2] = -k_deg
+        return ret
+
+    def n_states(self):
+        """ See :meth:`pints.ForwardModel.n_states()`. """
+        return 3
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
@@ -142,4 +190,3 @@ class Hes1Model(pints.ForwardModel, ToyModel):
         :meth:`suggested_times()`.
         """
         return np.array([2, 1.20, 5.90, 4.58, 2.64, 5.38, 6.42, 5.60, 4.48])
-

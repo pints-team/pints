@@ -47,7 +47,7 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         time = np.linspace(0, 10, 101)
         state = [0.01, 0.1, 2]
         x, y, z = state
-        ret = model.jacobian(state, time, parameters)
+        ret = model.jacobian(state, 0.0, parameters)
         self.assertEqual(ret[0, 0], -m1)
         self.assertEqual(ret[0, 1], 0)
         self.assertEqual(ret[0, 2], -10 * z**9 / ((1 + z**10)**2))

@@ -110,6 +110,14 @@ class ToyODEModel(ToyModel):
         """
         raise NotImplementedError
 
+    def n_states(self):
+        """
+        Returns number of states in underlying ODE.
+        Note:will not be same as ``n_outputs()`` for models where only a subset
+        of states are observed.
+        """
+        return self.n_outputs()
+
     def _rhs(self, y, t, p):
         """
         Returns RHS of ODE for numerical integration to obtain outputs and
@@ -135,16 +143,16 @@ class ToyODEModel(ToyModel):
         Parameters
         ----------
         y_and_dydp
-            Combined vector of states (elements ``0`` to ``n_outputs - 1``) and
-            sensitivities (elements ``n_outputs`` onwards)
+            Combined vector of states (elements ``0`` to ``n_states - 1``) and
+            sensitivities (elements ``n_states`` onwards)
         t
             Time
         p
             Model parameters
         """
-        y = y_and_dydp[0:self.n_outputs()]
-        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_outputs(),
-                                                      self.n_parameters()))
+        n_outputs = self.n_states()
+        y = y_and_dydp[0:n_outputs]
+        dydp = y_and_dydp[n_outputs:].reshape((n_outputs, self.n_parameters()))
         dydt = self._rhs(y, t, p)
         d_dydp_dt = (
             np.matmul(self.jacobian(y, t, p), dydp) +
@@ -180,7 +188,7 @@ class ToyODEModel(ToyModel):
 
         if sensitivities:
             n_params = self.n_parameters()
-            n_outputs = self.n_outputs()
+            n_outputs = self.n_states()
             y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
             result = odeint(self._rhs_S1, y0, times, (parameters,))
