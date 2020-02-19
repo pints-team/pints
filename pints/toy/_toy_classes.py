@@ -202,4 +202,6 @@ class ToyODEModel(ToyModel):
 
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
-        return self._simulate(parameters, times, True)
+        values, dvalues_dp = self._simulate(parameters, times, True)
+        n_outputs = self.n_outputs()
+        return values[:, :n_outputs], dvalues_dp[:, :n_outputs, :]
