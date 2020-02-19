@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests if the stochastic degradation (toy) model works.
+# Tests if the  degradation (toy) model works.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -11,16 +11,16 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
-from pints.toy import StochasticDegradationModel
+from pints.toy. import DegradationModel
 
 
-class TestStochasticDegradation(unittest.TestCase):
+class TestDegradation(unittest.TestCase):
     """
-    Tests if the stochastic degradation (toy) model works.
+    Tests if the  degradation (toy) model works.
     """
     def test_start_with_zero(self):
         # Test the special case where the initial molecule count is zero
-        model = StochasticDegradationModel(0)
+        model = DegradationModel(0)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1]
         values = model.simulate(parameters, times)
@@ -29,7 +29,7 @@ class TestStochasticDegradation(unittest.TestCase):
 
     def test_start_with_twenty(self):
         # Run small simulation
-        model = pints.toy.StochasticDegradationModel(20)
+        model = pints.toy.DegradationModel(20)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1]
         values = model.simulate(parameters, times)
@@ -39,7 +39,7 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertTrue(np.all(values[1:] <= values[:-1]))
 
     def test_suggested(self):
-        model = pints.toy.StochasticDegradationModel(20)
+        model = pints.toy.DegradationModel(20)
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         self.assertTrue(len(times) == 101)
@@ -47,7 +47,7 @@ class TestStochasticDegradation(unittest.TestCase):
 
     def test_simulate(self):
         times = np.linspace(0, 100, 101)
-        model = StochasticDegradationModel(20)
+        model = DegradationModel(20)
         time, mol_count = model.simulate_raw([0.1])
         values = model.interpolate_mol_counts(time, mol_count, times)
         self.assertTrue(len(time), len(mol_count))
@@ -68,27 +68,27 @@ class TestStochasticDegradation(unittest.TestCase):
 
     def test_mean_variance(self):
         # test mean
-        model = pints.toy.StochasticDegradationModel(10)
+        model = pints.toy.DegradationModel(10)
         v_mean = model.mean([1], [5, 10])
         self.assertEqual(v_mean[0], 10 * np.exp(-5))
         self.assertEqual(v_mean[1], 10 * np.exp(-10))
 
-        model = pints.toy.StochasticDegradationModel(20)
+        model = pints.toy.DegradationModel(20)
         v_mean = model.mean([5], [7.2])
         self.assertEqual(v_mean[0], 20 * np.exp(-7.2 * 5))
 
         # test variance
-        model = pints.toy.StochasticDegradationModel(10)
+        model = pints.toy.DegradationModel(10)
         v_var = model.variance([1], [5, 10])
         self.assertEqual(v_var[0], 10 * (np.exp(5) - 1.0) / np.exp(10))
         self.assertAlmostEqual(v_var[1], 10 * (np.exp(10) - 1.0) / np.exp(20))
 
-        model = pints.toy.StochasticDegradationModel(20)
+        model = pints.toy.DegradationModel(20)
         v_var = model.variance([2.0], [2.0])
         self.assertAlmostEqual(v_var[0], 20 * (np.exp(4) - 1.0) / np.exp(8))
 
     def test_errors(self):
-        model = pints.toy.StochasticDegradationModel(20)
+        model = pints.toy.DegradationModel(20)
         # parameters, times cannot be negative
         times = np.linspace(0, 100, 101)
         parameters = [-0.1]
@@ -109,7 +109,7 @@ class TestStochasticDegradation(unittest.TestCase):
         self.assertRaises(ValueError, model.variance, parameters_3, times)
 
         # Initial value can't be negative
-        self.assertRaises(ValueError, pints.toy.StochasticDegradationModel, -1)
+        self.assertRaises(ValueError, pints.toy.DegradationModel, -1)
 
 
 if __name__ == '__main__':
