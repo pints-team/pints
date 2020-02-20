@@ -398,7 +398,7 @@ def scan_for_notebooks(root, recursive=True, ignore_list=[]):
     for filename in os.listdir(root):
         path = os.path.join(root, filename)
         if path in ignore_list:
-            print('Skipping slow book: ' + path)
+            print('Skipping slow/error book: ' + path)
             continue
 
         # Recurse into subdirectories
@@ -406,7 +406,7 @@ def scan_for_notebooks(root, recursive=True, ignore_list=[]):
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            ok &= scan_for_notebooks(path, recursive)
+            ok &= scan_for_notebooks(path, recursive, ignore_list)
 
         # Test notebooks
         if os.path.splitext(path)[1] == '.ipynb':

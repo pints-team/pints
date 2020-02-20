@@ -1,10 +1,10 @@
 # Slow notebooks
-other-functionality/toy/automatic-differentiation-using-autograd.ipynb
 sampling/hamiltonian-mcmc.ipynb
 sampling/slice-doubling-mcmc.ipynb
 sampling/slice-overrelaxation-mcmc.ipynb
 sampling/slice-stepout-mcmc.ipynb
 other-functionality/stats/autoregressive-moving-average-errors.ipynb
+other-functionality/toy/automatic-differentiation-using-autograd.ipynb
 other-functionality/toy/model-beeler-reuter-ap.ipynb
 other-functionality/toy/model-fitzhugh-nagumo.ipynb
 other-functionality/toy/model-goodwin-oscillator.ipynb
