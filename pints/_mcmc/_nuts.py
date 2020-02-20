@@ -13,6 +13,63 @@ import pints
 import numpy as np
 
 
+class DualAveragingAdaption:
+    def __init__(self, num_warmup_steps):
+        # defaults taken from STAN
+        self._initial_window = 75
+        self._terminal_window = 50
+        self._base_window = 25
+
+        minimum_warmup_steps = self._initial_window + self._terminal_window +
+            self._base_window
+
+        if num_warmup_steps > minimum_warmup_steps:
+            raise ValueError(
+                'ERROR: number of warmup steps less than the minimum value {}'.
+                format(minimum_warmup_steps)
+            )
+
+        self._warmup_steps = num_warmup_steps
+        self._counter = 0
+        self._next_window = self._initial_window + self._base_window
+        self._adapting = True
+
+        def step(self, x, accept_prob):
+            if not self._adapting:
+                return
+
+            self._counter++
+
+            if self._counter >= self._warmup_steps:
+                self.finish_adapting()
+                self._adapting = False
+                return
+
+            if self._counter >= self._next_window:
+                self.finish_window()
+                if self._counter >= self._warmup_steps - self._terminal_window:
+                    self._next_window = self._warmup_steps
+                else:
+                    self._base_window *= 2
+                    self._next_window = min(
+                        self._counter + self._base_window,
+                        self._warmup_steps - self._terminal_window
+                    )
+
+            self.adapt_step_size(accept_prob)
+            self.adapt_mass_matrix(x)
+
+        def finish_adapting(self):
+
+        def finish_window(self):
+
+        def adapt_step_size(self, accept_prob):
+
+        def adapt_mass_matrix(self, x):
+
+
+
+
 class NutsState:
     """
     Class to hold information about the current state of the NUTS hamiltonian
@@ -81,15 +138,16 @@ class NutsState:
     """
 
     def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent,
-                 use_multinomial_sampling):
-        self.theta_minus = theta
-        self.theta_plus = theta
-        self.r_minus = r
-        self.r_plus = r
-        self.L_minus = L
-        self.L_plus = L
-        self.grad_L_minus = grad_L
-        self.grad_L_plus = grad_L
+                 use_multinomial_sampling, step_size):
+        self.theta_minus = np.copy(theta)
+        self.theta_plus = np.copy(theta)
+        self.r_minus = np.copy(r)
+        self.r_plus = np.copy(r)
+        self.r_sum = np.copy(r)
+        self.L_minus = np.copy(L)
+        self.L_plus = np.copy(L)
+        self.grad_L_minus = np.copy(grad_L)
+        self.grad_L_plus = np.copy(grad_L)
         self.n = n
         self.s = s
         self.theta = theta
@@ -98,6 +156,7 @@ class NutsState:
         self.alpha = alpha
         self.n_alpha = n_alpha
         self.divergent = divergent
+        self.step_size = step_size
 
         if use_multinomial_sampling:
             self.accumulate_weight = self.accumulate_multinomial_sampling
@@ -120,7 +179,10 @@ class NutsState:
         return np.exp(subtree_n - tree_n)
 
     def probability_of_accept_slice_sampling(self, tree_n, subtree_n):
-        return subtree_n / tree_n
+        if subtree_n == 0:
+            return 0.0
+        else:
+            return subtree_n / tree_n
 
     def update(self, other_state, direction, root):
         """
@@ -153,6 +215,7 @@ class NutsState:
         s_dash = other_state.s
         alpha_dash = other_state.alpha
         n_alpha_dash = other_state.n_alpha
+        r_sum_dash = other_state.r_sum
 
         # for non-root merges accumulate tree weightings before probability
         # calculation
@@ -188,12 +251,18 @@ class NutsState:
             self.alpha += alpha_dash
             self.n_alpha += n_alpha_dash
 
+        # integrate r over chain
+        self.r_sum += r_sum_dash
+
         # test if the path has done a U-Turn
         self.s *= s_dash
-        self.s *= int((self.theta_plus -
-                       self.theta_minus).dot(self.r_minus) >= 0)
-        self.s *= int((self.theta_plus -
-                       self.theta_minus).dot(self.r_plus) >= 0)
+        # self.s *= int((self.theta_plus -
+        #               self.theta_minus).dot(self.r_minus) >= 0)
+        # self.s *= int((self.theta_plus -
+        #               self.theta_minus).dot(self.r_plus) >= 0)
+
+        self.s *= int((self.r_sum-self.r_minus).dot(self.step_size*self.r_minus) >= 0)
+        self.s *= int((self.r_sum-self.r_plus).dot(self.step_size*self.r_plus) >= 0)
 
         # propogate divergence up the tree
         self.divergent |= other_state.divergent
@@ -206,10 +275,10 @@ class NutsState:
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, step_size):
     """ performs a leapfrog step with step size ``epsilon*step_size`` """
-    r_new = r + 0.5 * epsilon * step_size * grad_L
+    r_new = r + 0.5 * epsilon * grad_L
     theta_new = theta + epsilon * step_size * r_new
     L_new, grad_L_new = (yield theta_new)
-    r_new += 0.5 * epsilon * step_size * grad_L_new
+    r_new += 0.5 * epsilon * grad_L_new
     return L_new, grad_L_new, theta_new, r_new
 
 
@@ -234,7 +303,7 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
 
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, v * epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
+        hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
         slice_comparison = log_u - hamiltonian_dash
         if use_multinomial_sampling:
             n_dash = -slice_comparison
@@ -247,7 +316,8 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
         n_alpha_dash = 1
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
-            alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling
+            alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling,
+            step_size
         )
 
     else:
@@ -277,10 +347,10 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
     r = np.random.normal(size=len(theta))
-    hamiltonian = L - 0.5 * r.dot(r)
+    hamiltonian = L - 0.5 * step_size.dot(r**2)
     L_dash, grad_L_dash, theta_dash, r_dash = \
         yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-    hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
+    hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
     comparison = hamiltonian_dash - hamiltonian
 
     # determine whether we are doubling or halving
@@ -291,7 +361,7 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
         epsilon = 2**alpha * epsilon
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5 * r_dash.dot(r_dash)
+        hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
         comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
@@ -366,8 +436,8 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     # provide an infinite generator of mcmc steps....
     while True:
         # randomly sample momentum
-        r0 = np.random.normal(size=len(theta))
-        hamiltonian0 = L - 0.5 * r0.dot(r0)
+        r0 = np.random.normal(size=len(theta), scale=1.0/np.sqrt(step_size))
+        hamiltonian0 = L - 0.5 * step_size.dot(r0**2)
 
         if use_multinomial_sampling:
             # use multinomial sampling
@@ -382,7 +452,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
 
         # create initial integration path state
         state = NutsState(theta, r0, L, grad_L, n, 1, None, None, False,
-                use_multinomial_sampling)
+                          use_multinomial_sampling, step_size)
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
