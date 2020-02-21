@@ -82,7 +82,7 @@ class DualAveragingAdaption:
         self._next_window = self._initial_window + self._base_window
         self._adapting = True
 
-        self.init_sample_covariance(self._next_window)
+        self.init_sample_covariance(self._base_window)
         self.init_adapt_epsilon()
 
     @property
@@ -138,7 +138,8 @@ class DualAveragingAdaption:
             return
 
         self.adapt_epsilon(accept_prob)
-        self.add_parameter_sample(x)
+        if self._counter > self._initial_window:
+            self.add_parameter_sample(x)
 
         if self._counter >= self._next_window:
             self.inv_mass_matrix = self.calculate_sample_variance()
