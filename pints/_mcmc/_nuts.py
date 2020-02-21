@@ -94,12 +94,16 @@ class DualAveragingAdaption:
         """
         We calculate the mass matrix whenever the inverse mass matrix is set
         """
-        try:
-            self._mass_matrix = np.linalg.inv(inv_mass_matrix)
-        except np.linalg.LinAlgError:
-            print('WARNING: adapted mass matrix is ill-conditioned')
-            return
-        self._inv_mass_matrix = inv_mass_matrix
+        if inv_mass_matrix.ndim == 1:
+            self._mass_matrix = 1.0 / inv_mass_matrix
+            self._inv_mass_matrix = inv_mass_matrix
+        else:
+            try:
+                self._mass_matrix = np.linalg.inv(inv_mass_matrix)
+            except np.linalg.LinAlgError:
+                print('WARNING: adapted mass matrix is ill-conditioned')
+                return
+            self._inv_mass_matrix = inv_mass_matrix
 
     @property
     def mass_matrix(self):
@@ -202,7 +206,10 @@ class DualAveragingAdaption:
         """
         Return the sample covariance of all the stored samples
         """
-        return np.cov(self._samples)
+        if self._inv_mass_matrix.ndim == 1:
+            return np.var(self._samples, axis=1)
+        else:
+            return np.cov(self._samples)
 
 
 class NutsState:
@@ -391,21 +398,24 @@ class NutsState:
 
         # test if the path has done a U-Turn
         self.s *= s_dash
-        # self.s *= int((self.theta_plus -
-        #               self.theta_minus).dot(self.r_minus) >= 0)
-        # self.s *= int((self.theta_plus -
-        #               self.theta_minus).dot(self.r_plus) >= 0)
-
-        self.s *= \
-            int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix.dot(self.r_minus)) >= 0)
-        self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
+        if self.inv_mass_matrix.ndim == 1:
+            self.s *= \
+                int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix * self.r_minus) >= 0)
+            self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix * self.r_plus) >= 0)
+        else:
+            self.s *= \
+                int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix.dot(self.r_minus)) >= 0)
+            self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
 
         # propogate divergence up the tree
         self.divergent |= other_state.divergent
 
 
 def kinetic_energy(r, inv_mass_matrix):
-    return 0.5 * r.dot(inv_mass_matrix.dot(r))
+    if inv_mass_matrix.ndim == 1:
+        return 0.5 * r.dot(inv_mass_matrix * r)
+    else:
+        return 0.5 * r.dot(inv_mass_matrix.dot(r))
 
 # All the functions below are written as coroutines to enable the recursive
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
@@ -416,7 +426,10 @@ def kinetic_energy(r, inv_mass_matrix):
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     """ performs a leapfrog step """
     r_new = r + 0.5 * epsilon * grad_L
-    theta_new = theta + epsilon * inv_mass_matrix.dot(r_new)
+    if inv_mass_matrix.ndim == 1:
+        theta_new = theta + epsilon * inv_mass_matrix * r_new
+    else:
+        theta_new = theta + epsilon * inv_mass_matrix.dot(r_new)
     L_new, grad_L_new = (yield theta_new)
     r_new += 0.5 * epsilon * grad_L_new
     return L_new, grad_L_new, theta_new, r_new
@@ -486,10 +499,16 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
 
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
-    r = np.random.multivariate_normal(
-        np.zeros(len(theta)),
-        np.linalg.inv(inv_mass_matrix)
-    )
+    if inv_mass_matrix.ndim == 1:
+        r = np.random.normal(
+            np.zeros(len(theta)),
+            np.sqrt(1.0 / inv_mass_matrix)
+        )
+    else:
+        r = np.random.multivariate_normal(
+            np.zeros(len(theta)),
+            np.linalg.inv(inv_mass_matrix)
+        )
     hamiltonian = L - kinetic_energy(r, inv_mass_matrix)
     L_dash, grad_L_dash, theta_dash, r_dash = \
         yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
@@ -518,7 +537,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
 @asyncio.coroutine
 def nuts_sampler(x0, delta, M_adapt, step_size,
                  hamiltonian_threshold, max_tree_depth,
-                 use_multinomial_sampling):
+                 use_multinomial_sampling, use_dense_mass_matrix):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
 
@@ -544,6 +563,9 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     use_multinomial_sampling: bool
         use multinomial sampling as suggested in [2] instead of slice sampling
         method used in [1]
+    use_dense_mass_matrix: bool
+        if False, use a diagonal mass matrix, if True use a fully dense mass
+        matrix
 
     References
     ----------
@@ -567,8 +589,12 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     # find a good value to start epsilon at
     # (this will later be refined so that the acceptance probability matches
     # delta)
-    init_inv_mass_matrix = np.diag(step_size)
-    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, init_inv_mass_matrix)
+    if use_dense_mass_matrix:
+        init_inv_mass_matrix = np.diag(step_size)
+    else:
+        init_inv_mass_matrix = step_size
+    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L,
+                                                 init_inv_mass_matrix)
 
     # create adaption for epsilon and mass matrix
     adaptor = DualAveragingAdaption(M_adapt, delta, epsilon, init_inv_mass_matrix)
@@ -579,7 +605,10 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     # provide an infinite generator of mcmc steps....
     while True:
         # randomly sample momentum
-        r0 = np.random.multivariate_normal(np.zeros(len(theta)), adaptor.mass_matrix)
+        if use_dense_mass_matrix:
+            r0 = np.random.multivariate_normal(np.zeros(len(theta)), adaptor.mass_matrix)
+        else:
+            r0 = np.random.normal(np.zeros(len(theta)), np.sqrt(adaptor.mass_matrix))
         hamiltonian0 = L - kinetic_energy(r0, adaptor.inv_mass_matrix)
 
         if use_multinomial_sampling:
@@ -667,6 +696,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self.set_leapfrog_step_size(np.diag(self._sigma0))
         self._max_tree_depth = 10
         self._use_multinomial_sampling = True
+        self._use_dense_mass_matrix = False
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
@@ -712,7 +742,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                                       self._step_size,
                                       self._hamiltonian_threshold,
                                       self._max_tree_depth,
-                                      self._use_multinomial_sampling)
+                                      self._use_multinomial_sampling,
+                                      self._use_dense_mass_matrix)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
