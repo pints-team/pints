@@ -14,15 +14,14 @@ import numpy as np
 
 
 class DualAveragingAdaption:
-    def __init__(self, num_warmup_steps, target_accept_prob, init_epsilon, init_mass_matrix):
+    def __init__(self, num_warmup_steps, target_accept_prob, init_epsilon, init_inv_mass_matrix):
         # defaults taken from STAN
         self._initial_window = 75
         self._base_window = 25
         self._terminal_window = 50
         self._epsilon = init_epsilon
-        self._mass_matrix = init_mass_matrix
+        self.inv_mass_matrix = np.copy(init_inv_mass_matrix)
         self._target_accept_prob = target_accept_prob
-
 
         minimum_warmup_steps = self._initial_window + self._terminal_window + \
             self._base_window
@@ -41,6 +40,27 @@ class DualAveragingAdaption:
         self.init_sample_covariance(self._next_window)
         self.init_adapt_epsilon()
 
+    @property
+    def inv_mass_matrix(self):
+        return self._inv_mass_matrix
+
+    @inv_mass_matrix.setter
+    def inv_mass_matrix(self, inv_mass_matrix):
+        try:
+            self._mass_matrix = np.linalg.inv(inv_mass_matrix)
+        except np.linalg.LinAlgError:
+            print('WARNING: adapted mass matrix is ill-conditioned')
+            return
+        self._inv_mass_matrix = inv_mass_matrix
+
+    @property
+    def mass_matrix(self):
+        return self._mass_matrix
+
+    @property
+    def epsilon(self):
+        return self._epsilon
+
     def step(self, x, accept_prob):
         if not self._adapting:
             return
@@ -56,7 +76,7 @@ class DualAveragingAdaption:
         self.add_parameter_sample(x)
 
         if self._counter >= self._next_window:
-            self._mass_matrix = self.calculate_sample_variance()
+            self.inv_mass_matrix = self.calculate_sample_variance()
             if self._counter >= self._warmup_steps - self._terminal_window:
                 self._next_window = self._warmup_steps
             else:
@@ -68,7 +88,6 @@ class DualAveragingAdaption:
             self.init_sample_covariance(self._next_window - self._counter)
             self._epsilon = self.final_epsilon()
             self.init_adapt_epsilon()
-
 
     def init_adapt_epsilon(self):
         # default values taken from [1]
@@ -94,7 +113,7 @@ class DualAveragingAdaption:
         return np.exp(self._log_epsilon_bar)
 
     def init_sample_covariance(self, size):
-        n = self._mass_matrix.shape[0]
+        n = self.inv_mass_matrix.shape[0]
         self._samples = np.empty((n, size))
         self._num_samples = 0
 
@@ -174,7 +193,7 @@ class NutsState:
     """
 
     def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent,
-                 use_multinomial_sampling, step_size):
+                 use_multinomial_sampling, inv_mass_matrix):
         self.theta_minus = np.copy(theta)
         self.theta_plus = np.copy(theta)
         self.r_minus = np.copy(r)
@@ -192,7 +211,7 @@ class NutsState:
         self.alpha = alpha
         self.n_alpha = n_alpha
         self.divergent = divergent
-        self.step_size = step_size
+        self.inv_mass_matrix = inv_mass_matrix
 
         if use_multinomial_sampling:
             self.accumulate_weight = self.accumulate_multinomial_sampling
@@ -297,29 +316,34 @@ class NutsState:
         # self.s *= int((self.theta_plus -
         #               self.theta_minus).dot(self.r_plus) >= 0)
 
-        self.s *= int((self.r_sum-self.r_minus).dot(self.step_size*self.r_minus) >= 0)
-        self.s *= int((self.r_sum-self.r_plus).dot(self.step_size*self.r_plus) >= 0)
+        self.s *= \
+            int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix.dot(self.r_minus)) >= 0)
+        self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
 
         # propogate divergence up the tree
         self.divergent |= other_state.divergent
 
 
+def kinetic_energy(r, inv_mass_matrix):
+    return 0.5 * r.dot(inv_mass_matrix.dot(r))
+
 # All the functions below are written as coroutines to enable the recursive
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
 # see main coroutine function ``nuts_sampler`` for more details
 
+
 @asyncio.coroutine
-def leapfrog(theta, L, grad_L, r, epsilon, step_size):
-    """ performs a leapfrog step with step size ``epsilon*step_size`` """
+def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
+    """ performs a leapfrog step """
     r_new = r + 0.5 * epsilon * grad_L
-    theta_new = theta + epsilon * step_size * r_new
+    theta_new = theta + epsilon * inv_mass_matrix.dot(r_new)
     L_new, grad_L_new = (yield theta_new)
     r_new += 0.5 * epsilon * grad_L_new
     return L_new, grad_L_new, theta_new, r_new
 
 
 @asyncio.coroutine
-def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
+def build_tree(state, log_u, v, j, adaptor, hamiltonian0,
                hamiltonian_threshold, use_multinomial_sampling):
     """
     Implicitly build up a subtree of depth j for the NUTS sampler
@@ -338,43 +362,43 @@ def build_tree(state, log_u, v, j, epsilon, hamiltonian0, step_size,
             grad_L = state.grad_L_plus
 
         L_dash, grad_L_dash, theta_dash, r_dash = \
-            yield from leapfrog(theta, L, grad_L, r, v * epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
+            yield from leapfrog(theta, L, grad_L, r, v * adaptor.epsilon,
+                                adaptor.inv_mass_matrix)
+        hamiltonian_dash = L_dash \
+            - kinetic_energy(r_dash, adaptor.inv_mass_matrix)
         slice_comparison = log_u - hamiltonian_dash
         if use_multinomial_sampling:
             n_dash = -slice_comparison
         else:
             n_dash = int(slice_comparison <= 0)
         comparison = hamiltonian_dash - hamiltonian0
-        s_dash = int(slice_comparison < hamiltonian_threshold)
-        divergent = not bool(s_dash)
+        divergent = slice_comparison > hamiltonian_threshold
+        s_dash = int(not divergent)
         alpha_dash = min(1.0, np.exp(comparison))
         n_alpha_dash = 1
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
             alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling,
-            step_size
+            adaptor.inv_mass_matrix
         )
 
     else:
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
-            build_tree(state, log_u, v, j - 1, epsilon, hamiltonian0,
-                       step_size, hamiltonian_threshold,
-                       use_multinomial_sampling)
+            build_tree(state, log_u, v, j - 1, adaptor, hamiltonian0,
+                       hamiltonian_threshold, use_multinomial_sampling)
 
         if state_dash.s == 1:
             state_double_dash = yield from \
-                build_tree(state_dash, log_u, v, j - 1, epsilon, hamiltonian0,
-                           step_size, hamiltonian_threshold,
-                           use_multinomial_sampling)
+                build_tree(state_dash, log_u, v, j - 1, adaptor, hamiltonian0,
+                           hamiltonian_threshold, use_multinomial_sampling)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
 
 
 @asyncio.coroutine
-def find_reasonable_epsilon(theta, L, grad_L, step_size):
+def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
     probability of the Langevin proposal crosses 0.5.
@@ -382,12 +406,18 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
 
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
-    r = np.random.normal(size=len(theta))
-    hamiltonian = L - 0.5 * step_size.dot(r**2)
+    r = np.random.multivariate_normal(
+        np.zeros(len(theta)),
+        np.linalg.inv(inv_mass_matrix)
+    )
+    hamiltonian = L - kinetic_energy(r, inv_mass_matrix)
     L_dash, grad_L_dash, theta_dash, r_dash = \
-        yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-    hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
-    comparison = hamiltonian_dash - hamiltonian
+        yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
+    hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
+    if np.isnan(hamiltonian_dash):
+        comparison = float('-inf')
+    else:
+        comparison = hamiltonian_dash - hamiltonian
 
     # determine whether we are doubling or halving
     alpha = 2 * int(comparison > np.log(0.5)) - 1
@@ -396,9 +426,12 @@ def find_reasonable_epsilon(theta, L, grad_L, step_size):
     while comparison * alpha > np.log(2) * (-alpha):
         epsilon = 2**alpha * epsilon
         L_dash, grad_L_dash, theta_dash, r_dash = \
-            yield from leapfrog(theta, L, grad_L, r, epsilon, step_size)
-        hamiltonian_dash = L_dash - 0.5 * step_size.dot(r_dash**2)
-        comparison = hamiltonian_dash - hamiltonian
+            yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
+        hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
+        if np.isnan(hamiltonian_dash):
+            comparison = float('-inf')
+        else:
+            comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
 
@@ -424,8 +457,6 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
         target acceptance probability (Dual Averaging scheme)
     M_adapt: int
         number of adaption steps (Dual Averaging scheme)
-    step_size: ndarray
-        step sizes in each parameter dimension
     hamiltonian_threshold: float
         threshold to test divergent iterations
     max_tree_depth: int
@@ -456,15 +487,11 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     # find a good value to start epsilon at
     # (this will later be refined so that the acceptance probability matches
     # delta)
-    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, step_size)
+    init_inv_mass_matrix = np.diag(step_size)
+    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L, init_inv_mass_matrix)
 
-    # default values taken from [1]
-    mu = np.log(10 * epsilon)
-    log_epsilon_bar = np.log(1)
-    H_bar = 0
-    gamma = 0.05
-    t0 = 10
-    kappa = 0.75
+    # create adaption for epsilon and mass matrix
+    adaptor = DualAveragingAdaption(M_adapt, delta, epsilon, init_inv_mass_matrix)
 
     # start at iteration 1
     m = 1
@@ -472,8 +499,8 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     # provide an infinite generator of mcmc steps....
     while True:
         # randomly sample momentum
-        r0 = np.random.normal(size=len(theta), scale=1.0/np.sqrt(step_size))
-        hamiltonian0 = L - 0.5 * step_size.dot(r0**2)
+        r0 = np.random.multivariate_normal(np.zeros(len(theta)), adaptor.mass_matrix)
+        hamiltonian0 = L - kinetic_energy(r0, adaptor.inv_mass_matrix)
 
         if use_multinomial_sampling:
             # use multinomial sampling
@@ -488,7 +515,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
 
         # create initial integration path state
         state = NutsState(theta, r0, L, grad_L, n, 1, None, None, False,
-                          use_multinomial_sampling, step_size)
+                          use_multinomial_sampling, adaptor.inv_mass_matrix)
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
@@ -504,23 +531,15 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
 
             # recursivly build up tree in that direction
             state_dash = yield from \
-                build_tree(state, log_u, vj, j, epsilon,
-                           hamiltonian0, step_size, hamiltonian_threshold,
+                build_tree(state, log_u, vj, j, adaptor,
+                           hamiltonian0, hamiltonian_threshold,
                            use_multinomial_sampling)
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
 
-        # adapt epsilon using dual averaging
-        if m < M_adapt:
-            H_bar = (1 - 1.0 / (m + t0)) * H_bar + 1.0 / (m + t0) * \
-                (delta - state.alpha / state.n_alpha)
-            log_epsilon = mu - (np.sqrt(m) / gamma) * H_bar
-            log_epsilon_bar = m**(-kappa) * log_epsilon + \
-                (1 - m**(-kappa)) * log_epsilon_bar
-            epsilon = np.exp(log_epsilon)
-        elif m == M_adapt:
-            epsilon = np.exp(log_epsilon_bar)
+        # adapt epsilon and mass matrix using dual averaging
+        adaptor.step(state.theta, state.alpha / state.n_alpha)
 
         # update current position in chain
         theta = state.theta
