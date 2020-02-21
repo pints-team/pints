@@ -14,18 +14,22 @@ import numpy as np
 
 
 class DualAveragingAdaption:
-    def __init__(self, num_warmup_steps):
+    def __init__(self, num_warmup_steps, target_accept_prob, init_epsilon, init_mass_matrix):
         # defaults taken from STAN
         self._initial_window = 75
-        self._terminal_window = 50
         self._base_window = 25
+        self._terminal_window = 50
+        self._epsilon = init_epsilon
+        self._mass_matrix = init_mass_matrix
+        self._target_accept_prob = target_accept_prob
 
-        minimum_warmup_steps = self._initial_window + self._terminal_window +
+
+        minimum_warmup_steps = self._initial_window + self._terminal_window + \
             self._base_window
 
-        if num_warmup_steps > minimum_warmup_steps:
+        if num_warmup_steps < minimum_warmup_steps:
             raise ValueError(
-                'ERROR: number of warmup steps less than the minimum value {}'.
+                'Number of warmup steps less than the minimum value {}'.
                 format(minimum_warmup_steps)
             )
 
@@ -34,40 +38,72 @@ class DualAveragingAdaption:
         self._next_window = self._initial_window + self._base_window
         self._adapting = True
 
-        def step(self, x, accept_prob):
-            if not self._adapting:
-                return
+        self.init_sample_covariance(self._next_window)
+        self.init_adapt_epsilon()
 
-            self._counter++
+    def step(self, x, accept_prob):
+        if not self._adapting:
+            return
 
-            if self._counter >= self._warmup_steps:
-                self.finish_adapting()
-                self._adapting = False
-                return
+        self._counter += 1
 
-            if self._counter >= self._next_window:
-                self.finish_window()
-                if self._counter >= self._warmup_steps - self._terminal_window:
-                    self._next_window = self._warmup_steps
-                else:
-                    self._base_window *= 2
-                    self._next_window = min(
-                        self._counter + self._base_window,
-                        self._warmup_steps - self._terminal_window
-                    )
+        if self._counter >= self._warmup_steps:
+            self._epsilon = self.final_epsilon()
+            self._adapting = False
+            return
 
-            self.adapt_step_size(accept_prob)
-            self.adapt_mass_matrix(x)
+        self.adapt_epsilon(accept_prob)
+        self.add_parameter_sample(x)
 
-        def finish_adapting(self):
-
-        def finish_window(self):
-
-        def adapt_step_size(self, accept_prob):
-
-        def adapt_mass_matrix(self, x):
+        if self._counter >= self._next_window:
+            self._mass_matrix = self.calculate_sample_variance()
+            if self._counter >= self._warmup_steps - self._terminal_window:
+                self._next_window = self._warmup_steps
+            else:
+                self._base_window *= 2
+                self._next_window = min(
+                    self._counter + self._base_window,
+                    self._warmup_steps - self._terminal_window
+                )
+            self.init_sample_covariance(self._next_window - self._counter)
+            self._epsilon = self.final_epsilon()
+            self.init_adapt_epsilon()
 
 
+    def init_adapt_epsilon(self):
+        # default values taken from [1]
+        self._mu = np.log(10 * self._epsilon)
+        self._log_epsilon_bar = np.log(1)
+        self._H_bar = 0
+        self._gamma = 0.05
+        self._t0 = 10
+        self._kappa = 0.75
+
+    def adapt_epsilon(self, accept_prob):
+        self._H_bar = (1 - 1.0 / (self._counter + self._t0)) * self._H_bar \
+            + 1.0 / (self._counter + self._t0) * \
+            (self._target_accept_prob - accept_prob)
+        self._log_epsilon = self._mu  \
+            - (np.sqrt(self._counter) / self._gamma) \
+            * self._H_bar
+        self._log_epsilon_bar = self._counter**(-self._kappa) * self._log_epsilon + \
+            (1 - self._counter**(-self._kappa)) * self._log_epsilon_bar
+        self._epsilon = np.exp(self._log_epsilon)
+
+    def final_epsilon(self):
+        return np.exp(self._log_epsilon_bar)
+
+    def init_sample_covariance(self, size):
+        n = self._mass_matrix.shape[0]
+        self._samples = np.empty((n, size))
+        self._num_samples = 0
+
+    def add_parameter_sample(self, x):
+        self._samples[:, self._num_samples] = x
+        self._num_samples += 1
+
+    def calculate_sample_variance(self):
+        return np.cov(self._samples)
 
 
 class NutsState:

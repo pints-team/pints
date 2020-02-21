@@ -206,6 +206,7 @@ from ._mcmc._hamiltonian import HamiltonianMCMC
 
 if sys.hexversion >= 0x03030000:
     from ._mcmc._nuts import NoUTurnMCMC
+    from ._mcmc._nuts import DualAveragingAdaption
 else:
     print(
         'WARNING: Pints No-U-Turn sampler unsupported for Python version < 3.3'
