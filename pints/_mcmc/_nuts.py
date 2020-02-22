@@ -15,23 +15,23 @@ import numpy as np
 
 class DualAveragingAdaption:
     """
-    Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as per [1]_,
-    and estimates the (fully dense) inverse mass matrix using the sample covariance of
-    the accepted parameter, as suggested in [2]_
+    Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as
+    per [1]_, and estimates the (fully dense) inverse mass matrix using the
+    sample covariance of the accepted parameter, as suggested in [2]_
 
-    The adaption is done using the same windowing method employed by STAN, which is done
-    over three or more windows:
+    The adaption is done using the same windowing method employed by STAN,
+    which is done over three or more windows:
     - initial window: epsilon is adapted using dual averaging
-    - base window: epsilon continues to be adapted using dual averaging, this adaption
-      completes at the end of this window. The inverse mass matrix is adaped at the end
-      of the window by taking the sample covariance of all parameter points in this
-      window.
-    - terminal window: epsilon is adapted using dual averaging, which completes at the
-      end of the window
+    - base window: epsilon continues to be adapted using dual averaging, this
+      adaption completes at the end of this window. The inverse mass matrix is
+      adaped at the end of the window by taking the sample covariance of all
+      parameter points in this window.
+    - terminal window: epsilon is adapted using dual averaging, which completes
+      at the end of the window
 
-    If the number of warmup steps requested by the user is greater than the sum of these
-    three windows, then additional base windows are added, each with a size double that
-    of the previous window
+    If the number of warmup steps requested by the user is greater than the sum
+    of these three windows, then additional base windows are added, each with a
+    size double that of the previous window
 
     References
     ----------
@@ -59,7 +59,8 @@ class DualAveragingAdaption:
 
     """
 
-    def __init__(self, num_warmup_steps, target_accept_prob, init_epsilon, init_inv_mass_matrix):
+    def __init__(self, num_warmup_steps, target_accept_prob,
+                 init_epsilon, init_inv_mass_matrix):
         # defaults taken from STAN
         self._initial_window = 75
         self._base_window = 25
@@ -177,7 +178,8 @@ class DualAveragingAdaption:
         self._log_epsilon = self._mu  \
             - (np.sqrt(self._counter) / self._gamma) \
             * self._H_bar
-        self._log_epsilon_bar = self._counter**(-self._kappa) * self._log_epsilon + \
+        self._log_epsilon_bar = self._counter**(-self._kappa) \
+            * self._log_epsilon + \
             (1 - self._counter**(-self._kappa)) * self._log_epsilon_bar
         self._epsilon = np.exp(self._log_epsilon)
 
@@ -364,10 +366,10 @@ class NutsState:
             self.n = self.accumulate_weight(self.n, other_state.n)
 
         # if there is any accepted points in the other subtree then test for
-        # acceptance of that subtree's theta
-        # probability of sample being in new tree only greater than 0 if
-        # ``other_state.s == 1``.  for non-root we don't need to check this as the new
-        # tree is not built at all when ``other_state.s != 1``
+        # acceptance of that subtree's theta probability of sample being in new
+        # tree only greater than 0 if ``other_state.s == 1``.  for non-root we
+        # don't need to check this as the new tree is not built at all when
+        # ``other_state.s != 1``
         if root:
             p = int(other_state.s == 1) \
                 * min(1, self.probability_of_accept(self.n, other_state.n))
@@ -400,15 +402,19 @@ class NutsState:
         # self.s
         self.s *= other_state.s
         if self.inv_mass_matrix.ndim == 1:
-            self.s *= \
-                int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix * self.r_minus) >= 0)
-            self.s *= int((self.r_sum -
-                           self.r_plus).dot(self.inv_mass_matrix * self.r_plus) >= 0)
+            self.s *= int((self.r_sum - self.r_minus).dot(
+                self.inv_mass_matrix * self.r_minus
+            ) >= 0)
+            self.s *= int((self.r_sum - self.r_plus).dot(
+                self.inv_mass_matrix * self.r_plus
+            ) >= 0)
         else:
-            self.s *= \
-                int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix.dot(self.r_minus)) >= 0)
-            self.s *= int((self.r_sum -
-                           self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
+            self.s *= int((self.r_sum - self.r_minus).dot(
+                self.inv_mass_matrix.dot(self.r_minus)
+            ) >= 0)
+            self.s *= int((self.r_sum - self.r_plus).dot(
+                self.inv_mass_matrix.dot(self.r_plus)
+            ) >= 0)
 
         # propogate divergence up the tree
         self.divergent |= other_state.divergent
@@ -555,12 +561,12 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
                  use_multinomial_sampling, use_dense_mass_matrix):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1]_.
-    Implements both the slice sampling method given in [1]_, and the multinomial
-    sampling suggested in [2]_. Implements a mass matrix for the dynamics, which
-    is detailed in [2]_. Both the step size and the mass matrix is adapted using
-    a combination of the dual averaging detailed in [1]_, and the windowed
-    adaption for the mass matrix and step size implemented in the STAN library
-    (https://github.com/stan-dev/stan)
+    Implements both the slice sampling method given in [1]_, and the
+    multinomial sampling suggested in [2]_. Implements a mass matrix for the
+    dynamics, which is detailed in [2]_. Both the step size and the mass matrix
+    is adapted using a combination of the dual averaging detailed in [1]_, and
+    the windowed adaption for the mass matrix and step size implemented in the
+    STAN library (https://github.com/stan-dev/stan)
 
     Implemented as a coroutine that continually generates new theta values to
     evaluate (L, L') at. Users must send (L, L') back to the coroutine to
@@ -695,12 +701,12 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
     Algorithm 6 in [1]_.
 
-    Implements both the slice sampling method given in [1]_, and the multinomial
-    sampling suggested in [2]_. Implements a mass matrix for the dynamics, which
-    is detailed in [2]_. Both the step size and the mass matrix is adapted using
-    a combination of the dual averaging detailed in [1]_, and the windowed
-    adaption for the mass matrix and step size implemented in the STAN library
-    (https://github.com/stan-dev/stan).
+    Implements both the slice sampling method given in [1]_, and the
+    multinomial sampling suggested in [2]_. Implements a mass matrix for the
+    dynamics, which is detailed in [2]_. Both the step size and the mass matrix
+    is adapted using a combination of the dual averaging detailed in [1]_, and
+    the windowed adaption for the mass matrix and step size implemented in the
+    STAN library (https://github.com/stan-dev/stan).
 
     Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
     log-posterior (NLP) space to generate proposals. Naturally, the particle

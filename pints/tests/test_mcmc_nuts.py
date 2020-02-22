@@ -56,35 +56,43 @@ class TestNutsMCMC(unittest.TestCase):
         def fake_accept_prob(epsilon):
             return 1.0 / (10.0 * epsilon)
 
-        stored_x = np.empty((2, averager._next_window-averager._initial_window))
+        stored_x = np.empty(
+            (2, averager._next_window - averager._initial_window)
+        )
         for i in range(averager._next_window - 1):
-            x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
+            x = np.random.multivariate_normal(np.zeros(2) + 123,
+                                              target_mass_matrix)
             averager.step(x, fake_accept_prob(averager._epsilon))
             if i >= averager._initial_window:
                 stored_x[:, i - averager._initial_window] = x
 
         np.testing.assert_array_equal(averager._mass_matrix, init_mass_matrix)
-        x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
+        x = np.random.multivariate_normal(np.zeros(2) + 123,
+                                          target_mass_matrix)
         averager.step(x, fake_accept_prob(averager._epsilon))
         stored_x[:, -1] = x
-        np.testing.assert_array_equal(averager._inv_mass_matrix, np.cov(stored_x))
+        np.testing.assert_array_equal(averager._inv_mass_matrix,
+                                      np.cov(stored_x))
         np.testing.assert_array_equal(averager._mass_matrix,
-                np.linalg.inv(np.cov(stored_x)))
+                                      np.linalg.inv(np.cov(stored_x)))
         self.assertAlmostEqual(fake_accept_prob(averager._epsilon),
                                target_accept_prob, 1)
 
         self.assertEqual(averager._counter, initial_window + base_window)
-        self.assertEqual(averager._next_window, num_warmup_steps - terminal_window)
+        self.assertEqual(averager._next_window,
+                         num_warmup_steps - terminal_window)
 
         for i in range(averager._next_window - averager._counter):
-            x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
+            x = np.random.multivariate_normal(np.zeros(2) + 123,
+                                              target_mass_matrix)
             averager.step(x, fake_accept_prob(averager._epsilon))
 
         self.assertEqual(averager._counter, num_warmup_steps - terminal_window)
         self.assertEqual(averager._next_window, num_warmup_steps)
 
         for i in range(averager._next_window - averager._counter):
-            x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
+            x = np.random.multivariate_normal(np.zeros(2) + 123,
+                                              target_mass_matrix)
             averager.step(x, fake_accept_prob(averager._epsilon))
 
         self.assertEqual(averager._counter, num_warmup_steps)
