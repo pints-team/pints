@@ -15,9 +15,9 @@ import numpy as np
 
 class DualAveragingAdaption:
     """
-    Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as per [1],
+    Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as per [1]_,
     and estimates the (fully dense) inverse mass matrix using the sample covariance of
-    the accepted parameter, as suggested in [2]
+    the accepted parameter, as suggested in [2]_
 
     The adaption is done using the same windowing method employed by STAN, which is done
     over three or more windows:
@@ -159,7 +159,7 @@ class DualAveragingAdaption:
         """
         Start a new dual averaging adaption for epsilon
         """
-        # default values taken from [1]
+        # default values taken from [1]_
         self._mu = np.log(10 * self._epsilon)
         self._log_epsilon_bar = np.log(1)
         self._H_bar = 0
@@ -424,6 +424,7 @@ def kinetic_energy(r, inv_mass_matrix):
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
 # see main coroutine function ``nuts_sampler`` for more details
 
+
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     """
@@ -433,7 +434,6 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     The inverse mass matrix can be a 2 dimensional ndarray, in which case it is
     interpreted as a dense matrix, or a 1 dimensional ndarray, in which case it
     is interpreted as a diagonal matrix
-
     """
     r_new = r + 0.5 * epsilon * grad_L
     if inv_mass_matrix.ndim == 1:
@@ -505,10 +505,15 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
     probability of the Langevin proposal crosses 0.5.
+
+    Note: inv_mass_matrix can be a 1-d ndarray and in this case is interpreted
+    as a diagonal matrix, or can be given as a fully dense 2-d ndarray
     """
 
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
     epsilon = 1.0
+
+    # randomly sample momentum
     if inv_mass_matrix.ndim == 1:
         r = np.random.normal(
             np.zeros(len(theta)),
@@ -545,11 +550,17 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
 
 
 @asyncio.coroutine
-def nuts_sampler(x0, delta, M_adapt, step_size,
+def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
                  hamiltonian_threshold, max_tree_depth,
                  use_multinomial_sampling, use_dense_mass_matrix):
     """
-    The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1].
+    The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1]_.
+    Implements both the slice sampling method given in [1]_, and the multinomial
+    sampling suggested in [2]_. Implements a mass matrix for the dynamics, which
+    is detailed in [2]_. Both the step size and the mass matrix is adapted using
+    a combination of the dual averaging detailed in [1]_, and the windowed
+    adaption for the mass matrix and step size implemented in the STAN library
+    (https://github.com/stan-dev/stan)
 
     Implemented as a coroutine that continually generates new theta values to
     evaluate (L, L') at. Users must send (L, L') back to the coroutine to
@@ -564,15 +575,15 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
         starting point
     delta: float
         target acceptance probability (Dual Averaging scheme)
-    M_adapt: int
+    num_adaption_steps: int
         number of adaption steps (Dual Averaging scheme)
     hamiltonian_threshold: float
         threshold to test divergent iterations
     max_tree_depth: int
         maximum tree depth
     use_multinomial_sampling: bool
-        use multinomial sampling as suggested in [2] instead of slice sampling
-        method used in [1]
+        use multinomial sampling as suggested in [2]_ instead of slice sampling
+        method used in [1]_
     use_dense_mass_matrix: bool
         if False, use a diagonal mass matrix, if True use a fully dense mass
         matrix
@@ -596,19 +607,21 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
         raise ValueError(
             'Initial point for MCMC must have finite logpdf.')
 
-    # find a good value to start epsilon at
-    # (this will later be refined so that the acceptance probability matches
-    # delta)
+    # pick the initial inverse mass matrix as the provided sigma0.
+    # reduce to a diagonal matrix if not using a dense mass matrix
     if use_dense_mass_matrix:
-        init_inv_mass_matrix = np.diag(step_size)
+        init_inv_mass_matrix = sigma0
     else:
-        init_inv_mass_matrix = step_size
+        init_inv_mass_matrix = np.diag(sigma0)
+
+    # find a good value to start epsilon at (this will later be refined so that
+    # the acceptance probability matches delta)
     epsilon = yield from find_reasonable_epsilon(theta, L, grad_L,
                                                  init_inv_mass_matrix)
 
     # create adaption for epsilon and mass matrix
     adaptor = DualAveragingAdaption(
-        M_adapt, delta, epsilon, init_inv_mass_matrix)
+        num_adaption_steps, delta, epsilon, init_inv_mass_matrix)
 
     # start at iteration 1
     m = 1
@@ -682,6 +695,13 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
     Algorithm 6 in [1]_.
 
+    Implements both the slice sampling method given in [1]_, and the multinomial
+    sampling suggested in [2]_. Implements a mass matrix for the dynamics, which
+    is detailed in [2]_. Both the step size and the mass matrix is adapted using
+    a combination of the dual averaging detailed in [1]_, and the windowed
+    adaption for the mass matrix and step size implemented in the STAN library
+    (https://github.com/stan-dev/stan).
+
     Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
     log-posterior (NLP) space to generate proposals. Naturally, the particle
     tends to move to locations of low NLP -- meaning high posterior density.
@@ -697,16 +717,19 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     .. [1] Hoffman, M. D., & Gelman, A. (2014). The No-U-Turn sampler:
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
+
+    .. [2] `A Conceptual Introduction to Hamiltonian Monte Carlo`,
+            Michael Betancourt
+
     """
 
     def __init__(self, x0, sigma0=None):
         super(NoUTurnMCMC, self).__init__(x0, sigma0)
 
         # hyperparameters
-        self._M_adapt = 500
+        self._num_adaption_steps = 500
         self._delta = 0.6
         self._step_size = None
-        self.set_leapfrog_step_size(np.diag(self._sigma0))
         self._max_tree_depth = 10
         self._use_multinomial_sampling = True
         self._use_dense_mass_matrix = False
@@ -751,8 +774,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # Initialise on first call
         if not self._running:
-            self._nuts = nuts_sampler(self._x0, self._delta, self._M_adapt,
-                                      self._step_size,
+            self._nuts = nuts_sampler(self._x0, self._delta,
+                                      self._num_adaption_steps,
+                                      self._sigma0,
                                       self._hamiltonian_threshold,
                                       self._max_tree_depth,
                                       self._use_multinomial_sampling,
@@ -883,21 +907,15 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         return self._delta
 
-    def leapfrog_step_size(self):
-        """
-        Returns the step size for the leapfrog algorithm.
-        """
-        return self._step_size
-
     def number_adaption_steps(self):
         """
         Returns number of adaption steps used in the NUTS algorithm.
         """
-        return self._M_adapt
+        return self._num_adaption_steps
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 4
+        return 1
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -906,29 +924,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
-
-    def set_leapfrog_step_size(self, step_size):
-        """
-        Sets the step size for the leapfrog algorithm. Note that the absolute
-        value of the step size is unimportant, as it will be scaled by a scalar
-        step size that is generated by the dual averaging algorithm. It is
-        important however to specify the correct ratio of step size between
-        parameter dimensions
-        """
-        a = np.atleast_1d(step_size)
-        if len(a[a < 0]) > 0:
-            raise ValueError(
-                'Step size for leapfrog algorithm must' +
-                'be greater than zero.'
-            )
-        if len(a) == 1:
-            step_size = np.repeat(step_size, self._n_parameters)
-        elif not len(step_size) == self._n_parameters:
-            raise ValueError(
-                'Step size should either be of length 1 or equal to the' +
-                'number of parameters'
-            )
-        self._step_size = step_size
 
     def set_delta(self, delta):
         """
@@ -953,16 +948,12 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                 'cannot set number of adaption steps while sampler is running')
         if n < 0:
             raise ValueError('number of adaption steps must be non-negative')
-        self._M_adapt = int(n)
+        self._num_adaption_steps = int(n)
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[delta, number_adaption_steps,
-        leapfrog_step_size, max_tree_depth]``.
+        The hyper-parameter vector is ``[number_adaption_steps]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_delta(x[0])
-        self.set_number_adaption_steps(x[1])
-        self.set_leapfrog_step_size(x[2])
-        self.set_max_tree_depth(x[3])
+        self.set_number_adaption_steps(x[0])
