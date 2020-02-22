@@ -895,6 +895,35 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             raise ValueError('Maximum tree depth must be non-negative.')
         self._max_tree_depth = max_tree_depth
 
+    def set_use_dense_mass_matrix(self, use_dense_mass_matrix):
+        """
+        If ``use_dense_mass_matrix`` is False then algorithm uses a diagonal
+        matrix for the mass matrix. If True then a fully dense mass matrix is
+        used
+        """
+        self._use_dense_mass_matrix = bool(use_dense_mass_matrix)
+
+    def use_dense_mass_matrix(self):
+        """
+        Returns if the algorithm uses a dense (True) or diagonal (False) mass
+        matrix
+        """
+        return self._use_dense_mass_matrix
+
+    def set_use_multinomial_sampling(self, use_multinomial_sampling):
+        """
+        If True uses the multinomial sampling method suggested in [2]_,
+        otherwise uses the slice sampling method in [1]_.
+        """
+        self._use_multinomial_sampling = bool(use_multinomial_sampling)
+
+    def use_multinomial_sampling(self):
+        """
+        Returns True if the sampler uses the multinomial sampling method
+        suggested in [2]_, or False if using the slice sampling method in [1]_.
+        """
+        return self._use_multinomial_sampling
+
     def divergent_iterations(self):
         """
         Returns the iteration number of any divergent iterations
