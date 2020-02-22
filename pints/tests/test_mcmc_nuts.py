@@ -56,17 +56,20 @@ class TestNutsMCMC(unittest.TestCase):
         def fake_accept_prob(epsilon):
             return 1.0 / (10.0 * epsilon)
 
-        stored_x = np.empty((2, averager._next_window))
+        stored_x = np.empty((2, averager._next_window-averager._initial_window))
         for i in range(averager._next_window - 1):
             x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
             averager.step(x, fake_accept_prob(averager._epsilon))
-            stored_x[:, i] = x
+            if i >= averager._initial_window:
+                stored_x[:, i - averager._initial_window] = x
 
         np.testing.assert_array_equal(averager._mass_matrix, init_mass_matrix)
         x = np.random.multivariate_normal(np.zeros(2) + 123, target_mass_matrix)
         averager.step(x, fake_accept_prob(averager._epsilon))
         stored_x[:, -1] = x
-        np.testing.assert_array_equal(averager._mass_matrix, np.cov(stored_x))
+        np.testing.assert_array_equal(averager._inv_mass_matrix, np.cov(stored_x))
+        np.testing.assert_array_equal(averager._mass_matrix,
+                np.linalg.inv(np.cov(stored_x)))
         self.assertAlmostEqual(fake_accept_prob(averager._epsilon),
                                target_accept_prob, 1)
 
@@ -203,6 +206,14 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc.set_max_tree_depth(20)
         self.assertEqual(mcmc.max_tree_depth(), 20)
         self.assertRaises(ValueError, mcmc.set_max_tree_depth, -1)
+
+        # test use_dense_mass_matrix
+        mcmc.set_use_dense_mass_matrix(True)
+        self.assertEqual(mcmc.use_dense_mass_matrix(), True)
+
+        # test use_multinomial_sampling
+        mcmc.set_use_multinomial_sampling(False)
+        self.assertEqual(mcmc.use_multinomial_sampling(), False)
 
         # hyper param interface
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
