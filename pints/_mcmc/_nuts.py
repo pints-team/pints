@@ -207,6 +207,8 @@ class DualAveragingAdaption:
         """
         Return the sample covariance of all the stored samples
         """
+        assert(self._num_samples == self._samples.shape[1])
+
         if self._inv_mass_matrix.ndim == 1:
             return np.var(self._samples, axis=1)
         else:
@@ -301,6 +303,8 @@ class NutsState:
         self.divergent = divergent
         self.inv_mass_matrix = inv_mass_matrix
 
+        # define the accumulate_weight and probability_of_accept functions
+        # based on if we are doing multinomial sampling or slice sampling
         if use_multinomial_sampling:
             self.accumulate_weight = self.accumulate_multinomial_sampling
             self.probability_of_accept = \
@@ -310,9 +314,9 @@ class NutsState:
             self.probability_of_accept = \
                 self.probability_of_accept_slice_sampling
 
-    # for multinomial_sampling n will be a float, need to take care of
-    # overflow when suming this log probability.
     def accumulate_multinomial_sampling(self, left_subtree, right_subtree):
+        # for multinomial_sampling n will be a float, need to take care of
+        # overflow when suming this log probability.
         return np.logaddexp(left_subtree, right_subtree)
 
     def accumulate_slice_sampling(self, left_subtree, right_subtree):
@@ -340,6 +344,9 @@ class NutsState:
         direction is the current direction of integration, either forwards
         (``direction == 1``), or backwards (``direction = -1``)
         """
+
+        # update the appropriate end of the tree according to what direction we
+        # are integrating
         if direction == -1:
             self.theta_minus = other_state.theta_minus
             self.r_minus = other_state.r_minus
@@ -351,62 +358,57 @@ class NutsState:
             self.L_plus = other_state.L_plus
             self.grad_L_plus = other_state.grad_L_plus
 
-        theta_dash = other_state.theta
-        L_dash = other_state.L
-        grad_L_dash = other_state.grad_L
-        n_dash = other_state.n
-        s_dash = other_state.s
-        alpha_dash = other_state.alpha
-        n_alpha_dash = other_state.n_alpha
-        r_sum_dash = other_state.r_sum
-
         # for non-root merges accumulate tree weightings before probability
         # calculation
         if not root:
-            self.n = self.accumulate_weight(self.n, n_dash)
+            self.n = self.accumulate_weight(self.n, other_state.n)
 
         # if there is any accepted points in the other subtree then test for
         # acceptance of that subtree's theta
         # probability of sample being in new tree only greater than 0 if
-        # ``s_dash == 1``.  for non-root we don't need to check this as the new
-        # tree is not built at all when ``s_dash != 1``
+        # ``other_state.s == 1``.  for non-root we don't need to check this as the new
+        # tree is not built at all when ``other_state.s != 1``
         if root:
-            p = int(s_dash == 1) \
-                * min(1, self.probability_of_accept(self.n, n_dash))
+            p = int(other_state.s == 1) \
+                * min(1, self.probability_of_accept(self.n, other_state.n))
         else:
-            p = self.probability_of_accept(self.n, n_dash)
+            p = self.probability_of_accept(self.n, other_state.n)
 
         if p > 0.0 and np.random.uniform() < p:
-            self.theta = theta_dash
-            self.L = L_dash
-            self.grad_L = grad_L_dash
+            self.theta = other_state.theta
+            self.L = other_state.L
+            self.grad_L = other_state.grad_L
 
         # for root merges accumulate tree weightings after probability
         # calculation
         if root:
-            self.n = self.accumulate_weight(self.n, n_dash)
+            self.n = self.accumulate_weight(self.n, other_state.n)
 
         # Notes: alpha and n_alpha are only accumulated within build_tree
         if root:
-            self.alpha = alpha_dash
-            self.n_alpha = n_alpha_dash
+            self.alpha = other_state.alpha
+            self.n_alpha = other_state.n_alpha
         else:
-            self.alpha += alpha_dash
-            self.n_alpha += n_alpha_dash
+            self.alpha += other_state.alpha
+            self.n_alpha += other_state.n_alpha
 
         # integrate r over chain
-        self.r_sum += r_sum_dash
+        self.r_sum += other_state.r_sum
 
-        # test if the path has done a U-Turn
-        self.s *= s_dash
+        # test if the path has done a U-Turn, if we are stopping due to a
+        # U-turn or a divergent iteration propogate this up the tree with
+        # self.s
+        self.s *= other_state.s
         if self.inv_mass_matrix.ndim == 1:
             self.s *= \
                 int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix * self.r_minus) >= 0)
-            self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix * self.r_plus) >= 0)
+            self.s *= int((self.r_sum -
+                           self.r_plus).dot(self.inv_mass_matrix * self.r_plus) >= 0)
         else:
             self.s *= \
                 int((self.r_sum-self.r_minus).dot(self.inv_mass_matrix.dot(self.r_minus)) >= 0)
-            self.s *= int((self.r_sum-self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
+            self.s *= int((self.r_sum -
+                           self.r_plus).dot(self.inv_mass_matrix.dot(self.r_plus)) >= 0)
 
         # propogate divergence up the tree
         self.divergent |= other_state.divergent
@@ -422,10 +424,17 @@ def kinetic_energy(r, inv_mass_matrix):
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
 # see main coroutine function ``nuts_sampler`` for more details
 
-
 @asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
-    """ performs a leapfrog step """
+    """
+    performs a leapfrog step using a step_size ``epsilon`` and an inverse mass
+    matrix ``inv_mass_matrix``
+
+    The inverse mass matrix can be a 2 dimensional ndarray, in which case it is
+    interpreted as a dense matrix, or a 1 dimensional ndarray, in which case it
+    is interpreted as a diagonal matrix
+
+    """
     r_new = r + 0.5 * epsilon * grad_L
     if inv_mass_matrix.ndim == 1:
         theta_new = theta + epsilon * inv_mass_matrix * r_new
@@ -598,7 +607,8 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
                                                  init_inv_mass_matrix)
 
     # create adaption for epsilon and mass matrix
-    adaptor = DualAveragingAdaption(M_adapt, delta, epsilon, init_inv_mass_matrix)
+    adaptor = DualAveragingAdaption(
+        M_adapt, delta, epsilon, init_inv_mass_matrix)
 
     # start at iteration 1
     m = 1
@@ -607,9 +617,11 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
     while True:
         # randomly sample momentum
         if use_dense_mass_matrix:
-            r0 = np.random.multivariate_normal(np.zeros(len(theta)), adaptor.mass_matrix)
+            r0 = np.random.multivariate_normal(
+                np.zeros(len(theta)), adaptor.mass_matrix)
         else:
-            r0 = np.random.normal(np.zeros(len(theta)), np.sqrt(adaptor.mass_matrix))
+            r0 = np.random.normal(np.zeros(len(theta)),
+                                  np.sqrt(adaptor.mass_matrix))
         hamiltonian0 = L - kinetic_energy(r0, adaptor.inv_mass_matrix)
 
         if use_multinomial_sampling:
@@ -629,7 +641,7 @@ def nuts_sampler(x0, delta, M_adapt, step_size,
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
-        # encounter a U-Turn, or reach a max number of points 2^10
+        # encounter a U-Turn, or reach a max number of points 2^max_tree_depth
         while j < max_tree_depth and state.s == 1:
 
             # pick a random direction to integrate in
