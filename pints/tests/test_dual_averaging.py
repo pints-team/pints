@@ -23,22 +23,22 @@ class TestDualAveraging(unittest.TestCase):
         num_warmup_steps = 200
         target_accept_prob = 0.5
         init_epsilon = 1.0
-        init_mass_matrix = np.array([[1, 0], [0, 1]])
+        init_inv_mass_matrix = np.array([[1, 0], [0, 1]])
         target_mass_matrix = np.array([[10, 0], [0, 10]])
 
         with self.assertRaises(ValueError):
             averager = pints.DualAveragingAdaption(10,
                                                    target_accept_prob,
                                                    init_epsilon,
-                                                   init_mass_matrix)
+                                                   init_inv_mass_matrix)
 
         averager = pints.DualAveragingAdaption(num_warmup_steps,
                                                target_accept_prob,
                                                init_epsilon,
-                                               init_mass_matrix)
+                                               init_inv_mass_matrix)
 
         self.assertEqual(averager._epsilon, init_epsilon)
-        np.testing.assert_array_equal(averager._mass_matrix, init_mass_matrix)
+        np.testing.assert_array_equal(averager.inv_mass_matrix, init_inv_mass_matrix)
         self.assertEqual(averager._counter, 0)
 
         initial_window = 75
@@ -61,7 +61,7 @@ class TestDualAveraging(unittest.TestCase):
             if i >= averager._initial_window:
                 stored_x[:, i - averager._initial_window] = x
 
-        np.testing.assert_array_equal(averager._mass_matrix, init_mass_matrix)
+        np.testing.assert_array_equal(averager.inv_mass_matrix, init_inv_mass_matrix)
         x = np.random.multivariate_normal(np.zeros(2) + 123,
                                           target_mass_matrix)
         averager.step(x, fake_accept_prob(averager._epsilon))
