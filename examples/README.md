@@ -10,9 +10,9 @@ relevant code.
 ## Getting started
 - [Optimisation: First example](./optimisation/first-example.ipynb)
 - [Sampling: First example](./sampling/first-example.ipynb)
-- [Writing a model](./other-functionality/stats/custom-model.ipynb)
-- [Writing a custom LogPDF](./other-functionality/stats/custom-logpdf.ipynb)
-- [Writing a custom LogPrior](./other-functionality/stats/custom-prior.ipynb)
+- [Writing a model](./stats/custom-model.ipynb)
+- [Writing a custom LogPDF](./stats/custom-logpdf.ipynb)
+- [Writing a custom LogPrior](./stats/custom-prior.ipynb)
 
 
 ## Optimisation
@@ -60,49 +60,49 @@ relevant code.
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
 ### Analysing sampling results
-- [Autocorrelation](./other-functionality/plotting/mcmc-autocorrelation.ipynb)
+- [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
-- [Evaluating noise models using autocorrelation plots of the residuals](./other-functionality/plotting/residuals-autocorrelation.ipynb)
-- [Pairwise scatterplots](./other-functionality/plotting/mcmc-pairwise-scatterplots.ipynb)
-- [Predicted time series](./other-functionality/plotting/mcmc-predicted-time-series.ipynb)
-- [Trace plots](./other-functionality/plotting/mcmc-trace-plots.ipynb)
+- [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
+- [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
+- [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
+- [Trace plots](./plotting/mcmc-trace-plots.ipynb)
 
 
 ## Statistical modelling
-- [Autoregressive moving average errors](./other-functionality/stats/autoregressive-moving-average-errors.ipynb)
-- [Cauchy sampling error](./other-functionality/stats/cauchy-sampling-error.ipynb)
-- [Integrated noise model](./other-functionality/stats/integrated-gaussian-log-likelihood.ipynb)
-- [Log priors](./other-functionality/stats/log-priors.ipynb)
-- [Student-t noise model](./other-functionality/stats/student-t-sampling-error.ipynb)
+- [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
+- [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
+- [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
+- [Log priors](./stats/log-priors.ipynb)
+- [Student-t noise model](./stats/student-t-sampling-error.ipynb)
 
 
 ## Toy problems
 
 ### Models
-- [Beeler-Reuter action potential model](./other-functionality/toy/model-beeler-reuter-ap.ipynb)
-- [Constant model](./other-functionality/toy/model-constant.ipynb)
-- [Fitzhugh-Nagumo model](./other-functionality/toy/model-fitzhugh-nagumo.ipynb)
-- [Goodwin oscillator model](./other-functionality/toy/model-goodwin-oscillator.ipynb)
-- [HES1 Michaelis-Menten model](./other-functionality/toy/model-hes1-michaelis-menten.ipynb)
-- [Hodgkin-Huxley Potassium current model](./other-functionality/toy/model-hodgkin-huxley-ik.ipynb)
-- [Logistic growth model](./other-functionality/toy/model-logistic.ipynb)
-- [Lotka-Volterra predator-prey model](./other-functionality/toy/model-lotka-volterra.ipynb)
-- [Repressilator model](./other-functionality/toy/model-repressilator.ipynb)
-- [Simple Harmonic Oscillator model](./other-functionality/toy/model-simple-harmonic-oscillator.ipynb)
-- [SIR Epidemiology model](./other-functionality/toy/model-sir.ipynb)
-- [Stochastic Degradation model](./other-functionality/toy/model-stochastic-degradation.ipynb)
+- [Beeler-Reuter action potential model](./toy/model-beeler-reuter-ap.ipynb)
+- [Constant model](./toy/model-constant.ipynb)
+- [Fitzhugh-Nagumo model](./toy/model-fitzhugh-nagumo.ipynb)
+- [Goodwin oscillator model](./toy/model-goodwin-oscillator.ipynb)
+- [HES1 Michaelis-Menten model](./toy/model-hes1-michaelis-menten.ipynb)
+- [Hodgkin-Huxley Potassium current model](./toy/model-hodgkin-huxley-ik.ipynb)
+- [Logistic growth model](./toy/model-logistic.ipynb)
+- [Lotka-Volterra predator-prey model](./toy/model-lotka-volterra.ipynb)
+- [Repressilator model](./toy/model-repressilator.ipynb)
+- [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
+- [SIR Epidemiology model](./toy/model-sir.ipynb)
+- [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
 
 ### Distributions
-- [Annulus](./other-functionality/toy/distribution-annulus.ipynb)
-- [Cone](./other-functionality/toy/distribution-cone.ipynb)
-- [High dimensional gaussian](./other-functionality/toy/distribution-high-dimensional-gaussian.ipynb)
-- [Multimodal gaussian distribution](./other-functionality/toy/distribution-multimodal-gaussian.ipynb)
-- [Neals Funnel](./other-functionality/toy/distribution-neals-funnel.ipynb)
-- [Rosenbrock function](./other-functionality/toy/distribution-rosenbrock.ipynb)
-- [Simple Egg Box](./other-functionality/toy/distribution-simple-egg-box.ipynb)
-- [Twisted Gaussian Banana](./other-functionality/toy/distribution-twisted-gaussian.ipynb)
+- [Annulus](./toy/distribution-annulus.ipynb)
+- [Cone](./toy/distribution-cone.ipynb)
+- [High dimensional gaussian](./toy/distribution-high-dimensional-gaussian.ipynb)
+- [Multimodal gaussian distribution](./toy/distribution-multimodal-gaussian.ipynb)
+- [Neals Funnel](./toy/distribution-neals-funnel.ipynb)
+- [Rosenbrock function](./toy/distribution-rosenbrock.ipynb)
+- [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
+- [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
 
 ## Miscellaneous
-- [Automatic differentiation using autograd](./other-functionality/toy/automatic-differentiation-using-autograd.ipynb)
+- [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)
