@@ -776,9 +776,8 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             self._mu2.append(mu2)
 
     def __call__(self, x):
-        return np.log(
-            scipy.stats.multivariate_normal.pdf(
-                x, mean=self._mean, cov=self._cov))
+        return scipy.stats.multivariate_normal.logpdf(
+            x, mean=self._mean, cov=self._cov)
 
     def convert_from_unit_cube(self, u):
         """
