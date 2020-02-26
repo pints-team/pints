@@ -1,14 +1,14 @@
 # Slow notebooks
-automatic-differentiation-using-autograd.ipynb
-sampling-hamiltonian-mcmc.ipynb
-sampling-slice-doubling-mcmc.ipynb
-sampling-slice-overrelaxation-mcmc.ipynb
-sampling-slice-stepout-mcmc.ipynb
-stats-autoregressive-moving-average-errors.ipynb
-toy-model-beeler-reuter-ap.ipynb
-toy-model-fitzhugh-nagumo.ipynb
-toy-model-goodwin-oscillator.ipynb
-toy-model-hes1-michaelis-menten.ipynb
-toy-model-hodgkin-huxley-ik.ipynb
-toy-model-lotka-volterra.ipynb
-toy-model-repressilator.ipynb
+sampling/hamiltonian-mcmc.ipynb
+sampling/slice-doubling-mcmc.ipynb
+sampling/slice-overrelaxation-mcmc.ipynb
+sampling/slice-stepout-mcmc.ipynb
+stats/autoregressive-moving-average-errors.ipynb
+toy/automatic-differentiation-using-autograd.ipynb
+toy/model-beeler-reuter-ap.ipynb
+toy/model-fitzhugh-nagumo.ipynb
+toy/model-goodwin-oscillator.ipynb
+toy/model-hes1-michaelis-menten.ipynb
+toy/model-hodgkin-huxley-ik.ipynb
+toy/model-lotka-volterra.ipynb
+toy/model-repressilator.ipynb
