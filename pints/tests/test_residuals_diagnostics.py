@@ -183,6 +183,43 @@ class TestResidualsDiagnostics(unittest.TestCase):
             posterior_interval=1.5
         )
 
+    def test_plot_residuals_vs_output(self):
+        # Test the function which plots residuals against output magnitudes
+
+        # Test that it runs with an optimisation result
+        pints.residuals_diagnostics.plot_residuals_vs_output(
+            np.array([self.found_parameters1]),
+            self.problem1
+        )
+
+        # Test that it runs with multiple ouputs and MCMC
+        fig = pints.residuals_diagnostics.plot_residuals_vs_output(
+            self.samples2[0],
+            self.problem2
+        )
+
+        # Test that the multiple output figure has multiple axes
+        self.assertGreaterEqual(len(fig.axes), 2)
+
+        # Check the message when the input is wrong dimension
+        self.assertRaisesRegexp(
+            ValueError,
+            r'\`parameters\` must be of shape',
+            pints.residuals_diagnostics.plot_residuals_vs_output,
+            self.samples2,
+            self.model2
+        )
+
+        # Check the message when the thinning is invalid
+        self.assertRaisesRegexp(
+            ValueError,
+            'Thinning rate must be',
+            pints.residuals_diagnostics.plot_residuals_vs_output,
+            self.samples2[0],
+            self.problem2,
+            thinning=0
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
