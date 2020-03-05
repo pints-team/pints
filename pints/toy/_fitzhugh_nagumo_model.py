@@ -81,7 +81,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
     def _dfdp(self, y, t, p):
         """ See :meth:`pints.ToyODEModel._dfdp()`. """
         V, R = y
-        a, b, c = [float(x) for x in p]
+        a, b, c = [float(param) for param in p]
         ret = np.empty((2, 3))
         ret[0, 0] = 0
         ret[0, 1] = 0
@@ -94,7 +94,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
     def jacobian(self, y, t, p):
         """ See :meth:`pints.ToyODEModel.jacobian()`. """
         V, R = y
-        a, b, c = [float(x) for x in p]
+        a, b, c = [float(param) for param in p]
         ret = np.empty((2, 2))
         ret[0, 0] = c * (1 - V**2)
         ret[0, 1] = c

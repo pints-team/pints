@@ -164,12 +164,12 @@ class ToyODEModel(ToyModel):
         A vector of length ``n_outputs + n_parameters``.
         """
         y = y_and_dydp[0:self.n_outputs()]
-        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_outputs(),
-                                                      self.n_parameters()))
+        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
+                                                      self.n_outputs()))
         dydt = self._rhs(y, t, p)
         d_dydp_dt = (
-            np.matmul(self.jacobian(y, t, p), dydp) +
-            self._dfdp(y, t, p))
+            np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
+            np.transpose(self._dfdp(y, t, p)))
         return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
 
     def simulate(self, parameters, times):
@@ -207,7 +207,7 @@ class ToyODEModel(ToyModel):
             result = odeint(self._rhs_S1, y0, times, (parameters,))
             values = result[:, 0:n_outputs]
             dvalues_dp = (result[:, n_outputs:].reshape(
-                (len(times), n_outputs, n_params)))
+                (len(times), n_outputs, n_params), order="F"))
             return values, dvalues_dp
         else:
             values = odeint(self._rhs, self._y0, times, (parameters,))
