@@ -107,10 +107,8 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
-
         return np.array([2, 4, 0.12, 0.08, 0.1])
 
     def suggested_times(self):
         """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
-
         return np.linspace(0, 100, 200)

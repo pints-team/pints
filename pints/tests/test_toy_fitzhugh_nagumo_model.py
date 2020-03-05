@@ -11,6 +11,7 @@ import unittest
 import pints
 import pints.toy
 import numpy as np
+from scipy.interpolate import interp1d
 
 
 class TestFitzhughNagumoModel(unittest.TestCase):
@@ -58,6 +59,16 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         values = model.simulate(parameters, times)
         self.assertAlmostEqual(values[200, 0], 1.675726, places=6)
         self.assertAlmostEqual(values[200, 1], -0.226142, places=6)
+
+    def test_sensitivities(self):
+        model = pints.toy.FitzhughNagumoModel([2, 3])
+        parameters = [0.2, 0.7, 2.8]
+        times_finer = np.linspace(0, 20, 500)
+        sols, sens = model.simulateS1(parameters, times_finer)
+        f = interp1d(times_finer, sens[:, 0][:, 2])
+        self.assertTrue(np.abs(f([7])[0] - 5.0137868240051535) <= 0.01)
+        f = interp1d(times_finer, sens[:, 1][:, 1])
+        self.assertTrue(np.abs(f([12])[0] - 0.8288255034841188) <= 0.01)
 
 
 if __name__ == '__main__':
