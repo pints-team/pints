@@ -521,6 +521,79 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
         super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
 
 
+class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming heteroscedastic Gaussian errors, with
+    the magnitude of the error variance scaling with the problem output.
+
+    For each output in the problem, this likelihood introduces two new scalar
+    parameters: an exponential power ``eta`` and a scale ``sigma``.
+
+    This likelihood is applicable to a model given by
+
+    .. math::
+        X(t) = f(t; \theta) + f(t; \theta)^\eta v(t)
+
+    where v(t) is iid Gaussian:
+
+    .. math::
+        v(t) \sim \text{ iid } N(0, \sigma)
+
+    Note that the scalar parameter ``eta`` controls the exponential dependence
+    of the noise on the function output, while the scalar parameter ``sigma``
+    provides a baseline level of the noise standard deviation. This model leads
+    to a log likelihood of
+
+    .. math::
+        \log{L(\theta, \sigma, \eta | \boldsymbol{x})} =
+            -\frac{n_t}{2} \log{2 \pi}
+            -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
+            -\frac{1}{2}\sum_{i=1}^{n_t}
+                \frac{(X(t_i) - f(t_i, \theta))^2}
+                {(f(t_i, \theta)^\eta \sigma)^2}
+
+    where ``n_t`` is the number of time points in the series.
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem two parameters are added (``eta``, ``sigma``),
+        for a multi-output problem 2 times ``n_outputs`` parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(MultiplicativeGaussianLogLikelihood, self).__init__(problem)
+
+        # Get number of times and number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + 2 * self._no
+
+        # Pre-calculate the constant part of the likelihood
+        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        m = 2 * self._no
+        noise_parameters = x[-m:]
+        eta = np.asarray(noise_parameters[0::2])
+        sigma = np.asarray(noise_parameters[1::2])
+        function_values = self._problem.evaluate(x[:-m])
+
+        log_likelihood = \
+            np.sum(-self._logn
+                   - np.sum(np.log(function_values**eta * sigma), axis=0)
+                   - 0.5 / sigma**2
+                   * np.sum((self._values - function_values)**2
+                            / function_values ** (2 * eta), axis=0))
+
+        return log_likelihood
+
+
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood based on a (conditional)
