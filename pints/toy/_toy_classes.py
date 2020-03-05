@@ -74,73 +74,94 @@ class ToyODEModel(ToyModel):
     Defines an interface for toy problems where the underlying model is an
     ordinary differential equation (ODE).
 
-    Note that toy ODE models should extend both ``ToyModel`` and one of the
-    forward model classes, e.g. :class:`pints.ForwardModel`.
+    Note that toy ODE models should extend both :class:`pints.ToyODEModel` and
+    one of the forward model classes, e.g. :class:`pints.ForwardModel` or
+    :class:`pints.ForwardModelS1`.
+
+    To use this class as the basis for a :class:`pints.ForwardModel`, the
+    method :meth:`_rhs()` should be reimplemented.
+
+    Models implementing :meth:`_rhs()`, :meth:`jacobian()` and :meth:`_dfdp()`
+    can be used to create a :class:`pints.ForwardModelS1`.
     """
     def _dfdp(self, y, t, p):
         """
-        Returns the derivative of the ODE RHS with respect to parameters, this
-        should be a matrix of dimensions ``n_parameters`` by ``n_parameters``.
+        Returns the derivative of the ODE RHS at time ``t``, with respect to
+        model parameters ``p``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A matrix of dimensions ``n_parameters`` by ``n_parameters``.
         """
         raise NotImplementedError
 
     def jacobian(self, y, t, p):
         """
         Returns the Jacobian (the derivative of the RHS ODE with respect to the
-        outputs), this should be a matrix of dimensions ``n_outputs`` by
-        ``n_outputs``.
+        outputs) at time ``t``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A matrix of dimensions ``n_outputs`` by ``n_outputs``.
         """
         raise NotImplementedError
 
     def _rhs(self, y, t, p):
         """
-        Returns RHS of ODE for numerical integration to obtain outputs and
-        sensitivities, this should be a vector of length ``n_outputs``.
+        Returns the evaluated RHS (``dy/dt``) for a given state vector ``y``,
+        time ``t``, and parameter vector ``p``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A vector of length ``n_outputs``.
         """
         raise NotImplementedError
 
     def _rhs_S1(self, y_and_dydp, t, p):
         """
         Forms the RHS of ODE for numerical integration to obtain both outputs
-        and sensitivities, this should be a vector of length
-        ``n_outputs + n_parameters``.
+        and sensitivities.
 
         Parameters
         ----------
         y_and_dydp
-            Combined vector of states (elements ``0`` to ``n_outputs - 1``) and
-            sensitivities (elements ``n_outputs`` onwards)
+            A combined vector of states (elements ``0`` to ``n_outputs - 1``)
+            and sensitivities (elements ``n_outputs`` onwards).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A vector of length ``n_outputs + n_parameters``.
         """
         y = y_and_dydp[0:self.n_outputs()]
         dydp = y_and_dydp[self.n_outputs():].reshape((self.n_outputs(),
