@@ -11,7 +11,6 @@ import unittest
 import pints
 import pints.toy
 import numpy as np
-from scipy.interpolate import interp1d
 
 
 class TestFitzhughNagumoModel(unittest.TestCase):
@@ -64,13 +63,30 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         # compares sensitivities against standards
         model = pints.toy.FitzhughNagumoModel([2, 3])
         parameters = [0.2, 0.7, 2.8]
-        times_finer = np.linspace(0, 20, 500)
+
+        # Slow way to do it
+        times_finer = np.linspace(0, 20, 501)
         sols, sens = model.simulateS1(parameters, times_finer)
-        # interpolate to test sensitivity at defined times
-        f = interp1d(times_finer, sens[:, 0][:, 2])
-        self.assertTrue(np.abs(f([7])[0] - 5.0137868240051535) <= 0.01)
-        f = interp1d(times_finer, sens[:, 1][:, 1])
-        self.assertTrue(np.abs(f([12])[0] - 0.8288255034841188) <= 0.01)
+        print(sens[:, 0][:, 2][175])
+        self.assertEqual(times_finer[175], 7)   # t=7
+        self.assertAlmostEqual(sens[:, 0][:, 2][175], 5.01378, 5)
+        self.assertEqual(times_finer[300], 12)  # t=12
+        self.assertAlmostEqual(sens[:, 1][:, 1][300], 0.82883, 4)
+
+        # Way to do it that works with current code
+        times = [0, 7, 12]
+        sols, sens = model.simulateS1(parameters, times)
+        print(sens)
+        print(sens[:, 0][:, 2])
+        self.assertAlmostEqual(sens[:, 0][:, 2][1], 5.01378, 5)
+        self.assertAlmostEqual(sens[:, 1][:, 1][2], 0.82883, 4)
+
+        # Even better way to do it that reveals a bug in the current code!
+        sols, sens = model.simulateS1(parameters, [7, 12])
+        print(sens)
+        print(sens[:, 0][:, 2])
+        self.assertAlmostEqual(sens[:, 0][:, 2][0], 5.01378, 5)
+        self.assertAlmostEqual(sens[:, 1][:, 1][1], 0.82883, 4)
 
 
 if __name__ == '__main__':
