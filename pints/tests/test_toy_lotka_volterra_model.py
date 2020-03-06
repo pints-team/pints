@@ -9,6 +9,7 @@
 #
 import unittest
 import numpy as np
+
 import pints
 import pints.toy
 
@@ -60,8 +61,8 @@ class TestLotkaVolterraModel(unittest.TestCase):
         vals = model.suggested_values()
         self.assertEqual(vals.shape[0], 21)
         sols, sens = model.simulateS1([0.43, 0.2, 0.9, 0.28], [5, 10])
-        self.assertAlmostEqual(sens[:, 0][:, 0][0], -4.889418, 5)
-        self.assertAlmostEqual(sens[:, 1][:, 3][1], -0.975323, 5)
+        self.assertAlmostEqual(sens[0, 0, 0], -4.889418, 5)
+        self.assertAlmostEqual(sens[1, 1, 3], -0.975323, 5)
 
 
 if __name__ == '__main__':

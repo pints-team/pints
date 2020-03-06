@@ -77,8 +77,8 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         model = pints.toy.GoodwinOscillatorModel()
         parameters = model.suggested_parameters()
         sols, sens = model.simulateS1(parameters, [35, 80])
-        self.assertAlmostEqual(sens[:, 0][:, 2][0], 0.07705, 4)
-        self.assertAlmostEqual(sens[:, 1][:, 3][1], 3.35704, 4)
+        self.assertAlmostEqual(sens[0, 0, 2], 0.07705, 4)
+        self.assertAlmostEqual(sens[1, 1, 3], 3.35704, 4)
 
 
 if __name__ == '__main__':
