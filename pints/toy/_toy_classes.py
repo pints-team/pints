@@ -8,8 +8,8 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
+import pints
 from scipy.integrate import odeint
 
 
@@ -68,7 +68,8 @@ class ToyModel(object):
 class ToyODEModel(ToyModel):
     """
     Defines an interface for toy problems where the underlying model is an
-    ordinary differential equation (ODE).
+    ordinary differential equation (ODE) that describes some time-series
+    generating model.
 
     Note that toy ODE models should extend both :class:`pints.ToyODEModel` and
     one of the forward model classes, e.g. :class:`pints.ForwardModel` or
@@ -191,9 +192,16 @@ class ToyODEModel(ToyModel):
             :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
         """
-        times = np.asarray(times)
+        times = pints.vector(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
+
+        # Scipy odeint requires the first element in ``times`` to be the
+        # initial point, which ForwardModel says _has to be_ t=0
+        offset = 0
+        if len(times) < 1 or times[0] != 0:
+            times = np.concatenate(([0], times))
+            offset = 1
 
         if sensitivities:
             n_params = self.n_parameters()
@@ -204,10 +212,10 @@ class ToyODEModel(ToyModel):
             values = result[:, 0:n_outputs]
             dvalues_dp = (result[:, n_outputs:].reshape(
                 (len(times), n_outputs, n_params), order="F"))
-            return values, dvalues_dp
+            return values[offset:], dvalues_dp[offset:]
         else:
             values = odeint(self._rhs, self._y0, times, (parameters,))
-            return values
+            return values[offset:]
 
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
