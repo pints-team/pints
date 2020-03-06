@@ -53,16 +53,12 @@ class TestResidualsDiagnostics(unittest.TestCase):
         cls.model2 = toy.LotkaVolterraModel()
         cls.real_parameters2 = cls.model2.suggested_parameters()
         # Downsample the times for speed
-        cls.times2 = cls.model2.suggested_times()[::10]
-        cls.values2 = cls.model2.simulate(cls.real_parameters2, cls.times2)
-
-        # Add noise
-        cls.noise2 = 0.05
-        cls.values2 += np.random.normal(0, cls.noise2, cls.values2.shape)
+        cls.times2 = cls.model2.suggested_times()
+        cls.values2 = cls.model2.suggested_values()
 
         # Set up 2-output MCMC problem
         cls.problem2 = pints.MultiOutputProblem(
-            cls.model2, cls.times2, cls.values2)
+            cls.model2, cls.times2, np.log(cls.values2))
 
         # Instead of running MCMC, generate three chains which actually contain
         # independent samples near the true values (faster than MCMC)

@@ -10,7 +10,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
-from ._toy_classes import ToyLogPDF, ToyModel                       # noqa
+from ._toy_classes import ToyLogPDF, ToyModel, ToyODEModel          # noqa
 
 from ._annulus import AnnulusLogPDF                                 # noqa
 from ._beeler_reuter_model import ActionPotentialModel              # noqa
