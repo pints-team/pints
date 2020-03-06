@@ -11,7 +11,6 @@ import unittest
 import pints
 import pints.toy
 import numpy as np
-from scipy.interpolate import interp1d
 
 
 class TestGoodwinOscillatorModel(unittest.TestCase):
@@ -76,14 +75,10 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
                     np.abs(values[i, j] - values1[i, j]) < 10**(-3))
 
         model = pints.toy.GoodwinOscillatorModel()
-        times_finer = np.linspace(0, 100, 500)
         parameters = model.suggested_parameters()
-        sols, sens = model.simulateS1(parameters, times_finer)
-        # interpolate to test sensitivity at defined times
-        f = interp1d(times_finer, sens[:, 0][:, 2])
-        self.assertTrue(np.abs(f([35])[0] - 0.0770570443277744) <= 0.01)
-        f = interp1d(times_finer, sens[:, 1][:, 3])
-        self.assertTrue(np.abs(f([80])[0] - 3.3570408738564357) <= 0.01)
+        sols, sens = model.simulateS1(parameters, [35, 80])
+        self.assertAlmostEqual(sens[:, 0][:, 2][0], 0.07705, 4)
+        self.assertAlmostEqual(sens[:, 1][:, 3][1], 3.35704, 4)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,6 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
-from scipy.interpolate import interp1d
 
 
 class TestLotkaVolterraModel(unittest.TestCase):
@@ -60,13 +59,9 @@ class TestLotkaVolterraModel(unittest.TestCase):
         model = pints.toy.LotkaVolterraModel()
         vals = model.suggested_values()
         self.assertEqual(vals.shape[0], 21)
-        times_finer = np.linspace(0, 20, 200)
-        sols, sens = model.simulateS1([0.43, 0.2, 0.9, 0.28], times_finer)
-        # interpolate to test sensitivity at defined times
-        f = interp1d(times_finer, sens[:, 0][:, 0])
-        self.assertTrue(np.abs(f([5])[0] - -4.889418452733851) <= 0.01)
-        f = interp1d(times_finer, sens[:, 1][:, 3])
-        self.assertTrue(np.abs(f([10])[0] - -0.9753235757760741) <= 0.01)
+        sols, sens = model.simulateS1([0.43, 0.2, 0.9, 0.28], [5, 10])
+        self.assertAlmostEqual(sens[:, 0][:, 0][0], -4.889418, 5)
+        self.assertAlmostEqual(sens[:, 1][:, 3][1], -0.975323, 5)
 
 
 if __name__ == '__main__':
