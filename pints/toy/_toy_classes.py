@@ -64,10 +64,6 @@ class ToyModel(object):
         """
         raise NotImplementedError
 
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        raise NotImplementedError
-
 
 class ToyODEModel(ToyModel):
     """

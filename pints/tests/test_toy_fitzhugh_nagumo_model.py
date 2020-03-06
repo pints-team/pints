@@ -61,10 +61,12 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         self.assertAlmostEqual(values[200, 1], -0.226142, places=6)
 
     def test_sensitivities(self):
+        # compares sensitivities against standards
         model = pints.toy.FitzhughNagumoModel([2, 3])
         parameters = [0.2, 0.7, 2.8]
         times_finer = np.linspace(0, 20, 500)
         sols, sens = model.simulateS1(parameters, times_finer)
+        # interpolate to test sensitivity at defined times
         f = interp1d(times_finer, sens[:, 0][:, 2])
         self.assertTrue(np.abs(f([7])[0] - 5.0137868240051535) <= 0.01)
         f = interp1d(times_finer, sens[:, 1][:, 1])

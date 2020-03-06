@@ -52,7 +52,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
             \end{matrix}\right]
         \end{align}
 
-    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, `pints.toy.ToyODEModel`.
 
     Parameters
     ----------

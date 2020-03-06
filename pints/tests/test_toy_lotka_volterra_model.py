@@ -56,11 +56,13 @@ class TestLotkaVolterraModel(unittest.TestCase):
         self.assertAlmostEqual(values[100, 1], 0.000529, places=6)
 
     def test_sensitivities(self):
+        # tests sensitivities against standards
         model = pints.toy.LotkaVolterraModel()
         vals = model.suggested_values()
         self.assertEqual(vals.shape[0], 21)
         times_finer = np.linspace(0, 20, 200)
         sols, sens = model.simulateS1([0.43, 0.2, 0.9, 0.28], times_finer)
+        # interpolate to test sensitivity at defined times
         f = interp1d(times_finer, sens[:, 0][:, 0])
         self.assertTrue(np.abs(f([5])[0] - -4.889418452733851) <= 0.01)
         f = interp1d(times_finer, sens[:, 1][:, 3])

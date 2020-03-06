@@ -42,6 +42,8 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         self.assertAlmostEqual(values[100, 2], 2.6074527, places=6)
 
     def test_sensitivity(self):
+        # tests construction of matrices for sensitivity calculation and
+        # compares sensitivities vs standards
         model = pints.toy.GoodwinOscillatorModel()
         parameters = [3, 2.5, 0.15, 0.1, 0.12]
         k2, k3, m1, m2, m3 = parameters
@@ -73,11 +75,11 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
                 self.assertTrue(
                     np.abs(values[i, j] - values1[i, j]) < 10**(-3))
 
-    def test_sensitivities(self):
         model = pints.toy.GoodwinOscillatorModel()
         times_finer = np.linspace(0, 100, 500)
         parameters = model.suggested_parameters()
         sols, sens = model.simulateS1(parameters, times_finer)
+        # interpolate to test sensitivity at defined times
         f = interp1d(times_finer, sens[:, 0][:, 2])
         self.assertTrue(np.abs(f([35])[0] - 0.0770570443277744) <= 0.01)
         f = interp1d(times_finer, sens[:, 1][:, 3])

@@ -30,7 +30,7 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
     [2]_, and includes hare and lynx pelt count data collected by the Hudson's
     Bay Company, in Canada in the early twentieth century.
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyODEModel`.
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
+    .. [1] https://en.wikipedia.org/wiki/Lotka-Volterra_equations
     .. [2] Howard, P. (2009). Modeling basics. Lecture Notes for Math 442,
            Texas A&M University
     """
