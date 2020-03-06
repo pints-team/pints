@@ -64,16 +64,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         model = pints.toy.FitzhughNagumoModel([2, 3])
         parameters = [0.2, 0.7, 2.8]
 
-        # Slow way to do it
-        times_finer = np.linspace(0, 20, 501)
-        sols, sens = model.simulateS1(parameters, times_finer)
-        print(sens[:, 0][:, 2][175])
-        self.assertEqual(times_finer[175], 7)   # t=7
-        self.assertAlmostEqual(sens[:, 0][:, 2][175], 5.01378, 5)
-        self.assertEqual(times_finer[300], 12)  # t=12
-        self.assertAlmostEqual(sens[:, 1][:, 1][300], 0.82883, 4)
-
-        # Way to do it that works with current code
+        # Test with initial point t=0 included in range
         times = [0, 7, 12]
         sols, sens = model.simulateS1(parameters, times)
         print(sens)
@@ -81,7 +72,7 @@ class TestFitzhughNagumoModel(unittest.TestCase):
         self.assertAlmostEqual(sens[:, 0][:, 2][1], 5.01378, 5)
         self.assertAlmostEqual(sens[:, 1][:, 1][2], 0.82883, 4)
 
-        # Even better way to do it that reveals a bug in the current code!
+        # Test without initial point in range
         sols, sens = model.simulateS1(parameters, [7, 12])
         print(sens)
         print(sens[:, 0][:, 2])
