@@ -1,5 +1,5 @@
 #
-# ABC Rejection method
+# ABC SMC method
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -13,7 +13,24 @@ import numpy as np
 
 class ABCSMC(pints.ABCSampler):
     """
-    TODO: Docblock
+    ABC-SMC Algorithm  See, for example, [1]_. In each iteration of the
+    algorithm, the following steps occur::
+
+        theta* ~ p_(t-1)(theta), i.e. sample parameters from previous 
+            intermediate distribution
+        theta** ~ K(theta|theta*), i.e. perturb theta* to obtain to new point
+        x ~ p(x|theta**), i.e. sample data from sampling distribution
+        if s(x) < threshold_(t):
+            theta* added to list of samples[t]
+
+    After we have obtained n_target samples, t is advanced, and weights
+    are calculated for samples[t-1]. At the last value for threshold, 
+    samples are returned whenever they are accepted.
+
+    References
+    ----------
+    .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without likelihoods. 
+            Proc Natl Acad Sci USA, 104(6):1760–5, 2007."
     """
     def __init__(self, log_prior):
 
@@ -51,8 +68,9 @@ class ABCSMC(pints.ABCSampler):
                     # perturb using _K_t TODO: Allow this to adapt e.g. OLCM
                     theta_star_star = self._perturbation_kernel.perturb(theta_star)
                     # check if theta_star_star is possible under the prior and sample again if not
-                    first_time = False
                 self._xs.append(theta_star_star)
+            if n_samples==1:
+                self._xs = self._xs[0]
         self._ready_for_tell = True
         return self._xs
 

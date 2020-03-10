@@ -27,7 +27,6 @@ class TestABCSMC(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ Set up problem for tests. """
-
         # Create toy model
         cls.model = toy.StochasticDegradationModel()
         cls.real_parameters = [0.1]
@@ -48,7 +47,6 @@ class TestABCSMC(unittest.TestCase):
         cls.error_measure = pints.RootMeanSquaredError(cls.problem)
 
     def test_method(self):
-
         # Create abc smc sampler
         abc = pints.ABCSMC(self.log_prior)
         
@@ -57,6 +55,7 @@ class TestABCSMC(unittest.TestCase):
         niter = 20
         abc.set_intermediate_size(niter)
         abc.set_threshold_schedule([4,2])
+
         # Perform short run using ask and tell framework
         samples = []
         while len(samples) < niter:
