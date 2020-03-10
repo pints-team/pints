@@ -32,6 +32,9 @@ class TestPerturbationKernels(unittest.TestCase):
         p = k.p(x, np.array([0]))
         self.assertLessEqual(p, 1)
 
+    def test_errors(self):
+        k = pints.SphericalGaussianKernel(1, 1)
+        k.p([0], [0,1])
 
 if __name__ == '__main__':
     unittest.main()
