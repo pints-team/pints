@@ -34,7 +34,8 @@ class TestPerturbationKernels(unittest.TestCase):
 
     def test_errors(self):
         k = pints.SphericalGaussianKernel(1, 1)
-        self.assertRaises(ValueError, k.p, [0], [0,1])
+        self.assertRaises(ValueError, k.p, [0], [0, 1])
+
 
 if __name__ == '__main__':
     unittest.main()
