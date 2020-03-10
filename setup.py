@@ -60,10 +60,10 @@ setup(
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
         'matplotlib>=1.5',
+        'tabulate',
     ],
     extras_require={
         'docs': [
-            'guzzle-sphinx-theme',      # Nice theme for docs
             'sphinx>=1.5, !=1.7.3',     # For doc generation
         ],
         'dev': [
@@ -74,4 +74,3 @@ setup(
         ],
     },
 )
-

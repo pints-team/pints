@@ -13,14 +13,19 @@ import numpy as np
 
 
 class ParabolicError(pints.ErrorMeasure):
-    """
-    Error measure based ona simple parabola centered around a user specified
+    r"""
+    Error measure based on a simple parabola centered around a user specified
     point.
 
     .. math::
         f(x) = (x - c)^s
 
-    *Extends:* :class:`pints.ErrorMeasure`.
+    Extends :class:`pints.ErrorMeasure`.
+
+    Parameters
+    ----------
+    c : sequence
+        The center of the parabola.
     """
     def __init__(self, c=[0, 0]):
         self._c = pints.vector(c)

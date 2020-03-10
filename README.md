@@ -12,11 +12,12 @@
 PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference on ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
 PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252), and can be cited using the information given in our [CITATION file](./CITATION).
+More information about PINTS papers can be found in the [papers directory](./papers/).
 
 
 ## Using PINTS
 
-PINTS can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface. 
+PINTS can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface.
 This has just two methods:
 
 ```
@@ -48,7 +49,7 @@ In addition, there is a [full API documentation](http://pints.readthedocs.io/en/
 You'll need the following requirements:
 
 - Python 2.7 or Python 3.5+
-- Python libraries: `cma` `numpy` `matplotlib` `scipy`
+- Python libraries: `cma matplotlib numpy scipy tabulate`
 
 These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:
 

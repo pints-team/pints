@@ -116,6 +116,7 @@ from ._log_likelihoods import (
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
+    MultiplicativeGaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
@@ -195,17 +196,23 @@ from ._mcmc import (
     MultiChainMCMC,
     SingleChainMCMC,
 )
-from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
+from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
+from ._mcmc._haario_ac import HaarioACMC
+from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
+from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
 from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
+from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
 from ._mcmc._population import PopulationMCMC
-from ._mcmc._metropolis import MetropolisRandomWalkMCMC
+from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
+from ._mcmc._relativistic import RelativisticMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._summary import MCMCSummary
 
 from ._abc import (
     ABCSampler,
@@ -220,6 +227,7 @@ from ._abc._pertubation_kernels import SphericalGaussianKernel
 # Nested samplers
 #
 from ._nested import NestedSampler
+from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
 

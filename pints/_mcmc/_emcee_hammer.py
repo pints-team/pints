@@ -15,7 +15,7 @@ import numpy as np
 class EmceeHammerMCMC(pints.MultiChainMCMC):
     """
     Uses the differential evolution algorithm "emcee: the MCMC hammer",
-    described in Algorithm 2 in [1].
+    described in Algorithm 2 in [1]_.
 
     For ``k`` in ``1:N``:
 
@@ -36,9 +36,11 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     proportional to ``1 / sqrt(z)`` if ``z`` is in  ``[1 / a, a]`` or to 0,
     otherwise (where ``a`` is a parameter with default value ``2``).
 
-    [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg,
-    Dustin Lang, Jonathan Goodman, 2013, arXiv,
-    https://arxiv.org/pdf/1202.3665.pdf
+    References
+    ----------
+    .. [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg,
+           Dustin Lang, Jonathan Goodman, 2013, arXiv,
+           https://arxiv.org/pdf/1202.3665.pdf
     """
 
     def __init__(self, chains, x0, sigma0=None):
@@ -102,7 +104,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         return self._proposed
 
     def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdf()`. """
+        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
         return self._current_log_pdfs
 
     def _initialise(self):
