@@ -11,12 +11,13 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
+
 class ABCSMC(pints.ABCSampler):
     """
     ABC-SMC Algorithm  See, for example, [1]_. In each iteration of the
     algorithm, the following steps occur::
 
-        theta* ~ p_(t-1)(theta), i.e. sample parameters from previous 
+        theta* ~ p_(t-1)(theta), i.e. sample parameters from previous
             intermediate distribution
         theta** ~ K(theta|theta*), i.e. perturb theta* to obtain to new point
         x ~ p(x|theta**), i.e. sample data from sampling distribution
@@ -24,13 +25,13 @@ class ABCSMC(pints.ABCSampler):
             theta* added to list of samples[t]
 
     After we have obtained n_target samples, t is advanced, and weights
-    are calculated for samples[t-1]. At the last value for threshold, 
+    are calculated for samples[t-1]. At the last value for threshold,
     samples are returned whenever they are accepted.
 
     References
     ----------
-    .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without likelihoods. 
-            Proc Natl Acad Sci USA, 104(6):1760–5, 2007."
+    .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
+    likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
     """
     def __init__(self, log_prior):
 
@@ -44,7 +45,8 @@ class ABCSMC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
-        self._perturbation_kernel = pints.SphericalGaussianKernel(0.001, len(log_prior.sample()))
+        dim = log_prior.n_dimensions()
+        self._perturbation_kernel = pints.SphericalGaussianKernel(0.001, dim)
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -58,18 +60,21 @@ class ABCSMC(pints.ABCSampler):
             self._xs = self._log_prior.sample(n_samples)
         else:
             self._xs = []
-            
+
             while len(self._xs) < n_samples:
-                theta_star_star = None # to appease the linter
-                while theta_star_star == None or self._log_prior(theta_star_star) == -np.inf:
-                    theta_star = self._samples[self._t-1][
-                        np.random.choice(range(len(self._samples[self._t-1])),
-                                        p=self._weights[self._t-1])]
+                theta_s_s = None  # to appease the linter
+                while (theta_s_s is None or
+                       self._log_prior(theta_s_s) == -np.inf):
+                    indices = np.random.choice(
+                        range(len(self._samples[self._t - 1])),
+                        p=self._weights[self._t - 1])
+                    theta_s = self._samples[self._t - 1][indices]
                     # perturb using _K_t TODO: Allow this to adapt e.g. OLCM
-                    theta_star_star = self._perturbation_kernel.perturb(theta_star)
-                    # check if theta_star_star is possible under the prior and sample again if not
-                self._xs.append(theta_star_star)
-            if n_samples==1:
+                    theta_s_s = self._perturbation_kernel.perturb(theta_s)
+                    # check if theta_s_s is possible under the prior
+                    # sample again if not
+                self._xs.append(theta_s_s)
+            if n_samples == 1:
                 self._xs = self._xs[0]
         self._ready_for_tell = True
         return self._xs
@@ -85,13 +90,15 @@ class ABCSMC(pints.ABCSampler):
                 if self._t == len(self._e_schedule) - 1:
                     return [self._xs[c].tolist() for c, x in
                             enumerate(accepted) if x]
-                
+
                 self._accepted_count += sum(accepted)
-                self._samples[self._t].extend([self._xs[c].tolist() for c, x in enumerate(accepted) if x])
-                
+                self._samples[self._t].extend(
+                    [self._xs[c].tolist() for c, x in enumerate(accepted) if x]
+                )
+
                 if self._accepted_count >= self._n_target:
                     self._advance_time()
-            return None          
+            return None
         else:
             if fx < self._threshold:
                 self._accepted_count += 1
@@ -105,18 +112,22 @@ class ABCSMC(pints.ABCSampler):
     def _advance_time(self):
         t = self._t
         if t == 0:
-            self._weights.append(np.full(self._accepted_count, 1/self._accepted_count))
+            self._weights.append(
+                np.full(self._accepted_count, 1 / self._accepted_count))
         else:
-            unnorm_weights = self._calculate_weights(self._samples[t], self._samples[t-1], self._weights[t-1])
-             # Normalise weights
+            unnorm_weights = self._calculate_weights(
+                self._samples[t], self._samples[t - 1], self._weights[t - 1])
+            # Normalise weights
             normal = sum(unnorm_weights)
-            self._weights.append([w/normal for w in unnorm_weights])
+            self._weights.append([w / normal for w in unnorm_weights])
 
         self._samples.append([])
         self._accepted_count = 0
-        self._t=t+1
+        self._t += 1
         self._threshold = self._e_schedule[self._t]
-        print("Trying t=" + str(self._t) + ", threshold=" + str(self._threshold))
+        print(
+            "Trying t=" + str(self._t)
+            + ", threshold=" + str(self._threshold))
 
     def _calculate_weights(self, new_samples, old_samples, old_weights):
         new_weights = []
@@ -125,16 +136,20 @@ class ABCSMC(pints.ABCSampler):
             prior_prob = np.exp(self._log_prior(new_samples[i]))
 
             # Don't know what the technical name is for this (O(n^2))
-            marginal_weights = [old_weights[j]*self._perturbation_kernel.p(new_samples[j],old_samples[i]) for j in range(len(old_samples))]
-            
-            w = prior_prob / sum(marginal_weights)
+            mw = [old_weights[j] * self._perturbation_kernel.p(
+                new_samples[j],
+                old_samples[i]) for j in range(len(old_samples))]
+
+            w = prior_prob / sum(mw)
             new_weights.append(w)
         return new_weights
 
     def set_threshold_schedule(self, schedule):
         """
-        Sets a schedule for the threshold error distance that determines if a sample is accepted
-        (if error < threshold). Schedule should be a list of epsilon values
+        Sets a schedule for the threshold error distance that determines if a
+        sample is accepted (if error < threshold).
+
+        Schedule should be a list of epsilon values
         """
         e_schedule = np.array(schedule)
         if any(e_schedule <= 0):
@@ -144,7 +159,8 @@ class ABCSMC(pints.ABCSampler):
 
     def set_intermediate_size(self, n):
         """
-        Sets the size of the intermediate distributions, after we find n acceptable
-        samples then we will progress to the next threshold values in the schedule
+        Sets the size of the intermediate distributions, after we find n
+        acceptable samples then we will progress to the next threshold values
+        in the schedule
         """
         self._n_target = n

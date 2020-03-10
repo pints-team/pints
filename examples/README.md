@@ -61,6 +61,7 @@ relevant code.
 
 ### ABC
 - [Rejection ABC sampling](./sampling-abc-rejection.ipynb)
+- [ABC SMC Sampling](./sampling-abc-smc.ipynb)
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)

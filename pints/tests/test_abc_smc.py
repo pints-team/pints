@@ -49,12 +49,12 @@ class TestABCSMC(unittest.TestCase):
     def test_method(self):
         # Create abc smc sampler
         abc = pints.ABCSMC(self.log_prior)
-        
+
         # Configure
         n_draws = 1
         niter = 20
         abc.set_intermediate_size(niter)
-        abc.set_threshold_schedule([4,2])
+        abc.set_threshold_schedule([4, 2])
 
         # Perform short run using ask and tell framework
         samples = []

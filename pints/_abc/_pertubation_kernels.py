@@ -22,8 +22,8 @@ class PerturbationKernel:
 
 class SphericalGaussianKernel(PerturbationKernel):
     """
-    A Naïve perturbation kernel which uses a Multivariate Gaussian with diagonal covariance matrix
-    With all non-zero entries set to the single passed in value
+    A perturbation kernel which uses a Multivariate Gaussian with diagonal
+    covariance matrix With all non-zero entries set to the passed in value
     """
 
     def __init__(self, variance, dimension):
@@ -33,12 +33,13 @@ class SphericalGaussianKernel(PerturbationKernel):
     def perturb(self, theta):
         n_parameters = len(theta)
         ret = theta + np.random.multivariate_normal(np.zeros(n_parameters),
-                                                     self._cov)
+                                                    self._cov)
         return ret
 
     def p(self, x, y):
         if len(x) != len(y):
-            raise ValueError("Target and given parameter vectors must be of the same length")
-        x_star = np.subtract(y,x)
+            raise ValueError("Target and given parameter vectors must be of\
+                                the same length")
+        x_star = np.subtract(y, x)
         return stats.multivariate_normal.pdf(x_star, mean=np.zeros(len(x)),
                                              cov=self._cov)
