@@ -195,13 +195,12 @@ class CircularBoundaries(pints.Boundaries):
     """
     Circular boundaries, to test boundaries that are non-rectangular.
 
-    Arguments:
-
-    ``center``
+    Parameters
+    ----------
+    center
         The point these boundaries are centered on.
-    ``radius``
+    radius
         The radius (in all directions).
-
     """
     def __init__(self, center, radius=1):
         super(CircularBoundaries, self).__init__()

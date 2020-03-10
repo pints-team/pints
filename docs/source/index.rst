@@ -38,6 +38,7 @@ Contents
     nested_samplers/index
     noise_generators
     optimisers/index
+    noise_model_diagnostics
     toy/index
     utilities
 
@@ -56,7 +57,7 @@ Sampling
    - Metropolis-Hastings
    - Adaptive methods
 
-     - :class:`AdaptiveCovarianceMCMC`, works on any :class:`LogPDF`.
+     - :class:`AdaptiveCovarianceMC`, works on any :class:`LogPDF`.
 
    - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
    - Differential evolution methods

@@ -10,7 +10,7 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
-from ._toy_classes import ToyLogPDF, ToyModel                       # noqa
+from ._toy_classes import ToyLogPDF, ToyModel, ToyODEModel          # noqa
 
 from ._annulus import AnnulusLogPDF                                 # noqa
 from ._beeler_reuter_model import ActionPotentialModel              # noqa
@@ -29,6 +29,7 @@ from ._neals_funnel import NealsFunnelLogPDF                        # noqa
 from ._parabola import ParabolicError                               # noqa
 from ._repressilator_model import RepressilatorModel                # noqa
 from ._rosenbrock import RosenbrockError, RosenbrockLogPDF          # noqa
+from ._sho_model import SimpleHarmonicOscillatorModel               # noqa
 from ._simple_egg_box import SimpleEggBoxLogPDF                     # noqa
 from ._sir_model import SIRModel                                    # noqa
 from ._twisted_gaussian_banana import TwistedGaussianLogPDF         # noqa
