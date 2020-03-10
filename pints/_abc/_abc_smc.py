@@ -98,7 +98,7 @@ class ABCSMC(pints.ABCSampler):
         self._accepted_count = 0
         self._t=t+1
         self._threshold = self._e_schedule[self._t]
-        print(f"Trying t={self._t}, threshold={self._threshold}")
+        print("Trying t=" + str(self._t) + ", threshold=" + str(self._threshold))
 
     def _calculate_weights(self, new_samples, old_samples, old_weights):
         new_weights = []
