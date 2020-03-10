@@ -45,7 +45,7 @@ class ABCSMC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
-        dim = log_prior.n_dimensions()
+        dim = log_prior.n_parameters()
         self._perturbation_kernel = pints.SphericalGaussianKernel(0.001, dim)
 
     def name(self):
