@@ -54,7 +54,7 @@ class TestABCSMC(unittest.TestCase):
         n_draws = 1
         niter = 20
         abc.set_intermediate_size(niter)
-        abc.set_threshold_schedule([4, 2])
+        abc.set_threshold_schedule([6, 4, 2])
 
         # Perform short run using ask and tell framework
         samples = []
@@ -65,6 +65,31 @@ class TestABCSMC(unittest.TestCase):
             while sample is None:
                 x = abc.ask(n_draws)[0]
                 fx = self.error_measure(x)
+                sample = abc.tell(fx)
+            samples.append(sample)
+
+        samples = np.array(samples)
+        self.assertEqual(samples.shape[0], niter)
+
+    def test_method_list(self):
+        # Create abc smc sampler
+        abc = pints.ABCSMC(self.log_prior)
+
+        # Configure
+        n_draws = 2
+        niter = 10
+        abc.set_intermediate_size(niter)
+        abc.set_threshold_schedule([6, 4, 2])
+
+        # Perform short run using ask and tell framework
+        samples = []
+        while len(samples) < niter:
+            xs = abc.ask(n_draws)
+            fx = [self.error_measure(xs[0]), self.error_measure(xs[1])]
+            sample = abc.tell(fx)
+            while sample is None:
+                xs = abc.ask(n_draws)
+                fx = [self.error_measure(xs[0]), self.error_measure(xs[1])]
                 sample = abc.tell(fx)
             samples.append(sample)
 
@@ -83,6 +108,7 @@ class TestABCSMC(unittest.TestCase):
         # test error raised if tell called before ask
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
+        self.assertRaises(ValueError, abc.set_threshold_schedule, [1,-1])
 
 if __name__ == '__main__':
     unittest.main()
