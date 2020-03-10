@@ -31,7 +31,7 @@ class ABCSMC(pints.ABCSampler):
     References
     ----------
     .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
-    likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
+            likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
     """
     def __init__(self, log_prior):
 
