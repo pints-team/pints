@@ -22,6 +22,8 @@ class ABCSMC(pints.ABCSampler):
         self._accepted_count = 0
         self._weights = []
         self._threshold = 1
+        self._e_schedule = [1]
+        self._n_target = 100
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
