@@ -160,7 +160,11 @@ class MCMCSummary(object):
         self._rhat = pints.rhat_all_params(self._chains)
 
         # Effective sample size
-        self._ess = pints.effective_sample_size(stacked)
+        for i, chain in enumerate(self._chains):
+            if i == 0:
+                self._ess = pints.effective_sample_size(chain)
+            else:
+                self._ess += pints.effective_sample_size(chain)
         if self._time is not None:
             self._ess_per_second = np.array(self._ess) / self._time
 
