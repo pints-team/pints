@@ -530,7 +530,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # hyperparameters
         self._num_adaption_steps = 500
-        self._delta = 0.6
+        self._delta = 0.8
         self._step_size = None
         self._max_tree_depth = 10
         self._use_multinomial_sampling = True
