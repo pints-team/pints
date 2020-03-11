@@ -9,7 +9,6 @@
 from __future__ import print_function
 import numpy as np
 import pints
-import scipy
 from . import ToyODEModel
 
 
@@ -106,11 +105,6 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
         if a < 0 or b < 0:
             raise ValueError('Initial populations cannot be negative.')
         self._y0 = [a, b]
-
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        return scipy.integrate.odeint(
-            self._rhs, self._y0, times, args=(parameters,))
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
