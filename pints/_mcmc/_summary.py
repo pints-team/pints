@@ -160,7 +160,7 @@ class MCMCSummary(object):
         self._rhat = pints.rhat_all_params(self._chains)
 
         # Effective sample size
-        self._ess = 0
+        self._ess = np.zeros(self._n_parameters)
         for i, chain in enumerate(self._chains):
             self._ess += pints.effective_sample_size(chain)
 
