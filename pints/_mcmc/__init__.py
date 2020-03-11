@@ -297,7 +297,7 @@ class MCMCController(object):
     """
 
     def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None,
-                 log_prior=None):
+                 initialisation_function=None):
 
         # Store function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -322,6 +322,11 @@ class MCMCController(object):
                 raise ValueError(
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
+        if initialisation_function is not None:
+            if not isinstance(log_pdf, pints.LogPrior):
+                raise ValueError('Initialisation function must extend ' +
+                                 'pints.LogPrior.')
+            self._initialisation_function = initialisation_function
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -335,11 +340,13 @@ class MCMCController(object):
                 ok = False
             if not ok:
                 raise ValueError('Given method must extend pints.MCMCSampler.')
+        self._method = method
 
         # Using single chain samplers?
         self._single_chain = issubclass(method, pints.SingleChainMCMC)
 
         # Create sampler(s)
+        self._sigma0 = sigma0
         if self._single_chain:
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
@@ -388,7 +395,8 @@ class MCMCController(object):
         self._max_iterations = None
         self.set_max_iterations()
 
-        # TODO: Add more stopping criteria
+        # Initialisation number of tries
+        self._max_initialisation_tries = 20
 
     def chains(self):
         """
@@ -438,6 +446,12 @@ class MCMCController(object):
         ``None`` if it is not. See :meth:`set_max_iterations()`.
         """
         return self._max_iterations
+
+    def max_initialisation_tries(self):
+        """
+        Returns number of attempts to initialise samplers by sampling.
+        """
+        return self._max_initialisation_tries
 
     def method_needs_initial_phase(self):
         """
@@ -603,19 +617,35 @@ class MCMCController(object):
         timer = pints.Timer()
         running = True
 
-        # initialisation (for single chain methods only)
-        initialised_finite = False
-        current_active = list(active)
-        while not initialised_finite:
-            xs = [self._samplers[i].pre_ask() for i in current_active]
-            fxs = evaluator.evaluate(xs)
-            xs_iterator = iter(xs)
-            fxs_iterator = iter(fxs)
-            for i in list(current_active):  # new list: active may be modified
-                x = next(xs_iterator)
-                fx = next(fxs_iterator)
-                if np.isfinite(fx):
-                    
+        # initialisation (for single chain methods only and only if prior
+        # supplied)
+        init_fn = self._initialisation_function
+        if init_fn is not None:
+            initialised_finite = False
+            current_active = list(active)
+            n_tries = 0
+            x0 = []
+            while not initialised_finite and (n_tries <
+                                              self._max_initialisation_tries):
+                xs = [init_fn.sample() for i in current_active]
+                fxs = evaluator.evaluate(xs)
+                xs_iterator = iter(xs)
+                fxs_iterator = iter(fxs)
+                current_active_copy = list(current_active)
+                for i in list(current_active):
+                    x = next(xs_iterator)
+                    fx = next(fxs_iterator)
+                    if np.isfinite(fx):
+                        x0.append(x)
+                        del current_active_copy[i]
+                current_active = current_active_copy
+                if len(current_active) == 0:
+                    initialised_finite = True
+                n_tries += 1
+            if not initialised_finite:
+                raise ValueError('Initialisation failed since log_pdf not ' +
+                                 'finite at x0.')
+            self._samplers = [self._method(a, self._sigma0) for a in x0]
 
         while running:
             # Initial phase
@@ -957,6 +987,15 @@ class MCMCController(object):
         Enables or disables progress logging to screen.
         """
         self._log_to_screen = True if enabled else False
+
+    def set_max_initialisation_tries(self, max_initialisation_tries):
+        """
+        Sets number of attempts to initialise samplers by sampling.
+        """
+        if max_initialisation_tries < 1:
+            raise ValueError('Number of initialisation tries must ' +
+                             'exceed 1')
+        self._max_initialisation_tries = max_initialisation_tries
 
     def set_max_iterations(self, iterations=10000):
         """
