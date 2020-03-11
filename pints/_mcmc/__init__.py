@@ -297,7 +297,7 @@ class MCMCController(object):
     """
 
     def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None,
-                 initialisation_function=None):
+                 init_function=None):
 
         # Store function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -322,11 +322,18 @@ class MCMCController(object):
                 raise ValueError(
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
-        if initialisation_function is not None:
-            if not isinstance(log_pdf, pints.LogPrior):
+        if x0 is None and init_function is None:
+            raise ValueError('Either x0 or initialisation function must be ' +
+                             'non-None.')
+        if x0 is not None and init_function is not None:
+            raise ValueError('Cannot have both x0 and initialisation ' +
+                             'function.')
+        if init_function is not None:
+            if not isinstance(init_function, pints.LogPrior):
                 raise ValueError('Initialisation function must extend ' +
                                  'pints.LogPrior.')
-            self._initialisation_function = initialisation_function
+            x0 = [init_function.sample() for i in range(chains)]
+            self._init_function = init_function
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -619,7 +626,7 @@ class MCMCController(object):
 
         # initialisation (for single chain methods only and only if prior
         # supplied)
-        init_fn = self._initialisation_function
+        init_fn = self._init_function
         if init_fn is not None:
             initialised_finite = False
             current_active = list(active)
@@ -627,19 +634,16 @@ class MCMCController(object):
             x0 = []
             while not initialised_finite and (n_tries <
                                               self._max_initialisation_tries):
-                xs = [init_fn.sample() for i in current_active]
+                xs = [init_fn.sample()[0] for i in current_active]
                 fxs = evaluator.evaluate(xs)
                 xs_iterator = iter(xs)
                 fxs_iterator = iter(fxs)
-                current_active_copy = list(current_active)
                 for i in list(current_active):
                     x = next(xs_iterator)
                     fx = next(fxs_iterator)
                     if np.isfinite(fx):
                         x0.append(x)
-                        del current_active_copy[i]
-                current_active = current_active_copy
-                if len(current_active) == 0:
+                if len(x0) == len(active):
                     initialised_finite = True
                 n_tries += 1
             if not initialised_finite:
