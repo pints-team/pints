@@ -296,7 +296,8 @@ class MCMCController(object):
         :class:`HaarioBardenetACMC` is used.
     """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None,
+                 log_prior=None):
 
         # Store function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -312,14 +313,15 @@ class MCMCController(object):
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s): Most checking is done by samplers!
-        if len(x0) != chains:
-            raise ValueError(
-                'Number of initial positions must be equal to number of'
-                ' chains.')
-        if not all([len(x) == self._n_parameters for x in x0]):
-            raise ValueError(
-                'All initial positions must have the same dimension as the'
-                ' given LogPDF.')
+        if x0 is not None:
+            if len(x0) != chains:
+                raise ValueError(
+                    'Number of initial positions must be equal to number of'
+                    ' chains.')
+            if not all([len(x) == self._n_parameters for x in x0]):
+                raise ValueError(
+                    'All initial positions must have the same dimension as the'
+                    ' given LogPDF.')
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -600,6 +602,21 @@ class MCMCController(object):
         # Start sampling
         timer = pints.Timer()
         running = True
+
+        # initialisation (for single chain methods only)
+        initialised_finite = False
+        current_active = list(active)
+        while not initialised_finite:
+            xs = [self._samplers[i].pre_ask() for i in current_active]
+            fxs = evaluator.evaluate(xs)
+            xs_iterator = iter(xs)
+            fxs_iterator = iter(fxs)
+            for i in list(current_active):  # new list: active may be modified
+                x = next(xs_iterator)
+                fx = next(fxs_iterator)
+                if np.isfinite(fx):
+                    
+
         while running:
             # Initial phase
             # Note: self._initial_phase_iterations is None when no initial
