@@ -16,28 +16,31 @@ import urllib.request
 from scipy import stats
 
 
-class GermanCreditLogPDF(ToyLogPDF):
+class GermanCreditHierarchicalLogPDF(ToyLogPDF):
     r"""
-    Toy distribution based on a logistic regression model, which takes the
-    form,
+    Toy distribution based on a hierarchical logistic regression model, which
+    takes the form,
 
     .. math::
 
-        f(x, y|\beta) \propto \text{exp}(-\sum_{i=1}^{N} 1 +
-        \text{exp}(-y_i x_i\dot\beta) - 1/2\sigma^2 \beta\dot\beta)
+        f(z, y|\beta) \propto \text{exp}(-\sum_{i=1}^{N} 1 +
+        \text{exp}(-y_i z_i\dot\beta) - 1/2\sigma^2 \beta\dot\beta -
+        N/2 \text{log }\sigma^2 - \lambda \sigma^2)
 
-    The data :math:`(x, y)` are a matrix of individual predictors (with 1s in
+    The data :math:`(z, y)` are a matrix of individual predictors (with 1s in
     the first column) and responses (1 if the individual should receive credit
-    and -1 if not) respectively; :math:`\beta` is a 25x1 vector of coefficients
-    and :math:`\sigma^2=100`. The dataset here is from [1]_ but the test
-    problem is defined in [2]_.
+    and -1 if not) respectively; :math:`\beta` is a 325x1 vector of
+    coefficients and :math:`N=1000`; :math:`z` is the design matrix formed
+    by creating all interactions between individual variables and themselves
+    as defined in [2]_.
 
     Extends :class:`pints.LogPDF`.
 
     Parameters
     ----------
-    beta : float
-        vector of coefficients of length 25.
+    theta : float
+        vector of coefficients of length 326 (first dimension is sigma; other
+        entries make up beta)
 
     References
     ----------
@@ -56,21 +59,40 @@ class GermanCreditLogPDF(ToyLogPDF):
                 raise ValueError("x must have 25 predictor columns.")
             if max(y) != 1 or min(y) != -1:
                 raise ValueError("Output must be either 1 or -1.")
-        self._x = x
-        self._y = y
-        self._n_parameters = dims
-        self._sigma = 10
-        self._sigma_sq = self._sigma**2
-        self._N = len(y)
 
-    def __call__(self, beta):
-        log_prob = sum(-np.log(1 + np.exp(-self._y * np.dot(self._x, beta))))
-        log_prob += -1 / (2 * self._sigma_sq) * np.dot(beta, beta)
+        # make design matrix
+        self._x = np.copy(x)
+        x = x[:, 1:]
+        z = np.zeros((1000, 325))
+        zz = np.zeros((z.shape[0], 300))
+        k = 0
+        for i in range(x.shape[1]):
+            for j in range(i, x.shape[1]):
+                zz[:, k] = np.transpose(x[:, i] * x[:, j])
+                k += 1
+        zz = np.column_stack([x, zz])
+        z[:, 0] = np.ones(1000)
+        z[:, 1:] = zz
+
+        self._y = y
+        self._z = z
+        self._n_parameters = 326
+        self._N = len(y)
+        self._lambda = 0.01
+
+    def __call__(self, theta):
+        sigma = theta[0]
+        beta = theta[1::]
+        sigma_sq = sigma**2
+        log_prob = sum(-np.log(1 + np.exp(-self._y * np.dot(self._z, beta))))
+        log_prob += -1 / (2 * sigma_sq) * np.dot(beta, beta) \
+                    - self._N / 2 * np.log(sigma) \
+                    - self._lambda * sigma_sq
         return log_prob
 
     def data(self):
         """ Returns data used to fit model. """
-        return self._x, self._y
+        return self._x, self._y, self._z
 
     def download_data(self):
         """ Downloads data from [1]. """
@@ -93,18 +115,30 @@ class GermanCreditLogPDF(ToyLogPDF):
         x = np.copy(x1)
         return x, y
 
-    def evaluateS1(self, beta):
+    def evaluateS1(self, theta):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        sigma = theta[0]
+        sigma_sq = sigma**2
+
+        beta = theta[1::]
         log_prob = 0.0
         grad_log_prob = np.zeros(self.n_parameters())
         for i in range(self._N):
-            exp_yxb = np.exp(-self._y[i] * np.dot(self._x[i], beta))
+            exp_yxb = np.exp(-self._y[i] * np.dot(self._z[i], beta))
             log_prob += -np.log(1 + exp_yxb)
-            grad_log_prob += self._x[i] * self._y[i] * exp_yxb / (1 + exp_yxb)
+            grad_log_prob[1:] += (
+                self._z[i] * self._y[i] * exp_yxb / (1 + exp_yxb))
 
-        scale = -1 / (2 * self._sigma_sq)
+        scale = -1 / (2 * sigma_sq)
         log_prob += scale * np.dot(beta, beta)
-        grad_log_prob += scale * 2 * beta
+        grad_log_prob[1:] += scale * 2 * beta
+
+        log_prob += -self._N / 2 * np.log(sigma_sq)
+        grad_log_prob[0] += -self._N / sigma
+
+        log_prob += -self._lambda * sigma_sq
+        grad_log_prob[0] += -self._lambda * 2 * sigma
+
         return log_prob, grad_log_prob
 
     def n_parameters(self):

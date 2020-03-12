@@ -17,10 +17,10 @@ import urllib.request
 from scipy import stats
 
 
-class TestGermanCreditLogPDF(unittest.TestCase):
+class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
     """
-    Tests the logpdf toy distribution from fitting a logistic model to German
-    credit data.
+    Tests the logpdf toy distribution from fitting a hierarchical logistic
+    model to German credit data.
     """
     @classmethod
     def setUpClass(cls):
@@ -46,7 +46,7 @@ class TestGermanCreditLogPDF(unittest.TestCase):
         x = np.copy(x1)
         cls.x = x
 
-        cls.model = pints.toy.GermanCreditLogPDF(x, y)
+        cls.model = pints.toy.GermanCreditHierarchicalLogPDF(x, y)
 
     def test_download(self):
         # tests that method can download data from UCI repo
@@ -64,22 +64,21 @@ class TestGermanCreditLogPDF(unittest.TestCase):
 
     def test_values(self):
         # tests calls
-        self.assertAlmostEqual(self.model(np.zeros(25)), -693.1471805599322,
-                               places=6)
-        self.assertAlmostEqual(self.model(np.ones(25)), -2887.6292678483533,
+        self.assertAlmostEqual(self.model(np.ones(326)),
+                               -20174.077700157857,
                                places=6)
 
     def test_sensitivities(self):
         # test sensitivity values vs reference
-        val, dp = self.model.evaluateS1(np.zeros(25))
-        self.assertEqual(val, self.model(np.zeros(25)))
-        self.assertEqual(len(dp), 25)
-        self.assertEqual(dp[0], -200)
-        self.assertAlmostEqual(dp[1], -160.7785147438439, places=6)
+        val, dp = self.model.evaluateS1(np.ones(326))
+        self.assertEqual(val, self.model(np.ones(326)))
+        self.assertEqual(len(dp), 326)
+        self.assertAlmostEqual(dp[0], -1000.02)
+        self.assertAlmostEqual(dp[1], -700.8386959844057, places=6)
 
     def test_givens(self):
         # tests whether boundaries are correct and n_parameters
-        self.assertEqual(25, self.model.n_parameters())
+        self.assertEqual(326, self.model.n_parameters())
         borders = self.model.suggested_bounds()
         self.assertEqual(borders[0][0], -100)
         self.assertEqual(borders[1][0], 100)
