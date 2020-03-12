@@ -18,6 +18,7 @@ from ._cone import ConeLogPDF                                       # noqa
 from ._constant_model import ConstantModel                          # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._gaussian import GaussianLogPDF                               # noqa
+from ._german_credit import GermanCreditLogPDF                      # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
 from ._hes1_michaelis_menten import Hes1Model                       # noqa
 from ._hh_ik_model import HodgkinHuxleyIKModel                      # noqa
