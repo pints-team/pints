@@ -80,6 +80,11 @@ def reorder(param_number, chains):
     Reorders chains for a given parameter into a more useful format for
     calculating rhat.
     """
+    # split chains in two
+    a_len = int(chains.shape[1] / 2)
+    chains_first = [chain[:a_len, :] for chain in chains]
+    chains_second = [chain[a_len:, :] for chain in chains]
+    chains = chains_first + chains_second
     num_chains = len(chains)
     samples = [chains[i][:, param_number] for i in range(0, num_chains)]
     return samples
@@ -96,9 +101,12 @@ def reorder_all_params(chains):
 
 
 def rhat(samples):
-    """
-    Calculates r-hat = sqrt(((n - 1)/n * W + (1/n) * B)/W) as per "Bayesian
-    data analysis", 3rd edition, Gelman et al., 2014.
+    r"""
+    Calculates :math:`\hat{R} = sqrt(((n - 1)/n * W + (1/n) * B)/W)`` as per
+    [1] for a single parameter. It does this after splitting each chain into
+    two.
+
+    [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
     """
     W = within(samples)
     B = between(samples)
@@ -107,11 +115,12 @@ def rhat(samples):
 
 
 def rhat_all_params(chains):
-    """
-    Calculates r-hat for all parameters in chains as per "Bayesian data
-    analysis", 3rd edition, Gelman et al., 2014.
+    r"""
+    Calculates :math:`\hat{R} = sqrt(((n - 1)/n * W + (1/n) * B)/W)`` as per
+    [1] for all parameters. It does this after splitting each chain into two.
+
+    [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
     """
     samples_all = reorder_all_params(chains)
     rhat_all = list(map(lambda x: rhat(x), samples_all))
     return rhat_all
-
