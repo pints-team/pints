@@ -10,6 +10,10 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 from . import ToyLogPDF
+import io
+import urllib
+import urllib.request
+from scipy import stats
 
 
 class GermanCreditLogPDF(ToyLogPDF):
@@ -39,15 +43,19 @@ class GermanCreditLogPDF(ToyLogPDF):
     .. [1] "UCI machine learning repository", 2010. A. Frank and A. Asuncion.
            https://archive.ics.uci.edu/ml/datasets/statlog+(german+credit+data)
     """
-    def __init__(self, x, y, sigma=10):
-        dims = x.shape[1]
-        if dims != 25:
-            raise ValueError("x must have 25 predictor columns.")
-        if max(y) != 1 or min(y) != -1:
-            raise ValueError("Output must be either 1 or -1.")
+    def __init__(self, x=None, y=None, sigma=10):
+        if x is None:
+            x, y = self.download_data()
+            dims = x.shape[1]
+        else:
+            dims = x.shape[1]
+            if dims != 25:
+                raise ValueError("x must have 25 predictor columns.")
+            if max(y) != 1 or min(y) != -1:
+                raise ValueError("Output must be either 1 or -1.")
         self._x = x
-        self._n_parameters = dims
         self._y = y
+        self._n_parameters = dims
         self._sigma = sigma
         self._sigma_sq = sigma**2
         self._N = len(y)
@@ -56,6 +64,31 @@ class GermanCreditLogPDF(ToyLogPDF):
         log_prob = sum(-np.log(1 + np.exp(-self._y * np.dot(self._x, beta))))
         log_prob += -1 / (2 * self._sigma_sq) * np.dot(beta, beta)
         return log_prob
+
+    def data(self):
+        """ Returns data used to fit model. """
+        return self._x, self._y
+
+    def download_data(self):
+        """ Downloads data from [1]. """
+        url="http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric" # noqa
+        with urllib.request.urlopen(url) as url:
+            raw_data = url.read()
+        a = np.genfromtxt(io.BytesIO(raw_data), delimiter=4)[:, :25]
+
+        # get output
+        y = a[:, -1]
+        y[y == 1] = -1
+        y[y == 2] = 1
+
+        # get inputs and standardise
+        x = a[:, :-1]
+        x = stats.zscore(x)
+        x1 = np.zeros((x.shape[0], x.shape[1] + 1))
+        x1[:, 0] = np.ones(x.shape[0])
+        x1[:, 1:] = x
+        x = np.copy(x1)
+        return x, y
 
     def evaluateS1(self, beta):
         """ See :meth:`LogPDF.evaluateS1()`. """

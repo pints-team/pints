@@ -47,6 +47,13 @@ class TestGermanCreditLogPDF(unittest.TestCase):
 
         cls.model = pints.toy.GermanCreditLogPDF(x, y)
 
+    def test_download(self):
+        # tests that method can download data from UCI repo
+        model = pints.toy.GermanCreditLogPDF()
+        x, y = model.data()
+        self.assertTrue(np.array_equal(x, self.x))
+        self.assertTrue(np.array_equal(y, self.y))
+
     def test_errors(self):
         # tests errors of inapropriate function calls and inits
         self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
