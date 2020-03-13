@@ -23,8 +23,8 @@ class GermanCreditLogPDF(ToyLogPDF):
 
     .. math::
 
-        f(x, y|\beta) \propto \text{exp}(-\sum_{i=1}^{N} 1 +
-        \text{exp}(-y_i x_i\dot\beta) - 1/2\sigma^2 \beta\dot\beta)
+        f(x, y|\beta) \propto \text{exp}(-\sum_{i=1}^{N} \text{log}(1 +
+        \text{exp}(-y_i x_i.\beta)) - \beta.\beta/2\sigma^2)
 
     The data :math:`(x, y)` are a matrix of individual predictors (with 1s in
     the first column) and responses (1 if the individual should receive credit
@@ -46,11 +46,18 @@ class GermanCreditLogPDF(ToyLogPDF):
     .. [2] "The No-U-Turn Sampler:  Adaptively Setting Path Lengths in
            Hamiltonian Monte Carlo", 2014, M.D. Hoffman and A. Gelman.
     """
-    def __init__(self, x=None, y=None):
-        if x is None:
+    def __init__(self, x=None, y=None, download=False):
+        if x is None or y is None:
+            if download is False:
+                raise ValueError("No data supplied. Consider setting " +
+                                 "download to True to download data.")
             x, y = self.download_data()
             dims = x.shape[1]
         else:
+            if download is True:
+                raise ValueError("Either supply no data or set " +
+                                 "download to True to download data, but " +
+                                 "not both.")
             dims = x.shape[1]
             if dims != 25:
                 raise ValueError("x must have 25 predictor columns.")

@@ -50,7 +50,7 @@ class TestGermanCreditLogPDF(unittest.TestCase):
 
     def test_download(self):
         # tests that method can download data from UCI repo
-        model = pints.toy.GermanCreditLogPDF()
+        model = pints.toy.GermanCreditLogPDF(download=True)
         x, y = model.data()
         self.assertTrue(np.array_equal(x, self.x))
         self.assertTrue(np.array_equal(y, self.y))
@@ -61,6 +61,12 @@ class TestGermanCreditLogPDF(unittest.TestCase):
                           np.zeros((27, 27)), self.y)
         self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
                           self.x, np.ones(1000) * 2)
+        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+                          self.x, self.y, True)
+        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+                          None, self.y)
+        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+                          self.x, None)
 
     def test_values(self):
         # tests calls
