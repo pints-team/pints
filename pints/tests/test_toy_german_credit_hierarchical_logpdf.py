@@ -57,15 +57,15 @@ class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
 
     def test_errors(self):
         # tests errors of inapropriate function calls and inits
-        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+        self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           np.zeros((27, 27)), self.y)
-        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+        self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           self.x, np.ones(1000) * 2)
-        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+        self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           self.x, self.y, True)
-        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+        self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           None, self.y)
-        self.assertRaises(ValueError, pints.toy.GermanCreditLogPDF,
+        self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           self.x, None)
 
     def test_values(self):
