@@ -12,7 +12,10 @@ import numpy as np
 from . import ToyLogPDF
 import io
 import urllib
-import urllib.request
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen # noqa
 from scipy import stats
 
 
