@@ -11,12 +11,12 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 from . import ToyLogPDF
 import io
-import urllib
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen # noqa
+import sys
 from scipy import stats
+if sys.version_info[0] == 3:
+    import urllib.request
+else:
+    import urllib2
 
 
 class GermanCreditLogPDF(ToyLogPDF):
@@ -85,7 +85,11 @@ class GermanCreditLogPDF(ToyLogPDF):
     def download_data(self):
         """ Downloads data from [1]. """
         url="http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric" # noqa
-        with urllib.request.urlopen(url) as url:
+        if sys.version_info[0] == 3:
+            with urllib.request.urlopen(url) as url:
+                raw_data = url.read()
+        else:
+            url = urllib2.urlopen(url)
             raw_data = url.read()
         a = np.genfromtxt(io.BytesIO(raw_data), delimiter=4)[:, :25]
 

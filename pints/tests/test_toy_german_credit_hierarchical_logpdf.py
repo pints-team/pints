@@ -13,11 +13,12 @@ import unittest
 import numpy as np
 import io
 import urllib
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen # noqa
+import sys
 from scipy import stats
+if sys.version_info[0] == 3:
+    import urllib.request
+else:
+    import urllib2
 
 
 class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
@@ -30,7 +31,11 @@ class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
         """ Set up problem for tests. """
         # download data
         url="http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric" # noqa
-        with urllib.request.urlopen(url) as url:
+        if sys.version_info[0] == 3:
+            with urllib.request.urlopen(url) as url:
+                raw_data = url.read()
+        else:
+            url = urllib2.urlopen(url)
             raw_data = url.read()
         a = np.genfromtxt(io.BytesIO(raw_data), delimiter=4)[:, :25]
 
