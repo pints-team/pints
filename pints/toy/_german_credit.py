@@ -54,7 +54,7 @@ class GermanCreditLogPDF(ToyLogPDF):
             if download is False:
                 raise ValueError("No data supplied. Consider setting " +
                                  "download to True to download data.")
-            x, y = self.download_data()
+            x, y = self._download_data()
             dims = x.shape[1]
         else:
             if download is True:
@@ -82,9 +82,10 @@ class GermanCreditLogPDF(ToyLogPDF):
         """ Returns data used to fit model. """
         return self._x, self._y
 
-    def download_data(self):
+    def _download_data(self):
         """ Downloads data from [1]. """
-        url="http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric" # noqa
+        url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
+               'statlog/german/german.data-numeric')
         if sys.version_info[0] == 3:
             with urllib.request.urlopen(url) as url:
                 raw_data = url.read()

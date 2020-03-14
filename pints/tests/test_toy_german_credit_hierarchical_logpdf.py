@@ -11,14 +11,6 @@ import pints
 import pints.toy
 import unittest
 import numpy as np
-import io
-import urllib
-import sys
-from scipy import stats
-if sys.version_info[0] == 3:
-    import urllib.request
-else:
-    import urllib2
 
 
 class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
@@ -30,36 +22,19 @@ class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
     def setUpClass(cls):
         """ Set up problem for tests. """
         # download data
-        url="http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data-numeric" # noqa
-        if sys.version_info[0] == 3:
-            with urllib.request.urlopen(url) as url:
-                raw_data = url.read()
-        else:
-            url = urllib2.urlopen(url)
-            raw_data = url.read()
-        a = np.genfromtxt(io.BytesIO(raw_data), delimiter=4)[:, :25]
-
-        # get output
-        y = a[:, -1]
-        y[y == 1] = -1
-        y[y == 2] = 1
+        model = pints.toy.GermanCreditHierarchicalLogPDF(download=True)
+        x, y, z = model.data()
         cls.y = y
-
-        # get inputs and standardise
-        x = a[:, :-1]
-        x = stats.zscore(x)
-        x1 = np.zeros((x.shape[0], x.shape[1] + 1))
-        x1[:, 0] = np.ones(x.shape[0])
-        x1[:, 1:] = x
-        x = np.copy(x1)
         cls.x = x
-
-        cls.model = pints.toy.GermanCreditHierarchicalLogPDF(x, y)
+        cls.model = model
 
     def test_download(self):
         # tests that method can download data from UCI repo
         model = pints.toy.GermanCreditHierarchicalLogPDF(download=True)
         x, y, z = model.data()
+        self.assertEqual(x.shape[0], 1000)
+        self.assertEqual(x.shape[1], 25)
+        self.assertEqual(len(y), 1000)
         self.assertTrue(np.array_equal(x, self.x))
         self.assertTrue(np.array_equal(y, self.y))
 
@@ -75,6 +50,15 @@ class TestGermanCreditHierarchicalLogPDF(unittest.TestCase):
                           None, self.y)
         self.assertRaises(ValueError, pints.toy.GermanCreditHierarchicalLogPDF,
                           self.x, None)
+
+    def test_local(self):
+        # tests that model can be instantiated using local files
+        x, y, z = self.model.data()
+        model = pints.toy.GermanCreditHierarchicalLogPDF(x=x, y=y)
+        x1, y1, z1 = model.data()
+        self.assertTrue(np.array_equal(x, x1))
+        self.assertTrue(np.array_equal(y, y1))
+        self.assertTrue(np.array_equal(z, z1))
 
     def test_values(self):
         # tests calls
