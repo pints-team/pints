@@ -113,9 +113,13 @@ class TestABCSMC(unittest.TestCase):
         # test error raised if tell called before ask
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
-        self.assertRaises(ValueError, abc.set_threshold_schedule, [1,-1])
+        self.assertRaises(ValueError, abc.set_threshold_schedule, [1, -1])
 
-        self.assertRaises(ValueError, pints.ABCSMC, self.log_prior, np.array([0]))
+        self.assertRaises(
+            ValueError,
+            pints.ABCSMC,
+            self.log_prior,
+            np.array([0]))
 
 
 if __name__ == '__main__':

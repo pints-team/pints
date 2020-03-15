@@ -46,13 +46,12 @@ class ABCSMC(pints.ABCSampler):
         self._ready_for_tell = False
         self._t = 0
 
-
         dim = log_prior.n_parameters()
 
         if perturbation_kernel is None:
             self._perturbation_kernel = pints.MultivariateGaussianLogPrior(
                 np.zeros(dim),
-                0.001*np.identity(dim))
+                0.001 * np.identity(dim))
         elif isinstance(perturbation_kernel, pints.LogPrior):
             self._perturbation_kernel = perturbation_kernel
         else:
@@ -81,7 +80,7 @@ class ABCSMC(pints.ABCSampler):
                         p=self._weights[self._t - 1])
                     theta_s = self._samples[self._t - 1][indices]
                     # perturb using _K_t TODO: Allow this to adapt e.g. OLCM
-                    theta_s_s = np.add(theta_s, 
+                    theta_s_s = np.add(theta_s,
                                        self._perturbation_kernel.sample(1)[0])
                     # check if theta_s_s is possible under the prior
                     # sample again if not
@@ -147,7 +146,7 @@ class ABCSMC(pints.ABCSampler):
 
             # Don't know what the technical name is for this (O(n^2))
             mw = [old_weights[j] * np.exp(self._perturbation_kernel(
-                np.subtract(new_samples[i],old_samples[j]))) 
+                np.subtract(new_samples[i], old_samples[j])))
                 for j in range(len(old_samples))]
 
             w = prior_prob / sum(mw)
