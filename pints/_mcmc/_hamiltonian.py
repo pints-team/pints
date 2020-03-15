@@ -75,6 +75,9 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._position = None       # Aka q in the chapter
         self._gradient = None       # Aka grad_U(q) in the chapter
 
+        self._noise_estimate = None
+        self._noisy_gradients = False
+
         # Iterations, acceptance monitoring, and leapfrog iterations
         self._mcmc_iteration = 0
         self._mcmc_acceptance = 0
@@ -272,6 +275,24 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._step_size = step_size
         self._set_scaled_epsilon()
 
+    def set_gradient_noise_estimate(self, noise_est):
+        """
+        Configures HMC to use noisy gradient mode with the provided noise
+        estimate.
+        """
+        self._noise_estimate = noise_est
+        self._noisy_gradients = True
+
+    def _calculate_effective_grad(self, grad):
+        effective_grad = grad
+        # Carry out SGHMC Friction adjustments
+        if self._noisy_gradients:
+            effective_grad += self._noise_estimate.dot(self._momentum)
+            effective_grad -= np.random.multivariate_normal(
+                np.zeros(self._n_parameters), 2 * self._noise_estimate)
+
+        return effective_grad
+
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         if not self._ready_for_tell:
@@ -283,7 +304,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
         # Check reply, copy gradient
         energy = float(energy)
-        gradient = pints.vector(gradient)
+        gradient = self._calculate_effective_grad(pints.vector(gradient))
         assert(gradient.shape == (self._n_parameters, ))
 
         # Energy = -log_pdf, so flip both signs!
