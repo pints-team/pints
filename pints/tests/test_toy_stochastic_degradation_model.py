@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
-from pints.toy. import DegradationModel
+from pints.toy.stochastic import DegradationModel
 
 
 class TestDegradation(unittest.TestCase):

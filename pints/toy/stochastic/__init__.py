@@ -13,4 +13,4 @@ from __future__ import print_function, unicode_literals
 from ._degradation_model import DegradationModel  # noqa
 from ._markov_jump_model import MarkovJumpModel  # noqa
 from ._michaelis_menten_model import MichaelisMentenModel # noqa
-from ._schlogl_model import SchloglModel
+from ._schlogl_model import SchloglModel # noqa
