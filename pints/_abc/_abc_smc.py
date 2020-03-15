@@ -86,8 +86,6 @@ class ABCSMC(pints.ABCSampler):
                     # check if theta_s_s is possible under the prior
                     # sample again if not
                 self._xs.append(theta_s_s)
-            if n_samples == 1:
-                self._xs = self._xs[0]
         self._ready_for_tell = True
         return self._xs
 
