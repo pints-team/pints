@@ -33,7 +33,7 @@ class ABCSMC(pints.ABCSampler):
     .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
             likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
     """
-    def __init__(self, log_prior):
+    def __init__(self, log_prior, perturbation_kernel=None):
 
         self._log_prior = log_prior
         self._samples = [[]]
@@ -45,8 +45,19 @@ class ABCSMC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
+
+
         dim = log_prior.n_parameters()
-        self._perturbation_kernel = pints.SphericalGaussianKernel(0.001, dim)
+
+        if perturbation_kernel is None:
+            self._perturbation_kernel = pints.MultivariateGaussianLogPrior(
+                np.zeros(dim),
+                0.001*np.identity(dim))
+        elif isinstance(perturbation_kernel, pints.LogPrior):
+            self._perturbation_kernel = perturbation_kernel
+        else:
+            raise ValueError("Provided perturbation kernel must be an instance\
+                of pints.LogPrior")
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -70,7 +81,8 @@ class ABCSMC(pints.ABCSampler):
                         p=self._weights[self._t - 1])
                     theta_s = self._samples[self._t - 1][indices]
                     # perturb using _K_t TODO: Allow this to adapt e.g. OLCM
-                    theta_s_s = self._perturbation_kernel.perturb(theta_s)
+                    theta_s_s = np.add(theta_s, 
+                                       self._perturbation_kernel.sample(1)[0])
                     # check if theta_s_s is possible under the prior
                     # sample again if not
                 self._xs.append(theta_s_s)
@@ -136,9 +148,9 @@ class ABCSMC(pints.ABCSampler):
             prior_prob = np.exp(self._log_prior(new_samples[i]))
 
             # Don't know what the technical name is for this (O(n^2))
-            mw = [old_weights[j] * self._perturbation_kernel.p(
-                new_samples[j],
-                old_samples[i]) for j in range(len(old_samples))]
+            mw = [old_weights[j] * np.exp(self._perturbation_kernel(
+                np.subtract(new_samples[i],old_samples[j]))) 
+                for j in range(len(old_samples))]
 
             w = prior_prob / sum(mw)
             new_weights.append(w)

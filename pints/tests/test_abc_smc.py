@@ -43,6 +43,11 @@ class TestABCSMC(unittest.TestCase):
             [0.3]
         )
 
+        cls.transition_kernel = pints.MultivariateGaussianLogPrior(
+            np.zeros(1),
+            0.001 * np.identity(1)
+        )
+
         # Set error measure
         cls.error_measure = pints.RootMeanSquaredError(cls.problem)
 
@@ -109,6 +114,9 @@ class TestABCSMC(unittest.TestCase):
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
         self.assertRaises(ValueError, abc.set_threshold_schedule, [1,-1])
+
+        self.assertRaises(ValueError, pints.ABCSMC, self.log_prior, np.array([0]))
+
 
 if __name__ == '__main__':
     unittest.main()
