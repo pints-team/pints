@@ -59,6 +59,49 @@ class LogPrior(LogPDF):
 
     Extends :class:`LogPDF`.
     """
+    def cdf(self, x):
+        """
+        Returns the cumulative density function at point(s) ``x``.
+        ``x`` should be an n x d array, where n in the number of input samples
+        and d is the dimension of parameter space.
+        """
+        raise NotImplementedError
+
+    def convert_from_unit_cube(self, u):
+        """
+        Converts samples ``u`` uniformly drawn from the unit cube into those
+        drawn from the prior space, typically by transforming using
+        :meth:`LogPrior.icdf()`.
+        ``u`` should be an n x d array, where n in the number of input samples
+        and d is the dimension of parameter space.
+        """
+        return self.icdf(u)
+
+    def convert_to_unit_cube(self, x):
+        """
+        Converts samples from the prior ``x`` to be drawn uniformly from the
+        unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
+        ``x`` should be an n x d array, where n in the number of input samples
+        and d is the dimension of parameter space.
+        """
+        return self.cdf(x)
+
+    def icdf(self, p):
+        """
+        Returns the inverse cumulative density function at cumulative
+        probability/probabilities ``p``.
+        ``p`` should be an n x d array, where n in the number of input samples
+        and d is the dimension of parameter space.
+        """
+        raise NotImplementedError
+
+    def mean(self):
+        """
+        Returns the analytical value of the expectation of a random variable
+        distributed according to this :class:`LogPDF`.
+        """
+        raise NotImplementedError
+
     def sample(self, n=1):
         """
         Returns ``n`` random samples from the underlying prior distribution.
@@ -69,13 +112,6 @@ class LogPrior(LogPDF):
 
         Note: This method is optional, in the sense that only a subset of
         inference methods require it.
-        """
-        raise NotImplementedError
-
-    def mean(self):
-        """
-        Returns the analytical value of the expectation of a random variable
-        distributed according to this :class:`LogPDF`.
         """
         raise NotImplementedError
 
