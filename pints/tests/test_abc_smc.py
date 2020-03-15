@@ -64,13 +64,13 @@ class TestABCSMC(unittest.TestCase):
         # Perform short run using ask and tell framework
         samples = []
         while len(samples) < niter:
-            x = abc.ask(n_draws)[0]
-            fx = self.error_measure(x)
-            sample = abc.tell(fx)
+            xs = abc.ask(n_draws)
+            fxs = [self.error_measure(x) for x in xs]
+            sample = abc.tell(fxs)
             while sample is None:
-                x = abc.ask(n_draws)[0]
-                fx = self.error_measure(x)
-                sample = abc.tell(fx)
+                xs = abc.ask(n_draws)
+                fxs = [self.error_measure(x) for x in xs]
+                sample = abc.tell(fxs)
             samples.append(sample)
 
         samples = np.array(samples)
@@ -90,12 +90,12 @@ class TestABCSMC(unittest.TestCase):
         samples = []
         while len(samples) < niter:
             xs = abc.ask(n_draws)
-            fx = [self.error_measure(xs[0]), self.error_measure(xs[1])]
-            sample = abc.tell(fx)
+            fxs = [self.error_measure(x) for x in xs]
+            sample = abc.tell(fxs)
             while sample is None:
                 xs = abc.ask(n_draws)
-                fx = [self.error_measure(xs[0]), self.error_measure(xs[1])]
-                sample = abc.tell(fx)
+                fxs = [self.error_measure(x) for x in xs]
+                sample = abc.tell(fxs)
             samples.append(sample)
 
         samples = np.array(samples)
