@@ -95,14 +95,14 @@ class TestDiagnostics(unittest.TestCase):
 
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
         y = np.array(pints._diagnostics.reorder(0, test))
-        self.assertEqual(y.shape, (4, 10))
+        self.assertEqual(y.shape, (8, 5))
 
     def test_reorder_all(self):
         # Tests that reorder_all function reshapes correctly
 
         test = np.random.normal(loc=0, scale=1, size=(4, 10, 3))
         y = np.array(pints._diagnostics.reorder_all_params(test))
-        self.assertEqual(y.shape, (3, 4, 10))
+        self.assertEqual(y.shape, (3, 8, 5))
 
     def test_rhat(self):
         # Tests that rhat works
@@ -128,7 +128,7 @@ class TestDiagnostics(unittest.TestCase):
                        [0.89531238, 0.63207977]]])
 
         y = pints._diagnostics.rhat_all_params(x)
-        d = np.array(y) - np.array([1.0246953961614296, 1.3219816558533388])
+        d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
         self.assertLess(np.linalg.norm(d), 0.01)
 
 
