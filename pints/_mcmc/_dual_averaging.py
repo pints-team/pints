@@ -195,9 +195,9 @@ class DualAveragingAdaption:
         """
         Return the sample covariance of all the stored samples
         """
-        assert(self._num_samples == self._samples.shape[1])
+        assert self._num_samples == self._samples.shape[1]
 
-        if self._inv_mass_matrix.ndim == 1:
+        if self.inv_mass_matrix.ndim == 1:
             return np.var(self._samples, axis=1)
         else:
             return np.cov(self._samples)
