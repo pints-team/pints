@@ -9,6 +9,7 @@ class DualAveragingAdaption:
 
     The adaption is done using the same windowing method employed by STAN,
     which is done over three or more windows:
+
     - initial window: epsilon is adapted using dual averaging
     - base window: epsilon continues to be adapted using dual averaging, this
       adaption completes at the end of this window. The inverse mass matrix is
@@ -33,17 +34,14 @@ class DualAveragingAdaption:
     Attributes
     ----------
 
-    num_warmup_steps: int
-        maximum number of adaption steps
+    inv_mass_matrix: ndarray
+        inverse of the adapted mass matrix
 
-    target_accept_prob: float
-        the target acceptance probability
+    mass_matrix: ndarray
+        the adapted mass matrix
 
-    init_epsilon: float
-        an initial epsilon to begin adapting
-
-    init_inv_mass_matrix: ndarray
-        an initial inverse mass matrix to begin adapting
+    epsilon: float
+        the adapted step size epsilon
 
     """
 
