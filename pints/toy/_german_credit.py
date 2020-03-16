@@ -44,10 +44,13 @@ class GermanCreditLogPDF(ToyLogPDF):
 
     References
     ----------
-    .. [1] "UCI machine learning repository", 2010. A. Frank and A. Asuncion.
-           https://archive.ics.uci.edu/ml/datasets/statlog+(german+credit+data)
+    .. [1] `"UCI machine learning repository"
+      <https://archive.ics.uci.edu/ml/datasets/statlog+(german+credit+data)>`_,
+      2010. A. Frank and A. Asuncion.
     .. [2] "The No-U-Turn Sampler:  Adaptively Setting Path Lengths in
            Hamiltonian Monte Carlo", 2014, M.D. Hoffman and A. Gelman.
+
+    .. _Python: http://www.python.org/
     """
     def __init__(self, x=None, y=None, download=False):
         if x is None or y is None:
