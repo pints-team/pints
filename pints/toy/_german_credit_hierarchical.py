@@ -1,5 +1,5 @@
 #
-# German credit toy log pdf.
+# German credit toy hierarchical log pdf.
 #
 # This file is part of PINTS.
 #  Copyright (c) 2017-2019, University of Oxford.
@@ -9,15 +9,14 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
-from . import ToyLogPDF
 import io
-import urllib
-import sys
 from scipy import stats
-if sys.version_info[0] == 3:
-    import urllib.request
-else:
-    import urllib2
+from . import ToyLogPDF
+
+try:
+    from urllib.request import urlopen
+except ImportError:     # pragma: no python 3 cover
+    from urllib2 import urlopen
 
 
 class GermanCreditHierarchicalLogPDF(ToyLogPDF):
@@ -56,20 +55,20 @@ class GermanCreditHierarchicalLogPDF(ToyLogPDF):
     def __init__(self, x=None, y=None, download=False):
         if x is None or y is None:
             if download is False:
-                raise ValueError("No data supplied. Consider setting " +
-                                 "download to True to download data.")
+                raise ValueError('No data supplied. Consider setting download'
+                                 ' to True to download data.')
             x, y = self._download_data()
             dims = x.shape[1]
         else:
             if download is True:
-                raise ValueError("Either supply no data or set " +
-                                 "download to True to download data, but " +
-                                 "not both.")
+                raise ValueError(
+                    'Either supply no data or set download to True to download'
+                    ' data, but not both.')
             dims = x.shape[1]
             if dims != 25:
-                raise ValueError("x must have 25 predictor columns.")
+                raise ValueError('x must have 25 predictor columns.')
             if max(y) != 1 or min(y) != -1:
-                raise ValueError("Output must be either 1 or -1.")
+                raise ValueError('Output must be either 1 or -1.')
 
         # make design matrix
         self._x = np.copy(x)
@@ -109,12 +108,11 @@ class GermanCreditHierarchicalLogPDF(ToyLogPDF):
         """ Downloads data from [1]. """
         url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
                'statlog/german/german.data-numeric')
-        if sys.version_info[0] == 3:
-            with urllib.request.urlopen(url) as url:
-                raw_data = url.read()
-        else:
-            url = urllib2.urlopen(url)
+        url = urlopen(url)
+        try:
             raw_data = url.read()
+        finally:
+            url.close()
         a = np.genfromtxt(io.BytesIO(raw_data), delimiter=4)[:, :25]
 
         # get output

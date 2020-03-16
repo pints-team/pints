@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the German credit toy distribution.
 #
@@ -30,10 +30,10 @@ class TestGermanCreditLogPDF(unittest.TestCase):
 
     def test_download(self):
         # tests that method can download data from UCI repo
-        model = pints.toy.GermanCreditLogPDF(download=True)
-        x, y = model.data()
-        self.assertTrue(np.array_equal(x, self.x))
-        self.assertTrue(np.array_equal(y, self.y))
+        x, y = self.model.data()
+        self.assertEqual(x.shape[0], 1000)
+        self.assertEqual(x.shape[1], 25)
+        self.assertEqual(len(y), 1000)
 
     def test_errors(self):
         # tests errors of inapropriate function calls and inits
