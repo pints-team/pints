@@ -53,7 +53,7 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
     last rejected proposal (:math:`x_k`).
 
     To avoid floating-point underflow, we implement the suggestion advanced
-    in [1]_ pp.712. We use the log pdf of the un-normalised posterior
+    in [2]_ pp.712. We use the log pdf of the un-normalised posterior
     (:math:`log f(x)`) instead of :math:`f(x)`. In doing so, we use an
     auxiliary variable :math:`z = log(y) - \epsilon`, where
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
@@ -65,6 +65,8 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
     ----------
     .. [1] "Covariance-adaptive slice sampling", 2010. Thompson, M. and Neal,
            R.M., arXiv preprint arXiv:1003.3201.
+    .. [2] "Slice sampling", 2003, Neal, R.M., The annals of statistics, 31(3),
+           pp.705-767. https://doi.org/10.1214/aos/1056562461
     """
 
     def __init__(self, x0, sigma0=None):
