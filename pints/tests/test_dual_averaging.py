@@ -68,7 +68,7 @@ class TestDualAveraging(unittest.TestCase):
                                           target_mass_matrix)
         averager.step(x, fake_accept_prob(averager._epsilon))
         stored_x[:, -1] = x
-        np.testing.assert_array_equal(averager._inv_mass_matrix,
+        np.testing.assert_array_equal(averager.inv_mass_matrix,
                                       np.cov(stored_x))
         np.testing.assert_array_equal(averager._mass_matrix,
                                       np.linalg.inv(np.cov(stored_x)))
