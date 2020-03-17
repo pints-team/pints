@@ -56,7 +56,6 @@ relevant code.
 - [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
 - [Slice Sampling: Covariance Matching MCMC](./sampling-slice-covariance-matching-mcmc.ipynb)
 
-
 ### Nested sampling
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
