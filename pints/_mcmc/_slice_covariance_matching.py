@@ -15,7 +15,7 @@ import numpy as np
 
 class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Covariance-Adaptive Slice Sampling by Covariance Matching, as
+    Implements covariance-adaptive slice sampling by covariance matching, as
     described in [1]_. This is an adaptive multivariate method which uses
     additional points, called "crumbs", and rejected proposals to guide the
     selection of samples.
