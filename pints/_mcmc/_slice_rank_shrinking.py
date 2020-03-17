@@ -15,14 +15,14 @@ import numpy as np
 
 class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Covariance-Adaptive Slice Sampling by Rank Shrinking,
-    as described in [1]_. This is an adaptive multivariate method which uses
-    additional points, called "crumbs", and rejected proposals to guide the
-    selection of samples.
+    Implements Covariance-Adaptive slice sampling by ``rank shrinking'',
+    as introduced in [1]_ with pseudocode given in Fig. 5. This is an adaptive
+    multivariate method which uses additional points, called "crumbs", and
+    rejected proposals to guide the selection of samples.
 
     It generates samples by sampling uniformly from the volume underneath the
     posterior (:math:`f`). It does so by introducing an auxiliary variable
-    (:math:`y`) and by definying a Markov chain.
+    (:math:`y`) that guide the path of a Markov chain.
 
     Sampling follows:
 
@@ -60,7 +60,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     direction.
 
     To avoid floating-point underflow, we implement the suggestion advanced
-    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    in [2]_ pp.712. We use the log pdf of the un-normalised posterior
     (:math:`\text{log} f(x)`) instead of :math:`f(x)`. In doing so, we use an
     auxiliary variable :math:`z = log(y) - \epsilon`, where
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
@@ -70,9 +70,11 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
     References
     ----------
-    .. [1] "MCMC using Hamiltonian dynamics". Radford M. Neal, Chapter 5 of the
-           Handbook of Markov Chain Monte Carlo by Steve Brooks, Andrew Gelman,
-           Galin Jones, and Xiao-Li Meng.
+    .. [1] "Covariance-Adaptive Slice Sampling", 2010, M Thompson and RM Neal,
+           Technical Report No. 1002, Department of Statistics, University of
+           Toronto
+    .. [2] "Slice sampling", 2003, Neal, R.M., The annals of statistics, 31(3),
+           pp.705-767. https://doi.org/10.1214/aos/1056562461
     """
 
     def __init__(self, x0, sigma0=None):
