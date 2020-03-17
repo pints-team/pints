@@ -17,8 +17,6 @@ import matplotlib
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
 
-debug = False
-
 
 class TestPlot(unittest.TestCase):
     """
@@ -82,11 +80,11 @@ class TestPlot(unittest.TestCase):
 
         # Create an object with links to the model and time series
         self.problem2 = pints.MultiOutputProblem(
-            self.model2, self.times2, self.values2)
+            self.model2, self.times2, np.log(self.values2))
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
+        self.log_prior2 = pints.UniformLogPrior([0, 0, 0, 0], [6, 6, 6, 6])
         # Create a log likelihood
         self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
             self.problem2, self.noise2)
@@ -451,8 +449,4 @@ class TestPlot(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

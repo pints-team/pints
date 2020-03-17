@@ -378,7 +378,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return np.copy(self._current_log_pdf)
+        return self._current_log_pdf
 
     def current_slice_height(self):
         """
