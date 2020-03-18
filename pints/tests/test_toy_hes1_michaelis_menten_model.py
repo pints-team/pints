@@ -56,6 +56,18 @@ class TestHes1Model(unittest.TestCase):
         self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [0, 0, -1]))
         self.assertRaises(ValueError, pints.toy.Hes1Model, *(0, [-1, -1, -1]))
 
+    def test_values(self):
+        # value-based tests for Hes1 Michaelis-Menten
+        times = np.linspace(0, 10, 101)
+        parameters = [3.8, 0.035, 0.15, 7.5]
+        iparameters = [4.5, 4.0, 0.04]
+        y0 = 7
+        model = pints.toy.Hes1Model(y0=y0, implicit_parameters=iparameters)
+        values = model.simulate(parameters, times)
+        self.assertEqual(values[0], y0)
+        self.assertAlmostEqual(values[1], 7.011333, places=6)
+        self.assertAlmostEqual(values[100], 5.420750, places=6)
+
 
 if __name__ == '__main__':
     unittest.main()
