@@ -52,7 +52,7 @@ class DualAveragingAdaption:
         self._base_window = 25
         self._terminal_window = 50
         self._epsilon = init_epsilon
-        self.inv_mass_matrix = np.copy(init_inv_mass_matrix)
+        self.set_inv_mass_matrix(np.copy(init_inv_mass_matrix))
         self._target_accept_prob = target_accept_prob
 
         minimum_warmup_steps = self._initial_window + self._terminal_window + \
@@ -72,12 +72,10 @@ class DualAveragingAdaption:
         self.init_sample_covariance(self._base_window)
         self.init_adapt_epsilon()
 
-    @property
-    def inv_mass_matrix(self):
+    def get_inv_mass_matrix(self):
         return self._inv_mass_matrix
 
-    @inv_mass_matrix.setter
-    def inv_mass_matrix(self, inv_mass_matrix):
+    def set_inv_mass_matrix(self, inv_mass_matrix):
         """
         We calculate the mass matrix whenever the inverse mass matrix is set
         """
@@ -92,12 +90,10 @@ class DualAveragingAdaption:
                 return
             self._inv_mass_matrix = inv_mass_matrix
 
-    @property
-    def mass_matrix(self):
+    def get_mass_matrix(self):
         return self._mass_matrix
 
-    @property
-    def epsilon(self):
+    def get_epsilon(self):
         return self._epsilon
 
     def step(self, x, accept_prob):
@@ -129,7 +125,7 @@ class DualAveragingAdaption:
             self.add_parameter_sample(x)
 
         if self._counter >= self._next_window:
-            self.inv_mass_matrix = self.calculate_sample_variance()
+            self.set_inv_mass_matrix(self.calculate_sample_variance())
             if self._counter >= self._warmup_steps - self._terminal_window:
                 self._next_window = self._warmup_steps
             else:
@@ -179,7 +175,7 @@ class DualAveragingAdaption:
         """
         Start a new adaption window for the inverse mass matrix
         """
-        n = self.inv_mass_matrix.shape[0]
+        n = self._inv_mass_matrix.shape[0]
         self._samples = np.empty((n, size))
         self._num_samples = 0
 
@@ -197,7 +193,7 @@ class DualAveragingAdaption:
         """
         assert self._num_samples == self._samples.shape[1]
 
-        if self.inv_mass_matrix.ndim == 1:
+        if self._inv_mass_matrix.ndim == 1:
             return np.var(self._samples, axis=1)
         else:
             return np.cov(self._samples)

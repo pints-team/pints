@@ -39,7 +39,7 @@ class TestDualAveraging(unittest.TestCase):
 
         self.assertEqual(averager._epsilon, init_epsilon)
         np.testing.assert_array_equal(
-            averager.inv_mass_matrix, init_inv_mass_matrix)
+            averager.get_inv_mass_matrix(), init_inv_mass_matrix)
         self.assertEqual(averager._counter, 0)
 
         initial_window = 75
@@ -63,14 +63,14 @@ class TestDualAveraging(unittest.TestCase):
                 stored_x[:, i - averager._initial_window] = x
 
         np.testing.assert_array_equal(
-            averager.inv_mass_matrix, init_inv_mass_matrix)
+            averager.get_inv_mass_matrix(), init_inv_mass_matrix)
         x = np.random.multivariate_normal(np.zeros(2) + 123,
                                           target_mass_matrix)
         averager.step(x, fake_accept_prob(averager._epsilon))
         stored_x[:, -1] = x
-        np.testing.assert_array_equal(averager.inv_mass_matrix,
+        np.testing.assert_array_equal(averager.get_inv_mass_matrix(),
                                       np.cov(stored_x))
-        np.testing.assert_array_equal(averager.mass_matrix,
+        np.testing.assert_array_equal(averager.get_mass_matrix(),
                                       np.linalg.inv(np.cov(stored_x)))
         self.assertAlmostEqual(fake_accept_prob(averager._epsilon),
                                target_accept_prob, 1)

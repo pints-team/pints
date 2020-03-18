@@ -267,10 +267,10 @@ def build_tree(state, log_u, v, j, adaptor, hamiltonian0,
             grad_L = state.grad_L_plus
 
         L_dash, grad_L_dash, theta_dash, r_dash = \
-            yield from leapfrog(theta, L, grad_L, r, v * adaptor.epsilon,
-                                adaptor.inv_mass_matrix)
+            yield from leapfrog(theta, L, grad_L, r, v * adaptor.get_epsilon(),
+                                adaptor.get_inv_mass_matrix())
         hamiltonian_dash = L_dash \
-            - kinetic_energy(r_dash, adaptor.inv_mass_matrix)
+            - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
         slice_comparison = log_u - hamiltonian_dash
         if use_multinomial_sampling:
             n_dash = -slice_comparison
@@ -284,7 +284,7 @@ def build_tree(state, log_u, v, j, adaptor, hamiltonian0,
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
             alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling,
-            adaptor.inv_mass_matrix
+            adaptor.get_inv_mass_matrix()
         )
 
     else:
@@ -433,11 +433,11 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         # randomly sample momentum
         if use_dense_mass_matrix:
             r0 = np.random.multivariate_normal(
-                np.zeros(len(theta)), adaptor.mass_matrix)
+                np.zeros(len(theta)), adaptor.get_mass_matrix())
         else:
             r0 = np.random.normal(np.zeros(len(theta)),
-                                  np.sqrt(adaptor.mass_matrix))
-        hamiltonian0 = L - kinetic_energy(r0, adaptor.inv_mass_matrix)
+                                  np.sqrt(adaptor.get_mass_matrix()))
+        hamiltonian0 = L - kinetic_energy(r0, adaptor.get_inv_mass_matrix())
 
         if use_multinomial_sampling:
             # use multinomial sampling
@@ -452,7 +452,8 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
 
         # create initial integration path state
         state = NutsState(theta, r0, L, grad_L, n, 1, None, None, False,
-                          use_multinomial_sampling, adaptor.inv_mass_matrix)
+                          use_multinomial_sampling,
+                          adaptor.get_inv_mass_matrix())
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
