@@ -198,7 +198,6 @@ from ._mcmc import (
 )
 # base classes first
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
-from ._mcmc._global_adaptive_covariance import GlobalAdaptiveCovarianceMC
 
 # methods
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC

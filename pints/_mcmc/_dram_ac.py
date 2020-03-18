@@ -13,7 +13,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-class DramACMC(pints.GlobalAdaptiveCovarianceMC):
+class DramACMC(pints.AdaptiveCovarianceMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1]_.
     In this method, rejections do not necessarily lead an iteration to end.
@@ -84,40 +84,26 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
     def __init__(self, x0, sigma0=None):
         super(DramACMC, self).__init__(x0, sigma0)
 
+        self._adapt_kernel = True
+        self._before_kernels_set = True
         self._log_lambda = 0
         self._n_kernels = 2
+        self._proposal_count = 0
+        self._sigma_base = np.copy(self._sigma)
         self._upper_scale = 1000
         self._Y = [None] * self._n_kernels
         self._Y_log_pdf = np.zeros(self._n_kernels)
-        self._proposal_count = 0
-        self._adapt_kernel = True
-        self._before_kernels_set = True
 
-    def ask(self):
+    def _adapt_sigma(self):
         """
-        If first proposal from a position, return a proposal with an ambitious
-        (i.e. large) proposal width; if first is rejected then return
-        proposal from a conservative kernel (i.e. with low width).
+        Updates the covariance matrices of the various kernels being used
+        according to adaptive Metropolis routine.
         """
-        super(DramACMC, self).ask()
-        if self._before_kernels_set:
-            self._sigma_base = np.copy(self._sigma)
-            self.set_sigma_scale()
-            self._Y = [None] * self._n_kernels
-            self._Y_log_pdf = np.zeros(self._n_kernels)
-            self._before_kernels_set = False
-
-        # Propose new point
-        if self._proposed is None:
-            self._proposed = np.random.multivariate_normal(
-                self._current, np.exp(self._log_lambda) *
-                self._sigma[self._proposal_count])
-            self._Y[self._proposal_count] = np.copy(self._proposed)
-            # Set as read-only
-            self._proposed.setflags(write=False)
-
-        # Return proposed point
-        return self._proposed
+        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
+        self._sigma_base = ((1 - self._gamma) * self._sigma_base +
+                            self._gamma * np.dot(dsigm, dsigm.T))
+        self._sigma = [self._sigma_scale[i] * self._sigma_base
+                       for i in range(self._n_kernels)]
 
     def _calculate_alpha_log(self, n, Y, log_Y):
         """
@@ -158,6 +144,20 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
                                      self._Y_log_pdf[0:(c + 1)]])
         self._r_log = self._calculate_alpha_log(c, temp_Y,
                                                 temp_log_Y)
+
+    def _generate_proposal(self):
+        """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
+        if self._before_kernels_set:
+            self.set_sigma_scale()
+            self._Y = [None] * self._n_kernels
+            self._Y_log_pdf = np.zeros(self._n_kernels)
+            self._before_kernels_set = False
+
+        proposed = np.random.multivariate_normal(
+            self._current, np.exp(self._log_lambda) *
+            self._sigma[self._proposal_count])
+        self._Y[self._proposal_count] = proposed
+        return proposed
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -255,9 +255,9 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
 
         # Check if the proposed point can be accepted
         accepted = 0
-        self._calculate_r_log(fx)
 
         if np.isfinite(fx):
+            self._calculate_r_log(fx)
             u = np.log(np.random.uniform(0, 1))
             if u < self._r_log:
                 accepted = 1
@@ -278,22 +278,11 @@ class DramACMC(pints.GlobalAdaptiveCovarianceMC):
         self._adaptations += 1
 
         # Update mu, covariance matrix and log lambda
-        self._update_mu()
-        self._update_sigma()
+        self._adapt_mu()
+        self._adapt_sigma()
         self._log_lambda += (self._gamma *
                              (accepted - self._target_acceptance))
         return self._current
-
-    def _update_sigma(self):
-        """
-        Updates the covariance matrices of the various kernels being used
-        according to adaptive Metropolis routine.
-        """
-        dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
-        self._sigma_base = ((1 - self._gamma) * self._sigma_base +
-                            self._gamma * np.dot(dsigm, dsigm.T))
-        self._sigma = [self._sigma_scale[i] * self._sigma_base
-                       for i in range(self._n_kernels)]
 
     def upper_scale(self):
         """
