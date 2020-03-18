@@ -77,7 +77,7 @@ before_script:
 # issues with debug output:
 # https://github.com/travis-ci/travis-ci/issues/5716
 script:
-  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
+  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --copyright; python run-tests.py --unit fi;
   - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
   - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
   - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --unit; fi;

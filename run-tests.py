@@ -9,12 +9,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import re
-import os
-import sys
 import argparse
-import unittest
+import datetime
+import os
+import re
 import subprocess
+import sys
+import unittest
 
 
 def run_unit_tests():
@@ -51,6 +52,24 @@ def run_flake8():
     else:
         print('FAILED')
         sys.exit(ret)
+
+
+def run_copyright_year_check():
+    """
+    Checks that the copyright year in LICENSE.md is up-to-date
+    """
+    print('\nChecking that copyright notice is up-to-date.')
+
+    current_year = str(datetime.datetime.now().year)
+
+    with open('LICENSE.md', 'r') as license_file:
+        license_text = license_file.read()
+        if 'Copyright (c) 2017-' + current_year in license_text:
+            print("Copyright is up-to-date.")
+        else:
+            print('Copyright notice in LICENSE.md is NOT up-to-date.')
+            print('FAILED')
+            sys.exit(1)
 
 
 def run_doctests():
@@ -533,6 +552,12 @@ if __name__ == '__main__':
         action='store_true',
         help='Run any doctests, check if docs can be built',
     )
+    # Copyright year check
+    parser.add_argument(
+        '--copyright',
+        action='store_true',
+        help='Check copyright runs to the current year',
+    )
     # Combined test sets
     parser.add_argument(
         '--quick',
@@ -553,6 +578,10 @@ if __name__ == '__main__':
     if args.doctest:
         has_run = True
         run_doctests()
+    # Copyright year check
+    if args.copyright:
+        has_run = True
+        run_copyright_year_check()
     # Notebook tests
     if args.allbooks:
         has_run = True
