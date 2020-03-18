@@ -2,7 +2,7 @@
 # Potassium current (IK) toy model based on the model by Hodgkin & Huxley (HH).
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
-# released under the BSD 3-clause license. See accompanying LICENSE.txt for
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 #
