@@ -105,10 +105,6 @@ def rhat(samples):
     Calculates :math:`\hat{R} = sqrt(((n - 1)/n * W + (1/n) * B)/W)`` as per
     [1]_ for a single parameter. It does this after splitting each chain into
     two.
-
-    References
-    ----------
-    ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
     """
     W = within(samples)
     B = between(samples)
