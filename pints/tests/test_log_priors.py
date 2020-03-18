@@ -125,6 +125,13 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
 
+        # Test sensitivities
+        p = pints.CauchyLogPrior(10, 5)
+        val = p([-3.3])
+        val1, dp = p.evaluateS1([-3.3])
+        self.assertEqual(val, val1)
+        self.assertAlmostEqual(dp[0], 0.13175491604338996, places=6)
+
     def test_cauchy_cdf_icdf(self):
         p = pints.CauchyLogPrior(-3, 2)
         self.assertAlmostEqual(p.cdf(5.5), 0.92644155602673783)
@@ -479,6 +486,13 @@ class TestPrior(unittest.TestCase):
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
+
+        # Test sensitivities
+        p = pints.HalfCauchyLogPrior(-3, 5)
+        val = p([3.3])
+        val1, dp = p.evaluateS1([3.3])
+        self.assertEqual(val, val1)
+        self.assertAlmostEqual(dp[0], -0.19477508115628384, places=6)
 
     def test_half_cauchy_cdf_icdf(self):
         p1 = pints.HalfCauchyLogPrior(-3, 4.5)

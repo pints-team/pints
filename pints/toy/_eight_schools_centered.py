@@ -67,7 +67,7 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
 
     def data(self):
         """ Returns data used to fit model from [1]_. """
-        return self._y_j, self._sigma_j
+        return {'J': 8, 'y': self._y_j, 'sigma': self._sigma_j}
 
     def evaluateS1(self, x):
         """ See :meth:`pints.LogPDF.evaluateS1()`. """
@@ -86,8 +86,12 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
                 pints.GaussianLogPrior(theta, self._sigma_j[i])([self._y_j[i]])
             )
             dL_temp[0] += (self._y_j[i] - theta) / (self._sigma_j[i]**2)
-            dL_theta.append(dL_temp)
-        return log_prob, (dL1 + dL2 + dL_theta)
+            dL_theta.append(dL_temp[0])
+        return log_prob, ([dL1[0]] + [dL2[0]] + dL_theta)
+
+    def n_parameters(self):
+        """ See :meth:`pints.LogPDF.n_parameters()`. """
+        return self._n_parameters
 
     def suggested_bounds(self):
         """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """

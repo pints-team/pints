@@ -143,6 +143,13 @@ class CauchyLogPrior(pints.LogPrior):
         """ See :meth:`LogPrior.cdf()`. """
         return scipy.stats.cauchy.cdf(x, self._location, self._scale)
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        loc_minus_x = self._location - x[0]
+        return value, np.asarray([2 * loc_minus_x / (self._scale**2
+                                  + loc_minus_x**2)])
+
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
         return scipy.stats.cauchy.ppf(p, self._location, self._scale)
@@ -523,6 +530,15 @@ class HalfCauchyLogPrior(pints.LogPrior):
             (self._arctan +
              np.arctan((-self._location + x) / self._scale) / np.pi) /
             (0.5 + self._arctan))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        scale = self._scale
+        loc = self._location
+        loc_minus_x = loc - x[0]
+        dp = 2 * loc_minus_x / (scale**2 + loc_minus_x**2)
+        return value, np.asarray([dp])
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
