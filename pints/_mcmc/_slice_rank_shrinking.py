@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Slice Sampling - Covariance Adaptive: Rank Shrinking
 #
@@ -15,7 +14,7 @@ import numpy as np
 
 class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Covariance-Adaptive slice sampling by ``rank shrinking'',
+    Implements Covariance-Adaptive slice sampling by "rank shrinking",
     as introduced in [1]_ with pseudocode given in Fig. 5. This is an adaptive
     multivariate method which uses additional points, called "crumbs", and
     rejected proposals to guide the selection of samples.
@@ -46,8 +45,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
     where:
 
-    2. :math:`\Lambda_k = W_1 + ... + W_k`
-    3. :math:`\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)`
+       :math:`\Lambda_k = W_1 + ... + W_k`
+       :math:`\bar{c}_k = \Lambda^{-1}_k * (W_1 * c_1 + ... + W_k * c_k)`
 
     This method aims to conveniently modify the (k+1)th proposal distribution
     to increase the likelihood of sampling an acceptable point. It does so by
