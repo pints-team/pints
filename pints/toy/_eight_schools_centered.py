@@ -80,6 +80,7 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
         log_prob = log_prob1 + log_prob2
         dL_theta = []
         for i, theta in enumerate(thetas):
+            dL2[0] += ((theta - mu)**2 - tau**2) / tau**3
             log_prob_temp, dL_temp = log_prior.evaluateS1([theta])
             log_prob += log_prob_temp
             log_prob += (
