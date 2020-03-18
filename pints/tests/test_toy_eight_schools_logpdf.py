@@ -44,6 +44,15 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         val = f([1, 0.5, 0.4, 1, 1, 1, 1, 1, 1, 1])
         self.assertAlmostEqual(val, -46.41445177944207, places=6)
 
+        # Test data
+        data = f.data()
+        self.assertEqual(len(data), 3)
+        self.assertEqual(data["J"], 8)
+        self.assertTrue(np.array_equal(data["y"],
+                        [28, 8, -3, 7, -1, 1, 18, 12]))
+        self.assertTrue(np.array_equal(data["sigma"],
+                        [15, 10, 16, 11, 9, 11, 10, 18]))
+
     def test_bad_calls(self):
         # Tests bad calls
 
