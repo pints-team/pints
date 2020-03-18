@@ -52,6 +52,8 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
         self._tau_log_pdf = pints.HalfCauchyLogPrior(0, 5)
 
     def __call__(self, x):
+        if len(x) != 10:
+            raise ValueError("Input parameters must be of length 10.")
         mu = x[0]
         tau = x[1]
         thetas = x[2:]
@@ -71,6 +73,8 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`pints.LogPDF.evaluateS1()`. """
+        if len(x) != 10:
+            raise ValueError("Input parameters must be of length 10.")
         mu = x[0]
         tau = x[1]
         thetas = x[2:]
@@ -96,6 +100,7 @@ class EightSchoolsCenteredLogPDF(ToyLogPDF):
 
     def suggested_bounds(self):
         """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        magnitude = 50
+        magnitude = 20
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
+        bounds[1, 0] = 0
         return np.transpose(bounds).tolist()
