@@ -18,7 +18,6 @@ interface, that can be used to sample from an unknown
     dram_ac_mcmc
     dream_mcmc
     emcee_hammer_mcmc
-    global_adaptive_covariance_mc
     haario_ac_mcmc
     haario_bardenet_ac_mcmc
     hamiltonian_mcmc
@@ -30,3 +29,4 @@ interface, that can be used to sample from an unknown
     relativistic_mcmc
     slice_doubling_mcmc
     slice_stepout_mcmc
+    summary_mcmc

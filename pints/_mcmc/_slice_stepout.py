@@ -15,9 +15,11 @@ import numpy as np
 
 class SliceStepoutMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Slice Sampling with Stepout, as described in [1]_. This is a
-    univariate method, which is applied in a Slice-Sampling-within-Gibbs
-    framework to allow MCMC sampling from multivariate models.
+    Implements Slice Sampling with Stepout, as described in [1]_.
+
+    This is a univariate method, which is applied in a
+    Slice-Sampling-within-Gibbs framework to allow MCMC sampling from
+    multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (``f``). It does so by introducing an auxiliary variable (``y``)
@@ -406,7 +408,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return np.copy(self._current_log_pdf)
+        return self._current_log_pdf
 
     def current_slice_height(self):
         """
@@ -440,9 +442,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         a = int(a)
         if a < 0:
-            raise ValueError('Integer must be positive to limit'
-                             'overrelaxation endpoint accuracy to'
-                             '``2 ^ (-bisection steps) * width``.')
+            raise ValueError(
+                'Integer must be positive (to limit overrelaxation endpoint'
+                ' accuracy to (2 ^ (-bisection steps) * width).')
         self._a = a
 
     def set_expansion_steps(self, m):
@@ -452,7 +454,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         m = int(m)
         if m <= 0:
             raise ValueError('Integer must be positive to limit the'
-                             'interval size to ``integer * width``.')
+                             ' interval size to ``integer * width``.')
         self._m = m
 
     def set_hyper_parameters(self, x):
@@ -472,23 +474,29 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         prob = float(prob)
         if prob < 0 or prob > 1:
-            raise ValueError("""Probability must be positive and <= 1.""")
+            raise ValueError('Probability must be positive and <= 1.')
         self._prob_overrelaxed = prob
 
     def set_width(self, w):
         """
-        Sets the width for generating the interval. This can either be a single
-        number or an array with the same number of elements as the number of
-        variables to update.
+        Sets the width for generating the interval.
+
+        This can either be a single number or an array with the same number of
+        elements as the number of variables to update.
         """
-        if type(w) == int or float:
-            w = np.full((len(self._x0)), w)
-        if any(n < 0 for n in w):
-            raise ValueError('Width must be positive'
-                             'for interval expansion.')
+        if np.isscalar(w):
+            w = np.ones(self._n_parameters) * w
+        else:
+            w = np.array(w, copy=True)
+            if len(w) != self._n_parameters:
+                raise ValueError(
+                    'Width for interval expansion must a scalar or an array'
+                    ' of length n_parameters.')
+        if np.any(w < 0):
+            raise ValueError('Width for interval expansion must be positive.')
         self._w = w
 
-    def tell(self, reply):
+    def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # Check ask/tell pattern
@@ -496,8 +504,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        # Ensure fx is a float
+        fx = float(fx)
 
         # Very first call
         if self._current is None:
@@ -684,6 +692,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def width(self):
         """
-        Returns width used for generating the interval.
+        Returns the width used for generating the interval.
         """
         return np.copy(self._w)

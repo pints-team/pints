@@ -24,7 +24,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
         \frac{\partial f(t)}{\partial r} &=
                                 \frac{k t (k / p_0 - 1) \exp(-r t)}
                                       {((k/p_0-1) \exp(-r t) + 1)^2} \\
-        \frac{\partial f(t)}{ \partial k} &= \frac{k \exp(-r t)}
+        \frac{\partial f(t)}{ \partial k} &= -\frac{k \exp(-r t)}
                                           {p_0 ((k/p_0-1)\exp(-r t) + 1)^2}
                                          + \frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
 
