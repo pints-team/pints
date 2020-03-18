@@ -156,19 +156,23 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
 
         # Draw crumb c
         self._c = self._current + np.dot(np.linalg.inv(self._F), z)
-
+        # print(self._c)
         # Compute un-normalised proposal mean
         self._c_bar_star = self._c_bar_star + np.dot(np.dot(np.transpose(
             self._F), self._F), self._c)
-
+        # print(np.dot(np.dot(np.transpose(
+        #         self._F), self._F), self._c))
+        # print(self._F)
+        # print(self._c_bar_star)
         # Compute normalised proposal mean
         c_bar = np.dot(np.dot(np.linalg.inv(self._R), np.transpose(
             np.linalg.inv(self._R))), self._c_bar_star)
-
+        # print(c_bar)
         # Draw second p-variate
         z = np.random.multivariate_normal(self._mean_z, self._cov_z)
-
+        # print(z)
         # Draw sample
+        # print(self._R)
         self._proposed = c_bar + np.dot(np.linalg.inv(self._R), z)
 
         # Set flag indicating we have created a new proposal. This is used to
@@ -181,6 +185,9 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
 
         # Send trial point for checks
         self._ready_for_tell = True
+        # print(self._current)
+        # print(self._proposed)
+        # print(-2)
         return np.array(self._proposed, copy=True)
 
     def current_log_pdf(self):
@@ -321,38 +328,50 @@ class SliceCovarianceMatchingMCMC(pints.SingleChainMCMC):
                 return None
 
             else:
-                self._log_fx_u = fx
+                if np.isfinite(fx):
+                    self._log_fx_u = fx
 
-                # Calculate ``\kappa``
-                kappa = (-2.) * self._delta ** (-2.) * (
-                    self._log_fx_u - self._proposed_log_pdf - self._delta *
-                    np.linalg.norm(self._G))
+                    # Calculate ``\kappa``
+                    kappa = (-2.) * self._delta ** (-2.) * (
+                        self._log_fx_u - self._proposed_log_pdf - self._delta *
+                        np.linalg.norm(self._G))
 
-                # Peak of parabolic cut through ``x1`` and ``u``
-                lxu = (0.5 * (np.linalg.norm(self._G) ** 2 / kappa) +
-                       self._proposed_log_pdf)
+                    # Peak of parabolic cut through ``x1`` and ``u``
+                    lxu = (0.5 * (np.linalg.norm(self._G) ** 2 / kappa) +
+                           self._proposed_log_pdf)
 
-                # Update ``M``
-                self._M = max(self._M, lxu)
+                    # Update ``M``
+                    self._M = max(self._M, lxu)
 
-                # Calculate conditional variance of new distribution
-                sigma_squared = 2 / 3 * (self._M - self._current_log_y) / kappa
+                    # Calculate conditional variance of new distribution
+                    sigma_squared = 2 / 3 * (self._M - self._current_log_y) / kappa
 
-                alpha = max(
-                    0, sigma_squared ** (-1) - ((
-                        1 + self._theta) * np.dot(
-                            np.transpose(self._g), np.dot(
-                                np.transpose(self._R), np.dot(
-                                    self._R, self._g)))))
+                    alpha = max(
+                        0, sigma_squared ** (-1) - ((
+                            1 + self._theta) * np.dot(
+                                np.transpose(self._g), np.dot(
+                                    np.transpose(self._R), np.dot(
+                                        self._R, self._g)))))
 
-                # Update F and R
-                self._F = self._chud(
-                    np.sqrt(self._theta) * self._R, np.sqrt(alpha) * self._g)
-                self._R = self._chud(
-                    np.sqrt(1 + self._theta) * self._R, np.sqrt(alpha) *
-                    self._g)
+                    # Update F and R
+                    # print(-3)
+                    # print(self._log_fx_u)
+                    # print(self._proposed_log_pdf)
+                    # print(kappa)
+                    # print(self._current_log_y)
+                    # print(self._M)
+                    # print(sigma_squared)
+                    # print(self._theta)
+                    # print(alpha)
+                    # print(self._g)
+                    # print(-4)
+                    self._F = self._chud(
+                        np.sqrt(self._theta) * self._R, np.sqrt(alpha) * self._g)
+                    self._R = self._chud(
+                        np.sqrt(1 + self._theta) * self._R, np.sqrt(alpha) *
+                        self._g)
 
-                return None
+                    return None
 
     def theta(self):
         """
