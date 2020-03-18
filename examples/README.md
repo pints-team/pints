@@ -97,6 +97,8 @@ relevant code.
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
 - [Cone](./toy/distribution-cone.ipynb)
+- [German credit hierarchical logistic model](./toy/distribution-german-credit-hierarchical.ipynb)
+- [German credit logistic model](./toy/distribution-german-credit.ipynb)
 - [High dimensional gaussian](./toy/distribution-high-dimensional-gaussian.ipynb)
 - [Multimodal gaussian distribution](./toy/distribution-multimodal-gaussian.ipynb)
 - [Neals Funnel](./toy/distribution-neals-funnel.ipynb)
