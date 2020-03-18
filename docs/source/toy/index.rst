@@ -20,6 +20,8 @@ Some toy classes provide extra functionality defined in the
     constant_model
     fitzhugh_nagumo_model
     gaussian_logpdf
+    german_credit_hierarchical_logpdf
+    german_credit_logpdf
     goodwin_oscillator_model
     hes1_michaelis_menten_model
     high_dimensional_gaussian_logpdf
