@@ -16,7 +16,7 @@ from ._annulus import AnnulusLogPDF                                 # noqa
 from ._beeler_reuter_model import ActionPotentialModel              # noqa
 from ._cone import ConeLogPDF                                       # noqa
 from ._constant_model import ConstantModel                          # noqa
-from ._eight_schools_centered import EightSchoolsCenteredLogPDF     # noqa
+from ._eight_schools import EightSchoolsLogPDF                      # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._gaussian import GaussianLogPDF                               # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa

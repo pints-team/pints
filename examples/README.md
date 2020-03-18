@@ -96,6 +96,7 @@ relevant code.
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
 - [Cone](./toy/distribution-cone.ipynb)
+- [Eight schools distribution](./toy/distribution-eight-schools.ipynb)
 - [High dimensional gaussian](./toy/distribution-high-dimensional-gaussian.ipynb)
 - [Multimodal gaussian distribution](./toy/distribution-multimodal-gaussian.ipynb)
 - [Neals Funnel](./toy/distribution-neals-funnel.ipynb)
