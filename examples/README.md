@@ -109,5 +109,4 @@ relevant code.
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
-- [Interfacing with other packages](./interfacing-with-other-packages/stan.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)
