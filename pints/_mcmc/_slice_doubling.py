@@ -22,7 +22,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (:math:`f`). It does so by introducing an auxiliary variable
-    (:math:`y`) and by definying a Markov chain.
+    (:math:`y`) and by defining a Markov chain.
 
     If the distribution is univariate, sampling follows:
 
