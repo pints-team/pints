@@ -199,11 +199,10 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 ### Docstring template
 
-1. Each docstring should start with a single sentence explaining what it does.
+1. Each docstring should start with a [single sentence](https://www.python.org/dev/peps/pep-0257/#one-line-docstrings) explaining what it does.
 
-2. If desired, this can be followed by a blank line and one or several
-   paragraphs providing a more detailed explanation. These paragraphs can
-   include code snippets or use LaTeX expressions for mathematics (see below).
+2. If desired, [this can be followed by a blank line and one or several paragraphs](https://www.python.org/dev/peps/pep-0257/#multi-line-docstrings) providing a more detailed explanation.
+   These paragraphs can include code snippets or use LaTeX expressions for mathematics (see below).
 
 3. If the class is a subclass of some other PINTS type, it may be good to
    mention this here. For example:
