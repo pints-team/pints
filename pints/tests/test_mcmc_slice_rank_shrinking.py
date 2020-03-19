@@ -14,8 +14,6 @@ import numpy as np
 import pints
 import pints.toy
 
-debug = False
-
 
 class TestSliceRankShrinking(unittest.TestCase):
     """

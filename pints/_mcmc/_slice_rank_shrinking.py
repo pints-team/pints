@@ -140,10 +140,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
         # Sample trial point
         z = np.random.multivariate_normal(mean, cov)
-        self._proposed = self._current + (self._p(self._J,
-                                                  self._c_bar +
-                                                  self._sigma_c /
-                                                  np.sqrt(self._k) * z))
+        self._proposed = self._current + self._p(
+            self._J, self._c_bar + self._sigma_c / np.sqrt(self._k) * z)
 
         # Send trial point for checks
         self._ready_for_tell = True
@@ -184,8 +182,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         """
         sigma_c = float(sigma_c)
         if sigma_c < 0:
-            raise ValueError('Inital crumb standard deviation '
-                             'must be positive.')
+            raise ValueError(
+                'Inital crumb standard deviation must be positive.')
         self._sigma_c = sigma_c
 
     def sigma_c(self):
@@ -266,6 +264,5 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
                 if np.dot(g_star.transpose(), grad) > (
                         .5 * np.linalg.norm(g_star) * np.linalg.norm(grad)):
                     new_column = np.array(g_star / np.linalg.norm(g_star))
-                    self._J = np.column_stack([self._J,
-                                               new_column])
+                    self._J = np.column_stack([self._J, new_column])
             return None
