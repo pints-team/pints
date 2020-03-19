@@ -1,10 +1,9 @@
 #
 # DRAM AC MC method
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,6 +15,7 @@ import scipy.stats as stats
 class DramACMC(pints.AdaptiveCovarianceMC):
     """
     DRAM (Delayed Rejection Adaptive Covariance) MCMC, as described in [1]_.
+
     In this method, rejections do not necessarily lead an iteration to end.
     Instead, if a rejection occurs, another point is proposed although
     typically from a narrower (i.e. more conservative) proposal kernel than was
