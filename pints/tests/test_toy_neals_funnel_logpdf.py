@@ -17,7 +17,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
     Tests the Neal's funnel log pdf toy problem.
     """
     def test_default(self):
-        """ Tests instantiation and calls """
+        # Tests instantiation and calls.
 
         # test default instantiation
         f = pints.toy.NealsFunnelLogPDF()
@@ -48,7 +48,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertAlmostEqual(log_prob, -2.9064684028038599)
 
     def test_bad_calls(self):
-        """ Tests bad calls """
+        # Tests bad calls.
         f = pints.toy.NealsFunnelLogPDF()
         self.assertRaises(ValueError, f.__call__, [1, 2])
         self.assertRaises(ValueError, pints.toy.NealsFunnelLogPDF, 1)
@@ -61,7 +61,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.kl_divergence, x)
 
     def test_bespoke(self):
-        """ Tests non-default function behaviour """
+        # Tests non-default function behaviour
         f = pints.toy.NealsFunnelLogPDF(20)
         self.assertEqual(f.n_parameters(), 20)
         x = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -94,7 +94,7 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.kl_divergence, x)
 
     def test_suggested_bounds(self):
-        """ Tests suggested_bounds() """
+        # Tests suggested_bounds().
         # default
         f = pints.toy.NealsFunnelLogPDF()
         bounds = f.suggested_bounds()

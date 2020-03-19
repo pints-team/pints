@@ -14,8 +14,6 @@ import pints.toy
 
 from shared import StreamCapture
 
-debug = False
-
 
 class TestHamiltonianMCMC(unittest.TestCase):
     """
@@ -55,9 +53,8 @@ class TestHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
@@ -99,9 +96,8 @@ class TestHamiltonianMCMC(unittest.TestCase):
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
+        # Tests the parameter interface for this sampler.
+
         x0 = np.array([2, 2])
         mcmc = pints.HamiltonianMCMC(x0)
 
@@ -150,8 +146,4 @@ class TestHamiltonianMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

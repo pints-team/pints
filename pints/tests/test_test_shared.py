@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the test.shared methods.
 #
@@ -20,9 +20,8 @@ class TestSharedTestModule(unittest.TestCase):
     """
 
     def test_stream_capture(self):
-        """
-        Tests the StreamCapture class.
-        """
+        # Tests the StreamCapture class.
+
         # Test stdout capture
         t1 = 'Hello everyone'
         t2 = 'How are you'
@@ -50,9 +49,8 @@ class TestSharedTestModule(unittest.TestCase):
         self.assertEqual(c.text(), (tt, et))
 
     def test_temporary_directory(self):
-        """
-        Tests the temporary directory class.
-        """
+        # Tests the temporary directory class.
+
         with TemporaryDirectory() as d:
             # Test dir creation
             tempdir = d.path('')
@@ -79,7 +77,4 @@ class TestSharedTestModule(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
