@@ -81,7 +81,7 @@ If you'd like to help us develop PINTS by adding new methods, writing documentat
 
 ## License
 
-PINTS is fully open source. For more information about its license, see [LICENSE](LICENSE.txt).
+PINTS is fully open source. For more information about its license, see [LICENSE](LICENSE.md).
 
 ## Get in touch
 
