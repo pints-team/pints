@@ -1,10 +1,9 @@
 #
 # Slice Sampling - Covariance Adaptive: Rank Shrinking
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -15,9 +14,10 @@ import numpy as np
 class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     r"""
     Implements Covariance-Adaptive slice sampling by "rank shrinking",
-    as introduced in [1]_ with pseudocode given in Fig. 5. This is an adaptive
-    multivariate method which uses additional points, called "crumbs", and
-    rejected proposals to guide the selection of samples.
+    as introduced in [1]_ with pseudocode given in Fig. 5.
+
+    This is an adaptive multivariate method which uses additional points,
+    called "crumbs", and rejected proposals to guide the selection of samples.
 
     It generates samples by sampling uniformly from the volume underneath the
     posterior (:math:`f`). It does so by introducing an auxiliary variable
