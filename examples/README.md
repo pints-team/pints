@@ -50,10 +50,11 @@ relevant code.
 - [Slice Sampling: Stepout MCMC](./sampling/slice-stepout-mcmc.ipynb)
 
 ### MCMC with gradients
-- [Hamiltonian MCMC](./sampling/hamiltonian-mcmc.ipynb)
-- [MALA MCMC](./sampling/mala-mcmc.ipynb)
-- [Monomial-Gamma HMC MCMC](./sampling/monomial-gamma-hmc.ipynb)
-- [Relativistic MCMC](./sampling/relativistic-mcmc.ipynb)
+- [Hamiltonian MCMC](./sampling-hamiltonian-mcmc.ipynb)
+- [MALA MCMC](./sampling-mala-mcmc.ipynb)
+- [Monomial-Gamma HMC MCMC](./sampling-monomial-gamma-hmc.ipynb)
+- [Relativistic MCMC](./sampling-relativistic-mcmc.ipynb)
+- [Slice Sampling: Covariance Matching MCMC](./sampling-slice-covariance-matching-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
