@@ -140,10 +140,9 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         """
         c = self._proposal_count
         temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
-        temp_log_Y = np.concatenate([[self._current_log_pdf],
-                                     self._Y_log_pdf[0:(c + 1)]])
-        self._r_log = self._calculate_alpha_log(c, temp_Y,
-                                                temp_log_Y)
+        temp_log_Y = np.concatenate(
+            [[self._current_log_pdf], self._Y_log_pdf[0:(c + 1)]])
+        self._r_log = self._calculate_alpha_log(c, temp_Y, temp_log_Y)
 
     def _generate_proposal(self):
         """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
@@ -222,9 +221,8 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     def tell(self, fx):
         """
-        If first proposal, then accept with ordinary
-        Metropolis probability; if a later proposal, use probability
-        determined by [1]_.
+        If first proposal, then accept with ordinary Metropolis probability; if
+        a later proposal, use probability determined by [1]_.
         """
         # Check if we had a proposal
         if self._proposed is None:
