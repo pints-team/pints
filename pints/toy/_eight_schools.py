@@ -15,10 +15,12 @@ from . import ToyLogPDF
 
 class EightSchoolsLogPDF(ToyLogPDF):
     r"""
-    The classic Eight Schools example from [1]_.
+    The classic Eight Schools example that is discussed in [1]_: the aim of
+    this model is to determine the effects of coaching on SATS scores in 8
+    schools. It it used by statisticians to illustrate how hierarchical models
+    can quite easily become unidentified, making inference hard.
 
-    This model was used to determine the effects of coaching on SATS scores in
-    8 schools. This model is hierarchical and takes the form,
+    This model is hierarchical and takes the form,
 
     .. math::
         \mu\sim\mathcal{N}(0, 5)
