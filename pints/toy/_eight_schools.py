@@ -15,10 +15,12 @@ from . import ToyLogPDF
 
 class EightSchoolsLogPDF(ToyLogPDF):
     r"""
-    The classic Eight Schools example that is discussed in [1]_: the aim of
-    this model is to determine the effects of coaching on SATS scores in 8
-    schools. It it used by statisticians to illustrate how hierarchical models
-    can quite easily become unidentified, making inference hard.
+    The classic Eight Schools example that is discussed in [1]_.
+
+    The aim of this model (implemented as a :class:`pints.ToyLogPDF`) is to
+    determine the effects of coaching on SATS scores in 8 schools. It it used
+    by statisticians to illustrate how hierarchical models can quite easily
+    become unidentified, making inference hard.
 
     This model is hierarchical and takes the form,
 
@@ -44,16 +46,18 @@ class EightSchoolsLogPDF(ToyLogPDF):
     Note that, in the non-centered case, the parameter samples correspond to
     theta_tilde rather than theta.
 
+    The model uses a 10-dimensional parameter vector, composed of
+
+    - ``mu``, the population-level score
+    - ``tau``, the population-level standard deviation
+    - ``theta_j``, school j's mean score (for each of the 8 schools).
+
     Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------
-    mu : float
-        Mean population-level score
-    tau : float
-        Population-level standard deviation
-    theta_j : float
-        School j's mean score
+    centered : bool
+        Whether or not to use the centered formulation.
 
     References
     ----------
