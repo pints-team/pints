@@ -24,11 +24,11 @@ matrix:
           if: type != cron
         - python: "3.7"
           env:
-            - PINTS_STYLE=true
+            - PINTS_STAN=true
           if: type != cron
         - python: "3.7"
           env:
-            - PINTS_STAN=true
+            - PINTS_STYLE=true
           if: type != cron
         - python: "3.7"
           env:
