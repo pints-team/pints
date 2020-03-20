@@ -14,8 +14,6 @@ import pints.toy as toy
 
 from shared import StreamCapture
 
-debug = False
-
 
 class TestPopulationMCMC(unittest.TestCase):
     """
@@ -115,9 +113,8 @@ class TestPopulationMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, 1)
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.PopulationMCMC)
@@ -132,8 +129,4 @@ class TestPopulationMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

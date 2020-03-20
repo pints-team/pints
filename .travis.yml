@@ -24,6 +24,10 @@ matrix:
           if: type != cron
         - python: "3.7"
           env:
+            - PINTS_STAN=true
+          if: type != cron
+        - python: "3.7"
+          env:
             - PINTS_STYLE=true
           if: type != cron
         - python: "3.7"
@@ -64,6 +68,7 @@ install:
   - pip install --upgrade pip
   - pip install .
   - if [[ $PINTS_DOCS == true ]]; then pip install .[docs]; fi;
+  - if [[ $PINTS_STAN == true ]]; then pip install .[stan]; fi;
   - if [[ $PINTS_STYLE == true ]]; then pip install .[dev]; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then pip install .[dev]; fi;
   - if [[ $PINTS_COVER == true ]]; then pip install coverage codecov; fi;
@@ -80,6 +85,7 @@ script:
   - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --copyright; fi;
   - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
   - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
+  - if [[ $PINTS_STAN == true ]]; then python run-tests.py --unit; fi;
   - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
   - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --unit; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;

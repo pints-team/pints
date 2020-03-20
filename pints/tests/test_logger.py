@@ -311,7 +311,4 @@ class TestLogger(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

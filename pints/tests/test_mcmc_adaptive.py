@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the adaptive covariance base class.
 #
@@ -146,10 +146,9 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertTrue(mcmc.in_initial_phase())
 
     def test_logging(self):
-        """
-        Test logging includes acceptance rate, evaluations, iterations and
-        time.
-        """
+        # Test logging includes acceptance rate, evaluations, iterations and
+        # time.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.HaarioACMC)

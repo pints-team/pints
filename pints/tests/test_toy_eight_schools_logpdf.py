@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 #
-# Tests the cone distribution.
+# Tests the eight-schools toy problem.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -15,7 +14,7 @@ import numpy as np
 
 class TestEightSchoolsLogPDF(unittest.TestCase):
     """
-    Tests the cone log-pdf toy problems.
+    Tests the eight-schools toy problem.
     """
     def test_basic(self):
         """ Tests calls and data. """
@@ -48,10 +47,10 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         data = f.data()
         self.assertEqual(len(data), 3)
         self.assertEqual(data["J"], 8)
-        self.assertTrue(np.array_equal(data["y"],
-                        [28, 8, -3, 7, -1, 1, 18, 12]))
-        self.assertTrue(np.array_equal(data["sigma"],
-                        [15, 10, 16, 11, 9, 11, 10, 18]))
+        self.assertTrue(
+            np.array_equal(data["y"], [28, 8, -3, 7, -1, 1, 18, 12]))
+        self.assertTrue(
+            np.array_equal(data["sigma"], [15, 10, 16, 11, 9, 11, 10, 18]))
 
     def test_bad_calls(self):
         # Tests bad calls

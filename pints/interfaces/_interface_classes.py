@@ -16,7 +16,7 @@ class InterfaceLogPDF(pints.LogPDF):
 
     Extends :class:`pints.LogPDF`.
     """
-    def evaluateS1(self, n_samples):
+    def evaluateS1(self, x):
         """ See `pints.LogPDF.evaluateS1`. """
         raise NotImplementedError
 
