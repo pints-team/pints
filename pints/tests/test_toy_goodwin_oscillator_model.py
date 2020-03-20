@@ -2,10 +2,9 @@
 #
 # Tests if the goodwin oscillator (toy) model runs.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import pints
@@ -62,10 +61,9 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         values = model.simulate(parameters, time)
         values1, dvals = model.simulateS1(parameters, time)
         self.assertTrue(np.array_equal(values.shape, values1.shape))
-        self.assertTrue(
-            np.array_equal(dvals.shape,
-                           np.array([len(time),
-                                    model.n_outputs(), model.n_parameters()])))
+        self.assertTrue(np.array_equal(
+            dvals.shape,
+            np.array([len(time), model.n_outputs(), model.n_parameters()])))
         # note -- haven't coded this up separately to check but compare against
         # current output in case of future changes
         self.assertTrue(np.abs(-2.20655371e-05 - dvals[10, 0, 0]) < 10**(-5))

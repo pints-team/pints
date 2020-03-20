@@ -2,10 +2,9 @@
 #
 # Tests the log likelihood classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import pints
@@ -104,9 +103,8 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dl[2], -0.021527777777777774 / 12.0)
 
     def test_gaussian_log_likelihoods_single_output(self):
-        """
-        Single-output test for known/unknown noise log-likelihood methods
-        """
+        # Single-output test for known/unknown noise log-likelihood methods
+
         model = pints.toy.LogisticModel()
         parameters = [0.015, 500]
         sigma = 0.1
@@ -284,10 +282,9 @@ class TestLogLikelihood(unittest.TestCase):
                           problem, [1, 3], [2, 2])
 
     def test_known_noise_gaussian_single_S1(self):
-        """
-        Simple tests for single known noise Gaussian log-likelihood with
-        sensitivities.
-        """
+        # Simple tests for single known noise Gaussian log-likelihood with
+        # sensitivities.
+
         model = pints.toy.LogisticModel()
         x = [0.015, 500]
         sigma = 0.1
@@ -407,9 +404,8 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(dl[2], -0.021527777777777774)
 
     def test_student_t_log_likelihood_single(self):
-        """
-        Single-output test for Student-t noise log-likelihood methods
-        """
+        # Single-output test for Student-t noise log-likelihood methods
+
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
@@ -421,9 +417,8 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
 
     def test_student_t_log_likelihood_multi(self):
-        """
-        Multi-output test for Student-t noise log-likelihood methods
-        """
+        # Multi-output test for Student-t noise log-likelihood methods
+
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 4)
@@ -443,9 +438,8 @@ class TestLogLikelihood(unittest.TestCase):
             -47.83720347766945)
 
     def test_cauchy_log_likelihood_single(self):
-        """
-        Single-output test for Cauchy noise log-likelihood methods
-        """
+        # Single-output test for Cauchy noise log-likelihood methods
+
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
@@ -457,9 +451,8 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
 
     def test_cauchy_log_likelihood_multi(self):
-        """
-        Multi-output test for Cauchy noise log-likelihood methods
-        """
+        # Multi-output test for Cauchy noise log-likelihood methods
+
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 4)
@@ -479,10 +472,9 @@ class TestLogLikelihood(unittest.TestCase):
             -49.51182454195375)
 
     def test_gaussian_noise_multi(self):
-        """
-        Multi-output test for known/unknown Gaussian noise log-likelihood
-        methods.
-        """
+        # Multi-output test for known/unknown Gaussian noise log-likelihood
+        # methods.
+
         model = pints.toy.FitzhughNagumoModel()
         parameters = [0.5, 0.5, 0.5]
         sigma = 0.1
@@ -515,10 +507,8 @@ class TestLogLikelihood(unittest.TestCase):
             [1, 2, -3])
 
     def test_known_noise_gaussian_single_and_multi(self):
-        """
-        Tests the output of single-series against multi-series known noise
-        log-likelihoods.
-        """
+        # Tests the output of single-series against multi-series known noise
+        # log-likelihoods.
 
         # Define boring 1-output and 2-output models
         class NullModel1(pints.ForwardModel):

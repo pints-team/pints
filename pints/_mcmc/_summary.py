@@ -1,10 +1,9 @@
 #
 # MCMC summary method
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 #
 from __future__ import absolute_import, division
@@ -60,12 +59,7 @@ class MCMCSummary(object):
                 ' It is recommended that you rerun sampling with more than'
                 ' one chain')
 
-            # Split chain in half, analyse both
-            shapes = chains[0].shape
-            half = int(shapes[0] / 2)
-            first = chains[0][0:half, :]
-            second = chains[0][half:, :]
-            self._chains = [first, second]
+            self._chains = chains
 
         # Get number of parameters
         self._n_parameters = chains[0].shape[1]

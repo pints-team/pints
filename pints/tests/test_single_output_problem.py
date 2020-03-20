@@ -2,13 +2,11 @@
 #
 # Tests SingleOutputProblem methods.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function, unicode_literals
-import sys
 import pints
 import pints.toy
 import numpy as np
@@ -20,6 +18,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     Tests SingleOutputProblem methods.
     """
     def test_basics(self):
+        # Test everything
 
         model = pints.toy.LogisticModel()
         times = [0, 1, 2, 3]
@@ -55,7 +54,4 @@ class TestSingleOutputProblem(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

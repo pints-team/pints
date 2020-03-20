@@ -54,6 +54,7 @@ relevant code.
 - [MALA MCMC](./sampling/mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling/monomial-gamma-hmc.ipynb)
 - [Relativistic MCMC](./sampling/relativistic-mcmc.ipynb)
+- [Slice Sampling: Rank Shrinking MCMC](./sampling/slice-rank-shrinking-mcmc.ipynb)
 
 ### Nested sampling
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
@@ -96,6 +97,9 @@ relevant code.
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
 - [Cone](./toy/distribution-cone.ipynb)
+- [Eight schools distribution](./toy/distribution-eight-schools.ipynb)
+- [German credit hierarchical logistic model](./toy/distribution-german-credit-hierarchical.ipynb)
+- [German credit logistic model](./toy/distribution-german-credit.ipynb)
 - [High dimensional gaussian](./toy/distribution-high-dimensional-gaussian.ipynb)
 - [Multimodal gaussian distribution](./toy/distribution-multimodal-gaussian.ipynb)
 - [Neals Funnel](./toy/distribution-neals-funnel.ipynb)

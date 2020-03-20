@@ -2,10 +2,9 @@
 # Root of the toy module.
 # Provides a number of toy models and logpdfs for tests of Pints' functions.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,8 +15,11 @@ from ._annulus import AnnulusLogPDF                                 # noqa
 from ._beeler_reuter_model import ActionPotentialModel              # noqa
 from ._cone import ConeLogPDF                                       # noqa
 from ._constant_model import ConstantModel                          # noqa
+from ._eight_schools import EightSchoolsLogPDF                      # noqa
 from ._fitzhugh_nagumo_model import FitzhughNagumoModel             # noqa
 from ._gaussian import GaussianLogPDF                               # noqa
+from ._german_credit import GermanCreditLogPDF                      # noqa
+from ._german_credit_hierarchical import GermanCreditHierarchicalLogPDF  # noqa
 from ._goodwin_oscillator_model import GoodwinOscillatorModel       # noqa
 from ._hes1_michaelis_menten import Hes1Model                       # noqa
 from ._hh_ik_model import HodgkinHuxleyIKModel                      # noqa

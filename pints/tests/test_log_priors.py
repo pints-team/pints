@@ -2,10 +2,9 @@
 #
 # Tests Prior functions in Pints
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import division
 import unittest
@@ -124,6 +123,13 @@ class TestPrior(unittest.TestCase):
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
+
+        # Test sensitivities
+        p = pints.CauchyLogPrior(10, 5)
+        val = p([-3.3])
+        val1, dp = p.evaluateS1([-3.3])
+        self.assertEqual(val, val1)
+        self.assertAlmostEqual(dp[0], 0.13175491604338996, places=6)
 
     def test_cauchy_cdf_icdf(self):
         p = pints.CauchyLogPrior(-3, 2)
@@ -479,6 +485,13 @@ class TestPrior(unittest.TestCase):
         # Test other function calls
         self.assertEqual(p1.n_parameters(), 1)
         self.assertEqual(p2.n_parameters(), 1)
+
+        # Test sensitivities
+        p = pints.HalfCauchyLogPrior(-3, 5)
+        val = p([3.3])
+        val1, dp = p.evaluateS1([3.3])
+        self.assertEqual(val, val1)
+        self.assertAlmostEqual(dp[0], -0.19477508115628384, places=6)
 
     def test_half_cauchy_cdf_icdf(self):
         p1 = pints.HalfCauchyLogPrior(-3, 4.5)
