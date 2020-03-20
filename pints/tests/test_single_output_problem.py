@@ -7,7 +7,6 @@
 # copyright notice and full license details.
 #
 from __future__ import print_function, unicode_literals
-import sys
 import pints
 import pints.toy
 import numpy as np
@@ -19,6 +18,7 @@ class TestSingleOutputProblem(unittest.TestCase):
     Tests SingleOutputProblem methods.
     """
     def test_basics(self):
+        # Test everything
 
         model = pints.toy.LogisticModel()
         times = [0, 1, 2, 3]
@@ -54,7 +54,4 @@ class TestSingleOutputProblem(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

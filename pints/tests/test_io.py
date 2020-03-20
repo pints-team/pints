@@ -8,7 +8,6 @@
 #
 from __future__ import print_function, unicode_literals
 import os
-import sys
 import pints
 import pints.io
 import numpy as np
@@ -29,9 +28,7 @@ class TestIO(unittest.TestCase):
     """
 
     def test_load_save_samples(self):
-        """
-        Tests the load_samples and save_samples() methods.
-        """
+        # Tests the load_samples and save_samples() methods.
 
         m = 10  # 10 samples
         n = 5   # 5 parameters
@@ -104,7 +101,4 @@ class TestIO(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

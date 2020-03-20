@@ -1,10 +1,9 @@
 #
 # Eight schools log-pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,9 +15,14 @@ from . import ToyLogPDF
 
 class EightSchoolsLogPDF(ToyLogPDF):
     r"""
-    The classic Eight Schools example from [1]_. This model was used to
-    determine the effects of coaching on SATS scores in 8 schools. This model
-    is hierarchical and takes the form,
+    The classic Eight Schools example that is discussed in [1]_.
+
+    The aim of this model (implemented as a :class:`pints.ToyLogPDF`) is to
+    determine the effects of coaching on SATS scores in 8 schools. It it used
+    by statisticians to illustrate how hierarchical models can quite easily
+    become unidentified, making inference hard.
+
+    This model is hierarchical and takes the form,
 
     .. math::
         \mu\sim\mathcal{N}(0, 5)
@@ -42,16 +46,18 @@ class EightSchoolsLogPDF(ToyLogPDF):
     Note that, in the non-centered case, the parameter samples correspond to
     theta_tilde rather than theta.
 
+    The model uses a 10-dimensional parameter vector, composed of
+
+    - ``mu``, the population-level score
+    - ``tau``, the population-level standard deviation
+    - ``theta_j``, school j's mean score (for each of the 8 schools).
+
     Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------
-    mu : float
-        Mean population-level score
-    tau : float
-        Population-level standard deviation
-    theta_j : float
-        School j's mean score
+    centered : bool
+        Whether or not to use the centered formulation.
 
     References
     ----------
@@ -68,7 +74,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
 
     def __call__(self, x):
         if len(x) != 10:
-            raise ValueError("Input parameters must be of length 10.")
+            raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
         thetas = x[2:]
@@ -86,10 +92,9 @@ class EightSchoolsLogPDF(ToyLogPDF):
                 theta = theta_tilde
             else:
                 theta = mu + theta_tilde * tau
-            log_prob += (
-                pints.GaussianLogPrior(theta,
-                                       self._sigma_j[i])([self._y_j[i]])
-            )
+            log_prior_2 = pints.GaussianLogPrior(theta, self._sigma_j[i])
+            log_prob += log_prior_2([self._y_j[i]])
+
         return log_prob
 
     def data(self):
@@ -99,7 +104,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
     def evaluateS1(self, x):
         """ See :meth:`pints.LogPDF.evaluateS1()`. """
         if len(x) != 10:
-            raise ValueError("Input parameters must be of length 10.")
+            raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
         thetas = x[2:]
@@ -116,9 +121,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
                 dL2[0] += ((theta - mu)**2 - tau**2) / tau**3
                 log_prob_temp, dL_temp = log_prior.evaluateS1([theta])
                 log_prob += log_prob_temp
-                log_prob += (
-                    pints.GaussianLogPrior(theta, sigma_j)([y_j])
-                )
+                log_prob += pints.GaussianLogPrior(theta, sigma_j)([y_j])
                 dL_temp[0] += (y_j - theta) / sigma_j**2
                 dL_theta.append(dL_temp[0])
         else:
@@ -133,9 +136,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
                 dL2[0] += theta_tilde * y_minus_theta
                 log_prob_temp, dL_temp = log_prior.evaluateS1([theta_tilde])
                 log_prob += log_prob_temp
-                log_prob += (
-                    pints.GaussianLogPrior(theta, sigma_j)([y_j])
-                )
+                log_prob += pints.GaussianLogPrior(theta, sigma_j)([y_j])
                 dL_temp[0] += tau * y_minus_theta
                 dL_theta.append(dL_temp[0])
 

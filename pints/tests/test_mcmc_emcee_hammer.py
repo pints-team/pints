@@ -128,9 +128,8 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter and hyper-parameter interfaces for this sampler.
-        """
+        # Tests the parameter and hyper-parameter interfaces for this sampler.
+
         n = 3
         x0 = [self.real_parameters] * n
         mcmc = pints.EmceeHammerMCMC(n, x0)
@@ -147,9 +146,8 @@ class TestEmceeHammerMCMC(unittest.TestCase):
             ValueError, 'positive', mcmc.set_hyper_parameters, [0])
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.EmceeHammerMCMC)
