@@ -28,6 +28,7 @@ interface, that can be used to sample from an unknown
     rao_blackwell_ac_mcmc
     relativistic_mcmc
     slice_doubling_mcmc
+    slice_rank_shrinking_mcmc
     slice_stepout_mcmc
     summary_mcmc
     dual_averaging
