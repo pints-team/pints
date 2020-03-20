@@ -63,8 +63,9 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         cov = [[1.0, np.sqrt(1.0 / 2.0)],
                [np.sqrt(1.0 / 2.0), 2.0]]
         mean = np.zeros(2)
-        self.assertEqual(f([1, 2]), scipy.stats.multivariate_normal.logpdf(
-            [1, 2], mean, cov))
+        self.assertEqual(
+            f([1, 2]),
+            scipy.stats.multivariate_normal.logpdf([1, 2], mean, cov))
 
         # check suggested bounds
         f = pints.toy.HighDimensionalGaussianLogPDF(dimension=2)
@@ -99,16 +100,10 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         # in order for matrix to be positive definite there are bounds
         # on the lower value of rho > - 1 / (dims - 1)
         self.assertRaises(
-            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 4, -0.34
-        )
+            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 4, -0.34)
         self.assertRaises(
-            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11
-        )
+            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11)
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

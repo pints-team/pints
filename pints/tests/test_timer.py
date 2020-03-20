@@ -8,6 +8,7 @@
 #
 import pints
 import unittest
+import sys
 
 # Strings in Python 2 and 3
 try:
@@ -24,7 +25,8 @@ class TestTimer(unittest.TestCase):
         super(TestTimer, self).__init__(name)
 
     def test_timing(self):
-        """ Test the time() and reset() methods. """
+        # Test the time() and reset() methods.
+
         t = pints.Timer()
         a = t.time()
         self.assertGreaterEqual(a, 0)
@@ -37,8 +39,7 @@ class TestTimer(unittest.TestCase):
         self.assertLess(b, a)
 
     def test_format(self):
-        """ Test the format() method. """
-        import sys
+        # Test the format() method.
 
         t = pints.Timer()
         self.assertEqual(t.format(1e-3), '0.001 seconds')
@@ -67,8 +68,4 @@ class TestTimer(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()
