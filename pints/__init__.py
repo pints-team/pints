@@ -202,15 +202,25 @@ from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
 from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
 from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
+from ._mcmc._dual_averaging import DualAveragingAdaption
 from ._mcmc._hamiltonian import HamiltonianMCMC
+
+if sys.hexversion >= 0x03030000:
+    from ._mcmc._nuts import NoUTurnMCMC
+else:
+    print(
+        'WARNING: Pints No-U-Turn sampler unsupported for Python version < 3.3'
+    )
+
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
 from ._mcmc._relativistic import RelativisticMCMC
-from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
 
 
