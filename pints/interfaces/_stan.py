@@ -65,10 +65,11 @@ class StanLogPDF(InterfaceLogPDF):
         dict = self._dict_update(x)
         try:
             uncons = self._u_to_c(dict)
-            return (self._log_prob(uncons, adjust_transform=True),
-                    self._grad_log_prob(uncons, adjust_transform=True))
+            val = self._log_prob(uncons, adjust_transform=True)
+            dp = self._grad_log_prob(uncons, adjust_transform=True)
+            return val, dp.reshape(-1)
         except RuntimeError:
-            return -np.inf, np.ones(self._n_parameters)
+            return -np.inf, np.ones(self._n_parameters).reshape(-1)
 
     def _initialise_dict_index(self, names):
         """ Initialises dictionary and index of names. """
