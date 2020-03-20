@@ -22,19 +22,19 @@ matrix:
         # Run on latest Python version only
         # These are very quick, so we run them first so that users can see e.g.
         # style fails without having to wait for the unit tests to complete.
-        - python: "3.7"
+        - python: "3.8"
           env:
             - PINTS_DOCS=true
           if: type != cron
-        - python: "3.7"
+        - python: "3.8"
           env:
             - PINTS_STYLE=true
           if: type != cron
-        - python: "3.7"
+        - python: "3.8"
           env:
             - PINTS_COVER=true
           if: type != cron
-        - python: "3.7"
+        - python: "3.8"
           env:
             - PINTS_COPY=true
           if: type != cron
@@ -65,7 +65,7 @@ matrix:
             - PINTS_UNIT=true
           if: type != cron
         # Cron jobs
-        - python: "3.7"
+        - python: "3.8"
           if: type == cron
 
 # Install dependencies
