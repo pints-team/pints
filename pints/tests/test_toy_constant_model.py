@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests if the constant (toy) model works.
 #
@@ -25,7 +25,7 @@ class TestConstantModel(unittest.TestCase):
     """
 
     def test_1d(self):
-        """ Test in 1d (SingleOutputProblem). """
+        # Test in 1d (SingleOutputProblem).
 
         # Output given for a SingleOutputProblem
         model = pints.toy.ConstantModel(1)
@@ -48,7 +48,7 @@ class TestConstantModel(unittest.TestCase):
         self.assertTrue(np.all(values == -2))
 
     def test_3d(self):
-        """ Test three-dimensional case (MultiOutputProblem). """
+        # Test three-dimensional case (MultiOutputProblem).
 
         model = pints.toy.ConstantModel(3)
         times = [0, 1, 2, 10000]
@@ -62,9 +62,8 @@ class TestConstantModel(unittest.TestCase):
             self.assertTrue(np.all(column == parameters * multipliers))
 
     def test_varying_numbers_of_parameters(self):
-        """
-        Tests for different parameter sizes (All using MultiOutputProblem).
-        """
+        # Tests for different parameter sizes (All using MultiOutputProblem).
+
         times = [0, 1, 2, 10000]
         for n in range(1, 10):
             model = pints.toy.ConstantModel(n, force_multi_output=True)
@@ -78,7 +77,7 @@ class TestConstantModel(unittest.TestCase):
                 self.assertTrue(np.all(column == parameters * multipliers))
 
     def test_errors(self):
-        """ Tests the right errors are raised when used improperly. """
+        # Tests the right errors are raised when used improperly.
 
         # Negative times
         model = pints.toy.ConstantModel(1)
@@ -108,9 +107,7 @@ class TestConstantModel(unittest.TestCase):
             ValueError, '1 or greater', pints.toy.ConstantModel, -1)
 
     def test_in_problem(self):
-        """
-        Tests using a ConstantModel in single and multi-output problems.
-        """
+        # Tests using a ConstantModel in single and multi-output problems.
 
         # Single output
         model = pints.toy.ConstantModel(1)
@@ -131,9 +128,7 @@ class TestConstantModel(unittest.TestCase):
         problem.evaluate([1, 2, 3])
 
     def test_derivatives(self):
-        """
-        Tests the derivatives are returned correctly.
-        """
+        # Tests the derivatives are returned correctly.
 
         # Single output
         model = pints.toy.ConstantModel(1)

@@ -53,9 +53,8 @@ class TestRelativisticMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
@@ -97,9 +96,8 @@ class TestRelativisticMCMC(unittest.TestCase):
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_kinetic_energy(self):
-        """
-        Tests kinetic energy values and derivatives
-        """
+        # Tests kinetic energy values and derivatives
+
         x0 = np.array([2, 2])
         model = pints.RelativisticMCMC(x0)
         model.ask()
@@ -124,9 +122,8 @@ class TestRelativisticMCMC(unittest.TestCase):
         self.assertEqual(ke1, ke2)
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
+        # Tests the parameter interface for this sampler.
+
         x0 = np.array([2, 2])
         mcmc = pints.RelativisticMCMC(x0)
 
@@ -177,6 +174,7 @@ class TestRelativisticMCMC(unittest.TestCase):
 
     def test_other_setters(self):
         # Tests other setters and getters.
+
         x0 = np.array([2, 2])
         mcmc = pints.RelativisticMCMC(x0)
         self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)

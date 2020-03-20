@@ -140,9 +140,8 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the hyper-parameter interface for this sampler.
-        """
+        # Tests the hyper-parameter interface for this sampler.
+
         n = 3
         x0 = [self.real_parameters] * n
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
@@ -191,9 +190,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             mcmc.set_hyper_parameters, (0.5, 0.6, 'sdf', 0, 0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DifferentialEvolutionMCMC)

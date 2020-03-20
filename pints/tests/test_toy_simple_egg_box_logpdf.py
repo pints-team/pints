@@ -29,9 +29,8 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
             ValueError, pints.toy.SimpleEggBoxLogPDF, r=0)
 
     def test_sampling_and_divergence(self):
-        """
-        Tests :meth:`SimpleEggBoxLogPDF.kl_divergence()`.
-        """
+        # Tests :meth:`SimpleEggBoxLogPDF.kl_divergence()`.
+
         # Ensure consistent output
         np.random.seed(1)
 
@@ -102,8 +101,4 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

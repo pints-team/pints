@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the Rao-Blackwel adaptive covariance MCMC routine.
 #
