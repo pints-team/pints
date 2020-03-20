@@ -60,6 +60,10 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
+        - python: "3.8"
+          env:
+            - PINTS_UNIT=true
+          if: type != cron
         # Cron jobs
         - python: "3.7"
           if: type == cron
