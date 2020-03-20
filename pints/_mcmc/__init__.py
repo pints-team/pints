@@ -296,7 +296,7 @@ class MCMCController(object):
     """
 
     def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None,
-                 init_function=None):
+                 init=None):
 
         # Store function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -321,18 +321,18 @@ class MCMCController(object):
                 raise ValueError(
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
-        if x0 is None and init_function is None:
+        if x0 is None and init is None:
             raise ValueError('Either x0 or initialisation function must be ' +
                              'non-None.')
-        if x0 is not None and init_function is not None:
+        if x0 is not None and init is not None:
             raise ValueError('Cannot have both x0 and initialisation ' +
                              'function.')
-        if init_function is not None:
-            if not isinstance(init_function, pints.LogPrior):
+        if init is not None:
+            if not isinstance(init, pints.LogPrior):
                 raise ValueError('Initialisation function must extend ' +
                                  'pints.LogPrior.')
-            x0 = [init_function.sample() for i in range(chains)]
-            self._init_function = init_function
+            x0 = [init.sample() for i in range(chains)]
+            self._init = init
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -625,26 +625,8 @@ class MCMCController(object):
 
         # initialisation (for single chain methods only and only if prior
         # supplied)
-        init_fn = self._init_function
-        if init_fn is not None:
-            initialised_finite = False
-            current_active = list(active)
-            n_tries = 0
-            x0 = []
-            while not initialised_finite and (n_tries <
-                                              self._max_initialisation_tries):
-                xs = [init_fn.sample()[0] for i in current_active]
-                fxs = evaluator.evaluate(xs)
-                xs_iterator = iter(xs)
-                fxs_iterator = iter(fxs)
-                for i in list(current_active):
-                    x = next(xs_iterator)
-                    fx = next(fxs_iterator)
-                    if np.isfinite(fx):
-                        x0.append(x)
-                if len(x0) == len(active):
-                    initialised_finite = True
-                n_tries += 1
+        if self._init is not None:
+            initialised_finite, x0 = self._sample_x0(active, evaluator)
             if not initialised_finite:
                 raise ValueError('Initialisation failed since log_pdf not ' +
                                  'finite at x0.')
@@ -861,6 +843,32 @@ class MCMCController(object):
         a list containing a single :class:`MultiChainMCMC` instance.
         """
         return self._samplers
+
+    def _sample_x0(self, active, evaluator):
+        """
+        Samples an initial starting point for the chains using the supplied
+        `init` function.
+        """
+        initialised_finite = False
+        init_fn = self._init
+        current_active = list(active)
+        n_tries = 0
+        x0 = []
+        while not initialised_finite and (n_tries <
+                                          self._max_initialisation_tries):
+            xs = [init_fn.sample()[0] for i in current_active]
+            fxs = evaluator.evaluate(xs)
+            xs_iterator = iter(xs)
+            fxs_iterator = iter(fxs)
+            for i in list(current_active):
+                x = next(xs_iterator)
+                fx = next(fxs_iterator)
+                if np.isfinite(fx):
+                    x0.append(x)
+            if len(x0) == len(active):
+                initialised_finite = True
+            n_tries += 1
+        return initialised_finite, x0
 
     def set_chain_filename(self, chain_file):
         """
