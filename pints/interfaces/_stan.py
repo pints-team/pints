@@ -50,21 +50,25 @@ class StanLogPDF(InterfaceLogPDF):
             for i, xs in enumerate(x):
                 if xs < lower[i] or xs > upper[i]:
                     return -np.inf
-        self._dict_update(x)
-        return self._log_prob(self._u_to_c(self._dict), adjust_transform=True)
+        dict = self._dict_update(x)
+        return self._log_prob(self._u_to_c(dict), adjust_transform=True)
 
     def _dict_update(self, x):
         """ Updates dictionary object with parameter values. """
         names = self._names
+        k = 0
         for i, name in enumerate(names):
             count = self._counter[i]
             if count == 1:
-                self._dict[name] = x[i]
+                self._dict[name] = x[k]
+                k += 1
             else:
                 vals = []
                 for j in range(count):
-                    vals.append(x[i + j])
+                    vals.append(x[k])
+                    k += 1
                 self._dict[name] = vals
+        return self._dict
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -75,8 +79,8 @@ class StanLogPDF(InterfaceLogPDF):
                 j = self._index[i]
                 if xs < lower[j] or xs > upper[j]:
                     return -np.inf, self._boundaries.sample()
-        self._dict_update(x)
-        uncons = self._u_to_c(self._dict)
+        dict = self._dict_update(x)
+        uncons = self._u_to_c(dict)
         return (self._log_prob(uncons, adjust_transform=True),
                 self._grad_log_prob(uncons, adjust_transform=True))
 
