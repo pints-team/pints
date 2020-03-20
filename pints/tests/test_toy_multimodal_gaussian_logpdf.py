@@ -17,10 +17,9 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
     Tests the multimodal log-pdf toy problems.
     """
     def test_basic(self):
-        """
-        Tests instantiations and calls in 2D and 3D across varying
-        numbers of modes
-        """
+        # Tests instantiations and calls in 2D and 3D across varying numbers of
+        # modes.
+
         # Default settings
         f = pints.toy.MultimodalGaussianLogPDF()
         self.assertEqual(f.n_parameters(), 2)
@@ -67,7 +66,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         ])
 
     def test_bad_constructors(self):
-        """ Tests bad Constructors """
+        # Tests bad Constructors.
+
         self.assertRaises(
             ValueError, pints.toy.MultimodalGaussianLogPDF, [])
         self.assertRaises(
@@ -82,7 +82,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             [[[1, 0], [0]], [[1, 0], [0, 1]]])
 
     def test_sensitivities(self):
-        """ Tests sensitivities """
+        # Tests sensitivities.
+
         log_pdf = pints.toy.MultimodalGaussianLogPDF()
         l, dl = log_pdf.evaluateS1([1, 1])
         self.assertEqual(len(dl), 2)
@@ -108,7 +109,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(dl[2], -0.39317158556789844)
 
     def test_suggested_bounds(self):
-        """ Tests suggested_bounds() """
+        # Tests suggested_bounds().
+
         f = pints.toy.MultimodalGaussianLogPDF()
         covariances = [[[5**2, 0.5 * 5 * 3, -0.1 * 5 * 2],
                         [0.5 * 5 * 3, 3**2, 0.4 * 3 * 2],
@@ -134,7 +136,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(bounds, bounds1))
 
     def test_distance_function(self):
-        """ Tests distance function which calls kl_divergence() """
+        # Tests distance function which calls kl_divergence().
+
         f = pints.toy.MultimodalGaussianLogPDF()
         covariances = [[[5**2, 0.5 * 5 * 3, -0.1 * 5 * 2],
                         [0.5 * 5 * 3, 3**2, 0.4 * 3 * 2],

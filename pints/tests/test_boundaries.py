@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the Boundaries classes.
 #
@@ -17,7 +17,8 @@ class TestRectangularBoundaries(unittest.TestCase):
     Tests the RectangularBoundaries class.
     """
 
-    def test_rectangular_boundaries(self):
+    def test_creation(self):
+        # Tests creation and input checking
 
         # Create boundaries
         pints.RectangularBoundaries([1, 2], [3, 4])
@@ -31,6 +32,8 @@ class TestRectangularBoundaries(unittest.TestCase):
         self.assertRaises(ValueError, pints.RectangularBoundaries, [2], [1])
         self.assertRaises(
             ValueError, pints.RectangularBoundaries, [1, 1], [10, 1])
+
+    def test_boundary_checking(self):
 
         # Check methods
         lower = [1, -2]
@@ -59,6 +62,7 @@ class TestRectangularBoundaries(unittest.TestCase):
         self.assertFalse(b.check([2, -3]))
 
     def test_sampling(self):
+        # Tests sampling from within rectangular boundaries
 
         lower = np.array([1, -1])
         upper = np.array([2, 1])

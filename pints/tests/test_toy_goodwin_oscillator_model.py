@@ -61,10 +61,9 @@ class TestGoodwinOscillatorModel(unittest.TestCase):
         values = model.simulate(parameters, time)
         values1, dvals = model.simulateS1(parameters, time)
         self.assertTrue(np.array_equal(values.shape, values1.shape))
-        self.assertTrue(
-            np.array_equal(dvals.shape,
-                           np.array([len(time),
-                                    model.n_outputs(), model.n_parameters()])))
+        self.assertTrue(np.array_equal(
+            dvals.shape,
+            np.array([len(time), model.n_outputs(), model.n_parameters()])))
         # note -- haven't coded this up separately to check but compare against
         # current output in case of future changes
         self.assertTrue(np.abs(-2.20655371e-05 - dvals[10, 0, 0]) < 10**(-5))
