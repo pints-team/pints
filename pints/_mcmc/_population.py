@@ -1,10 +1,9 @@
 #
 # Population MCMC
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
@@ -17,7 +16,7 @@ import numpy as np
 class PopulationMCMC(pints.SingleChainMCMC):
     """
     Creates a chain of samples from a target distribution, using the population
-    MCMC (simulated tempering) routine described in algorithm 1 in [1].
+    MCMC (simulated tempering) routine described in algorithm 1 in [1]_.
 
     This method uses several chains internally, but only a single one is
     updated per iteration, and only a single one is returned at the end, hence
@@ -44,10 +43,14 @@ class PopulationMCMC(pints.SingleChainMCMC):
     ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
     one whose target distribution we want to sample.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
 
-    [1] "On population-based simulation for static inference", Ajay Jasra,
-    David A. Stephens and Christopher C. Holmes, Statistical Computing, 2007.
+    References
+    ----------
+    .. [1] "On population-based simulation for static inference", Ajay Jasra,
+           David A. Stephens and Christopher C. Holmes,
+           Statistical Computing, 2007.
+           https://doi.org/10.1007/s11222-007-9028-9
     """
     def __init__(self, x0, sigma0=None):
         super(PopulationMCMC, self).__init__(x0, sigma0)
@@ -69,7 +72,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         #
         # Default settings
         #
-        self._method = pints.AdaptiveCovarianceMCMC
+        self._method = pints.HaarioBardenetACMC
         self._needs_initial_phase = True
         self._in_initial_phase = True
 
@@ -165,12 +168,6 @@ class PopulationMCMC(pints.SingleChainMCMC):
     def needs_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return self._needs_initial_phase
-
-    def replace(self, x, fx):
-        """
-        Not implemented for this method!
-        """
-        raise NotImplementedError
 
     def set_initial_phase(self, phase):
         """
@@ -300,4 +297,3 @@ class PopulationMCMC(pints.SingleChainMCMC):
         distribution is ``p(theta|data) ^ (1 - T)``.
         """
         return self._schedule
-

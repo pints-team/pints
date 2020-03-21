@@ -2,7 +2,7 @@
 Rosenbrock function
 *******************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: RosenbrockError
 

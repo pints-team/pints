@@ -2,7 +2,7 @@
 Nested rejection sampler
 ************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: NestedRejectionSampler
 

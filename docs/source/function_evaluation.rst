@@ -2,7 +2,7 @@
 Function evaluation
 *******************
 
-.. module:: pints
+.. currentmodule:: pints
 
 The :class:`Evaluator` classes provide an abstraction layer that makes it
 easier to implement sequential and/or parallel evaluation of functions.

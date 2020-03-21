@@ -2,7 +2,7 @@
 Error measures
 **************
 
-.. module:: pints
+.. currentmodule:: pints
 
 Error measures are callable objects that return some scalar representing the
 error between a model and an experiment.

@@ -1,59 +1,70 @@
 #
 # Fitzhugh-Nagumo toy model.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
+
 import pints
-from scipy.integrate import odeint
-
-from . import ToyModel
+from . import ToyODEModel
 
 
-class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
-    """
-    Fitzhugh Nagumo model of action potential.
+class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
+    r"""
+    Fitzhugh-Nagumo model of the action potential [1]_.
 
     Has two states, and three phenomenological parameters: ``a`` , ``b``,
     ``c``. All states are visible
 
     .. math::
-        \\frac{d \mathbf{y}}{dt} = \\mathbf{f}(\\mathbf{y},\\mathbf{p},t)
+        \frac{d \mathbf{y}}{dt} = \mathbf{f}(\mathbf{y},\mathbf{p},t)
 
     where
 
     .. math::
-        \\mathbf{y} &= (V,R)\\\\
-        \\mathbf{p} &= (a,b,c)
+        \mathbf{y} &= (V,R)\\
+        \mathbf{p} &= (a,b,c)
 
     The RHS, jacobian and change in RHS with the parameters are given by
 
     .. math::
-        \\mathbf{f}(\\mathbf{y},\\mathbf{p},t) &= \\left[\\begin{matrix}
-                    c \\left(R - V^{3}/3+V\\right)\\\\
-                    - \\frac{1}{c} \\left(R b + V - a\\right)\\end{matrix}
-                    \\right]\\\\
-        \\frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
-        \\left[\\begin{matrix} c \\left(1- V^{2}\\right) & c \\\\
-                    - \\frac{1}{c} & - \\frac{b}{c}\\end{matrix}\\right] \\\\
-        \\frac{\partial \mathbf{f}}{\partial \mathbf{p}} &=
-                        \\left[\\begin{matrix}0 & 0 & R - V^{3}/3 + V\\\\
-                        \\frac{1}{c} & - \\frac{R}{c} &
-                        \\frac{1}{c^{2}} \\left(R b + V - a\\right)
-                        \\end{matrix}\\right]
+        \begin{align}
+        \mathbf{f}(\mathbf{y},\mathbf{p},t) &=
+            \left[\begin{matrix}
+                c \left(R - V^{3}/3+V\right) \\
+                - \frac{1}{c} \left(R b + V - a\right)
+            \end{matrix}\right] \\
+        \frac{\partial \mathbf{f}}{\partial \mathbf{y}} &=
+            \left[\begin{matrix}
+                c \left(1- V^{2}\right) & c \\
+                - \frac{1}{c} & - \frac{b}{c}
+            \end{matrix}\right] \\
+        \frac{\partial \mathbf{f}}{\partial \mathbf{p}} &=
+            \left[\begin{matrix}
+                0 & 0 & R - V^{3}/3 + V\\
+                \frac{1}{c} & - \frac{R}{c} &
+                    \frac{1}{c^{2}} \left(R b + V - a\right)
+            \end{matrix}\right]
+        \end{align}
 
-    Arguments:
+    Extends :class:`pints.ForwardModelS1`, `pints.toy.ToyODEModel`.
 
-    ``y0``
-        The system's initial state
+    Parameters
+    ----------
+    y0
+        The system's initial state. If not given, the default ``[-1, 1]`` is
+        used.
 
-    *Extends:* :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    References
+    ----------
+    .. [1] A kinetic model of the conductance changes in nerve membrane
+           Fitzhugh (1961) Journal of Cellular and Comparative Physiology.
+           https://doi.org/10.1002/jcp.1030660518
     """
 
     def __init__(self, y0=None):
@@ -67,6 +78,30 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
             if len(self._y0) != 2:
                 raise ValueError('Initial value must have size 2.')
 
+    def _dfdp(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel._dfdp()`. """
+        V, R = y
+        a, b, c = [float(param) for param in p]
+        ret = np.empty((2, 3))
+        ret[0, 0] = 0
+        ret[0, 1] = 0
+        ret[0, 2] = R - V**3 / 3 + V
+        ret[1, 0] = 1 / c
+        ret[1, 1] = -R / c
+        ret[1, 2] = (R * b + V - a) / c**2
+        return ret
+
+    def jacobian(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel.jacobian()`. """
+        V, R = y
+        a, b, c = [float(param) for param in p]
+        ret = np.empty((2, 2))
+        ret[0, 0] = c * (1 - V**2)
+        ret[0, 1] = c
+        ret[1, 0] = -1 / c
+        ret[1, 1] = -b / c
+        return ret
+
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 2
@@ -75,89 +110,13 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 3
 
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        return self._simulate(parameters, times, False)
-
-    def simulateS1(self, parameters, times):
-        """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
-        return self._simulate(parameters, times, True)
-
-    def _simulate(self, parameters, times, sensitivities):
-        """
-        Private helper function that either simulates the model with
-        sensitivities (`sensitivities == true`) or without
-        (`sensitivities == false`)
-
-        Arguments:
-
-        ``parameters``
-            The three phenomenological parameters: ``a`` , ``b``, ``c``.
-
-        ``times``
-            The times at which to calculate the model output / sensitivities
-
-        ``sensitivities``
-            If set to `true` the function returns the model outputs and
-            sensitivities `(values,sensitivities)`. If set to `false` the
-            function only returns the model outputs `values`. See
-            :meth:`pints.ForwardModel.simulate()` and
-            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
-            details.
-
-        """
-
-        a, b, c = [float(x) for x in parameters]
-
-        times = np.asarray(times)
-        if np.any(times < 0):
-            raise ValueError('Negative times are not allowed.')
-
-        def r(y, t, p):
-            V, R = y
-            dV_dt = (V - V**3 / 3 + R) * c
-            dR_dt = (V - a + b * R) / -c
-            return dV_dt, dR_dt
-
-        if sensitivities:
-            def jac(y):
-                V, R = y
-                ret = np.empty((2, 2))
-                ret[0, 0] = c * (1 - V**2)
-                ret[0, 1] = c
-                ret[1, 0] = -1 / c
-                ret[1, 1] = -b / c
-                return ret
-
-            def dfdp(y):
-                V, R = y
-                ret = np.empty((2, 3))
-                ret[0, 0] = 0
-                ret[0, 1] = 0
-                ret[0, 2] = R - V**3 / 3 + V
-                ret[1, 0] = 1 / c
-                ret[1, 1] = -R / c
-                ret[1, 2] = (R * b + V - a) / c**2
-                return ret
-
-            def rhs(y_and_dydp, t, p):
-                y = y_and_dydp[0:2]
-                dydp = y_and_dydp[2:].reshape((2, 3))
-
-                dydt = r(y, t, p)
-                d_dydp_dt = np.matmul(jac(y), dydp) + dfdp(y)
-
-                return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
-
-            y0 = np.zeros(8)
-            y0[0:2] = self._y0
-            result = odeint(rhs, y0, times, (parameters,))
-            values = result[:, 0:2]
-            dvalues_dp = result[:, 2:].reshape((len(times), 2, 3))
-            return values, dvalues_dp
-        else:
-            values = odeint(r, self._y0, times, (parameters,))
-            return values
+    def _rhs(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel._rhs()`. """
+        V, R = y
+        a, b, c = [float(x) for x in p]
+        dV_dt = (V - V**3 / 3 + R) * c
+        dR_dt = (V - a + b * R) / -c
+        return dV_dt, dR_dt
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
@@ -166,4 +125,3 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
     def suggested_times(self):
         """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
         return np.linspace(0, 20, 200)
-

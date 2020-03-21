@@ -1,10 +1,9 @@
 #
 # Cone toy log pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -15,26 +14,26 @@ from . import ToyLogPDF
 
 
 class ConeLogPDF(ToyLogPDF):
-    """
+    r"""
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
 
-        f(x) \\propto e^{-|x|^\\beta}
+        f(x) \propto e^{-|x|^\beta}
 
     where ``x`` is a d-dimensional real, and ``|x|`` is the Euclidean norm. The
     mean and variance that are returned relate to expectations on ``|x|`` not
     the multidimensional ``x``.
 
-    Arguments:
+    Extends :class:`pints.LogPDF`.
 
-    ``dimensions``
+    Parameters
+    ----------
+    dimensions : int
         The dimensionality of the cone.
-    ``beta``
+    beta : float
         The power to which ``|x|`` is raised in the exponential term, which
         must be positive.
-
-    *Extends:* :class:`pints.LogPDF`.
     """
     def __init__(self, dimensions=2, beta=1):
         if dimensions < 1:

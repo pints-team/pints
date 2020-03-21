@@ -1,10 +1,9 @@
 #
 # Multi-model Gaussian log pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -33,18 +32,18 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
         # 2d with 3 modes
         f = pints.toy.MultimodalGaussianLogPDF([[0, 0], [5, 5], [5, 0]])
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``modes``
+    Parameters
+    ----------
+    modes
         A list of points that will form the modes of the distribution. Must all
         have the same dimension.
         If not set, the method will revert to the bimodal distribution
         described above.
-    ``covariances``
+    covariances
         A list of covariance matrices, one for each mode. If not set, a unit
         matrix will be used for each.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, modes=None, covariances=None):
 

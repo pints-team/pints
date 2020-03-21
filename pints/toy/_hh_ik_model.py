@@ -1,10 +1,9 @@
 #
 # Potassium current (IK) toy model based on the model by Hodgkin & Huxley (HH).
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 #
 from __future__ import absolute_import, division
@@ -16,15 +15,50 @@ from . import ToyModel
 
 
 class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
-    """
+    r"""
     Toy model based on the potassium current experiments used for Hodgkin and
-    Huxley's 1952 model of the action potential of a squid's giant axon.
+    Huxley's 1952 model of the action potential of a squid's giant axon [1]_.
 
     A voltage-step protocol is created and applied to an axon, and the elicited
-    potassium current is given as model output.
+    potassium current (:math:`I_\text{K}`) is given as model output.
 
-    The protocol is applied in the interval ``t = [0, 1200]``, so sampling
-    outside this interval will not provide much new information.
+    The model equations are
+
+    .. math::
+
+        \alpha &= p_1 \frac{-V - 75 + p_2}{\exp[(-V - 75 + p_2) / p_3] - 1} \\
+        \beta &= p_4 \exp[(-V - 75) / p_5] \\
+        \frac{dn}{dt} &= \alpha \cdot (1 - n) - \beta \cdot n \\
+        E_\text{K} &= -88 \\
+        g_\text{max} &= 36 \\
+        I_\text{K} &= g_\text{max} \cdot n^4 \cdot (V - E_\text{K})
+
+    Where :math:`p_1, p_2, ..., p_5` are the parameters varied in this toy
+    model.
+
+    During simulation, the membrane potential :math:`V` is varied by holding it
+    at -75mV for 90ms, then at a "step potential" for 10ms. The step potentials
+    are based on the values used in the original paper, and are -69, -64, -56,
+    -49, -43, -37, -24, -12, 1, 13, 25, and 34mV.
+    The protocol is applied in the interval :math:`t = [0, 1200]`, so sampling
+    outside this interval will not provide new information.
+
+    With the parameter values from :meth:`suggested_parameters`, simulation
+    results will match those in [1]_.
+
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+
+    Parameters
+    ----------
+    initial_condition : float
+        The initial value of the state variable :math:`n`.
+
+    References
+    ----------
+    .. [1] A quantitative description of membrane currents and its application
+           to conduction and excitation in nerve.
+           Hodgkin, Huxley (1952d) Journal of Physiology.
+           https://doi.org/10.1113/jphysiol.1964.sp007378
 
     Example usage::
 
@@ -45,13 +79,6 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
             plt.plot(t, v)
         plt.show()
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
-
-    References:
-
-    [1] A quantitative description of membrane currents and its application to
-    conduction and excitation in nerve
-    Hodgkin, Huxley (1952d) Journal of Physiology
     """
     def __init__(self, initial_condition=0.3):
         super(HodgkinHuxleyIKModel, self).__init__()

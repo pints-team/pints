@@ -1,10 +1,9 @@
 #
 # Particle swarm optimisation (PSO).
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
@@ -17,14 +16,12 @@ import pints
 
 class PSO(pints.PopulationBasedOptimiser):
     """
-    Finds the best parameters using the PSO method described in [1].
+    Finds the best parameters using the PSO method described in [1]_.
 
     Particle Swarm Optimisation (PSO) is a global search method (so refinement
     with a local optimiser is advised!) that works well for problems in high
     dimensions and with many local minima. Because it treats each parameter
     independently, it does not require preconditioning of the search space.
-
-    Detailed description:
 
     In a particle swarm optimization, the parameter space is explored by ``n``
     independent particles. The particles perform a pseudo-random walk through
@@ -67,13 +64,13 @@ class PSO(pints.PopulationBasedOptimiser):
                     v[i,j] += al * (p[i,j] - x[i,j]) + ag * (pg[i,j]  - x[i,j])
                     x[i,j] += v[i,j]
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
-    References:
-
-    [1] Kennedy, Eberhart (1995) Particle Swarm Optimization.
-    IEEE International Conference on Neural Networks
-
+    References
+    ----------
+    .. [1] Kennedy, Eberhart (1995) Particle Swarm Optimization.
+           IEEE International Conference on Neural Networks
+           https://doi.org/10.1109/ICNN.1995.488968
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):

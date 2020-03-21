@@ -2,7 +2,7 @@
 Goodwin oscillator model
 ************************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: GoodwinOscillatorModel
 

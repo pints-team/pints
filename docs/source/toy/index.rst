@@ -13,12 +13,16 @@ Some toy classes provide extra functionality defined in the
 
 .. toctree::
 
+    toy_classes
     annulus_logpdf
     beeler_reuter_ap_model
     cone_logpdf
     constant_model
+    eight_schools_logpdf
     fitzhugh_nagumo_model
     gaussian_logpdf
+    german_credit_hierarchical_logpdf
+    german_credit_logpdf
     goodwin_oscillator_model
     hes1_michaelis_menten_model
     high_dimensional_gaussian_logpdf
@@ -30,8 +34,8 @@ Some toy classes provide extra functionality defined in the
     parabolic_error
     repressilator_model
     rosenbrock
-    sir_model
     simple_egg_box_logpdf
-    toy_classes
+    simple_harmonic_oscillator_model
+    sir_model
+    stochastic_degradation_model
     twisted_gaussian_logpdf
-

@@ -1,10 +1,9 @@
 #
 # Differential evolution MCMC
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -14,8 +13,8 @@ import logging
 
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
-    """
-    Uses differential evolution MCMC as described in [1] to do posterior
+    r"""
+    Uses differential evolution MCMC as described in [1]_ to perform posterior
     sampling from the posterior.
 
     In each step of the algorithm ``n`` chains are evolved using the evolution
@@ -32,15 +31,18 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     If ``x_proposed / x[i,r] > u ~ U(0,1)``, then
     ``x[i+1,r] = x_proposed``; otherwise, ``x[i+1,r] = x[i]``.
 
+    Extends :class:`MultiChainMCMC`.
+
     .. note::
-        This sampler requires a number of chains $n \ge 3$, and
-        recommends $n \ge 1.5 d$
+        This sampler requires a number of chains :math:`n \ge 3`, and
+        recommends :math:`n \ge 1.5 d`.
 
-    *Extends:* :class:`MultiChainMCMC`
-
-    [1] "A Markov Chain Monte Carlo version of the genetic algorithm
-    Differential Evolution: easy Bayesian computing for real parameter spaces"
-    Cajo J. F. Ter Braak (2006) Statistical Computing
+    References
+    ----------
+    .. [1] "A Markov Chain Monte Carlo version of the genetic algorithm
+           Differential Evolution: easy Bayesian computing for real parameter
+           spaces". Cajo J. F. Ter Braak (2006) Statistical Computing
+           https://doi.org/10.1007/s11222-006-8769-1
     """
 
     def __init__(self, chains, x0, sigma0=None):
@@ -93,13 +95,14 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if not self._running:
             self._initialise()
 
-        # set gamma to 1
-        if self._iter_count % self._gamma_switch_rate == 0:
-            self._gamma = 1
-        self._iter_count += 1
-
         # Propose new points
         if self._proposed is None:
+
+            # set gamma to 1
+            if self._iter_count % self._gamma_switch_rate == 0:
+                self._gamma = 1
+            self._iter_count += 1
+
             self._proposed = np.zeros(self._current.shape)
             for j in range(self._chains):
                 if self._gaussian_error:
@@ -167,8 +170,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_gamma_switch_rate(self, gamma_switch_rate):
         """
-        Sets the number of steps between iterations where
-        gamma is set to 1 (then reset immediately afterwards)
+        Sets the number of steps between iterations where gamma is set to 1
+        (then reset immediately afterwards)
         """
         if gamma_switch_rate < 1:
             raise ValueError('The interval number of steps between ' +
@@ -180,9 +183,9 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
     def set_relative_scaling(self, relative_scaling):
         """
-        Sets whether to use an error process whose standard deviation
-        scales relatively (scale = self._mu * self_b) or absolutely
-        (scale = self._b in all dimensions)
+        Sets whether to use an error process whose standard deviation scales
+        relatively (``scale = self._mu * self_b``) or absolutely
+        (``scale = self._b`` in all dimensions).
         """
         relative_scaling = bool(relative_scaling)
         self._relative_scaling = relative_scaling

@@ -2,7 +2,7 @@
 Population MCMC
 ***************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: PopulationMCMC
 

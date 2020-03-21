@@ -2,16 +2,11 @@
 Running an optimisation
 ***********************
 
-.. module:: pints
-
+.. currentmodule:: pints
 
 .. autofunction:: optimise
 
+.. autoclass:: OptimisationController
+
 .. autoclass:: Optimisation
 
-Convenience methods
--------------------
-
-.. autofunction:: fmin
-
-.. autofunction:: curve_fit

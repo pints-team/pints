@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the CMAES optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -13,7 +12,8 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture, CircularBoundaries
+from shared import CircularBoundaries
+from shared import StreamCapture
 
 debug = False
 method = pints.CMAES
@@ -42,7 +42,7 @@ class TestCMAES(unittest.TestCase):
         return r, x, s, b
 
     def test_unbounded(self):
-        """ Runs an optimisation without boundaries. """
+        # Runs an optimisation without boundaries.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         opt.set_threshold(1e-3)
@@ -51,7 +51,7 @@ class TestCMAES(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded(self):
-        """ Runs an optimisation with boundaries. """
+        # Runs an optimisation with boundaries.
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
@@ -71,7 +71,7 @@ class TestCMAES(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded_and_sigma(self):
-        """ Runs an optimisation without boundaries and sigma. """
+        # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_threshold(1e-3)
@@ -79,8 +79,9 @@ class TestCMAES(unittest.TestCase):
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
 
+    @unittest.skip('Newer versions of cma no longer trigger this condition')
     def test_stopping_on_ill_conditioned_covariance_matrix(self):
-        """ Tests that ill conditioned covariance matrices are detected. """
+        # Tests that ill conditioned covariance matrices are detected.
         from scipy.integrate import odeint
         #TODO: A quicker test-case for this would be great!
 
@@ -115,7 +116,7 @@ class TestCMAES(unittest.TestCase):
         self.assertTrue('Ill-conditioned covariance matrix' in c.text())
 
     def test_ask_tell(self):
-        """ Tests ask-and-tell related error handling. """
+        # Tests ask-and-tell related error handling.
         r, x, s, b = self.problem()
         opt = method(x)
 
@@ -128,18 +129,16 @@ class TestCMAES(unittest.TestCase):
 
         # Tell before ask
         self.assertRaisesRegex(
-            Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
+            Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
 
     def test_is_default(self):
-        """ Checks this is the default optimiser. """
+        # Checks this is the default optimiser.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x)
         self.assertIsInstance(opt.optimiser(), method)
 
     def test_hyper_parameter_interface(self):
-        """
-        Tests the hyper parameter interface for this optimiser.
-        """
+        # Tests the hyper parameter interface for this optimiser.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
@@ -151,7 +150,7 @@ class TestCMAES(unittest.TestCase):
             ValueError, 'at least 1', m.set_hyper_parameters, [0])
 
     def test_name(self):
-        """ Test the name() method. """
+        # Test the name() method.
         opt = method(np.array([0, 1.01]))
         self.assertIn('CMA-ES', opt.name())
 
@@ -161,4 +160,6 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
     unittest.main()

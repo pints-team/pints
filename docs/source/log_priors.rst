@@ -2,7 +2,7 @@
 Log-priors
 **********
 
-.. module:: pints
+.. currentmodule:: pints
 
 A number of :class:`LogPriors<pints.LogPrior>` are provided for use in e.g.
 Bayesian inference.

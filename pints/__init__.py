@@ -2,10 +2,9 @@
 # Root of the pints module.
 # Provides access to all shared functionality (optimisation, mcmc, etc.).
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 """
 Pints: Probabilistic Inference on Noisy Time Series.
@@ -21,9 +20,20 @@ from __future__ import print_function, unicode_literals
 import sys
 
 #
-# Version info: Remember to keep this in sync with setup.py!
+# Version info
 #
-__version_int__ = 0, 2, 1
+def _load_version_int():
+    try:
+        import os
+        root = os.path.abspath(os.path.dirname(__file__))
+        with open(os.path.join(root, 'version'), 'r') as f:
+            version = f.read().strip().split(',')
+        major, minor, revision = [int(x) for x in version]
+        return major, minor, revision
+    except Exception as e:
+        raise RuntimeError('Unable to read version number (' + str(e) + ').')
+
+__version_int__ = _load_version_int()
 __version__ = '.'.join([str(x) for x in __version_int__])
 if sys.version_info[0] < 3:
     del(x)  # Before Python3, list comprehension iterators leaked
@@ -105,6 +115,7 @@ from ._log_likelihoods import (
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
+    MultiplicativeGaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
@@ -157,6 +168,7 @@ from ._optimisers import (
     TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
+from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
@@ -183,20 +195,31 @@ from ._mcmc import (
     MultiChainMCMC,
     SingleChainMCMC,
 )
-from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
+from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
+from ._mcmc._haario_ac import HaarioACMC
+from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
+from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
 from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
-from ._mcmc._population import PopulationMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
+from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
+from ._mcmc._population import PopulationMCMC
+from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
+from ._mcmc._relativistic import RelativisticMCMC
+from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
+from ._mcmc._summary import MCMCSummary
 
 
 #
 # Nested samplers
 #
 from ._nested import NestedSampler
+from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
 

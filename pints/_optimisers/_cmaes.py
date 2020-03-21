@@ -1,10 +1,9 @@
 #
-# Uses the Python `cma` module to runs CMA-ES optimisations.
+# Uses the Python ``cma`` module to run CMA-ES optimisations.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -15,19 +14,27 @@ import pints
 
 class CMAES(pints.PopulationBasedOptimiser):
     """
-    Finds the best parameters using the CMA-ES method described in [1, 2] and
-    implemented in the ``cma`` module.
+    Finds the best parameters using the CMA-ES method described in [1]_, [2]_
+    and implemented in the ``cma`` module [3]_.
 
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
-    [1] https://www.lri.fr/~hansen/cmaesintro.html
+    References
+    ----------
+    .. [1] The CMA Evolution Strategy: A Tutorial
+           Nikolaus Hanse, arxiv
+           https://arxiv.org/abs/1604.00772
 
-    [2] Hansen, Mueller, Koumoutsakos (2006) Reducing the time complexity of
-    the derandomized evolution strategy with covariance matrix adaptation
-    (CMA-ES).
+    .. [2] Hansen, Mueller, Koumoutsakos (2006) "Reducing the time complexity
+           of the derandomized evolution strategy with covariance matrix
+           adaptation (CMA-ES)". Evolutionary Computation
+           https://doi.org/10.1162/106365603321828970
+
+    .. [3] PyPi page for ``cma``
+           https://pypi.org/project/cma/
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
@@ -166,7 +173,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         # callback: User callback triggered stop
         stop = self._es.stop()
         if stop:
-            if 'tolconditioncov' in stop:
+            if 'tolconditioncov' in stop:    # pragma: no cover
                 return 'Ill-conditioned covariance matrix.'
 
             self._logger.debug(

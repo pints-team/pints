@@ -2,7 +2,7 @@
 Boundaries
 **********
 
-.. module:: pints
+.. currentmodule:: pints
 
 Simple boundaries for an optimisation can be created using
 :class:`RectangularBoundaries`.

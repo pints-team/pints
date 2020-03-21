@@ -2,7 +2,7 @@
 Core classes and methods
 ************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autofunction:: version
 

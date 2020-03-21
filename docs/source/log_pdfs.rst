@@ -2,7 +2,7 @@
 Log-PDFs
 ********
 
-.. module:: pints
+.. currentmodule:: pints
 
 :class:`LogPDFs<pints.LogPDF>` are callable objects that represent
 distributions, including likelihoods and Bayesian priors and posteriors.

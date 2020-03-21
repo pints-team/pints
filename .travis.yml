@@ -1,6 +1,6 @@
 sudo: false
 
-dist: trusty
+dist: xenial
 
 language: python
 
@@ -11,16 +11,32 @@ branches:
 
 matrix:
     include:
+        # Unit testing on OS/X
+        - os: osx
+          language: generic
+          env:
+            - PINTS_UNIT=true
+          if: type != cron
+        # Docs, style and cover checking, latest Python version only
+        - python: "3.7"
+          env:
+            - PINTS_DOCS=true
+          if: type != cron
+        - python: "3.7"
+          env:
+            - PINTS_STYLE=true
+          if: type != cron
+        - python: "3.7"
+          env:
+            - PINTS_COVER=true
+          if: type != cron
         # Unit testing on all supported Python versions on Ubuntu
-        - python: "2.7"
-          env:
-            - PINTS_UNIT=true
-          if: type != cron
         - python: "2.7.6"
+          dist: trusty
           env:
             - PINTS_UNIT=true
           if: type != cron
-        - python: "3.4"
+        - python: "2.7"
           env:
             - PINTS_UNIT=true
           if: type != cron
@@ -32,31 +48,12 @@ matrix:
           env:
             - PINTS_UNIT=true
           if: type != cron
-        #- python: "3.7"
-        #  env:
-        #    - PINT_UNIT=true
-        #  if: type != cron
-        # Unit testing on OS/X
-        - os: osx
-          language: generic
+        - python: "3.7"
           env:
             - PINTS_UNIT=true
           if: type != cron
-        # Docs, style and cover checking, latest Python version only
-        - python: "3.6"
-          env:
-            - PINTS_DOCS=true
-          if: type != cron
-        - python: "3.6"
-          env:
-            - PINTS_STYLE=true
-          if: type != cron
-        - python: "3.6"
-          env:
-            - PINTS_COVER=true
-          if: type != cron
-          # Cron jobs
-        - python: "3.6"
+        # Cron jobs
+        - python: "3.7"
           if: type == cron
 
 # Install dependencies
@@ -80,10 +77,11 @@ before_script:
 # issues with debug output:
 # https://github.com/travis-ci/travis-ci/issues/5716
 script:
+  - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --copyright; fi;
   - if [[ $PINTS_UNIT == true ]]; then python run-tests.py --unit; fi;
   - if [[ $PINTS_DOCS == true ]]; then python run-tests.py --doctest; fi;
   - if [[ $PINTS_STYLE == true ]]; then python -m flake8; fi;
-  - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --nosub; fi;
+  - if [[ $PINTS_COVER == true ]]; then coverage run run-tests.py --unit; fi;
   - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then travis_wait 120 python run-tests.py --books; fi;
 
 after_success:
@@ -93,3 +91,5 @@ notifications:
   email:
     recipients:
     - pints-core-devs@maillist.ox.ac.uk
+    - martinjrobins@gmail.com
+    - michael.clerx@cs.ox.ac.uk

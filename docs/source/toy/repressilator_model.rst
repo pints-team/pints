@@ -2,7 +2,7 @@
 Repressilator model
 *******************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: RepressilatorModel
 

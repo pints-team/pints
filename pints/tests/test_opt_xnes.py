@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the XNES optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -42,7 +41,7 @@ class TestXNES(unittest.TestCase):
         return r, x, s, b
 
     def test_unbounded(self):
-        """ Runs an optimisation without boundaries. """
+        # Runs an optimisation without boundaries.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         opt.set_log_to_screen(debug)
@@ -50,7 +49,7 @@ class TestXNES(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded(self):
-        """ Runs an optimisation with boundaries. """
+        # Runs an optimisation with boundaries.
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
@@ -70,7 +69,7 @@ class TestXNES(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_bounded_and_sigma(self):
-        """ Runs an optimisation without boundaries and sigma. """
+        # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, s, b, method)
         opt.set_log_to_screen(debug)
@@ -78,9 +77,8 @@ class TestXNES(unittest.TestCase):
         self.assertTrue(found_solution < 1e-3)
 
     def test_hyper_parameter_interface(self):
-        """
-        Tests the hyper parameter interface for this optimiser.
-        """
+        # Tests the hyper parameter interface for this optimiser.
+
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
@@ -92,7 +90,7 @@ class TestXNES(unittest.TestCase):
             ValueError, 'at least 1', m.set_hyper_parameters, [0])
 
     def test_ask_tell(self):
-        """ Tests ask-and-tell related error handling. """
+        # Tests ask-and-tell related error handling.
         x = np.array([1.1, 1.1])
         opt = method(x)
 
@@ -105,10 +103,10 @@ class TestXNES(unittest.TestCase):
 
         # Tell before ask
         self.assertRaisesRegex(
-            Exception, 'ask\(\) not called before tell\(\)', opt.tell, 5)
+            Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
 
     def test_name(self):
-        """ Test the name() method. """
+        # Test the name() method.
         opt = method(np.array([0, 1.01]))
         self.assertIn('xNES', opt.name())
 

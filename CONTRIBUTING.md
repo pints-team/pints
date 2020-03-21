@@ -81,6 +81,10 @@ Naming is hard. In general, we aim for descriptive class, method, and argument n
 
 Class names are CamelCase, and start with an upper case letter, for example `SuperDuperMCMC`. Method and variable names are lower case, and use underscores for word separation, for example `x` or `iteration_count`.
 
+### Spelling
+
+To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references.
+
 ### Python 2 and 3
 
 Python is currently in a long, long transition phase from Python 2 to Python 3. Pints supports both Python 2 (version 2.7 and upwards) and Python 3 (version 3.4 and upwards).
@@ -147,12 +151,21 @@ Every new feature should have its own test. To create ones, have a look at the `
 
 Next, add some simple (and speedy!) tests of your main features. If these run without exceptions that's a good start! Next, check the output of your methods using any of these [assert methods](https://docs.python.org/3.3/library/unittest.html#assert-methods).
 
+Guidelines for writing unit tests:
+
+1. Unit tests should test a very small block of code (e.g. a single method)
+1b. When writing tests, start from the simplest case, and then work up
+2. Unit tests _test the public API_ (i.e. they never access private methods or variables). They test _if_ the code does what it promises to do, not _how_ it does it. For example, after running `my_object.set_x(4)`, you might check if `my_object.x()` returns 4, but you never check if `my_object._x == 4`: how the object stores its data is its own business.
+3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
+4. If you're testing something stochastic, seed the number generator as part of the test, i.e. with `np.random.seed(1)`.
+
 ### Running more tests
 
 If you want to check your tests on Python 2 and 3, use
 
 ```
-$ python run-tests.py --unit2 --unit3
+$ python2 run-tests.py --unit
+$ python3 run-tests.py --unit
 ```
 
 When you commit anything to Pints, these checks will also be run automatically (see [infrastructure](#infrastructure)).
@@ -168,7 +181,7 @@ $ python run-tests.py --books
 If notebooks fail because of changes to pints, it can be a bit of a hassle to debug. In these cases, you can create a temporary export of a notebook's Python content using
 
 ```
-$ python run-tests.py --debook examples/notebook-name.ipynb script.py
+$ python run-tests.py -debook examples/notebook-name.ipynb script.py
 ```
 
 
@@ -183,6 +196,114 @@ These docstrings can be fairly simple, but can also make use of [reStructuredTex
 In addition, we write a (very) small bit of documentation in separate reStructuredText files in the `docs` directory. Most of what these files do is simply import docstrings from the source code. But they also do things like add tables and indexes. If you've added a new class to a module, search the `docs` directory for that module's `.rst` file and add your class (in alphabetical order) to its index. If you've added a whole new module, copy-paste another module's file and add a link to your new file in the appropriate `index.rst` file.
 
 Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs` can be converted to HTML, PDF, and other formats. In particular, we use it to generate the documentation on http://pints.readthedocs.io/
+
+### Docstring template
+
+1. Each docstring should start with a [single sentence](https://www.python.org/dev/peps/pep-0257/#one-line-docstrings) explaining what it does.
+
+2. If desired, [this can be followed by a blank line and one or several paragraphs](https://www.python.org/dev/peps/pep-0257/#multi-line-docstrings) providing a more detailed explanation.
+   These paragraphs can include code snippets or use LaTeX expressions for mathematics (see below).
+
+3. If the class is a subclass of some other PINTS type, it may be good to
+   mention this here. For example:
+   
+        Extends :class:`SingleChainMCMC`.
+
+4. Simple arguments can be described textually. For example, a docstring could
+   be a single line "Sets the width parameter to `w`.". For complicated
+   functions or methods it may be good to include a parameters section:
+   
+        Parameters
+        ----------
+        x : int
+            A variable `x` that should be an integer
+        y
+            A variable without a type hint
+            
+   This syntax can also be used for constructor arguments.
+   Note that default values for any arguments are already displayed
+   automatically in the function/method/constructor signature.
+   
+5. Simple return types can be described textually, but complicated return types
+   (which are not encouraged) can use the syntax:
+   
+        Returns
+        -------
+        samples
+            A list of samples.
+        likelihoods
+            A list of their corresponding log-likelihoods
+            
+6. References to literature are highly encouraged, and go near the bottom of
+   the docstring:
+   
+        Adaptive covariance MCMC based on Haario et al. [1]_, [2]_.
+        
+        (rest of the docstring goes here)
+   
+        References
+        ----------
+        .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,
+               Clayton, Mirams (2015) "Uncertainty and variability in models of
+               the cardiac action potential: Can we build trustworthy models?".
+               Journal of Molecular and Cellular Cardiology.
+               https://10.1016/j.yjmcc.2015.11.018
+
+        .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis 
+               algorithm". Bernoulli.
+               https://doi.org/10.2307/3318737
+
+   There is no standard format (e.g. APA style), but authors, titles, years,
+   and journals are recommended, as well as a link based on a
+   [DOI](https://www.doi.org/).
+   
+7. Longer code snippets can go at the very end of a docstring
+
+        Examples
+        --------
+        ::
+
+            errors = [
+                pints.MeanSquaredError(problem1),
+                pints.MeanSquaredError(problem2),
+            ]
+            
+            # Equally weighted
+            e1 = pints.SumOfErrors(errors)
+
+            # Differrent weights:
+            weights = [
+                1.0,
+                2.7,
+            ]
+            e2 = pints.SumOfErrors(errors, weights)
+
+### Using code in documentation
+
+When referencing a variable in a docstring, please use the syntax ` ``x`` `.
+Longer code snippets can be started using this form:
+
+    """
+    An example follows here::
+    
+        print('Hello world')
+
+    """        
+
+### Using Maths in documentation
+
+LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings:
+
+    r"""
+        Defines a :math:`\gamma` (log) prior with given shape parameter ``a`` 
+        and rate parameter ``b``, with pdf
+
+        .. math::
+            f(x|a,b)=\frac{b^a x^{a-1} e^{-bx}}{\mathrm{\Gamma}(a)}
+    
+    """
+    
+Note that when using maths, it is best to define the docstring in a *raw string*, i.e. by writing ```r""" your stuff here """```. This will allow you to write e.g. `1 + \tau` instead of `1 + \\tau` and will stop flake8 from complaining about invalid escape sequences. See https://github.com/pints-team/pints/issues/735.
 
 ### Building the documentation
 
@@ -208,6 +329,10 @@ Where possible, notebooks are tested daily. A list of slow notebooks (which time
 
 ## Infrastructure
 
+### Version number
+
+A central version number is stored in `pints/version`.
+
 ### Setuptools
 
 Installation of Pints _and dependencies_ is handled via [setuptools](http://setuptools.readthedocs.io/)
@@ -216,9 +341,10 @@ Configuration files:
 
 ```
 setup.py
+MANIFEST.in
 ```
 
-Note that this file must be kept in sync with the version number in [pints/__init__.py](pints/__init__.py).
+The `MANIFEST.in` file is used to list non-Python files to be included in the installation.
 
 ### PIP
 
@@ -298,5 +424,5 @@ Configuration files:
 GitHub does some magic with particular filesnames. In particular:
 
 - The first page people see when they go to [our GitHub page](https://github.com/pints-team/pints) displays the contents of [README.md](README.md), which is written in the [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) format. Some guidelines can be found [here](https://help.github.com/articles/about-readmes/).
-- The license for using Pints is stored in [LICENSE](LICENSE), and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
+- The license for using Pints is stored in [LICENSE.md](LICENSE.md), and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
 - This file, [CONTRIBUTING.md](CONTRIBUTING.md) is recognised as the contribution guidelines and a link is [automatically](https://github.com/blog/1184-contributing-guidelines) displayed when new issues or pull requests are created.

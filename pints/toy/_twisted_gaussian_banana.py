@@ -1,10 +1,9 @@
 #
 # Twisted Gaussian (banana) distribution toy log pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,7 +15,7 @@ from . import ToyLogPDF
 
 class TwistedGaussianLogPDF(ToyLogPDF):
     """
-    Twisted multivariate Gaussian 'banana' with un-normalised density [1]:
+    Twisted multivariate Gaussian 'banana' with un-normalised density [1]_:
 
     .. math::
         p(x_1, x_2, x_3, ..., x_n) \\propto
@@ -28,21 +27,24 @@ class TwistedGaussianLogPDF(ToyLogPDF):
     .. math::
         \\phi(x_1,x_2,x_3,...,x_n) = (x_1, x_2 + b x_1^2 - V b, x_3, ..., x_n),
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimension``
+    Parameters
+    ----------
+    dimension : int
         Problem dimension (``n``), must be 2 or greater.
-    ``b``
+    b : float
         "Bananicity": ``b = 0.01`` induces mild non-linearity in target
         density, while non-linearity for ``b = 0.1`` is high.
         Must be greater than or equal to zero.
-    ``V``
+    V : float
         Offset (see equation).
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
-
-    [1] Adaptive proposal distribution for random walk Metropolis algorithm
-    Haario, Saksman, Tamminen (1999) Computational Statistics.
+    References
+    ----------
+    .. [1] Adaptive proposal distribution for random walk Metropolis algorithm
+           Haario, Saksman, Tamminen (1999) Computational Statistics.
+           https://doi.org/10.1007/s001800050022
     """
     def __init__(self, dimension=10, b=0.1, V=100):
         # Check dimension
@@ -128,22 +130,18 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         #       - k
         #       )
         #
-        # For this distribution, s1 is the identify matrix, and m1 is zero,
-        # so it simplifies to
-        #
-        # dkl = 0.5 * (trace(s0) + m0.dot(m0) - log(det(s0)) - k))
-        #
         m0 = np.mean(y, axis=0)
         s0 = np.cov(y.T)
         s1 = self._sigma
         m1 = np.zeros(self.n_parameters())
         s1_inv = np.linalg.inv(s1)
         return 0.5 * (
-            np.trace(np.matmul(s1_inv, s0)) +
-            np.matmul(np.matmul(m1 - m0, s1_inv), m1 - m0) -
-            np.log(np.linalg.det(s0)) +
-            np.log(np.linalg.det(s1)) -
-            self._n_parameters)
+            np.trace(np.matmul(s1_inv, s0))
+            + np.matmul(np.matmul((m1 - m0).T, s1_inv), m1 - m0)
+            + np.log(np.linalg.det(s1))
+            - np.log(np.linalg.det(s0))
+            - self._n_parameters
+        )
 
     def n_parameters(self):
         """ See :meth:`pints.LogPDF.n_parameters()`. """

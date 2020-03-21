@@ -1,10 +1,9 @@
 #
 # Simple egg-box toy LogPDF.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -19,15 +18,16 @@ class SimpleEggBoxLogPDF(ToyLogPDF):
     Two-dimensional multimodal Gaussian distribution, with four more-or-less
     independent modes, each centered in a different quadrant.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``sigma``
+    Parameters
+    ----------
+    sigma : float
         The variance of each mode.
-    ``r``
-        The first mode will be located at ``(d, d)``, ``(-d, d)``, (-d, -d)``,
-        and ``(d, -d)``, where ``d = r * sigma``.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    r : float
+        Determines the positions of the modes, which will be located at
+        ``(d, d)``, ``(-d, d)``, ``(-d, -d)``, and ``(d, -d)``, where
+        ``d = r * sigma``.
     """
     def __init__(self, sigma=2, r=4):
 

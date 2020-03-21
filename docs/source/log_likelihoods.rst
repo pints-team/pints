@@ -2,7 +2,7 @@
 Log-likelihoods
 ***************
 
-.. module:: pints
+.. currentmodule:: pints
 
 The classes below all implement the :class:`ProblemLogLikelihood` interface,
 and can calculate a log-likelihood based on some time-series :class:`Problem`.
@@ -27,9 +27,10 @@ Example::
 
 .. autoclass:: KnownNoiseLogLikelihood
 
+.. autoclass:: MultiplicativeGaussianLogLikelihood
+
 .. autoclass:: ScaledLogLikelihood
 
 .. autoclass:: StudentTLogLikelihood
 
 .. autoclass:: UnknownNoiseLogLikelihood
-
