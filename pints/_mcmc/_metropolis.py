@@ -15,8 +15,16 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
     Metropolis Random Walk MCMC, as described in [1]_.
 
-    Standard Metropolis using multivariate Gaussian distribution as proposal
-    step, also known as Metropolis Random Walk MCMC.
+    Metropolis using multivariate Gaussian distribution as proposal step, also
+    known as Metropolis Random Walk MCMC. In each iteration (t) of the
+    algorithm, the following occurs::
+
+        propose x' ~ N(x_t, Sigma)
+        generate u ~ U(0, 1)
+        calculate r = pi(x') / pi(x_t)
+        if r > u, x_t+1 = x'; otherwise, x_t+1 = x_t
+
+    here Sigma is the covariance matrix of the proposal.
 
     Extends :class:`SingleChainMCMC`.
 
@@ -173,4 +181,3 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         self._current = current
         self._current_log_pdf = current_log_pdf
         self._proposed = proposed
-
