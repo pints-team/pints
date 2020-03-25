@@ -144,10 +144,6 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc.set_use_dense_mass_matrix(True)
         self.assertEqual(mcmc.use_dense_mass_matrix(), True)
 
-        # test use_multinomial_sampling
-        mcmc.set_use_multinomial_sampling(False)
-        self.assertEqual(mcmc.use_multinomial_sampling(), False)
-
         # hyper param interface
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
         mcmc.set_hyper_parameters([2])

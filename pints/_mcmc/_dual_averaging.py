@@ -52,6 +52,7 @@ class DualAveragingAdaption:
         self._base_window = 25
         self._terminal_window = 50
         self._epsilon = init_epsilon
+        self._counter = 0
         self.set_inv_mass_matrix(np.copy(init_inv_mass_matrix))
         self._target_accept_prob = target_accept_prob
 
@@ -65,12 +66,11 @@ class DualAveragingAdaption:
             )
 
         self._warmup_steps = num_warmup_steps
-        self._counter = 0
         self._next_window = self._initial_window + self._base_window
         self._adapting = True
 
         self.init_sample_covariance(self._base_window)
-        self.init_adapt_epsilon()
+        self.init_adapt_epsilon(init_epsilon)
 
     def get_inv_mass_matrix(self):
         return self._inv_mass_matrix
@@ -118,7 +118,7 @@ class DualAveragingAdaption:
         if self._counter >= self._warmup_steps:
             self._epsilon = self.final_epsilon()
             self._adapting = False
-            return
+            return False
 
         self.adapt_epsilon(accept_prob)
         if self._counter > self._initial_window:
@@ -135,34 +135,39 @@ class DualAveragingAdaption:
                     self._warmup_steps - self._terminal_window
                 )
             self.init_sample_covariance(self._next_window - self._counter)
-            self._epsilon = self.final_epsilon()
-            self.init_adapt_epsilon()
+            return True
+            #self._epsilon = self.final_epsilon()
 
-    def init_adapt_epsilon(self):
+        return False
+
+    def init_adapt_epsilon(self, epsilon):
         """
         Start a new dual averaging adaption for epsilon
         """
         # default values taken from [1]_
+        self._epsilon = epsilon
         self._mu = np.log(10 * self._epsilon)
         self._log_epsilon_bar = np.log(1)
-        self._H_bar = 0
+        self._H_bar = 0.0
         self._gamma = 0.05
-        self._t0 = 10
+        self._t0 = 10.0
         self._kappa = 0.75
 
     def adapt_epsilon(self, accept_prob):
         """
         Perform a single step of the dual averaging scheme
         """
-        self._H_bar = (1 - 1.0 / (self._counter + self._t0)) * self._H_bar \
-            + 1.0 / (self._counter + self._t0) * \
-            (self._target_accept_prob - accept_prob)
+        if accept_prob > 1:
+            accept_prob = 1.0
+        eta = 1.0 / (self._counter + self._t0)
+        self._H_bar = (1 - eta) * self._H_bar \
+            + eta * (self._target_accept_prob - accept_prob)
         self._log_epsilon = self._mu  \
             - (np.sqrt(self._counter) / self._gamma) \
             * self._H_bar
-        self._log_epsilon_bar = self._counter**(-self._kappa) \
-            * self._log_epsilon + \
-            (1 - self._counter**(-self._kappa)) * self._log_epsilon_bar
+        x_eta = self._counter**(-self._kappa)
+        self._log_epsilon_bar = x_eta * self._log_epsilon + \
+            (1 - x_eta) * self._log_epsilon_bar
         self._epsilon = np.exp(self._log_epsilon)
 
     def final_epsilon(self):
@@ -192,8 +197,16 @@ class DualAveragingAdaption:
         Return the sample covariance of all the stored samples
         """
         assert self._num_samples == self._samples.shape[1]
+        params = self._samples.shape[0]
+        n = self._samples.shape[1]
 
         if self._inv_mass_matrix.ndim == 1:
-            return np.var(self._samples, axis=1)
+            sample_covariance = np.var(self._samples, axis=1)
+            I = np.ones(params)
         else:
-            return np.cov(self._samples)
+            sample_covariance = np.cov(self._samples)
+            I = np.eye(params)
+
+        # adapt the sample covariance in a similar way to Stan
+        return (n / (n + 5.0)) * sample_covariance \
+            + 1e-3 * (5.0 / (n + 5.0)) * I

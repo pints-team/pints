@@ -53,9 +53,7 @@ class NutsState:
         gradient of logpdf at the forwards end of the integration path
 
     n: int or float
-        number of accepted points in the path. If the sampler is using
-        multinomial_sampling then this is is a float which is the weight
-        given to each subtree
+        the weight given to each subtree
 
     s: int
         0 if sufficient leapfrog steps have been taken, 1 otherwise
@@ -81,7 +79,7 @@ class NutsState:
     """
 
     def __init__(self, theta, r, L, grad_L, n, s, alpha, n_alpha, divergent,
-                 use_multinomial_sampling, inv_mass_matrix):
+                 inv_mass_matrix):
         self.theta_minus = np.copy(theta)
         self.theta_plus = np.copy(theta)
         self.r_minus = np.copy(r)
@@ -93,41 +91,13 @@ class NutsState:
         self.grad_L_plus = np.copy(grad_L)
         self.n = n
         self.s = s
-        self.theta = theta
+        self.theta = np.copy(theta)
         self.L = L
-        self.grad_L = grad_L
+        self.grad_L = np.copy(grad_L)
         self.alpha = alpha
         self.n_alpha = n_alpha
         self.divergent = divergent
         self.inv_mass_matrix = inv_mass_matrix
-
-        # define the accumulate_weight and probability_of_accept functions
-        # based on if we are doing multinomial sampling or slice sampling
-        if use_multinomial_sampling:
-            self.accumulate_weight = self.accumulate_multinomial_sampling
-            self.probability_of_accept = \
-                self.probability_of_accept_multinomial_sampling
-        else:
-            self.accumulate_weight = self.accumulate_slice_sampling
-            self.probability_of_accept = \
-                self.probability_of_accept_slice_sampling
-
-    def accumulate_multinomial_sampling(self, left_subtree, right_subtree):
-        # for multinomial_sampling n will be a float, need to take care of
-        # overflow when suming this log probability.
-        return np.logaddexp(left_subtree, right_subtree)
-
-    def accumulate_slice_sampling(self, left_subtree, right_subtree):
-        return left_subtree + right_subtree
-
-    def probability_of_accept_multinomial_sampling(self, tree_n, subtree_n):
-        return np.exp(subtree_n - tree_n)
-
-    def probability_of_accept_slice_sampling(self, tree_n, subtree_n):
-        if subtree_n == 0:
-            return 0.0
-        else:
-            return subtree_n / tree_n
 
     def update(self, other_state, direction, root):
         """
@@ -148,29 +118,47 @@ class NutsState:
         if direction == -1:
             self.theta_minus = other_state.theta_minus
             self.r_minus = other_state.r_minus
+            r_minus_plus = other_state.r_plus
+            r_plus_minus = self.r_minus
+            r_sum_minus = other_state.r_sum
+            r_sum_plus = self.r_sum
             self.L_minus = other_state.L_minus
             self.grad_L_minus = other_state.grad_L_minus
         else:
             self.theta_plus = other_state.theta_plus
             self.r_plus = other_state.r_plus
+            r_minus_plus = self.r_plus
+            r_plus_minus = other_state.r_minus
+            r_sum_minus = self.r_sum
+            r_sum_plus = other_state.r_sum
             self.L_plus = other_state.L_plus
             self.grad_L_plus = other_state.grad_L_plus
+
+        # Notes: alpha and n_alpha are only accumulated within build_tree
+        # Update: perhaps not according to stan code...
+        if root:
+            self.alpha += other_state.alpha
+            self.n_alpha += other_state.n_alpha
+        else:
+            self.alpha += other_state.alpha
+            self.n_alpha += other_state.n_alpha
+
+        # propogate divergence up the tree
+        self.divergent |= other_state.divergent
+
+        self.s *= other_state.s
+
+        # check if chain is stopping
+        if self.s == 0:
+            return
 
         # for non-root merges accumulate tree weightings before probability
         # calculation
         if not root:
-            self.n = self.accumulate_weight(self.n, other_state.n)
+            self.n = np.logaddexp(self.n, other_state.n)
 
-        # if there is any accepted points in the other subtree then test for
-        # acceptance of that subtree's theta probability of sample being in new
-        # tree only greater than 0 if ``other_state.s == 1``.  for non-root we
-        # don't need to check this as the new tree is not built at all when
-        # ``other_state.s != 1``
-        if root:
-            p = int(other_state.s == 1) \
-                * min(1, self.probability_of_accept(self.n, other_state.n))
-        else:
-            p = self.probability_of_accept(self.n, other_state.n)
+        # accept a new point based on the weighting of the two trees
+        p = min(1, np.exp(other_state.n - self.n))
 
         if p > 0.0 and np.random.uniform() < p:
             self.theta = other_state.theta
@@ -180,47 +168,42 @@ class NutsState:
         # for root merges accumulate tree weightings after probability
         # calculation
         if root:
-            self.n = self.accumulate_weight(self.n, other_state.n)
+            self.n = np.logaddexp(self.n, other_state.n)
 
-        # Notes: alpha and n_alpha are only accumulated within build_tree
-        if root:
-            self.alpha = other_state.alpha
-            self.n_alpha = other_state.n_alpha
-        else:
-            self.alpha += other_state.alpha
-            self.n_alpha += other_state.n_alpha
-
-        # integrate r over chain
+        # integrate momentum over chain
         self.r_sum += other_state.r_sum
 
         # test if the path has done a U-Turn, if we are stopping due to a
         # U-turn or a divergent iteration propogate this up the tree with
         # self.s
-        self.s *= other_state.s
         if self.inv_mass_matrix.ndim == 1:
-            self.s *= int((self.r_sum - self.r_minus).dot(
-                self.inv_mass_matrix * self.r_minus
-            ) >= 0)
-            self.s *= int((self.r_sum - self.r_plus).dot(
-                self.inv_mass_matrix * self.r_plus
-            ) >= 0)
+            r_sharp_minus = self.inv_mass_matrix * self.r_minus
+            r_sharp_plus = self.inv_mass_matrix * self.r_plus
+            r_sharp_plus_minus = self.inv_mass_matrix * r_plus_minus
+            r_sharp_minus_plus = self.inv_mass_matrix * r_minus_plus
         else:
-            self.s *= int((self.r_sum - self.r_minus).dot(
-                self.inv_mass_matrix.dot(self.r_minus)
-            ) >= 0)
-            self.s *= int((self.r_sum - self.r_plus).dot(
-                self.inv_mass_matrix.dot(self.r_plus)
-            ) >= 0)
+            r_sharp_minus = self.inv_mass_matrix.dot(self.r_minus)
+            r_sharp_plus = self.inv_mass_matrix.dot(self.r_plus)
+            r_sharp_plus_minus = self.inv_mass_matrix.dot(r_plus_minus)
+            r_sharp_minus_plus = self.inv_mass_matrix.dot(r_minus_plus)
 
-        # propogate divergence up the tree
-        self.divergent |= other_state.divergent
+        # test merged trees
+        self.s *= int((self.r_sum).dot(r_sharp_minus) > 0)
+        self.s *= int((self.r_sum).dot(r_sharp_plus) > 0)
+
+        # test across subtrees
+        self.s *= int((r_sum_minus + r_plus_minus).dot(r_sharp_minus) > 0)
+        self.s *= int((r_sum_minus + r_plus_minus).dot(r_sharp_plus_minus) > 0)
+
+        self.s *= int((r_sum_plus + r_minus_plus).dot(r_sharp_minus_plus) > 0)
+        self.s *= int((r_sum_plus + r_minus_plus).dot(r_sharp_plus) > 0)
 
 
 def kinetic_energy(r, inv_mass_matrix):
     if inv_mass_matrix.ndim == 1:
-        return 0.5 * r.dot(inv_mass_matrix * r)
+        return 0.5 * np.inner(r, inv_mass_matrix * r)
     else:
-        return 0.5 * r.dot(inv_mass_matrix.dot(r))
+        return 0.5 * np.inner(r, inv_mass_matrix.dot(r))
 
 # All the functions below are written as coroutines to enable the recursive
 # nuts algorithm to be written using the ask-and-tell interface used by PINTS,
@@ -248,8 +231,7 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
 
 
 @asyncio.coroutine
-def build_tree(state, log_u, v, j, adaptor, hamiltonian0,
-               hamiltonian_threshold, use_multinomial_sampling):
+def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     """
     Implicitly build up a subtree of depth j for the NUTS sampler
     """
@@ -271,32 +253,31 @@ def build_tree(state, log_u, v, j, adaptor, hamiltonian0,
                                 adaptor.get_inv_mass_matrix())
         hamiltonian_dash = L_dash \
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
-        slice_comparison = log_u - hamiltonian_dash
-        if use_multinomial_sampling:
-            n_dash = -slice_comparison
-        else:
-            n_dash = int(slice_comparison <= 0)
+
         comparison = hamiltonian_dash - hamiltonian0
-        divergent = slice_comparison > hamiltonian_threshold
-        s_dash = int(not divergent)
+        n_dash = comparison
         alpha_dash = min(1.0, np.exp(comparison))
+
+        divergent = -comparison > hamiltonian_threshold
+        s_dash = int(not divergent)
+
         n_alpha_dash = 1
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
-            alpha_dash, n_alpha_dash, divergent, use_multinomial_sampling,
+            alpha_dash, n_alpha_dash, divergent,
             adaptor.get_inv_mass_matrix()
         )
 
     else:
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
-            build_tree(state, log_u, v, j - 1, adaptor, hamiltonian0,
-                       hamiltonian_threshold, use_multinomial_sampling)
+            build_tree(state, v, j - 1, adaptor, hamiltonian0,
+                       hamiltonian_threshold)
 
         if state_dash.s == 1:
             state_double_dash = yield from \
-                build_tree(state_dash, log_u, v, j - 1, adaptor, hamiltonian0,
-                           hamiltonian_threshold, use_multinomial_sampling)
+                build_tree(state_dash, v, j - 1, adaptor, hamiltonian0,
+                           hamiltonian_threshold)
             state_dash.update(state_double_dash, direction=v, root=False)
 
         return state_dash
@@ -354,15 +335,14 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
 @asyncio.coroutine
 def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
                  hamiltonian_threshold, max_tree_depth,
-                 use_multinomial_sampling, use_dense_mass_matrix):
+                 use_dense_mass_matrix):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1]_.
-    Implements both the slice sampling method given in [1]_, and the
-    multinomial sampling suggested in [2]_. Implements a mass matrix for the
-    dynamics, which is detailed in [2]_. Both the step size and the mass matrix
-    is adapted using a combination of the dual averaging detailed in [1]_, and
-    the windowed adaption for the mass matrix and step size implemented in the
-    STAN library (https://github.com/stan-dev/stan)
+    Implements the multinomial sampling suggested in [2]_. Implements a mass
+    matrix for the dynamics, which is detailed in [2]_. Both the step size and
+    the mass matrix is adapted using a combination of the dual averaging
+    detailed in [1]_, and the windowed adaption for the mass matrix and step
+    size implemented in the STAN library (https://github.com/stan-dev/stan)
 
     Implemented as a coroutine that continually generates new theta values to
     evaluate (L, L') at. Users must send (L, L') back to the coroutine to
@@ -383,9 +363,6 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         threshold to test divergent iterations
     max_tree_depth: int
         maximum tree depth
-    use_multinomial_sampling: bool
-        use multinomial sampling as suggested in [2]_ instead of slice sampling
-        method used in [1]_
     use_dense_mass_matrix: bool
         if False, use a diagonal mass matrix, if True use a fully dense mass
         matrix
@@ -413,8 +390,10 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
     # reduce to a diagonal matrix if not using a dense mass matrix
     if use_dense_mass_matrix:
         init_inv_mass_matrix = sigma0
+        init_inv_mass_matrix = 1e-3 * np.eye(len(x0))
     else:
         init_inv_mass_matrix = np.diag(sigma0)
+        init_inv_mass_matrix = 1e-3 * np.ones(len(x0))
 
     # find a good value to start epsilon at (this will later be refined so that
     # the acceptance probability matches delta)
@@ -437,23 +416,13 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         else:
             r0 = np.random.normal(np.zeros(len(theta)),
                                   np.sqrt(adaptor.get_mass_matrix()))
+
         hamiltonian0 = L - kinetic_energy(r0, adaptor.get_inv_mass_matrix())
 
-        if use_multinomial_sampling:
-            # use multinomial sampling
-            log_u = hamiltonian0
-            # n is a tree weight using a float
-            n = 0.0
-        else:
-            # use slice sampling
-            log_u = np.log(np.random.uniform(0, 1)) + hamiltonian0
-            # n is the number of accepted points in the chain
-            n = 1
-
         # create initial integration path state
-        state = NutsState(theta, r0, L, grad_L, n, 1, None, None, False,
-                          use_multinomial_sampling,
-                          adaptor.get_inv_mass_matrix())
+        state = NutsState(theta=theta, r=r0, L=L, grad_L=grad_L,
+                          n=0.0, s=1, alpha=1, n_alpha=1, divergent=False,
+                          inv_mass_matrix=adaptor.get_inv_mass_matrix())
         j = 0
 
         # build up an integration path with 2^j points, stopping when we either
@@ -469,24 +438,34 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
 
             # recursivly build up tree in that direction
             state_dash = yield from \
-                build_tree(state, log_u, vj, j, adaptor,
-                           hamiltonian0, hamiltonian_threshold,
-                           use_multinomial_sampling)
+                build_tree(state, vj, j, adaptor,
+                           hamiltonian0, hamiltonian_threshold)
+
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
-
-        # adapt epsilon and mass matrix using dual averaging
-        adaptor.step(state.theta, state.alpha / state.n_alpha)
 
         # update current position in chain
         theta = state.theta
         L = state.L
         grad_L = state.grad_L
 
+        # adapt epsilon and mass matrix using dual averaging
+        restart_stepsize_adapt = \
+            adaptor.step(state.theta, state.alpha / state.n_alpha)
+        if restart_stepsize_adapt:
+            epsilon = yield from \
+                find_reasonable_epsilon(theta, L, grad_L,
+                                        adaptor.get_inv_mass_matrix())
+            adaptor.init_adapt_epsilon(epsilon)
+
         # signal calling process that mcmc step is complete by passing a tuple
         # (rather than an ndarray)
-        yield (theta, L, state.alpha / state.n_alpha, 2**j, state.divergent)
+        yield (theta,
+               L,
+               state.alpha / state.n_alpha,
+               state.n_alpha,
+               state.divergent)
 
         # next step
         m += 1
@@ -498,12 +477,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
     Algorithm 6 in [1]_.
 
-    Implements both the slice sampling method given in [1]_, and the
-    multinomial sampling suggested in [2]_. Implements a mass matrix for the
-    dynamics, which is detailed in [2]_. Both the step size and the mass matrix
-    is adapted using a combination of the dual averaging detailed in [1]_, and
-    the windowed adaption for the mass matrix and step size implemented in the
-    STAN library (https://github.com/stan-dev/stan).
+    Implements the multinomial sampling suggested in [2]_. Implements a mass
+    matrix for the dynamics, which is detailed in [2]_. Both the step size and
+    the mass matrix is adapted using a combination of the dual averaging
+    detailed in [1]_, and the windowed adaption for the mass matrix and step
+    size implemented in the STAN library (https://github.com/stan-dev/stan).
 
     Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
     log-posterior (NLP) space to generate proposals. Naturally, the particle
@@ -533,8 +511,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._num_adaption_steps = 500
         self._delta = 0.8
         self._step_size = None
-        self._max_tree_depth = 10
-        self._use_multinomial_sampling = True
+        self._max_tree_depth = 5
         self._use_dense_mass_matrix = False
 
         # Default threshold for Hamiltonian divergences
@@ -582,7 +559,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                                       self._sigma0,
                                       self._hamiltonian_threshold,
                                       self._max_tree_depth,
-                                      self._use_multinomial_sampling,
                                       self._use_dense_mass_matrix)
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
@@ -712,20 +688,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         matrix
         """
         return self._use_dense_mass_matrix
-
-    def set_use_multinomial_sampling(self, use_multinomial_sampling):
-        """
-        If True uses the multinomial sampling method suggested in [2]_,
-        otherwise uses the slice sampling method in [1]_.
-        """
-        self._use_multinomial_sampling = bool(use_multinomial_sampling)
-
-    def use_multinomial_sampling(self):
-        """
-        Returns True if the sampler uses the multinomial sampling method
-        suggested in [2]_, or False if using the slice sampling method in [1]_.
-        """
-        return self._use_multinomial_sampling
 
     def divergent_iterations(self):
         """
