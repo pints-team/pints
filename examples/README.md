@@ -15,6 +15,12 @@ relevant code.
 - [Writing a custom LogPrior](./stats/custom-prior.ipynb)
 
 
+## Digging deeper
+
+- [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
+- [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
+
+
 ## Optimisation
 
 ### Particle-based methods
@@ -27,11 +33,9 @@ relevant code.
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
 
 ### Further optimisation
-- [Ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 - [Convenience methods fmin() and curve\_fit()](./optimisation/convenience.ipynb)
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
-- [Transformed parameter space](./optimisation/transformed-parameters.ipynb)
 
 
 ## Sampling
