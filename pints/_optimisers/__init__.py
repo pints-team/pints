@@ -1,10 +1,9 @@
 #
 # Sub-module containing several optimisation routines
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -20,21 +19,6 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     an optimisation may wish to use the :class:`OptimisationController`
     instead.
 
-    Optimisers are initialised using the arguments:
-
-    ``x0``
-        A starting point for searches in the parameter space. This value may be
-        used directly (for example as the initial position of a particle in
-        :class:`PSO`) or indirectly (for example as the center of a
-        distribution in :class:`XNES`).
-    ``sigma0=None``
-        An optional initial standard deviation around ``x0``. Can be specified
-        either as a scalar value (one standard deviation for all coordinates)
-        or as an array with one entry per dimension. Not all methods will use
-        this information.
-    ``boundaries=None``
-        An optional set of boundaries on the parameter space.
-
     Optimisation using "ask-and-tell" proceed by the user repeatedly "asking"
     the optimiser for points, and then "telling" it the function evaluations at
     those points. This allows a user to have fine-grained control over an
@@ -42,6 +26,26 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     criteria etc. Users who don't need this functionality can use optimisers
     via the :class:`OptimisationController` class instead.
 
+    All optimisers implement the :class:`pints.Loggable` and
+    :class:`pints.TunableMethod` interfaces.
+
+    Parameters
+    ----------
+    x0
+        A starting point for searches in the parameter space. This value may be
+        used directly (for example as the initial position of a particle in
+        :class:`PSO`) or indirectly (for example as the center of a
+        distribution in :class:`XNES`).
+    sigma0
+        An optional initial standard deviation around ``x0``. Can be specified
+        either as a scalar value (one standard deviation for all coordinates)
+        or as an array with one entry per dimension. Not all methods will use
+        this information.
+    boundaries
+        An optional set of boundaries on the parameter space.
+
+    Example
+    -------
     An optimisation with ask-and-tell, proceeds roughly as follows::
 
         optimiser = MyOptimiser()
@@ -70,9 +74,6 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
             # At this point, code to visualise or benchmark optimiser behaviour
             # could be added in, for example by plotting `xs` in the parameter
             # space.
-
-    All optimisers implement the :class:`pints.Loggable` and
-    :class:`pints.TunableMethod` interfaces.
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
@@ -185,7 +186,7 @@ class PopulationBasedOptimiser(Optimiser):
     Base class for optimisers that work by moving multiple points through the
     search space.
 
-    *Extends:* :class:`Optimiser`
+    Extends :class:`Optimiser`.
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
@@ -267,27 +268,26 @@ class OptimisationController(object):
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.
 
-    Arguments:
-
-    ``function``
+    Parameters
+    ----------
+    function
         An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
         evaluates points in the parameter space.
-    ``x0``
+    x0
         The starting point for searches in the parameter space. This value may
         be used directly (for example as the initial position of a particle in
         :class:`PSO`) or indirectly (for example as the center of a
         distribution in :class:`XNES`).
-    ``sigma0=None``
+    sigma0
         An optional initial standard deviation around ``x0``. Can be specified
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
         this information.
-    ``boundaries=None``
+    boundaries
         An optional set of boundaries on the parameter space.
-    ``method=None``
+    method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
-
     """
 
     def __init__(
@@ -601,14 +601,13 @@ class OptimisationController(object):
         """
         Changes the frequency with which messages are logged.
 
-        Arguments:
-
+        Parameters
+        ----------
         ``interval``
             A log message will be shown every ``iters`` iterations.
         ``warm_up``
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
-
         """
         iters = int(iters)
         if iters < 1:
@@ -748,28 +747,33 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.
 
-    Arguments:
-
-    ``function``
+    Parameters
+    ----------
+    function
         An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
         evaluates points in the parameter space.
-    ``x0``
+    x0
         The starting point for searches in the parameter space. This value may
         be used directly (for example as the initial position of a particle in
         :class:`PSO`) or indirectly (for example as the center of a
         distribution in :class:`XNES`).
-    ``sigma0=None``
+    sigma0
         An optional initial standard deviation around ``x0``. Can be specified
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
         this information.
-    ``boundaries=None``
+    boundaries
         An optional set of boundaries on the parameter space.
-    ``method=None``
+    method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
 
-    Returns a tuple ``(xbest, fbest)``.
+    Returns
+    -------
+    xbest : numpy array
+        The best parameter set obtained
+    fbest : float
+        The corresponding score.
     """
     return OptimisationController(
         function, x0, sigma0, boundaries, method).run()
@@ -819,7 +823,46 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     of ``p`` for which ``sum((y - f(x, *p))**2) / n`` is minimised (where ``n``
     is the number of entries in ``y``).
 
-    Example:
+    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
+    corresponding value ``fbest = f(xbest)``.
+
+    Parameters
+    ----------
+    f : callable
+        A function or callable class to be minimised.
+    x
+        The values of an independent variable, at which ``y`` was recorded.
+    y
+        Measured values ``y = f(x, p) + noise``.
+    p0
+        An initial guess for the optimal parameters ``p``.
+    boundaries
+        An optional :class:`pints.Boundaries` object or a tuple
+        ``(lower, upper)`` specifying lower and upper boundaries for the
+        search. If no boundaries are provided an unbounded search is run.
+    threshold
+        An optional absolute threshold stopping criterium.
+    max_iter
+        An optional maximum number of iterations stopping criterium.
+    max_unchanged
+        A stopping criterion based on the maximum number of successive
+        iterations without a signficant change in ``f`` (see
+        :meth:`pints.OptimisationController`).
+    verbose
+        Set to ``True`` to print progress messages to the screen.
+    parallel
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
+    method
+        The :class:`pints.Optimiser` to use. If no method is specified,
+        ``pints.CMAES`` is used.
+
+    Example
+    -------
+    ::
 
         import numpy as np
         import pints
@@ -833,42 +876,6 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         p0 = [0, 0, 0]
         popt = pints.curve_fit(f, x, y, p0)
 
-    Arguments:
-
-    ``f``
-        A function or callable class to be minimised.
-    ``x``
-        The values of an independent variable, at which ``y`` was recorded.
-    ``y``
-        Measured values ``y = f(x, p) + noise``.
-    ``p0``
-        An initial guess for the optimal parameters ``p``.
-    ``boundaries``
-        An optional :class:`pints.Boundaries` object or a tuple
-        ``(lower, upper)`` specifying lower and upper boundaries for the
-        search. If no boundaries are provided an unbounded search is run.
-    ``threshold``
-        An optional absolute threshold stopping criterium.
-    ``max_iter``
-        An optional maximum number of iterations stopping criterium.
-    ``max_unchanged=200``
-        A stopping criterion based on the maximum number of successive
-        iterations without a signficant change in ``f`` (see
-        :meth:`pints.OptimisationController`).
-    ``verbose=False``
-        Set to ``True`` to print progress messages to the screen.
-    ``parallel=False``
-        Allows parallelisation to be enabled.
-        If set to ``True``, the evaluations will happen in parallel using a
-        number of worker processes equal to the detected cpu core count. The
-        number of workers can be set explicitly by setting ``parallel`` to an
-        integer greater than 0.
-    ``method``
-        The :class:`pints.Optimiser` to use. If no method is specified,
-        ``pints.CMAES`` is used.
-
-    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
-    corresponding value ``fbest = f(xbest)``.
     """
     # Test function
     if not callable(f):
@@ -935,7 +942,45 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     Minimises a callable function ``f``, starting from position ``x0``, using a
     :class:`pints.Optimiser`.
 
-    Example:
+    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
+    corresponding value ``fbest = f(xbest)``.
+
+    Parameters
+    ----------
+    f
+        A function or callable class to be minimised.
+    x0
+        The initial point to search at. Must be a 1-dimensional sequence (e.g.
+        a list or a numpy array).
+    args
+        An optional tuple of extra arguments for ``f``.
+    boundaries
+        An optional :class:`pints.Boundaries` object or a tuple
+        ``(lower, upper)`` specifying lower and upper boundaries for the
+        search. If no boundaries are provided an unbounded search is run.
+    threshold
+        An optional absolute threshold stopping criterium.
+    max_iter
+        An optional maximum number of iterations stopping criterium.
+    max_unchanged
+        A stopping criterion based on the maximum number of successive
+        iterations without a signficant change in ``f`` (see
+        :meth:`pints.OptimisationController`).
+    verbose
+        Set to ``True`` to print progress messages to the screen.
+    parallel
+        Allows parallelisation to be enabled.
+        If set to ``True``, the evaluations will happen in parallel using a
+        number of worker processes equal to the detected cpu core count. The
+        number of workers can be set explicitly by setting ``parallel`` to an
+        integer greater than 0.
+    method
+        The :class:`pints.Optimiser` to use. If no method is specified,
+        ``pints.CMAES`` is used.
+
+    Example
+    -------
+    ::
 
         import pints
 
@@ -943,42 +988,6 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
             return (x[0] - 3) ** 2 + (x[1] + 5) ** 2
 
         xopt, fopt = pints.fmin(f, [1, 1])
-
-    Arguments:
-
-    ``f``
-        A function or callable class to be minimised.
-    ``x0``
-        The initial point to search at. Must be a 1-dimensional sequence (e.g.
-        a list or a numpy array).
-    ``args``
-        An optional tuple of extra arguments for ``f``.
-    ``boundaries``
-        An optional :class:`pints.Boundaries` object or a tuple
-        ``(lower, upper)`` specifying lower and upper boundaries for the
-        search. If no boundaries are provided an unbounded search is run.
-    ``threshold``
-        An optional absolute threshold stopping criterium.
-    ``max_iter``
-        An optional maximum number of iterations stopping criterium.
-    ``max_unchanged=200``
-        A stopping criterion based on the maximum number of successive
-        iterations without a signficant change in ``f`` (see
-        :meth:`pints.OptimisationController`).
-    ``verbose=False``
-        Set to ``True`` to print progress messages to the screen.
-    ``parallel=False``
-        Allows parallelisation to be enabled.
-        If set to ``True``, the evaluations will happen in parallel using a
-        number of worker processes equal to the detected cpu core count. The
-        number of workers can be set explicitly by setting ``parallel`` to an
-        integer greater than 0.
-    ``method``
-        The :class:`pints.Optimiser` to use. If no method is specified,
-        ``pints.CMAES`` is used.
-
-    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
-    corresponding value ``fbest = f(xbest)``.
     """
     # Test function
     if not callable(f):

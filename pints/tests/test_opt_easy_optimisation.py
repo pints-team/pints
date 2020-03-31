@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the easy optimisation methods fmin and curve_fit.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import unittest
@@ -17,9 +16,8 @@ class TestEasyOptimisation(unittest.TestCase):
     Tests the easy optimisation methods fmin and curve_fit.
     """
     def test_fmin(self):
-        """
-        Tests :meth:`pints.fmin()`.
-        """
+        # Tests :meth:`pints.fmin()`.
+
         # Note: This just wraps around `OptimisationController`, so testing
         # done here is for wrapper code, not main functionality!
 
@@ -49,9 +47,8 @@ class TestEasyOptimisation(unittest.TestCase):
         pints.fmin(f, [1, 1], parallel=True, method=pints.XNES)
 
     def test_curve_fit(self):
-        """
-        Tests :meth:`pints.curve_fit()`.
-        """
+        # Tests :meth:`pints.curve_fit()`.
+
         # Note: This just wraps around `OptimisationController`, so testing
         # done here is for wrapper code, not main functionality!
         np.random.seed(1)
@@ -64,9 +61,9 @@ class TestEasyOptimisation(unittest.TestCase):
         p0 = [0, 0, 0]
         np.random.seed(1)
         popt = pints.curve_fit(g, x, y, p0, method=pints.XNES)
-        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
-        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
-        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
+        self.assertAlmostEqual(popt[0], 9, places=1)
+        self.assertAlmostEqual(popt[1], 3, places=1)
+        self.assertAlmostEqual(popt[2], 1, places=1)
 
         # Function must be callable
         self.assertRaisesRegexp(
@@ -76,9 +73,9 @@ class TestEasyOptimisation(unittest.TestCase):
         pints.curve_fit(
             g, x, y, p0,
             boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
-        self.assertTrue(np.abs(popt[0] - 9) < 0.1)
-        self.assertTrue(np.abs(popt[1] - 3) < 0.1)
-        self.assertTrue(np.abs(popt[2] - 1) < 0.1)
+        self.assertAlmostEqual(popt[0], 9, places=1)
+        self.assertAlmostEqual(popt[1], 3, places=1)
+        self.assertAlmostEqual(popt[2], 1, places=1)
 
         # Test with parallelisation
         pints.curve_fit(g, x, y, p0, parallel=True, method=pints.XNES)
@@ -100,8 +97,4 @@ def g(x, a, b, c):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

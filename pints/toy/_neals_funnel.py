@@ -1,10 +1,9 @@
 #
 # Neal's funnel log pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,27 +15,30 @@ from . import ToyLogPDF
 
 
 class NealsFunnelLogPDF(ToyLogPDF):
-    """
+    r"""
     Toy distribution based on a d-dimensional distribution of the form,
 
     .. math::
 
-        f(x_1, x_2,...,x_d,\\nu) =
-            \\left[\\prod_{i=1}^d\\mathcal{N}(x_i|0,e^{\\nu/2})\\right] \\times
-            \\mathcal{N}(\\nu|0,3)
+        f(x_1, x_2,...,x_d,\nu) =
+            \left[\prod_{i=1}^d\mathcal{N}(x_i|0,e^{\nu/2})\right] \times
+            \mathcal{N}(\nu|0,3)
 
     where ``x`` is a d-dimensional real. This distribution was introduced in
-    [1].
+    [1]_.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimensions``
+    Parameters
+    ----------
+    dimensions : int
         The dimensionality of funnel (by default equal to 10) which must
         exceed 1.
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
-
-    [1] R. Neal, Annals of statistics , 705 (2003)
+    References
+    ----------
+    .. [1] "Slice sampling". R. Neal, Annals of statistics, 705 (2003)
+           https://doi.org/10.1214/aos/1056562461
     """
     def __init__(self, dimensions=10):
         if dimensions < 2:
@@ -74,9 +76,9 @@ class NealsFunnelLogPDF(ToyLogPDF):
         return L, dL
 
     def kl_divergence(self, samples):
-        """
+        r"""
         Calculates the KL divergence of samples of the :math:`nu` parameter
-        of Neal's funnel from the analytic :math:`\\mathcal{N}(0, 3)` result.
+        of Neal's funnel from the analytic :math:`\mathcal{N}(0, 3)` result.
         """
         # Check size of input
         if not len(samples.shape) == 2:
@@ -95,8 +97,8 @@ class NealsFunnelLogPDF(ToyLogPDF):
                       1)
 
     def marginal_log_pdf(self, x, nu):
-        """
-        Yields the marginal density :math:`\\text{log } p(x_i,\\nu)`.
+        r"""
+        Yields the marginal density :math:`\text{log } p(x_i,\nu)`.
         """
         return (
             scipy.stats.norm.logpdf(x, 0, np.exp(nu / 2)) +

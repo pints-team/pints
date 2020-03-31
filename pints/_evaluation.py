@@ -2,10 +2,9 @@
 # Utility classes to perform multiple model evaluations sequentially or in
 # parallell.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
@@ -29,13 +28,13 @@ def evaluate(f, x, parallel=False, args=None):
     Evaluates the function ``f`` on every value present in ``x`` and returns
     a sequence of evaluations ``f(x[i])``.
 
-    Arguments:
-
-    ``f``
+    Parameters
+    ----------
+    f : callable
         The function to evaluate, called as ``f(x[i], *args)``.
-    ``x``
+    x
         A list of values to evaluate ``f`` with
-    ``parallel=False``
+    parallel : boolean
         Run in parallel or not.
         If set to ``True``, the evaluations will happen in parallel using a
         number of worker processes equal to the detected cpu core count. The
@@ -43,10 +42,10 @@ def evaluate(f, x, parallel=False, args=None):
         integer greater than 0.
         Parallelisation can be disabled by setting ``parallel`` to ``0`` or
         ``False``.
-    ``args``
+    args : sequence
         Optional extra arguments to pass into ``f``.
 
-    Returns a list of evaluations ``y = f(x, *args)``.
+
     """
     if parallel is True:
         evaluator = ParallelEvaluator(f, args=args)
@@ -59,23 +58,20 @@ def evaluate(f, x, parallel=False, args=None):
 
 class Evaluator(object):
     """
-    *Abstract class*
-
-    Interface for classes that take a function (or callable object)
+    Abstract base class for classes that take a function (or callable object)
     ``f(x)`` and evaluate it for list of input values ``x``. This interface is
     shared by a parallel and a sequential implementation, allowing easy
     switching between parallel or sequential implementations of the same
     algorithm.
 
-    Arguments:
-
-    ``function``
+    Parameters
+    ----------
+    function : callable
         A function or other callable object ``f`` that takes a value ``x`` and
         returns an evaluation ``f(x)``.
-    ``args``
+    args : sequence
         An optional sequence of extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
-
     """
     def __init__(self, function, args=None):
 
@@ -141,25 +137,6 @@ multiprocessing.html#all-platforms>`_ for details).
          <https://docs.python.org/2/library/multiprocessing.html#windows>`_
          for details).
 
-    Arguments:
-
-    ``function``
-        The function to evaluate
-    ``n_workers``
-        The number of worker processes to use. If left at the default value
-        ``n_workers=None`` the number of workers will equal the number of CPU
-        cores in the machine this is run on. In many cases this will provide
-        good performance.
-    ``max_tasks_per_worker``
-        Python garbage collection does not seem to be optimized for
-        multi-process function evaluation. In many cases, some time can be
-        saved by refreshing the worker processes after every
-        ``max_tasks_per_worker`` evaluations. This number can be tweaked for
-        best performance on a given task / system.
-    ``args``
-        An optional sequence of extra arguments to ``f``. If ``args`` is
-        specified, ``f`` will be called as ``f(x, *args)``.
-
     The evaluator will keep it's subprocesses alive and running until it is
     tidied up by garbage collection.
 
@@ -167,7 +144,26 @@ multiprocessing.html#all-platforms>`_ for details).
     safe itself: It should not be used by more than a single thread/process at
     a time.
 
-    *Extends:* :class:`Evaluator`
+    Extends :class:`Evaluator`.
+
+    Parameters
+    ----------
+    function
+        The function to evaluate
+    n_workers
+        The number of worker processes to use. If left at the default value
+        ``n_workers=None`` the number of workers will equal the number of CPU
+        cores in the machine this is run on. In many cases this will provide
+        good performance.
+    max_tasks_per_worker
+        Python garbage collection does not seem to be optimized for
+        multi-process function evaluation. In many cases, some time can be
+        saved by refreshing the worker processes after every
+        ``max_tasks_per_worker`` evaluations. This number can be tweaked for
+        best performance on a given task / system.
+    args
+        An optional sequence of extra arguments to ``f``. If ``args`` is
+        specified, ``f`` will be called as ``f(x, *args)``.
     """
     def __init__(
             self, function,
@@ -377,22 +373,21 @@ multiprocessing.html#all-platforms>`_ for details).
 
 class SequentialEvaluator(Evaluator):
     """
-    Evaluates a function (or callable object) for a list of input values.
+    Evaluates a function (or callable object) for a list of input values, and
+    returns a list containing the calculated function evaluations.
 
     Runs sequentially, but shares an interface with the
     :class:`ParallelEvaluator`, allowing parallelism to be switched on/off.
 
-    Arguments:
+    Extends :class:`Evaluator`.
 
-    ``function``
+    Parameters
+    ----------
+    function : callable
         The function to evaluate.
-    ``args``
+    args : sequence
         An optional tuple containing extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
-
-    Returns a list containing the calculated function evaluations.
-
-    *Extends:* :class:`Evaluator`
     """
     def __init__(self, function, args=None):
         super(SequentialEvaluator, self).__init__(function, args)
@@ -417,31 +412,31 @@ class _Worker(multiprocessing.Process):
 
     Keeps running until it's given the string "stop" as a task.
 
-    Arguments:
+    Extends ``multiprocessing.Process``.
 
-    ``function``
+    Parameters
+    ----------
+    function : callable
         The function to optimize.
-    ``args``
+    args : sequence
         A (possibly empty) tuple containing extra input arguments to the
         objective function.
-    ``tasks``
+    tasks
         The queue to read tasks from. Tasks are stored as tuples
         ``(i, p)`` where ``i`` is a task id and ``p`` is the
         position to evaluate.
-    ``results``
+    results
         The queue to store results in. Results are stored as
         tuples ``(i, p, r)`` where ``i`` is the task id, ``p`` is
         the position evaluated (which can be updated by the
         refinement method!) and ``r`` is the result at ``p``.
-    ``max_tasks``
+    max_tasks : int
         The maximum number of tasks to perform before dying.
-    ``errors``
+    errors
         A queue to store exceptions on
-    ``error``
+    error
         This flag will be set by the worker whenever it encounters an
         error.
-
-    *Extends:* ``multiprocessing.Process``
     """
     def __init__(
             self, function, args, tasks, results, max_tasks, errors, error):

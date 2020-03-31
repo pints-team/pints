@@ -1,10 +1,9 @@
 #
 # High-dimensional Gaussian log-pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -19,16 +18,16 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     High-dimensional multivariate Gaussian log pdf, with off-diagonal
     correlations.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimension``
+    Parameters
+    ----------
+    dimension : int
         Dimensions of Gaussian distribution.
-    ``rho``
+    rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
         covariance matrix is positive semi-definite.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)

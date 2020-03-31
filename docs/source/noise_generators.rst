@@ -19,3 +19,4 @@ This can then be added to simulation output to create "realistic" experimental
 
 .. autofunction:: independent
 
+.. autofunction:: multiplicative_gaussian

@@ -1,10 +1,9 @@
 #
 # Defines different prior distributions
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -34,7 +33,7 @@ class BetaLogPrior(pints.LogPrior):
 
         p = pints.BetaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -58,6 +57,10 @@ class BetaLogPrior(pints.LogPrior):
                                        x[0]) + scipy.special.xlog1py(
                 self._b - 1.0, -x[0]) - self._log_beta
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.beta.cdf(x, self._a, self._b)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
@@ -75,6 +78,10 @@ class BetaLogPrior(pints.LogPrior):
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - np.divide(
                 self._b - 1., 1. - _x)])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.beta.ppf(p, self._a, self._b)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -106,14 +113,14 @@ class CauchyLogPrior(pints.LogPrior):
 
         p = pints.CauchyLogPrior(0, 5)
 
-    Arguments:
+    Extends :class:`LogPrior`.
 
-    ``location``
+    Parameters
+    ----------
+    location
         The center of the distribution.
-    ``scale``
+    scale
         The scale of the distribution.
-
-    *Extends:* :class:`LogPrior`
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -130,6 +137,21 @@ class CauchyLogPrior(pints.LogPrior):
     def __call__(self, x):
         _x_sq = (x[0] - self._location) * (x[0] - self._location)
         return -np.log(self._pi_sig + self._pi_on_sig * _x_sq)
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.cauchy.cdf(x, self._location, self._scale)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        loc_minus_x = self._location - x[0]
+        return value, np.asarray([2 * loc_minus_x / (self._scale**2
+                                  + loc_minus_x**2)])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.cauchy.ppf(p, self._location, self._scale)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -158,7 +180,7 @@ class ComposedLogPrior(pints.LogPrior):
     where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
     itself.
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, *priors):
         # Check if sub-priors given
@@ -184,6 +206,18 @@ class ComposedLogPrior(pints.LogPrior):
             output += prior(x[lo:hi])
         return output
 
+    def cdf(self, x):
+        """
+        See :meth:`LogPrior.cdf()`.
+
+        *This method only works if the underlying :class:`LogPrior` classes all
+        implement the optional method :class:`LogPDF.cdf().`.*
+        """
+        cdfs = []
+        for i, prior in enumerate(self._priors):
+            cdfs.append(prior.cdf(x[i]))
+        return cdfs
+
     def evaluateS1(self, x):
         """
         See :meth:`LogPDF.evaluateS1()`.
@@ -201,6 +235,18 @@ class ComposedLogPrior(pints.LogPrior):
             output += p
             doutput[lo:hi] = np.asarray(dp)
         return output, doutput
+
+    def icdf(self, x):
+        """
+        See :meth:`LogPrior.icdf()`.
+
+        *This method only works if the underlying :class:`LogPrior` classes all
+        implement the optional method :class:`LogPDF.icdf().`.*
+        """
+        icdfs = []
+        for i, prior in enumerate(self._priors):
+            icdfs.append(prior.icdf(x[i]))
+        return icdfs
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
@@ -239,7 +285,7 @@ class ExponentialLogPrior(pints.LogPrior):
 
         p = pints.ExponentialLogPrior(0.5)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, rate):
         # Parse input arguments
@@ -257,6 +303,14 @@ class ExponentialLogPrior(pints.LogPrior):
             return -np.inf
         else:
             return self._log_scale - self._rate * x[0]
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.expon.cdf(x, loc=0, scale=1.0 / self._rate)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.expon.ppf(p, loc=0, scale=1.0 / self._rate)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -299,7 +353,7 @@ class GammaLogPrior(pints.LogPrior):
 
         p = pints.GammaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -324,6 +378,10 @@ class GammaLogPrior(pints.LogPrior):
             return self._constant + scipy.special.xlogy(self._a - 1.,
                                                         x[0]) - self._b * x[0]
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.gamma.cdf(x, a=self._a, loc=0, scale=1.0 / self._b)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         value = self(x)
@@ -339,6 +397,10 @@ class GammaLogPrior(pints.LogPrior):
         else:
             # Use np.divide here to better handle possible v small denominators
             return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.gamma.ppf(p, a=self._a, loc=0, scale=1.0 / self._b)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -373,7 +435,7 @@ class GaussianLogPrior(pints.LogPrior):
 
         p = pints.GaussianLogPrior(0, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, mean, sd):
         # Parse input arguments
@@ -388,9 +450,17 @@ class GaussianLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._offset - self._factor * (x[0] - self._mean)**2
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.norm.cdf(x, self._mean, self._sd)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         return self(x), self._factor2 * (self._mean - np.asarray(x))
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.norm.ppf(p, self._mean, self._sd)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -424,14 +494,14 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         p = pints.HalfCauchyLogPrior(0, 5)
 
-    Arguments:
+    Extends :class:`LogPrior`.
 
-    ``location``
+    Parameters
+    ----------
+    location
         The center of the distribution.
-    ``scale``
+    scale
         The scale of the distribution.
-
-    *Extends:* :class:`LogPrior`
     """
     def __init__(self, location, scale):
         # Test inputs
@@ -445,12 +515,35 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # Cache constants
         self._norm_factor = -np.log(np.arctan(location / scale) / np.pi + 0.5)
+        self._arctan = np.arctan(self._location / self._scale) / np.pi
 
     def __call__(self, x):
         if x[0] > 0:
             return self._norm_factor + self._cauchy(x)
         else:
             return -np.inf
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return (
+            (self._arctan +
+             np.arctan((-self._location + x) / self._scale) / np.pi) /
+            (0.5 + self._arctan))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        scale = self._scale
+        loc = self._location
+        loc_minus_x = loc - x[0]
+        dp = 2 * loc_minus_x / (scale**2 + loc_minus_x**2)
+        return value, np.asarray([dp])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return (self._location +
+                self._scale * np.tan(np.pi * (-self._arctan +
+                                              p * (0.5 + self._arctan))))
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -462,8 +555,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
-        return scipy.stats.halfcauchy.rvs(loc=self._location,
-                                          scale=self._scale, size=(n, 1))
+
+        # use inverse transform sampling
+        us = np.random.uniform(0, 1, n)
+        return np.array([self.icdf(u) for u in us])
 
 
 class InverseGammaLogPrior(pints.LogPrior):
@@ -487,7 +582,7 @@ class InverseGammaLogPrior(pints.LogPrior):
 
         p = pints.InverseGammaLogPrior(5, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, a, b):
         # Parse input arguments
@@ -511,6 +606,14 @@ class InverseGammaLogPrior(pints.LogPrior):
             return -np.inf
         else:
             return self._k - self._ap1 * np.log(_x) - np.divide(self._b, _x)
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.invgamma.cdf(x, a=self._a, loc=0, scale=self._b)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.invgamma.ppf(p, a=self._a, loc=0, scale=self._b)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -563,7 +666,7 @@ class LogNormalLogPrior(pints.LogPrior):
 
         p = pints.LogNormalLogPrior(0, 1)
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
 
     def __init__(self, log_mean, scale):
@@ -588,6 +691,11 @@ class LogNormalLogPrior(pints.LogPrior):
             _shift = _lx - self._log_mean
             return self._offset - _lx - self._1on2sigsq * _shift * _shift
 
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.lognorm.cdf(x, scale=np.exp(self._log_mean),
+                                       s=self._scale)
+
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         if x[0] < 0.0:
@@ -597,6 +705,11 @@ class LogNormalLogPrior(pints.LogPrior):
             _lx = np.log(_x)
             return self(x), np.asarray(
                 [self._m1onsigsq * np.divide(self._sigsqmmu + _lx, _x)])
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.lognorm.ppf(p, scale=np.exp(self._log_mean),
+                                       s=self._scale)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -634,7 +747,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         p = pints.MultivariateGaussianLogPrior(
                 np.array([0, 0]), np.array([[1, 0],[0, 1]]))
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, mean, cov):
         # Check input
@@ -649,11 +762,56 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         self._mean = mean
         self._cov = cov
         self._n_parameters = mean.shape[0]
+        self._cov_inverse = np.linalg.inv(self._cov)
+
+        # Factors needed for pseudo-cdf calculation
+        self._sigma12_sigma22_inv_l = []
+        self._sigma_bar_l = []
+        self._mu1 = []
+        self._mu2 = []
+        # note the below does not do anything for index 1 since the first
+        # distribution is just a simple marginal
+        for j in range(1, self._n_parameters):
+            sigma = self._cov[0:(j + 1), 0:(j + 1)]
+            dims = sigma.shape
+            sigma11 = sigma[dims[0] - 1, dims[1] - 1]
+            sigma22 = sigma[0:(dims[0] - 1), 0:(dims[0] - 1)]
+            sigma12 = sigma[dims[0] - 1, 0:(dims[0] - 1)]
+            sigma21 = sigma[0:(dims[0] - 1), dims[0] - 1]
+            mean = self._mean[0:dims[0]]
+            mu2 = mean[0:(dims[0] - 1)]
+            mu1 = mean[dims[0] - 1]
+            sigma12_sigma22_inv = np.matmul(sigma12,
+                                            np.linalg.inv(sigma22))
+            sigma_bar = np.sqrt(sigma11 - np.matmul(sigma12_sigma22_inv,
+                                                    sigma21))
+            self._sigma12_sigma22_inv_l.append(sigma12_sigma22_inv)
+            self._sigma_bar_l.append(sigma_bar)
+            self._mu1.append(mu1)
+            self._mu2.append(mu2)
 
     def __call__(self, x):
-        return np.log(
-            scipy.stats.multivariate_normal.pdf(
-                x, mean=self._mean, cov=self._cov))
+        return scipy.stats.multivariate_normal.logpdf(
+            x, mean=self._mean, cov=self._cov)
+
+    def convert_from_unit_cube(self, u):
+        """
+        Converts a sample ``u`` uniformly drawn from the unit cube into one
+        drawn from the prior space, using
+        :meth:`MultivariateGaussianLogPrior.pseudo_icdf()`.
+        """
+        return self.pseudo_icdf(u)
+
+    def convert_to_unit_cube(self, x):
+        """
+        Converts a sample from the prior ``x`` to be drawn uniformly from the
+        unit cube using :meth:`MultivariateGaussianLogPrior.pseudo_cdf()`.
+        """
+        return self.pseudo_cdf(x)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -662,6 +820,119 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
         return self._n_parameters
+
+    def pseudo_cdf(self, xs):
+        r"""
+        Calculates a pseudo-cdf for a multivariate Gaussian as described in
+        Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
+        Gaussian is factorised:
+
+        .. math::
+            \pi(\theta_1,\theta_2,...,\theta_d) = \pi_1(\theta_1)
+                \pi_2(\theta_2|\theta_1)...
+                \pi_d(\theta_d|\theta_1, \theta_2,...,\theta_{d-1})
+
+        The cdfs we report are then the values for each individual conditional.
+        For example, for the second component, we calculate:
+
+        .. math::
+            u_2 = \int_{-\infty}^{\theta_2} \pi_2(\theta_2|\theta_1)d\theta_2
+
+        So that we return a vector of cdfs (u_1,u_2,...,u_d).
+        Note that, this function is mainly to facilitate Multinest sampling
+        since the distribution (u_1,u_2,...,u_d) is uniform within the unit
+        cube.
+        """
+        if not isinstance(xs, np.ndarray):
+            if not isinstance(xs, list):
+                xs = [xs]
+            if any(isinstance(a, list) for a in xs):
+                xs = np.array(xs)
+            else:
+                xs = np.array([xs])
+            n_samples = xs.shape[0]
+            n_params = xs.shape[1]
+        else:
+            if len(xs.shape) == 1:
+                n_params = xs.shape[0]
+                n_samples = 1
+                xs = np.reshape(xs, (n_samples, n_params))
+        if n_params != self._n_parameters:
+            raise ValueError(
+                "Dimensions of samples must match prior dimensions.")
+        cdfs = np.zeros((n_samples, n_params))
+        for j in range(n_samples):
+            for i in range(self._n_parameters):
+                if i == 0:
+                    mu = self._mean[0]
+                    sigma = np.sqrt(self._cov[0, 0])
+                else:
+                    sigma = self._sigma_bar_l[i - 1]
+                    mu = self._mu1[i - 1] + np.matmul(
+                        self._sigma12_sigma22_inv_l[i - 1],
+                        (xs[j, 0:i] - self._mu2[i - 1]))
+                cdfs[j, i] = scipy.stats.norm.cdf(xs[j, i], mu, sigma)
+        if n_samples == 1:
+            return cdfs[0]
+        else:
+            return cdfs
+
+    def pseudo_icdf(self, ps):
+        r"""
+        Calculates a pseudo-icdf for a multivariate Gaussian as described in
+        Feroz et al. (2009) ("Multnest..."). In this approach, a multivariate
+        Gaussian is factorised:
+
+        .. math::
+            \pi(\theta_1,\theta_2,...,\theta_d) = \pi_1(\theta_1)
+                \pi_2(\theta_2|\theta_1)...
+                \pi_d(\theta_d|\theta_1, \theta_2,...,\theta_{d-1})
+
+        The icdfs we report are then the values for each individual
+        conditional. For example, for the second component, we calculate the
+        theta_2 value that satisfies:
+
+        .. math::
+            u_2 = \int_{-\infty}^{\theta_2} \pi_2(\theta_2|\theta_1)d\theta_2
+
+        So that we return a vector of icdfs (theta_1,theta_2,...,theta_d)
+        Note that, this function is mainly to facilitate Multinest sampling
+        since the distribution (u_1,u_2,...,u_d) is uniform within the unit
+        cube.
+        """
+        if not isinstance(ps, np.ndarray):
+            if not isinstance(ps, list):
+                ps = [ps]
+            if any(isinstance(a, list) for a in ps):
+                ps = np.array(ps)
+            else:
+                ps = np.array([ps])
+            n_samples = ps.shape[0]
+            n_params = ps.shape[1]
+        else:
+            if len(ps.shape) == 1:
+                n_params = ps.shape[0]
+                n_samples = 1
+                ps = np.reshape(ps, (n_samples, n_params))
+        if n_params != self._n_parameters:
+            raise ValueError(
+                "Dimensions of samples must match prior dimensions.")
+        icdfs = np.zeros((n_samples, n_params))
+        for j in range(n_samples):
+            for i in range(self._n_parameters):
+                if i == 0:
+                    mu = self._mean[0]
+                    sigma = np.sqrt(self._cov[0, 0])
+                else:
+                    sigma = self._sigma_bar_l[i - 1]
+                    mu = self._mu1[i - 1] + np.matmul(
+                        self._sigma12_sigma22_inv_l[i - 1],
+                        (np.array(icdfs[j, 0:i]) - self._mu2[i - 1]))
+                icdfs[j, i] = scipy.stats.norm.ppf(ps[j, i], mu, sigma)
+        if n_samples == 1:
+            return icdfs[0]
+        else:
+            return icdfs
 
     def sample(self, n=1):
         """ See :meth:`LogPrior.call()`. """
@@ -707,16 +978,16 @@ class StudentTLogPrior(pints.LogPrior):
 
         p = pints.StudentTLogPrior(0, 3, 1)
 
-    Arguments:
+    Extends :class:`LogPrior`.
 
-    ``location``
+    Parameters
+    ----------
+    location
         The center of the distribution.
-    ``df``
+    df : int
         The number of degrees of freedom of the distribution.
-    ``scale``
+    scale
         The scale of the distribution.
-
-    *Extends:* :class:`LogPrior`
     """
     def __init__(self, location, df, scale):
         # Test inputs
@@ -745,6 +1016,14 @@ class StudentTLogPrior(pints.LogPrior):
     def __call__(self, x):
         return self._samp_const + self._first * (self._log_df - np.log(
             self._df + self._1_sig_sq * (x[0] - self._location) ** 2))
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.t.cdf(x, self._df, self._location, self._scale)
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.t.ppf(p, self._df, self._location, self._scale)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -795,7 +1074,7 @@ class UniformLogPrior(pints.LogPrior):
 
         p = pints.UniformLogPrior(RectangularBoundaries([0, 1, 2], [4, 5, 6]))
 
-    *Extends:* :class:`LogPrior`
+    Extends :class:`LogPrior`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
@@ -822,6 +1101,77 @@ class UniformLogPrior(pints.LogPrior):
 
     def __call__(self, x):
         return self._value if self._boundaries.check(x) else -np.inf
+
+    def cdf(self, xs):
+        """ See :meth:`LogPrior.cdf()`. """
+        if not isinstance(xs, np.ndarray):
+            if not isinstance(xs, list):
+                xs = [xs]
+            if any(isinstance(a, list) for a in xs):
+                xs = np.array(xs)
+            else:
+                xs = np.array([xs])
+            n_samples = xs.shape[0]
+            n_params = xs.shape[1]
+        else:
+            if len(xs.shape) == 1:
+                n_params = xs.shape[0]
+                n_samples = 1
+                xs = np.reshape(xs, (n_samples, n_params))
+        if n_params != self._n_parameters:
+            raise ValueError(
+                "Dimensions of samples must match prior dimensions.")
+        cdfs = np.zeros((n_samples, n_params))
+        for j in range(n_samples):
+            for i in range(n_params):
+                if xs[j, i] > self._boundaries.lower()[i] and (
+                        xs[j, i] < self._boundaries.upper()[i]):
+                    cdfs[j, i] = ((-self._boundaries.lower()[i] + xs[j, i]) /
+                                  (-self._boundaries.lower()[i] +
+                                  self._boundaries.upper()[i]))
+                elif xs[j, i] >= self._boundaries.upper()[i]:
+                    cdfs[j, i] = 1.0
+                else:
+                    cdfs[j, i] = 0.0
+        if n_samples == 1:
+            return cdfs[0]
+        else:
+            return cdfs
+
+    def icdf(self, ps):
+        """ See :meth:`LogPrior.icdf()`. """
+        if not isinstance(ps, np.ndarray):
+            if not isinstance(ps, list):
+                ps = [ps]
+            if any(isinstance(a, list) for a in ps):
+                ps = np.array(ps)
+            else:
+                ps = np.array([ps])
+            n_samples = ps.shape[0]
+            n_params = ps.shape[1]
+        else:
+            if len(ps.shape) == 1:
+                n_params = ps.shape[0]
+                n_samples = 1
+                ps = np.reshape(ps, (n_samples, n_params))
+        if n_params != self._n_parameters:
+            raise ValueError(
+                "Dimensions of samples must match prior dimensions.")
+        icdfs = np.zeros((n_samples, n_params))
+        for j in range(n_samples):
+            for i in range(n_params):
+                if ps[j, i] > 0 and ps[j, i] < 1:
+                    icdfs[j, i] = (
+                        self._boundaries.lower()[i] * (1 - ps[j, i]) +
+                        self._boundaries.upper()[i] * ps[j, i])
+                elif ps[j, i] <= 0:
+                    icdfs[j, i] = self._boundaries.lower()[i]
+                else:
+                    icdfs[j, i] = self._boundaries.upper()[i]
+        if n_samples == 1:
+            return icdfs[0]
+        else:
+            return icdfs
 
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """

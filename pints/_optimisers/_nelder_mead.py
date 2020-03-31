@@ -1,10 +1,9 @@
 #
 # Nelder-Mead simplex method.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -81,8 +80,8 @@ class NelderMead(pints.Optimiser):
     """
     Nelder-Mead downhill simplex method.
 
-    Implementation of the classical algorithm by [1], following the
-    presentation in Algorithm 8.1 of [2].
+    Implementation of the classical algorithm by [1]_, following the
+    presentation in Algorithm 8.1 of [2]_.
 
     This is a deterministic local optimiser. In most update steps it performs
     either 1 evaluation, or 2 sequential evaluations, so that it will not
@@ -113,19 +112,21 @@ class NelderMead(pints.Optimiser):
 
     where ys is a parameter (typically ys = 0.5).
 
-    The initialisation of the initial simplex was copied from [3].
+    The initialisation of the initial simplex was copied from [3]_.
 
-    [1] A simplex method for function minimization
-    Nelder, Mead 1965, Computer Journal
-    https://doi.org/10.1093/comjnl/7.4.308
+    References
+    ----------
+    .. [1] A simplex method for function minimization
+           Nelder, Mead 1965, Computer Journal
+           https://doi.org/10.1093/comjnl/7.4.308
 
-    [2] Introduction to derivative-free optimization
-    Andrew R. Conn, Katya Scheinberg, Luis N. Vicente
-    2009, First edition. ISBN 978-0-098716-68-9
-    https://doi.org/10.1137/1.9780898718768
+    .. [2] Introduction to derivative-free optimization
+           Andrew R. Conn, Katya Scheinberg, Luis N. Vicente
+           2009, First edition. ISBN 978-0-098716-68-9
+           https://doi.org/10.1137/1.9780898718768
 
-    [3] SciPy
-    https://github.com/scipy/scipy/blob/master/scipy/optimize/optimize.py#L455
+    .. [3] SciPy on GitHub
+           https://github.com/scipy/scipy/
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):

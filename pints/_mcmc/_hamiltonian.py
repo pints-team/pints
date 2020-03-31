@@ -1,10 +1,9 @@
 #
 # Hamiltonian MCMC method
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -14,7 +13,7 @@ import numpy as np
 
 class HamiltonianMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Hamiltonian Monte Carlo as described in [1].
+    Implements Hamiltonian Monte Carlo as described in [1]_.
 
     Uses a physical analogy of a particle moving across a landscape under
     Hamiltonian dynamics to aid efficient exploration of parameter space.
@@ -43,15 +42,19 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     .. math::
         p_i(t + \epsilon/2) &= p_i(t) - (\epsilon/2) d U(q_i(t))/dq_i\\
         q_i(t + \epsilon) &= q_i(t) + \epsilon p_i(t + \epsilon/2) / m_i\\
+        p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
+                             (\epsilon/2) d U(q_i(t + \epsilon))/dq_i
 
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
-    [1], since we allow different epsilon according to dimension.
+    [1]_, since we allow different epsilon according to dimension.
 
-    [1] MCMC using Hamiltonian dynamics
-    Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
-    Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
+    Extends :class:`SingleChainMCMC`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    References
+    ----------
+    .. [1] "MCMC using Hamiltonian dynamics". Radford M. Neal, Chapter 5 of the
+           Handbook of Markov Chain Monte Carlo by Steve Brooks, Andrew Gelman,
+           Galin Jones, and Xiao-Li Meng.
     """
     def __init__(self, x0, sigma0=None):
         super(HamiltonianMCMC, self).__init__(x0, sigma0)
@@ -91,36 +94,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
         self._hamiltonian_threshold = 10**3
-
-    def set_epsilon(self, epsilon):
-        """
-        Sets epsilon for the leapfrog algorithm
-        """
-        epsilon = float(epsilon)
-        if epsilon <= 0:
-            raise ValueError('epsilon must be positive for leapfrog algorithm')
-        self._epsilon = epsilon
-        self._set_scaled_epsilon()
-
-    def epsilon(self):
-        """
-        Returns epsilon used in leapfrog algorithm
-        """
-        return self._epsilon
-
-    def scaled_epsilon(self):
-        """
-        Returns scaled epsilon used in leapfrog algorithm
-        """
-        return self._scaled_epsilon
-
-    def _set_scaled_epsilon(self):
-        """
-        Rescales epsilon along the dimensions of step_size
-        """
-        self._scaled_epsilon = np.zeros(self._n_parameters)
-        for i in range(self._n_parameters):
-            self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -175,6 +148,25 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
         return -self._current_energy
 
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations
+        """
+        return self._divergent
+
+    def epsilon(self):
+        """
+        Returns epsilon used in leapfrog algorithm
+        """
+        return self._epsilon
+
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
     def leapfrog_steps(self):
         """
         Returns the number of leapfrog steps to carry out for each iteration.
@@ -195,6 +187,10 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._mcmc_acceptance)
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 2
+
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Hamiltonian Monte Carlo'
@@ -202,6 +198,49 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
+
+    def scaled_epsilon(self):
+        """
+        Returns scaled epsilon used in leapfrog algorithm
+        """
+        return self._scaled_epsilon
+
+    def _set_scaled_epsilon(self):
+        """
+        Rescales epsilon along the dimensions of step_size
+        """
+        self._scaled_epsilon = np.zeros(self._n_parameters)
+        for i in range(self._n_parameters):
+            self._scaled_epsilon[i] = self._epsilon * self._step_size[i]
+
+    def set_epsilon(self, epsilon):
+        """
+        Sets epsilon for the leapfrog algorithm
+        """
+        epsilon = float(epsilon)
+        if epsilon <= 0:
+            raise ValueError('epsilon must be positive for leapfrog algorithm')
+        self._epsilon = epsilon
+        self._set_scaled_epsilon()
+
+    def set_hamiltonian_threshold(self, hamiltonian_threshold):
+        """
+        Sets threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        if hamiltonian_threshold < 0:
+            raise ValueError('Threshold for divergent iterations must be ' +
+                             'non-negative.')
+        self._hamiltonian_threshold = hamiltonian_threshold
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_leapfrog_steps(x[0])
+        self.set_leapfrog_step_size(x[1])
 
     def set_leapfrog_steps(self, steps):
         """
@@ -231,12 +270,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             )
         self._step_size = step_size
         self._set_scaled_epsilon()
-
-    def divergent_iterations(self):
-        """
-        Returns the iteration number of any divergent iterations
-        """
-        return self._divergent
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -351,16 +384,3 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
         # Return current position as next sample in the chain
         return self._current
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[leapfrog_steps, leapfrog_step_size]``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_leapfrog_steps(x[0])
-        self.set_leapfrog_step_size(x[1])

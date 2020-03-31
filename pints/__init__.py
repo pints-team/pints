@@ -2,10 +2,9 @@
 # Root of the pints module.
 # Provides access to all shared functionality (optimisation, mcmc, etc.).
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 """
 Pints: Probabilistic Inference on Noisy Time Series.
@@ -116,6 +115,7 @@ from ._log_likelihoods import (
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
+    MultiplicativeGaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
@@ -195,17 +195,24 @@ from ._mcmc import (
     MultiChainMCMC,
     SingleChainMCMC,
 )
-from ._mcmc._adaptive_covariance import AdaptiveCovarianceMCMC
+from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
+from ._mcmc._haario_ac import HaarioACMC
+from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
+from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
 from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
+from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
 from ._mcmc._population import PopulationMCMC
-from ._mcmc._metropolis import MetropolisRandomWalkMCMC
-from ._mcmc._slice_stepout import SliceStepoutMCMC
+from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
+from ._mcmc._relativistic import RelativisticMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
+from ._mcmc._summary import MCMCSummary
 
 from ._abc import (
     ABCSampler,
@@ -218,6 +225,7 @@ from ._abc._abc_rejection import RejectionABC
 # Nested samplers
 #
 from ._nested import NestedSampler
+from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
 

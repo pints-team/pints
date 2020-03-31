@@ -6,11 +6,7 @@ Running an optimisation
 
 .. autofunction:: optimise
 
+.. autoclass:: OptimisationController
+
 .. autoclass:: Optimisation
 
-Convenience methods
--------------------
-
-.. autofunction:: fmin
-
-.. autofunction:: curve_fit

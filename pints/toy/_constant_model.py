@@ -1,10 +1,9 @@
 #
 # Constant model with multiple outputs.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -32,23 +31,25 @@ class ConstantModel(pints.ForwardModelS1):
         \frac{\partial{f_i(t)}}{dp_j} =
             \begin{cases} 1, i = j\\0, i \neq j \end{cases}
 
-    Arguments:
+    Extends :class:`pints.ForwardModelS1`.
 
-    ``n``
+    Parameters
+    ----------
+    n : int
         The number of parameters (and outputs) the model should have.
-    ``force_multi_output``
+    force_multi_output : boolean
         Set to ``True`` to always return output of the shape
         ``(n_times, n_outputs)``, even if ``n_outputs == 1``.
 
-    Example::
+    Example
+    -------
+    ::
 
         times = np.linspace(0, 1, 100)
         m = pints.ConstantModel(2)
         m.simulate([1, 2], times)
 
     In this example, the returned output is ``[1, 4]`` at every point in time.
-
-    *Extends:* :class:`pints.ForwardModelS1`.
     """
 
     def __init__(self, n, force_multi_output=False):

@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the evaluator methods and classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import unittest
@@ -16,9 +15,6 @@ try:
     unittest.TestCase.assertRaisesRegex
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
-
-debug = False
 
 
 class TestEvaluators(unittest.TestCase):
@@ -104,9 +100,8 @@ class TestEvaluators(unittest.TestCase):
         e.evaluate([1, 2])
 
     def test_worker(self):
-        """
-        Manual test of worker, since cover doesn't pick up on its run method.
-        """
+        # Manual test of worker, since cover doesn't pick up on its run method.
+
         from pints._evaluation import _Worker as Worker
 
         # Create queues for worker
@@ -197,8 +192,4 @@ def system_exit_on_four(x):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

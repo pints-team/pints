@@ -1,10 +1,9 @@
 #
 # Core modules and methods
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -36,21 +35,19 @@ class ForwardModel(object):
         Runs a forward simulation with the given ``parameters`` and returns a
         time-series with data points corresponding to the given ``times``.
 
-        Arguments:
+        Returns a sequence of length ``n_times`` (for single output problems)
+        or a NumPy array of shape ``(n_times, n_outputs)`` (for multi-output
+        problems), representing the values of the model at the given ``times``.
 
-        ``parameters``
-            An ordered list of parameter values.
-        ``times``
+        Parameters
+        ----------
+        parameters
+            An ordered sequence of parameter values.
+        times
             The times at which to evaluate. Must be an ordered sequence,
             without duplicates, and without negative values.
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
-
-        Returns:
-
-        A sequence of length ``n_times`` (for single output problems) or a
-        NumPy array of shape ``(n_times, n_outputs)`` (for multi-output
-        problems), representing the values of the model at the given ``times``.
         """
         raise NotImplementedError
 
@@ -68,7 +65,7 @@ class ForwardModelS1(ForwardModel):
     the first-order derivative of the simulated values with respect to the
     parameters.
 
-    Derived from :class:`pints.ForwardModel`.
+    Extends :class:`pints.ForwardModel`.
     """
 
     def __init__(self):
@@ -81,25 +78,25 @@ class ForwardModelS1(ForwardModel):
         along with the sensitivities of the forward simulation with respect to
         the parameters.
 
-        Arguments:
-
-        ``parameters``
+        Parameters
+        ----------
+        parameters
             An ordered list of parameter values.
-        ``times``
+        times
             The times at which to evaluate. Must be an ordered sequence,
             without duplicates, and without negative values.
             All simulations are started at time 0, regardless of whether this
             value appears in ``times``.
 
-        Returns:
-
-        A tuple ``(y, y')`` of the simulated values ``y`` and their derivatives
-        ``y'`` with resepect to the ``parameters``.
-        The first entry ``y`` must be a sequence of ``n_times`` values, or
-        a NumPy array of shape ``(n_times, n_outputs)``.
-        The second entry ``y'`` must be a numpy array of shape
-        ``(n_times, n_parameters)`` or an array of shape
-        ``(n_times, n_outputs, n_parameters)``.
+        Returns
+        -------
+        y
+            The simulated values, as a sequence of ``n_times`` values, or
+            a NumPy array of shape ``(n_times, n_outputs)``.
+        y'
+            The corresponding derivatives, as a numpy array of shape
+            ``(n_times, n_parameters)`` or an array of shape
+            ``(n_times, n_outputs, n_parameters)``.
         """
         raise NotImplementedError
 
@@ -110,15 +107,14 @@ class SingleOutputProblem(object):
     Represents an inference problem where a model is fit to a single time
     series, such as measured from a system with a single output.
 
-    Arguments:
-
-    ``model``
+    Parameters
+    ----------
+    model
         A model or model wrapper extending :class:`ForwardModel`.
-    ``times``
+    times
         A sequence of points in time. Must be non-negative and increasing.
-    ``values``
+    values
         A sequence of scalar output values, measured at the times in ``times``.
-
     """
 
     def __init__(self, model, times, values):
@@ -220,17 +216,16 @@ class MultiOutputProblem(object):
     Represents an inference problem where a model is fit to a multi-valued time
     series, such as measured from a system with multiple outputs.
 
-    Arguments:
-
-    ``model``
+    Parameters
+    ----------
+    model
         A model or model wrapper extending :class:`ForwardModel`.
-    ``times``
+    times
         A sequence of points in time. Must be non-negative and non-decreasing.
-    ``values``
+    values
         A sequence of multi-valued measurements. Must have shape
         ``(n_times, n_outputs)``, where ``n_times`` is the number of points in
         ``times`` and ``n_outputs`` is the number of outputs in the model.
-
     """
 
     def __init__(self, model, times, values):
@@ -342,11 +337,11 @@ class TunableMethod(object):
     allows the user to, for example, use an optimiser to tune the
     hyper-parameters of the method.
 
-    Note that the `set_hyper_parameters` function takes an array of parameters,
-    which might be of the same type (e.g. a numpy array). So derived classes
-    should not raise any errors if individual hyper parameters are set using
-    the wrong type (e.g. float rather than int), but should instead implicitly
-    convert the argument to the correct type.
+    Note that :meth:`set_hyper_parameters` takes an array of parameters, which
+    might be of the same type (e.g. a numpy array). So derived classes should
+    not raise any errors if individual hyper parameters are set using the wrong
+    type (e.g. float rather than int), but should instead implicitly convert
+    the argument to the correct type.
     """
 
     def n_hyper_parameters(self):
@@ -361,9 +356,10 @@ class TunableMethod(object):
         Sets the hyper-parameters for the method with the given vector of
         values (see :class:`TunableMethod`).
 
-        Arguments:
-
-        ``x`` an array of length ``n_hyper_parameters`` used to set the
-              hyper-parameters
+        Parameters
+        ----------
+        x
+            An array of length ``n_hyper_parameters`` used to set the
+            hyper-parameters.
         """
         pass

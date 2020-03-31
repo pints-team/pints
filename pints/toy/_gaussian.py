@@ -1,10 +1,9 @@
 #
 # Unimodal Normal/Gaussian toy log pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -19,16 +18,16 @@ class GaussianLogPDF(ToyLogPDF):
     Toy distribution based on a multivariate (unimodal) Normal/Gaussian
     distribution.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``mean``
+    Parameters
+    ----------
+    mean
         The distribution mean (specified as a vector).
-    ``sigma``
+    sigma
         The distribution's covariance matrix. Can be given as either a matrix
         or a vector (in which case ``diag(sigma)`` will be used. Should be
         symmetric and positive-semidefinite.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
 
     def __init__(self, mean=[0, 0], sigma=[1, 1]):

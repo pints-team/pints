@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the Monomial-gamma HMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -54,9 +53,8 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
@@ -98,9 +96,8 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_kinetic_energy(self):
-        """
-        Tests kinetic energy values and derivatives
-        """
+        # Tests kinetic energy values and derivatives
+
         x0 = np.array([2, 2])
         model = pints.MonomialGammaHamiltonianMCMC(x0)
         model.ask()
@@ -123,9 +120,8 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         self.assertTrue(mom[0] != mom[1])
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
+        # Tests the parameter interface for this sampler.
+
         x0 = np.array([2, 2])
         mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
 
@@ -178,6 +174,17 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         mcmc.set_mass(m)
         self.assertEqual(mcmc.mass(), m)
         self.assertRaises(ValueError, mcmc.set_mass, -1.8)
+
+    def test_other_setters(self):
+        # Tests other setters and getters.
+        x0 = np.array([2, 2])
+        mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
+        self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)
+        threshold1 = mcmc.hamiltonian_threshold()
+        self.assertEqual(threshold1, 10**3)
+        threshold2 = 10
+        mcmc.set_hamiltonian_threshold(threshold2)
+        self.assertEqual(mcmc.hamiltonian_threshold(), threshold2)
 
 
 if __name__ == '__main__':

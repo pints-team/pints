@@ -2,10 +2,9 @@
 #
 # Slice Sampling with Stepout MCMC Method
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -15,9 +14,11 @@ import numpy as np
 
 class SliceStepoutMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Slice Sampling with Stepout, as described in [1]. This is a
-    univariate method, which is applied in a Slice-Sampling-within-Gibbs
-    framework to allow MCMC sampling from multivariate models.
+    Implements Slice Sampling with Stepout, as described in [1]_.
+
+    This is a univariate method, which is applied in a
+    Slice-Sampling-within-Gibbs framework to allow MCMC sampling from
+    multivariate models.
 
     Generates samples by sampling uniformly from the volume underneath the
     posterior (``f``). It does so by introducing an auxiliary variable (``y``)
@@ -115,16 +116,19 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
     iterations are hyperparameters.
 
     To avoid floating-point underflow, we implement the suggestion advanced
-    in [1] pp.712. We use the log pdf of the un-normalised posterior
+    in [1]_ pp.712. We use the log pdf of the un-normalised posterior
     (:math:`g(x) = log(f(x))`) instead of :math:`f(x)`. In doing so, we use an
-    auxiliary variable :math:`z = log(y) = g(x0) − \epsilon`, where
+    auxiliary variable :math:`z = log(y) = g(x0) - \epsilon`, where
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
     :math:`S = {x : z < g(x)}`.
 
-    [1] Neal, R.M., 2003. Slice sampling. The annals of statistics, 31(3),
-    pp.705-767.
+    Extends :class:`SingleChainMCMC`.
 
-    *Extends:* :class:`SingleChainMCMC`
+    References
+    ----------
+    .. [1] Neal, R.M., 2003. "Slice sampling". The annals of statistics, 31(3),
+           pp.705-767.
+           https://doi.org/10.1214/aos/1056562461
     """
 
     def __init__(self, x0, sigma0=None):
@@ -403,7 +407,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def current_log_pdf(self):
         """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return np.copy(self._current_log_pdf)
+        return self._current_log_pdf
 
     def current_slice_height(self):
         """
@@ -437,9 +441,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         a = int(a)
         if a < 0:
-            raise ValueError('Integer must be positive to limit'
-                             'overrelaxation endpoint accuracy to'
-                             '``2 ^ (-bisection steps) * width``.')
+            raise ValueError(
+                'Integer must be positive (to limit overrelaxation endpoint'
+                ' accuracy to (2 ^ (-bisection steps) * width).')
         self._a = a
 
     def set_expansion_steps(self, m):
@@ -449,7 +453,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         m = int(m)
         if m <= 0:
             raise ValueError('Integer must be positive to limit the'
-                             'interval size to ``integer * width``.')
+                             ' interval size to ``integer * width``.')
         self._m = m
 
     def set_hyper_parameters(self, x):
@@ -469,23 +473,29 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         prob = float(prob)
         if prob < 0 or prob > 1:
-            raise ValueError("""Probability must be positive and <= 1.""")
+            raise ValueError('Probability must be positive and <= 1.')
         self._prob_overrelaxed = prob
 
     def set_width(self, w):
         """
-        Sets the width for generating the interval. This can either
-        be a single number or an array with the same number of elements
-        as the number of variables to update.
+        Sets the width for generating the interval.
+
+        This can either be a single number or an array with the same number of
+        elements as the number of variables to update.
         """
-        if type(w) == int or float:
-            w = np.full((len(self._x0)), w)
-        if any(n < 0 for n in w):
-            raise ValueError('Width must be positive'
-                             'for interval expansion.')
+        if np.isscalar(w):
+            w = np.ones(self._n_parameters) * w
+        else:
+            w = np.array(w, copy=True)
+            if len(w) != self._n_parameters:
+                raise ValueError(
+                    'Width for interval expansion must a scalar or an array'
+                    ' of length n_parameters.')
+        if np.any(w < 0):
+            raise ValueError('Width for interval expansion must be positive.')
         self._w = w
 
-    def tell(self, reply):
+    def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
 
         # Check ask/tell pattern
@@ -493,8 +503,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # Unpack reply
-        fx = np.asarray(reply, dtype=float)
+        # Ensure fx is a float
+        fx = float(fx)
 
         # Very first call
         if self._current is None:
@@ -681,6 +691,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
     def width(self):
         """
-        Returns width used for generating the interval.
+        Returns the width used for generating the interval.
         """
         return np.copy(self._w)
