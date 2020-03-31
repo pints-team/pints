@@ -18,6 +18,7 @@ Some toy classes provide extra functionality defined in the
     beeler_reuter_ap_model
     cone_logpdf
     constant_model
+    eight_schools_logpdf
     fitzhugh_nagumo_model
     gaussian_logpdf
     german_credit_hierarchical_logpdf
