@@ -292,6 +292,25 @@ class TestErrorMeasures(unittest.TestCase):
         p = MultiMiniProblem()
         self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
 
+    def test_normalised_root_mean_squared_error(self):
+        # Tests :class:`pints.NormalisedRootMeanSquaredError`.
+
+        p = MiniProblem()
+        e = pints.NormalisedRootMeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 3)
+        float(e([1, 2, 3]))
+        self.assertEqual(e([-1, 2, 3]), 0)
+        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
+        x = [0, 0, 0]
+        y = 1.0
+        self.assertEqual(e(x), y)
+        x = [1, 1, 1]
+        y = np.sqrt((4 + 1 + 4) / 3) / np.sqrt((1 + 4 + 9) / 3)
+        self.assertAlmostEqual(e(x), y)
+
+        p = MultiMiniProblem()
+        self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
+
     def test_sum_of_squares_error_single(self):
         # Tests :class:`pints.MeanSquaredError` with a single output.
 
