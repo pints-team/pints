@@ -135,11 +135,12 @@ from ._boundaries import (
 #
 from ._error_measures import (
     ErrorMeasure,
-    ProblemErrorMeasure,
-    ProbabilityBasedError,
-    SumOfErrors,
     MeanSquaredError,
+    NormalisedRootMeanSquaredError,
+    ProbabilityBasedError,
+    ProblemErrorMeasure,
     RootMeanSquaredError,
+    SumOfErrors,
     SumOfSquaresError,
 )
 
