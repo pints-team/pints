@@ -64,6 +64,81 @@ class ProblemErrorMeasure(ErrorMeasure):
         return self._n_parameters
 
 
+class MeanSquaredError(ProblemErrorMeasure):
+    """
+    Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``,
+    where ``n`` is the product of the number of times in the time series and
+    the number of outputs of the problem.
+
+    Extends :class:`ProblemErrorMeasure`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`.
+    weights
+        An optional sequence of (float) weights, exactly one per problem
+        output. If no weights are specified all sums will be weighted equally.
+    """
+    def __init__(self, problem, weights=None):
+        super(MeanSquaredError, self).__init__(problem)
+        self._ninv = 1.0 / np.product(self._values.shape)
+
+        if weights is None:
+            weights = [1] * self._n_outputs
+        elif self._n_outputs != len(weights):
+            raise ValueError(
+                'Number of weights must match number of problem outputs.')
+        # Check weights
+        self._weights = np.asarray([float(w) for w in weights])
+
+    def __call__(self, x):
+        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
+                               axis=0) * self._weights) * self._ninv),
+                      axis=0)
+
+    def evaluateS1(self, x):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+        y, dy = self._problem.evaluateS1(x)
+        dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
+        r = y - self._values
+        e = self._ninv * np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
+        de = 2 * self._ninv * np.sum(np.sum((r.T * dy.T), axis=2) *
+                                     self._weights, axis=1)
+        return e, de
+
+
+class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
+    """
+    Calculates a normalised root mean squared error. This is similar to the
+    (unnormalised) :class:`RootMeanSquaredError`, which is defined as
+    ``f = sqrt( sum( (x[i] - y[i])**2 / n) ) / C``
+    with a normalisation constant ``C`` given by
+    ``C = sqrt( sum((y[i])**2 / n) )``.
+
+    Extends :class:`ProblemErrorMeasure`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`pints.SingleOutputProblem`
+    """
+    def __init__(self, problem):
+        super(NormalisedRootMeanSquaredError, self).__init__(problem)
+
+        if not isinstance(problem, pints.SingleOutputProblem):
+            raise ValueError(
+                'This measure is only defined for single output problems.')
+
+        self._ninv = 1.0 / len(self._values)
+        self._norm = 1.0 / np.sqrt(self._ninv * np.sum(self._values**2))
+
+    def __call__(self, x):
+        return self._norm * np.sqrt(self._ninv * np.sum(
+            (self._problem.evaluate(x) - self._values)**2))
+
+
 class ProbabilityBasedError(ErrorMeasure):
     """
     Changes the sign of a :class:`LogPDF` to use it as an error. Minimising
@@ -99,6 +174,32 @@ class ProbabilityBasedError(ErrorMeasure):
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._log_pdf.n_parameters()
+
+
+class RootMeanSquaredError(ProblemErrorMeasure):
+    """
+    Calculates a root mean squared error (RMSE):
+    ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
+
+    Extends :class:`ProblemErrorMeasure`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`pints.SingleOutputProblem`
+    """
+    def __init__(self, problem):
+        super(RootMeanSquaredError, self).__init__(problem)
+
+        if not isinstance(problem, pints.SingleOutputProblem):
+            raise ValueError(
+                'This measure is only defined for single output problems.')
+
+        self._ninv = 1.0 / len(self._values)
+
+    def __call__(self, x):
+        return np.sqrt(self._ninv * np.sum(
+            (self._problem.evaluate(x) - self._values)**2))
 
 
 class SumOfErrors(ErrorMeasure):
@@ -199,107 +300,6 @@ class SumOfErrors(ErrorMeasure):
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._n_parameters
-
-
-class MeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``,
-    where ``n`` is the product of the number of times in the time series and
-    the number of outputs of the problem.
-
-    Extends :class:`ProblemErrorMeasure`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`pints.SingleOutputProblem` or
-        :class:`pints.MultiOutputProblem`.
-    weights
-        An optional sequence of (float) weights, exactly one per problem
-        output. If no weights are specified all sums will be weighted equally.
-    """
-    def __init__(self, problem, weights=None):
-        super(MeanSquaredError, self).__init__(problem)
-        self._ninv = 1.0 / np.product(self._values.shape)
-
-        if weights is None:
-            weights = [1] * self._n_outputs
-        elif self._n_outputs != len(weights):
-            raise ValueError(
-                'Number of weights must match number of problem outputs.')
-        # Check weights
-        self._weights = np.asarray([float(w) for w in weights])
-
-    def __call__(self, x):
-        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
-                               axis=0) * self._weights) * self._ninv),
-                      axis=0)
-
-    def evaluateS1(self, x):
-        """ See :meth:`ErrorMeasure.evaluateS1()`. """
-        y, dy = self._problem.evaluateS1(x)
-        dy = dy.reshape((self._n_times, self._n_outputs, self._n_parameters))
-        r = y - self._values
-        e = self._ninv * np.sum(np.sum(r**2, axis=0) * self._weights, axis=0)
-        de = 2 * self._ninv * np.sum(np.sum((r.T * dy.T), axis=2) *
-                                     self._weights, axis=1)
-        return e, de
-
-
-class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates a normalised root mean squared error. This is similar to the
-    (unnormalised) :class:`RootMeanSquaredError`, which is defined as
-    ``f = sqrt( sum( (x[i] - y[i])**2 / n) ) / C``
-    with a normalisation constant ``C`` given by
-    ``C = sqrt( sum((y[i])**2 / n) )``.
-
-    Extends :class:`ProblemErrorMeasure`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`pints.SingleOutputProblem`
-    """
-    def __init__(self, problem):
-        super(NormalisedRootMeanSquaredError, self).__init__(problem)
-
-        if not isinstance(problem, pints.SingleOutputProblem):
-            raise ValueError(
-                'This measure is only defined for single output problems.')
-
-        self._ninv = 1.0 / len(self._values)
-        self._norm = 1.0 / np.sqrt(self._ninv * np.sum(self._values**2))
-
-    def __call__(self, x):
-        return self._norm * np.sqrt(self._ninv * np.sum(
-            (self._problem.evaluate(x) - self._values)**2))
-
-
-class RootMeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates a root mean squared error (RMSE):
-    ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
-
-    Extends :class:`ProblemErrorMeasure`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`pints.SingleOutputProblem`
-    """
-    def __init__(self, problem):
-        super(RootMeanSquaredError, self).__init__(problem)
-
-        if not isinstance(problem, pints.SingleOutputProblem):
-            raise ValueError(
-                'This measure is only defined for single output problems.')
-
-        self._ninv = 1.0 / len(self._values)
-
-    def __call__(self, x):
-        return np.sqrt(self._ninv * np.sum(
-            (self._problem.evaluate(x) - self._values)**2))
 
 
 class SumOfSquaresError(ProblemErrorMeasure):

@@ -137,6 +137,66 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
 
 
+class CauchyLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent Cauchy-distributed noise
+    at each time point, and adds one parameter: the scale (``sigma``).
+
+    For a noise characterised by ``sigma``, the log-likelihood is of the form:
+
+    .. math::
+        \log{L(\theta, \sigma)} =
+              -N\log \pi - N\log \sigma
+              -\sum_{i=1}^N\log(1 +
+            \frac{x_i - f(\theta)}{\sigma}^2)
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem one parameter is added ``sigma``, where
+        ``sigma`` is scale, for a multi-output problem ``n_outputs``
+        parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(CauchyLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem (one for each output)
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate
+        self._n = len(self._times)
+        self._n_log_pi = self._n * np.log(np.pi)
+
+    def __call__(self, x):
+        # For multiparameter problems the parameters are stored as
+        # (model_params_1, model_params_2, ..., model_params_k,
+        # sigma_1, sigma_2,...)
+        n = self._n
+        m = self._no
+
+        # problem parameters
+        problem_parameters = x[:-m]
+        error = self._values - self._problem.evaluate(problem_parameters)
+
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+
+        # Calculate
+        return np.sum(
+            - self._n_log_pi
+            - n * np.log(sigma)
+            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
+        )
+
+
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
@@ -275,66 +335,6 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             self._n_minus_1_over_2 * np.log(sse) +
             self._log_gamma +
             log_temp
-        )
-
-
-class CauchyLogLikelihood(pints.ProblemLogLikelihood):
-    r"""
-    Calculates a log-likelihood assuming independent Cauchy-distributed noise
-    at each time point, and adds one parameter: the scale (``sigma``).
-
-    For a noise characterised by ``sigma``, the log-likelihood is of the form:
-
-    .. math::
-        \log{L(\theta, \sigma)} =
-              -N\log \pi - N\log \sigma
-              -\sum_{i=1}^N\log(1 +
-            \frac{x_i - f(\theta)}{\sigma}^2)
-
-    Extends :class:`ProblemLogLikelihood`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem one parameter is added ``sigma``, where
-        ``sigma`` is scale, for a multi-output problem ``n_outputs``
-        parameters are added.
-    """
-
-    def __init__(self, problem):
-        super(CauchyLogLikelihood, self).__init__(problem)
-
-        # Get number of times, number of outputs
-        self._nt = len(self._times)
-        self._no = problem.n_outputs()
-
-        # Add parameters to problem (one for each output)
-        self._n_parameters = problem.n_parameters() + self._no
-
-        # Pre-calculate
-        self._n = len(self._times)
-        self._n_log_pi = self._n * np.log(np.pi)
-
-    def __call__(self, x):
-        # For multiparameter problems the parameters are stored as
-        # (model_params_1, model_params_2, ..., model_params_k,
-        # sigma_1, sigma_2,...)
-        n = self._n
-        m = self._no
-
-        # problem parameters
-        problem_parameters = x[:-m]
-        error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
-
-        # Calculate
-        return np.sum(
-            - self._n_log_pi
-            - n * np.log(sigma)
-            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
         )
 
 
