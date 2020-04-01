@@ -309,7 +309,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertAlmostEqual(e(x), y)
 
         p = MultiMiniProblem()
-        self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
+        self.assertRaises(ValueError, pints.NormalisedRootMeanSquaredError, p)
 
     def test_sum_of_squares_error_single(self):
         # Tests :class:`pints.MeanSquaredError` with a single output.
