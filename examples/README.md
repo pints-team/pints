@@ -68,6 +68,7 @@ relevant code.
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling
