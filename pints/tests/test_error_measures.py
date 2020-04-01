@@ -312,7 +312,10 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e(x), y)
 
         p = MultiMiniProblem()
-        self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
+        self.assertRaisesRegex(
+            ValueError,
+            'This measure is only defined for single output problems.',
+            pints.RootMeanSquaredError, p)
 
     def test_sum_of_squares_error_single(self):
         # Tests :class:`pints.MeanSquaredError` with a single output.
