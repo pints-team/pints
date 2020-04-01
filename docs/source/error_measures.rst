@@ -23,6 +23,8 @@ Example::
 
 .. autoclass:: RootMeanSquaredError
 
+.. autoclass:: NormalisedRootMeanSquaredError
+
 .. autoclass:: SumOfErrors
 
 .. autoclass:: SumOfSquaresError
