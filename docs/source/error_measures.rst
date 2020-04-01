@@ -17,13 +17,13 @@ Example::
 
 .. autoclass:: MeanSquaredError
 
+.. autoclass:: NormalisedRootMeanSquaredError
+
 .. autoclass:: ProbabilityBasedError
 
 .. autoclass:: ProblemErrorMeasure
 
 .. autoclass:: RootMeanSquaredError
-
-.. autoclass:: NormalisedRootMeanSquaredError
 
 .. autoclass:: SumOfErrors
 
