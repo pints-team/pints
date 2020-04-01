@@ -12,10 +12,9 @@ import pints.plot
 import unittest
 import numpy as np
 import matplotlib
-import matplotlib.pyplot as plt
-
 # Select matplotlib backend that doesn't require a screen
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # noqa
+import matplotlib.pyplot as plt
 
 
 class TestPlot(unittest.TestCase):
