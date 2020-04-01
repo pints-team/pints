@@ -248,10 +248,11 @@ class MeanSquaredError(ProblemErrorMeasure):
 
 class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
     """
-    Calculates a normalised root mean squared error (RMSE):
-    ``f = N * sqrt( sum( (x[i] - y[i])**2 / n) )``
-    where ``N`` is a normalisation constant defined as the inverse of the RMSE
-    of the data ``y`` with respect to zero.
+    Calculates a normalised root mean squared error. This is similar to the
+    (unnormalised) :class:`RootMeanSquaredError`, which is defined as
+    ``f = sqrt( sum( (x[i] - y[i])**2 / n) ) / C``
+    with a normalisation constant ``C`` given by
+    ``C = sqrt( sum((y[i])**2 / n) )``.
 
     Extends :class:`ProblemErrorMeasure`.
 
