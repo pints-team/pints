@@ -10,15 +10,24 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 from collections import Counter
 import pystan
+import os
+import pickle
 
 from . import InterfaceLogPDF
 
 
 class StanLogPDF(InterfaceLogPDF):
-    def __init__(self, stan_code, stan_data):
+    def __init__(self, stan_code, stan_data, pickle_filename=None):
 
-        print("Compiling Stan model then test running...")
-        sm = pystan.StanModel(model_code=stan_code)
+        if pickle_filename:
+            if os.path.isfile(pickle_filename):
+                sm = pickle.load(open(pickle_filename, 'rb'))
+            else:
+                sm = pystan.StanModel(model_code=stan_code)
+                pickle.dump(sm, open(pickle_filename, 'wb'))
+        else:
+            sm = pystan.StanModel(model_code=stan_code)
+
         stanfit = sm.sampling(data=stan_data, iter=1, chains=1,
                               verbose=False, refresh=10,
                               control={'adapt_engaged': False})
@@ -36,9 +45,8 @@ class StanLogPDF(InterfaceLogPDF):
         self._dict = {self._names[i]: [] for i in range(len(self._names))}
 
     def __call__(self, x):
-        dict = self._dict_update(x)
         try:
-            return self._log_prob(self._u_to_c(dict), adjust_transform=True)
+            return self._log_prob(x, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except RuntimeError:
             return -np.inf
@@ -62,14 +70,9 @@ class StanLogPDF(InterfaceLogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        dict = self._dict_update(x)
-        try:
-            uncons = self._u_to_c(dict)
-            val = self._log_prob(uncons, adjust_transform=True)
-            dp = self._grad_log_prob(uncons, adjust_transform=True)
-            return val, dp.reshape(-1)
-        except RuntimeError:
-            return -np.inf, np.ones(self._n_parameters).reshape(-1)
+        val = self._log_prob(x, adjust_transform=True)
+        dp = self._grad_log_prob(x, adjust_transform=True)
+        return val, dp.reshape(-1)
 
     def _initialise_dict_index(self, names):
         """ Initialises dictionary and index of names. """
