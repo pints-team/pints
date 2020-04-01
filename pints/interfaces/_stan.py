@@ -70,8 +70,13 @@ class StanLogPDF(InterfaceLogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        val = self._log_prob(x, adjust_transform=True)
-        dp = self._grad_log_prob(x, adjust_transform=True)
+        try:
+            val = self._log_prob(x, adjust_transform=True)
+            dp = self._grad_log_prob(x, adjust_transform=True)
+        except RuntimeError:
+            val = -np.inf
+            dp = np.ones(self._n_parameters)
+
         return val, dp.reshape(-1)
 
     def _initialise_dict_index(self, names):

@@ -511,7 +511,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._num_adaption_steps = 500
         self._delta = 0.8
         self._step_size = None
-        self._max_tree_depth = 5
+        self._max_tree_depth = 10
         self._use_dense_mass_matrix = False
 
         # Default threshold for Hamiltonian divergences
