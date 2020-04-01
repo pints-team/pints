@@ -273,7 +273,8 @@ class TestPlot(unittest.TestCase):
             ValueError,
             r'Length of \`ref\_parameters\` must be same as number of'
             r' parameters\.',
-            pints.plot.histogram, self.samples, [self.real_parameters[0]]
+            pints.plot.histogram, self.samples,
+            ref_parameters=[self.real_parameters[0]]
         )
 
         # Test it works with single parameter
