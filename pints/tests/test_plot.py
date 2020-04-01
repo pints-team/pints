@@ -12,6 +12,7 @@ import pints.plot
 import unittest
 import numpy as np
 import matplotlib
+import matplotlib.pyplot as plt
 
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
@@ -173,6 +174,9 @@ class TestPlot(unittest.TestCase):
         pints.plot.function(self.log_posterior3, self.real_parameters3,
                             self.lower3, self.upper3)
 
+        # Close figure objects
+        plt.close('all')
+
     def test_function_between_points(self):
         # Tests the function_between_points function.
 
@@ -241,6 +245,9 @@ class TestPlot(unittest.TestCase):
                                            self.lower3,
                                            self.upper3)
 
+        # Close figure objects
+        plt.close('all')
+
     def test_histogram(self):
         # Tests the histogram function.
 
@@ -279,6 +286,9 @@ class TestPlot(unittest.TestCase):
         pints.plot.histogram(few_samples3,
                              ref_parameters=self.real_parameters3)
 
+        # Close figure objects
+        plt.close('all')
+
     def test_trace(self):
         # Tests the trace function.
 
@@ -313,6 +323,9 @@ class TestPlot(unittest.TestCase):
         pints.plot.trace(few_samples3,
                          ref_parameters=self.real_parameters3)
 
+        # Close figure objects
+        plt.close('all')
+
     def test_autocorrelation(self):
         # Tests the autocorrelation function.
 
@@ -327,6 +340,9 @@ class TestPlot(unittest.TestCase):
 
         # Test it works with single parameter
         pints.plot.autocorrelation(self.samples3[0], max_lags=20)
+
+        # Close figure objects
+        plt.close('all')
 
     def test_series(self):
         # Tests the series function.
@@ -393,6 +409,9 @@ class TestPlot(unittest.TestCase):
             self.real_parameters2[:-2]
         )
 
+        # Close figure objects
+        plt.close('all')
+
     def test_pairwise(self):
         # Tests the pairwise function.
 
@@ -445,6 +464,9 @@ class TestPlot(unittest.TestCase):
             ValueError, r'Number of parameters must be larger than 2\.',
             pints.plot.pairwise, few_samples3
         )
+
+        # Close figure objects
+        plt.close('all')
 
 
 if __name__ == '__main__':
