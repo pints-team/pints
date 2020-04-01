@@ -35,7 +35,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
 
     Parameters
     ----------
-    initial_population_size : int
+    initial_population_size : float
         Sets the initial population size :math:`f(0) = p_0`.
 
     References
