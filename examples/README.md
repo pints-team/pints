@@ -38,6 +38,7 @@ relevant code.
 
 ### MCMC without gradients
 - [Differential Evolution MCMC](./sampling/differential-evolution-mcmc.ipynb)
+- [DRAM ACMC](./sampling/adaptive-covariance-dram.ipynb)
 - [DREAM MCMC](./sampling/dream-mcmc.ipynb)
 - [Emcee Hammer](./sampling/emcee-hammer.ipynb)
 - [Haario Adaptive Covariance MCMC](./sampling/adaptive-covariance-haario.ipynb)
@@ -67,6 +68,7 @@ relevant code.
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling
