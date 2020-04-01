@@ -246,32 +246,6 @@ class MeanSquaredError(ProblemErrorMeasure):
         return e, de
 
 
-class RootMeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates a root mean squared error (RMSE):
-    ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
-
-    Extends :class:`ProblemErrorMeasure`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`pints.SingleOutputProblem`
-    """
-    def __init__(self, problem):
-        super(RootMeanSquaredError, self).__init__(problem)
-
-        if not isinstance(problem, pints.SingleOutputProblem):
-            raise ValueError(
-                'This measure is only defined for single output problems.')
-
-        self._ninv = 1.0 / len(self._values)
-
-    def __call__(self, x):
-        return np.sqrt(self._ninv * np.sum(
-            (self._problem.evaluate(x) - self._values)**2))
-
-
 class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
     """
     Calculates a normalised root mean squared error (RMSE):
@@ -298,6 +272,32 @@ class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
 
     def __call__(self, x):
         return self._norm * np.sqrt(self._ninv * np.sum(
+            (self._problem.evaluate(x) - self._values)**2))
+
+
+class RootMeanSquaredError(ProblemErrorMeasure):
+    """
+    Calculates a root mean squared error (RMSE):
+    ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
+
+    Extends :class:`ProblemErrorMeasure`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`pints.SingleOutputProblem`
+    """
+    def __init__(self, problem):
+        super(RootMeanSquaredError, self).__init__(problem)
+
+        if not isinstance(problem, pints.SingleOutputProblem):
+            raise ValueError(
+                'This measure is only defined for single output problems.')
+
+        self._ninv = 1.0 / len(self._values)
+
+    def __call__(self, x):
+        return np.sqrt(self._ninv * np.sum(
             (self._problem.evaluate(x) - self._values)**2))
 
 
