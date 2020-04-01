@@ -140,6 +140,7 @@ from ._error_measures import (
     SumOfErrors,
     MeanSquaredError,
     RootMeanSquaredError,
+    NormalisedRootMeanSquaredError,
     SumOfSquaresError,
 )
 
