@@ -254,6 +254,9 @@ class TestPlot(unittest.TestCase):
         # Test compatiblity with one chain only
         pints.plot.histogram([self.samples[0]])
 
+        # Check kde gives no error
+        pints.plot.histogram(few_samples, kde=True)
+
         # Check n_percentiles gives no error
         pints.plot.histogram(few_samples, n_percentiles=50)
 
