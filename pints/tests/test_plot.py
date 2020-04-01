@@ -12,9 +12,9 @@ import pints.plot
 import unittest
 import numpy as np
 import matplotlib
+
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')  # noqa
-import matplotlib.pyplot as plt
 
 
 class TestPlot(unittest.TestCase):
@@ -174,6 +174,7 @@ class TestPlot(unittest.TestCase):
                             self.lower3, self.upper3)
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_function_between_points(self):
@@ -245,6 +246,7 @@ class TestPlot(unittest.TestCase):
                                            self.upper3)
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_histogram(self):
@@ -286,6 +288,7 @@ class TestPlot(unittest.TestCase):
                              ref_parameters=self.real_parameters3)
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_trace(self):
@@ -323,6 +326,7 @@ class TestPlot(unittest.TestCase):
                          ref_parameters=self.real_parameters3)
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_autocorrelation(self):
@@ -341,6 +345,7 @@ class TestPlot(unittest.TestCase):
         pints.plot.autocorrelation(self.samples3[0], max_lags=20)
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_series(self):
@@ -409,6 +414,7 @@ class TestPlot(unittest.TestCase):
         )
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
     def test_pairwise(self):
@@ -465,6 +471,7 @@ class TestPlot(unittest.TestCase):
         )
 
         # Close figure objects
+        import matplotlib.pyplot as plt
         plt.close('all')
 
 
