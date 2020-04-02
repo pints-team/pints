@@ -28,8 +28,8 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
                                          + \frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
 
     Has two model parameters: A growth rate :math:`r` and a carrying capacity
-    :math:`k`. :math:`p_0` is the initial population size which is a fixed
-    (known) parameter in the model.
+    :math:`k`. The initial population size :math:`p_0` is a fixed (known)
+    parameter in the model.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
