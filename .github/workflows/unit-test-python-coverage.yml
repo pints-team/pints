@@ -1,0 +1,38 @@
+name: Unit tests on multiple python versions
+
+on:
+  push:
+    branches:
+      - master
+      - i1074-gh-actions
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+
+  build-and-test:
+    name: Unit test (python coverage)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: install python bindings
+        run: |
+          python --version
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install .
+
+      - name: python unit tests
+        run: |
+          python run-tests.py --unit
