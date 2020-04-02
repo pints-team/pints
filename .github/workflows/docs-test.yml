@@ -1,4 +1,4 @@
-name: Unit tests on multiple operating systems
+name: Doctest
 
 on:
   push:
@@ -12,11 +12,8 @@ on:
 jobs:
 
   build-and-test:
-    name: unit test (OS coverage)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-16.04, macos-latest, windows-latest]
+    name: doctest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
@@ -32,7 +29,8 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
+          python -m pip install .[docs]
 
-      - name: run unit tests
+      - name: run doctest
         run: |
-          python run-tests.py --unit
+          python run-tests.py --doctest

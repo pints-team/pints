@@ -1,22 +1,15 @@
-name: Unit tests on multiple operating systems
+name: Notebooks
 
 on:
-  push:
-    branches:
-      - master
-      - i1074-gh-actions
-  pull_request:
-    branches:
-      - '**'
+  schedule:
+    # 1am every Friday morning
+    - cron:  '0 1 * * 5'
 
 jobs:
 
   build-and-test:
-    name: unit test (OS coverage)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-16.04, macos-latest, windows-latest]
+    name: notebooks
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
@@ -32,7 +25,8 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
+          python -m pip install .[dev]
 
-      - name: run unit tests
+      - name: run jupyter notebooks
         run: |
-          python run-tests.py --unit
+          python run-tests.py --allbooks

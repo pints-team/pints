@@ -1,4 +1,4 @@
-name: Unit tests on multiple operating systems
+name: Copyright
 
 on:
   push:
@@ -12,11 +12,8 @@ on:
 jobs:
 
   build-and-test:
-    name: unit test (OS coverage)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-16.04, macos-latest, windows-latest]
+    name: copyright
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
@@ -33,6 +30,6 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
 
-      - name: run unit tests
+      - name: run copyright test
         run: |
-          python run-tests.py --unit
+          python run-tests.py --copyright

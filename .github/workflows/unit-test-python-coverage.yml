@@ -12,7 +12,7 @@ on:
 jobs:
 
   build-and-test:
-    name: Unit test (python coverage)
+    name: unit test (python coverage)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,12 +27,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: install python bindings
+      - name: install pints
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
 
-      - name: python unit tests
+      - name: run unit tests
         run: |
           python run-tests.py --unit
