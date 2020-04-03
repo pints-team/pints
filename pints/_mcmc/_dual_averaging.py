@@ -152,20 +152,29 @@ class DualAveragingAdaption:
         self._gamma = 0.05
         self._t0 = 10.0
         self._kappa = 0.75
+        self._adapt_epsilon_counter = 0
 
     def adapt_epsilon(self, accept_prob):
         """
         Perform a single step of the dual averaging scheme
         """
+
         if accept_prob > 1:
             accept_prob = 1.0
-        eta = 1.0 / (self._counter + self._t0)
+
+        self._adapt_epsilon_counter += 1
+        counter = self._adapt_epsilon_counter
+
+        eta = 1.0 / (counter + self._t0)
+
         self._H_bar = (1 - eta) * self._H_bar \
             + eta * (self._target_accept_prob - accept_prob)
+
         self._log_epsilon = self._mu  \
-            - (np.sqrt(self._counter) / self._gamma) \
+            - (np.sqrt(counter) / self._gamma) \
             * self._H_bar
-        x_eta = self._counter**(-self._kappa)
+
+        x_eta = counter**(-self._kappa)
         self._log_epsilon_bar = x_eta * self._log_epsilon + \
             (1 - x_eta) * self._log_epsilon_bar
         self._epsilon = np.exp(self._log_epsilon)
