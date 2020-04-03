@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - i1074-gh-actions
   pull_request:
     branches:
       - '**'
