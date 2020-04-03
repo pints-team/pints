@@ -1,5 +1,5 @@
-[![travis](https://travis-ci.org/pints-team/pints.svg?branch=master)](https://travis-ci.org/pints-team/pints)
-[![appveyor](https://ci.appveyor.com/api/projects/status/k8xvn7md0pte2gsi/branch/master?svg=true)](https://ci.appveyor.com/project/MichaelClerx/pints/branch/master)
+[![Unit tests on multiple python versions](https://github.com/pints-team/pints/workflows/Unit%20tests%20on%20multiple%20python%20versions/badge.svg)](https://github.com/pints-team/pints/actions)
+[![Unit tests on multiple operating systems](https://github.com/pints-team/pints/workflows/Unit%20tests%20on%20multiple%20operating%20systems/badge.svg)](https://github.com/pints-team/pints/actions)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/master/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
 [![Functional testing code](https://github.com/pints-team/functional-testing/blob/master/badge-code.svg)](https://github.com/pints-team/functional-testing)
 [![Functional testing results](https://github.com/pints-team/functional-testing/blob/master/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
