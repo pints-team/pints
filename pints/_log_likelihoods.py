@@ -109,7 +109,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     calculates a likelihood conditioned on initial values. This topic is
     discussed further in [2]_ , chapter 5.6. Thus, for a time series defined at
     points :math:`i=1,...,N`, summation begins at :math:`i=3`, and the
-    conditional likelihood is
+    conditional log-likelihood is
 
     .. math::
         L(\theta, \sigma, \rho, \phi|\boldsymbol{x}) =
