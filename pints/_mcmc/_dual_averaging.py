@@ -47,12 +47,26 @@ class DualAveragingAdaption:
 
     def __init__(self, num_warmup_steps, target_accept_prob,
                  init_epsilon, init_inv_mass_matrix):
-        # defaults taken from STAN
+        # windowing constants (defaults taken from STAN)
         self._initial_window = 75
         self._base_window = 25
         self._terminal_window = 50
-        self._epsilon = init_epsilon
+
+        # windowing counter
         self._counter = 0
+
+        # dual averaging constants (defaults taken from STAN)
+        self._gamma = 0.05
+        self._t0 = 10.0
+        self._kappa = 0.75
+
+        # variables for dual averaging
+        self._epsilon = init_epsilon
+        self._mu = np.log(10 * self._epsilon)
+        self._log_epsilon_bar = np.log(1)
+        self._h_bar = 0.0
+        self._adapt_epsilon_counter = 0
+
         self.set_inv_mass_matrix(np.copy(init_inv_mass_matrix))
         self._target_accept_prob = target_accept_prob
 
@@ -91,9 +105,11 @@ class DualAveragingAdaption:
             self._inv_mass_matrix = inv_mass_matrix
 
     def get_mass_matrix(self):
+        """ return the mass matrix """
         return self._mass_matrix
 
     def get_epsilon(self):
+        """ return the step size """
         return self._epsilon
 
     def step(self, x, accept_prob):
@@ -144,14 +160,10 @@ class DualAveragingAdaption:
         """
         Start a new dual averaging adaption for epsilon
         """
-        # default values taken from [1]_
         self._epsilon = epsilon
         self._mu = np.log(10 * self._epsilon)
         self._log_epsilon_bar = np.log(1)
-        self._H_bar = 0.0
-        self._gamma = 0.05
-        self._t0 = 10.0
-        self._kappa = 0.75
+        self._h_bar = 0.0
         self._adapt_epsilon_counter = 0
 
     def adapt_epsilon(self, accept_prob):
@@ -167,17 +179,17 @@ class DualAveragingAdaption:
 
         eta = 1.0 / (counter + self._t0)
 
-        self._H_bar = (1 - eta) * self._H_bar \
+        self._h_bar = (1 - eta) * self._h_bar \
             + eta * (self._target_accept_prob - accept_prob)
 
-        self._log_epsilon = self._mu  \
+        log_epsilon = self._mu  \
             - (np.sqrt(counter) / self._gamma) \
-            * self._H_bar
+            * self._h_bar
 
         x_eta = counter**(-self._kappa)
-        self._log_epsilon_bar = x_eta * self._log_epsilon + \
+        self._log_epsilon_bar = x_eta * log_epsilon + \
             (1 - x_eta) * self._log_epsilon_bar
-        self._epsilon = np.exp(self._log_epsilon)
+        self._epsilon = np.exp(log_epsilon)
 
     def final_epsilon(self):
         """
@@ -189,16 +201,16 @@ class DualAveragingAdaption:
         """
         Start a new adaption window for the inverse mass matrix
         """
-        n = self._inv_mass_matrix.shape[0]
-        self._samples = np.empty((n, size))
+        n_params = self._inv_mass_matrix.shape[0]
+        self._samples = np.empty((n_params, size))
         self._num_samples = 0
 
-    def add_parameter_sample(self, x):
+    def add_parameter_sample(self, sample):
         """
         Store the parameter samples so that we can later on calculate a sample
         covariance
         """
-        self._samples[:, self._num_samples] = x
+        self._samples[:, self._num_samples] = sample
         self._num_samples += 1
 
     def calculate_sample_variance(self):
@@ -207,15 +219,15 @@ class DualAveragingAdaption:
         """
         assert self._num_samples == self._samples.shape[1]
         params = self._samples.shape[0]
-        n = self._samples.shape[1]
+        samples = self._samples.shape[1]
 
         if self._inv_mass_matrix.ndim == 1:
             sample_covariance = np.var(self._samples, axis=1)
-            I = np.ones(params)
+            identity = np.ones(params)
         else:
             sample_covariance = np.cov(self._samples)
-            I = np.eye(params)
+            identity = np.eye(params)
 
         # adapt the sample covariance in a similar way to Stan
-        return (n / (n + 5.0)) * sample_covariance \
-            + 1e-3 * (5.0 / (n + 5.0)) * I
+        return (samples / (samples + 5.0)) * sample_covariance \
+            + 1e-3 * (5.0 / (samples + 5.0)) * identity
