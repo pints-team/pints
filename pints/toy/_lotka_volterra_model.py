@@ -115,10 +115,10 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
 
     def suggested_values(self):
         """
-        Returns hare-lynx pelt count data collected by the Hudson's
-        Bay Company in Canada in the early twentieth century, which is taken
-        from [2]_. The data given here corresponds to annual observations
-        taken from 1900-1920 (inclusive).
+        Returns hare-lynx pelt count data collected by the Hudson's Bay Company
+        in Canada in the early twentieth century, which is taken from [2]_. 
+        The data given here corresponds to annual observations taken from 
+        1900-1920 (inclusive).
         """
         return np.array([
             [30.0, 4.0],     # 1900

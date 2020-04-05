@@ -9,7 +9,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
-from scipy.integrate import odeint
+import scipy
 
 
 class ToyLogPDF(pints.LogPDF):
@@ -207,13 +207,15 @@ class ToyODEModel(ToyModel):
             n_outputs = self.n_outputs()
             y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
-            result = odeint(self._rhs_S1, y0, times, (parameters,))
+            result = scipy.integrate.odeint(
+                self._rhs_S1, y0, times, (parameters,))
             values = result[:, 0:n_outputs]
             dvalues_dp = (result[:, n_outputs:].reshape(
                 (len(times), n_outputs, n_params), order="F"))
             return values[offset:], dvalues_dp[offset:]
         else:
-            values = odeint(self._rhs, self._y0, times, (parameters,))
+            values = scipy.integrate.odeint(
+                self._rhs, self._y0, times, (parameters,))
             return values[offset:]
 
     def simulateS1(self, parameters, times):
