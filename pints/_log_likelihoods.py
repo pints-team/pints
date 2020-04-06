@@ -14,8 +14,9 @@ import scipy.special
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming AR(1) (autoregressive order 1)
-    errors. In this error model, the ith error term
+    Calculates a log-likelihood assuming AR(1) (autoregressive order 1) errors.
+
+    In this error model, the ith error term
     :math:`\epsilon_i = x_i - f_i(\theta)` is assumed to obey the following
     relationship.
 
@@ -92,9 +93,10 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming ARMA(1,1) errors. The ARMA(1,1) model
-    has 1 autoregressive term and 1 moving average term. It assumes that the
-    errors :math:`\epsilon_i = x_i - f_i(\theta)` obey
+    Calculates a log-likelihood assuming ARMA(1,1) errors.
+
+    The ARMA(1,1) model has 1 autoregressive term and 1 moving average term. It
+    assumes that the errors :math:`\epsilon_i = x_i - f_i(\theta)` obey
 
     .. math::
         \epsilon_i = \nu_i + \rho \epsilon_{i-1} + \phi \nu_{i-1}
