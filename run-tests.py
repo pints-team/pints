@@ -395,7 +395,6 @@ def run_notebook_tests(skip_slow_books=False):
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    debug = True
 
     # Ignore books with deliberate errors and books that are too slow for
     # fast testing.
@@ -431,10 +430,7 @@ def run_notebook_tests(skip_slow_books=False):
     print('Testing notebooks')
     ok = True
     for notebook in list_notebooks('examples', True, ignore_list):
-        if debug:
-            print(notebook)
-        else:
-            ok &= test_notebook(notebook)
+        ok &= test_notebook(notebook)
     if not ok:
         print('\nErrors encountered in notebooks')
         sys.exit(1)
@@ -512,7 +508,7 @@ def test_notebook(path):
         print('ABORTED')
         sys.exit(1)
 
-    # Sucessfully run
+    # Successfully run
     print('ok (' + b.format() + ')')
     return True
 
