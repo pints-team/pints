@@ -253,8 +253,9 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # We use the condition number defined in the pycma code at
         # cma/evolution_strategy.py#L2965.
-        diag_D = np.diagonal(self._S)
-        if (np.max(diag_D) / np.min(diag_D)) ** 2 > 1e14:
+        cond = np.diagonal(self._S)
+        cond = (np.max(cond) / np.min(cond)) ** 2
+        if cond > 1e14:     # pramga: no cover
             return 'Ill-conditioned covariance matrix'
         return False
 

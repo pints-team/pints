@@ -169,6 +169,30 @@ class TestBareCMAES(unittest.TestCase):
         opt = method(np.array([0, 1.01]))
         self.assertIn('Bare-bones CMA-ES', opt.name())
 
+    def test_covariance_matrix_and_mean(self):
+        # Tests getting the covariance matrix and mean
+
+        r, x, s, b = self.problem()
+        opt = method(x)
+
+        e = pints.ParallelEvaluator(r)
+        for i in range(10):
+            opt.tell(e.evaluate(opt.ask()))
+
+        # Get covariance matrix: check shape and symmetry
+        C = opt.cov()
+        self.assertEqual(C.shape, (2, 2))
+        self.assertTrue(np.all(C == C.T))
+
+        # Get decomposition
+        R, S = opt.cov(decomposed=True)
+        error = np.max(np.abs(C - R.dot(S).dot(S).dot(R.T)))
+        self.assertLess(error, 1e-15)
+
+        # Get mean
+        mean = opt.mean()
+        self.assertEqual(mean.shape, (2, ))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
