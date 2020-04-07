@@ -42,64 +42,6 @@ class TestBareCMAES(unittest.TestCase):
 
     def test_unbounded(self):
         # Runs an optimisation without boundaries.
-        r, x0, sigma0, b = self.problem()
-
-        # Show animation of progress
-        if False:
-            x0 = [0.7, 0.6]
-
-            import matplotlib.pyplot as plt
-            from matplotlib.patches import Ellipse
-
-            plt.figure(figsize=(10, 10))
-            ax = plt.subplot(1, 1, 1)
-            plt.xlim(-0.6, 1)
-            plt.ylim(-0.6, 1)
-            plt.plot([0], [0], 'o', label='true')
-
-            x = np.arange(-1.5, 1.5, 0.1)
-            X, Y = np.meshgrid(x, x)
-            f = np.copy(X)
-            for i, xx in enumerate(x):
-                for j, yy in enumerate(x):
-                    f[i, j] = np.sqrt(r([xx, yy]))
-            plt.contour(X, Y, f)
-
-            opt = pints.BareCMAES(x0, sigma0)
-
-            e = pints.ParallelEvaluator(r)
-
-            x1, y1 = x0
-            for i in range(60):
-
-                # Plot jump in mean of distribution
-                x2, y2 = opt.mean()
-                plt.plot([x1, x2], [y1, y2], 'x-', color='tab:blue')
-                x1, y1 = x2, y2
-
-                # Draw ellipse of covariance matrix
-                # width = 2 * first eigenvalue
-                # height = 2 * second eigenvalue
-                # rotation = first eigenvector
-                R, S = opt.cov(True)
-                w = 2 * S[0, 0]     # First eigenvalue
-                h = 2 * S[1, 1]     # Second eigenvalue
-                t = np.arctan2(R[1, 0], R[0, 0])  # Angle of first eigenvector
-                ellipse = Ellipse((x2, y2), w, h, t * 180 / np.pi, **{
-                    'facecolor': 'none',
-                    'edgecolor': 'red',
-                    'alpha': 1,
-                })
-                ax.add_patch(ellipse)
-
-                # Move to next point
-                opt.tell(e.evaluate(opt.ask()))
-
-                plt.pause(0.2)
-                ellipse.remove()
-
-            return
-
         r, x, s, b = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         opt.set_threshold(1e-3)
