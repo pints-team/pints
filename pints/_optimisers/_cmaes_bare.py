@@ -255,7 +255,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # cma/evolution_strategy.py#L2965.
         cond = np.diagonal(self._S)
         cond = (np.max(cond) / np.min(cond)) ** 2
-        if cond > 1e14:     # pramga: no cover
+        if cond > 1e14:     # pragma: no cover
             return 'Ill-conditioned covariance matrix'
         return False
 
