@@ -97,7 +97,7 @@ class TestGradientDescent(unittest.TestCase):
             Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
 
         # Ask
-        xs = opt.ask()
+        opt.ask()
 
         # Now we should be running
         self.assertTrue(opt.running())
