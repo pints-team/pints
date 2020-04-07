@@ -8,12 +8,6 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
-import logging
-import numpy as np
-
-from numpy.linalg import norm
-from scipy.special import gamma
-
 import pints
 
 
