@@ -13,7 +13,6 @@ import pints
 import pints.toy
 
 from shared import CircularBoundaries
-from shared import StreamCapture
 
 debug = False
 method = pints.BareCMAES
