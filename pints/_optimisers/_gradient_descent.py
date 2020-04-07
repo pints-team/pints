@@ -42,8 +42,9 @@ class GradientDescent(pints.Optimiser):
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
 
-        # Ready for tell now
+        # Running, and ready for tell now
         self._ready_for_tell = True
+        self._running = True
 
         # Return proposed points (just the one)
         return [self._proposed]
@@ -101,9 +102,6 @@ class GradientDescent(pints.Optimiser):
         if not self._ready_for_tell:
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
-
-        # Definitely running
-        self._running = True
 
         # Unpack reply
         fx, dfx = reply[0]

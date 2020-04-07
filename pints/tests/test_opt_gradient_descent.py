@@ -85,6 +85,7 @@ class TestGradientDescent(unittest.TestCase):
         opt = method(x)
 
         # Stop called when not running
+        self.assertFalse(opt.running())
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
@@ -94,6 +95,12 @@ class TestGradientDescent(unittest.TestCase):
         # Tell before ask
         self.assertRaisesRegex(
             Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
+
+        # Ask
+        xs = opt.ask()
+
+        # Now we should be running
+        self.assertTrue(opt.running())
 
     def test_hyper_parameter_interface(self):
         # Tests the hyper parameter interface for this optimiser.
