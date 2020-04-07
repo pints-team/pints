@@ -246,26 +246,9 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         """ See :meth:`Optimiser.name()`. """
         return 'Bare-bones CMA-ES'
 
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-
-        # TODO
-        raise NotImplementedError
-
     def running(self):
         """ See :meth:`Optimiser.running()`. """
         return self._running
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[population_size]``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        # self.set_population_size(x[0])
-
-        # TODO
-        raise NotImplementedError
 
     def stop(self):
         """ See :meth:`Optimiser.stop()`. """
@@ -274,7 +257,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # cma/evolution_strategy.py#L2965.
         diag_D = np.diagonal(self._S)
         if (np.max(diag_D) / np.min(diag_D)) ** 2 > 1e14:
-            return 'Ill-conditionned covariance matrix'
+            return 'Ill-conditioned covariance matrix'
         return False
 
     def _suggested_population_size(self):
@@ -313,24 +296,18 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # Update the mean
         self._mu += self._cm * np.sum(
-            np.multiply((xs[:npa] - self._mu).T, self._W[:npa]).T,
-            axis=0
-        )
-
-        # Normalizing constants for the evolution path udpate
-        norm_cst_sig = np.sqrt(self._csig * (2 - self._csig) * self._muEff)
-        norm_cst_c = np.sqrt(self._ccov * (2 - self._ccov) * self._muEff)
+            ((xs[:npa] - self._mu).T * self._W[:npa]).T, axis=0)
 
         # Get the weighted means of y and z
-        zmeans = np.sum(np.multiply(zs[:npa].T, self._W[:npa]).T, 0)
-        ymeans = np.sum(np.multiply(ys[:npa].T, self._W[:npa]).T, 0)
+        zmeans = np.sum((zs[:npa].T * self._W[:npa]).T, 0)
+        ymeans = np.sum((ys[:npa].T * self._W[:npa]).T, 0)
 
         # Evolution path of sigma (the step size)
         # Note that self._R.dot(zmeans) =
         #     self._R.dot(np.linalg.inv(self._S)).dot(self._R.T).dot(ymeans)
-        self._psig = (
-            (1 - self._csig) * self._psig + norm_cst_sig * self._R.dot(zmeans)
-        )
+        # Normalizing constants for the evolution path udpate
+        c = np.sqrt(self._csig * (2 - self._csig) * self._muEff)
+        self._psig = (1 - self._csig) * self._psig + c * self._R.dot(zmeans)
 
         # In cma/sigma_adaptation.py#L71 they are NOT using exp_size_N0I, but
         # instead use a term based on n_parameters.
@@ -346,7 +323,8 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         delta_sig = (1 - h_sig) * self._ccov * (2 - self._ccov)
 
         # Evolution path for the rank-1 update
-        self._pc = (1 - self._ccov) * self._pc + h_sig * norm_cst_c * ymeans
+        c = np.sqrt(self._ccov * (2 - self._ccov) * self._muEff)
+        self._pc = (1 - self._ccov) * self._pc + h_sig * c * ymeans
 
         # Weight changes taken from the tutorial (no explanation is given for
         # the change) these weights are used for the rank mu update only.
@@ -364,7 +342,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # Calculate the rank-mu update
         yy = np.array([np.outer(y, y) for y in ys]).T
-        rankmu = self._cmu * np.sum(np.multiply(yy, temp_weights).T, 0)
+        rankmu = self._cmu * np.sum((yy * temp_weights).T, 0)
 
         # Update C
         self._C = rank1 + rankmu + self._C * (
@@ -398,7 +376,5 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
     def xbest(self):
         """ See :meth:`Optimiser.xbest()`. """
-        if self._running:
-            return np.array(self._xbest, copy=True)
-        return np.array([float('inf')] * self._n_parameters)
+        return self._xbest
 
