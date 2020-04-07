@@ -62,6 +62,12 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Number of iterations run
         self._iterations = 0
 
+        # Mean of the proposal distribution
+        self._mu = np.copy(self._x0)
+
+        # Step size
+        self._eta = np.min(self._sigma0)
+
         # Covariance matrix C and decomposition in rotation R and scaling S
         # A decomposition C = R S S R.T can be made, such that R is the matrix
         # of eigenvectors of C, and S is a diagonal matrix containing the
@@ -138,8 +144,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
     def fbest(self):
         """ See :meth:`Optimiser.fbest()`. """
-        if not self._running:
-            return float('inf')
         return self._fbest
 
     def mean(self):
@@ -162,12 +166,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
                 self._boundaries)
         elif self._boundaries is not None:
             self._manual_boundaries = True
-
-        # Mean of the proposal distribution
-        self._mu = np.copy(self._x0)
-
-        # Step size
-        self._eta = np.min(self._sigma0)
 
         # Parent generation population size
         # The parameter parent_pop_size is the mu in the papers. It represents
