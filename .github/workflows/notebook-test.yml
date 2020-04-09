@@ -29,4 +29,4 @@ jobs:
 
       - name: run jupyter notebooks
         run: |
-          python run-tests.py --allbooks
+          python run-tests.py --books
