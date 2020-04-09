@@ -105,16 +105,31 @@ class ABCController(object):
             if not ok:
                 raise ValueError('Given method must extend pints.ABCSampler.')
 
-        # Initialisation
-        self._parallel = False
-        self._n_workers = 1
-        self._max_iterations = 10000
-        self._n_target = 500
+        # Create sampler
         self._sampler = method(log_prior)
+
+        # Target number of samples
+        self._n_target = 500
+        self.set_n_target()
+
+        # Logging
         self._log_to_screen = True
         self._log_filename = None
         self._log_csv = False
         self.set_log_interval()
+
+        # Parallelisation
+        self._parallel = False
+        self._n_workers = 1
+        self.set_parallel()
+
+        #
+        # Stopping criteria
+        #
+
+        # Maximum iterations
+        self._max_iterations = 10000
+
 
     def set_log_interval(self, iters=20, warm_up=3):
         """
@@ -325,7 +340,7 @@ class ABCController(object):
 
     def set_n_target(self, n_target=500):
         """
-        Sets a target number of samples
+        Sets a target number of samples.
         """
         self._n_target = n_target
 
