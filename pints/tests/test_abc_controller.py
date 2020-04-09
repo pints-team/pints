@@ -8,10 +8,14 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
-import pints.toy
+
 import unittest
 import numpy as np
+
+
+import pints
+import pints.toy
+
 from shared import StreamCapture
 
 # Consistent unit testing in Python 2 and 3
@@ -19,9 +23,6 @@ try:
     unittest.TestCase.assertRaisesRegex
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
-
-debug = False
 
 
 class TestABCController(unittest.TestCase):
@@ -53,8 +54,9 @@ class TestABCController(unittest.TestCase):
         cls.error_measure = pints.RootMeanSquaredError(cls.problem)
 
     def test_nparameters_error(self):
-        """ Test that error is thrown when parameters from log prior and error
-        measure do not match"""
+        # Test that error is thrown when parameters from log prior and error
+        # measure do not match
+
         log_prior = pints.UniformLogPrior(
             [0.0, 0, 0],
             [0.2, 100, 1])
@@ -63,7 +65,7 @@ class TestABCController(unittest.TestCase):
                           log_prior)
 
     def test_stopping(self):
-        """ Test different stopping criteria. """
+        # Test different stopping criteria.
 
         abc = pints.ABCController(self.error_measure, self.log_prior)
 
@@ -82,7 +84,7 @@ class TestABCController(unittest.TestCase):
             ValueError, 'At least one stopping criterion', abc.run)
 
     def test_parallel(self):
-        """ Test running ABC with parallisation. """
+        # Test running ABC with parallisation.
 
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.RejectionABC)
@@ -98,7 +100,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(abc.parallel(), 2)
 
     def test_logging(self):
-        # tests logging to screen
+        # Test logging to screen
+
         # No output
         with StreamCapture() as capture:
             abc = pints.ABCController(
@@ -153,7 +156,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(capture.text(), '')
 
     def test_controller_extra(self):
-        # tests various controller aspects
+        # Test various controller aspects
+
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           self.error_measure)
         self.assertRaisesRegex(
@@ -190,8 +194,4 @@ class TestABCController(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

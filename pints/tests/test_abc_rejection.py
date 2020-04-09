@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the adaptive covariance MCMC routine.
 #
@@ -6,10 +6,11 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pints
-import pints.toy as toy
 import unittest
 import numpy as np
+
+import pints
+import pints.toy as toy
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -20,12 +21,14 @@ except AttributeError:
 
 class TestRejectionABC(unittest.TestCase):
     """
-    Tests the basic methods of the ABC Rejection routine.
+    Tests the ABC Rejection routine.
     """
-# Set up toy model, parameter values, problem, error measure
+
     @classmethod
     def setUpClass(cls):
-        """ Set up problem for tests. """
+        """
+        Set up toy model, parameter values, problem, error measure.
+        """
 
         # Create toy model
         cls.model = toy.StochasticDegradationModel()
@@ -48,7 +51,7 @@ class TestRejectionABC(unittest.TestCase):
 
     def test_method(self):
 
-        # Create abc rejection scheme
+        # Create abc rejection sampler
         abc = pints.RejectionABC(self.log_prior)
 
         # Configure
@@ -71,7 +74,8 @@ class TestRejectionABC(unittest.TestCase):
         self.assertEqual(samples.shape[0], niter)
 
     def test_errors(self):
-        # test errors in abc rejection
+        # Test errors in abc rejection
+
         abc = pints.RejectionABC(self.log_prior)
         abc.ask(1)
         # test two asks raises error
@@ -83,7 +87,8 @@ class TestRejectionABC(unittest.TestCase):
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
     def test_setters_and_getters(self):
-        # test setting and getting
+        # Test setting and getting
+
         abc = pints.RejectionABC(self.log_prior)
         self.assertEqual('Rejection ABC', abc.name())
         self.assertEqual(abc.threshold(), 1)
