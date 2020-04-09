@@ -13,7 +13,8 @@ import numpy as np
 
 class ABCSampler(pints.Loggable, pints.TunableMethod):
     """
-    Abstract base class for ABC methods.
+    Abstract base class for Approximate Bayesian Computation (ABC) methods.
+
     All ABC samplers implement the :class:`pints.Loggable` and
     :class:`pints.TunableMethod` interfaces.
     """
@@ -56,17 +57,17 @@ class ABCController(object):
 
         posterior_estimate = abc.run()
 
-    Constructor arguments:
-    ``error_measure``
-    An error measure to evaluate on a problem, given a forward model,
-    simulated and observed data, and times
+    Parameters
+    ----------
+    error_measure
+        An error measure to evaluate on a problem, given a forward model,
+        simulated and observed data, and times
+    log_prior
+        A :class:`LogPrior` function from which parameter values are sampled
+    method
+        The class of :class:`ABCSampler` to use. If no method is specified,
+        :class:`pints.RejectionABC` is used.
 
-    ``log_prior``
-    A :class:`LogPrior` function from which parameter values are sampled
-
-    ``method``
-    The class of :class:`ABCSampler` to use. If no method is specified,
-    :class:`RejectionABC` is used.
     """
     def __init__(self, error_measure, log_prior, method=None):
 
@@ -117,11 +118,11 @@ class ABCController(object):
         """
         Changes the frequency with which messages are logged.
 
-        Arguments:
-
-        ``interval``
+        Paramaters
+        ----------
+        interval
             A log message will be shown every ``iters`` iterations.
-        ``warm_up``
+        warm_up
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
 

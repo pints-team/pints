@@ -13,8 +13,10 @@ import numpy as np
 
 class RejectionABC(pints.ABCSampler):
     """
-    Rejection ABC algorithm  See, for example, [1]_. In each iteration of the
-    algorithm, the following steps occur::
+    Rejection ABC sampler.
+
+    See, for example, [1]_. In each iteration of the algorithm, the following
+    steps occur::
 
         theta* ~ p(theta), i.e. sample parameters from prior distribution
         x ~ p(x|theta*), i.e. sample data from sampling distribution
@@ -75,10 +77,11 @@ class RejectionABC(pints.ABCSampler):
 
     def set_threshold(self, threshold):
         """
-        Sets threshold error distance that determines if a sample is accepted]
-        (if error < threshold).
+        Sets threshold error distance that determines if a sample is accepted
+        (``if error < threshold``).
         """
         x = float(threshold)
         if x <= 0:
             raise ValueError('Threshold must be positive.')
         self._threshold = threshold
+
