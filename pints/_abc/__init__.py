@@ -256,23 +256,20 @@ class ABCController(object):
 
         samples = []
         while running:
-            # Sample until a given sample is accepted
-            xs = self._sampler.ask(self._n_workers)
-            fxs = evaluator.evaluate(xs)
-            evaluations += self._n_workers
-            accepted_vals = self._sampler.tell(fxs)
-            if accepted_vals is not None:
-                accepted_count += len(accepted_vals)
+            iteration += 1
+
+            # Sample until a sample has been accepted
+            accepted_vals = None
             while accepted_vals is None:
                 xs = self._sampler.ask(self._n_workers)
                 fxs = evaluator.evaluate(xs)
-                accepted_vals = self._sampler.tell(fxs)
                 evaluations += self._n_workers
-                if accepted_vals is not None:
-                    accepted_count += len(accepted_vals)
+                accepted_vals = self._sampler.tell(fxs)
+
+            # Store the accepted samples
+            accepted_count += len(accepted_vals)
             for val in accepted_vals:
                 samples.append(val)
-            iteration += 1
 
             # Show progress
             if logging and iteration >= next_message:
