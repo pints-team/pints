@@ -7,8 +7,10 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
+
 import numpy as np
+
+import pints
 
 
 class ABCSampler(pints.Loggable, pints.TunableMethod):

@@ -6,8 +6,8 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import unittest
 import numpy as np
+import unittest
 
 import pints
 import pints.toy as toy
