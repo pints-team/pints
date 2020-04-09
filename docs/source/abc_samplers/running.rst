@@ -1,8 +1,7 @@
 **********************
-ABC sampler base class
+Running an ABC sampler
 **********************
 
 .. currentmodule:: pints
 
-.. autoclass:: ABCSampler
 .. autoclass:: ABCController
