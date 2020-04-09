@@ -65,7 +65,7 @@ relevant code.
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
-### ABC
+### Approximate Bayesian Computation (ABC)
 - [ABC rejection sampling](./sampling/abc-rejection.ipynb)
 
 ### Analysing sampling results

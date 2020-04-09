@@ -219,12 +219,16 @@ from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
 
+
+#
+# ABC
+#
 from ._abc import (
     ABCSampler,
     ABCController
 )
-
 from ._abc._abc_rejection import RejectionABC
+
 
 #
 # Nested samplers
