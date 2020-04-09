@@ -130,7 +130,6 @@ class ABCController(object):
         # Maximum iterations
         self._max_iterations = 10000
 
-
     def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
