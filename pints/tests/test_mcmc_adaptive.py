@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the adaptive covariance base class.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy as toy
@@ -147,10 +146,9 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertTrue(mcmc.in_initial_phase())
 
     def test_logging(self):
-        """
-        Test logging includes acceptance rate, evaluations, iterations and
-        time.
-        """
+        # Test logging includes acceptance rate, evaluations, iterations and
+        # time.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.HaarioACMC)

@@ -2,10 +2,9 @@
 #
 # Tests the Pints plot methods.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy as toy
@@ -15,9 +14,7 @@ import numpy as np
 import matplotlib
 
 # Select matplotlib backend that doesn't require a screen
-matplotlib.use('Agg')
-
-debug = False
+matplotlib.use('Agg')  # noqa
 
 
 class TestPlot(unittest.TestCase):
@@ -82,11 +79,11 @@ class TestPlot(unittest.TestCase):
 
         # Create an object with links to the model and time series
         self.problem2 = pints.MultiOutputProblem(
-            self.model2, self.times2, self.values2)
+            self.model2, self.times2, np.log(self.values2))
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior2 = pints.UniformLogPrior([1, 1, 1, 1], [6, 6, 6, 6])
+        self.log_prior2 = pints.UniformLogPrior([0, 0, 0, 0], [6, 6, 6, 6])
         # Create a log likelihood
         self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
             self.problem2, self.noise2)
@@ -176,6 +173,10 @@ class TestPlot(unittest.TestCase):
         pints.plot.function(self.log_posterior3, self.real_parameters3,
                             self.lower3, self.upper3)
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
     def test_function_between_points(self):
         # Tests the function_between_points function.
 
@@ -244,6 +245,10 @@ class TestPlot(unittest.TestCase):
                                            self.lower3,
                                            self.upper3)
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
     def test_histogram(self):
         # Tests the histogram function.
 
@@ -282,6 +287,10 @@ class TestPlot(unittest.TestCase):
         pints.plot.histogram(few_samples3,
                              ref_parameters=self.real_parameters3)
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
     def test_trace(self):
         # Tests the trace function.
 
@@ -316,6 +325,10 @@ class TestPlot(unittest.TestCase):
         pints.plot.trace(few_samples3,
                          ref_parameters=self.real_parameters3)
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
     def test_autocorrelation(self):
         # Tests the autocorrelation function.
 
@@ -330,6 +343,10 @@ class TestPlot(unittest.TestCase):
 
         # Test it works with single parameter
         pints.plot.autocorrelation(self.samples3[0], max_lags=20)
+
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
 
     def test_series(self):
         # Tests the series function.
@@ -396,6 +413,10 @@ class TestPlot(unittest.TestCase):
             self.real_parameters2[:-2]
         )
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
     def test_pairwise(self):
         # Tests the pairwise function.
 
@@ -449,10 +470,10 @@ class TestPlot(unittest.TestCase):
             pints.plot.pairwise, few_samples3
         )
 
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

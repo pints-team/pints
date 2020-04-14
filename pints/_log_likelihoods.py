@@ -1,10 +1,9 @@
 #
 # Log-likelihood functions
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -136,6 +135,66 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
+
+
+class CauchyLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent Cauchy-distributed noise
+    at each time point, and adds one parameter: the scale (``sigma``).
+
+    For a noise characterised by ``sigma``, the log-likelihood is of the form:
+
+    .. math::
+        \log{L(\theta, \sigma)} =
+              -N\log \pi - N\log \sigma
+              -\sum_{i=1}^N\log(1 +
+            \frac{x_i - f(\theta)}{\sigma}^2)
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem one parameter is added ``sigma``, where
+        ``sigma`` is scale, for a multi-output problem ``n_outputs``
+        parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(CauchyLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem (one for each output)
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate
+        self._n = len(self._times)
+        self._n_log_pi = self._n * np.log(np.pi)
+
+    def __call__(self, x):
+        # For multiparameter problems the parameters are stored as
+        # (model_params_1, model_params_2, ..., model_params_k,
+        # sigma_1, sigma_2,...)
+        n = self._n
+        m = self._no
+
+        # problem parameters
+        problem_parameters = x[:-m]
+        error = self._values - self._problem.evaluate(problem_parameters)
+
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+
+        # Calculate
+        return np.sum(
+            - self._n_log_pi
+            - n * np.log(sigma)
+            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
+        )
 
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
@@ -276,66 +335,6 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             self._n_minus_1_over_2 * np.log(sse) +
             self._log_gamma +
             log_temp
-        )
-
-
-class CauchyLogLikelihood(pints.ProblemLogLikelihood):
-    r"""
-    Calculates a log-likelihood assuming independent Cauchy-distributed noise
-    at each time point, and adds one parameter: the scale (``sigma``).
-
-    For a noise characterised by ``sigma``, the log-likelihood is of the form:
-
-    .. math::
-        \log{L(\theta, \sigma)} =
-              -N\log \pi - N\log \sigma
-              -\sum_{i=1}^N\log(1 +
-            \frac{x_i - f(\theta)}{\sigma}^2)
-
-    Extends :class:`ProblemLogLikelihood`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem one parameter is added ``sigma``, where
-        ``sigma`` is scale, for a multi-output problem ``n_outputs``
-        parameters are added.
-    """
-
-    def __init__(self, problem):
-        super(CauchyLogLikelihood, self).__init__(problem)
-
-        # Get number of times, number of outputs
-        self._nt = len(self._times)
-        self._no = problem.n_outputs()
-
-        # Add parameters to problem (one for each output)
-        self._n_parameters = problem.n_parameters() + self._no
-
-        # Pre-calculate
-        self._n = len(self._times)
-        self._n_log_pi = self._n * np.log(np.pi)
-
-    def __call__(self, x):
-        # For multiparameter problems the parameters are stored as
-        # (model_params_1, model_params_2, ..., model_params_k,
-        # sigma_1, sigma_2,...)
-        n = self._n
-        m = self._no
-
-        # problem parameters
-        problem_parameters = x[:-m]
-        error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
-
-        # Calculate
-        return np.sum(
-            - self._n_log_pi
-            - n * np.log(sigma)
-            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
         )
 
 
@@ -519,6 +518,79 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianKnownSigmaLogLikelihood` instead.')
         super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
+
+
+class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming heteroscedastic Gaussian errors, with
+    the magnitude of the error variance scaling with the problem output.
+
+    For each output in the problem, this likelihood introduces two new scalar
+    parameters: an exponential power ``eta`` and a scale ``sigma``.
+
+    This likelihood is applicable to a model given by
+
+    .. math::
+        X(t) = f(t; \theta) + f(t; \theta)^\eta v(t)
+
+    where v(t) is iid Gaussian:
+
+    .. math::
+        v(t) \sim \text{ iid } N(0, \sigma)
+
+    Note that the scalar parameter ``eta`` controls the exponential dependence
+    of the noise on the function output, while the scalar parameter ``sigma``
+    provides a baseline level of the noise standard deviation. This model leads
+    to a log likelihood of
+
+    .. math::
+        \log{L(\theta, \sigma, \eta | \boldsymbol{x})} =
+            -\frac{n_t}{2} \log{2 \pi}
+            -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
+            -\frac{1}{2}\sum_{i=1}^{n_t}
+                \frac{(X(t_i) - f(t_i, \theta))^2}
+                {(f(t_i, \theta)^\eta \sigma)^2}
+
+    where ``n_t`` is the number of time points in the series.
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem two parameters are added (``eta``, ``sigma``),
+        for a multi-output problem 2 times ``n_outputs`` parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(MultiplicativeGaussianLogLikelihood, self).__init__(problem)
+
+        # Get number of times and number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + 2 * self._no
+
+        # Pre-calculate the constant part of the likelihood
+        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        m = 2 * self._no
+        noise_parameters = x[-m:]
+        eta = np.asarray(noise_parameters[0::2])
+        sigma = np.asarray(noise_parameters[1::2])
+        function_values = self._problem.evaluate(x[:-m])
+
+        log_likelihood = \
+            np.sum(-self._logn
+                   - np.sum(np.log(function_values**eta * sigma), axis=0)
+                   - 0.5 / sigma**2
+                   * np.sum((self._values - function_values)**2
+                            / function_values ** (2 * eta), axis=0))
+
+        return log_likelihood
 
 
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):

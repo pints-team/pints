@@ -1,10 +1,9 @@
 #
 # Random-walk Metropolis MCMC
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,8 +15,16 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
     Metropolis Random Walk MCMC, as described in [1]_.
 
-    Standard Metropolis using multivariate Gaussian distribution as proposal
-    step, also known as Metropolis Random Walk MCMC.
+    Metropolis using multivariate Gaussian distribution as proposal step, also
+    known as Metropolis Random Walk MCMC. In each iteration (t) of the
+    algorithm, the following occurs::
+
+        propose x' ~ N(x_t, Sigma)
+        generate u ~ U(0, 1)
+        calculate r = pi(x') / pi(x_t)
+        if r > u, x_t+1 = x'; otherwise, x_t+1 = x_t
+
+    here Sigma is the covariance matrix of the proposal.
 
     Extends :class:`SingleChainMCMC`.
 
@@ -174,4 +181,3 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         self._current = current
         self._current_log_pdf = current_log_pdf
         self._proposed = proposed
-

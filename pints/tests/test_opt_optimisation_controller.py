@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the pints.OptimisationController class
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -34,7 +33,8 @@ class TestOptimisationController(unittest.TestCase):
         np.random.seed(1)
 
     def test_optimise(self):
-        """ Tests :meth: `pints.optimise()`. """
+        # Tests :meth: `pints.optimise()`.
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         s = 0.01
@@ -45,7 +45,8 @@ class TestOptimisationController(unittest.TestCase):
         self.assertTrue(f < 1e-6)
 
     def test_stopping_max_iterations(self):
-        """ Runs an optimisation with the max_iter stopping criterion. """
+        # Runs an optimisation with the max_iter stopping criterion.
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -127,7 +128,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertRaises(ValueError, opt.set_log_interval, 0)
 
     def test_stopping_max_unchanged(self):
-        """ Runs an optimisation with the max_unchanged stopping criterion. """
+        # Runs an optimisation with the max_unchanged stopping criterion.
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -148,7 +149,8 @@ class TestOptimisationController(unittest.TestCase):
             self.assertIn('Halting: No significant change', c.text())
 
     def test_stopping_threshold(self):
-        """ Runs an optimisation with the threshold stopping criterion. """
+        # Runs an optimisation with the threshold stopping criterion.
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0.008, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -165,7 +167,8 @@ class TestOptimisationController(unittest.TestCase):
                 'Halting: Objective function crossed threshold', c.text())
 
     def test_stopping_no_criterion(self):
-        """ Tries to run an optimisation with the no stopping criterion. """
+        # Tries to run an optimisation with the no stopping criterion.
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -177,9 +180,8 @@ class TestOptimisationController(unittest.TestCase):
         self.assertRaises(ValueError, opt.run)
 
     def test_set_population_size(self):
-        """
-        Tests the set_population_size method for this optimiser.
-        """
+        # Tests the set_population_size method for this optimiser.
+
         r = pints.toy.RosenbrockError()
         x = np.array([1.01, 1.01])
         opt = pints.OptimisationController(r, x, method=method)
@@ -239,7 +241,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertIsInstance(opt, pints.OptimisationController)
 
     def test_post_run_statistics(self):
-        """ Test the methods to return statistics, post-run. """
+        # Test the methods to return statistics, post-run.
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -258,4 +260,8 @@ class TestOptimisationController(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    print('Add -v for more debug output')
+    import sys
+    if '-v' in sys.argv:
+        debug = True
     unittest.main()

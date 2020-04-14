@@ -9,12 +9,13 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import re
-import os
-import sys
 import argparse
-import unittest
+import datetime
+import os
+import re
 import subprocess
+import sys
+import unittest
 
 
 def run_unit_tests():
@@ -53,6 +54,51 @@ def run_flake8():
         sys.exit(ret)
 
 
+def run_copyright_checks():
+    """
+    Checks that the copyright year in LICENSE.md is up-to-date and that each
+    file contains the copyright header
+    """
+    print('\nChecking that copyright is up-to-date and complete.')
+
+    year_check = True
+    current_year = str(datetime.datetime.now().year)
+
+    with open('LICENSE.md', 'r') as license_file:
+        license_text = license_file.read()
+        if 'Copyright (c) 2017-' + current_year in license_text:
+            print("Copyright notice in LICENSE.md is up-to-date.")
+        else:
+            print('Copyright notice in LICENSE.md is NOT up-to-date.')
+            year_check = False
+
+    # Recursively walk the pints directory and check copyright header is in
+    # each checked file type
+    header_check = True
+    checked_file_types = ['.py']
+    copyright_header = """#
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#"""
+
+    for dirname, subdir_list, file_list in os.walk('pints'):
+        for f_name in file_list:
+            if any([f_name.endswith(x) for x in checked_file_types]):
+                path = os.path.join(dirname, f_name)
+                with open(path, 'r') as f:
+                    if copyright_header not in f.read():
+                        print('Copyright blurb missing from ' + path)
+                        header_check = False
+
+    if header_check:
+        print('All files contain copyright header.')
+
+    if not year_check or not header_check:
+        print('FAILED')
+        sys.exit(1)
+
+
 def run_doctests():
     """
     Runs a number of tests related to documentation
@@ -69,9 +115,6 @@ def run_doctests():
     # Check all classes and methods are documented in rst files, and no
     # unintended modules are exposed via a public interface
     doctest_rst_and_public_interface()
-
-    # Check all .slow-books exist (they haven't been, e.g., renamed or removed)
-    doctest_slow_books()
 
     print('\n{}\n# Doctests passed. #\n{}\n'.format('#' * 20, '#' * 20))
 
@@ -120,7 +163,7 @@ def doctest_examples_readme():
         index_contents = f.read()
 
     # Get a list of all notebooks in the examples directory
-    notebooks = [x for x in os.listdir('examples') if x.endswith('.ipynb')]
+    notebooks = [x[9:] for x in list_notebooks('examples')]
     assert(len(notebooks) > 10)
 
     # Find which are not indexed
@@ -134,7 +177,7 @@ def doctest_examples_readme():
         print('FAILED')
         sys.exit(1)
     else:
-        print('All example notebooks are indexed.')
+        print('All ' + str(len(notebooks)) + ' example notebooks are indexed.')
 
 
 def doctest_rst_and_public_interface():
@@ -301,122 +344,57 @@ def get_all_documented_symbols():
     return documented_symbols
 
 
-def doctest_slow_books():
-    """
-    Check that all notebooks listed in .slow-books actually exist. This
-    prevents cron jobs falling over if slow notebooks are renamed without
-    editing the list.
-    """
-
-    print('\nChecking that all notebooks listed in .slow-books exist.')
-
-    with open('.slow-books', 'r') as f:
-        slow_books = [l.strip() for l in f.readlines() if
-                      l.strip().endswith('.ipynb')]
-
-    if len(slow_books) < 1:
-        print('No slow books found in .slow-books. Did something change?')
-        print('FAILED')
-        sys.exit(1)
-
-    with open('.slow-books', 'r') as f:
-        other_lines = [l.strip() for l in f.readlines() if not (
-            l.strip().startswith('#') or
-            l.strip().endswith('.ipynb') or
-            l.strip() == ''
-        )]
-
-    if len(other_lines) > 0:
-        print('The following entries are in .slow-books but are not ipynb:')
-        print('  {}'.format('\n  '.join(other_lines)))
-        print('FAILED')
-        sys.exit(1)
-
-    examples = [l for l in os.listdir('examples') if l.endswith('ipynb')]
-    undocumented = [b for b in slow_books if b not in examples]
-
-    if len(undocumented) > 0:
-        print('The following ipynb files are in .slow-books but are not in the'
-              'examples directory:')
-        print('  {}'.format('\n  '.join(undocumented)))
-        print('FAILED')
-        sys.exit(1)
-
-    print('All notebooks listed in .slow-books exist.')
-
-
-def run_notebook_tests(skip_slow_books=False):
+def run_notebook_tests():
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    # Ignore books with deliberate errors and books that are too slow for
-    # fast testing.
-    ignore_list = []
-    if os.path.isfile('.error-books'):
-        with open('.error-books', 'r') as f:
-            for line in f.readlines():
-                line = line.strip()
-                if not line or line[:1] == '#':
-                    continue
-                if not line.startswith('examples/'):
-                    line = 'examples/' + line
-                if not line.endswith('.ipynb'):
-                    line = line + '.ipynb'
-                if not os.path.isfile(line):
-                    raise Exception('Error notebook not found: ' + line)
-                ignore_list.append(line)
-    if skip_slow_books and os.path.isfile('.slow-books'):
-        with open('.slow-books', 'r') as f:
-            for line in f.readlines():
-                line = line.strip()
-                if not line or line[:1] == '#':
-                    continue
-                if not line.startswith('examples/'):
-                    line = 'examples/' + line
-                if not line.endswith('.ipynb'):
-                    line = line + '.ipynb'
-                if not os.path.isfile(line):
-                    raise Exception('Slow notebook not found: ' + line)
-                ignore_list.append(line)
+
+    # Ignore books with deliberate errors, but check they still exist
+    ignore_list = [
+        'examples/optimisation/maximum-likelihood.ipynb'
+    ]
+
+    for ignored_book in ignore_list:
+        if not os.path.isfile(ignored_book):
+            raise Exception('Ignored notebook not found: ' + ignored_book)
 
     # Scan and run
     print('Testing notebooks')
-    if not scan_for_notebooks('examples', True, ignore_list):
+    ok = True
+    for notebook in list_notebooks('examples', True, ignore_list):
+        ok &= test_notebook(notebook)
+    if not ok:
         print('\nErrors encountered in notebooks')
         sys.exit(1)
     print('\nOK')
 
 
-def scan_for_notebooks(root, recursive=True, ignore_list=[]):
+def list_notebooks(root, recursive=True, ignore_list=None, notebooks=None):
     """
-    Scans for, and tests, all notebooks in a directory.
+    Returns a list of all notebooks in a directory.
     """
-    ok = True
-    debug = False
-
-    # Scan path
+    if notebooks is None:
+        notebooks = []
+    if ignore_list is None:
+        ignore_list = []
     for filename in os.listdir(root):
         path = os.path.join(root, filename)
         if path in ignore_list:
-            print('Skipping slow book: ' + path)
+            print('Skipping ignored notebook: ' + path)
             continue
 
+        # Add notebooks
+        if os.path.splitext(path)[1] == '.ipynb':
+            notebooks.append(path)
+
         # Recurse into subdirectories
-        if recursive and os.path.isdir(path):
+        elif recursive and os.path.isdir(path):
             # Ignore hidden directories
             if filename[:1] == '.':
                 continue
-            ok &= scan_for_notebooks(path, recursive)
+            list_notebooks(path, recursive, ignore_list, notebooks)
 
-        # Test notebooks
-        if os.path.splitext(path)[1] == '.ipynb':
-            if debug:
-                print(path)
-            else:
-                ok &= test_notebook(path)
-
-    # Return True if every notebook is ok
-    return ok
+    return notebooks
 
 
 def test_notebook(path):
@@ -466,7 +444,7 @@ def test_notebook(path):
         print('ABORTED')
         sys.exit(1)
 
-    # Sucessfully run
+    # Successfully run
     print('ok (' + b.format() + ')')
     return True
 
@@ -517,11 +495,6 @@ if __name__ == '__main__':
         help='Test only the fast Jupyter notebooks in `examples`.',
     )
     parser.add_argument(
-        '--allbooks',
-        action='store_true',
-        help='Test all Jupyter notebooks in `examples`.',
-    )
-    parser.add_argument(
         '-debook',
         nargs=2,
         metavar=('in', 'out'),
@@ -532,6 +505,12 @@ if __name__ == '__main__':
         '--doctest',
         action='store_true',
         help='Run any doctests, check if docs can be built',
+    )
+    # Copyright checks
+    parser.add_argument(
+        '--copyright',
+        action='store_true',
+        help='Check copyright runs to the current year',
     )
     # Combined test sets
     parser.add_argument(
@@ -553,13 +532,14 @@ if __name__ == '__main__':
     if args.doctest:
         has_run = True
         run_doctests()
-    # Notebook tests
-    if args.allbooks:
+    # Copyright checks
+    if args.copyright:
         has_run = True
-        run_notebook_tests()
+        run_copyright_checks()
+    # Notebook tests
     elif args.books:
         has_run = True
-        run_notebook_tests(True)
+        run_notebook_tests()
     if args.debook:
         has_run = True
         export_notebook(*args.debook)

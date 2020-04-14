@@ -2,10 +2,9 @@
 #
 # Tests the noise generators
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -147,6 +146,94 @@ class TestNoise(unittest.TestCase):
         samples = pn.arma11_unity(0.5, 0.5, 5, 10000)
         self.assertTrue(np.abs(np.mean(samples) - 1) < 1)
         self.assertTrue(np.abs(np.std(samples) - 5) < 1)
+
+    def test_multiplicative_gaussian(self):
+
+        # Test construction errors
+        self.assertRaisesRegex(
+            ValueError,
+            'Standard deviation',
+            pn.multiplicative_gaussian,
+            1.0,
+            -1.0,
+            [1, 2, 3]
+        )
+
+        self.assertRaisesRegex(
+            ValueError,
+            'Standard deviation',
+            pn.multiplicative_gaussian,
+            1.0,
+            [2.0, -1.0],
+            np.array([[1, 2, 3], [4, 5, 6]])
+        )
+
+        f_too_many_dims = np.zeros((2, 10, 5))
+        self.assertRaisesRegex(
+            ValueError,
+            'f must have be of shape',
+            pn.multiplicative_gaussian,
+            1.0,
+            1.0,
+            f_too_many_dims
+        )
+
+        self.assertRaisesRegex(
+            ValueError,
+            'eta must be',
+            pn.multiplicative_gaussian,
+            np.array([[1, 2, 3], [4, 5, 6]]),
+            1.0,
+            [1, 2, 3]
+        )
+
+        self.assertRaisesRegex(
+            ValueError,
+            'eta must be',
+            pn.multiplicative_gaussian,
+            np.array([1, 2, 3]),
+            1.0,
+            [1, 2, 3]
+        )
+
+        self.assertRaisesRegex(
+            ValueError,
+            'sigma must be',
+            pn.multiplicative_gaussian,
+            1.0,
+            np.array([[1, 2, 3], [4, 5, 6]]),
+            [1, 2, 3]
+        )
+
+        self.assertRaisesRegex(
+            ValueError,
+            'sigma must be',
+            pn.multiplicative_gaussian,
+            1.0,
+            np.array([1, 2, 3]),
+            [1, 2, 3]
+        )
+
+        # Test values
+        samples_small_f = pn.multiplicative_gaussian(2.0, 1.0, [1] * 10000)
+        self.assertTrue(np.abs(np.mean(samples_small_f)) < 1)
+        self.assertTrue(np.abs(np.std(samples_small_f) - 1) < 1)
+
+        samples_large_f = pn.multiplicative_gaussian(2.0, 1.0, [2] * 10000)
+        self.assertTrue(np.abs(np.mean(samples_large_f)) < 1)
+        self.assertTrue(np.abs(np.std(samples_large_f) - 4) < 1)
+
+        # Test multi-outputs
+        f_2d = np.array([[1, 2, 3, 4], [11, 12, 13, 14]])
+        samples_2d_eta = pn.multiplicative_gaussian([1.0, 3.0], 5.0, f_2d)
+        self.assertTrue(samples_2d_eta.shape == f_2d.shape)
+
+        samples_2d_sigma = pn.multiplicative_gaussian(1.0, [0.5, 0.75], f_2d)
+        self.assertTrue(samples_2d_sigma.shape == f_2d.shape)
+
+        samples_2d_both = pn.multiplicative_gaussian([1.0, 3.0],
+                                                     [0.5, 0.75], f_2d)
+        self.assertTrue(samples_2d_both.shape == f_2d.shape)
 
 
 if __name__ == '__main__':
