@@ -262,6 +262,9 @@ class TestPlot(unittest.TestCase):
         # Test compatiblity with one chain only
         pints.plot.histogram([self.samples[0]])
 
+        # Check kde gives no error
+        pints.plot.histogram(few_samples, kde=True)
+
         # Check n_percentiles gives no error
         pints.plot.histogram(few_samples, n_percentiles=50)
 
@@ -278,7 +281,8 @@ class TestPlot(unittest.TestCase):
             ValueError,
             r'Length of \`ref\_parameters\` must be same as number of'
             r' parameters\.',
-            pints.plot.histogram, self.samples, [self.real_parameters[0]]
+            pints.plot.histogram, self.samples,
+            ref_parameters=[self.real_parameters[0]]
         )
 
         # Test it works with single parameter
