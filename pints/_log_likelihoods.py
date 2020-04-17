@@ -25,8 +25,11 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
     where :math:`\nu_i` is IID Gaussian white noise with variance
     :math:`\sigma^2 (1-\rho^2)`. Therefore, this likelihood is appropriate when
-    the error terms are autocorrelated, and the parameter :math:`\rho`
+    error terms are autocorrelated, and the parameter :math:`\rho`
     determines the level of autocorrelation.
+
+    This model is parameterised as such because it leads to a simple marginal
+    distribution :math:`\epsilon_i \sim N(0, \sigma)`.
 
     This class treats the error at the first time point (i=1) as fixed, which
     simplifies the calculations. For sufficiently long time-series, this
@@ -99,13 +102,16 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     assumes that the errors :math:`\epsilon_i = x_i - f_i(\theta)` obey
 
     .. math::
-        \epsilon_i = \nu_i + \rho \epsilon_{i-1} + \phi \nu_{i-1}
+        \epsilon_i = \rho \epsilon_{i-1} + \nu_i + \phi \nu_{i-1}
 
     where :math:`\nu_i` is IID Gaussian white noise with standard deviation
     :math:`\sigma'`.
 
     .. math::
         \sigma' = \sigma \sqrt{\frac{1 - \rho^2}{1 + 2  \phi  \rho + \phi^2}}
+
+    This model is parameterised as such because it leads to a simple marginal
+    distribution :math:`\epsilon_i \sim N(0, \sigma)`.
 
     Due to the complexity of the exact ARMA(1,1) likelihood, this class
     calculates a likelihood conditioned on initial values. This topic is
