@@ -59,7 +59,7 @@ class GradientDescent(pints.Optimiser):
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
-        return 'Fixed learning rate gradient descent'
+        return 'Gradient descent'
 
     def needs_sensitivities(self):
         """ See :meth:`Optimiser.needs_sensitivities()`. """
