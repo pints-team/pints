@@ -48,8 +48,8 @@ class StanLogPDF(InterfaceLogPDF):
         try:
             return self._log_prob(x, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
-        except RuntimeError:
-            return -np.inf
+        except (RuntimeError, ValueError):
+                return -np.inf
 
     def _dict_update(self, x):
         """ Updates dictionary object with parameter values. """
@@ -73,10 +73,9 @@ class StanLogPDF(InterfaceLogPDF):
         try:
             val = self._log_prob(x, adjust_transform=True)
             dp = self._grad_log_prob(x, adjust_transform=True)
-        except RuntimeError:
+        except (RuntimeError, ValueError):
             val = -np.inf
             dp = np.ones(self._n_parameters)
-
         return val, dp.reshape(-1)
 
     def _initialise_dict_index(self, names):
