@@ -14,7 +14,6 @@ import pints
 import pints.toy
 
 
-
 class TestParabolicError(unittest.TestCase):
     """
     Tests the parabolic error toy error measure.
