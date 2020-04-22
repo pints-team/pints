@@ -17,6 +17,8 @@ Example::
 
 .. autoclass:: MeanSquaredError
 
+.. autoclass:: NormalisedRootMeanSquaredError
+
 .. autoclass:: ProbabilityBasedError
 
 .. autoclass:: ProblemErrorMeasure

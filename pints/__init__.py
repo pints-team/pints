@@ -135,11 +135,12 @@ from ._boundaries import (
 #
 from ._error_measures import (
     ErrorMeasure,
-    ProblemErrorMeasure,
-    ProbabilityBasedError,
-    SumOfErrors,
     MeanSquaredError,
+    NormalisedRootMeanSquaredError,
+    ProbabilityBasedError,
+    ProblemErrorMeasure,
     RootMeanSquaredError,
+    SumOfErrors,
     SumOfSquaresError,
 )
 
@@ -168,6 +169,7 @@ from ._optimisers import (
     TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
+from ._optimisers._gradient_descent import GradientDescent
 from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
@@ -195,8 +197,12 @@ from ._mcmc import (
     MultiChainMCMC,
     SingleChainMCMC,
 )
+# base classes first
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
+
+# methods
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
+from ._mcmc._dram_ac import DramACMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
