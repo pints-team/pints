@@ -25,6 +25,7 @@ relevant code.
 
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
+- [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
 - [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
