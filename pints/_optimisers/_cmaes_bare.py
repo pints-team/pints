@@ -170,9 +170,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Parent generation population size
         # The parameter parent_pop_size is the mu in the papers. It represents
         # the size of a parent population used to update our paramters.
-        # Not sure if the limitation to dim is good
-        # This limitation is supposed to prevent a mistake in the update of the
-        # covariance matrix (C) with the rank mu update
         self._parent_pop_size = self._population_size // 2
 
         # Weights, all set equal for the moment
