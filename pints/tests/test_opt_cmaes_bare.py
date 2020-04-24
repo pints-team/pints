@@ -54,7 +54,6 @@ class TestBareCMAES(unittest.TestCase):
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
-        b = pints.RectangularBoundaries([-1, -1], [1, 1])
         opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
