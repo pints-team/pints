@@ -26,6 +26,7 @@ relevant code.
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
 - [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
+- [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
 - [XNES](./optimisation/xnes.ipynb)
@@ -70,6 +71,7 @@ relevant code.
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
+- [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)

@@ -324,7 +324,7 @@ Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) 
 
 All example notebooks should be listed in [examples/README.md](https://github.com/pints-team/pints/examples/README.md). Please follow the (naming and writing) style of existing notebooks where possible.
 
-Where possible, notebooks are tested daily. A list of slow notebooks (which time-out and fail tests) is maintained in `.slow-books`, these notebooks will be excluded from daily testing.
+Notebooks are tested daily.
 
 
 ## Infrastructure

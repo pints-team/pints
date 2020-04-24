@@ -17,7 +17,7 @@ class ParabolicError(pints.ErrorMeasure):
     point.
 
     .. math::
-        f(x) = (x - c)^s
+        f(x) = \sum (x - c)^2
 
     Extends :class:`pints.ErrorMeasure`.
 
@@ -32,6 +32,11 @@ class ParabolicError(pints.ErrorMeasure):
 
     def __call__(self, x):
         return np.sum((self._c - x)**2)
+
+    def evaluateS1(self, x):
+        """ See :meth:`pints.ErrorMeasure.evaluateS1()`. """
+        x = pints.vector(x) - self._c
+        return np.sum(x**2), 2 * x
 
     def n_parameters(self):
         """ See :meth:`pints.ErrorMeasure.n_parameters()`. """

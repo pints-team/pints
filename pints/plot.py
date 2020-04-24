@@ -171,7 +171,7 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(samples, ref_parameters=None, n_percentiles=None):
+def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms for each chain or list of samples.
@@ -185,6 +185,9 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
         ``(n_lists, n_samples, n_parameters)``, where ``n_lists`` is the
         number of lists of samples, ``n_samples`` is the number of samples in
         one list and ``n_parameters`` is the number of parameters.
+    kde
+        Set to ``True`` to include kernel-density estimation for the
+        histograms.
     ref_parameters
         A set of parameters for reference in the plot. For example, if true
         values of parameters are known, they can be passed in for plotting.
@@ -192,8 +195,15 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
         Shows only the middle n-th percentiles of the distribution.
         Default shows all samples in ``samples``.
     """
+    import matplotlib
     import matplotlib.pyplot as plt
     import numpy as np
+    import scipy.stats as stats
+    from distutils.version import LooseVersion
+
+    # Check matplotlib version
+    use_old_matplotlib = LooseVersion(matplotlib.__version__) \
+        < LooseVersion("2.2")
 
     # If we switch to Python3 exclusively, bins and alpha can be keyword-only
     # arguments
@@ -237,9 +247,19 @@ def histogram(samples, ref_parameters=None, n_percentiles=None):
                 xmax = np.percentile(samples_j[:, i],
                                      50 + n_percentiles / 2.)
             xbins = np.linspace(xmin, xmax, bins)
-            axes[i, 0].hist(
-                samples_j[:, i], bins=xbins, alpha=alpha,
-                label='Samples ' + str(1 + j_list))
+            if use_old_matplotlib:  # pragma: no cover
+                axes[i, 0].hist(
+                    samples_j[:, i], bins=xbins, alpha=alpha, normed=True,
+                    label='Samples ' + str(1 + j_list))
+            else:
+                axes[i, 0].hist(
+                    samples_j[:, i], bins=xbins, alpha=alpha, density=True,
+                    label='Samples ' + str(1 + j_list))
+
+            # Add kde plot
+            if kde:
+                x = np.linspace(xmin, xmax, 100)
+                axes[i, 0].plot(x, stats.gaussian_kde(samples_j[:, i])(x))
 
         # Add reference parameters if given
         if ref_parameters is not None:
