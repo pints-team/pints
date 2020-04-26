@@ -204,11 +204,11 @@ from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dram_ac import DramACMC
 from ._mcmc._dream import DreamMCMC
+from ._mcmc._dual_averaging import DualAveragingAdaption
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
 from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
 from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
-from ._mcmc._dual_averaging import DualAveragingAdaption
 from ._mcmc._hamiltonian import HamiltonianMCMC
 
 if sys.hexversion >= 0x03030000:

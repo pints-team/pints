@@ -21,8 +21,8 @@ class NutsState:
     tree, this class handles combining states from different subtrees (see
     `update`).
 
-    NUTS integrates both backwards ("minus") and forwards ("plus"), so this
-    state must keep track of both end points of the integration path.
+    NUTS integrates both backwards ("minus") and forwards ("plus") in time, so
+    this state must keep track of both end points of the integration path.
 
     Attributes
     ----------
@@ -102,14 +102,14 @@ class NutsState:
         """
         if ``root == True``, this combines a depth j subtree (``self``) with a
         depth j+1 (``other_state``) subtree, which corresponds to the higher
-        level loop in the nuts algorithm
+        level loop in the nuts algorithm.
 
-        if ``root == False``, this combins two subtrees with depth j, which
+        if ``root == False``, this combines two subtrees with depth j, which
         occurs when the nuts algorithm is implicitly building up the tree with
-        the build_tree subroutine
+        the build_tree subroutine.
 
         direction is the current direction of integration, either forwards
-        (``direction == 1``), or backwards (``direction = -1``)
+        (``direction == 1``), or backwards (``direction = -1``).
         """
 
         # update the appropriate end of the tree according to what direction we
@@ -213,11 +213,11 @@ def kinetic_energy(r, inv_mass_matrix):
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     """
     performs a leapfrog step using a step_size ``epsilon`` and an inverse mass
-    matrix ``inv_mass_matrix``
+    matrix ``inv_mass_matrix``.
 
     The inverse mass matrix can be a 2 dimensional ndarray, in which case it is
     interpreted as a dense matrix, or a 1 dimensional ndarray, in which case it
-    is interpreted as a diagonal matrix
+    is interpreted as a diagonal matrix.
     """
     r_new = r + 0.5 * epsilon * grad_L
     if inv_mass_matrix.ndim == 1:
@@ -232,7 +232,7 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
 @asyncio.coroutine
 def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     """
-    Implicitly build up a subtree of depth j for the NUTS sampler
+    Implicitly build up a subtree of depth ``j`` for the NUTS sampler.
     """
     if j == 0:
         # Base case - take one leapfrog in the direction v
@@ -286,10 +286,11 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
 def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
-    probability of the Langevin proposal crosses 0.5.
+    probability of the Langevin proposal crosses 0.5. This is based on
+    Algorithm 4 in [1]_.
 
     Note: inv_mass_matrix can be a 1-d ndarray and in this case is interpreted
-    as a diagonal matrix, or can be given as a fully dense 2-d ndarray
+    as a diagonal matrix, or can be given as a fully dense 2-d ndarray.
     """
 
     # intialise at epsilon = 1.0 (shouldn't matter where we start)
@@ -340,8 +341,8 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
     Implements the multinomial sampling suggested in [2]_. Implements a mass
     matrix for the dynamics, which is detailed in [2]_. Both the step size and
     the mass matrix is adapted using a combination of the dual averaging
-    detailed in [1]_, and the windowed adaption for the mass matrix and step
-    size implemented in the STAN library (https://github.com/stan-dev/stan)
+    detailed in [1]_ and the windowed adaption for the mass matrix and step
+    size implemented in the Stan library (https://github.com/stan-dev/stan)
 
     Implemented as a coroutine that continually generates new theta values to
     evaluate (L, L') at. Users must send (L, L') back to the coroutine to
@@ -372,8 +373,8 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
 
-    .. [2] `A Conceptual Introduction to Hamiltonian Monte Carlo`,
-            Michael Betancourt
+    .. [2] Betancourt, M. (2018). `A Conceptual Introduction to Hamiltonian
+           Monte Carlo`, https://arxiv.org/abs/1701.02434.
 
     """
     # Initialise sampler with x0 and calculate logpdf
@@ -480,7 +481,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     matrix for the dynamics, which is detailed in [2]_. Both the step size and
     the mass matrix is adapted using a combination of the dual averaging
     detailed in [1]_, and the windowed adaption for the mass matrix and step
-    size implemented in the STAN library (https://github.com/stan-dev/stan).
+    size implemented in the Stan library (https://github.com/stan-dev/stan).
 
     Like Hamiltonian Monte Carlo, NUTS imagines a particle moving over negative
     log-posterior (NLP) space to generate proposals. Naturally, the particle
@@ -498,8 +499,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
 
-    .. [2] `A Conceptual Introduction to Hamiltonian Monte Carlo`,
-            Michael Betancourt
+    .. [2] Betancourt, M. (2018). `A Conceptual Introduction to Hamiltonian
+           Monte Carlo`, https://arxiv.org/abs/1701.02434.
 
     """
 
@@ -659,7 +660,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Returns the maximum tree depth ``D`` for the algorithm. For each
         iteration, the number of leapfrog steps will not be greater than
-        ``2^D``
+        ``2^D``.
         """
         return self._max_tree_depth
 
@@ -677,26 +678,26 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         If ``use_dense_mass_matrix`` is False then algorithm uses a diagonal
         matrix for the mass matrix. If True then a fully dense mass matrix is
-        used
+        used.
         """
         self._use_dense_mass_matrix = bool(use_dense_mass_matrix)
 
     def use_dense_mass_matrix(self):
         """
         Returns if the algorithm uses a dense (True) or diagonal (False) mass
-        matrix
+        matrix.
         """
         return self._use_dense_mass_matrix
 
     def divergent_iterations(self):
         """
-        Returns the iteration number of any divergent iterations
+        Returns the iteration number of any divergent iterations.
         """
         return self._divergent
 
     def delta(self):
         """
-        Returns delta used in leapfrog algorithm
+        Returns delta used in leapfrog algorithm.
         """
         return self._delta
 
@@ -722,7 +723,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Sets delta for the nuts algorithm. This is the goal acceptance
         probability for the algorithm. Used to set the scalar magnitude of the
-        leapfrog step size
+        leapfrog step size.
         """
         if self._running:
             raise RuntimeError('cannot set delta while sampler is running')
@@ -734,7 +735,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Sets number of adaptions steps in the nuts algorithm. This is the
         number of mcmc steps that are used to determin the best value for
-        epsilon, the scalar magnitude of the leafrog step size
+        epsilon, the scalar magnitude of the leafrog step size.
         """
         if self._running:
             raise RuntimeError(

@@ -10,25 +10,32 @@ import numpy as np
 
 
 class DualAveragingAdaption:
-    """
+    r"""
     Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as
-    per [1]_, and estimates the (fully dense) inverse mass matrix using the
-    sample covariance of the accepted parameter, as suggested in [2]_
+    per [1]_ and estimates the (fully dense) inverse mass matrix using the
+    sample covariance of the accepted parameter, as suggested in [2]_.
 
-    The adaption is done using the same windowing method employed by STAN,
+    During iteration ``m`` of adaption, the parameter ``epsilon`` is updated
+    using the following scheme:
+
+    .. math::
+        \bar{H} = (1 - 1/(m + t_0)) \bar{H} + 1/(m + t_0)(\delta - n/n_\alpha)
+        \text{log} \epsilon = \mu - \sqrt{m}/\gamma \bar{H}
+
+    The adaption is done using the same windowing method employed by Stan,
     which is done over three or more windows:
 
-    - initial window: epsilon is adapted using dual averaging
-    - base window: epsilon continues to be adapted using dual averaging, this
+    - initial window: epsilon is adapted using dual averaging.
+    - base window: epsilon continues to be adapted using dual averaging; this
       adaption completes at the end of this window. The inverse mass matrix is
       adaped at the end of the window by taking the sample covariance of all
       parameter points in this window.
-    - terminal window: epsilon is adapted using dual averaging, which completes
-      at the end of the window
+    - terminal window: epsilon is adapted using dual averaging, holding the
+      mass matrix constant, and completes at the end of the window.
 
     If the number of warmup steps requested by the user is greater than the sum
     of these three windows, then additional base windows are added, each with a
-    size double that of the previous window
+    size double that of the previous window.
 
     References
     ----------
@@ -36,8 +43,8 @@ class DualAveragingAdaption:
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
 
-    .. [2] `A Conceptual Introduction to Hamiltonian Monte Carlo`,
-            Michael Betancourt
+    .. [2] Betancourt, M. (2018). `A Conceptual Introduction to Hamiltonian
+           Monte Carlo`, https://arxiv.org/abs/1701.02434.
 
     Attributes
     ----------
@@ -55,7 +62,7 @@ class DualAveragingAdaption:
 
     def __init__(self, num_warmup_steps, target_accept_prob,
                  init_epsilon, init_inv_mass_matrix):
-        # windowing constants (defaults taken from STAN)
+        # windowing constants (defaults taken from Stan)
         self._initial_window = 75
         self._base_window = 25
         self._terminal_window = 50
@@ -63,7 +70,7 @@ class DualAveragingAdaption:
         # windowing counter
         self._counter = 0
 
-        # dual averaging constants (defaults taken from STAN)
+        # dual averaging constants (defaults taken from Stan)
         self._gamma = 0.05
         self._t0 = 10.0
         self._kappa = 0.75
@@ -94,12 +101,96 @@ class DualAveragingAdaption:
         self.init_sample_covariance(self._base_window)
         self.init_adapt_epsilon(init_epsilon)
 
+    def adapt_epsilon(self, accept_prob):
+        """
+        Perform a single step of the dual averaging scheme.
+        """
+
+        if accept_prob > 1:
+            accept_prob = 1.0
+
+        self._adapt_epsilon_counter += 1
+        counter = self._adapt_epsilon_counter
+
+        eta = 1.0 / (counter + self._t0)
+
+        self._h_bar = (1 - eta) * self._h_bar \
+            + eta * (self._target_accept_prob - accept_prob)
+
+        log_epsilon = self._mu  \
+            - (np.sqrt(counter) / self._gamma) \
+            * self._h_bar
+
+        x_eta = counter**(-self._kappa)
+        self._log_epsilon_bar = x_eta * log_epsilon + \
+            (1 - x_eta) * self._log_epsilon_bar
+        self._epsilon = np.exp(log_epsilon)
+
+    def add_parameter_sample(self, sample):
+        """
+        Store the parameter samples to calculate a sample covariance matrix
+        later on.
+        """
+        self._samples[:, self._num_samples] = sample
+        self._num_samples += 1
+
+    def calculate_sample_variance(self):
+        """
+        Return the sample covariance of all the stored samples.
+        """
+        assert self._num_samples == self._samples.shape[1]
+        params = self._samples.shape[0]
+        samples = self._samples.shape[1]
+
+        if self._inv_mass_matrix.ndim == 1:
+            sample_covariance = np.var(self._samples, axis=1)
+            identity = np.ones(params)
+        else:
+            sample_covariance = np.cov(self._samples)
+            identity = np.eye(params)
+
+        # adapt the sample covariance in a similar way to Stan
+        return (samples / (samples + 5.0)) * sample_covariance \
+            + 1e-3 * (5.0 / (samples + 5.0)) * identity
+
+    def final_epsilon(self):
+        """
+        Perform the final step of the dual averaging scheme.
+        """
+        return np.exp(self._log_epsilon_bar)
+
+    def get_epsilon(self):
+        """ return the step size """
+        return self._epsilon
+
     def get_inv_mass_matrix(self):
         return self._inv_mass_matrix
 
+    def get_mass_matrix(self):
+        """ Return the mass matrix. """
+        return self._mass_matrix
+
+    def init_adapt_epsilon(self, epsilon):
+        """
+        Start a new dual averaging adaption for epsilon.
+        """
+        self._epsilon = epsilon
+        self._mu = np.log(10 * self._epsilon)
+        self._log_epsilon_bar = np.log(1)
+        self._h_bar = 0.0
+        self._adapt_epsilon_counter = 0
+
+    def init_sample_covariance(self, size):
+        """
+        Start a new adaption window for the inverse mass matrix.
+        """
+        n_params = self._inv_mass_matrix.shape[0]
+        self._samples = np.empty((n_params, size))
+        self._num_samples = 0
+
     def set_inv_mass_matrix(self, inv_mass_matrix):
         """
-        We calculate the mass matrix whenever the inverse mass matrix is set
+        We calculate the mass matrix whenever the inverse mass matrix is set.
         """
         if inv_mass_matrix.ndim == 1:
             self._mass_matrix = 1.0 / inv_mass_matrix
@@ -112,17 +203,9 @@ class DualAveragingAdaption:
                 return
             self._inv_mass_matrix = inv_mass_matrix
 
-    def get_mass_matrix(self):
-        """ return the mass matrix """
-        return self._mass_matrix
-
-    def get_epsilon(self):
-        """ return the step size """
-        return self._epsilon
-
     def step(self, x, accept_prob):
         """
-        Perform a single step of the adaption
+        Perform a single step of the adaption.
 
         Arguments
         ---------
@@ -163,79 +246,3 @@ class DualAveragingAdaption:
             #self._epsilon = self.final_epsilon()
 
         return False
-
-    def init_adapt_epsilon(self, epsilon):
-        """
-        Start a new dual averaging adaption for epsilon
-        """
-        self._epsilon = epsilon
-        self._mu = np.log(10 * self._epsilon)
-        self._log_epsilon_bar = np.log(1)
-        self._h_bar = 0.0
-        self._adapt_epsilon_counter = 0
-
-    def adapt_epsilon(self, accept_prob):
-        """
-        Perform a single step of the dual averaging scheme
-        """
-
-        if accept_prob > 1:
-            accept_prob = 1.0
-
-        self._adapt_epsilon_counter += 1
-        counter = self._adapt_epsilon_counter
-
-        eta = 1.0 / (counter + self._t0)
-
-        self._h_bar = (1 - eta) * self._h_bar \
-            + eta * (self._target_accept_prob - accept_prob)
-
-        log_epsilon = self._mu  \
-            - (np.sqrt(counter) / self._gamma) \
-            * self._h_bar
-
-        x_eta = counter**(-self._kappa)
-        self._log_epsilon_bar = x_eta * log_epsilon + \
-            (1 - x_eta) * self._log_epsilon_bar
-        self._epsilon = np.exp(log_epsilon)
-
-    def final_epsilon(self):
-        """
-        Perform the final step of the dual averaging scheme
-        """
-        return np.exp(self._log_epsilon_bar)
-
-    def init_sample_covariance(self, size):
-        """
-        Start a new adaption window for the inverse mass matrix
-        """
-        n_params = self._inv_mass_matrix.shape[0]
-        self._samples = np.empty((n_params, size))
-        self._num_samples = 0
-
-    def add_parameter_sample(self, sample):
-        """
-        Store the parameter samples so that we can later on calculate a sample
-        covariance
-        """
-        self._samples[:, self._num_samples] = sample
-        self._num_samples += 1
-
-    def calculate_sample_variance(self):
-        """
-        Return the sample covariance of all the stored samples
-        """
-        assert self._num_samples == self._samples.shape[1]
-        params = self._samples.shape[0]
-        samples = self._samples.shape[1]
-
-        if self._inv_mass_matrix.ndim == 1:
-            sample_covariance = np.var(self._samples, axis=1)
-            identity = np.ones(params)
-        else:
-            sample_covariance = np.cov(self._samples)
-            identity = np.eye(params)
-
-        # adapt the sample covariance in a similar way to Stan
-        return (samples / (samples + 5.0)) * sample_covariance \
-            + 1e-3 * (5.0 / (samples + 5.0)) * identity
