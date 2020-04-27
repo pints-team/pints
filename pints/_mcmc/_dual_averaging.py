@@ -12,8 +12,11 @@ import numpy as np
 class DualAveragingAdaption:
     r"""
     Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as
-    per [1]_ and estimates the (fully dense) inverse mass matrix using the
-    sample covariance of the accepted parameter, as suggested in [2]_.
+    per [1]_ (section 3.2.1 and algorithm 6), and estimates the inverse mass
+    matrix using the sample covariance of the accepted parameter, as suggested
+    in [2]_. The mass matrix can either be given as a fully dense matrix
+    represented as a 2D ndarray, or a diagonal matrix represented as a 1D
+    ndarray.
 
     During iteration ``m`` of adaption, the parameter ``epsilon`` is updated
     using the following scheme:
