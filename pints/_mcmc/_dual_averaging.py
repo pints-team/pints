@@ -19,8 +19,12 @@ class DualAveragingAdaption:
     using the following scheme:
 
     .. math::
-        \bar{H} = (1 - 1/(m + t_0)) \bar{H} + 1/(m + t_0)(\delta - n/n_\alpha)
+        \bar{H} = (1 - 1/(m + t_0)) \bar{H} + 1/(m + t_0)(\delta_t - \delta)
         \text{log} \epsilon = \mu - \sqrt{m}/\gamma \bar{H}
+
+    where $\delta_t$ is the target acceptence probability set by the user and
+    $\delta$ is the acceptence probability reported by the algorithm (i.e. that
+    is provided as an argument to the :meth:`step` method.
 
     The adaption is done using the same windowing method employed by Stan,
     which is done over three or more windows:
