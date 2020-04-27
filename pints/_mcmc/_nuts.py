@@ -287,7 +287,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
     probability of the Langevin proposal crosses 0.5. This is based on
-    Algorithm 4 in [1]_.
+    Algorithm 4 in [1]_ (with scaled mass matrix as per section 4.2).
 
     Note: inv_mass_matrix can be a 1-d ndarray and in this case is interpreted
     as a diagonal matrix, or can be given as a fully dense 2-d ndarray.
@@ -567,6 +567,134 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._next, copy=True)
 
+    def current_log_pdf(self):
+        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
+        return self._current_logpdf
+
+    def delta(self):
+        """
+        Returns delta used in leapfrog algorithm.
+        """
+        return self._delta
+
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations.
+        """
+        return self._divergent
+
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('Accept.')
+        logger.add_counter('Steps.')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        # print nothing if no mcmc iterations since last log
+        if self._last_log_write == self._mcmc_iteration:
+            logger.log(None)
+            logger.log(None)
+        else:
+            logger.log(self._mcmc_acceptance)
+            logger.log(self._n_leapfrog)
+        self._mcmc_acceptance = 0
+        self._n_leapfrog = 0
+        self._last_log_write = self._mcmc_iteration
+
+    def max_tree_depth(self):
+        """
+        Returns the maximum tree depth ``D`` for the algorithm. For each
+        iteration, the number of leapfrog steps will not be greater than
+        ``2^D``.
+        """
+        return self._max_tree_depth
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'No-U-Turn MCMC'
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
+
+    def number_adaption_steps(self):
+        """
+        Returns number of adaption steps used in the NUTS algorithm.
+        """
+        return self._num_adaption_steps
+
+    def set_delta(self, delta):
+        """
+        Sets delta for the nuts algorithm. This is the goal acceptance
+        probability for the algorithm. Used to set the scalar magnitude of the
+        leapfrog step size.
+        """
+        if self._running:
+            raise RuntimeError('cannot set delta while sampler is running')
+        if delta < 0 or delta > 1:
+            raise ValueError('delta must be in [0, 1]')
+        self._delta = delta
+
+    def set_hamiltonian_threshold(self, hamiltonian_threshold):
+        """
+        Sets threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        if hamiltonian_threshold < 0:
+            raise ValueError('Threshold for divergent iterations must be ' +
+                             'non-negative.')
+        self._hamiltonian_threshold = hamiltonian_threshold
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[number_adaption_steps]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_number_adaption_steps(x[0])
+
+    def set_max_tree_depth(self, max_tree_depth):
+        """
+        Sets the maximum tree depth ``D`` for the algorithm. For each
+        iteration, the number of leapfrog steps will not be greater than
+        ``2^D``
+        """
+        if max_tree_depth < 0:
+            raise ValueError('Maximum tree depth must be non-negative.')
+        self._max_tree_depth = max_tree_depth
+
+    def set_number_adaption_steps(self, n):
+        """
+        Sets number of adaptions steps in the nuts algorithm. This is the
+        number of mcmc steps that are used to determin the best value for
+        epsilon, the scalar magnitude of the leafrog step size.
+        """
+        if self._running:
+            raise RuntimeError(
+                'cannot set number of adaption steps while sampler is running')
+        if n < 0:
+            raise ValueError('number of adaption steps must be non-negative')
+        self._num_adaption_steps = int(n)
+
+    def set_use_dense_mass_matrix(self, use_dense_mass_matrix):
+        """
+        If ``use_dense_mass_matrix`` is False then algorithm uses a diagonal
+        matrix for the mass matrix. If True then a fully dense mass matrix is
+        used.
+        """
+        self._use_dense_mass_matrix = bool(use_dense_mass_matrix)
+
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
         if not self._ready_for_tell:
@@ -617,137 +745,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             # Return None to indicate there is no new sample for the chain
             return None
 
-    def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init()`. """
-        logger.add_float('Accept.')
-        logger.add_counter('Steps.')
-
-    def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write()`. """
-        # print nothing if no mcmc iterations since last log
-        if self._last_log_write == self._mcmc_iteration:
-            logger.log(None)
-            logger.log(None)
-        else:
-            logger.log(self._mcmc_acceptance)
-            logger.log(self._n_leapfrog)
-        self._mcmc_acceptance = 0
-        self._n_leapfrog = 0
-        self._last_log_write = self._mcmc_iteration
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_logpdf
-
-    def hamiltonian_threshold(self):
-        """
-        Returns threshold difference in Hamiltonian value from one iteration to
-        next which determines whether an iteration is divergent.
-        """
-        return self._hamiltonian_threshold
-
-    def set_hamiltonian_threshold(self, hamiltonian_threshold):
-        """
-        Sets threshold difference in Hamiltonian value from one iteration to
-        next which determines whether an iteration is divergent.
-        """
-        if hamiltonian_threshold < 0:
-            raise ValueError('Threshold for divergent iterations must be ' +
-                             'non-negative.')
-        self._hamiltonian_threshold = hamiltonian_threshold
-
-    def max_tree_depth(self):
-        """
-        Returns the maximum tree depth ``D`` for the algorithm. For each
-        iteration, the number of leapfrog steps will not be greater than
-        ``2^D``.
-        """
-        return self._max_tree_depth
-
-    def set_max_tree_depth(self, max_tree_depth):
-        """
-        Sets the maximum tree depth ``D`` for the algorithm. For each
-        iteration, the number of leapfrog steps will not be greater than
-        ``2^D``
-        """
-        if max_tree_depth < 0:
-            raise ValueError('Maximum tree depth must be non-negative.')
-        self._max_tree_depth = max_tree_depth
-
-    def set_use_dense_mass_matrix(self, use_dense_mass_matrix):
-        """
-        If ``use_dense_mass_matrix`` is False then algorithm uses a diagonal
-        matrix for the mass matrix. If True then a fully dense mass matrix is
-        used.
-        """
-        self._use_dense_mass_matrix = bool(use_dense_mass_matrix)
-
     def use_dense_mass_matrix(self):
         """
         Returns if the algorithm uses a dense (True) or diagonal (False) mass
         matrix.
         """
         return self._use_dense_mass_matrix
-
-    def divergent_iterations(self):
-        """
-        Returns the iteration number of any divergent iterations.
-        """
-        return self._divergent
-
-    def delta(self):
-        """
-        Returns delta used in leapfrog algorithm.
-        """
-        return self._delta
-
-    def number_adaption_steps(self):
-        """
-        Returns number of adaption steps used in the NUTS algorithm.
-        """
-        return self._num_adaption_steps
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
-
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'No-U-Turn MCMC'
-
-    def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
-        return True
-
-    def set_delta(self, delta):
-        """
-        Sets delta for the nuts algorithm. This is the goal acceptance
-        probability for the algorithm. Used to set the scalar magnitude of the
-        leapfrog step size.
-        """
-        if self._running:
-            raise RuntimeError('cannot set delta while sampler is running')
-        if delta < 0 or delta > 1:
-            raise ValueError('delta must be in [0, 1]')
-        self._delta = delta
-
-    def set_number_adaption_steps(self, n):
-        """
-        Sets number of adaptions steps in the nuts algorithm. This is the
-        number of mcmc steps that are used to determin the best value for
-        epsilon, the scalar magnitude of the leafrog step size.
-        """
-        if self._running:
-            raise RuntimeError(
-                'cannot set number of adaption steps while sampler is running')
-        if n < 0:
-            raise ValueError('number of adaption steps must be non-negative')
-        self._num_adaption_steps = int(n)
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[number_adaption_steps]``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_number_adaption_steps(x[0])
