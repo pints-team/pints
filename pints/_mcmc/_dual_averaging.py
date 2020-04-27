@@ -29,11 +29,12 @@ class DualAveragingAdaption:
     The adaption is done using the same windowing method employed by Stan,
     which is done over three or more windows:
 
-    - initial window: epsilon is adapted using dual averaging.
+    - initial window: epsilon is adapted using dual averaging (*no* adaption of
+      the mass matrix).
     - base window: epsilon continues to be adapted using dual averaging; this
       adaption completes at the end of this window. The inverse mass matrix is
       adaped at the end of the window by taking the sample covariance of all
-      parameter points in this window.
+      parameter points within this window.
     - terminal window: epsilon is adapted using dual averaging, holding the
       mass matrix constant, and completes at the end of the window.
 
