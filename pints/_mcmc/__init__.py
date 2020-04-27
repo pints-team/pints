@@ -465,7 +465,7 @@ class MCMCController(object):
 
         # Can only run once for each controller instance
         if self._has_run:
-            raise RuntimeError("MCMC Controller is valid for single use only")
+            raise RuntimeError("Controller is valid for single use only")
         self._has_run = True
 
         # Check stopping criteria

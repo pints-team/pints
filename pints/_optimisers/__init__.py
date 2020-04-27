@@ -352,6 +352,9 @@ class OptimisationController(object):
         self._n_workers = 1
         self.set_parallel()
 
+        # :meth:`run` can only be called once
+        self._has_run = False
+
         #
         # Stopping criteria
         #
@@ -422,6 +425,11 @@ class OptimisationController(object):
         """
         Runs the optimisation, returns a tuple ``(xbest, fbest)``.
         """
+        # Can only run once for each controller instance
+        if self._has_run:
+            raise RuntimeError("Controller is valid for single use only")
+        self._has_run = True
+
         # Check stopping criteria
         has_stopping_criterion = False
         has_stopping_criterion |= (self._max_iterations is not None)

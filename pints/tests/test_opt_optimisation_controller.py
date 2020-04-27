@@ -258,6 +258,22 @@ class TestOptimisationController(unittest.TestCase):
         t = opt.time()
         self.assertTrue(0 < t < 5)
 
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        opt.run()
+        with self.assertRaisesRegex(RuntimeError,
+                                    "Controller is valid for single use only"):
+            opt.run()
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
