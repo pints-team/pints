@@ -309,6 +309,11 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test with fixed number of worker processes
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(niterations)
+        mcmc.set_log_to_screen(debug)
         mcmc.set_parallel(2)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
