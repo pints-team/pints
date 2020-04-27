@@ -194,6 +194,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         self.assertIs(chains, mcmc.chains())
 
+
     def test_multi(self):
         # Test with a multi-chain method
 
@@ -543,6 +544,23 @@ class TestMCMCController(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        # Test simple run
+        n_chains = 1
+        n_iterations = 10
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        with self.assertRaisesRegex(RuntimeError,
+                                    "MCMC Controller is valid for single use only"):
+            mcmc.run()
 
 
 class TestMCMCControllerLogging(unittest.TestCase):
@@ -1520,6 +1538,8 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
         self.assertTrue(np.all(chains1 == chains3))
         self.assertEqual(log_pdfs2.shape, (2, 5, 1))
         self.assertTrue(np.all(log_pdfs1 == log_pdfs2))
+
+
 
 
 if __name__ == '__main__':
