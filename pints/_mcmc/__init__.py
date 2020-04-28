@@ -311,12 +311,12 @@ class MCMCController(object):
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s): Most checking is done by samplers!
-        x0_isfunction = hasattr(x0, '__call__')
-        if x0_isfunction:
+        self._x0_isfunction = hasattr(x0, '__call__')
+        if self._x0_isfunction:
             if not isinstance(x0, pints.LogPrior):
                 raise ValueError('Initialisation function must extend ' +
                                  'pints.LogPrior.')
-            self._init = [x0.sample() for i in range(chains)]
+            init = [x0.sample() for i in range(chains)]
             self._init_fn = x0
         else:
             if len(x0) != chains:
@@ -327,7 +327,7 @@ class MCMCController(object):
                 raise ValueError(
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
-            self._init = x0
+            init = x0
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -352,11 +352,11 @@ class MCMCController(object):
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
             self._n_samplers = self._n_chains
-            self._samplers = [method(x, sigma0) for x in self._init]
+            self._samplers = [method(x, sigma0) for x in init]
         else:
             # Using a single sampler that samples multiple chains
             self._n_samplers = 1
-            self._samplers = [method(self._n_chains, self._init, sigma0)]
+            self._samplers = [method(self._n_chains, init, sigma0)]
 
         # Check if sensitivities are required
         self._needs_sensitivities = self._samplers[0].needs_sensitivities()
@@ -620,7 +620,7 @@ class MCMCController(object):
 
         # initialisation (for single chain methods only and only if prior
         # supplied)
-        if self._init is not None:
+        if self._x0_isfunction:
             initialised_finite, x0 = self._sample_x0(active, evaluator)
             if not initialised_finite:
                 raise ValueError('Initialisation failed since log_pdf not ' +
