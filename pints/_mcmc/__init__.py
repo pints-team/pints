@@ -295,8 +295,7 @@ class MCMCController(object):
         :class:`HaarioBardenetACMC` is used.
     """
 
-    def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None,
-                 init=None):
+    def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None):
 
         # Store function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -312,7 +311,14 @@ class MCMCController(object):
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s): Most checking is done by samplers!
-        if x0 is not None:
+        x0_isfunction = hasattr(x0, '__call__')
+        if x0_isfunction:
+            if not isinstance(x0, pints.LogPrior):
+                raise ValueError('Initialisation function must extend ' +
+                                 'pints.LogPrior.')
+            self._init = [x0.sample() for i in range(chains)]
+            self._init_fn = x0
+        else:
             if len(x0) != chains:
                 raise ValueError(
                     'Number of initial positions must be equal to number of'
@@ -321,18 +327,7 @@ class MCMCController(object):
                 raise ValueError(
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
-        if x0 is None and init is None:
-            raise ValueError('Either x0 or initialisation function must be ' +
-                             'non-None.')
-        if x0 is not None and init is not None:
-            raise ValueError('Cannot have both x0 and initialisation ' +
-                             'function.')
-        if init is not None:
-            if not isinstance(init, pints.LogPrior):
-                raise ValueError('Initialisation function must extend ' +
-                                 'pints.LogPrior.')
-            x0 = [init.sample() for i in range(chains)]
-            self._init = init
+            self._init = x0
 
         # Don't check initial standard deviation: done by samplers!
 
@@ -357,11 +352,11 @@ class MCMCController(object):
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
             self._n_samplers = self._n_chains
-            self._samplers = [method(x, sigma0) for x in x0]
+            self._samplers = [method(x, sigma0) for x in self._init]
         else:
             # Using a single sampler that samples multiple chains
             self._n_samplers = 1
-            self._samplers = [method(self._n_chains, x0, sigma0)]
+            self._samplers = [method(self._n_chains, self._init, sigma0)]
 
         # Check if sensitivities are required
         self._needs_sensitivities = self._samplers[0].needs_sensitivities()
@@ -850,7 +845,7 @@ class MCMCController(object):
         `init` function.
         """
         initialised_finite = False
-        init_fn = self._init
+        init_fn = self._init_fn
         current_active = list(active)
         n_tries = 0
         x0 = []
