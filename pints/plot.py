@@ -276,7 +276,11 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     return fig, axes[:, 0]
 
 
-def trace(samples, ref_parameters=None, n_percentiles=None):
+def trace(
+        samples,
+        parameter_names=None,
+        ref_parameters=None,
+        n_percentiles=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms and traces for each chain or list of
@@ -291,6 +295,10 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
         ``(n_lists, n_samples, n_parameters)``, where ``n_lists`` is the
         number of lists of samples, ``n_samples`` is the number of samples in
         one list and ``n_parameters`` is the number of parameters.
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        trace subplots. If no names are provided, the parameters are
+        enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example, if true
         values of parameters are known, they can be passed in for plotting.
@@ -315,6 +323,18 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
                 'All samples must have the same number of parameters.'
             )
 
+    # Check parameter names
+    if parameter_names is not None:
+        if len(parameter_names) != n_param:
+            raise ValueError(
+                'Length of `parameter_names` must be same as number of'
+                ' parameters.')
+        for name in parameter_names:
+            if not isinstance(name, str):
+                raise ValueError(
+                    'All elements of `parameter_names` must be string'
+                    ' instances.')
+
     # Check reference parameters
     if ref_parameters is not None:
         if len(ref_parameters) != n_param:
@@ -335,7 +355,10 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
         ymin_all, ymax_all = np.inf, -np.inf
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            if parameter_names is not None:
+                axes[i, 0].set_xlabel(parameter_names[i])
+            else:
+                axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
@@ -351,7 +374,10 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
 
             # Add trace subplot
             axes[i, 1].set_xlabel('Iteration')
-            axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
+            if parameter_names is not None:
+                axes[i, 1].set_ylabel(parameter_names[i])
+            else:
+                axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
 
             # Set ylim
