@@ -171,7 +171,12 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
+def histogram(
+        samples,
+        kde=False,
+        parameter_names=None,
+        ref_parameters=None,
+        n_percentiles=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms for each chain or list of samples.
@@ -188,6 +193,10 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     kde
         Set to ``True`` to include kernel-density estimation for the
         histograms.
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        trace subplots. If no names are provided, the parameters are
+        enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example, if true
         values of parameters are known, they can be passed in for plotting.
@@ -211,6 +220,18 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     alpha = 0.5
     n_list = len(samples)
     _, n_param = samples[0].shape
+
+    # Check parameter names
+    if parameter_names is not None:
+        if len(parameter_names) != n_param:
+            raise ValueError(
+                'Length of `parameter_names` must be same as number of'
+                ' parameters.')
+        for name in parameter_names:
+            if not isinstance(name, str):
+                raise ValueError(
+                    'All elements of `parameter_names` must be string'
+                    ' instances.')
 
     # Check number of parameters
     for samples_j in samples:
@@ -236,7 +257,10 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            if parameter_names is not None:
+                axes[i, 0].set_xlabel(parameter_names[i])
+            else:
+                axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
