@@ -2,10 +2,9 @@
 #
 # Test the methods in pints.residuals_diagnostics
 #
-# This file is part of PINTS
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing informating, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import matplotlib
 import numpy as np
@@ -53,16 +52,12 @@ class TestResidualsDiagnostics(unittest.TestCase):
         cls.model2 = toy.LotkaVolterraModel()
         cls.real_parameters2 = cls.model2.suggested_parameters()
         # Downsample the times for speed
-        cls.times2 = cls.model2.suggested_times()[::10]
-        cls.values2 = cls.model2.simulate(cls.real_parameters2, cls.times2)
-
-        # Add noise
-        cls.noise2 = 0.05
-        cls.values2 += np.random.normal(0, cls.noise2, cls.values2.shape)
+        cls.times2 = cls.model2.suggested_times()
+        cls.values2 = cls.model2.suggested_values()
 
         # Set up 2-output MCMC problem
         cls.problem2 = pints.MultiOutputProblem(
-            cls.model2, cls.times2, cls.values2)
+            cls.model2, cls.times2, np.log(cls.values2))
 
         # Instead of running MCMC, generate three chains which actually contain
         # independent samples near the true values (faster than MCMC)
@@ -181,6 +176,43 @@ class TestResidualsDiagnostics(unittest.TestCase):
             self.samples2[0],
             self.problem2,
             posterior_interval=1.5
+        )
+
+    def test_plot_residuals_vs_output(self):
+        # Test the function which plots residuals against output magnitudes
+
+        # Test that it runs with an optimisation result
+        pints.residuals_diagnostics.plot_residuals_vs_output(
+            np.array([self.found_parameters1]),
+            self.problem1
+        )
+
+        # Test that it runs with multiple ouputs and MCMC
+        fig = pints.residuals_diagnostics.plot_residuals_vs_output(
+            self.samples2[0],
+            self.problem2
+        )
+
+        # Test that the multiple output figure has multiple axes
+        self.assertGreaterEqual(len(fig.axes), 2)
+
+        # Check the message when the input is wrong dimension
+        self.assertRaisesRegexp(
+            ValueError,
+            r'\`parameters\` must be of shape',
+            pints.residuals_diagnostics.plot_residuals_vs_output,
+            self.samples2,
+            self.model2
+        )
+
+        # Check the message when the thinning is invalid
+        self.assertRaisesRegexp(
+            ValueError,
+            'Thinning rate must be',
+            pints.residuals_diagnostics.plot_residuals_vs_output,
+            self.samples2[0],
+            self.problem2,
+            thinning=0
         )
 
 

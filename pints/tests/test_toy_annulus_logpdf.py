@@ -2,10 +2,9 @@
 #
 # Tests the annulus distribution.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -38,7 +37,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertEqual(a_mean[1], 0)
 
     def test_sample_and_moments(self):
-        """ Tests sampling """
+        # Tests sampling
+
         # Change dimensions and beta
         f = pints.toy.AnnulusLogPDF(10, 15, 0.5)
         self.assertEqual(f.n_parameters(), 10)
@@ -69,7 +69,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
             ValueError, pints.toy.AnnulusLogPDF, 3, 1, -1)
 
     def test_suggested_bounds(self):
-        """ Tests suggested_bounds() method """
+        # Tests suggested_bounds() method
+
         f = pints.toy.AnnulusLogPDF()
         bounds = f.suggested_bounds()
         a_val = 55
@@ -88,9 +89,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array(bounds).shape, [2, 5]))
 
     def test_distance_function(self):
-        """
-        Tests distance function
-        """
+        # Tests distance function
+
         log_pdf = pints.toy.AnnulusLogPDF()
         samples = log_pdf.sample(100)
         d = list(map(lambda x: np.linalg.norm(x), samples))
@@ -122,7 +122,8 @@ class TestAnnulusLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.distance, x)
 
     def test_sensitivities(self):
-        """ Tests sensitivities """
+        # Tests sensitivities
+
         f = pints.toy.AnnulusLogPDF()
         l, dl = f.evaluateS1([0, -9])
         self.assertEqual(l, f([0, -9]))
@@ -142,8 +143,4 @@ class TestAnnulusLogPDF(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

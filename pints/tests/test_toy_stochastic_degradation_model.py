@@ -2,10 +2,9 @@
 #
 # Tests if the  degradation (toy) model works.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -52,19 +51,20 @@ class TestDegradation(unittest.TestCase):
         values = model.interpolate_mol_counts(time, mol_count, times)
         self.assertTrue(len(time), len(mol_count))
         # Test output of Gillespie algorithm
-        self.assertTrue(np.all(mol_count ==
-                               np.array(range(20, -1, -1))))
+        self.assertTrue(np.all(mol_count == np.array(range(20, -1, -1))))
 
         # Check simulate function returns expected values
         self.assertTrue(np.all(values[np.where(times < time[1])] == 20))
 
         # Check interpolation function works as expected
         temp_time = np.array([np.random.uniform(time[0], time[1])])
-        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     temp_time)[0] == 20)
+        self.assertEqual(
+            model.interpolate_mol_counts(time, mol_count, temp_time)[0],
+            20)
         temp_time = np.array([np.random.uniform(time[1], time[2])])
-        self.assertTrue(model.interpolate_mol_counts(time, mol_count,
-                                                     temp_time)[0] == 19)
+        self.assertEqual(
+            model.interpolate_mol_counts(time, mol_count, temp_time)[0],
+            19)
 
     def test_mean_variance(self):
         # test mean

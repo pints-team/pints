@@ -1,10 +1,9 @@
 #
 # Defines different prior distributions
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -142,6 +141,13 @@ class CauchyLogPrior(pints.LogPrior):
     def cdf(self, x):
         """ See :meth:`LogPrior.cdf()`. """
         return scipy.stats.cauchy.cdf(x, self._location, self._scale)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        loc_minus_x = self._location - x[0]
+        return value, np.asarray([2 * loc_minus_x / (self._scale**2
+                                  + loc_minus_x**2)])
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
@@ -524,6 +530,15 @@ class HalfCauchyLogPrior(pints.LogPrior):
              np.arctan((-self._location + x) / self._scale) / np.pi) /
             (0.5 + self._arctan))
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        scale = self._scale
+        loc = self._location
+        loc_minus_x = loc - x[0]
+        dp = 2 * loc_minus_x / (scale**2 + loc_minus_x**2)
+        return value, np.asarray([dp])
+
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
         return (self._location +
@@ -776,9 +791,8 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             self._mu2.append(mu2)
 
     def __call__(self, x):
-        return np.log(
-            scipy.stats.multivariate_normal.pdf(
-                x, mean=self._mean, cov=self._cov))
+        return scipy.stats.multivariate_normal.logpdf(
+            x, mean=self._mean, cov=self._cov)
 
     def convert_from_unit_cube(self, u):
         """

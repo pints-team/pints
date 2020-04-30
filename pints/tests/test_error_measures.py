@@ -2,10 +2,9 @@
 #
 # Tests the error measure classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import division
 import pints
@@ -104,7 +103,7 @@ class TestErrorMeasures(unittest.TestCase):
         super(TestErrorMeasures, self).__init__(name)
 
     def test_mean_squared_error_single(self):
-        """ Tests :class:`pints.MeanSquaredError` with a single output. """
+        # Tests :class:`pints.MeanSquaredError` with a single output.
 
         # Set up problem
         model = pints.toy.ConstantModel(1)
@@ -130,7 +129,7 @@ class TestErrorMeasures(unittest.TestCase):
             self.assertTrue(np.all(dy == 2 * r))
 
     def test_mean_squared_error_multi(self):
-        """ Tests :class:`pints.MeanSquaredError` with multiple outputs. """
+        # Tests :class:`pints.MeanSquaredError` with multiple outputs.
 
         # Set up problem
         model = pints.toy.ConstantModel(2)
@@ -190,7 +189,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[1], -3)
 
     def test_mean_squared_error_weighted(self):
-        """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
+        # Tests :class:`pints.MeanSquaredError` with weighted outputs.
 
         # Set up problem
         model = pints.toy.ConstantModel(2)
@@ -257,8 +256,30 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[0], -1)
         self.assertEqual(dex[1], -6)
 
+    def test_normalised_root_mean_squared_error(self):
+        # Tests :class:`pints.NormalisedRootMeanSquaredError`.
+
+        p = MiniProblem()
+        e = pints.NormalisedRootMeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 3)
+        float(e([1, 2, 3]))
+        self.assertEqual(e([-1, 2, 3]), 0)
+        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
+        x = [0, 0, 0]
+        y = 1.0
+        self.assertEqual(e(x), y)
+        x = [1, 1, 1]
+        y = np.sqrt((4 + 1 + 4) / 3) / np.sqrt((1 + 4 + 9) / 3)
+        self.assertAlmostEqual(e(x), y)
+
+        p = MultiMiniProblem()
+        self.assertRaisesRegex(
+            ValueError,
+            'This measure is only defined for single output problems.',
+            pints.NormalisedRootMeanSquaredError, p)
+
     def test_probability_based_error(self):
-        """ Tests :class:`pints.ProbabilityBasedError`. """
+        # Tests :class:`pints.ProbabilityBasedError`.
 
         p = MiniLogPDF()
         e = pints.ProbabilityBasedError(p)
@@ -275,7 +296,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertTrue(np.all(dy == [-1, -2, -3]))
 
     def test_root_mean_squared_error(self):
-        """ Tests :class:`pints.RootMeanSquaredError`. """
+        # Tests :class:`pints.RootMeanSquaredError`.
 
         p = MiniProblem()
         e = pints.RootMeanSquaredError(p)
@@ -291,10 +312,13 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e(x), y)
 
         p = MultiMiniProblem()
-        self.assertRaises(ValueError, pints.RootMeanSquaredError, p)
+        self.assertRaisesRegex(
+            ValueError,
+            'This measure is only defined for single output problems.',
+            pints.RootMeanSquaredError, p)
 
     def test_sum_of_squares_error_single(self):
-        """ Tests :class:`pints.MeanSquaredError` with a single output. """
+        # Tests :class:`pints.MeanSquaredError` with a single output.
 
         # Set up problem
         model = pints.toy.ConstantModel(1)
@@ -320,7 +344,7 @@ class TestErrorMeasures(unittest.TestCase):
             self.assertEqual(dex[0], 2 * 3 * r)
 
     def test_sum_of_squares_error_multi(self):
-        """ Tests :class:`pints.MeanSquaredError` with multiple outputs. """
+        # Tests :class:`pints.MeanSquaredError` with multiple outputs.
 
         # Set up problem
         model = pints.toy.ConstantModel(2)
@@ -380,7 +404,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[1], -18)
 
     def test_sum_of_squares_error_weighted(self):
-        """ Tests :class:`pints.MeanSquaredError` with weighted outputs. """
+        # Tests :class:`pints.MeanSquaredError` with weighted outputs.
 
         # Set up problem
         model = pints.toy.ConstantModel(2)
@@ -448,7 +472,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dex[1], -36)
 
     def test_sum_of_errors(self):
-        """ Tests :class:`pints.SumOfErrors`. """
+        # Tests :class:`pints.SumOfErrors`.
 
         e1 = pints.SumOfSquaresError(MiniProblem())
         e2 = pints.MeanSquaredError(MiniProblem())
@@ -553,8 +577,4 @@ class TestErrorMeasures(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

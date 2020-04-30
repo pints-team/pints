@@ -17,7 +17,9 @@ or the :class:`OptimisationController` class.
     base_classes
     convenience_methods
     boundary_transformations
+    cmaes_bare
     cmaes
+    gradient_descent
     nelder_mead
     pso
     snes

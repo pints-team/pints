@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the Boundaries classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import division
 import unittest
@@ -18,7 +17,8 @@ class TestRectangularBoundaries(unittest.TestCase):
     Tests the RectangularBoundaries class.
     """
 
-    def test_rectangular_boundaries(self):
+    def test_creation(self):
+        # Tests creation and input checking
 
         # Create boundaries
         pints.RectangularBoundaries([1, 2], [3, 4])
@@ -32,6 +32,8 @@ class TestRectangularBoundaries(unittest.TestCase):
         self.assertRaises(ValueError, pints.RectangularBoundaries, [2], [1])
         self.assertRaises(
             ValueError, pints.RectangularBoundaries, [1, 1], [10, 1])
+
+    def test_boundary_checking(self):
 
         # Check methods
         lower = [1, -2]
@@ -60,6 +62,7 @@ class TestRectangularBoundaries(unittest.TestCase):
         self.assertFalse(b.check([2, -3]))
 
     def test_sampling(self):
+        # Tests sampling from within rectangular boundaries
 
         lower = np.array([1, -1])
         upper = np.array([2, 1])

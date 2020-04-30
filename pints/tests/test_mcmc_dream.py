@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the DREAM MCMC method.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -20,8 +19,6 @@ try:
     unittest.TestCase.assertRaisesRegex
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
-debug = False
 
 
 class TestDreamMCMC(unittest.TestCase):
@@ -161,9 +158,8 @@ class TestDreamMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the hyper-parameter interface for this optimiser.
-        """
+        # Tests the hyper-parameter interface for this optimiser.
+
         n = 5
         x0 = [self.real_parameters] * n
         mcmc = pints.DreamMCMC(n, x0)
@@ -228,9 +224,8 @@ class TestDreamMCMC(unittest.TestCase):
         self.assertEqual(mcmc._nCR, 5)
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DreamMCMC)
@@ -242,8 +237,4 @@ class TestDreamMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

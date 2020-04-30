@@ -1,10 +1,9 @@
 #
 # Sub-module containing several optimisation routines
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -26,6 +25,10 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     optimisation, and implement custom parallelisation, logging, stopping
     criteria etc. Users who don't need this functionality can use optimisers
     via the :class:`OptimisationController` class instead.
+
+    All PINTS optimisers are _minimisers_. To maximise a function simply pass
+    in the negative of its evaluations to :meth:`tell()` (this is handled
+    automatically by the :class:`OptimisationController`).
 
     All optimisers implement the :class:`pints.Loggable` and
     :class:`pints.TunableMethod` interfaces.
@@ -154,6 +157,13 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated error.
+        """
+        return False
+
     def running(self):
         """
         Returns ``True`` if this an optimisation is in progress.
@@ -172,6 +182,11 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the optimiser algorithm, using the evaluations
         ``fx`` of the points ``x`` previously specified by ``ask``.
+
+        For methods that require sensitivities (see
+        :meth:`needs_sensitivities`), ``fx`` should be a tuple
+        ``(objective, sensitivities)``, containing the values returned by
+        :meth:`pints.ErrorMeasure.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -323,6 +338,9 @@ class OptimisationController(object):
             raise ValueError('Method must be subclass of pints.Optimiser.')
         self._optimiser = method(x0, sigma0, boundaries)
 
+        # Check if sensitivities are required
+        self._needs_sensitivities = self._optimiser.needs_sensitivities()
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -420,6 +438,11 @@ class OptimisationController(object):
         # information)
         unchanged_iterations = 0
 
+        # Choose method to evaluate
+        f = self._function
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+
         # Create evaluator object
         if self._parallel:
             # Get number of workers
@@ -429,10 +452,9 @@ class OptimisationController(object):
             # particles!
             if isinstance(self._optimiser, PopulationBasedOptimiser):
                 n_workers = min(n_workers, self._optimiser.population_size())
-            evaluator = pints.ParallelEvaluator(
-                self._function, n_workers=n_workers)
+            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._function)
+            evaluator = pints.SequentialEvaluator(f)
 
         # Keep track of best position and score
         fbest = float('inf')

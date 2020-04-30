@@ -2,10 +2,9 @@
 # Root of the pints module.
 # Provides access to all shared functionality (optimisation, mcmc, etc.).
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 """
 Pints: Probabilistic Inference on Noisy Time Series.
@@ -116,6 +115,7 @@ from ._log_likelihoods import (
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
+    MultiplicativeGaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
     UnknownNoiseLogLikelihood,
@@ -135,11 +135,12 @@ from ._boundaries import (
 #
 from ._error_measures import (
     ErrorMeasure,
-    ProblemErrorMeasure,
-    ProbabilityBasedError,
-    SumOfErrors,
     MeanSquaredError,
+    NormalisedRootMeanSquaredError,
+    ProbabilityBasedError,
+    ProblemErrorMeasure,
     RootMeanSquaredError,
+    SumOfErrors,
     SumOfSquaresError,
 )
 
@@ -168,6 +169,8 @@ from ._optimisers import (
     TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
+from ._optimisers._cmaes_bare import BareCMAES
+from ._optimisers._gradient_descent import GradientDescent
 from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
@@ -195,8 +198,12 @@ from ._mcmc import (
     MultiChainMCMC,
     SingleChainMCMC,
 )
+# base classes first
 from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
+
+# methods
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
+from ._mcmc._dram_ac import DramACMC
 from ._mcmc._dream import DreamMCMC
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
@@ -209,8 +216,9 @@ from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
 from ._mcmc._relativistic import RelativisticMCMC
-from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
 
 
