@@ -3,7 +3,7 @@ exclude=
   .git,
   problems,
   pints/__init__.py,
-  env
+  venv
 ignore=
   # Block comment should start with '# '
   # Not if it's a commented out line
