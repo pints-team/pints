@@ -195,7 +195,7 @@ def histogram(
         histograms.
     parameter_names
         A list of parameter names, which will be displayed on the x-axis of the
-        trace subplots. If no names are provided, the parameters are
+        histogram subplots. If no names are provided, the parameters are
         enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example, if true
@@ -431,7 +431,7 @@ def trace(
     return fig, axes
 
 
-def autocorrelation(samples, max_lags=100):
+def autocorrelation(samples, parameter_names=None, max_lags=100):
     """
     Creates and returns an autocorrelation plot for a given markov chain or
     list of `samples`.
@@ -444,6 +444,10 @@ def autocorrelation(samples, max_lags=100):
         A list of samples, with shape ``(n_samples, n_parameters)``, where
         ``n_samples`` is the number of samples in the list and ``n_parameters``
         is the number of parameters.
+    parameter_names
+        A list of parameter names, which will be displayed in the legend of the
+        autocorrelation subplots. If no names are provided, the parameters are
+        enumerated.
     max_lags
         The maximum autocorrelation lag to plot.
     """
@@ -457,13 +461,28 @@ def autocorrelation(samples, max_lags=100):
         raise ValueError('`samples` must be of shape (n_sample,'
                          + ' n_parameters).')
 
+    # Check parameter names
+    if parameter_names is not None:
+        if len(parameter_names) != n_param:
+            raise ValueError(
+                'Length of `parameter_names` must be same as number of'
+                ' parameters.')
+        for name in parameter_names:
+            if not isinstance(name, str):
+                raise ValueError(
+                    'All elements of `parameter_names` must be string'
+                    ' instances.')
+
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     if n_param == 1:
         axes = np.asarray([axes], dtype=object)
     for i in range(n_param):
         axes[i].acorr(samples[:, i] - np.mean(samples[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
-        axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
+        if parameter_names is not None:
+            axes[i].legend([parameter_names[i]], loc='upper right')
+        else:
+            axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
 
     # Add x-label to final plot only
     axes[i].set_xlabel('Lag')
