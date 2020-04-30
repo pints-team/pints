@@ -268,12 +268,32 @@ class TestPlot(unittest.TestCase):
         # Check n_percentiles gives no error
         pints.plot.histogram(few_samples, n_percentiles=50)
 
+        # Check that setting parameter names gives no error
+        names = ['some_name'] * len(self.real_parameters)
+        pints.plot.histogram(few_samples, parameter_names=names)
+
         # Check invalid samples input
         self.assertRaisesRegexp(
             ValueError,
             r'All samples must have the same number of parameters\.',
             pints.plot.histogram,
             [self.samples[0, :, :], self.samples[1:, :, :-1]]
+        )
+
+        # Check invalid parameter_names input
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Length of \`parameter\_names\` must be same as number of'
+            r' parameters\.',
+            pints.plot.histogram, self.samples,
+            parameter_names=['some_name']
+        )
+        names = [1] * len(self.real_parameters)
+        self.assertRaisesRegexp(
+            ValueError,
+            r'All elements of \`parameter\_names\` must be string instances.',
+            pints.plot.histogram, self.samples,
+            parameter_names=names
         )
 
         # Check invalid ref_parameter input
@@ -309,6 +329,10 @@ class TestPlot(unittest.TestCase):
         # Check n_percentiles gives no error
         pints.plot.trace(few_samples, n_percentiles=50)
 
+        # Check that setting parameter names gives no error
+        names = ['some_name'] * len(self.real_parameters)
+        pints.plot.trace(few_samples, parameter_names=names)
+
         # Check invalid samples input
         self.assertRaisesRegexp(
             ValueError,
@@ -316,11 +340,28 @@ class TestPlot(unittest.TestCase):
             pints.plot.trace, [self.samples[0, :, :], self.samples[1:, :, :-1]]
         )
 
+        # Check invalid parameter_names input
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Length of \`parameter\_names\` must be same as number of'
+            r' parameters\.',
+            pints.plot.trace, self.samples,
+            parameter_names=['some_name']
+        )
+        names = [1] * len(self.real_parameters)
+        self.assertRaisesRegexp(
+            ValueError,
+            r'All elements of \`parameter\_names\` must be string instances.',
+            pints.plot.trace, self.samples,
+            parameter_names=names
+        )
+
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
             ValueError,
             r'Length of \`ref\_parameters\` must be same as number of',
-            pints.plot.trace, self.samples, [self.real_parameters[0]]
+            pints.plot.trace, self.samples,
+            ref_parameters=[self.real_parameters[0]]
         )
 
         # Test it works with single parameter
@@ -339,10 +380,30 @@ class TestPlot(unittest.TestCase):
         # Test it can plot without error
         pints.plot.autocorrelation(self.samples[0], max_lags=20)
 
+        # Check that setting parameter names gives no error
+        names = ['some_name'] * len(self.real_parameters)
+        pints.plot.autocorrelation(self.samples[0], parameter_names=names)
+
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, r'\`samples\` must be of shape \(n_sample\,'
             r' n_parameters\)\.', pints.plot.autocorrelation, self.samples
+        )
+
+        # Check invalid parameter_names input
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Length of \`parameter\_names\` must be same as number of'
+            r' parameters\.',
+            pints.plot.autocorrelation, self.samples[0],
+            parameter_names=['some_name']
+        )
+        names = [1] * len(self.real_parameters)
+        self.assertRaisesRegexp(
+            ValueError,
+            r'All elements of \`parameter\_names\` must be string instances.',
+            pints.plot.autocorrelation, self.samples[0],
+            parameter_names=names
         )
 
         # Test it works with single parameter
@@ -453,10 +514,30 @@ class TestPlot(unittest.TestCase):
         # Test n_percentiles gives no error
         pints.plot.pairwise(few_samples, n_percentiles=50)
 
+        # Check that setting parameter names gives no error
+        names = ['some_name'] * len(self.real_parameters)
+        pints.plot.pairwise(few_samples, parameter_names=names)
+
         # Check invalid input of samples
         self.assertRaisesRegexp(
             ValueError, r'\`samples\` must be of shape \(n_sample\,'
             r' n_parameters\)\.', pints.plot.pairwise, self.samples
+        )
+
+        # Check invalid parameter_names input
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Length of \`parameter\_names\` must be same as number of'
+            r' parameters\.',
+            pints.plot.pairwise, few_samples,
+            parameter_names=['some_name']
+        )
+        names = [1] * len(self.real_parameters)
+        self.assertRaisesRegexp(
+            ValueError,
+            r'All elements of \`parameter\_names\` must be string instances.',
+            pints.plot.pairwise, few_samples,
+            parameter_names=names
         )
 
         # Check invalid ref_parameter input
