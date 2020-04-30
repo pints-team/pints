@@ -639,6 +639,7 @@ def pairwise(samples,
              kde=False,
              heatmap=False,
              opacity=None,
+             parameter_names=None,
              ref_parameters=None,
              n_percentiles=None):
     """
@@ -668,6 +669,10 @@ def pairwise(samples,
         This value can be used to manually set the opacity of the
         points in the scatter plots (when ``kde=False`` and ``heatmap=False``
         only).
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        trace subplots. If no names are provided, the parameters are
+        enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
@@ -701,6 +706,18 @@ def pairwise(samples,
     # Check number of parameters
     if n_param < 2:
         raise ValueError('Number of parameters must be larger than 2.')
+
+    # Check parameter names
+    if parameter_names is not None:
+        if len(parameter_names) != n_param:
+            raise ValueError(
+                'Length of `parameter_names` must be same as number of'
+                ' parameters.')
+        for name in parameter_names:
+            if not isinstance(name, str):
+                raise ValueError(
+                    'All elements of `parameter_names` must be string'
+                    ' instances.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -851,10 +868,15 @@ def pairwise(samples,
                 axes[i, j].set_yticklabels([])
 
         # Set axis labels
-        axes[-1, i].set_xlabel('Parameter %d' % (i + 1))
+        if parameter_names is not None:
+            axes[-1, i].set_xlabel(parameter_names[i])
+        else:
+            axes[-1, i].set_xlabel('Parameter %d' % (i + 1))
         if i == 0:
             # The first one is not a parameter
             axes[i, 0].set_ylabel('Frequency')
+        elif parameter_names is not None:
+            axes[i, 0].set_ylabel(parameter_names[i])
         else:
             axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
 
