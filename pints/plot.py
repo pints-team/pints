@@ -227,11 +227,6 @@ def histogram(
             raise ValueError(
                 'Length of `parameter_names` must be same as number of'
                 ' parameters.')
-        for name in parameter_names:
-            if not isinstance(name, str):
-                raise ValueError(
-                    'All elements of `parameter_names` must be string'
-                    ' instances.')
 
     # Check number of parameters
     for samples_j in samples:
@@ -353,11 +348,6 @@ def trace(
             raise ValueError(
                 'Length of `parameter_names` must be same as number of'
                 ' parameters.')
-        for name in parameter_names:
-            if not isinstance(name, str):
-                raise ValueError(
-                    'All elements of `parameter_names` must be string'
-                    ' instances.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -467,11 +457,6 @@ def autocorrelation(samples, parameter_names=None, max_lags=100):
             raise ValueError(
                 'Length of `parameter_names` must be same as number of'
                 ' parameters.')
-        for name in parameter_names:
-            if not isinstance(name, str):
-                raise ValueError(
-                    'All elements of `parameter_names` must be string'
-                    ' instances.')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     if n_param == 1:
@@ -713,11 +698,6 @@ def pairwise(samples,
             raise ValueError(
                 'Length of `parameter_names` must be same as number of'
                 ' parameters.')
-        for name in parameter_names:
-            if not isinstance(name, str):
-                raise ValueError(
-                    'All elements of `parameter_names` must be string'
-                    ' instances.')
 
     # Check reference parameters
     if ref_parameters is not None:

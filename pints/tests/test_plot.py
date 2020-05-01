@@ -294,13 +294,6 @@ class TestPlot(unittest.TestCase):
             pints.plot.histogram, self.samples,
             parameter_names=['some_name']
         )
-        names = [1] * len(self.real_parameters)
-        self.assertRaisesRegexp(
-            ValueError,
-            r'All elements of \`parameter\_names\` must be string instances.',
-            pints.plot.histogram, self.samples,
-            parameter_names=names
-        )
 
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
@@ -354,13 +347,6 @@ class TestPlot(unittest.TestCase):
             pints.plot.trace, self.samples,
             parameter_names=['some_name']
         )
-        names = [1] * len(self.real_parameters)
-        self.assertRaisesRegexp(
-            ValueError,
-            r'All elements of \`parameter\_names\` must be string instances.',
-            pints.plot.trace, self.samples,
-            parameter_names=names
-        )
 
         # Check invalid ref_parameter input
         self.assertRaisesRegexp(
@@ -403,13 +389,6 @@ class TestPlot(unittest.TestCase):
             r' parameters\.',
             pints.plot.autocorrelation, self.samples[0],
             parameter_names=['some_name']
-        )
-        names = [1] * len(self.real_parameters)
-        self.assertRaisesRegexp(
-            ValueError,
-            r'All elements of \`parameter\_names\` must be string instances.',
-            pints.plot.autocorrelation, self.samples[0],
-            parameter_names=names
         )
 
         # Test it works with single parameter
@@ -537,13 +516,6 @@ class TestPlot(unittest.TestCase):
             r' parameters\.',
             pints.plot.pairwise, few_samples,
             parameter_names=['some_name']
-        )
-        names = [1] * len(self.real_parameters)
-        self.assertRaisesRegexp(
-            ValueError,
-            r'All elements of \`parameter\_names\` must be string instances.',
-            pints.plot.pairwise, few_samples,
-            parameter_names=names
         )
 
         # Check invalid ref_parameter input
