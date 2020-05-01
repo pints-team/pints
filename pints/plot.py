@@ -222,11 +222,12 @@ def histogram(
     _, n_param = samples[0].shape
 
     # Check parameter names
-    if parameter_names is not None:
-        if len(parameter_names) != n_param:
-            raise ValueError(
-                'Length of `parameter_names` must be same as number of'
-                ' parameters.')
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check number of parameters
     for samples_j in samples:
@@ -252,10 +253,7 @@ def histogram(
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            if parameter_names is not None:
-                axes[i, 0].set_xlabel(parameter_names[i])
-            else:
-                axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
@@ -343,11 +341,12 @@ def trace(
             )
 
     # Check parameter names
-    if parameter_names is not None:
-        if len(parameter_names) != n_param:
-            raise ValueError(
-                'Length of `parameter_names` must be same as number of'
-                ' parameters.')
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -369,10 +368,7 @@ def trace(
         ymin_all, ymax_all = np.inf, -np.inf
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            if parameter_names is not None:
-                axes[i, 0].set_xlabel(parameter_names[i])
-            else:
-                axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
@@ -388,10 +384,7 @@ def trace(
 
             # Add trace subplot
             axes[i, 1].set_xlabel('Iteration')
-            if parameter_names is not None:
-                axes[i, 1].set_ylabel(parameter_names[i])
-            else:
-                axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
+            axes[i, 1].set_ylabel(parameter_names[i])
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
 
             # Set ylim
@@ -452,11 +445,12 @@ def autocorrelation(samples, parameter_names=None, max_lags=100):
                          + ' n_parameters).')
 
     # Check parameter names
-    if parameter_names is not None:
-        if len(parameter_names) != n_param:
-            raise ValueError(
-                'Length of `parameter_names` must be same as number of'
-                ' parameters.')
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     if n_param == 1:
@@ -464,10 +458,7 @@ def autocorrelation(samples, parameter_names=None, max_lags=100):
     for i in range(n_param):
         axes[i].acorr(samples[:, i] - np.mean(samples[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
-        if parameter_names is not None:
-            axes[i].legend([parameter_names[i]], loc='upper right')
-        else:
-            axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
+        axes[i].legend([parameter_names[i]], loc='upper right')
 
     # Add x-label to final plot only
     axes[i].set_xlabel('Lag')
@@ -693,11 +684,12 @@ def pairwise(samples,
         raise ValueError('Number of parameters must be larger than 2.')
 
     # Check parameter names
-    if parameter_names is not None:
-        if len(parameter_names) != n_param:
-            raise ValueError(
-                'Length of `parameter_names` must be same as number of'
-                ' parameters.')
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -848,16 +840,11 @@ def pairwise(samples,
                 axes[i, j].set_yticklabels([])
 
         # Set axis labels
-        if parameter_names is not None:
-            axes[-1, i].set_xlabel(parameter_names[i])
-        else:
-            axes[-1, i].set_xlabel('Parameter %d' % (i + 1))
+        axes[-1, i].set_xlabel(parameter_names[i])
         if i == 0:
             # The first one is not a parameter
             axes[i, 0].set_ylabel('Frequency')
-        elif parameter_names is not None:
-            axes[i, 0].set_ylabel(parameter_names[i])
         else:
-            axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
+            axes[i, 0].set_ylabel(parameter_names[i])
 
     return fig, axes
