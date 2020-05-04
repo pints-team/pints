@@ -141,7 +141,7 @@ class TestErrorMeasures(unittest.TestCase):
 
         # Check inability to convert input to 1d vector
         times = [1, 2, 3]
-        values = np.array([[1, 1, 1],[1, 1, 1]])
+        values = np.array([[1, 1, 1], [1, 1, 1]])
         self.assertRaisesRegexp(
             ValueError,
             r'Unable to convert to 1d vector of scalar values\.',
@@ -156,22 +156,24 @@ class TestErrorMeasures(unittest.TestCase):
         values = [1, 1, 1]
         p = pints.SingleOutputProblem(model, times, values)
 
-        # Test
+        # Test for different parameters: expected = mean(input - 1) ** 2
         e = pints.MeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 1)
-        float(e([1]))
         self.assertEqual(e([1]), 0)
-        self.assertEqual(e([2]), 1)
-        self.assertEqual(e([0]), 1)
         self.assertEqual(e([3]), 4)
 
-        # Derivatives
-        for x in [1, 2, 3, 4]:
-            y, dy = e.evaluateS1([x])
-            r = x - 1
-            self.assertEqual(y, e([x]))
-            self.assertEqual(dy.shape, (1, ))
-            self.assertTrue(np.all(dy == 2 * r))
+        # Derivative of error for different parameters:
+        # expected = 2 * mean(input - 1)
+        p = 1
+        y, dy = e.evaluateS1([p])
+        self.assertEqual(y, e([p]))
+        self.assertEqual(dy.shape, (1, ))
+        self.assertTrue(np.all(dy == 2 * (p - 1)))
+        p = 3
+        y, dy = e.evaluateS1([p])
+        self.assertEqual(y, e([p]))
+        self.assertEqual(dy.shape, (1, ))
+        self.assertTrue(np.all(dy == 2 * (p - 1)))
 
     def test_mean_squared_error_multi(self):
         # Tests :class:`pints.MeanSquaredError` with multiple outputs.
