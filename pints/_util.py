@@ -91,7 +91,7 @@ def vector(x):
     if x.ndim != 1:
         n = np.max(x.shape)
         if np.prod(x.shape) != n:
-            raise ValueError('Unable to convert to 1d vector of scalar values')
+            raise ValueError('Unable to convert to 1d vector of scalar values.')
         x = x.reshape((n,))
     return x
 
