@@ -225,22 +225,22 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dy[1], weights[1] * (2 * x[1] - 4))
 
     def test_normalised_root_mean_squared_error(self):
-        # Tests :class:`pints.MeanSquaredError` with a single output.
+        # Tests :class:`pints.NormalisedRootMeanSquaredError` with a single output.
 
         # Set up problem
         model = pints.toy.ConstantModel(1)
         times = [1, 2, 3]
 
         # Test Case I: Input as List
-        values = [1, 1, 1]
+        values = [2, 2, 2]
         p = pints.SingleOutputProblem(model, times, values)
 
         # Test for different parameters:
-        # expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(1 ** 2))
+        # expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
         e = pints.NormalisedRootMeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([1]), 0)
-        self.assertEqual(e([3]), 2)  # sqrt(2^2) / sqrt(1^2) = 2
+        self.assertEqual(e([2]), 0)
+        self.assertEqual(e([3]), 0.5)  # sqrt(1^2) / sqrt(2^2) = 0.5
 
         # Check derivatives
         self.assertRaisesRegex(
@@ -249,15 +249,15 @@ class TestErrorMeasures(unittest.TestCase):
             e.evaluateS1, 1)
 
         # Test Case II: Input as array of shape (n_times, 1)
-        values = [1, 1, 1]
+        values = [2, 2, 2]
         p = pints.SingleOutputProblem(model, times, values)
 
         # Test for different parameters:
-        # expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(1 ** 2))
+        # expected = sqrt(mean((input - 2) ** 2)) / sqrt(mean(2 ** 2))
         e = pints.NormalisedRootMeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([1]), 0)
-        self.assertEqual(e([3]), 2)  # sqrt(2^2) / sqrt(1^2) = 2
+        self.assertEqual(e([2]), 0)
+        self.assertEqual(e([3]), 0.5)  # sqrt(2^2) / sqrt(2^2) = 0.5
 
         # Check derivatives
         self.assertRaisesRegex(
@@ -286,25 +286,53 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2, 3]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
-        self.assertEqual(dy.shape, (3, ))
-        self.assertTrue(np.all(dy == [-1, -2, -3]))
+        self.assertEqual(dy.shape, (3,))
+        self.assertEqual(dy[0], -1)
+        self.assertEqual(dy[1], -2)
+        self.assertEqual(dy[2], -3)
 
     def test_root_mean_squared_error(self):
-        # Tests :class:`pints.RootMeanSquaredError`.
+        # Tests :class:`pints.RootMeanSquaredError` with a single output.
 
-        p = MiniProblem()
+        # Set up problem
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+
+        # Test Case I: Input as List
+        values = [1, 1, 1]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 1) ** 2))
         e = pints.RootMeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = np.sqrt((1 + 4 + 9) / 3)
-        self.assertAlmostEqual(e(x), y)
-        x = [1, 1, 1]
-        y = np.sqrt((4 + 1 + 4) / 3)
-        self.assertEqual(e(x), y)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 2)  # sqrt(2^2) = 2
 
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test Case II: Input as array of shape (n_times, 1)
+        values = [1, 1, 1]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 1) ** 2))
+        e = pints.RootMeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 2)  # sqrt(2^2) = 2
+
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test invalid problem
         p = MultiMiniProblem()
         self.assertRaisesRegex(
             ValueError,
