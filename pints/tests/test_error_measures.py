@@ -13,6 +13,13 @@ import unittest
 import numpy as np
 
 
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
+
 class MiniProblem(pints.SingleOutputProblem):
     def __init__(self):
         self._t = pints.vector([1, 2, 3])
@@ -101,6 +108,44 @@ class TestErrorMeasures(unittest.TestCase):
     """
     def __init__(self, name):
         super(TestErrorMeasures, self).__init__(name)
+
+    def test_mean_squared_error_input_shapes(self):
+        # Tests :class:`pints.MeanSquaredError` input shapes
+
+        # Test Case I: Single Output Problem
+        # Set up model
+        model = pints.toy.ConstantModel(1)
+
+        # Check input as list does not throw an error
+        times = [1, 2, 3]
+        values = [1, 1, 1]
+        pints.SingleOutputProblem(model, times, values)
+
+        # Check input shape (n_times,) does not throw an error
+        times = [1, 2, 3]
+        values = np.array([1, 1, 1])
+        pints.SingleOutputProblem(model, times, values)
+
+        # Check input shape (n_times, 1) does not throw an error
+        times = [1, 2, 3]
+        values = np.array([1, 1, 1])[:, np.newaxis]
+        pints.SingleOutputProblem(model, times, values)
+
+        # Check invalid length of input
+        times = [1, 2, 3]
+        values = [1, 1, 1, 1]
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Times and values arrays must have same length\.',
+            pints.SingleOutputProblem, model, times, values)
+
+        # Check inability to convert input to 1d vector
+        times = [1, 2, 3]
+        values = np.array([[1, 1, 1],[1, 1, 1]])
+        self.assertRaisesRegexp(
+            ValueError,
+            r'Unable to convert to 1d vector of scalar values\.',
+            pints.SingleOutputProblem, model, times, values)
 
     def test_mean_squared_error_single(self):
         # Tests :class:`pints.MeanSquaredError` with a single output.
