@@ -4,7 +4,8 @@ exclude=
   problems,
   pints/__init__.py,
   env,
-  venv
+  venv,
+  build
 ignore=
   # Block comment should start with '# '
   # Not if it's a commented out line
