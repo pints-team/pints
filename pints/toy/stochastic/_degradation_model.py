@@ -11,10 +11,10 @@ import numpy as np
 from scipy.interpolate import interp1d
 import pints
 
-from . import ToyModel
+from .. import ToyModel
 
 
-class StochasticDegradationModel(pints.ForwardModel, ToyModel):
+class DegradationModel(pints.ForwardModel, ToyModel):
     r"""
     Stochastic degradation model of a single chemical reaction starting from
     an initial molecule count :math:`A(0)` and degrading to 0 with a fixed rate
@@ -64,7 +64,7 @@ class StochasticDegradationModel(pints.ForwardModel, ToyModel):
            https://doi.org/10.1016/0021-9991(76)90041-3
     """
     def __init__(self, initial_molecule_count=20):
-        super(StochasticDegradationModel, self).__init__()
+        super(DegradationModel, self).__init__()
         self._n0 = float(initial_molecule_count)
         if self._n0 < 0:
             raise ValueError('Initial molecule count cannot be negative.')
