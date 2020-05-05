@@ -433,27 +433,27 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(e.n_parameters(), 2)
 
         # Test for different parameters:
-        # exp = (weight[0] * mean(input[0] - 1) ** 2 +
-        # weight[1] * mean(2 * input[1] - 4) ** 2) / 2
+        # exp = weight[0] * sum((input[0] - 1) ** 2) +
+        # weight[1] * sum((2 * input[1] - 4) ** 2)
         self.assertEqual(e([1, 2]), 0)
-        self.assertEqual(e([3, 4]), 18)     # (2 ^ 2 + 2 * 4 ^ 2) / 2 = 18
+        self.assertEqual(e([3, 4]), 108)  # (3 * 2 ^ 2 + 2 * 3 * 4 ^ 2) = 108
 
         # Derivative of error for different parameters:
         # Expectation for parameter:
-        # expectation = [weight [0] * mean(input[0] - 1),
-        # weight[1] * mean(2 * input[1] - 4)]
+        # expectation = [weight [0] * 2 * sum(input[0] - 1),
+        # weight[1] * 4 * sum(2 * input[1] - 4)]
         x = [1, 2]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
         self.assertEqual(dy.shape, (2,))
-        self.assertEqual(dy[0], weights[0] * (x[0] - 1))
-        self.assertEqual(dy[1], weights[1] * (2 * x[1] - 4))
+        self.assertEqual(dy[0], weights[0] * 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 4 * 3 * (2 * x[1] - 4))
         x = [3, 4]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
         self.assertEqual(dy.shape, (2,))
-        self.assertEqual(dy[0], weights[0] * (x[0] - 1))
-        self.assertEqual(dy[1], weights[1] * (2 * x[1] - 4))
+        self.assertEqual(dy[0], weights[0] * 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 4 * 3 * (2 * x[1] - 4))
 
     def test_sum_of_errors(self):
         # Tests :class:`pints.SumOfErrors`.
