@@ -1,0 +1,15 @@
+Timer unit: 1e-06 s
+
+Total time: 5.4e-05 s
+File: <ipython-input-12-c8c017633199>
+Function: _propensities at line 1
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+     1                                           def _propensities(xs, ks):
+     2                                               return [
+     3         1         37.0     37.0     68.5          1e5 * xs[0] ** 2 * ks[0],
+     4         1         10.0     10.0     18.5          xs[0] ** 3 * ks[1],
+     5         1          1.0      1.0      1.9          2e5 * ks[2],
+     6         1          6.0      6.0     11.1          xs[0] * ks[3]
+     7                                               ]

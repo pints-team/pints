@@ -11,6 +11,7 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 from scipy.interpolate import interp1d
 import pints
+import random
 
 from .. import ToyModel
 
@@ -105,7 +106,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         mol_count = [np.array(x)]
         time = [t]
         while a_0 > 0 and t <= max_time:
-            r_1, r_2 = np.random.uniform(0, 1, 2)
+            r_1, r_2 = random.random(), random.random()
             t += -np.log(r_1) / (a_0)
             s = 0
             r = 0

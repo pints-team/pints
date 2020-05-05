@@ -35,12 +35,12 @@ class SchloglModel(MarkovJumpModel):
 
     def simulate(self, parameters, times, approx=None, approx_tau=None):
         return super(SchloglModel, self).simulate(
-            parameters, times, approx, approx_tau)[:, 0]
+            parameters, times, approx_tau)[:, 0]
 
-    def _propensities(self, xs, ks):
+    def _propensities(self, xs, ks):     
         return [
-            self.a_count * xs[0] * (xs[0] - 1) * ks[0],
-            xs[0] * (xs[0] - 1) * (xs[0] - 2) * ks[1],
+            self.a_count * xs[0] * xs[0] * ks[0],
+            xs[0] * xs[0] * xs[0] * ks[1],
             self.b_count * ks[2],
             xs[0] * ks[3]
         ]
