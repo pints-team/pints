@@ -181,7 +181,7 @@ class TestErrorMeasures(unittest.TestCase):
 
         # Derivative of error for different parameters:
         # Expectation for parameter:
-        # expectation = [mean(input[0] - 1), mean(2 * input[1] - 4)]
+        # expectation = [mean(input[0] - 1), 2 * mean(2 * input[1] - 4)]
         x = [1, 2]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
@@ -193,7 +193,7 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(y, e(x))
         self.assertEqual(dy.shape, (2,))
         self.assertEqual(dy[0], x[0] - 1)
-        self.assertEqual(dy[1], 2 * x[1] - 4)
+        self.assertEqual(dy[1], 2 * (2 * x[1] - 4))
 
         # Test Case II: Weighted Inputs
         # Check valid weights don't throw an error
@@ -210,19 +210,19 @@ class TestErrorMeasures(unittest.TestCase):
         # Derivative of error for different parameters:
         # Expectation for parameter:
         # expectation = [weight [0] * mean(input[0] - 1),
-        # weight[1] * mean(2 * input[1] - 4)]
+        # weight[1] * 2 * mean(2 * input[1] - 4)]
         x = [1, 2]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
         self.assertEqual(dy.shape, (2,))
         self.assertEqual(dy[0], weights[0] * (x[0] - 1))
-        self.assertEqual(dy[1], weights[1] * (2 * x[1] - 4))
+        self.assertEqual(dy[1], weights[1] * 2 * (2 * x[1] - 4))
         x = [3, 4]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
         self.assertEqual(dy.shape, (2,))
         self.assertEqual(dy[0], weights[0] * (x[0] - 1))
-        self.assertEqual(dy[1], weights[1] * (2 * x[1] - 4))
+        self.assertEqual(dy[1], weights[1] * 2 * (2 * x[1] - 4))
 
     def test_normalised_root_mean_squared_error(self):
         # Tests :class:`pints.NormalisedRootMeanSquaredError` with a single
@@ -429,7 +429,7 @@ class TestErrorMeasures(unittest.TestCase):
         # Test Case II: Weighted Inputs
         # Check valid weights don't throw an error
         weights = [1, 2]
-        e = pints.MeanSquaredError(p, weights=weights)
+        e = pints.SumOfSquaresError(p, weights=weights)
         self.assertEqual(e.n_parameters(), 2)
 
         # Test for different parameters:
