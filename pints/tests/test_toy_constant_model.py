@@ -168,11 +168,11 @@ class TestConstantModel(unittest.TestCase):
         self.assertEqual(dy.shape, (3, 2, 2))
         dmx = np.array(
             [[[1, 0],   # dx1/dp1 = 1, dx1/dp2 = 0
-              [0, 1]],  # dx2/dp2 = 0, dx2/dp2 = 1
+              [0, 2]],  # dx2/dp2 = 0, dx2/dp2 = 2
              [[1, 0],
-              [0, 1]],
+              [0, 2]],
              [[1, 0],
-              [0, 1]]]
+              [0, 2]]]
         )
         self.assertTrue(np.all(dy == dmx))
 
