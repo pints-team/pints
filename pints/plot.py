@@ -171,7 +171,12 @@ def function_between_points(f, point_1, point_2, padding=0.25, evaluations=20):
     return fig, axes
 
 
-def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
+def histogram(
+        samples,
+        kde=False,
+        n_percentiles=None,
+        parameter_names=None,
+        ref_parameters=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms for each chain or list of samples.
@@ -188,12 +193,16 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     kde
         Set to ``True`` to include kernel-density estimation for the
         histograms.
-    ref_parameters
-        A set of parameters for reference in the plot. For example, if true
-        values of parameters are known, they can be passed in for plotting.
     n_percentiles
         Shows only the middle n-th percentiles of the distribution.
         Default shows all samples in ``samples``.
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        histogram subplots. If no names are provided, the parameters are
+        enumerated.
+    ref_parameters
+        A set of parameters for reference in the plot. For example, if true
+        values of parameters are known, they can be passed in for plotting.
     """
     import matplotlib
     import matplotlib.pyplot as plt
@@ -211,6 +220,14 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     alpha = 0.5
     n_list = len(samples)
     _, n_param = samples[0].shape
+
+    # Check parameter names
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check number of parameters
     for samples_j in samples:
@@ -236,7 +253,7 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
@@ -276,7 +293,11 @@ def histogram(samples, kde=False, ref_parameters=None, n_percentiles=None):
     return fig, axes[:, 0]
 
 
-def trace(samples, ref_parameters=None, n_percentiles=None):
+def trace(
+        samples,
+        n_percentiles=None,
+        parameter_names=None,
+        ref_parameters=None):
     """
     Takes one or more markov chains or lists of samples as input and creates
     and returns a plot showing histograms and traces for each chain or list of
@@ -291,12 +312,16 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
         ``(n_lists, n_samples, n_parameters)``, where ``n_lists`` is the
         number of lists of samples, ``n_samples`` is the number of samples in
         one list and ``n_parameters`` is the number of parameters.
-    ref_parameters
-        A set of parameters for reference in the plot. For example, if true
-        values of parameters are known, they can be passed in for plotting.
     n_percentiles
         Shows only the middle n-th percentiles of the distribution.
         Default shows all samples in ``samples``.
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        trace subplots. If no names are provided, the parameters are
+        enumerated.
+    ref_parameters
+        A set of parameters for reference in the plot. For example, if true
+        values of parameters are known, they can be passed in for plotting.
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -314,6 +339,14 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
             raise ValueError(
                 'All samples must have the same number of parameters.'
             )
+
+    # Check parameter names
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -335,7 +368,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
         ymin_all, ymax_all = np.inf, -np.inf
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
-            axes[i, 0].set_xlabel('Parameter ' + str(i + 1))
+            axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
             if n_percentiles is None:
                 xmin = np.min(samples_j[:, i])
@@ -351,7 +384,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
 
             # Add trace subplot
             axes[i, 1].set_xlabel('Iteration')
-            axes[i, 1].set_ylabel('Parameter ' + str(i + 1))
+            axes[i, 1].set_ylabel(parameter_names[i])
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
 
             # Set ylim
@@ -381,7 +414,7 @@ def trace(samples, ref_parameters=None, n_percentiles=None):
     return fig, axes
 
 
-def autocorrelation(samples, max_lags=100):
+def autocorrelation(samples, max_lags=100, parameter_names=None):
     """
     Creates and returns an autocorrelation plot for a given markov chain or
     list of `samples`.
@@ -396,6 +429,10 @@ def autocorrelation(samples, max_lags=100):
         is the number of parameters.
     max_lags
         The maximum autocorrelation lag to plot.
+    parameter_names
+        A list of parameter names, which will be displayed in the legend of the
+        autocorrelation subplots. If no names are provided, the parameters are
+        enumerated.
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -407,13 +444,21 @@ def autocorrelation(samples, max_lags=100):
         raise ValueError('`samples` must be of shape (n_sample,'
                          + ' n_parameters).')
 
+    # Check parameter names
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
+
     fig, axes = plt.subplots(n_param, 1, sharex=True, figsize=(6, 2 * n_param))
     if n_param == 1:
         axes = np.asarray([axes], dtype=object)
     for i in range(n_param):
         axes[i].acorr(samples[:, i] - np.mean(samples[:, i]), maxlags=max_lags)
         axes[i].set_xlim(-0.5, max_lags + 0.5)
-        axes[i].legend(['Parameter ' + str(1 + i)], loc='upper right')
+        axes[i].legend([parameter_names[i]], loc='upper right')
 
     # Add x-label to final plot only
     axes[i].set_xlabel('Lag')
@@ -570,8 +615,9 @@ def pairwise(samples,
              kde=False,
              heatmap=False,
              opacity=None,
-             ref_parameters=None,
-             n_percentiles=None):
+             n_percentiles=None,
+             parameter_names=None,
+             ref_parameters=None):
     """
     Takes a markov chain or list of ``samples`` and creates a set of pairwise
     scatterplots for all parameters (p1 versus p2, p1 versus p3, p2 versus p3,
@@ -599,13 +645,17 @@ def pairwise(samples,
         This value can be used to manually set the opacity of the
         points in the scatter plots (when ``kde=False`` and ``heatmap=False``
         only).
+    n_percentiles
+        Shows only the middle n-th percentiles of the distribution.
+        Default shows all samples in ``samples``.
+    parameter_names
+        A list of parameter names, which will be displayed on the x-axis of the
+        trace subplots. If no names are provided, the parameters are
+        enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for
         plotting.
-    n_percentiles
-        Shows only the middle n-th percentiles of the distribution.
-        Default shows all samples in ``samples``.
     """
     import matplotlib
     import matplotlib.pyplot as plt
@@ -632,6 +682,14 @@ def pairwise(samples,
     # Check number of parameters
     if n_param < 2:
         raise ValueError('Number of parameters must be larger than 2.')
+
+    # Check parameter names
+    if parameter_names is None:
+        parameter_names = ['Parameter' + str(i + 1) for i in range(n_param)]
+    elif len(parameter_names) != n_param:
+        raise ValueError(
+            'Length of `parameter_names` must be same as number of'
+            ' parameters.')
 
     # Check reference parameters
     if ref_parameters is not None:
@@ -782,11 +840,11 @@ def pairwise(samples,
                 axes[i, j].set_yticklabels([])
 
         # Set axis labels
-        axes[-1, i].set_xlabel('Parameter %d' % (i + 1))
+        axes[-1, i].set_xlabel(parameter_names[i])
         if i == 0:
             # The first one is not a parameter
             axes[i, 0].set_ylabel('Frequency')
         else:
-            axes[i, 0].set_ylabel('Parameter %d' % (i + 1))
+            axes[i, 0].set_ylabel(parameter_names[i])
 
     return fig, axes
