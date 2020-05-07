@@ -1,4 +1,4 @@
-name: Unit test (python versions)
+name: Unit tests (python versions)
 
 on:
   push:
