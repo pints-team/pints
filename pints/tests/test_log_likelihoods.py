@@ -14,14 +14,19 @@ import numpy as np
 
 class TestLogLikelihood(unittest.TestCase):
 
-    def test_scaled_log_likelihood(self):
-
+    def test_scaled_log_likelihood_single(self):
+        # Tests :class:`pints.ScaledLogLikelihood` for instances of
+        # :class:`pints.SingleOutputProblem`.
         model = pints.toy.LogisticModel()
         real_parameters = [0.015, 500]
         test_parameters = [0.014, 501]
         sigma = 0.001
-        times = np.linspace(0, 1000, 100)
-        values = model.simulate(real_parameters, times)
+        n_times = 100
+        times = np.linspace(0, 1000, n_times)
+        bare_values = model.simulate(real_parameters, times)
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
 
         # Create an object with links to the model and time series
         problem = pints.SingleOutputProblem(model, times, values)
@@ -36,7 +41,7 @@ class TestLogLikelihood(unittest.TestCase):
         eval_scaled = log_likelihood_scaled(test_parameters)
 
         self.assertEqual(int(eval_not_scaled), -20959169232)
-        self.assertAlmostEqual(eval_scaled * len(times), eval_not_scaled)
+        self.assertAlmostEqual(eval_scaled * n_times, eval_not_scaled)
 
         # Test bad constructor
         self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
@@ -48,23 +53,116 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(dy1.shape, (2, ))
         self.assertEqual(y2, log_likelihood_scaled(test_parameters))
         self.assertEqual(dy2.shape, (2, ))
-        dy3 = dy2 * len(times)
+        dy3 = dy2 * n_times
         self.assertAlmostEqual(dy1[0] / dy3[0], 1)
         self.assertAlmostEqual(dy1[1] / dy3[1], 1)
 
-        # Test on multi-output problem
+        # Test Case II: values as array of shape (n_times,)
+        n_times = n_times
+        values = np.reshape(bare_values, (n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a scaled and not scaled log_likelihood
+        log_likelihood_not_scaled = pints.GaussianKnownSigmaLogLikelihood(
+            problem, sigma)
+        log_likelihood_scaled = pints.ScaledLogLikelihood(
+            log_likelihood_not_scaled)
+
+        eval_not_scaled = log_likelihood_not_scaled(test_parameters)
+        eval_scaled = log_likelihood_scaled(test_parameters)
+
+        self.assertEqual(int(eval_not_scaled), -20959169232)
+        self.assertAlmostEqual(eval_scaled * n_times, eval_not_scaled)
+
+        # Test bad constructor
+        self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
+
+        # Test single-output derivatives
+        y1, dy1 = log_likelihood_not_scaled.evaluateS1(test_parameters)
+        y2, dy2 = log_likelihood_scaled.evaluateS1(test_parameters)
+        self.assertEqual(y1, log_likelihood_not_scaled(test_parameters))
+        self.assertEqual(dy1.shape, (2, ))
+        self.assertEqual(y2, log_likelihood_scaled(test_parameters))
+        self.assertEqual(dy2.shape, (2, ))
+        dy3 = dy2 * n_times
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
+
+        # Test Case III: values as array of shape (n_times, 1)
+        n_times = n_times
+        values = np.reshape(bare_values, (n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a scaled and not scaled log_likelihood
+        log_likelihood_not_scaled = pints.GaussianKnownSigmaLogLikelihood(
+            problem, sigma)
+        log_likelihood_scaled = pints.ScaledLogLikelihood(
+            log_likelihood_not_scaled)
+
+        eval_not_scaled = log_likelihood_not_scaled(test_parameters)
+        eval_scaled = log_likelihood_scaled(test_parameters)
+
+        self.assertEqual(int(eval_not_scaled), -20959169232)
+        self.assertAlmostEqual(eval_scaled * n_times, eval_not_scaled)
+
+        # Test bad constructor
+        self.assertRaises(ValueError, pints.ScaledLogLikelihood, model)
+
+        # Test single-output derivatives
+        y1, dy1 = log_likelihood_not_scaled.evaluateS1(test_parameters)
+        y2, dy2 = log_likelihood_scaled.evaluateS1(test_parameters)
+        self.assertEqual(y1, log_likelihood_not_scaled(test_parameters))
+        self.assertEqual(dy1.shape, (2, ))
+        self.assertEqual(y2, log_likelihood_scaled(test_parameters))
+        self.assertEqual(dy2.shape, (2, ))
+        dy3 = dy2 * n_times
+        self.assertAlmostEqual(dy1[0] / dy3[0], 1)
+        self.assertAlmostEqual(dy1[1] / dy3[1], 1)
+
+    def test_scaled_log_likelihood_multi(self):
+        # Tests :class:`pints.ScaledLogLikelihood` for instances of
+        # :class:`pints.MultiOutputProblem`.
+
+        # Test multi-output evaluation
         model = pints.toy.FitzhughNagumoModel()
-        nt = 10
+        n_times = 10
         no = model.n_outputs()
-        times = np.linspace(0, 100, nt)
-        values = model.simulate([0.5, 0.5, 0.5], times)
+        times = np.linspace(0, 100, n_times)
+        bare_values = model.simulate([0.5, 0.5, 0.5], times)
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
         problem = pints.MultiOutputProblem(model, times, values)
         unscaled = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
         scaled = pints.ScaledLogLikelihood(unscaled)
         p = [0.1, 0.1, 0.1]
         x = unscaled(p)
         y = scaled(p)
-        self.assertAlmostEqual(y, x / nt / no)
+        self.assertAlmostEqual(y, x / n_times / no)
+
+        # Test Case II: values as array of shape (n_times,)
+        values = np.reshape(bare_values, (n_times,))
+        problem = pints.MultiOutputProblem(model, times, values)
+        unscaled = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+        scaled = pints.ScaledLogLikelihood(unscaled)
+        p = [0.1, 0.1, 0.1]
+        x = unscaled(p)
+        y = scaled(p)
+        self.assertAlmostEqual(y, x / n_times / no)
+
+        # Test Case II: values as array of shape (n_times, 1)
+        values = np.reshape(bare_values, (n_times, 1))
+        problem = pints.MultiOutputProblem(model, times, values)
+        unscaled = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+        scaled = pints.ScaledLogLikelihood(unscaled)
+        p = [0.1, 0.1, 0.1]
+        x = unscaled(p)
+        y = scaled(p)
+        self.assertAlmostEqual(y, x / n_times / no)
 
         # Test multi-output derivatives
         y1, dy1 = unscaled.evaluateS1(p)
@@ -99,8 +197,8 @@ class TestLogLikelihood(unittest.TestCase):
         l, dl = log_likelihood.evaluateS1(parameters)
         self.assertAlmostEqual(l, -50.508848609684783 / 12.0)
         self.assertAlmostEqual(dl[0], 1.820408163265306 / 12.0)
-        self.assertAlmostEqual(dl[1], 3.7000000000000002 / 12.0)
-        self.assertAlmostEqual(dl[2], -0.021527777777777774 / 12.0)
+        self.assertAlmostEqual(dl[1], 2 * 3.7000000000000002 / 12.0)
+        self.assertAlmostEqual(dl[2], 3 * -0.021527777777777774 / 12.0)
 
     def test_gaussian_log_likelihoods_single_output(self):
         # Single-output test for known/unknown noise log-likelihood methods
