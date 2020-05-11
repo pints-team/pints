@@ -828,18 +828,38 @@ class TestLogLikelihood(unittest.TestCase):
                                          0.0, 2.0]),
             -237.93936126949615)
 
-    def test_arma11(self):
+    def test_arma11_single(self):
+        # Tests :class:`pints.ARMA11LogLikelihood` for
+        # instances of :class:`pints.SingleOutputProblem`.
         model = pints.toy.ConstantModel(1)
-        parameters = [0]
         times = np.asarray([1, 2, 3, 4])
-        model.simulate(parameters, times)
-        values = np.asarray([3, -4.5, 10.5, 0.3])
+        n_times = len(times)
+        bare_values = np.asarray([3, -4.5, 10.5, 0.3])
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.ARMA11LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
 
-        # multiple outputs
+        # Test Case II: values as array of shape (n_times,)
+        values = np.reshape(bare_values, (n_times,))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
+
+        # Test Case III: values as array of shape (n_times, 1)
+        values = np.reshape(bare_values, (n_times, 1))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
+
+    def test_arma11_multi(self):
+        # Tests :class:`pints.ARMA11LogLikelihood` for
+        # instances of :class:`pints.MultiOutputProblem`.
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 5)
