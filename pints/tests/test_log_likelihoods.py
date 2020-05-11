@@ -440,7 +440,7 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(l, l1)
 
     def test_gaussian_integrated_uniform_log_likelihood_single(self):
-        # Tests :class:`pints.GaussianIntegratedUnifromLogLikelihood` for
+        # Tests :class:`pints.GaussianIntegratedUniformLogLikelihood` for
         # instances of :class:`pints.SingleOutputProblem`.
         model = pints.toy.ConstantModel(1)
         parameters = [0]
@@ -513,7 +513,7 @@ class TestLogLikelihood(unittest.TestCase):
                           problem, [1, 2], [2, 3])
 
     def test_gaussian_integrated_uniform_log_likelihood_multi(self):
-        # Tests :class:`pints.GaussianIntegratedUnifromLogLikelihood` for
+        # Tests :class:`pints.GaussianIntegratedUniformLogLikelihood` for
         # instances of :class:`pints.MultiOutputProblem`.
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
@@ -563,13 +563,33 @@ class TestLogLikelihood(unittest.TestCase):
                           problem, [1, 3], [2, 2])
 
     def test_student_t_log_likelihood_single(self):
-        # Single-output test for Student-t noise log-likelihood methods
+        # Tests :class:`pints.StudentTLogLikelihood` for
+        # instances of :class:`pints.SingleOutputProblem`.
 
+        # Check evaluation
         model = pints.toy.ConstantModel(1)
         parameters = [0]
         times = np.asarray([1, 2, 3])
+        n_times = len(times)
         model.simulate(parameters, times)
-        values = np.asarray([1.0, -10.7, 15.5])
+        bare_values = np.asarray([1.0, -10.7, 15.5])
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
+        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
+
+        # Test Case II: values as array of shape (n_times,)
+        values = np.reshape(bare_values, (n_times,))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
+        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
+
+        # Test Case III: values as array of shape (n_times, 1)
+        values = np.reshape(bare_values, (n_times, 1))
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.StudentTLogLikelihood(problem)
         # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
@@ -597,7 +617,8 @@ class TestLogLikelihood(unittest.TestCase):
             -47.83720347766945)
 
     def test_cauchy_log_likelihood_single(self):
-        # Single-output test for Cauchy noise log-likelihood methods
+        # Tests :class:`pints.StudentTLogLikelihood` for
+        # instances of :class:`pints.MultiOutputProblem`.
 
         model = pints.toy.ConstantModel(1)
         parameters = [0]
