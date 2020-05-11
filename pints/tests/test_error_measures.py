@@ -13,6 +13,13 @@ import unittest
 import numpy as np
 
 
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
+
 class MiniProblem(pints.SingleOutputProblem):
     def __init__(self):
         self._t = pints.vector([1, 2, 3])
@@ -108,25 +115,52 @@ class TestErrorMeasures(unittest.TestCase):
         # Set up problem
         model = pints.toy.ConstantModel(1)
         times = [1, 2, 3]
+
+        # Test Case I: Input as List
         values = [1, 1, 1]
         p = pints.SingleOutputProblem(model, times, values)
 
-        # Test
+        # Test for different parameters: expected = mean(input - 1) ** 2
         e = pints.MeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 1)
-        float(e([1]))
         self.assertEqual(e([1]), 0)
-        self.assertEqual(e([2]), 1)
-        self.assertEqual(e([0]), 1)
         self.assertEqual(e([3]), 4)
 
-        # Derivatives
-        for x in [1, 2, 3, 4]:
-            y, dy = e.evaluateS1([x])
-            r = x - 1
-            self.assertEqual(y, e([x]))
-            self.assertEqual(dy.shape, (1, ))
-            self.assertTrue(np.all(dy == 2 * r))
+        # Derivative of error for different parameters:
+        # expected = 2 * mean(input - 1)
+        x = 1
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * (x - 1))
+        x = 3
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * (x - 1))
+
+        # Test Case II: Input as array of shape (n_times, 1)
+        values = np.array([1, 1, 1])[:, np.newaxis]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters: expected = mean(input - 1) ** 2
+        e = pints.MeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 4)
+
+        # Derivative of error for different parameters:
+        # expected = 2 * mean(input - 1)
+        x = 1
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * (x - 1))
+        x = 3
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * (x - 1))
 
     def test_mean_squared_error_multi(self):
         # Tests :class:`pints.MeanSquaredError` with multiple outputs.
@@ -137,141 +171,102 @@ class TestErrorMeasures(unittest.TestCase):
         values = [[1, 4], [1, 4], [1, 4]]
         p = pints.MultiOutputProblem(model, times, values)
 
-        # Test
+        # Test Case I: Equal Weights on Inputs
+        # Test for different parameters:
+        # exp = (mean(input[0] - 1) ** 2 + mean(2 * input[1] - 4) ** 2) / 2
         e = pints.MeanSquaredError(p)
         self.assertEqual(e.n_parameters(), 2)
-        float(e([1, 2]))
-        self.assertEqual(e([1, 2]), 0)      # 0
-        self.assertEqual(e([2, 2]), 0.5)    # (3*(1^2+0^2)) / 6 = (1^2+0^2) / 2
-        self.assertEqual(e([2, 3]), 2.5)    # (1^2+2^2) / 2 = 2.5
-        self.assertEqual(e([3, 4]), 10)     # (2^2+4^2) / 2 = 10
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([3, 4]), 10)     # (2 ^ 2 + 4 ^ 2) / 2 = 10
 
-        # Derivatives
-        values = np.array([[1, 4], [2, 7], [3, 10]])
-        p = pints.MultiOutputProblem(model, times, values)
-        e = pints.MeanSquaredError(p)
+        # Derivative of error for different parameters:
+        # Expectation for parameter:
+        # expectation = [mean(input[0] - 1), 2 * mean(2 * input[1] - 4)]
         x = [1, 2]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], x[0] - 1)
+        self.assertEqual(dy[1], 2 * x[1] - 4)
+        x = [3, 4]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], x[0] - 1)
+        self.assertEqual(dy[1], 2 * (2 * x[1] - 4))
 
-        # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 1]]
-        y, dy = p.evaluateS1(x)
-        self.assertTrue(np.all(y == p.evaluate(x)))
-        self.assertTrue(np.all(y[0, :] == [1, 4]))
-        self.assertTrue(np.all(y[1, :] == [1, 4]))
-        self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
-
-        # Check residuals
-        rx = y - np.array(values)
-        self.assertTrue(np.all(rx == np.array(
-            [[-0, -0],
-             [-1, -3],
-             [-2, -6]]
-        )))
-        self.assertAlmostEqual(e(x), np.sum(rx**2) / 6)
-
-        # Now with derivatives
-        ex, dex = e.evaluateS1(x)
-
-        # Check error
-        self.assertAlmostEqual(ex, e(x))
-
-        # Check derivatives. Shape is (parameters, )
-        self.assertEqual(dex.shape, (2, ))
-
-        # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 1]]
-        # dex1 is: (2 / nt / no) * (0 - 1 - 2) * 1 = (1 / 3) * -3 * 1 = -1
-        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 1 = (1 / 3) * -9 * 1 = -3
-        self.assertEqual(dex[0], -1)
-        self.assertEqual(dex[1], -3)
-
-    def test_mean_squared_error_weighted(self):
-        # Tests :class:`pints.MeanSquaredError` with weighted outputs.
-
-        # Set up problem
-        model = pints.toy.ConstantModel(2)
-        times = [1, 2, 3]
-        values = [[1, 4], [1, 4], [1, 4]]
-        p = pints.MultiOutputProblem(model, times, values)
-
-        # Test
-        e = pints.MeanSquaredError(p, weights=[1, 2])
-        self.assertRaisesRegex(
-            ValueError, 'Number of weights',
-            pints.MeanSquaredError, p, weights=[1, 2, 3])
+        # Test Case II: Weighted Inputs
+        # Check valid weights don't throw an error
+        weights = [1, 2]
+        e = pints.MeanSquaredError(p, weights=weights)
         self.assertEqual(e.n_parameters(), 2)
-        float(e([1, 2]))
-        self.assertEqual(e([1, 2]), 0)      # 0
-        self.assertEqual(e([2, 2]), 0.5)    # (3*(1^2*1+0^2*2)) / 6 = 1 / 2
-        self.assertEqual(e([2, 3]), 4.5)    # (1^2*1+2^2*2) / 2 = 4.5
-        self.assertEqual(e([3, 4]), 18)     # (2^2*1+4^2*2) / 2 = 18
 
-        # Derivatives
-        values = np.array([[1, 4], [2, 7], [3, 10]])
-        p = pints.MultiOutputProblem(model, times, values)
-        w = np.array([1, 2])
-        e = pints.MeanSquaredError(p, weights=w)
+        # Test for different parameters:
+        # exp = (weight[0] * mean(input[0] - 1) ** 2 +
+        # weight[1] * mean(2 * input[1] - 4) ** 2) / 2
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([3, 4]), 18)     # (2 ^ 2 + 2 * 4 ^ 2) / 2 = 18
+
+        # Derivative of error for different parameters:
+        # Expectation for parameter:
+        # expectation = [weight [0] * mean(input[0] - 1),
+        # weight[1] * 2 * mean(2 * input[1] - 4)]
         x = [1, 2]
-
-        # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 1]]
-        y, dy = p.evaluateS1(x)
-        self.assertTrue(np.all(y == p.evaluate(x)))
-        self.assertTrue(np.all(y[0, :] == [1, 4]))
-        self.assertTrue(np.all(y[1, :] == [1, 4]))
-        self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
-
-        # Check residuals
-        rx = y - np.array(values)
-        self.assertTrue(np.all(rx == np.array(
-            [[-0, -0],
-             [-1, -3],
-             [-2, -6]]
-        )))
-        self.assertAlmostEqual(e(x), np.sum(np.sum(rx**2, axis=0) * w) / 6)
-
-        # Now with derivatives
-        ex, dex = e.evaluateS1(x)
-
-        # Check error
-        self.assertAlmostEqual(ex, e(x))
-
-        # Check derivatives. Shape is (parameters, )
-        self.assertEqual(dex.shape, (2, ))
-
-        # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 2]]
-        # dex1 is: (2 / nt / no) * (0 - 1 - 2) * 1 * 1
-        #        = (1 / 3) * -3 * 1 * 1
-        #        = -1
-        # dex2 is: (2 / nt / no) * (0 - 3 - 6) * 1 * 2
-        #        = (1 / 3) * -9 * 1 * 2
-        #        = -6
-        self.assertEqual(dex[0], -1)
-        self.assertEqual(dex[1], -6)
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], weights[0] * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 2 * (2 * x[1] - 4))
+        x = [3, 4]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], weights[0] * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 2 * (2 * x[1] - 4))
 
     def test_normalised_root_mean_squared_error(self):
-        # Tests :class:`pints.NormalisedRootMeanSquaredError`.
+        # Tests :class:`pints.NormalisedRootMeanSquaredError` with a single
+        # output.
 
-        p = MiniProblem()
+        # Set up problem
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+
+        # Test Case I: Input as List
+        values = [2, 2, 2]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
         e = pints.NormalisedRootMeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = 1.0
-        self.assertEqual(e(x), y)
-        x = [1, 1, 1]
-        y = np.sqrt((4 + 1 + 4) / 3) / np.sqrt((1 + 4 + 9) / 3)
-        self.assertAlmostEqual(e(x), y)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([2]), 0)
+        self.assertEqual(e([3]), 0.5)  # sqrt(1^2) / sqrt(2^2) = 0.5
 
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test Case II: Input as array of shape (n_times, 1)
+        values = np.array([2, 2, 2])[:, np.newaxis]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 2) ** 2)) / sqrt(mean(2 ** 2))
+        e = pints.NormalisedRootMeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([2]), 0)
+        self.assertEqual(e([3]), 0.5)  # sqrt(2^2) / sqrt(2^2) = 0.5
+
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test invalid problem
         p = MultiMiniProblem()
         self.assertRaisesRegex(
             ValueError,
@@ -292,25 +287,53 @@ class TestErrorMeasures(unittest.TestCase):
         x = [1, 2, 3]
         y, dy = e.evaluateS1(x)
         self.assertEqual(y, e(x))
-        self.assertEqual(dy.shape, (3, ))
-        self.assertTrue(np.all(dy == [-1, -2, -3]))
+        self.assertEqual(dy.shape, (3,))
+        self.assertEqual(dy[0], -1)
+        self.assertEqual(dy[1], -2)
+        self.assertEqual(dy[2], -3)
 
     def test_root_mean_squared_error(self):
-        # Tests :class:`pints.RootMeanSquaredError`.
+        # Tests :class:`pints.RootMeanSquaredError` with a single output.
 
-        p = MiniProblem()
+        # Set up problem
+        model = pints.toy.ConstantModel(1)
+        times = [1, 2, 3]
+
+        # Test Case I: Input as List
+        values = [1, 1, 1]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 1) ** 2))
         e = pints.RootMeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 3)
-        float(e([1, 2, 3]))
-        self.assertEqual(e([-1, 2, 3]), 0)
-        self.assertNotEqual(np.all(e([1, 2, 3])), 0)
-        x = [0, 0, 0]
-        y = np.sqrt((1 + 4 + 9) / 3)
-        self.assertAlmostEqual(e(x), y)
-        x = [1, 1, 1]
-        y = np.sqrt((4 + 1 + 4) / 3)
-        self.assertEqual(e(x), y)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 2)  # sqrt(2^2) = 2
 
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test Case II: Input as array of shape (n_times, 1)
+        values = np.array([1, 1, 1])[:, np.newaxis]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters:
+        # expected = sqrt(mean((input - 1) ** 2))
+        e = pints.RootMeanSquaredError(p)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 2)  # sqrt(2^2) = 2
+
+        # Check derivatives
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            e.evaluateS1, 1)
+
+        # Test invalid problem
         p = MultiMiniProblem()
         self.assertRaisesRegex(
             ValueError,
@@ -318,33 +341,60 @@ class TestErrorMeasures(unittest.TestCase):
             pints.RootMeanSquaredError, p)
 
     def test_sum_of_squares_error_single(self):
-        # Tests :class:`pints.MeanSquaredError` with a single output.
+        # Tests :class:`pints.SumOfSquaresError` for single output problems.
 
         # Set up problem
         model = pints.toy.ConstantModel(1)
         times = [1, 2, 3]
+
+        # Test Case I: Input as List
         values = [1, 1, 1]
         p = pints.SingleOutputProblem(model, times, values)
 
-        # Test
+        # Test for different parameters: expected = sum((input - 1) ** 2)
         e = pints.SumOfSquaresError(p)
         self.assertEqual(e.n_parameters(), 1)
-        float(e([1]))
         self.assertEqual(e([1]), 0)
-        self.assertEqual(e([2]), 3)
-        self.assertEqual(e([0]), 3)
         self.assertEqual(e([3]), 12)
 
-        # Derivatives
-        for x in [1, 2, 3, 4]:
-            ex, dex = e.evaluateS1([x])
-            r = x - 1
-            self.assertEqual(ex, e([x]))
-            self.assertEqual(dex.shape, (1, ))
-            self.assertEqual(dex[0], 2 * 3 * r)
+        # Derivative of error for different parameters:
+        # expected = 2 * sum(input - 1)
+        x = 1
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * 3 * (x - 1))
+        x = 3
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * 3 * (x - 1))
+
+        # Test Case II: Input as array of shape (n_times, 1)
+        values = np.array([1, 1, 1])[:, np.newaxis]
+        p = pints.SingleOutputProblem(model, times, values)
+
+        # Test for different parameters: expected = sum((input - 1) ** 2)
+        e = pints.SumOfSquaresError(p)
+        self.assertEqual(e.n_parameters(), 1)
+        self.assertEqual(e([1]), 0)
+        self.assertEqual(e([3]), 12)
+
+        # Derivative of error for different parameters:
+        # expected = 2 * sum(input - 1)
+        x = 1
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * 3 * (x - 1))
+        x = 3
+        y, dy = e.evaluateS1([x])
+        self.assertEqual(y, e([x]))
+        self.assertEqual(dy.shape, (1,))
+        self.assertEqual(dy, 2 * 3 * (x - 1))
 
     def test_sum_of_squares_error_multi(self):
-        # Tests :class:`pints.MeanSquaredError` with multiple outputs.
+        # Tests :class:`pints.SumOfSquaresError` with multiple outputs.
 
         # Set up problem
         model = pints.toy.ConstantModel(2)
@@ -352,124 +402,58 @@ class TestErrorMeasures(unittest.TestCase):
         values = [[1, 4], [1, 4], [1, 4]]
         p = pints.MultiOutputProblem(model, times, values)
 
-        # Test
+        # Test Case I: Equal Weights on Inputs
+        # Test for different parameters:
+        # exp = sum((input[0] - 1) ** 2) + sum((2 * input[1] - 4) ** 2)
         e = pints.SumOfSquaresError(p)
         self.assertEqual(e.n_parameters(), 2)
-        float(e([1, 2]))
-        self.assertEqual(e([1, 2]), 0)      # 0
-        self.assertEqual(e([2, 2]), 3)      # 3*(1^2+0^2) = 3
-        self.assertEqual(e([2, 3]), 15)     # 3*(1^2+2^2) = 15
-        self.assertEqual(e([3, 4]), 60)     # 3*(2^2+4^2) = 60
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([3, 4]), 60)     # 3 * 2 ^ 2 + 3 * 4 ^ 2 = 60
 
-        # Derivatives
-        values = np.array([[1, 4], [2, 7], [3, 10]])
-        p = pints.MultiOutputProblem(model, times, values)
-        e = pints.SumOfSquaresError(p)
+        # Derivative of error for different parameters:
+        # Expectation for parameter:
+        # expectation = [2 * sum(input[0] - 1), 4 * sum(2 * input[1] - 4)]
         x = [1, 2]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], 4 * 3 * (2 * x[1] - 4))
+        x = [3, 4]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], 4 * 3 * (2 * x[1] - 4))
 
-        # Model outputs are 3 times [1,4]
-        # Model derivatives are 3 times [[1, 0], [0, 1]]
-        y, dy = p.evaluateS1(x)
-        self.assertTrue(np.all(y == p.evaluate(x)))
-        self.assertTrue(np.all(y[0, :] == [1, 4]))
-        self.assertTrue(np.all(y[1, :] == [1, 4]))
-        self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
-
-        # Check residuals
-        rx = y - np.array(values)
-        self.assertTrue(np.all(rx == np.array(
-            [[-0, -0],
-             [-1, -3],
-             [-2, -6]]
-        )))
-        self.assertAlmostEqual(e(x), np.sum(rx**2))
-
-        # Now with derivatives
-        ex, dex = e.evaluateS1(x)
-
-        # Check error
-        self.assertTrue(np.all(ex == e(x)))
-
-        # Check derivatives. Shape is (parameters, )
-        self.assertEqual(dex.shape, (2, ))
-
-        # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 1]]
-        # dex1 is: 2 * (0 - 1 - 2) * 1 = 2 * -3 * 1 = -6
-        # dex2 is: 2 * (0 - 3 - 6) * 2 = 2 * -9 * 1 = -18
-        self.assertEqual(dex[0], -6)
-        self.assertEqual(dex[1], -18)
-
-    def test_sum_of_squares_error_weighted(self):
-        # Tests :class:`pints.MeanSquaredError` with weighted outputs.
-
-        # Set up problem
-        model = pints.toy.ConstantModel(2)
-        times = [1, 2, 3]
-        values = [[1, 4], [1, 4], [1, 4]]
-        p = pints.MultiOutputProblem(model, times, values)
-
-        # Test
-        e = pints.SumOfSquaresError(p, weights=[1, 2])
-        self.assertRaisesRegex(
-            ValueError, 'Number of weights',
-            pints.SumOfSquaresError, p, weights=[1, 2, 3])
+        # Test Case II: Weighted Inputs
+        # Check valid weights don't throw an error
+        weights = [1, 2]
+        e = pints.SumOfSquaresError(p, weights=weights)
         self.assertEqual(e.n_parameters(), 2)
-        float(e([1, 2]))
-        self.assertEqual(e([1, 2]), 0)      # 0
-        self.assertEqual(e([2, 2]), 3)      # 3*(1^2*1+0^2*2) = 3
-        self.assertEqual(e([2, 3]), 27)     # 3*(1^2*1+2^2*2) = 27
-        self.assertEqual(e([3, 4]), 108)    # 3*(2^2*1+4^2*2) = 108
 
-        # Derivatives
-        values = np.array([[1, 4], [2, 7], [3, 10]])
-        p = pints.MultiOutputProblem(model, times, values)
-        w = np.array([1, 2])
-        e = pints.SumOfSquaresError(p, weights=w)
+        # Test for different parameters:
+        # exp = weight[0] * sum((input[0] - 1) ** 2) +
+        # weight[1] * sum((2 * input[1] - 4) ** 2)
+        self.assertEqual(e([1, 2]), 0)
+        self.assertEqual(e([3, 4]), 108)  # (3 * 2 ^ 2 + 2 * 3 * 4 ^ 2) = 108
+
+        # Derivative of error for different parameters:
+        # Expectation for parameter:
+        # expectation = [weight [0] * 2 * sum(input[0] - 1),
+        # weight[1] * 4 * sum(2 * input[1] - 4)]
         x = [1, 2]
-
-        # Model outputs are 3 times [1, 4]
-        # Model derivatives are 3 times [[1, 0], [0, 1]]
-        y, dy = p.evaluateS1(x)
-        self.assertTrue(np.all(y == p.evaluate(x)))
-        self.assertTrue(np.all(y[0, :] == [1, 4]))
-        self.assertTrue(np.all(y[1, :] == [1, 4]))
-        self.assertTrue(np.all(y[2, :] == [1, 4]))
-        self.assertTrue(np.all(dy[0, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[1, :] == [[1, 0], [0, 1]]))
-        self.assertTrue(np.all(dy[2, :] == [[1, 0], [0, 1]]))
-
-        # Check residuals
-        rx = y - np.array(values)
-        self.assertTrue(np.all(rx == np.array(
-            [[-0, -0],
-             [-1, -3],
-             [-2, -6]]
-        )))
-        self.assertAlmostEqual(e(x), np.sum(np.sum(rx**2, axis=0) * w))
-
-        # Now with derivatives
-        ex, dex = e.evaluateS1(x)
-
-        # Check error
-        self.assertAlmostEqual(ex, e(x))
-
-        # Check derivatives. Shape is (parameters, )
-        self.assertEqual(dex.shape, (2, ))
-
-        # Residuals are: [[0, 0], [-1, -3], [-2, -6]]
-        # Derivatives are: [[1, 0], [0, 1]]
-        # dex1 is: 2 * (0 - 1 - 2) * 1 * 1
-        #        = 2 * -3 * 1 * 1
-        #        = -6
-        # dex2 is: 2 * (0 - 3 - 6) * 2 * 1
-        #        = 2 * -9 * 2 * 1
-        #        = -36
-        self.assertEqual(dex[0], -6)
-        self.assertEqual(dex[1], -36)
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], weights[0] * 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 4 * 3 * (2 * x[1] - 4))
+        x = [3, 4]
+        y, dy = e.evaluateS1(x)
+        self.assertEqual(y, e(x))
+        self.assertEqual(dy.shape, (2,))
+        self.assertEqual(dy[0], weights[0] * 2 * 3 * (x[0] - 1))
+        self.assertEqual(dy[1], weights[1] * 4 * 3 * (2 * x[1] - 4))
 
     def test_sum_of_errors(self):
         # Tests :class:`pints.SumOfErrors`.
