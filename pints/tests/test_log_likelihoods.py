@@ -774,23 +774,41 @@ class TestLogLikelihood(unittest.TestCase):
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
 
-    def test_ar1(self):
-        # single outputs
+    def test_ar1_single(self):
+        # Tests :class:`pints.AR1LogLikelihood` for
+        # instances of :class:`pints.SingleOutputProblem`.
         model = pints.toy.ConstantModel(1)
-        parameters = [0]
         times = np.asarray([1, 2, 3])
-        model.simulate(parameters, times)
-        values = np.asarray([1.0, -10.7, 15.5])
+        n_times = len(times)
+        bare_values = np.asarray([1.0, -10.7, 15.5])
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
         problem = pints.SingleOutputProblem(model, times, values)
         log_likelihood = pints.AR1LogLikelihood(problem)
         self.assertAlmostEqual(
             log_likelihood([0, 0.5, 5]), -19.706737485492436)
 
-        # multiple outputs
+        # Test Case II: values as array of shape (n_times,)
+        values = np.reshape(bare_values, (n_times, ))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.5, 5]), -19.706737485492436)
+
+        # Test Case III: values as array of shape (n_times, 1)
+        values = np.reshape(bare_values, (n_times, 1))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        self.assertAlmostEqual(
+            log_likelihood([0, 0.5, 5]), -19.706737485492436)
+
+    def test_ar1_multi(self):
+        # Tests :class:`pints.AR1LogLikelihood` for
+        # instances of :class:`pints.MultiOutputProblem`.
         model = pints.toy.ConstantModel(4)
         parameters = [0, 0, 0, 0]
         times = np.arange(1, 5)
-        model.simulate(parameters, times)
         values = np.asarray([[3.5, 7.6, 8.5, 3.4],
                              [1.1, -10.3, 15.6, 5.5],
                              [-10, -30.5, -5, 7.6],
