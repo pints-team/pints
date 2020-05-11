@@ -568,7 +568,6 @@ class TestLogLikelihood(unittest.TestCase):
 
         # Check evaluation
         model = pints.toy.ConstantModel(1)
-        parameters = [0]
         times = np.asarray([1, 2, 3])
         n_times = len(times)
         bare_values = np.asarray([1.0, -10.7, 15.5])
