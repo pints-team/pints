@@ -666,41 +666,6 @@ class TestLogLikelihood(unittest.TestCase):
             log_likelihood(parameters + [13, 8, 13.5, 10.5]),
             -49.51182454195375)
 
-    def test_gaussian_noise_multi(self):
-        # Multi-output test for known/unknown Gaussian noise log-likelihood
-        # methods.
-
-        model = pints.toy.FitzhughNagumoModel()
-        parameters = [0.5, 0.5, 0.5]
-        sigma = 0.1
-        times = np.linspace(0, 100, 100)
-        values = model.simulate(parameters, times)
-        values += np.random.normal(0, sigma, values.shape)
-        problem = pints.MultiOutputProblem(model, times, values)
-
-        # Test if known/unknown give same result
-        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
-        l2 = pints.GaussianKnownSigmaLogLikelihood(problem, [sigma, sigma])
-        l3 = pints.GaussianLogLikelihood(problem)
-        self.assertAlmostEqual(
-            l1(parameters),
-            l2(parameters),
-            l3(parameters + [sigma, sigma]))
-
-        # Test invalid constructors
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, [1])
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem,
-            [1, 2, 3, 4])
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem,
-            [1, 2, -3])
-
     def test_known_noise_gaussian_single_and_multi(self):
         # Tests the output of single-series against multi-series known noise
         # log-likelihoods.
