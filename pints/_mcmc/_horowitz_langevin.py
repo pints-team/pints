@@ -13,12 +13,13 @@ import numpy as np
 
 class HorowitzLangevinMCMC(pints.SingleChainMCMC):
     r"""
-    TODO: Update docstring
-    Implements Hamiltonian Monte Carlo as described in [1]_.
+    Implements Horowitz-Langevin MCMC as described in [1]_. Our implementation
+    follows the description provided in [2]_.
 
-    Uses a physical analogy of a particle moving across a landscape under
-    Hamiltonian dynamics to aid efficient exploration of parameter space.
-    Introduces an auxilary variable -- the momentum (``p_i``) of a particle
+    Similar to MALA and HMC, this method uses a physical analogy of a particle
+    moving across a landscape under Hamiltonian dynamics to aid efficient
+    exploration of parameter space.
+    It introduces an auxilary variable -- the momentum (``p_i``) of a particle
     moving in dimension ``i`` of negative log posterior space -- which
     supplements the position (``q_i``) of the particle in parameter space. The
     particle's motion is dictated by solutions to Hamilton's equations,
@@ -46,15 +47,28 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         p_i(t + \epsilon) &= p_i(t + \epsilon/2) -
                              (\epsilon/2) d U(q_i(t + \epsilon))/dq_i
 
-    In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
-    [1]_, since we allow different epsilon according to dimension.
+    In this method each iteration performs exactly one integrational step and
+    is therefore in this regard equivalent to MALA or HMC with only one
+    leapfrog step. The novelty is that the momentum in each MCMC iteration can
+    persist to some degree, which avoids Random Walk behavour in heavily
+    peaked regions of the landscape. The persistence of the momentum is
+    controlled by ``alpha``.
+
+    For ``alpha`` close to 1 the momentum after in accepted step is almost
+    fully preserved. For ``alpha`` equal to 0, the Horowitz Langevin method
+    reduced to MALA or HMC with one leapfrog step per iteration.
+
+    See references
 
     Extends :class:`SingleChainMCMC`.
 
     References
     ----------
-    .. [1] "Non-reversibly updating a uniform [0,1] value for Metropolis
-           accept/reject decisions". https://arxiv.org/abs/2001.11950v1.
+    .. [1] "A generalized guided Monte Carlo algorithm", Alan M. Horowitz,
+           Physics Letters B, Volume 268, Issue 2, 1991.
+    .. [2] "Non-reversibly updating a uniform [0,1] value for Metropolis
+           accept/reject decisions". Radford M. Neal, 2020
+           https://arxiv.org/abs/2001.11950v1.
     """
     def __init__(self, x0, sigma0=None):
         super(HorowitzLangevinMCMC, self).__init__(x0, sigma0)
