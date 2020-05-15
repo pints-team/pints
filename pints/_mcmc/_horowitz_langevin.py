@@ -84,7 +84,7 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         self.set_leapfrog_step_size(np.diag(self._sigma0))
 
         # Default weighting of momentum update
-        self._alpha = 0.1
+        self._alpha = 0.9
 
         # Divergence checking
         # Create a vector of divergent iterations
@@ -93,6 +93,22 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
         self._hamiltonian_threshold = 10**3
+
+    def alpha(self):
+        r"""
+        Returns the weight of the momentum updates.
+
+        Momentum updates before integration are performed according to
+
+        .. math::
+        p' = \alpha p_i(t) - \sqrt{1 - \alpha ^2}\Delta p,
+
+        where
+
+        .. math::
+        \Delta p \sim \mathcal{N}(0,\mathbb{1}).
+        """
+        return self._alpha
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -192,7 +208,7 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 1
+        return 2
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -207,6 +223,22 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         Returns scaled epsilon used in leapfrog algorithm
         """
         return self._scaled_epsilon
+
+    def set_alpha(self, alpha):
+        r"""
+        Sets the weight of the momentum updates.
+
+        Momentum updates before integration are performed according to
+
+        .. math::
+        p' = \alpha p_i(t) - \sqrt{1 - \alpha ^2}\Delta p,
+
+        where
+
+        .. math::
+        \Delta p \sim \mathcal{N}(0,\mathbb{1}).
+        """
+        self._alpha = alpha
 
     def _set_scaled_epsilon(self):
         """
@@ -236,13 +268,14 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
                              'non-negative.')
         self._hamiltonian_threshold = hamiltonian_threshold
 
-    def set_hyper_parameters(self, step_size):
+    def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``step_size``.
+        The hyper-parameter vector is ``[alpha, step_size]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
-        self.set_leapfrog_step_size(step_size)
+        self.set_alpha(x[0])
+        self.set_leapfrog_step_size(x[1])
 
     def set_leapfrog_step_size(self, step_size):
         """
