@@ -100,6 +100,31 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
         mcmc = pints.HorowitzLangevinMCMC(x0)
 
+        # Test default alpha
+        default_alpha = 0.9
+        self.assertEqual(mcmc.alpha(), default_alpha)
+
+        # Test setting alpha
+        alpha = 0.1
+        mcmc.set_alpha(alpha)
+        self.assertEqual(mcmc.alpha(), alpha)
+
+        # Test setting invalid alpha: alpha > 1
+        self.assertRaisesRegex(
+            ValueError,
+            r'Alpha must lie in the interval \[0\,1\]\.',
+            mcmc.set_alpha,
+            2
+        )
+
+        # Test setting invalid alpha: alpha < 0
+        self.assertRaisesRegex(
+            ValueError,
+            r'Alpha must lie in the interval \[0\,1\]\.',
+            mcmc.set_alpha,
+            -1
+        )
+
         # Test leapfrog parameters
         d = mcmc.leapfrog_step_size()
         self.assertTrue(len(d) == mcmc._n_parameters)
@@ -108,8 +133,9 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        mcmc.set_hyper_parameters(2)
+        self.assertEqual(mcmc.n_hyper_parameters(), 2)
+        mcmc.set_hyper_parameters([0.5, 2])
+        self.assertEqual(mcmc.alpha(), 0.5)
         self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
 
         mcmc.set_epsilon(0.4)

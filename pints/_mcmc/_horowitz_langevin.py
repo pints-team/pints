@@ -238,6 +238,8 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         .. math::
         \Delta p \sim \mathcal{N}(0,\mathbb{1}).
         """
+        if alpha < 0 or alpha > 1:
+            raise ValueError('Alpha must lie in the interval [0,1].')
         self._alpha = alpha
 
     def _set_scaled_epsilon(self):
