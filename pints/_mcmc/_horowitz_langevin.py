@@ -53,9 +53,8 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
     References
     ----------
-    .. [1] "MCMC using Hamiltonian dynamics". Radford M. Neal, Chapter 5 of the
-           Handbook of Markov Chain Monte Carlo by Steve Brooks, Andrew Gelman,
-           Galin Jones, and Xiao-Li Meng.
+    .. [1] "Non-reversibly updating a uniform [0,1] value for Metropolis
+           accept/reject decisions". https://arxiv.org/abs/2001.11950v1.
     """
     def __init__(self, x0, sigma0=None):
         super(HorowitzLangevinMCMC, self).__init__(x0, sigma0)
@@ -83,6 +82,9 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         self._epsilon = 0.1
         self._step_size = None
         self.set_leapfrog_step_size(np.diag(self._sigma0))
+
+        # Default weighting of momentum update
+        self._alpha = 0.1
 
         # Divergence checking
         # Create a vector of divergent iterations
@@ -118,15 +120,28 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
             self._ready_for_tell = True
             return np.array(self._x0, copy=True)
 
-        # Sample random momentum for current point using identity cov
-        self._current_momentum = np.random.multivariate_normal(
+        # First leapfrog step in chain
+        if self._mcmc_iteration == 1:
+
+            # Sample random initial momentum using identity cov
+            self._current_momentum = np.random.multivariate_normal(
+                np.zeros(self._n_parameters), np.eye(self._n_parameters))
+
+        # Step 1 in ref [1] p. 5
+        # Sample random adjustment of current momentum using identity cov
+        delta_momentum = np.random.multivariate_normal(
             np.zeros(self._n_parameters), np.eye(self._n_parameters))
+
+        # Compute new momentum with a weighted update
+        self._current_momentum = self._alpha * self._current_momentum \
+            + np.sqrt(1 - self._alpha ** 2) * delta_momentum
 
         # Starting leapfrog position is the current sample in the chain
         self._position = np.array(self._current, copy=True)
         self._gradient = np.array(self._current_gradient, copy=True)
         self._momentum = np.array(self._current_momentum, copy=True)
 
+        # Start of step 2 in ref [1] p. 5. (ends in tell)
         # Perform first half of leapfrog step for the momentum
         self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
@@ -295,6 +310,10 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
         # Perform second (final) half of leapfrog step for the momentum
         self._momentum -= self._scaled_epsilon * self._gradient * 0.5
 
+        # End of step 2 in ref [1] p. 5
+        # Negation of momentum
+        self._momentum *= -1
+
         # Before starting accept/reject procedure, check if the leapfrog
         # procedure has led to a finite momentum and logpdf. If not, reject.
         accept = 0
@@ -314,7 +333,10 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
                 self._divergent = np.append(
                     self._divergent, self._mcmc_iteration)
                 self._momentum = self._position = self._gradient = None
-                self._frog_iteration = 0
+
+                # Step 4 in ref [1] p. 5 (dealt with as if rejected in step 3)
+                # Negate current momentum
+                self._current_momentum *= -1
 
                 # Update MCMC iteration count
                 self._mcmc_iteration += 1
@@ -328,10 +350,12 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
             # Accept/reject
             else:
+                # Step 3 in ref [1] p. 5
                 r = np.exp(current_U - proposed_U + current_K - proposed_K)
                 if np.random.uniform(0, 1) < r:
                     accept = 1
                     self._current = self._position
+                    self._current_momentum = self._momentum
                     self._current_energy = energy
                     self._current_gradient = gradient
 
@@ -340,6 +364,10 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
         # Reset leapfrog mechanism
         self._momentum = self._position = self._gradient = None
+
+        # Step 4 in ref [1] p. 5
+        # Negate current momentum
+        self._current_momentum *= -1
 
         # Update MCMC iteration count
         self._mcmc_iteration += 1
