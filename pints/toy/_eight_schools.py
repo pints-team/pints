@@ -118,6 +118,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
             for i, theta in enumerate(thetas):
                 y_j = self._y_j[i]
                 sigma_j = self._sigma_j[i]
+                dL1[0] += (theta - mu) / tau**2
                 dL2[0] += ((theta - mu)**2 - tau**2) / tau**3
                 log_prob_temp, dL_temp = log_prior.evaluateS1([theta])
                 log_prob += log_prob_temp
