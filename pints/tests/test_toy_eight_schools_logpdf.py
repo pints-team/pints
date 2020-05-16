@@ -32,8 +32,8 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         self.assertAlmostEqual(val, -38.24061255483484, places=6)
 
         # Default settings with non-ones input
-        f1, dp = f.evaluateS1(list(n+1 for n in range(10)))
-        self.assertEqual(f1, f(list(n+1 for n in range(10))))
+        f1, dp = f.evaluateS1(list(n + 1 for n in range(10)))
+        self.assertEqual(f1, f(list(n + 1 for n in range(10))))
         self.assertAlmostEqual(f1, -83.0819420614)
         self.assertEqual(len(dp), 10)
         self.assertEqual(dp[0], 10.96)
