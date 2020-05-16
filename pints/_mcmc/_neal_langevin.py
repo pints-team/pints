@@ -11,10 +11,10 @@ import pints
 import numpy as np
 
 
-class HorowitzLangevinMCMC(pints.SingleChainMCMC):
+class NealLangevinMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Horowitz-Langevin MCMC as described in [1]_. Our implementation
-    follows the description provided in [2]_.
+    Implements Neal-Langevin MCMC as described in [2]_. Our implementation
+    follows the description provided in [1]_.
 
     Similar to MALA and HMC, this method uses a physical analogy of a particle
     moving across a landscape under Hamiltonian dynamics to aid efficient
@@ -64,14 +64,14 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
     References
     ----------
-    .. [1] "A generalized guided Monte Carlo algorithm", Alan M. Horowitz,
-           Physics Letters B, Volume 268, Issue 2, 1991.
-    .. [2] "Non-reversibly updating a uniform [0,1] value for Metropolis
+    .. [1] "Non-reversibly updating a uniform [0,1] value for Metropolis
            accept/reject decisions". Radford M. Neal, 2020
            https://arxiv.org/abs/2001.11950v1.
+    .. [2] "A generalized guided Monte Carlo algorithm", Alan M. Horowitz,
+           Physics Letters B, Volume 268, Issue 2, 1991.
     """
     def __init__(self, x0, sigma0=None):
-        super(HorowitzLangevinMCMC, self).__init__(x0, sigma0)
+        super(NealLangevinMCMC, self).__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -226,7 +226,7 @@ class HorowitzLangevinMCMC(pints.SingleChainMCMC):
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Horowitz Langevin Algorithm'
+        return 'Neal Langevin MCMC'
 
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """

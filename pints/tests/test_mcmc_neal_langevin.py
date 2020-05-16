@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the Horowitz Langevin MCMC routine.
+# Tests the basic methods of the Neal Langevin MCMC routine.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -15,9 +15,9 @@ import pints.toy
 from shared import StreamCapture
 
 
-class TestHorowitzLangevinMCMC(unittest.TestCase):
+class TestNealLangevinMCMC(unittest.TestCase):
     """
-    Tests the basic methods of the HorowitzLangevin MCMC routine.
+    Tests the basic methods of the NealLangevin MCMC routine.
     """
 
     def test_method(self):
@@ -28,7 +28,7 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         # Create mcmc
         x0 = np.array([2, 2])
         sigma = [[3, 0], [0, 3]]
-        mcmc = pints.HorowitzLangevinMCMC(x0, sigma)
+        mcmc = pints.NealLangevinMCMC(x0, sigma)
 
         # This method needs sensitivities
         self.assertTrue(mcmc.needs_sensitivities())
@@ -58,13 +58,13 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
         mcmc = pints.MCMCController(
-            log_pdf, 2, x0, method=pints.HorowitzLangevinMCMC)
+            log_pdf, 2, x0, method=pints.NealLangevinMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()
         text = c.text()
 
-        self.assertIn('Horowitz Langevin Algorithm', text)
+        self.assertIn('Neal Langevin MCMC', text)
         self.assertIn(' Accept.', text)
 
     def test_flow(self):
@@ -73,14 +73,14 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
-        mcmc = pints.HorowitzLangevinMCMC(x0)
+        mcmc = pints.NealLangevinMCMC(x0)
         self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
 
         # Repeated asks
         self.assertRaises(RuntimeError, mcmc.ask)
 
         # Tell without ask
-        mcmc = pints.HorowitzLangevinMCMC(x0)
+        mcmc = pints.NealLangevinMCMC(x0)
         self.assertRaises(RuntimeError, mcmc.tell, 0)
 
         # Repeated tells should fail
@@ -89,7 +89,7 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, log_pdf.evaluateS1(x))
 
         # Bad starting point
-        mcmc = pints.HorowitzLangevinMCMC(x0)
+        mcmc = pints.NealLangevinMCMC(x0)
         mcmc.ask()
         self.assertRaises(
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
@@ -98,7 +98,7 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
         # Tests the parameter interface for this sampler.
 
         x0 = np.array([2, 2])
-        mcmc = pints.HorowitzLangevinMCMC(x0)
+        mcmc = pints.NealLangevinMCMC(x0)
 
         # Test default alpha
         default_alpha = 0.9
@@ -154,7 +154,7 @@ class TestHorowitzLangevinMCMC(unittest.TestCase):
     def test_other_setters(self):
         # Tests other setters and getters.
         x0 = np.array([2, 2])
-        mcmc = pints.HorowitzLangevinMCMC(x0)
+        mcmc = pints.NealLangevinMCMC(x0)
         self.assertRaises(ValueError, mcmc.set_hamiltonian_threshold, -0.3)
         threshold1 = mcmc.hamiltonian_threshold()
         self.assertEqual(threshold1, 10**3)
