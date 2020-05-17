@@ -290,7 +290,7 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         if sigma:
             if sigma <= 0:
                 raise ValueError(
-                    'The standard deviation of delta can only take non-
+                    'The standard deviation of delta can only take non-'
                     'negative values.')
             if sigma > 0:
                 self._sigma_delta = sigma
