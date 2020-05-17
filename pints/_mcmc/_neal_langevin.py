@@ -13,12 +13,14 @@ import numpy as np
 
 class NealLangevinMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Neal-Langevin MCMC as described in [2]_. Our implementation
-    follows the description provided in [1]_.
+    Implements Neal-Langevin MCMC as described in [1]_.
 
     Similar to MALA and HMC, this method uses a physical analogy of a particle
     moving across a landscape under Hamiltonian dynamics to aid efficient
-    exploration of parameter space.
+    exploration of parameter space. The key differences are a persistent
+    momentum after Horowitz [2]_, and clustered sequences of proposal
+    rejections, which leads to better ergocity properties.
+
     It introduces an auxilary variable -- the momentum (``p_i``) of a particle
     moving in dimension ``i`` of negative log posterior space -- which
     supplements the position (``q_i``) of the particle in parameter space. The
@@ -57,6 +59,15 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
     For ``alpha`` close to 1 the momentum after in accepted step is almost
     fully preserved. For ``alpha`` equal to 0, the Horowitz Langevin method
     reduced to MALA or HMC with one leapfrog step per iteration.
+
+    Proposals ``q'`` are accepted if
+
+    .. math::
+        u < \text{exp}(-(H(q', p`)-H(q, p))),
+
+    where ``u=|v|`` and ``v`` is updated each MCMC iteration by an increment
+    ``delta \sim \mathcal{N}(\bar \delta, \sigma _{\delta}) and reflected off
+    at the boundaries 1 and -1, such that ``u\in [0,1]``.
 
     See references
 
@@ -98,7 +109,12 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         self.set_leapfrog_step_size(np.diag(self._sigma0))
 
         # Default weighting of momentum update
-        self._alpha = 0.9
+        self._alpha = 0.9  # Default: high persistance of momentum
+
+        # Default acceptance ratio parameters
+        self._v = None
+        self._delta = 0.05  # Default: slow updating of v
+        self._sigma_delta = self._delta * 0.1  # Default: moderate noise
 
         # Divergence checking
         # Create a vector of divergent iterations
@@ -193,6 +209,13 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         """
         return self._divergent
 
+    def delta(self):
+        """
+        Returns the mean and standard deviation of the updates ``delta``
+        of the acceptance ratio ``u``.
+        """
+        return [self._delta, self._sigma_delta]
+
     def epsilon(self):
         """
         Returns epsilon used in leapfrog algorithm
@@ -222,7 +245,7 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 4
 
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
@@ -256,6 +279,24 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
             raise ValueError('Alpha must lie in the interval [0,1].')
         self._alpha = alpha
 
+    def set_delta(self, mean, sigma=None):
+        """
+        Sets the mean and standard deviation of the updates delta of the
+        acceptance ratio u. If sigma is None or 0, the updates will be
+        deterministic. If no value for sigma is provided, it is set to None.
+        """
+        self._delta = mean
+
+        if sigma:
+            if sigma <= 0:
+                raise ValueError(
+                    'The standard deviation of delta can only take non-negative'
+                    ' values.')
+            if sigma > 0:
+                self._sigma_delta = sigma
+        else:
+            self._sigma_delta = None
+
     def _set_scaled_epsilon(self):
         """
         Rescales epsilon along the dimensions of step_size
@@ -286,12 +327,17 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[alpha, step_size]``.
+        The hyper-parameter vector is ``[alpha, step_size, mean_delta,
+        std_delta]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_alpha(x[0])
         self.set_leapfrog_step_size(x[1])
+        if len(x) < 4:
+            self.set_delta(mean=x[2])
+        else:
+            self.set_delta(mean=x[2], sigma=x[3])
 
     def set_leapfrog_step_size(self, step_size):
         """
@@ -347,6 +393,9 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._mcmc_iteration += 1
 
+            # Set rejection threshold (no default in paper)
+            self._v = 0.5
+
             # Mark current as read-only, so it can be safely returned
             self._current.setflags(write=False)
 
@@ -401,7 +450,22 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
             else:
                 # Step 3 in ref [1] p. 5
                 r = np.exp(current_U - proposed_U + current_K - proposed_K)
-                if np.random.uniform(0, 1) < r:
+
+                # Eq. (1) in ref [1] p. 2
+                # Update rejection threshold # TODO: which noise?
+                noise = 0
+                if self._sigma_delta:
+                    noise = np.random.normal(0, self._sigma_delta)
+
+                self._v += self._delta + noise
+
+                # Make sure theta v is in [-1, 1]
+                while self._v > 1:
+                    self._v -= 2
+                while self._v < -1:
+                    self._v += 2
+
+                if abs(self._v) < r:
                     accept = 1
                     self._current = self._position
                     self._current_momentum = self._momentum

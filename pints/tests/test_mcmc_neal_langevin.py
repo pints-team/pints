@@ -133,11 +133,6 @@ class TestNealLangevinMCMC(unittest.TestCase):
         self.assertEqual(mcmc.leapfrog_step_size()[0], 0.5)
         self.assertRaises(ValueError, mcmc.set_leapfrog_step_size, -1)
 
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        mcmc.set_hyper_parameters([0.5, 2])
-        self.assertEqual(mcmc.alpha(), 0.5)
-        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
-
         mcmc.set_epsilon(0.4)
         self.assertEqual(mcmc.epsilon(), 0.4)
         self.assertRaises(ValueError, mcmc.set_epsilon, -0.1)
@@ -150,6 +145,56 @@ class TestNealLangevinMCMC(unittest.TestCase):
         mcmc.set_leapfrog_step_size([1.5, 3])
         self.assertEqual(mcmc.leapfrog_step_size()[0], 1.5)
         self.assertEqual(mcmc.leapfrog_step_size()[1], 3)
+
+        # Test u updating parameters
+
+        # Default values
+        mean, std = mcmc.delta()
+        self.assertEqual(mean, 0.05)
+        self.assertAlmostEqual(std, 0.005)
+
+        # Check setting values
+        mcmc.set_delta(mean=1)
+        mean, std = mcmc.delta()
+        self.assertEqual(mean, 1)
+        self.assertEqual(std, None)
+
+        mcmc.set_delta(mean=1, sigma=0)
+        mean, std = mcmc.delta()
+        self.assertEqual(mean, 1)
+        self.assertEqual(std, None)
+
+        mcmc.set_delta(mean=-0.5, sigma=0.1)
+        mean, std = mcmc.delta()
+        self.assertEqual(mean, -0.5)
+        self.assertEqual(std, 0.1)
+
+        # Check invalid sigmas
+        self.assertRaisesRegex(
+            ValueError,
+            r'The standard deviation of delta can only take non-negative'
+            r' values\.',
+            mcmc.set_delta,
+            1,
+            -1
+        )
+
+        # Test hyper parameters
+        self.assertEqual(mcmc.n_hyper_parameters(), 4)
+
+        mcmc.set_hyper_parameters([0.5, 2, 3])
+        mean, std = mcmc.delta()
+        self.assertEqual(mcmc.alpha(), 0.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+        self.assertEqual(mean, 3)
+        self.assertEqual(std, None)
+
+        mcmc.set_hyper_parameters([0.5, 2, 3, 4])
+        mean, std = mcmc.delta()
+        self.assertEqual(mcmc.alpha(), 0.5)
+        self.assertEqual(mcmc.leapfrog_step_size()[0], 2)
+        self.assertEqual(mean, 3)
+        self.assertEqual(std, 4)
 
     def test_other_setters(self):
         # Tests other setters and getters.
