@@ -1,6 +1,6 @@
-***********************
-Horowitz Langenvin MCMC
-***********************
+*******************
+Neal Langenvin MCMC
+*******************
 
 .. currentmodule:: pints
 
