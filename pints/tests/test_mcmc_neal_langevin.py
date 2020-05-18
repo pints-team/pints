@@ -51,6 +51,31 @@ class TestNealLangevinMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[0], 0.5 * number_steps)
         self.assertEqual(chain.shape[1], len(x0))
 
+        # Perform short run with negative steps
+
+        # Create mcmc
+        x0 = np.array([2, 2])
+        sigma = [[3, 0], [0, 3]]
+        mcmc = pints.NealLangevinMCMC(x0, sigma)
+
+        # set delta
+        mcmc.set_delta(mean=-0.1)
+
+        # run
+        chain = []
+        for i in range(number_steps):
+            x = mcmc.ask()
+            fx, gr = log_pdf.evaluateS1(x)
+            sample = mcmc.tell((fx, gr))
+            if i >= 0.5 * number_steps and sample is not None:
+                chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
+        chain = np.array(chain)
+        self.assertEqual(chain.shape[0], 0.5 * number_steps)
+        self.assertEqual(chain.shape[1], len(x0))
+
     def test_logging(self):
         # Test logging includes name and custom fields.
 
