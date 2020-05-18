@@ -18,33 +18,38 @@ class EightSchoolsLogPDF(ToyLogPDF):
     The classic Eight Schools example that is discussed in [1]_.
 
     The aim of this model (implemented as a :class:`pints.ToyLogPDF`) is to
-    determine the effects of coaching on SATS scores in 8 schools. It it used
+    determine the effects of coaching on SATS scores in 8 schools (each school
+    being denoted by subscript j in the following equations). It it used
     by statisticians to illustrate how hierarchical models can quite easily
     become unidentified, making inference hard.
 
     This model is hierarchical and takes the form,
 
     .. math::
-        \mu\sim\mathcal{N}(0, 5)
-        \tau\sim\text{Cauchy}(0, 5)
-        \theta_j\sim\mathcal{N}(\mu, \tau)
-        y_j\sim\mathcal{N}(\theta_j, \sigma_j),
+        \begin{align}
+        \mu &\sim \mathcal{N}(0, 5) \\
+        \tau &\sim \text{Cauchy}(0, 5) \\
+        \theta_j &\sim \mathcal{N}(\mu, \tau) \\
+        y_j &\sim \mathcal{N}(\theta_j, \sigma_j), \\
+        \end{align}
 
-    where :math:`sigma_j` is known. The user may choose between the "centered"
+    where :math:`\sigma_j` is known. The user may choose between the "centered"
     parameterisation of the model (which exactly mirrors the statistical
     model), and the "non-centered" parameterisation, which introduces
     auxillary variables to improve chain mixing. The non-centered model takes
     the form,
 
     .. math::
-        \mu\sim\mathcal{N}(0, 5)
-        \tau\sim\text{Cauchy}(0, 5)
-        \tilde{\theta}_j\sim\mathcal{N}(0, 1)
-        \theta_j = mu + \tilde{\theta}_j \tau
-        y_j\sim\mathcal{N}(\theta_j, \sigma_j).
+        \begin{align}
+        \mu &\sim \mathcal{N}(0, 5) \\
+        \tau &\sim \text{Cauchy}(0, 5) \\
+        \tilde{\theta}_j &\sim \mathcal{N}(0, 1) \\
+        \theta_j &= mu + \tilde{\theta}_j \tau \\
+        y_j &\sim \mathcal{N}(\theta_j, \sigma_j). \\
+        \end{align}
 
     Note that, in the non-centered case, the parameter samples correspond to
-    theta_tilde rather than theta.
+    :math:`\tilde{\theta}` rather than :math:`\theta`.
 
     The model uses a 10-dimensional parameter vector, composed of
 
