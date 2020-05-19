@@ -9,8 +9,8 @@ from ._autocorrelation import autocorrelation
 from ._function import function
 from ._function_between_points import function_between_points
 from ._histogram import histogram
-from ._loss_surface_colors import loss_surface_colors
 from ._pairwise import pairwise
 from ._series import series
+from ._surface import surface
 from ._trace import trace
 

@@ -1,5 +1,5 @@
 #
-# Plots autocorrelation in a chain
+# Plots a function defined on a two-dimensional space.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -7,6 +7,9 @@
 #
 # This module was was adapted from Myokit (see http://myokit.org) by the
 # original author.
+#
+# The code to plot voronoi regions was based on an example shown here:
+# http://stackoverflow.com/a/20678647/423420
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -16,8 +19,7 @@ import numpy as np
 import pints
 
 
-def loss_surface_colors(
-        points, values, boundaries=None, markers='+', figsize=None):
+def surface(points, values, boundaries=None, markers='+', figsize=None):
     """
     Takes irregularly spaced points and function evaluations in a
     two-dimensional parameter space and creates a coloured surface plot using a
@@ -106,9 +108,6 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     dropped. Voronoi regions partially outside the bounds will be truncated.
     The third array ``f`` will be filtered the same way as ``x`` and ``y`` but
     is otherwise not used.
-
-    The code to extract the voronoi regions was (heavily) adapted from:
-    http://stackoverflow.com/a/20678647/423420
 
     Parameters
     ----------
