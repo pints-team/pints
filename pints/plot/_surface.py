@@ -174,8 +174,7 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     regions = [set() for i in range(n)]
     for (p1, p2), (v1, v2) in izip(vor.ridge_points, vor.ridge_vertices):
         # Ensure only v1 can every be -1
-        if v1 > v2:
-            v1, v2 = v2, v1
+        v1, v2 = (v2, v1) if v1 > v2 else (v1, v2)
 
         # Get vertice coordinates
         x2 = vor.vertices[v2]  # Only v1 can be -1
@@ -207,6 +206,7 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     # border, and remove regions outside of the bounds.
     selection = []
     for k, region in enumerate(regions):
+        # Regions can be empty if points appear more than once
         if len(region) == 0:
             continue
 
@@ -214,8 +214,11 @@ def _voronoi_regions(x, y, f, xlim, ylim):
         region = np.asarray([np.asarray(v) for v in region])
 
         # Filter out any regions lying entirely outside the bounds
-        if not (np.any((region[:, 0] > xmin) | (region[:, 0] < xmax)) or
-                np.any((region[:, 1] > ymin) | (region[:, 1] < ymax))):
+        xmn = region[:, 0] < xmin
+        xmx = region[:, 0] > xmax
+        ymn = region[:, 1] < ymin
+        ymx = region[:, 1] > ymax
+        if np.all(xmn | xmx) and np.all(ymn | ymx):
             continue
 
         # Sort vertices counter clockwise
@@ -224,8 +227,7 @@ def _voronoi_regions(x, y, f, xlim, ylim):
         regions[k] = region[np.argsort(angles)]
 
         # Region fully contained? Then keep in selection and continue
-        if not np.any((region[:, 0] < xmin) | (region[:, 0] > xmax) |
-                      (region[:, 1] < ymin) | (region[:, 1] > ymax)):
+        if not (np.any(xmn) or np.any(xmx) or np.any(ymn) or np.any(ymx)):
             selection.append(k)
             continue
 

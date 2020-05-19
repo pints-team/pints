@@ -545,14 +545,17 @@ class TestPlot(unittest.TestCase):
 
         # Choose some points
         np.random.seed(1)
-        points = np.random.uniform(-2, 10, [20, 2])
-        values = np.random.uniform(0, 10, [20])
+        points = np.random.normal(-2, 10, [100, 2])
+        values = np.random.uniform(0, 10, len(points))
+
+        # Check that duplicate points are handled
+        points[:-10] = points[10:]
 
         # Create a plot
         pints.plot.surface(points, values)
 
         # Create a plot with boundaries
-        b = pints.RectangularBoundaries([0, 5], [3, 7])
+        b = pints.RectangularBoundaries([3, 5], [8, 7])
         pints.plot.surface(points, values, b)
 
         # Points must be 2-dimensional
