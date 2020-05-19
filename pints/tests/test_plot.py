@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 #
-# Tests the Pints plot methods.
+# Tests the PINTS plot methods.
+#
+# These tests all simply check that the code runs without errors. The generated
+# output is not actually checked.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -27,6 +30,7 @@ class TestPlot(unittest.TestCase):
     """
     Tests Pints plot methods.
     """
+
     def __init__(self, name):
         super(TestPlot, self).__init__(name)
 
@@ -532,6 +536,42 @@ class TestPlot(unittest.TestCase):
             ValueError, r'Number of parameters must be larger than 2\.',
             pints.plot.pairwise, few_samples3
         )
+
+        # Close figure objects
+        import matplotlib.pyplot as plt
+        plt.close('all')
+
+    def test_surface(self):
+
+        # Choose some points
+        np.random.seed(1)
+        points = np.random.uniform(-2, 10, [20, 2])
+        values = np.random.uniform(0, 10, [20])
+
+        # Create a plot
+        pints.plot.surface(points, values)
+
+        # Create a plot with boundaries
+        b = pints.RectangularBoundaries([0, 5], [3, 7])
+        pints.plot.surface(points, values, b)
+
+        # Points must be 2-dimensional
+        bad_points = np.random.uniform(-2, 10, [20, 3])
+        self.assertRaisesRegexp(
+            ValueError, r'two-dimensional parameters',
+            pints.plot.surface, bad_points, values)
+
+        # Number of values must match number of points
+        bad_values = values[:-1]
+        self.assertRaisesRegexp(
+            ValueError, r'number of values must match',
+            pints.plot.surface, points, bad_values)
+
+        # Three-dimensional boundaries
+        bad_b = pints.RectangularBoundaries([0, 5, 1], [1, 9, 3])
+        self.assertRaisesRegexp(
+            ValueError, r'boundaries must be two-dimensional',
+            pints.plot.surface, points, values, bad_b)
 
         # Close figure objects
         import matplotlib.pyplot as plt
