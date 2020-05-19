@@ -134,23 +134,8 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     except ImportError:
         izip = zip
 
-    # Check x, y, f
-    x = np.asarray(x)
-    y = np.asarray(y)
-    f = np.asarray(f)
-    assert x.shape == y.shape == f.shape
-    if len(x.shape) > 1:
-        axis = -1
-        for k, n in x.shape:
-            if n > 1:
-                assert axis < 0
-                axis = k
-        n = x.shape[axis]
-        x = x.reshape((n,))
-        y = y.reshape((n,))
-        f = f.reshape((n,))
-    else:
-        n = len(x)
+    # Don't check x, y, f: handled by calling method
+    n = len(x)
 
     # Check limits
     xmin, xmax = [float(a) for a in sorted(xlim)]
