@@ -147,14 +147,8 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         Returns the weight of the momentum updates.
 
         Momentum updates before integration are performed according to
-
-        .. math::
-        p' = \alpha p_i(t) - \sqrt{1 - \alpha ^2}\Delta p,
-
-        where
-
-        .. math::
-        \Delta p \sim \mathcal{N}(0,\mathbb{1}).
+        :math:`p' = \alpha ^2 p_i - \sqrt{1 - \alpha ^2}\Delta p`,
+        where :math:`\Delta p \sim \mathcal{N}(0,\mathbb{1})`.
         """
         return self._alpha
 
@@ -197,7 +191,7 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
             np.zeros(self._n_parameters), np.eye(self._n_parameters))
 
         # Compute new momentum with a weighted update
-        self._current_momentum = self._alpha * self._current_momentum \
+        self._current_momentum = self._alpha ** 2 * self._current_momentum \
             + np.sqrt(1 - self._alpha ** 2) * delta_momentum
 
         # Starting leapfrog position is the current sample in the chain
@@ -228,9 +222,11 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         return self._divergent
 
     def delta(self):
-        """
-        Returns the mean and standard deviation of the updates ``delta``
-        of the acceptance ratio ``u``.
+        r"""
+        Returns the mean :math:`\bar \delta` and standard deviation
+        :math:`\sigma_{\delta}` of the updates
+        :math:`\delta \sim \mathcal{N(\bar \delta, \sigma_{\delta})}` of
+        the acceptance ratio :math:`u`.
         """
         return [self._delta, self._sigma_delta]
 
@@ -284,24 +280,21 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
         Sets the weight of the momentum updates.
 
         Momentum updates before integration are performed according to
-
-        .. math::
-        p' = \alpha p_i(t) - \sqrt{1 - \alpha ^2}\Delta p,
-
-        where
-
-        .. math::
-        \Delta p \sim \mathcal{N}(0,\mathbb{1}).
+        :math:`p' = \alpha ^2 p_i - \sqrt{1 - \alpha ^2}\Delta p`,
+        where :math:`\Delta p \sim \mathcal{N}(0,\mathbb{1})`.
         """
         if alpha < 0 or alpha > 1:
             raise ValueError('Alpha must lie in the interval [0,1].')
         self._alpha = alpha
 
     def set_delta(self, mean, sigma=None):
-        """
-        Sets the mean and standard deviation of the updates delta of the
-        acceptance ratio u. If sigma is None or 0, the updates will be
-        deterministic. If no value for sigma is provided, it is set to None.
+        r"""
+        Sets the mean :math:`\bar \delta` and standard deviation
+        :math:`\sigma_{\delta}` of the updates
+        :math:`\delta \sim \mathcal{N(\bar \delta, \sigma_{\delta})}` of
+        the acceptance ratio :math:`u`. If ``sigma`` is ``None`` or ``0``, the
+        updates will be deterministic. If no value for ``sigma`` is provided,
+        it is set to ``None``.
         """
         self._delta = mean
 
