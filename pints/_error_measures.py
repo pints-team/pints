@@ -79,7 +79,10 @@ class MeanSquaredError(ProblemErrorMeasure):
         :class:`pints.MultiOutputProblem`.
     weights
         An optional sequence of (float) weights, exactly one per problem
-        output. If no weights are specified all sums will be weighted equally.
+        output. If given, the error in each individual output will be
+        multiplied by the corresponding weight. If no weights are specified all
+        outputs will be weighted equally.
+
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
@@ -215,7 +218,8 @@ class SumOfErrors(ErrorMeasure):
         A sequence of error measures.
     weights
         An optional sequence of (float) weights, exactly one per error measure.
-        If no weights are specified all sums will be weighted equally.
+        If given, each individual error will be multiplied by the corresponding
+        weight. If no weights are given all sums will be weighted equally.
 
     Examples
     --------
