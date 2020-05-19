@@ -3,6 +3,8 @@ exclude=
   .git,
   problems,
   pints/__init__.py,
+  pints/plot/__init__.py,
+  pints/toy/__init__.py,
   env,
   venv,
   build
