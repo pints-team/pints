@@ -38,6 +38,7 @@ relevant code.
 - [Convenience methods fmin() and curve\_fit()](./optimisation/convenience.ipynb)
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
+- [Visualising a 2d error surface](./plotting/optimisation-2d-surface.ipynb)
 
 
 ## Sampling
