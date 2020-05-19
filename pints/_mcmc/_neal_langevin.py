@@ -13,18 +13,19 @@ import numpy as np
 
 class NealLangevinMCMC(pints.SingleChainMCMC):
     r"""
-    Implements Neal-Langevin MCMC as described in [1]_.
+    Implements the Neal Langevin MCMC algorithm as described in [1]_.
 
     Similar to MALA and HMC, this method uses a physical analogy of a particle
     moving across a landscape under Hamiltonian dynamics to aid efficient
     exploration of parameter space. The key differences are a persistent
     momentum after Horowitz [2]_, and clustered sequences of proposal
-    rejections, which leads to better ergocity properties.
+    rejections, which leads to better ergodicity properties.
 
-    It introduces an auxilary variable -- the momentum (``p_i``) of a particle
-    moving in dimension ``i`` of negative log posterior space -- which
-    supplements the position (``q_i``) of the particle in parameter space. The
-    particle's motion is dictated by solutions to Hamilton's equations,
+    It introduces an auxilary variable -- the momentum :math:`p_i` of a
+    particle moving in dimension :math:`i` of negative log posterior space --
+    which supplements the position :math:`q_i` of the particle in parameter
+    space. The particle's motion is dictated by solutions to Hamilton's
+    equations,
 
     .. math::
         dq_i/dt &=   \partial H/\partial p_i\\
@@ -34,10 +35,10 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
 
     .. math::
         H(q,p) &=       U(q)       +        KE(p)\\
-               &= -log(p(q|X)p(q)) + \Sigma_{i=1}^{d} p_i^2/2m_i,
+               &= -\text{log}(p(q|X)p(q)) + \Sigma_{i=1}^{d} p_i^2/2m_i,
 
-    where ``d`` is the dimensionality of model and ``m_i`` is the 'mass' given
-    to each particle (often chosen to be 1 as default).
+    where :math:`d` is the dimensionality of the model and :math:`m_i` is the
+    'mass' assigned to each particle (often chosen to be 1 as default).
 
     To numerically integrate Hamilton's equations, it is essential to use a
     sympletic discretisation routine, of which the most typical approach is
@@ -51,23 +52,40 @@ class NealLangevinMCMC(pints.SingleChainMCMC):
 
     In this method each iteration performs exactly one integrational step and
     is therefore in this regard equivalent to MALA or HMC with only one
-    leapfrog step. The novelty is that the momentum in each MCMC iteration can
-    persist to some degree, which avoids Random Walk behavour in heavily
-    peaked regions of the landscape. The persistence of the momentum is
-    controlled by ``alpha``.
+    leapfrog step.
 
-    For ``alpha`` close to 1 the momentum after in accepted step is almost
-    fully preserved. For ``alpha`` equal to 0, the Horowitz Langevin method
-    reduced to MALA or HMC with one leapfrog step per iteration.
-
-    Proposals ``q'`` are accepted if
+    Proposals :math:`(q', p')=(q(t + \epsilon), p(t + \epsilon))` are accepted
+    if
 
     .. math::
-        u < \text{exp}(-(H(q', p`)-H(q, p))),
+        u < \text{exp}(-H(q', p')) / \text{exp}(-H(q, p)),
 
-    where ``u=|v|`` and ``v`` is updated each MCMC iteration by an increment
-    ``delta \sim \mathcal{N}(\bar \delta, \sigma _{\delta}) and reflected off
-    at the boundaries 1 and -1, such that ``u\in [0,1]``.
+    where :math:`\text{p}(q,p)\propto \text{exp}(-H(q', p'))` is the
+    probability of the phase space position :math:`(q, p)`. Here
+    :math:`u=|v|` is updated at each MCMC iteration by an increment
+    :math:`\delta \sim \mathcal{N}(\bar \delta, \sigma _{\delta})` and
+    reflected off at the boundaries 1 and -1, such that :math:`u\in [0,1]`.
+    This in contrast to MALA and HMC, where :math:`u` is uniformly drawn from
+    :math:`[0, 1]` at each iteration. The gradual updating of :math:`u` leads
+    to a clustering of rejections, which overall improves the ergodicity of the
+    sampler. See [1]_ for more details.
+
+    If the proposal is rejected, the :math:`(q,p)` is set to the last sampled
+    values and the momentum negated. If the proposal is accepted
+    :math:`(q,p) \leftarrow (q',p')` and the momentum is NOT negated.
+
+    At the beginning of each MCMC iteration the current momentum is updated by
+    a random variable
+    :math:`\Delta p \sim \mathcal{N}(0, \mathbb{1})`
+
+    .. math::
+        p \leftarrow \alpha ^ 2p + \sqrt{1-\alpha ^ 2}\Delta p.
+
+    This leads to a persistance of the momentum for accepted proposals,
+    which avoids Random Walk behaviour in heavily peaked regions of the
+    landscape.
+
+    Setting :math:`\alpha = 0` turns the persistance of the momentum off.
 
     See references
 
