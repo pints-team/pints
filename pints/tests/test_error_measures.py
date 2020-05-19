@@ -224,6 +224,13 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dy[0], weights[0] * (x[0] - 1))
         self.assertEqual(dy[1], weights[1] * 2 * (2 * x[1] - 4))
 
+        # Test invalid weight shape
+        weights = [1, 2, 3]
+        self.assertRaisesRegex(
+            ValueError,
+            'Number of weights must match number of problem outputs.',
+            pints.MeanSquaredError, p, weights)
+
     def test_normalised_root_mean_squared_error(self):
         # Tests :class:`pints.NormalisedRootMeanSquaredError` with a single
         # output.
@@ -454,6 +461,13 @@ class TestErrorMeasures(unittest.TestCase):
         self.assertEqual(dy.shape, (2,))
         self.assertEqual(dy[0], weights[0] * 2 * 3 * (x[0] - 1))
         self.assertEqual(dy[1], weights[1] * 4 * 3 * (2 * x[1] - 4))
+
+        # Test invalid weight shape
+        weights = [1, 2, 3]
+        self.assertRaisesRegex(
+            ValueError,
+            'Number of weights must match number of problem outputs.',
+            pints.SumOfSquaresError, p, weights)
 
     def test_sum_of_errors(self):
         # Tests :class:`pints.SumOfErrors`.

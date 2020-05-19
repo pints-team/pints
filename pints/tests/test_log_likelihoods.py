@@ -245,6 +245,9 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
         self.assertRaises(
+            ValueError,
+            pints.GaussianKnownSigmaLogLikelihood, problem, [0.1, 0.2])
+        self.assertRaises(
             ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
 
     def test_gaussian_known_sigma_log_likelihood_multi(self):
