@@ -14,6 +14,19 @@ Example::
     x = [1, 2, 3]
     fx = logpdf(x)
 
+Overview:
+
+- :class:`AR1LogLikelihood`
+- :class:`ARMA11LogLikelihood`
+- :class:`CauchyLogLikelihood`
+- :class:`GaussianIntegratedUniformLogLikelihood`
+- :class:`GaussianKnownSigmaLogLikelihood`
+- :class:`GaussianLogLikelihood`
+- :class:`KnownNoiseLogLikelihood`
+- :class:`MultiplicativeGaussianLogLikelihood`
+- :class:`ScaledLogLikelihood`
+- :class:`StudentTLogLikelihood`
+- :class:`UnknownNoiseLogLikelihood`
 
 Autoregressive order 1 noise
 ****************************
