@@ -19,32 +19,32 @@ This can then be added to simulation output to create "realistic" experimental
  - :func:`multiplicative_gaussian`
 
 
-Autoregressive order 1
-**********************
+Autoregressive order 1 noise
+****************************
 
 .. autofunction:: ar1
 
-Autoregressive order 1 with mean 1
-**********************************
+Autoregressive order 1 with mean 1 noise
+****************************************
 
 .. autofunction:: ar1_unity
 
-Autoregressive moving average
-*****************************
+Autoregressive moving average noise
+***********************************
 
 .. autofunction:: arma11
 
-Autoregressive moving average with mean 1
-*****************************************
+Autoregressive moving average with mean 1 noise
+***********************************************
 
 .. autofunction:: arma11_unity
 
-Independent Gaussian
-********************
+Independent Gaussian noise
+**************************
 
 .. autofunction:: independent
 
-Multiplicative (heteroscedastic) Gaussian
-*****************************************
+Multiplicative (heteroscedastic) Gaussian noise
+***********************************************
 
 .. autofunction:: multiplicative_gaussian
