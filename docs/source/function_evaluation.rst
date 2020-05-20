@@ -18,11 +18,24 @@ Example::
         ]
     fx = e.evaluate(x)
 
+
+Evalutate function
+******************
+
 .. autofunction:: evaluate
+
+Evaluator
+*********
 
 .. autoclass:: Evaluator
 
+Parallel evaluator
+******************
+
 .. autoclass:: ParallelEvaluator
+
+Sequential evaluator
+********************
 
 .. autoclass:: SequentialEvaluator
 
