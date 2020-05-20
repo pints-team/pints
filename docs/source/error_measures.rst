@@ -13,19 +13,44 @@ Example::
     x = [1,2,3]
     fx = error(x)
 
+
+Customisable error measure
+**************************
+
 .. autoclass:: ErrorMeasure
+
+Mean squared error
+******************
 
 .. autoclass:: MeanSquaredError
 
+Normalised root mean squared error
+**********************************
+
 .. autoclass:: NormalisedRootMeanSquaredError
+
+Probability-based error
+***********************
 
 .. autoclass:: ProbabilityBasedError
 
+Problem error measure
+*********************
+
 .. autoclass:: ProblemErrorMeasure
+
+Root mean squared error
+***********************
 
 .. autoclass:: RootMeanSquaredError
 
+Sum of errors
+*************
+
 .. autoclass:: SumOfErrors
+
+Sum of squares error
+********************
 
 .. autoclass:: SumOfSquaresError
 
