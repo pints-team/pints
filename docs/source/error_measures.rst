@@ -13,6 +13,17 @@ Example::
     x = [1,2,3]
     fx = error(x)
 
+Overview:
+
+- :class:`ErrorMeasure`
+- :class:`MeanSquaredError`
+- :class:`NormalisedRootMeanSquaredError`
+- :class:`ProbabilityBasedError`
+- :class:`ProblemErrorMeasure`
+- :class:`RootMeanSquaredError`
+- :class:`SumOfErrors`
+- :class:`SumOfSquaresError`
+
 
 Customisable error measure
 **************************
