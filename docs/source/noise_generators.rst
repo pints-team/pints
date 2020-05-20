@@ -19,13 +19,13 @@ This can then be added to simulation output to create "realistic" experimental
  - :func:`multiplicative_gaussian`
 
 
- Autoregressive order 1
- **********************
+Autoregressive order 1
+**********************
 
 .. autofunction:: ar1
 
- Autoregressive order 1 with mean 1
- **********************************
+Autoregressive order 1 with mean 1
+**********************************
 
 .. autofunction:: ar1_unity
 
