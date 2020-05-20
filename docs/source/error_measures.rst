@@ -34,8 +34,8 @@ Probability-based error
 
 .. autoclass:: ProbabilityBasedError
 
-Problem error measure
-*********************
+Problem-based error
+*******************
 
 .. autoclass:: ProblemErrorMeasure
 
