@@ -15,13 +15,29 @@ Example::
     p = pints.GaussianLogPrior(mean=0, variance=1)
     x = p(0.1)
 
+
+Customisable log-PDF
+********************
+
 .. autoclass:: LogPDF
+
+Customisable log-prior
+**********************
 
 .. autoclass:: LogPrior
 
+Log-posterior
+*************
+
 .. autoclass:: LogPosterior
 
+Problem-based (customisable) log-likelihood
+*******************************************
+
 .. autoclass:: ProblemLogLikelihood
+
+Sum of independent log-PDFs
+***************************
 
 .. autoclass:: SumOfIndependentLogPDFs
 
