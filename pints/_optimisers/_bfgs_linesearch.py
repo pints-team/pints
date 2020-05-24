@@ -14,28 +14,28 @@ import pints
 
 class BFGS(pints.LineSearchBasedOptimiser):
     """
-    Broyden–Fletcher–Goldfarb–Shanno algorithm [2], [3], [4]
+    Broyden-Fletcher-Goldfarb-Shanno algorithm [2], [3], [4]
 
     The Hager-Zhang line search algorithm [1] is implemented in this class
     # TODO: when this is working move everything to an abstract class
 
     [1] Hager, W. W.; Zhang, H. Algorithm 851: CG_DESCENT,
     a Conjugate Gradient Method with Guaranteed Descent.
-    ACM Trans. Math. Softw. 2006, 32 (1), 113–137.
+    ACM Trans. Math. Softw. 2006, 32 (1), 113-137.
     https://doi.org/10.1145/1132973.1132979.
 
     [2] Liu, D. C.; Nocedal, J.
     On the Limited Memory BFGS Method for Large Scale Optimization.
     Mathematical Programming 1989, 45 (1),
-    503–528. https://doi.org/10.1007/BF01589116.
+    503-528. https://doi.org/10.1007/BF01589116.
 
     [3] Nocedal, J. Updating Quasi-Newton Matrices with Limited Storage.
-    Math. Comp. 1980, 35 (151), 773–782.
+    Math. Comp. 1980, 35 (151), 773-782.
     https://doi.org/10.1090/S0025-5718-1980-0572855-7.
 
     [4] Nash, S. G.; Nocedal, J. A Numerical Study of the Limited Memory
     BFGS Method and the Truncated-Newton Method for Large Scale Optimization.
-    SIAM J. Optim. 1991, 1 (3), 358–372. https://doi.org/10.1137/0801023.
+    SIAM J. Optim. 1991, 1 (3), 358-372. https://doi.org/10.1137/0801023.
 
     """
 
@@ -157,7 +157,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
-        return 'Broyden–Fletcher–Goldfarb–Shanno (BFGS)'
+        return 'Broyden-Fletcher-Goldfarb-Shanno (BFGS)'
 
     def needs_sensitivities(self):
         """ See :meth:`Optimiser.needs_sensitivities()`. """
