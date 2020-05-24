@@ -279,6 +279,29 @@ class PopulationBasedOptimiser(Optimiser):
         self.set_population_size(x[0])
 
 
+class LineSearchBasedOptimiser(Optimiser):
+    """
+    Base class for optimisers that incorporate a line search
+    within their algorithm.
+
+    Extends :class:`Optimiser`.
+    """
+
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super(LineSearchBasedOptimiser, self).__init__(x0, sigma0, boundaries)
+
+        self._evaluator = None
+
+    def _set_function_evaluator(self, function):
+
+        f = function
+        if self.needs_sensitivities:
+            f = f.evaluateS1
+
+        # Create evaluator object
+        self._evaluator = pints.SequentialEvaluator(f)
+
+
 class OptimisationController(object):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
@@ -337,6 +360,8 @@ class OptimisationController(object):
         elif not issubclass(method, pints.Optimiser):
             raise ValueError('Method must be subclass of pints.Optimiser.')
         self._optimiser = method(x0, sigma0, boundaries)
+        if issubclass(method, pints.LineSearchBasedOptimiser):
+            self._optimiser._set_function_evaluator(self._function)
 
         # Check if sensitivities are required
         self._needs_sensitivities = self._optimiser.needs_sensitivities()
