@@ -28,57 +28,26 @@ Overview:
 - :class:`StudentTLogLikelihood`
 - :class:`UnknownNoiseLogLikelihood`
 
-Autoregressive order 1 noise
-****************************
 
 .. autoclass:: AR1LogLikelihood
 
-Autoregressive moving average noise
-***********************************
-
 .. autoclass:: ARMA11LogLikelihood
-
-Cauchy noise
-************
 
 .. autoclass:: CauchyLogLikelihood
 
-Gaussian integrated uniform noise
-*********************************
-
 .. autoclass:: GaussianIntegratedUniformLogLikelihood
-
-Gaussian known sigma noise
-**************************
 
 .. autoclass:: GaussianKnownSigmaLogLikelihood
 
-Gaussian noise
-**************
-
 .. autoclass:: GaussianLogLikelihood
-
-Known noise
-***********
 
 .. autoclass:: KnownNoiseLogLikelihood
 
-Multiplicative (heteroscedastic) Gaussian noise
-***********************************************
-
 .. autoclass:: MultiplicativeGaussianLogLikelihood
-
-Scaled log-likelihood
-*********************
 
 .. autoclass:: ScaledLogLikelihood
 
-Student-t noise
-***************
-
 .. autoclass:: StudentTLogLikelihood
 
-Unknown noise
-*************
-
 .. autoclass:: UnknownNoiseLogLikelihood
+
