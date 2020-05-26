@@ -16,17 +16,8 @@ Overview:
 - :class:`RectangularBoundaries`
 
 
-Customisable boundaries
-***********************
-
 .. autoclass:: Boundaries
 
-Boundaries based on log-PDF
-***************************
-
 .. autoclass:: LogPDFBoundaries
-
-Rectangular boundaries
-**********************
 
 .. autoclass:: RectangularBoundaries
