@@ -29,68 +29,29 @@ Overview:
 - :class:`UniformLogPrior`
 
 
-Beta-distributed parameter log-prior
-************************************
-
 .. autoclass:: BetaLogPrior
-
-Cauchy-distributed parameter log-prior
-**************************************
 
 .. autoclass:: CauchyLogPrior
 
-Composed log-prior
-******************
-
 .. autoclass:: ComposedLogPrior
-
-Exponentially-distributed parameter log-prior
-*********************************************
 
 .. autoclass:: ExponentialLogPrior
 
-Gamma-distributed parameter log-prior
-*************************************
-
 .. autoclass:: GammaLogPrior
-
-Gaussian-distributed parameter log-prior
-****************************************
 
 .. autoclass:: GaussianLogPrior
 
-Half-Cauchy-distributed parameter log-prior
-*******************************************
-
 .. autoclass:: HalfCauchyLogPrior
-
-Inverse Gamma-distributed parameter log-prior
-*********************************************
 
 .. autoclass:: InverseGammaLogPrior
 
-Log-normally-distributed parameter log-prior
-********************************************
-
 .. autoclass:: LogNormalLogPrior
-
-Multivariate-Gaussian-distributed parameters log-prior
-******************************************************
 
 .. autoclass:: MultivariateGaussianLogPrior
 
-Normally-distributed parameter log-prior
-****************************************
-
 .. autoclass:: NormalLogPrior
 
-Student-t-distributed parameter log-prior
-*****************************************
-
 .. autoclass:: StudentTLogPrior
-
-Uniformly-distributed parameter log-prior
-*****************************************
 
 .. autoclass:: UniformLogPrior
 
