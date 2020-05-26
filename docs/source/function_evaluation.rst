@@ -25,23 +25,12 @@ Overview:
 - :class:`ParallelEvaluator`
 - :class:`SequentialEvaluator`
 
-Evalutate function
-******************
 
 .. autofunction:: evaluate
 
-Evaluator
-*********
-
 .. autoclass:: Evaluator
 
-Parallel evaluator
-******************
-
 .. autoclass:: ParallelEvaluator
-
-Sequential evaluator
-********************
 
 .. autoclass:: SequentialEvaluator
 
