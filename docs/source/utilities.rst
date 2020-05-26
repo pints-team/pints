@@ -15,22 +15,14 @@ Overview:
 
 .. autofunction:: strfloat
 
-Logger
-******
-
 .. autoclass:: Loggable
     :private-members:
 
 .. autoclass:: Logger
 
-Timer
-*****
-
 .. autoclass:: Timer
-
-Containers
-**********
 
 .. autofunction:: matrix2d
 
 .. autofunction:: vector
+
