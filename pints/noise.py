@@ -9,8 +9,8 @@
 
 
 def independent(sigma, shape):
-    """
-    Generates independent Gaussian noise (``iid N(0,sigma)``).
+    r"""
+    Generates independent Gaussian noise iid :math:`\mathcal{N}(0,\sigma)`.
 
     Returns an array of shape ``shape`` containing the generated noise.
 
@@ -36,23 +36,27 @@ def independent(sigma, shape):
 
 
 def ar1(rho, sigma, n):
-    """
+    r"""
     Generates first-order autoregressive (AR1) noise that can be added to a
     vector of simulated data.
 
     The generated noise follows the distribution
-    ``e(t) = rho * e(t - 1) + v(t)``,
 
-    where ``v(t) ~ iid N(0, sigma * sqrt(1 - rho^2))``.
+    .. math::
+        e(t) = \rho  e(t - 1) + v(t),
+
+    where :math:`v(t) \stackrel{\text{iid}}{\sim }\mathcal{N}(0, \sigma
+    \sqrt{1 - \rho ^2})`.
 
     Returns an array of length ``n`` containing the generated noise.
 
     Parameters
     ----------
     rho
-        Determines the magnitude of the noise (see above). Must be less than 1.
+        Determines the magnitude of the noise :math:`\rho` (see above). Must
+        be less than 1.
     sigma
-        The marginal standard deviation of ``e(t)`` (see above).
+        The marginal standard deviation :math:`\sigma` of ``e(t)`` (see above).
         Must be greater than zero.
     n
         The length of the signal. (Only single time-series are supported.)
@@ -88,15 +92,18 @@ def ar1(rho, sigma, n):
 
 
 def arma11(rho, theta, sigma, n):
-    """
+    r"""
     Generates an ARMA(1,1) error process of the form:
 
-    ``e(t) = (1 - rho) + rho * e(t - 1) + v(t) + theta * v[t-1]``,
+    .. math::
+        e(t) = (1 - \rho) + \rho * e(t - 1) + v(t) + \theta * v(t-1),
 
-    where ``v(t) ~ iid N(0, sigma')``,
-
+    where :math:`v(t) \stackrel{\text{iid}}{\sim }\mathcal{N}(0, \sigma ')`,
     and
-    ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
+
+    .. math::
+        \sigma ' = \sigma \sqrt{\frac{1 - \rho ^ 2}{1 + 2 \theta  \rho +
+        \theta ^ 2}}.
     """
     import numpy as np
 
@@ -249,7 +256,7 @@ def multiplicative_gaussian(eta, sigma, f):
     where v(t) is iid Gaussian:
 
     .. math::
-        v(t) \sim \text{ iid } N(0, \sigma)
+        v(t) \stackrel{\text{ iid }}{\sim} \mathcal{N}(0, \sigma)
 
     The output magnitudes ``f`` are required as an input to this function. The
     noise terms are returned in an array of the same shape as ``f``.

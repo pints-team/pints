@@ -9,6 +9,16 @@ Pints contains a module ``pints.noise`` that contains methods that generate
 This can then be added to simulation output to create "realistic" experimental
  data.
 
+ Overview:
+
+ - :func:`ar1`
+ - :func:`ar1_unity`
+ - :func:`arma11`
+ - :func:`arma11_unity`
+ - :func:`independent`
+ - :func:`multiplicative_gaussian`
+
+
 .. autofunction:: ar1
 
 .. autofunction:: ar1_unity
@@ -20,3 +30,4 @@ This can then be added to simulation output to create "realistic" experimental
 .. autofunction:: independent
 
 .. autofunction:: multiplicative_gaussian
+
