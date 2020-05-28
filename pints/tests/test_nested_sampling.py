@@ -120,7 +120,7 @@ class TestNestedController(unittest.TestCase):
 
         # Test with fixed number of worker processes
         sampler.set_parallel(4)
-        sampler.set_log_to_screen(True)
+        sampler.set_log_to_screen(False)
         self.assertEqual(sampler.parallel(), 4)
         sampler.run()
 
