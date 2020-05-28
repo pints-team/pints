@@ -119,9 +119,10 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
 
         # Test with fixed number of worker processes
-        sampler.set_parallel(2)
+        sampler.set_parallel(4)
         sampler.set_log_to_screen(True)
-        self.assertEqual(sampler.parallel(), 2)
+        self.assertEqual(sampler.parallel(), 4)
+        sampler.run()
 
     def test_logging(self):
         # Tests logging to screen and file.

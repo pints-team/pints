@@ -309,13 +309,13 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test with fixed number of worker processes
-        mcmc.set_parallel(2)
+        mcmc.set_parallel(5)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
-        self.assertEqual(mcmc._n_workers, 2)
+        self.assertEqual(mcmc._n_workers, 5)
         with StreamCapture() as c:
             chains = mcmc.run()
-        self.assertIn('with 2 worker', c.text())
+        self.assertIn('with 5 worker', c.text())
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)

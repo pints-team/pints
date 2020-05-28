@@ -227,10 +227,10 @@ class TestOptimisationController(unittest.TestCase):
         opt = pints.OptimisationController(r, x, boundaries=b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(debug)
-        opt.set_parallel(1)
-        opt.run()
+        opt.set_parallel(4)
         self.assertTrue(type(opt.parallel()) == int)
-        self.assertEqual(opt.parallel(), 1)
+        self.assertEqual(opt.parallel(), 4)
+        opt.run()
 
     def test_deprecated_alias(self):
         # Tests Optimisation()
