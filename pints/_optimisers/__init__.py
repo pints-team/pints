@@ -883,6 +883,13 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
 
+    Returns
+    -------
+    xbest : numpy array
+        The best parameter set obtained.
+    fbest : float
+        The corresponding score.
+
     Example
     -------
     ::
@@ -938,8 +945,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     opt.set_log_to_screen(True if verbose else False)
 
     # Run and return
-    popt, fopt = opt.run()
-    return popt
+    return opt.run()
 
 
 class _CurveFitError(pints.ErrorMeasure):

@@ -10,6 +10,12 @@ import pints
 import unittest
 import numpy as np
 
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestEasyOptimisation(unittest.TestCase):
     """
@@ -28,7 +34,7 @@ class TestEasyOptimisation(unittest.TestCase):
         self.assertAlmostEqual(xopt[1], -5)
 
         # Function must be callable
-        self.assertRaisesRegexp(ValueError, 'callable', pints.fmin, 3, [1])
+        self.assertRaisesRegex(ValueError, 'callable', pints.fmin, 3, [1])
 
         # Test with boundaries
         xopt, fopt = pints.fmin(
@@ -60,17 +66,17 @@ class TestEasyOptimisation(unittest.TestCase):
 
         p0 = [0, 0, 0]
         np.random.seed(1)
-        popt = pints.curve_fit(g, x, y, p0, method=pints.XNES)
+        popt, fopt = pints.curve_fit(g, x, y, p0, method=pints.XNES)
         self.assertAlmostEqual(popt[0], 9, places=1)
         self.assertAlmostEqual(popt[1], 3, places=1)
         self.assertAlmostEqual(popt[2], 1, places=1)
 
         # Function must be callable
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'callable', pints.curve_fit, 3, x, y, p0)
 
         # Test with boundaries
-        pints.curve_fit(
+        popt, fopt = pints.curve_fit(
             g, x, y, p0,
             boundaries=([-10, -10, -10], [10, 10, 10]), method=pints.XNES)
         self.assertAlmostEqual(popt[0], 9, places=1)
@@ -82,7 +88,7 @@ class TestEasyOptimisation(unittest.TestCase):
 
         # Test with invalid sizes of `x` and `y`
         x = np.linspace(-5, 5, 99)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'dimension', pints.curve_fit, g, x, y, p0)
 
 
