@@ -9,6 +9,13 @@ Simple boundaries for an optimisation can be created using
 More complex types can be made using :class:`LogPDFBoundaries` or a custom
 implementation of the :class:`Boundaries` interface.
 
+Overview:
+
+- :class:`Boundaries`
+- :class:`LogPDFBoundaries`
+- :class:`RectangularBoundaries`
+
+
 .. autoclass:: Boundaries
 
 .. autoclass:: LogPDFBoundaries

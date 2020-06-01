@@ -102,7 +102,7 @@ def reorder_all_params(chains):
 
 def rhat(samples):
     r"""
-    Calculates :math:`\hat{R} = sqrt(((n - 1)/n * W + (1/n) * B)/W)`` as per
+    Calculates :math:`\hat{R} = \sqrt{(W(n - 1) / n + (1 / n) B) / W}` as per
     [1]_ for a single parameter. It does this after splitting each chain into
     two.
     """
@@ -114,7 +114,7 @@ def rhat(samples):
 
 def rhat_all_params(chains):
     r"""
-    Calculates :math:`\hat{R} = sqrt(((n - 1)/n * W + (1/n) * B)/W)`` as per
+    Calculates :math:`\hat{R} = \sqrt{(W(n - 1) / n + (1 / n) B) / W}` as per
     [1]_ for all parameters. It does this after splitting each chain into two.
 
     References

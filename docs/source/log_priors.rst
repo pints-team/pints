@@ -12,6 +12,23 @@ Example::
     p = pints.GaussianLogPrior(mean=0, variance=1)
     x = p(0.1)
 
+Overview:
+
+- :class:`BetaLogPrior`
+- :class:`CauchyLogPrior`
+- :class:`ComposedLogPrior`
+- :class:`ExponentialLogPrior`
+- :class:`GammaLogPrior`
+- :class:`GaussianLogPrior`
+- :class:`HalfCauchyLogPrior`
+- :class:`InverseGammaLogPrior`
+- :class:`LogNormalLogPrior`
+- :class:`MultivariateGaussianLogPrior`
+- :class:`NormalLogPrior`
+- :class:`StudentTLogPrior`
+- :class:`UniformLogPrior`
+
+
 .. autoclass:: BetaLogPrior
 
 .. autoclass:: CauchyLogPrior

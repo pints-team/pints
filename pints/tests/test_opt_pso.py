@@ -119,7 +119,7 @@ class TestPSO(unittest.TestCase):
 
         # Log to screen - using a LogPDF and parallelisation
         opt = pints.OptimisationController(r, x, s, b, method)
-        opt.set_parallel(2)
+        opt.set_parallel(4)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(True)
         opt.set_log_to_file(False)
@@ -131,7 +131,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(lines[0], 'Maximising LogPDF')
         self.assertEqual(lines[1], 'Using Particle Swarm Optimisation (PSO)')
         self.assertEqual(
-            lines[2], 'Running in parallel with 2 worker processes.')
+            lines[2], 'Running in parallel with 4 worker processes.')
         self.assertEqual(lines[3], 'Population size: 6')
         self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
 
