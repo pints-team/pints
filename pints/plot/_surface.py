@@ -68,11 +68,13 @@ def surface(points, values, boundaries=None, markers='+', figsize=None):
     # Check boundaries
     if boundaries is None:
         xmin, xmax = np.min(x), np.max(x)
-        xmin -= 0.1 * (xmax - xmin)
-        xmax += 0.1 * (xmax - xmin)
+        r = 0.1 * (xmax - xmin)
+        xmin -= r
+        xmax += r
         ymin, ymax = np.min(y), np.max(y)
-        ymin -= 0.1 * (ymax - ymin)
-        ymax += 0.1 * (ymax - ymin)
+        r = 0.1 * (ymax - ymin)
+        ymin -= r
+        ymax += r
     else:
         if boundaries.n_parameters() != 2:
             raise ValueError('The boundaries must be two-dimensional.')
