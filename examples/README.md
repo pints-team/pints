@@ -38,6 +38,7 @@ relevant code.
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
 - [Spotting unidentifiable parameters with MCMC](./optimisation/spotting-unidentifiable-parameters.ipynb)
+- [Visualising a 2d error surface](./plotting/optimisation-2d-surface.ipynb)
 
 
 ## Sampling
