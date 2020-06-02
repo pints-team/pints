@@ -100,15 +100,56 @@ def reorder_all_params(chains):
     return samples_all
 
 
-def rhat(samples):
+def rhat(chains):
     r"""
-    Calculates :math:`\hat{R} = \sqrt{(W(n - 1) / n + (1 / n) B) / W}` as per
-    [1]_ for a single parameter. It does this after splitting each chain into
-    two.
+    Returns the convergence measure :math:`\hat{R}` according to [1]_.
+
+    :math:`\hat{R}` diagnoses convergence by checking mixing and stationarity
+    of :math:`M` chains (at least two, :math:`M\geq 2`). To diminish the
+    influence of starting values, the first half of each chain is considered
+    as warm up and does not enter the calculation. Subsequently, the truncated
+    chains are split in half yet again, and the mean of the variances within
+    and between the resulting chains are computed. Based on the mean within
+    variance :math:`W` and the mean between variance :math:`B` (definition
+    below) is an estimator of the marginal posterior variance constructed
+
+    .. math::
+        \widehat{\text{var}}^+ = \frac{n-1}{n}W + \frac{1}{n}B,
+
+    where :math:`n` is the length of the individual chains (i.e. :math:`4n` is
+    the length of the original chains). The estimator overestimates the
+    variance of the marginal posterior if the chains are not well mixed and
+    stationary, but is unbiased if the original chains equal the target
+    distribution. At the same time, the mean within variance :math:`W`
+    underestimates the marginal posterior variance for finite :math:`n`, but
+    converges to the true variance for :math:`n\rightarrow \infty`. By
+    comparing :math:`\widehat{\text{var}}^+` and :math:`W` the mixining and
+    stationarity of the chains can be quantified
+
+    .. math::
+        \hat{R} = \sqrt{\frac{\widehat{\text{var}}^+}{W}}.
+
+    For well mixed and stationary chains :math:`\hat{R}` will be close to one.
+
+    The mean within :math:`W` and mean between :math:`B` variance of the
+    :math:`m=2M` chains of length :math:`n` (original length of the chains
+    :math:`4n`) is defined as
+
+    .. math::
+        W = \frac{1}{m}\sum _{j=1}^{m}s_j^2\quad \text{where}\quad
+        s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\psi _{ij} - \bar{\psi} _j)^2,
+
+    .. math::
+        B = \frac{n}{m-1}\sum _{j=1}^m(\bar{\psi} _j - \bar{\psi})^2.
+
+    Here :math:`\bar{\psi _j}=\sum _{i=1}^n\psi _{ij}/n` is the within chain
+    mean of the parameter :math:`\psi` and
+    :math:`\bar{\psi _j} = \sum _{j=1}^m\bar{\psi} _{j}/m` is the between
+    chain mean of the within chain means.
     """
-    W = within(samples)
-    B = between(samples)
-    t = len(samples[0])
+    W = within(chains)
+    B = between(chains)
+    t = len(chains[0])
     return np.sqrt((W + (1.0 / t) * (B - W)) / W)
 
 
