@@ -123,7 +123,7 @@ def rhat(chains):
     distribution. At the same time, the mean within variance :math:`W`
     underestimates the marginal posterior variance for finite :math:`n`, but
     converges to the true variance for :math:`n\rightarrow \infty`. By
-    comparing :math:`\widehat{\text{var}}^+` and :math:`W` the mixining and
+    comparing :math:`\widehat{\text{var}}^+` and :math:`W` the mixing and
     stationarity of the chains can be quantified
 
     .. math::
