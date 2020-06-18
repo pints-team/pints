@@ -7,6 +7,12 @@ These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
 
+## Before you get started
+- [Using Python](using-python.md)
+- [Installing PINTS](../README.md#installing-pints)
+- [An introduction to optimisation and Bayesian inference](optimisation/beginners-tutorial.ipynb)
+
+
 ## Getting started
 - [Optimisation: First example](./optimisation/first-example.ipynb)
 - [Sampling: First example](./sampling/first-example.ipynb)

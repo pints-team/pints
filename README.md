@@ -44,7 +44,7 @@ PINTS comes with a number of [detailed examples](examples/README.md), hosted her
 In addition, there is a [full API documentation](http://pints.readthedocs.io/en/latest/), hosted on readthedocs.io.
 
 
-## Installing PINTS
+## Installing PINTS 
 
 You'll need the following requirements:
 
