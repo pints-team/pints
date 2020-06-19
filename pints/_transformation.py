@@ -99,6 +99,8 @@ class LogitTransform(Transform):
     .. math::
         |\frac{d}{dx} \text{logit}^{-1}(x)| = \text{logit}^{-1}(x) \times
         (1 - \text{logit}^{-1}(x)).
+
+    Extends :class:`Transform`.
     """
     def log_jacobian(self, p):
         """ See :meth:`Transform.log_jacobian()`. """
