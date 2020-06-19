@@ -82,3 +82,26 @@ class LogTransform(Transform):
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
         return np.log(p)
+
+
+class LogitTransform(Transform):
+    r"""
+    Logit (or log-odds) transformation of the model parameters:
+
+    .. math::
+        x = \text{logit}(p) = \log(\frac{p}{1 - p}),
+
+    where :math:`p` is the model parameter vector and :math:`x` is the
+    search space vector.
+    """
+    def log_jacobian(self, p):
+        """ See :meth:`Transform.log_jacobian()`. """
+        return np.sum(np.log(p) + np.log(1. - p))
+
+    def to_model(self, x):
+        """ See :meth:`Transform.to_model()`. """
+        return expit(x)
+
+    def to_search(self, p):
+        """ See :meth:`Transform.to_search()`. """
+        return logit(p)
