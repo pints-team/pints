@@ -52,3 +52,26 @@ class Transform(object):
         ``p`` to the search space ``x``.
         """
         raise NotImplementedError
+
+
+class LogTransform(Transform):
+    r"""
+    Logarithm transformation of the model parameters:
+
+    .. math::
+        x = \log(p),
+
+    where :math:`p` is the model parameter vector and :math:`x` is the
+    search space vector.
+    """
+    def log_jacobian(self, p):
+        """ See :meth:`Transform.log_jacobian()`. """
+        return np.sum(self.to_search(p))
+
+    def to_model(self, x):
+        """ See :meth:`Transform.to_model()`. """
+        return np.exp(x)
+
+    def to_search(self, p):
+        """ See :meth:`Transform.to_search()`. """
+        return np.log(p)
