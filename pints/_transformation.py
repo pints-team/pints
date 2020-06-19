@@ -93,6 +93,12 @@ class LogitTransform(Transform):
 
     where :math:`p` is the model parameter vector and :math:`x` is the
     search space vector.
+
+    The Jacobian adjustment of the logit transformation is given by
+
+    .. math::
+        |\frac{d}{dx} \text{logit}^{-1}(x)| = \text{logit}^{-1}(x) \times
+        (1 - \text{logit}^{-1}(x)).
     """
     def log_jacobian(self, p):
         """ See :meth:`Transform.log_jacobian()`. """
