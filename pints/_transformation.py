@@ -223,3 +223,82 @@ class LogitTransform(Transform):
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
         return logit(p)
+
+
+class RectangularBoundariesTransform(Transform):
+    r"""
+    A generalised version of logit transformation for the model parameters,
+    which transform an interval or ractangular boundaries :math:`[a, b)` to
+    all real number:
+
+    .. math::
+        x = f(p) = \log(p - a) - \log(b - p),
+
+    where :math:`p` is the model parameter vector and :math:`x` is the
+    search space vector. The range includes the lower (:math:`a`), but not the
+    upper (:math:`b`) boundaries. Note that :class:`LogitTransform` is a
+    special case where :math:`a = 0` and :math:`b = 1`.
+
+    The Jacobian adjustment of the transformation is given by
+
+    .. math::
+        |\frac{d}{dx} f^{-1}(x)| = \frac{b - a}{\exp(x) (1 - \exp(-x)) ^ 2}
+        \log|\frac{d}{dx} f^{-1}(x)| = \log(b - a) - 2 \log(1 - \exp(-x)) - x
+
+    For example, to create a transform with :math:`p_1 \in [0, 4)`,
+    :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
+
+        transform = pints.IntervalTransform([0, 1, 2], [4, 5, 6])
+
+    or::
+
+        boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
+        transform = pints.IntervalTransform(boundaries)
+
+    Extends :class:`Transform`.
+    """
+    def __init__(self, lower_or_boundaries, upper=None):
+        # Parse input arguments
+        if upper is None:
+            if not isinstance(lower_or_boundaries,
+                    pints.RectangularBoundaries):
+                raise ValueError(
+                    'IntervalTransform requires a lower and an upper bound, '
+                    'or a single RectangularBoundaries object.')
+            boundaries = lower_or_boundaries
+        else:
+            # Create RectangularBoundaries for all the input checks
+            boundaries = pints.RectangularBoundaries(lower_or_boundaries,
+                    upper)
+
+        self._a = boundaries.lower()
+        self._b = boundaries.upper()
+
+        # Cache dimension
+        self._n_parameters = lower_or_boundaries.n_parameters()
+
+    def jacobian(self, x):
+        """ See :meth:`Transform.jacobian()`. """
+        diag = (self._b - self._a) / (np.exp(x) * (1. - np.exp(-x)) ** 2)
+        return np.diag(diag)
+
+    def log_jacobian_det(self, x):
+        """ See :meth:`Transform.log_jacobian_det()`. """
+        s = self._softplus(-x)
+        return np.sum(np.log(self._b - self._a) - 2. * s - x)
+
+    def n_parameters(self):
+        """ See :meth:`Transform.n_parameters()`. """
+        return self._n_parameters
+
+    def to_model(self, x):
+        """ See :meth:`Transform.to_model()`. """
+        return (self._b - self._a) * expit(x) + self._a
+
+    def to_search(self, p):
+        """ See :meth:`Transform.to_search()`. """
+        return np.log(p - self._a) - np.log(self._b - p)
+
+    def _softplus(self, x):
+        """ Returns the softplus function. """
+        return np.log(1. - np.exp(x))
