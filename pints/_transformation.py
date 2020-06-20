@@ -176,7 +176,7 @@ class LogTransform(Transform):
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
-        return np.sum(np.exp(x))
+        return np.sum(x)
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
@@ -211,7 +211,7 @@ class LogitTransform(Transform):
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
-        return np.log(np.sum(expit(x) * (1. - expit(x))))
+        return np.sum(np.log(expit(x)) + np.log((1. - expit(x))))
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
