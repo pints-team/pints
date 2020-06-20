@@ -241,6 +241,7 @@ from ._transformation import (
     TransformedBoundaries,
     LogTransform,
     LogitTransform,
+    RectangularBoundariesTransform,
 )
 
 
