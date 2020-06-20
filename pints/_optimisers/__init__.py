@@ -304,10 +304,14 @@ class OptimisationController(object):
     method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
+    transform
+        A :class:`pints.Transform` that transform the model parameter space to
+        search space.
     """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, method=None):
+            self, function, x0, sigma0=None, boundaries=None, method=None,
+            transform=None):
 
         # Convert x0 to vector
         # This converts e.g. (1, 7) shapes to (7, ), giving users a bit more
@@ -323,6 +327,20 @@ class OptimisationController(object):
 
         # Check if minimising or maximising
         self._minimising = not isinstance(function, pints.LogPDF)
+
+        # Transform everything
+        # From this point onward the optimisation will see only the
+        # transformed search space and will know nothing about the model
+        # parameter space.
+        if transform:
+            function = transform.apply_error_measure(function)
+            x0 = transform.to_search(x0)
+            if sigma0 is not None:
+                jacobian = np.linalg.pinv(transform.jacobian(x0))
+                sigma0 *= np.diagonal(jacobian)
+            if boundaries:
+                boundaries = transform.apply_boundaries(boundaries)
+        self._transform = transform
 
         # Store function
         if self._minimising:
