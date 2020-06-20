@@ -67,7 +67,7 @@ class LogTransform(Transform):
     The Jacobian adjustment of the log transformation is given by
 
     .. math::
-        |\frac{d}{dx} \exp(x)| = \log(x).
+        |\frac{d}{dx} \exp(x)| = \exp(x).
 
     Extends :class:`Transform`.
     """
