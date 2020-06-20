@@ -7,6 +7,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import pints
 import numpy as np
 from scipy.special import logit, expit
 
@@ -21,6 +22,12 @@ class Transform(object):
     space ``x`` by using ``x = t.to_search(p)`` and the inverse by using
     ``p = t.to_model(x)``.
     """
+    def apply_log_pdf(self, log_pdf):
+        """
+        Returns a transformed log-PDF class.
+        """
+        return TransformedLogPDF(log_pdf, self)
+
     def jacobian(self, x):
         """
         Returns the Jacobian for the parameter ``x`` in the search space.
@@ -58,6 +65,33 @@ class Transform(object):
         ``p`` to the search space ``x``.
         """
         raise NotImplementedError
+
+
+class TransformedLogPDF(pints.LogPDF):
+    """
+    A log-PDF that is transformed from the model space to the search space.
+    """
+    def __init__(self, log_pdf, transform):
+        self._log_pdf = log_pdf
+        self._transform = transform
+        self._n_parameters = self._log_pdf.n_parameters()
+
+    def __call__(self, x):
+        logpdf_nojac = self.logpdf_nojac(x)
+        log_jacobian_det = self._transform.log_jacobian_det(x)
+        return logpdf_nojac + log_jacobian_det
+
+    #TODO evaluateS1?
+
+    def logpdf_nojac(self, x):
+        """
+        Returns log-PDF value of the transformed distribution evaluated at
+        ``x`` without the Jacobian adjustment term.
+        """
+        return self._log_pdf(self._transform.to_model(x))
+
+    def n_parameters(self):
+        return self._n_parameters
 
 
 class LogTransform(Transform):
