@@ -794,7 +794,9 @@ class Optimisation(OptimisationController):
             function, x0, sigma0=None, boundaries=None, method=None)
 
 
-def optimise(function, x0, sigma0=None, boundaries=None, method=None):
+def optimise(
+        function, x0, sigma0=None, boundaries=None, method=None,
+        transform=None):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.
@@ -819,6 +821,9 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
     method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
+    transform
+        A :class:`pints.Transform` that transform the model parameter space to
+        search space.
 
     Returns
     -------
@@ -828,7 +833,7 @@ def optimise(function, x0, sigma0=None, boundaries=None, method=None):
         The corresponding score.
     """
     return OptimisationController(
-        function, x0, sigma0, boundaries, method).run()
+        function, x0, sigma0, boundaries, method, transform).run()
 
 
 class TriangleWaveTransform(object):
