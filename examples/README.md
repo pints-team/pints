@@ -16,8 +16,9 @@ relevant code.
 
 
 ## Digging deeper
-- [Searching in a transformed parameter space with a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
-- [Searching in a transformed parameter space with Pints](./optimisation/transformed-parameters.ipynb)
+- [Optimisation in a transformed parameter space with a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
+- [Optimisation in a transformed parameter space with Pints](./optimisation/transformed-parameters.ipynb)
+- [Bayesian inference in a transformed parameter space with Pints](./sampling/transformed-parameters.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 
 
