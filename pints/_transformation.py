@@ -21,16 +21,22 @@ class Transform(object):
     space ``x`` by using ``x = t.to_search(p)`` and the inverse by using
     ``p = t.to_model(x)``.
     """
-    def log_jacobian(self, p):
+    def jacobian(self, x):
+        """
+        Returns the Jacobian for the parameter ``x`` in the search space.
+        """
+        raise NotImplementedError
+
+    def log_jacobian_det(self, x):
         """
         Returns the logarithm of the absolute value of the Jacobian
-        determinant for the parameter ``p`` in the model space.
+        determinant for the parameter ``x`` in the search space.
 
         *This is an optional method; it is needed when transformation is
         performed on :class:`LogPDF`, but not necessary if it's used for
         :class:`ErrorMeasure`.*
         """
-        raise NotImplementedError
+        return np.log(np.abs(np.linalg.det(self.jacobian(x))))
 
     def n_parameters(self):
         """
@@ -71,9 +77,13 @@ class LogTransform(Transform):
 
     Extends :class:`Transform`.
     """
-    def log_jacobian(self, p):
-        """ See :meth:`Transform.log_jacobian()`. """
-        return np.sum(p)
+    def jacobian(self, x):
+        """ See :meth:`Transform.jacobian()`. """
+        return np.diag(np.exp(x))
+
+    def log_jacobian_det(self, x):
+        """ See :meth:`Transform.log_jacobian_det()`. """
+        return np.sum(np.exp(x))
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
@@ -102,9 +112,13 @@ class LogitTransform(Transform):
 
     Extends :class:`Transform`.
     """
-    def log_jacobian(self, p):
-        """ See :meth:`Transform.log_jacobian()`. """
-        return np.sum(np.log(p) + np.log(1. - p))
+    def jacobian(self, x):
+        """ See :meth:`Transform.jacobian()`. """
+        return np.diag(expit(x) * (1. - expit(x)))
+
+    def log_jacobian_det(self, x):
+        """ See :meth:`Transform.log_jacobian_det()`. """
+        return np.log(np.sum(expit(x) * (1. - expit(x))))
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
