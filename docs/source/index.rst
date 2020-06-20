@@ -39,6 +39,7 @@ Contents
     optimisers/index
     noise_model_diagnostics
     toy/index
+    transformation
     utilities
 
 Hierarchy of methods
