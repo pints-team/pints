@@ -28,6 +28,18 @@ class Transform(object):
         """
         return TransformedLogPDF(log_pdf, self)
 
+    def apply_error_measure(self, error_measure):
+        """
+        Returns a transformed error measure class.
+        """
+        return TransformedErrorMeasure(error_measure, self)
+
+    def apply_boundaries(self, boundaries):
+        """
+        Returns a transformed boundaries class.
+        """
+        return TransformedBoundaries(boundaries, self)
+
     def jacobian(self, x):
         """
         Returns the Jacobian for the parameter ``x`` in the search space.
@@ -92,6 +104,53 @@ class TransformedLogPDF(pints.LogPDF):
 
     def n_parameters(self):
         return self._n_parameters
+
+
+class TransformedErrorMeasure(pints.ErrorMeasure):
+    """
+    An error measure that is transformed from the model space to the search
+    space.
+    """
+    def __init__(self, function, transform):
+        self._function = function
+        self._transform = transform
+        self._n_parameters = self._function.n_parameters()
+
+    def __call__(self, x):
+        # Get parameters at the model space
+        p = self._transform.to_model(x)
+        return self._function(p)
+
+    #TODO evaluateS1?
+
+    def n_parameters(self):
+        return self._n_parameters
+
+
+class TransformedBoundaries(pints.Boundaries):
+    """
+    Boundaries that are transformed from the model space to the search space.
+    """
+    def __init__(self, boundaries, transform):
+        self._boundaries = boundaries
+        self._transform = transform
+        self._n_parameters = self._boundaries.n_parameters()
+
+    def check(self, x):
+        # Get parameters at the model space
+        p = self._transform.to_model(x)
+        return self._boundaries.check(p)
+
+    def n_parameters(self):
+        return self._n_parameters
+
+    def range(self):
+        """
+        Returns the size of the parameter space (i.e. ``upper - lower``).
+        """
+        upper = self._transform(self._boundaries.upper())
+        lower = self._transform(self._boundaries.lower())
+        return upper - lower
 
 
 class LogTransform(Transform):
