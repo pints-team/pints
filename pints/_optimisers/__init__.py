@@ -616,7 +616,12 @@ class OptimisationController(object):
             print('Unexpected termination.')
             print('Current best score: ' + str(fbest))
             print('Current best position:')
-            for p in self._optimiser.xbest():
+            # Inverse transform search parameters
+            if self._transform:
+                xbest = self._transform.to_model(self._optimiser.xbest())
+            else:
+                xbest = self._optimiser.xbest()
+            for p in xbest:
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
@@ -635,8 +640,14 @@ class OptimisationController(object):
         self._iterations = iteration
         self._time = time_taken
 
+        # Inverse transform search parameters
+        if self._transform:
+            xbest = self._transform.to_model(self._optimiser.xbest())
+        else:
+            xbest = self._optimiser.xbest()
+
         # Return best position and score
-        return self._optimiser.xbest(), fbest_user
+        return xbest, fbest_user
 
     def set_log_interval(self, iters=20, warm_up=3):
         """
