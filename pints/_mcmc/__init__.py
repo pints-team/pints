@@ -324,7 +324,7 @@ class MCMCController(object):
                     self._sigma0 = self._sigma0.reshape(
                         (self._n_parameters, self._n_parameters))
                 jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
-                sigma0 = jacobian @ sigma0 @ jacobian.T
+                sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)
         self._transform = transform
 
         # Store function
