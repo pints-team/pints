@@ -16,7 +16,7 @@ relevant code.
 
 
 ## Digging deeper
-- [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
+- [Searching in a transformed parameter space with a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 
 
