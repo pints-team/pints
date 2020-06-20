@@ -19,6 +19,7 @@ Overview:
 - :class:`Transform`
 - :class:`LogTransform`
 - :class:`LogitTransform`
+- :class:`RectangularBoundariesTransform`
 - :class:`TransformedLogPDF`
 - :class:`TransformedErrorMeasure`
 - :class:`TransformedBoundaries`
@@ -29,6 +30,8 @@ Overview:
 .. autoclass:: LogTransform
 
 .. autoclass:: LogitTransform
+
+.. autoclass:: RectangularBoundariesTransform
 
 .. autoclass:: TransformedLogPDF
 
