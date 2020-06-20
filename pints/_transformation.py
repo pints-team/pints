@@ -73,7 +73,7 @@ class LogTransform(Transform):
     """
     def log_jacobian(self, p):
         """ See :meth:`Transform.log_jacobian()`. """
-        return np.sum(self.to_search(p))
+        return np.sum(p)
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
