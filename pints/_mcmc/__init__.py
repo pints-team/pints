@@ -811,7 +811,14 @@ class MCMCController(object):
             self._evaluations = evaluations
 
         # Return generated chains
-        return samples if self._chains_in_memory else None
+        if self._chains_in_memory:
+            if self._transform:
+                samples_user = self._transform.to_model(samples)
+            else:
+                samples_user = samples
+        else:
+            samples_user = None
+        return samples_user
 
     def sampler(self):
         """
