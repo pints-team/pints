@@ -103,6 +103,7 @@ class TransformedLogPDF(pints.LogPDF):
         return self._log_pdf(self._transform.to_model(x))
 
     def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
 
 
@@ -124,6 +125,7 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     #TODO evaluateS1?
 
     def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._n_parameters
 
 
@@ -142,6 +144,7 @@ class TransformedBoundaries(pints.Boundaries):
         return self._boundaries.check(p)
 
     def n_parameters(self):
+        """ See :meth:`Boundaries.n_parameters()`. """
         return self._n_parameters
 
     def range(self):
@@ -211,7 +214,7 @@ class LogitTransform(Transform):
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
-        return np.sum(np.log(expit(x)) + np.log((1. - expit(x))))
+        return np.sum(np.log(expit(x)) + np.log(1. - expit(x)))
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
