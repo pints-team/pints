@@ -91,7 +91,7 @@ class SingleChainMCMC(MCMCSampler):
             # Use to create diagonal matrix
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
-            self._sigma0 = np.array(sigma0)
+            self._sigma0 = np.array(sigma0, copy=True)
             if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
@@ -293,13 +293,41 @@ class MCMCController(object):
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
+    transform : pints.Transform
+        A :class:`pints.Transform` that transform the model parameter space to
+        search space.
     """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(
+            self, log_pdf, chains, x0, sigma0=None, method=None,
+            transform=None):
 
-        # Store function
+        # Check function
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
+
+        # Transform everything
+        # From this point onward the MCMC sampler will see only the
+        # transformed search space and will know nothing about the model
+        # parameter space.
+        if transform:
+            log_pdf = transform.apply_log_pdf(log_pdf)
+            x0 = transform.to_search(x0)
+            if sigma0 is not None:
+                # Transform sigma0 if provided
+                if np.product(self._sigma0.shape) == self._n_parameters:
+                    # Convert from 1d array
+                    self._sigma0 = self._sigma0.reshape((self._n_parameters,))
+                    self._sigma0 = np.diag(self._sigma0)
+                else:
+                    # Check if 2d matrix of correct size
+                    self._sigma0 = self._sigma0.reshape(
+                        (self._n_parameters, self._n_parameters))
+                jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
+                sigma0 =  jacobian @ sigma0 @ jacobian.T
+        self._transform = transform
+
+        # Store function
         self._log_pdf = log_pdf
 
         # Get number of parameters
