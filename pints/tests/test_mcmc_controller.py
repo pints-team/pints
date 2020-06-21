@@ -164,6 +164,7 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
+        self.assertTrue((chains > 0).all())  # Make sure inverse transformed
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
@@ -300,6 +301,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
+        self.assertTrue((chains > 0).all())  # Make sure inverse transformed
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
                              method=meth, transform=logt)
