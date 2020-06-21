@@ -149,10 +149,10 @@ class TransformedBoundaries(pints.Boundaries):
 
     def range(self):
         """
-        Returns the size of the parameter space (i.e. ``upper - lower``).
+        Returns the size of the search space (i.e. ``upper - lower``).
         """
-        upper = self._transform(self._boundaries.upper())
-        lower = self._transform(self._boundaries.lower())
+        upper = self._transform.to_search(self._boundaries.upper())
+        lower = self._transform.to_search(self._boundaries.lower())
         return upper - lower
 
 

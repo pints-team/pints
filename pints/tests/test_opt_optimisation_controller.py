@@ -65,6 +65,8 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
         s = 0.1
         t = pints.RectangularBoundariesTransform(b)
+        pints.OptimisationController(r, x0, boundaries=b, method=method,
+                                     transform=t)
         opt = pints.OptimisationController(r, x0, s, b, method, transform=t)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
