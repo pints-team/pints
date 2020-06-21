@@ -275,7 +275,7 @@ class RectangularBoundariesTransform(Transform):
         # Parse input arguments
         if upper is None:
             if not isinstance(lower_or_boundaries,
-                    pints.RectangularBoundaries):
+                              pints.RectangularBoundaries):
                 raise ValueError(
                     'IntervalTransform requires a lower and an upper bound, '
                     'or a single RectangularBoundaries object.')
@@ -283,7 +283,7 @@ class RectangularBoundariesTransform(Transform):
         else:
             # Create RectangularBoundaries for all the input checks
             boundaries = pints.RectangularBoundaries(lower_or_boundaries,
-                    upper)
+                                                     upper)
 
         self._a = boundaries.lower()
         self._b = boundaries.upper()
