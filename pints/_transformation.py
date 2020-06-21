@@ -293,7 +293,7 @@ class RectangularBoundariesTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
-        diag = (self._b - self._a) / (np.exp(x) * (1. - np.exp(-x)) ** 2)
+        diag = (self._b - self._a) / (np.exp(x) * (1. + np.exp(-x)) ** 2)
         return np.diag(diag)
 
     def log_jacobian_det(self, x):
@@ -315,4 +315,4 @@ class RectangularBoundariesTransform(Transform):
 
     def _softplus(self, x):
         """ Returns the softplus function. """
-        return np.log(1. - np.exp(x))
+        return np.log(1. + np.exp(x))
