@@ -169,10 +169,10 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                transform=logt)
+                             transform=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                transform=logt)
+                             transform=logt)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
@@ -302,10 +302,10 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                method=meth, transform=logt)
+                             method=meth, transform=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                method=meth, transform=logt)
+                             method=meth, transform=logt)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
