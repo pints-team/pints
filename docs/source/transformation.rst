@@ -17,6 +17,7 @@ Example::
 Overview:
 
 - :class:`Transform`
+- :class:`IdentityTransform`
 - :class:`LogTransform`
 - :class:`LogitTransform`
 - :class:`RectangularBoundariesTransform`
@@ -26,6 +27,8 @@ Overview:
 
 
 .. autoclass:: Transform
+
+.. autoclass:: IdentityTransform
 
 .. autoclass:: LogTransform
 

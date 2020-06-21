@@ -242,6 +242,7 @@ from ._transformation import (
     LogTransform,
     LogitTransform,
     RectangularBoundariesTransform,
+    IdentityTransform,
 )
 
 
