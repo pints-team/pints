@@ -86,6 +86,55 @@ class TestTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
 
+        # Test invalid inputs
+        self.assertTrue(np.isnan(t1.to_search(-1.)))
+        self.assertTrue(np.isnan(t1.to_search(2.)))
+        self.assertTrue(np.isinf(t1.to_search(1.)))
+
+    def test_rectangular_boundaries_transform(self):
+        # Test RectangularBoundariesTransform class
+
+        lower1 = np.array([1])
+        upper1 = np.array([10])
+
+        lower2 = np.array([1, 2])
+        upper2 = np.array([10, 20])
+
+        # Test normal construction with lower and upper
+        t1 = pints.RectangularBoundariesTransform(lower1, upper1)
+        t2 = pints.RectangularBoundariesTransform(lower2, upper2)
+
+        # Test construction with rectangular boundaries object
+        b2 = pints.RectangularBoundaries(lower2, upper2)
+        t2b = pints.RectangularBoundariesTransform(b2)
+
+        # Test bad constructor
+        self.assertRaises(ValueError, pints.RectangularBoundariesTransform,
+                          lower2)
+
+        p = [1.5, 15.]
+        x = [-2.8332133440562162, 0.9555114450274365]
+        j = np.diag([0.4722222222222225, 3.6111111111111098])
+        log_j_det = 0.5337099175995788
+
+        # Test forward transform
+        self.assertTrue(np.allclose(t1.to_search([p[0]]), [x[0]]))
+        self.assertTrue(np.allclose(t2.to_search(p), x))
+
+        # Test inverse transform
+        self.assertTrue(np.allclose(t1.to_model([x[0]]), [p[0]]))
+        self.assertTrue(np.allclose(t2.to_model(x), p))
+
+        # Test n_parameters
+        self.assertEqual(t1.n_parameters(), 1)
+        self.assertEqual(t2.n_parameters(), 2)
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t2.jacobian(x), j))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t2.log_jacobian_det(x), log_j_det)
+
 
 if __name__ == '__main__':
     unittest.main()
