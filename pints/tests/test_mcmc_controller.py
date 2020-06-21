@@ -157,6 +157,33 @@ class TestMCMCController(unittest.TestCase):
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0)
 
+        # Test transformation
+        logt = pints.LogTransform(n_parameters)
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
+                                    transform=logt)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        sigma0 = [0.005, 100, 0.5 * self.noise]
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                transform=logt)
+        sigma0 = [0.005, 100, 0.5 * self.noise, 10]
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
+
         # Test multi-chain with single-chain mcmc
 
         # 2 chains
