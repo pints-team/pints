@@ -256,8 +256,8 @@ class RectangularBoundariesTransform(Transform):
     The Jacobian adjustment of the transformation is given by
 
     .. math::
-        |\frac{d}{dx} f^{-1}(x)| = \frac{b - a}{\exp(x) (1 - \exp(-x)) ^ 2}
-        \log|\frac{d}{dx} f^{-1}(x)| = \log(b - a) - 2 \log(1 - \exp(-x)) - x
+        |\frac{d}{dx} f^{-1}(x)| = \frac{b - a}{\exp(x) (1 + \exp(-x)) ^ 2}
+        \log|\frac{d}{dx} f^{-1}(x)| = \log(b - a) - 2 \log(1 + \exp(-x)) - x
 
     For example, to create a transform with :math:`p_1 \in [0, 4)`,
     :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
@@ -289,15 +289,18 @@ class RectangularBoundariesTransform(Transform):
         self._b = boundaries.upper()
 
         # Cache dimension
-        self._n_parameters = lower_or_boundaries.n_parameters()
+        self._n_parameters = boundaries.n_parameters()
+        del(boundaries)
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
+        x = np.asarray(x)
         diag = (self._b - self._a) / (np.exp(x) * (1. + np.exp(-x)) ** 2)
         return np.diag(diag)
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
+        x = np.asarray(x)
         s = self._softplus(-x)
         return np.sum(np.log(self._b - self._a) - 2. * s - x)
 
@@ -307,9 +310,11 @@ class RectangularBoundariesTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
+        x = np.asarray(x)
         return (self._b - self._a) * expit(x) + self._a
 
     def to_search(self, p):
+        p = np.asarray(p)
         """ See :meth:`Transform.to_search()`. """
         return np.log(p - self._a) - np.log(self._b - p)
 
