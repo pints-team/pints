@@ -333,7 +333,10 @@ class OptimisationController(object):
         # transformed search space and will know nothing about the model
         # parameter space.
         if transform:
-            function = transform.apply_error_measure(function)
+            if self._minimising:
+                function = transform.apply_error_measure(function)
+            else:
+                function = transform.apply_log_pdf(function)
             x0 = transform.to_search(x0)
             if sigma0 is not None:
                 jacobian = np.linalg.pinv(transform.jacobian(x0))
