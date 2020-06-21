@@ -9,6 +9,7 @@
 from __future__ import division
 import unittest
 import pints
+import pints.toy
 import numpy as np
 
 
@@ -173,6 +174,56 @@ class TestTransform(unittest.TestCase):
 
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
+
+
+class TestTransformedWrappers(unittest.TestCase):
+
+    def test_transformed_error_measure(self):
+        # Test TransformedErrorMeasure class
+
+        t = pints.LogTransform(2)
+        r = pints.toy.ParabolicError()
+        x = [0.1, 0.1]
+        tx = [-2.3025850929940455, -2.3025850929940455]
+        tr = t.apply_error_measure(r)
+
+        # Test before and after transformed give the same result
+        self.assertAlmostEqual(tr(tx), r(x))
+        self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+    def test_transformed_log_pdf(self):
+        # Test TransformedLogPDF class
+
+        t = pints.LogTransform(2)
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = [0.05, 1.01]
+        tx = [-2.9957322735539909, 0.0099503308531681]
+        log_j_det = -2.9857819427008230
+        tr = t.apply_log_pdf(r)
+
+        # Test before and after transformed give the same result
+        self.assertAlmostEqual(tr(tx), r(x) + log_j_det)
+        self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+    def test_transformed_boundaries(self):
+        # Test TransformedBoundaries class
+
+        t = pints.LogTransform(2)
+        b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
+        tb = t.apply_boundaries(b)
+        xi = [0.02, 1.01]
+        txi = [-3.9120230054281460, 0.0099503308531681]
+        xo = [10., 50.]
+        txo = [2.3025850929940459, 3.9120230054281460]
+        tr = [1.6094379124341001, 0.1000834585569826]
+
+        # Test before and after transformed give the same result
+        self.assertEqual(tb.check(txi), b.check(xi))
+        self.assertEqual(tb.check(txo), b.check(xo))
+        self.assertEqual(tb.n_parameters(), b.n_parameters())
+
+        # Test transformed range
+        self.assertTrue(np.allclose(tb.range(), tr))
 
 
 if __name__ == '__main__':
