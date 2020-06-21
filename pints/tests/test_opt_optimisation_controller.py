@@ -45,25 +45,35 @@ class TestOptimisationController(unittest.TestCase):
         self.assertTrue(f < 1e-6)
 
     def test_transform(self):
-        # Runs an optimisation with parameter transformation.
+        # Test optimisation with parameter transformation.
 
+        # Test with LogPDF
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
+        x0 = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         t = pints.RectangularBoundariesTransform(b)
-        opt = pints.OptimisationController(r, x, s, b, method, transform=t)
+        opt = pints.OptimisationController(r, x0, s, b, method, transform=t)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
-        self.assertEqual(opt.max_iterations(), 10)
 
-        # TODO test error measure
+        # Test with ErrorMeasure
+        r = pints.toy.ParabolicError()
+        x0 = [0.1, 0.1]
+        b = pints.RectangularBoundaries([-1, -1], [1, 1])
+        s = 0.1
+        t = pints.RectangularBoundariesTransform(b)
+        opt = pints.OptimisationController(r, x0, s, b, method, transform=t)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        x, _ = opt.run()
 
-        # TODO test output detransformed
-
-        # TODO test composed transforms
+        # Test output are detransformed
+        self.assertEqual(x.shape, (2, ))
+        self.assertTrue(b.check(x))
 
     def test_stopping_max_iterations(self):
         # Runs an optimisation with the max_iter stopping criterion.
