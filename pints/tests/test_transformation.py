@@ -12,10 +12,10 @@ import pints
 import numpy as np
 
 
-class TestLogTransform(unittest.TestCase):
+class TestTransform(unittest.TestCase):
 
-    def test_creation(self):
-        # Test transform object is working fine
+    def test_log_transform(self):
+        # Test LogTransform class
 
         # Test input parameters
         t1 = pints.LogTransform(1)
@@ -48,25 +48,43 @@ class TestLogTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
 
-    def test_optimisation(self):
-        # Test passing to optimisation
-        pass
+        # Test invalid inputs
+        self.assertTrue(np.isnan(t1.to_search(-1.)))
+        self.assertTrue(np.isinf(t1.to_search(0)))
 
-        # Test sigma0 inputs?
+    def test_logit_transform(self):
+        # Test LogitTransform class
 
-        # Test return solution shape
+        # Test input parameters
+        t1 = pints.LogitTransform(1)
+        t4 = pints.LogitTransform(4)
 
-        # Test return solution transform
+        p = [0.1, 0.333, 0.5, 0.9]
+        x = [-2.1972245773362191, -0.6946475559351799, 0., 2.1972245773362196]
+        j = np.diag([0.09, 0.222111, 0.25, 0.09])
+        log_j_det = -7.7067636004918398
 
-    def test_sampling(self):
-        # Test passing to sampling
-        pass
+        # Test forward transform
+        for xi, pi in zip(x, p):
+            calc_xi = t1.to_search(pi)
+            self.assertAlmostEqual(calc_xi, xi)
+        self.assertTrue(np.allclose(t4.to_search(p), x))
 
-        # Test sigma0 inputs?
+        # Test inverse transform
+        for xi, pi in zip(x, p):
+            calc_pi = t1.to_model(xi)
+            self.assertAlmostEqual(calc_pi, pi)
+        self.assertTrue(np.allclose(t4.to_model(x), p))
 
-        # Test return chain shape
+        # Test n_parameters
+        self.assertEqual(t1.n_parameters(), 1)
+        self.assertEqual(t4.n_parameters(), 4)
 
-        # Test return chain transform
+        # Test Jacobian
+        self.assertTrue(np.allclose(t4.jacobian(x), j))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t4.log_jacobian_det(x), log_j_det)
 
 
 if __name__ == '__main__':
