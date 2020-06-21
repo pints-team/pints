@@ -17,7 +17,7 @@ class Transform(object):
     Abstract base class for objects that provide some convenience parameter
     transformation from the model parameter space to a search space.
 
-    If ``t`` is an instance of a :class:`Transform` class, you can apply
+    If ``t`` is an instance of a ``Transform`` class, you can apply
     the transformation from the model parameter space ``p`` to the search
     space ``x`` by using ``x = t.to_search(p)`` and the inverse by using
     ``p = t.to_model(x)``.
@@ -173,6 +173,9 @@ class LogTransform(Transform):
 
     Extends :class:`Transform`.
     """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
         return np.diag(np.exp(x))
@@ -180,6 +183,10 @@ class LogTransform(Transform):
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
         return np.sum(x)
+
+    def n_parameters(self):
+        """ See :meth:`Transform.n_parameters()`. """
+        return self._n_parameters
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
@@ -208,6 +215,9 @@ class LogitTransform(Transform):
 
     Extends :class:`Transform`.
     """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
         return np.diag(expit(x) * (1. - expit(x)))
@@ -215,6 +225,10 @@ class LogitTransform(Transform):
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
         return np.sum(np.log(expit(x)) + np.log(1. - expit(x)))
+
+    def n_parameters(self):
+        """ See :meth:`Transform.n_parameters()`. """
+        return self._n_parameters
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
