@@ -9,7 +9,6 @@
 from __future__ import division
 import unittest
 import pints
-import numpy as np
 
 
 class TestTransform(unittest.TestCase):
