@@ -120,20 +120,25 @@ class TestTransform(unittest.TestCase):
         # Test forward transform
         self.assertTrue(np.allclose(t1.to_search([p[0]]), [x[0]]))
         self.assertTrue(np.allclose(t2.to_search(p), x))
+        self.assertTrue(np.allclose(t2b.to_search(p), x))
 
         # Test inverse transform
         self.assertTrue(np.allclose(t1.to_model([x[0]]), [p[0]]))
         self.assertTrue(np.allclose(t2.to_model(x), p))
+        self.assertTrue(np.allclose(t2b.to_model(x), p))
 
         # Test n_parameters
         self.assertEqual(t1.n_parameters(), 1)
         self.assertEqual(t2.n_parameters(), 2)
+        self.assertEqual(t2b.n_parameters(), 2)
 
         # Test Jacobian
         self.assertTrue(np.allclose(t2.jacobian(x), j))
+        self.assertTrue(np.allclose(t2b.jacobian(x), j))
 
         # Test log-Jacobian determinant
         self.assertEqual(t2.log_jacobian_det(x), log_j_det)
+        self.assertEqual(t2b.log_jacobian_det(x), log_j_det)
 
 
 if __name__ == '__main__':
