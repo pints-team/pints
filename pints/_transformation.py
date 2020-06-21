@@ -321,3 +321,31 @@ class RectangularBoundariesTransform(Transform):
     def _softplus(self, x):
         """ Returns the softplus function. """
         return np.log(1. + np.exp(x))
+
+
+class IdentityTransform(Transform):
+    """
+    Identity transformation does nothing to the input parameters, i.e. the
+    search space under this transformation is the same as the model space.
+    And its Jacobian matrix is the identity matrix.
+
+    Extends :class:`Transform`.
+    """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
+    def jacobian(self, x):
+        """ See :meth:`Transform.jacobian()`. """
+        return np.eye(self._n_parameters)
+
+    def n_parameters(self):
+        """ See :meth:`Transform.n_parameters()`. """
+        return self._n_parameters
+
+    def to_model(self, x, *args, **kwargs):
+        """ See :meth:`Transform.to_model()`. """
+        return np.asarray(x, *args, **kwargs)
+
+    def to_search(self, p, *args, **kwargs):
+        """ See :meth:`Transform.to_search()`. """
+        return np.asarray(p, *args, **kwargs)

@@ -140,6 +140,40 @@ class TestTransform(unittest.TestCase):
         self.assertEqual(t2.log_jacobian_det(x), log_j_det)
         self.assertEqual(t2b.log_jacobian_det(x), log_j_det)
 
+    def test_identity_transform(self):
+        # Test IdentityTransform class
+
+        # Test input parameters
+        t1 = pints.IdentityTransform(1)
+        t4 = pints.IdentityTransform(4)
+
+        p = [-177., 0.333, 10., 99.99]
+        x = [-177., 0.333, 10., 99.99]
+        j = np.eye(4)
+        log_j_det = 0.
+
+        # Test forward transform
+        for xi, pi in zip(x, p):
+            calc_xi = t1.to_search(pi)
+            self.assertAlmostEqual(calc_xi, xi)
+        self.assertTrue(np.allclose(t4.to_search(p), x))
+
+        # Test inverse transform
+        for xi, pi in zip(x, p):
+            calc_pi = t1.to_model(xi)
+            self.assertAlmostEqual(calc_pi, pi)
+        self.assertTrue(np.allclose(t4.to_model(x), p))
+
+        # Test n_parameters
+        self.assertEqual(t1.n_parameters(), 1)
+        self.assertEqual(t4.n_parameters(), 4)
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t4.jacobian(x), j))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t4.log_jacobian_det(x), log_j_det)
+
 
 if __name__ == '__main__':
     unittest.main()
