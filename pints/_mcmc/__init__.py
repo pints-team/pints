@@ -313,16 +313,17 @@ class MCMCController(object):
         if transform:
             log_pdf = transform.apply_log_pdf(log_pdf)
             x0 = transform.to_search(x0)
+            n_parameters = log_pdf.n_parameters()
             if sigma0 is not None:
+                sigma0 = np.asarray(sigma0)
                 # Transform sigma0 if provided
-                if np.product(self._sigma0.shape) == self._n_parameters:
+                if np.product(sigma0.shape) == n_parameters:
                     # Convert from 1d array
-                    self._sigma0 = self._sigma0.reshape((self._n_parameters,))
-                    self._sigma0 = np.diag(self._sigma0)
+                    sigma0 = sigma0.reshape((n_parameters,))
+                    sigma0 = np.diag(sigma0)
                 else:
                     # Check if 2d matrix of correct size
-                    self._sigma0 = self._sigma0.reshape(
-                        (self._n_parameters, self._n_parameters))
+                    sigma0 = sigma0.reshape((n_parameters, n_parameters))
                 jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
                 sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)
         self._transform = transform
