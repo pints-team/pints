@@ -349,3 +349,109 @@ class IdentityTransform(Transform):
     def to_search(self, p, *args, **kwargs):
         """ See :meth:`Transform.to_search()`. """
         return np.asarray(p, *args, **kwargs)
+
+
+class ComposedTransform(Transform):
+    r"""
+    N-dimensional :class:`Transform` composed of one or more other
+    :math:`N_i`-dimensional ``Transform``, such that :math:`\sum _i N_i = N`.
+    The evaluation and transformation of the composed transformations assume
+    the input transformations are all independent from each other.
+
+    For example, a composed transform
+
+        ``t = pints.ComposedTransform(transform1, transform2, transform3)``,
+
+    where ``transform1``, ``transform2``, and ``transform3`` each have
+    dimension 1, 2 and 1, will have dimension 4.
+
+    The dimensionality of the individual priors does not have to be the same,
+    i.e. :math:`N_i\neq N_j` is allowed.
+
+    The input parameters of the :class:`ComposedTransform` have to be ordered
+    in the same way as the individual tranforms for the parameter vector. In
+    the above example the transform may be performed by ``t.to_search(p)``,
+    where:
+
+        ``p = [parameter1_transform1, parameter1_transform2,
+        parameter2_transform2, parameter1_transform3]``.
+
+    Extends :class:`Transform`.
+    """
+    def __init__(self, *transforms):
+        # Check if sub-transforms given
+        if len(transforms) < 1:
+            raise ValueError('Must have at least one sub-transform.')
+
+        # Check if proper transform, count dimension
+        self._n_parameters = 0
+        for transform in transforms:
+            if not isinstance(transform, pints.Transform):
+                raise ValueError('All sub-transforms must extend '
+                    'pints.Transform.')
+            self._n_parameters += transform.n_parameters()
+
+        # Store
+        self._transforms = transforms
+
+    def jacobian(self, x):
+        """ See :meth:`Transform.jacobian()`. """
+        lo, hi = 0, self._transforms[0].n_parameters()
+        output = self._transforms[0].jacobian(x[lo:hi])
+        for transform in self._transforms[1:]:
+            lo = hi
+            hi += transform.n_parameters()
+            jaco = transform.jacobian(x[lo:hi])
+            pack = np.zeros((output.shape[0], jaco.shape[1]))
+            output = np.block([[output, pack], [pack.T, jaco]])
+        return output
+
+    def log_jacobian_det(self, x):
+        """ See :meth:`Transform.log_jacobian_det()`. """
+        output = 0
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            output += transform.log_jacobian_det(x[lo:hi])
+        return output
+
+    def to_model(self, x):
+        """ See :meth:`Transform.to_model()`. """
+        if np.product(x.shape) == self._n_parameters:
+            x = x.reshape((self._n_parameters,))
+            single = True
+        else:
+            single = False
+        output = np.zeros(x.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            if single:
+                output[lo:hi] = transform.to_model(x[lo:hi])
+            else:
+                output[:, lo:hi] = transform.to_model(x[:, lo:hi])
+        return output
+
+    def to_search(self, p):
+        """ See :meth:`Transform.to_search()`. """
+        if np.product(p.shape) == self._n_parameters:
+            p = p.reshape((self._n_parameters,))
+            single = True
+        else:
+            single = False
+        output = np.zeros(p.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            if single:
+                output[lo:hi] = np.asarray(transform.to_search(p[lo:hi]))
+            else:
+                output[:, lo:hi] = np.asarray(transform.to_search(p[:, lo:hi]))
+        return output
+
+    def n_parameters(self):
+        """ See :meth:`Transform.n_parameters()`. """
+        return self._n_parameters
