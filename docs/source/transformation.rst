@@ -17,6 +17,7 @@ Example::
 Overview:
 
 - :class:`Transform`
+- :class:`ComposedTransform`
 - :class:`IdentityTransform`
 - :class:`LogTransform`
 - :class:`LogitTransform`
@@ -27,6 +28,8 @@ Overview:
 
 
 .. autoclass:: Transform
+
+.. autoclass:: ComposedTransform
 
 .. autoclass:: IdentityTransform
 
