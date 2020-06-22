@@ -30,13 +30,13 @@ class TestTransform(unittest.TestCase):
         # Test forward transform
         for xi, pi in zip(x, p):
             calc_xi = t1.to_search(pi)
-            self.assertAlmostEqual(calc_xi, xi)
+            self.assertAlmostEqual(calc_xi[0], xi)
         self.assertTrue(np.allclose(t4.to_search(p), x))
 
         # Test inverse transform
         for xi, pi in zip(x, p):
             calc_pi = t1.to_model(xi)
-            self.assertAlmostEqual(calc_pi, pi)
+            self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
         # Test n_parameters
@@ -68,13 +68,13 @@ class TestTransform(unittest.TestCase):
         # Test forward transform
         for xi, pi in zip(x, p):
             calc_xi = t1.to_search(pi)
-            self.assertAlmostEqual(calc_xi, xi)
+            self.assertAlmostEqual(calc_xi[0], xi)
         self.assertTrue(np.allclose(t4.to_search(p), x))
 
         # Test inverse transform
         for xi, pi in zip(x, p):
             calc_pi = t1.to_model(xi)
-            self.assertAlmostEqual(calc_pi, pi)
+            self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
         # Test n_parameters
@@ -156,13 +156,13 @@ class TestTransform(unittest.TestCase):
         # Test forward transform
         for xi, pi in zip(x, p):
             calc_xi = t1.to_search(pi)
-            self.assertAlmostEqual(calc_xi, xi)
+            self.assertAlmostEqual(calc_xi[0], xi)
         self.assertTrue(np.allclose(t4.to_search(p), x))
 
         # Test inverse transform
         for xi, pi in zip(x, p):
             calc_pi = t1.to_model(xi)
-            self.assertAlmostEqual(calc_pi, pi)
+            self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
         # Test n_parameters
@@ -225,7 +225,7 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedErrorMeasure, r,
-                pints.LogTransform(3))
+                          pints.LogTransform(3))
 
     def test_transformed_log_pdf(self):
         # Test TransformedLogPDF class
@@ -243,7 +243,7 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedLogPDF, r,
-                pints.LogTransform(3))
+                          pints.LogTransform(3))
 
     def test_transformed_boundaries(self):
         # Test TransformedBoundaries class
@@ -267,7 +267,7 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedBoundaries, b,
-                pints.LogTransform(3))
+                          pints.LogTransform(3))
 
 
 if __name__ == '__main__':

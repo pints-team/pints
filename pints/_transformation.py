@@ -213,10 +213,12 @@ class LogTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
+        x = pints.vector(x)
         return np.diag(np.exp(x))
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
+        x = pints.vector(x)
         return np.sum(x)
 
     def n_parameters(self):
@@ -225,10 +227,12 @@ class LogTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
+        x = pints.vector(x)
         return np.exp(x)
 
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
+        p = pints.vector(p)
         return np.log(p)
 
 
@@ -260,10 +264,12 @@ class LogitTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
+        x = pints.vector(x)
         return np.diag(expit(x) * (1. - expit(x)))
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
+        x = pints.vector(x)
         return np.sum(np.log(expit(x)) + np.log(1. - expit(x)))
 
     def n_parameters(self):
@@ -272,10 +278,12 @@ class LogitTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
+        x = pints.vector(x)
         return expit(x)
 
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
+        p = pints.vector(p)
         return logit(p)
 
 
@@ -334,13 +342,13 @@ class RectangularBoundariesTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
-        x = np.asarray(x)
+        x = pints.vector(x)
         diag = (self._b - self._a) / (np.exp(x) * (1. + np.exp(-x)) ** 2)
         return np.diag(diag)
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
-        x = np.asarray(x)
+        x = pints.vector(x)
         s = self._softplus(-x)
         return np.sum(np.log(self._b - self._a) - 2. * s - x)
 
@@ -350,11 +358,11 @@ class RectangularBoundariesTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
-        x = np.asarray(x)
+        x = pints.vector(x)
         return (self._b - self._a) * expit(x) + self._a
 
     def to_search(self, p):
-        p = np.asarray(p)
+        p = pints.vector(p)
         """ See :meth:`Transform.to_search()`. """
         return np.log(p - self._a) - np.log(self._b - p)
 
@@ -387,13 +395,13 @@ class IdentityTransform(Transform):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
 
-    def to_model(self, x, *args, **kwargs):
+    def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
-        return np.asarray(x, *args, **kwargs)
+        return pints.vector(x)
 
-    def to_search(self, p, *args, **kwargs):
+    def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
-        return np.asarray(p, *args, **kwargs)
+        return pints.vector(p)
 
 
 class ComposedTransform(Transform):
@@ -441,7 +449,7 @@ class ComposedTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
-        x = np.asarray(x)
+        x = pints.vector(x)
         lo, hi = 0, self._transforms[0].n_parameters()
         output = self._transforms[0].jacobian(x[lo:hi])
         for transform in self._transforms[1:]:
@@ -454,7 +462,7 @@ class ComposedTransform(Transform):
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
-        x = np.asarray(x)
+        x = pints.vector(x)
         output = 0
         lo = hi = 0
         for transform in self._transforms:
@@ -465,40 +473,24 @@ class ComposedTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
-        x = np.asarray(x)
-        if np.product(x.shape) == self._n_parameters:
-            x = x.reshape((self._n_parameters,))
-            single = True
-        else:
-            single = False
+        x = pints.vector(x)
         output = np.zeros(x.shape)
         lo = hi = 0
         for transform in self._transforms:
             lo = hi
             hi += transform.n_parameters()
-            if single:
-                output[lo:hi] = transform.to_model(x[lo:hi])
-            else:
-                output[:, lo:hi] = transform.to_model(x[:, lo:hi])
+            output[lo:hi] = np.asarray(transform.to_model(x[lo:hi]))
         return output
 
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
-        p = np.asarray(p)
-        if np.product(p.shape) == self._n_parameters:
-            p = p.reshape((self._n_parameters,))
-            single = True
-        else:
-            single = False
+        p = pints.vector(p)
         output = np.zeros(p.shape)
         lo = hi = 0
         for transform in self._transforms:
             lo = hi
             hi += transform.n_parameters()
-            if single:
-                output[lo:hi] = np.asarray(transform.to_search(p[lo:hi]))
-            else:
-                output[:, lo:hi] = np.asarray(transform.to_search(p[:, lo:hi]))
+            output[lo:hi] = np.asarray(transform.to_search(p[lo:hi]))
         return output
 
     def n_parameters(self):
