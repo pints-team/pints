@@ -44,8 +44,9 @@ class Transform(object):
         """
         Returns the Jacobian for a parameter vector ``x`` in the search space.
 
-        *This is an optional method; it is needed when `sigma0` is provided in
-        :meth:`pints.OptimisationController` or :meth:`pints.MCMCController`.*
+        *This is an optional method. It is needed when `sigma0` is provided in
+        :meth:`pints.OptimisationController` or :meth:`pints.MCMCController`,
+        or when the method requires ``evaluateS1()``.*
         """
         raise NotImplementedError
 
@@ -54,9 +55,10 @@ class Transform(object):
         Returns the logarithm of the absolute value of the Jacobian
         determinant for a parameter vector ``x`` in the search space.
 
-        *This is an optional method; it is needed when transformation is
-        performed on :class:`LogPDF`, but not necessary if it's used for
-        :class:`ErrorMeasure`.*
+        *This is an optional method. It is needed when transformation is
+        performed on :class:`LogPDF` and/or that requires ``evaluateS1()``;
+        e.g. not necessary if it's used for :class:`ErrorMeasure` without
+        :meth:`ErrorMeasure.evaluateS1()`.*
         """
         return np.log(np.abs(np.linalg.det(self.jacobian(x))))
 
@@ -108,7 +110,15 @@ class TransformedLogPDF(pints.LogPDF):
         log_jacobian_det = self._transform.log_jacobian_det(x)
         return logpdf_nojac + log_jacobian_det
 
-    #TODO evaluateS1?
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        p = self._transform.to_model(x)
+        logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
+        log_jacobian_det = self._transform.log_jacobian_det(x)
+        jacobian = self._transform.jacobian(x)
+        logpdf = logpdf_nojac + log_jacobian_det
+        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
+        return logpdf, dlogpdf
 
     def logpdf_nojac(self, x):
         """
@@ -149,7 +159,14 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
         p = self._transform.to_model(x)
         return self._error(p)
 
-    #TODO evaluateS1?
+    def evaluateS1(self, x):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+        p = self._transform.to_model(x)
+        e, de_nojac = self._error.evaluateS1(p)
+        log_jacobian_det = self._transform.log_jacobian_det(x)
+        jacobian = self._transform.jacobian(x)
+        de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
+        return e, de
 
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
