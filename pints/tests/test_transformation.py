@@ -221,11 +221,19 @@ class TestTransformedWrappers(unittest.TestCase):
         r = pints.toy.ParabolicError()
         x = [0.1, 0.1]
         tx = [-2.3025850929940455, -2.3025850929940455]
+        j = np.diag(x)
         tr = t.apply_error_measure(r)
 
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x))
         self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+        # Test evaluateS1()
+        rx, s1 = r.evaluateS1(x)
+        ts1 = np.matmul(s1, j)
+        trtx, trts1 = tr.evaluateS1(tx)
+        self.assertTrue(np.allclose(trtx, rx))
+        self.assertTrue(np.allclose(trts1, ts1))
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedErrorMeasure, r,
@@ -238,12 +246,21 @@ class TestTransformedWrappers(unittest.TestCase):
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = [0.05, 1.01]
         tx = [-2.9957322735539909, 0.0099503308531681]
+        j = np.diag(x)
         log_j_det = -2.9857819427008230
         tr = t.apply_log_pdf(r)
 
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x) + log_j_det)
         self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+        # Test evaluateS1()
+        rx, s1 = r.evaluateS1(x)
+        trx = rx + log_j_det
+        ts1 = np.matmul(s1, j)
+        trtx, trts1 = tr.evaluateS1(tx)
+        self.assertTrue(np.allclose(trtx, trx))
+        self.assertTrue(np.allclose(trts1, ts1))
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedLogPDF, r,
