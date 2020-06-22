@@ -245,6 +245,7 @@ from ._transformation import (
     LogitTransform,
     RectangularBoundariesTransform,
     IdentityTransform,
+    ComposedTransform,
 )
 
 
