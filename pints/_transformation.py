@@ -106,26 +106,55 @@ class TransformedLogPDF(pints.LogPDF):
                              'must match.')
 
     def __call__(self, x):
-        logpdf_nojac = self.logpdf_nojac(x)
+        # Get parameters in the model space
+        p = self._transform.to_model(x)
+
+        # Compute LogPDF in the model space
+        logpdf_nojac = self._log_pdf(p)
+
+        # Calculate the PDF change of variable. From Wikipedia:
+        # https://w.wiki/UsJ
+        #
+        # For some model parameter vector b and distribution p(b), consider a
+        # transformation a = f(b), then
+        #
+        # p(a) = p(f^{-1}(a)) |det(J(f^{-1}(a)))|
+        #
+        # where J is the Jacobian matrix. For log PDF, it becomes
+        #
+        # log(p(a)) = log(p(f^{-1}(a))) + log(|det(J(f^{-1}(a)))|)
+        #
         log_jacobian_det = self._transform.log_jacobian_det(x)
         return logpdf_nojac + log_jacobian_det
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        # Get parameters in the model space
         p = self._transform.to_model(x)
-        logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
-        log_jacobian_det = self._transform.log_jacobian_det(x)
-        jacobian = self._transform.jacobian(x)
-        logpdf = logpdf_nojac + log_jacobian_det
-        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
-        return logpdf, dlogpdf
 
-    def logpdf_nojac(self, x):
-        """
-        Returns log-PDF value of the transformed distribution evaluated at
-        ``x`` without the Jacobian adjustment term.
-        """
-        return self._log_pdf(self._transform.to_model(x))
+        # Compute evaluateS1 of LogPDF in the model space
+        logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
+
+        # Calculate the PDF change of variable, see self.__call__()
+        log_jacobian_det = self._transform.log_jacobian_det(x)
+        logpdf = logpdf_nojac + log_jacobian_det
+
+        # Calculate the S1 change of variable. From Chain Rule Wikipedia:
+        # https://w.wiki/Us8
+        #
+        # For some transformation x = h(p) and its inverse p = g(x) applied
+        # to some function E
+        #
+        # dE/dx_i = \sum_l dE/dp_l * dp_l/dx_i  (d denotes partial derivative)
+        #
+        # Or in matrix form, for Jacobian matrix J
+        #
+        # (dEdx)^T = J_(E.g) = J_E(p) J_g = (dEdp)^T J_g
+        #
+        jacobian = self._transform.jacobian(x)
+        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
+
+        return logpdf, dlogpdf
 
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
@@ -155,16 +184,35 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
                              'must match.')
 
     def __call__(self, x):
-        # Get parameters at the model space
+        # Get parameters in the model space
         p = self._transform.to_model(x)
+        # Compute ErrorMeasure in the model space
         return self._error(p)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
+
+        # Get parameters in the model space
         p = self._transform.to_model(x)
+
+        # Compute evaluateS1 of ErrorMeasure in the model space
         e, de_nojac = self._error.evaluateS1(p)
+
+        # Calculate the S1 change of variable. From Chain Rule Wikipedia:
+        # https://w.wiki/Us8
+        #
+        # For some transformation x = h(p) and its inverse p = g(x) applied
+        # to some function E
+        #
+        # dE/dx_i = \sum_l dE/dp_l * dp_l/dx_i  (d denotes partial derivative)
+        #
+        # Or in matrix form, for Jacobian matrix J
+        #
+        # (dEdx)^T = J_(E.g) = J_E(p) J_g = (dEdp)^T J_g
+        #
         jacobian = self._transform.jacobian(x)
         de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
+
         return e, de
 
     def n_parameters(self):
@@ -189,13 +237,16 @@ class TransformedBoundaries(pints.Boundaries):
         self._boundaries = boundaries
         self._transform = transform
         self._n_parameters = self._boundaries.n_parameters()
+
         if self._transform.n_parameters() != self._n_parameters:
             raise ValueError('Number of parameters for boundaries and '
                              'transform must match.')
 
     def check(self, x):
-        # Get parameters at the model space
+        """ See :meth:`Boundaries.check()`. """
+        # Get parameters in the model space
         p = self._transform.to_model(x)
+        # Check Boundaries in the model space
         return self._boundaries.check(p)
 
     def n_parameters(self):
