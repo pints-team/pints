@@ -312,7 +312,7 @@ class MCMCController(object):
         # parameter space.
         if transform:
             log_pdf = transform.apply_log_pdf(log_pdf)
-            x0 = transform.to_search(x0)
+            x0 = [transform.to_search(x) for x in x0]
             n_parameters = log_pdf.n_parameters()
             if sigma0 is not None:
                 sigma0 = np.asarray(sigma0)
@@ -814,7 +814,13 @@ class MCMCController(object):
         # Return generated chains
         if self._chains_in_memory:
             if self._transform:
-                samples_user = self._transform.to_model(samples)
+                # Inverse transform to model space if transform is provided
+                n_c, n_s, n_p = samples.shape
+                samples_user = np.zeros((n_c, n_s, n_p))
+                for c in range(n_c):
+                    for s in range(n_s):
+                        samples_user[c, s, :] = \
+                            self._transform.to_model(samples[c, s, :])
             else:
                 samples_user = samples
         else:
