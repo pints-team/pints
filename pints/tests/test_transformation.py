@@ -175,6 +175,38 @@ class TestTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
 
+    def test_composed_transform(self):
+        # Test ComposedTransform class
+
+        # Test input parameters
+        t1 = pints.IdentityTransform(1)
+        lower2 = np.array([1, 2])
+        upper2 = np.array([10, 20])
+        t2 = pints.RectangularBoundariesTransform(lower2, upper2)
+        t3 = pints.LogTransform(1)
+
+        t = pints.ComposedTransform(t1, t2, t3)
+
+        p = [0.1, 1.5, 15., 999.]
+        x = [0.1, -2.8332133440562162, 0.9555114450274365, 6.9067547786485539]
+        j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
+        log_j_det = 7.4404646962481324
+
+        # Test forward transform
+        self.assertTrue(np.allclose(t.to_search(p), x))
+
+        # Test inverse transform
+        self.assertTrue(np.allclose(t.to_model(x), p))
+
+        # Test n_parameters
+        self.assertEqual(t.n_parameters(), 4)
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t.jacobian(x), j))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t.log_jacobian_det(x), log_j_det)
+
 
 class TestTransformedWrappers(unittest.TestCase):
 
@@ -191,6 +223,10 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertAlmostEqual(tr(tx), r(x))
         self.assertEqual(tr.n_parameters(), r.n_parameters())
 
+        # Test invalid transform
+        self.assertRaises(ValueError, pints.TransformedErrorMeasure, r,
+                pints.LogTransform(3))
+
     def test_transformed_log_pdf(self):
         # Test TransformedLogPDF class
 
@@ -204,6 +240,10 @@ class TestTransformedWrappers(unittest.TestCase):
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x) + log_j_det)
         self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+        # Test invalid transform
+        self.assertRaises(ValueError, pints.TransformedLogPDF, r,
+                pints.LogTransform(3))
 
     def test_transformed_boundaries(self):
         # Test TransformedBoundaries class
@@ -224,6 +264,10 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test transformed range
         self.assertTrue(np.allclose(tb.range(), tr))
+
+        # Test invalid transform
+        self.assertRaises(ValueError, pints.TransformedBoundaries, b,
+                pints.LogTransform(3))
 
 
 if __name__ == '__main__':
