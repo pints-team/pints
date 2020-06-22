@@ -18,8 +18,8 @@ class Transform(object):
     transformation from the model parameter space to a search space.
 
     If ``t`` is an instance of a ``Transform`` class, you can apply
-    the transformation from the model parameter space ``p`` to the search
-    space ``x`` by using ``x = t.to_search(p)`` and the inverse by using
+    the transformation of a parameter vector from the model space ``p`` to the
+    search space ``x`` by using ``x = t.to_search(p)`` and the inverse by using
     ``p = t.to_model(x)``.
     """
     def apply_log_pdf(self, log_pdf):
@@ -42,14 +42,17 @@ class Transform(object):
 
     def jacobian(self, x):
         """
-        Returns the Jacobian for the parameter ``x`` in the search space.
+        Returns the Jacobian for a parameter vector ``x`` in the search space.
+
+        *This is an optional method; it is needed when `sigma0` is provided in
+        :meth:`pints.OptimisationController` or :meth:`pints.MCMCController`.*
         """
         raise NotImplementedError
 
     def log_jacobian_det(self, x):
         """
         Returns the logarithm of the absolute value of the Jacobian
-        determinant for the parameter ``x`` in the search space.
+        determinant for a parameter vector ``x`` in the search space.
 
         *This is an optional method; it is needed when transformation is
         performed on :class:`LogPDF`, but not necessary if it's used for
@@ -66,15 +69,15 @@ class Transform(object):
 
     def to_model(self, x):
         """
-        Returns the inverse of transformation from the search space ``x`` to
-        the model parameter space ``p``.
+        Returns the inverse of transformation of a vector from the search space
+        ``x`` to the model parameter space ``p``.
         """
         raise NotImplementedError
 
     def to_search(self, p):
         """
-        Returns the forward transformation from the model parameter space
-        ``p`` to the search space ``x``.
+        Returns the forward transformation of a vector from the model parameter
+        space ``p`` to the search space ``x``.
         """
         raise NotImplementedError
 
@@ -82,6 +85,8 @@ class Transform(object):
 class TransformedLogPDF(pints.LogPDF):
     """
     A log-PDF that is transformed from the model space to the search space.
+
+    Extends :class:`pints.LogPDF`.
 
     Parameters
     ----------
@@ -122,6 +127,8 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     An error measure that is transformed from the model space to the search
     space.
 
+    Extends :class:`pints.ErrorMeasure`.
+
     Parameters
     ----------
     error
@@ -152,6 +159,8 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
 class TransformedBoundaries(pints.Boundaries):
     """
     Boundaries that are transformed from the model space to the search space.
+
+    Extends :class:`pints.Boundaries`.
 
     Parameters
     ----------
@@ -206,7 +215,7 @@ class LogTransform(Transform):
     Parameters
     ----------
     n_parameters
-        Number of model parameters for the transformation.
+        Number of model parameters this transformation is defined over.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
@@ -257,7 +266,7 @@ class LogitTransform(Transform):
     Parameters
     ----------
     n_parameters
-        Number of model parameters for the transformation.
+        Number of model parameters this transformation is defined over.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
@@ -382,7 +391,7 @@ class IdentityTransform(Transform):
     Parameters
     ----------
     n_parameters
-        Number of model parameters for the transformation.
+        Number of model parameters this transformation is defined over.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
