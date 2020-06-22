@@ -82,6 +82,13 @@ class Transform(object):
 class TransformedLogPDF(pints.LogPDF):
     """
     A log-PDF that is transformed from the model space to the search space.
+
+    Parameters
+    ----------
+    log_pdf
+        A :class:`pints.LogPDF`.
+    transform
+        A :class:`pints.Transform`.
     """
     def __init__(self, log_pdf, transform):
         self._log_pdf = log_pdf
@@ -111,16 +118,23 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     """
     An error measure that is transformed from the model space to the search
     space.
+
+    Parameters
+    ----------
+    error
+        A :class:`pints.ErrorMeasure`.
+    transform
+        A :class:`pints.Transform`.
     """
-    def __init__(self, function, transform):
-        self._function = function
+    def __init__(self, error, transform):
+        self._error = error
         self._transform = transform
-        self._n_parameters = self._function.n_parameters()
+        self._n_parameters = self._error.n_parameters()
 
     def __call__(self, x):
         # Get parameters at the model space
         p = self._transform.to_model(x)
-        return self._function(p)
+        return self._error(p)
 
     #TODO evaluateS1?
 
@@ -132,6 +146,13 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
 class TransformedBoundaries(pints.Boundaries):
     """
     Boundaries that are transformed from the model space to the search space.
+
+    Parameters
+    ----------
+    boundaries
+        A :class:`pints.Boundaries`.
+    transform
+        A :class:`pints.Transform`.
     """
     def __init__(self, boundaries, transform):
         self._boundaries = boundaries
@@ -172,6 +193,11 @@ class LogTransform(Transform):
         |\frac{d}{dx} \exp(x)| = \exp(x).
 
     Extends :class:`Transform`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters for the transformation.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
@@ -214,6 +240,11 @@ class LogitTransform(Transform):
         (1 - \text{logit}^{-1}(x)).
 
     Extends :class:`Transform`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters for the transformation.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
@@ -330,6 +361,11 @@ class IdentityTransform(Transform):
     And its Jacobian matrix is the identity matrix.
 
     Extends :class:`Transform`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters for the transformation.
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
