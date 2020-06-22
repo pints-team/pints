@@ -207,6 +207,10 @@ class TestTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertEqual(t.log_jacobian_det(x), log_j_det)
 
+        # Test invalid constructors
+        self.assertRaises(ValueError, pints.ComposedTransform)
+        self.assertRaises(ValueError, pints.ComposedTransform, np.log)
+
 
 class TestTransformedWrappers(unittest.TestCase):
 
