@@ -94,6 +94,9 @@ class TransformedLogPDF(pints.LogPDF):
         self._log_pdf = log_pdf
         self._transform = transform
         self._n_parameters = self._log_pdf.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for log_pdf and transform '
+                             'must match.')
 
     def __call__(self, x):
         logpdf_nojac = self.logpdf_nojac(x)
@@ -130,6 +133,9 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
         self._error = error
         self._transform = transform
         self._n_parameters = self._error.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for error and transform '
+                             'must match.')
 
     def __call__(self, x):
         # Get parameters at the model space
@@ -158,6 +164,9 @@ class TransformedBoundaries(pints.Boundaries):
         self._boundaries = boundaries
         self._transform = transform
         self._n_parameters = self._boundaries.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for boundaries and '
+                             'transform must match.')
 
     def check(self, x):
         # Get parameters at the model space
