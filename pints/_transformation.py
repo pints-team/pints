@@ -163,7 +163,6 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """
         p = self._transform.to_model(x)
         e, de_nojac = self._error.evaluateS1(p)
-        log_jacobian_det = self._transform.log_jacobian_det(x)
         jacobian = self._transform.jacobian(x)
         de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
         return e, de
