@@ -306,7 +306,8 @@ class OptimisationController(object):
         If no method is specified, :class:`CMAES` is used.
     transform
         A :class:`pints.Transform` that transform the model parameter space to
-        search space.
+        search space. If no transform is specified, search will be performed
+        in the model space.
     """
 
     def __init__(
@@ -785,7 +786,8 @@ class Optimisation(OptimisationController):
     """ Deprecated alias for :class:`OptimisationController`. """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, method=None):
+            self, function, x0, sigma0=None, boundaries=None, method=None,
+            transform=None):
         # Deprecated on 2019-02-12
         import logging
         logging.basicConfig()
@@ -794,7 +796,8 @@ class Optimisation(OptimisationController):
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
-            function, x0, sigma0=None, boundaries=None, method=None)
+            function, x0, sigma0=None, boundaries=None, method=None,
+            transform=None)
 
 
 def optimise(
@@ -826,7 +829,8 @@ def optimise(
         If no method is specified, :class:`CMAES` is used.
     transform
         A :class:`pints.Transform` that transform the model parameter space to
-        search space.
+        search space. If no transform is specified, search will be performed
+        in the model space.
 
     Returns
     -------

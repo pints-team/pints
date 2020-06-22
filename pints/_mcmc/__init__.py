@@ -295,7 +295,8 @@ class MCMCController(object):
         :class:`HaarioBardenetACMC` is used.
     transform : pints.Transform
         A :class:`pints.Transform` that transform the model parameter space to
-        search space.
+        search space. If no transform is specified, search will be performed
+        in the model space.
     """
 
     def __init__(
