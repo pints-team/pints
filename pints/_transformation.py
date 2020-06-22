@@ -388,7 +388,7 @@ class ComposedTransform(Transform):
         for transform in transforms:
             if not isinstance(transform, pints.Transform):
                 raise ValueError('All sub-transforms must extend '
-                    'pints.Transform.')
+                                 'pints.Transform.')
             self._n_parameters += transform.n_parameters()
 
         # Store
@@ -396,6 +396,7 @@ class ComposedTransform(Transform):
 
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
+        x = np.asarray(x)
         lo, hi = 0, self._transforms[0].n_parameters()
         output = self._transforms[0].jacobian(x[lo:hi])
         for transform in self._transforms[1:]:
@@ -408,6 +409,7 @@ class ComposedTransform(Transform):
 
     def log_jacobian_det(self, x):
         """ See :meth:`Transform.log_jacobian_det()`. """
+        x = np.asarray(x)
         output = 0
         lo = hi = 0
         for transform in self._transforms:
@@ -418,6 +420,7 @@ class ComposedTransform(Transform):
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
+        x = np.asarray(x)
         if np.product(x.shape) == self._n_parameters:
             x = x.reshape((self._n_parameters,))
             single = True
@@ -436,6 +439,7 @@ class ComposedTransform(Transform):
 
     def to_search(self, p):
         """ See :meth:`Transform.to_search()`. """
+        p = np.asarray(p)
         if np.product(p.shape) == self._n_parameters:
             p = p.reshape((self._n_parameters,))
             single = True
