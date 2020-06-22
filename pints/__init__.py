@@ -35,7 +35,7 @@ def _load_version_int():
 
 __version_int__ = _load_version_int()
 __version__ = '.'.join([str(x) for x in __version_int__])
-if sys.version_info[0] < 3:     # pragma: no cover
+if sys.version_info[0] < 3:     # pragma: no python 3 cover
     # Before Python3, list comprehension iterators leaked, which would have
     # created a global ``pints.x`` at this point.
     del(x)
