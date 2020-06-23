@@ -429,6 +429,8 @@ class MCMCController(object):
         """
         # Note: Not copying this, for efficiency. At this point we're done with
         # the chains, so nothing will go wrong if the user messes the array up.
+        # Note: Any inverse transform for parameters should be performed before
+        # stored to memory.
         return self._samples
 
     def initial_phase_iterations(self):
@@ -765,10 +767,17 @@ class MCMCController(object):
             # Write samples to disk
             if self._chains_in_memory:
                 for i, chain_logger in enumerate(chain_loggers):
-                    chain_logger.log(*samples[i][iteration])
+                    if self._transform:
+                        chain_logger.log(*self._transform.to_model(
+                            samples[i][iteration]))
+                    else:
+                        chain_logger.log(*samples[i][iteration])
             else:
                 for i, chain_logger in enumerate(chain_loggers):
-                    chain_logger.log(*samples[i])
+                    if self._transform:
+                        chain_logger.log(*self._transform.to_model(samples[i]))
+                    else:
+                        chain_logger.log(*samples[i])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -804,18 +813,13 @@ class MCMCController(object):
             if self._log_to_screen:
                 print(halt_message)
 
-        # Store generated chains in memory
-        if self._chains_in_memory:
-            self._samples = samples
-
         # Store evaluations in memory
         if self._evaluations_in_memory:
             self._evaluations = evaluations
 
-        # Return generated chains
+        # Inverse transform to model space if transform is provided
         if self._chains_in_memory:
             if self._transform:
-                # Inverse transform to model space if transform is provided
                 n_c, n_s, n_p = samples.shape
                 samples_user = np.zeros((n_c, n_s, n_p))
                 for c in range(n_c):
@@ -826,6 +830,12 @@ class MCMCController(object):
                 samples_user = samples
         else:
             samples_user = None
+
+        # Store generated chains in memory
+        if self._chains_in_memory:
+            self._samples = samples_user
+
+        # Return generated chains
         return samples_user
 
     def sampler(self):
