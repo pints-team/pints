@@ -361,7 +361,7 @@ class OptimisationController(object):
             # Therefore the standard deviation sigma0 can be transformed using
             #
             # std(x) = diag(J^{-1}(E(x))) * sigma0
-            # 
+            #
             if sigma0 is not None:
                 jacobian = np.linalg.pinv(transform.jacobian(x0))
                 sigma0 *= np.diagonal(jacobian)
