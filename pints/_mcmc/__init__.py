@@ -314,10 +314,26 @@ class MCMCController(object):
         if transform:
             log_pdf = transform.apply_log_pdf(log_pdf)
             x0 = [transform.to_search(x) for x in x0]
-            n_parameters = log_pdf.n_parameters()
+            #
+            # Following Eq. 5 in
+            # http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
+            #
+            # For transformation x = g(p) and Jacobian J(x) = d/dx g^{-1}(x),
+            # then the covariance matrices C(.) for x and p follow
+            #
+            # C(x) = (d/dp g(E(p))) C(p) (d/dp g(E(p)))^T
+            #        = J^{-1}(E(x)) C(p) J^{-1}(E(x))^T
+            #
+            # Using the property that J^{-1} = dg/dp, from the inverse function
+            # theorem, i.e. the matrix inverse of the Jacobian matrix of an
+            # invertible function is the Jacobian matrix of the inverse
+            # function.
+            #
             if sigma0 is not None:
-                sigma0 = np.asarray(sigma0)
                 # Transform sigma0 if provided
+                sigma0 = np.asarray(sigma0)
+                n_parameters = log_pdf.n_parameters()
+                # Make sure sigma0 is a (covariance) matrix
                 if np.product(sigma0.shape) == n_parameters:
                     # Convert from 1d array
                     sigma0 = sigma0.reshape((n_parameters,))
@@ -325,6 +341,7 @@ class MCMCController(object):
                 else:
                     # Check if 2d matrix of correct size
                     sigma0 = sigma0.reshape((n_parameters, n_parameters))
+                # Transform sigma0
                 jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
                 sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)
         self._transform = transform
