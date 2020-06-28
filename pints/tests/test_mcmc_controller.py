@@ -164,7 +164,7 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        self.assertTrue((chains > 0).all())  # Make sure inverse transformed
+        self.assertTrue(np.all(chains > 0))  # Test chains inverse transformed
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
@@ -301,7 +301,7 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
-        self.assertTrue((chains > 0).all())  # Make sure inverse transformed
+        self.assertTrue(np.all(chains > 0))  # Test chains inverse transformed
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
                              method=meth, transform=logt)
@@ -754,6 +754,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                 chains2 = np.array(io.load_samples(cpath, self.nchains))
                 self.assertTrue(np.all(chains1 == chains2))
 
+                # Test files contain inverse transformed samples
+                self.assertTrue(np.all(chains2 > 0))
+
             text = c.text()
             self.assertIn('Writing chains to', text)
             self.assertIn('chain_0.csv', text)
@@ -872,6 +875,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                 chains2 = np.array(io.load_samples(cpath, self.nchains))
                 self.assertEqual(
                     chains2.shape, (self.nchains, 20, len(self.xs)))
+
+                # Test files contain inverse transformed samples
+                self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()
             self.assertIn('Writing chains to', text)
