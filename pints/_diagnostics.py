@@ -227,9 +227,10 @@ def rhat(chains, warm_up=0.0):
     # Compute R^hat
     try:
         rhat = np.sqrt((n - 1) / n + b / (w * n))
-    except ZeroDivisionError:
-        raise ValueError(
-            'Vanishing mean within-chain variance.')
+    except ZeroDivisionError as e:
+        raise ZeroDivisionError(
+            'Vanishing mean within-chain variance leads to :',
+            e)
 
     return rhat
 
