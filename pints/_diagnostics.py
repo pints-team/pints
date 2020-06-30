@@ -120,31 +120,6 @@ def _between(chains):
     return b
 
 
-def reorder(param_number, chains):
-    """
-    Reorders chains for a given parameter into a more useful format for
-    calculating rhat.
-    """
-    # split chains in two
-    a_len = int(chains.shape[1] / 2)
-    chains_first = [chain[:a_len, :] for chain in chains]
-    chains_second = [chain[a_len:, :] for chain in chains]
-    chains = chains_first + chains_second
-    num_chains = len(chains)
-    samples = [chains[i][:, param_number] for i in range(0, num_chains)]
-    return samples
-
-
-def reorder_all_params(chains):
-    """
-    Reorders chains for all parameters into a more useful format for
-    calculating rhat.
-    """
-    num_params = chains[0].shape[1]
-    samples_all = [reorder(i, chains) for i in range(0, num_params)]
-    return samples_all
-
-
 def rhat(chains, warm_up=0.0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
@@ -254,23 +229,10 @@ def rhat(chains, warm_up=0.0):
 
     # Compute R^hat
     try:
-        rhat = np.sqrt((w + (b - w)) / (w * n))
+        rhat = np.sqrt((n - 1) / n + b / (w * n))
     except ZeroDivisionError:
         raise ValueError(
             'Vanishing mean within-chain variance.')
 
     return rhat
 
-
-def rhat_all_params(chains, warm_up):
-    r"""
-    Calculates :math:`\hat{R} = \sqrt{(W(n - 1) / n + (1 / n) B) / W}` as per
-    [1]_ for all parameters. It does this after splitting each chain into two.
-
-    References
-    ----------
-    ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
-    """
-    samples_all = reorder_all_params(chains)
-    rhat_all = list(map(lambda x: rhat(x), samples_all))
-    return rhat_all
