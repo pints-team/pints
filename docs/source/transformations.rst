@@ -13,11 +13,11 @@ easier to deal with mathematically.
 To perform optimisation or sampling in a transformed space, users can choose to
 write their :class:`pints.ForwardModel` in "search space" directly.
 But an alternative is to write the ``ForwardModel`` in model parameters, and
-pass a :class:`Transform` object to e.g. an :classs:`OptimisationController` or :class:`MCMCController`.
+pass a :class:`Transform` object to e.g. an :class:`OptimisationController` or :class:`MCMCController`.
 
 Parameter transformation can be useful in many situations, for example
-transforming from a constrainted parameter space to some unconstrained variable
-search space using :class:`RectangularBoundariesTransform` leads to crucial
+transforming from a constrainted parameter space to an unconstrained search
+space using :class:`RectangularBoundariesTransform` leads to crucial
 performance improvements for many methods.
 
 Example::
