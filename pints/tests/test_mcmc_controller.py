@@ -547,7 +547,6 @@ class TestMCMCController(unittest.TestCase):
     def test_post_run_statistics(self):
         # Test method to obtain post-run statistics
 
-
         # Set up test problem
         x0 = np.array(self.real_parameters) * 1.05
         x1 = np.array(self.real_parameters) * 1.15
