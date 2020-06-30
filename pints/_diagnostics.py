@@ -72,7 +72,7 @@ def _within(chains):
 
     Parameters
     ----------
-    chains {np.ndarray, shape=(m, n)}
+    chains : np.ndarray of shape (m, n) or (m, n, p)
         A numpy array with the :math:`n` samples for `:math:`m` chains.
     """
     # Compute unbiased within-chain variance estimate
@@ -102,7 +102,7 @@ def _between(chains):
 
     Parameters
     ----------
-    chains {np.ndarray, shape=(m, n)}
+    chains : np.ndarray of shape (m, n) or (m, n, p)
         A numpy array with the :math:`n` samples for `:math:`m` chains.
     """
     # Get number of samples
@@ -124,25 +124,6 @@ def rhat(chains, warm_up=0.0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
     posterior according to [1]_.
-
-    Parameters
-    ----------
-    chains {np.ndarray, shape=(m, n), optional: shape=(m, n, p)}
-        A numpy array with the :math:`n` samples for `:math:`m` chains.
-        Optionally the :math:`\hat{R}` for :math:`p` parameters can be computed
-        by passing a numpy array with :math:`m` chains of length :math:`n`
-        for :math:`p` parameters.
-    warm_up {float}
-        First portion of each chain that will not be used for the
-        computation of :math:`\hat{R}`.
-
-    Returns
-    -------
-    rhat {float or np.ndarray, shape=(p,)}
-        :math:`\hat{R}` of the posteriors for each parameter.
-
-    Background
-    ----------
 
     :math:`\hat{R}` diagnoses convergence by checking mixing and stationarity
     of :math:`m` chains (at least two, :math:`m\geq 2`). To diminish the
@@ -181,7 +162,7 @@ def rhat(chains, warm_up=0.0):
     .. math::
         B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2.
 
-    Here, :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
+    Here, :math:`\psi _{ij}` is the jth sample of the ith
     chain, :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
     chain mean of the parameter :math:`\psi` and
     :math:`\bar{\psi } = \sum _{j=1}^{m'}\bar{\psi} _{j}/m'` is the between
@@ -190,6 +171,22 @@ def rhat(chains, warm_up=0.0):
     References
     ----------
     ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
+
+    Parameters
+    ----------
+    chains : np.ndarray of shape (m, n) or (m, n, p)
+        A numpy array with :math:`n` samples for each of :math:`m` chains.
+        Optionally the :math:`\hat{R}` for :math:`p` parameters can be computed
+        by passing a numpy array with :math:`m` chains of length :math:`n`
+        for :math:`p` parameters.
+    warm_up : float
+        First portion of each chain that will not be used for the
+        computation of :math:`\hat{R}`.
+
+    Returns
+    -------
+    rhat : float or np.ndarray of shape (p,)
+        :math:`\hat{R}` of the posteriors for each parameter.
     """
     if not (chains.ndim == 2 or chains.ndim == 3):
         raise ValueError(
