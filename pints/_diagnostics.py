@@ -229,16 +229,12 @@ def rhat(chains, warm_up=0.0):
     n = chains.shape[1]
 
     # Split chains in half
-    n = int(n // 2)  # new length of chains
+    n = n // 2  # new length of chains
     if n < 2:
         raise ValueError(
             'Number of samples per chain after warm-up and chain splitting is '
             '%d. Method needs at least 2 samples per chain.' % n)
-    chains = np.vstack(chains[:n], chains[-n:])
-
-    if n <= 1:
-        raise ValueError(
-            'There length of the ')
+    chains = np.vstack([chains[:n], chains[-n:]])
 
     # Compute mean within-chain variance
     w = _within(chains)
@@ -250,6 +246,8 @@ def rhat(chains, warm_up=0.0):
     try:
         rhat = np.sqrt((w + (b - w)) / (w * n))
     except ZeroDivisionError:
+        raise ValueError(
+            'Vanishing mean within-chain variance.')
 
     return rhat
 
