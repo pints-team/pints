@@ -79,7 +79,7 @@ def _within(chains):
     within_chain_var = np.var(chains, axis=1, ddof=1)
 
     # Compute mean-within chain variance
-    w = np.mean(within_chain_var)
+    w = np.mean(within_chain_var, axis=0)
 
     return w
 
@@ -112,7 +112,7 @@ def _between(chains):
     within_chain_means = np.mean(chains, axis=1)
 
     # Compute variance across chains of within-chain means
-    between_chain_var = np.var(within_chain_means, ddof=1)
+    between_chain_var = np.var(within_chain_means, axis=0, ddof=1)
 
     # Weight variance with number of samples per chain
     b = n * between_chain_var
@@ -148,15 +148,23 @@ def reorder_all_params(chains):
 def rhat(chains, warm_up=0.0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
-    posterior of a model parameter according to [1]_.
+    posterior according to [1]_.
 
     Parameters
     ----------
-    chains {np.ndarray, shape=(m, n)}
+    chains {np.ndarray, shape=(m, n), optional: shape=(m, n, p)}
         A numpy array with the :math:`n` samples for `:math:`m` chains.
+        Optionally the :math:`\hat{R}` for :math:`p` parameters can be computed
+        by passing a numpy array with :math:`m` chains of length :math:`n`
+        for :math:`p` parameters.
     warm_up {float}
         First portion of each chain that will not be used for the
         computation of :math:`\hat{R}`.
+
+    Returns
+    -------
+    rhat {float or np.ndarray, shape=(p,)}
+        :math:`\hat{R}` of the posteriors for each parameter.
 
     Background
     ----------
@@ -208,10 +216,12 @@ def rhat(chains, warm_up=0.0):
     ----------
     ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
     """
-    if chains.ndim != 2:
+    if not (chains.ndim == 2 or chains.ndim == 3):
         raise ValueError(
-            'Dimension of chains is %d. Method computes R^hat for one '
-            'parameter and therefore only accepts 2 dimensional arrays.')
+            'Dimension of chains is %d. ' % chains.ndim
+            + 'Method computes R^hat for one '
+            ' or multiple parameters and therefore only accepts 2 or 3 '
+            'dimensional arrays.')
     if chains.shape[0] < 2:
         raise ValueError(
             'Number of chains is %d. Method needs at least 2 chains.' %
@@ -224,7 +234,7 @@ def rhat(chains, warm_up=0.0):
     # Get number of samples
     n = chains.shape[1]
 
-    # Exclude warm up
+    # Exclude warm-up
     chains = chains[:, int(n * warm_up):]
     n = chains.shape[1]
 
@@ -234,7 +244,7 @@ def rhat(chains, warm_up=0.0):
         raise ValueError(
             'Number of samples per chain after warm-up and chain splitting is '
             '%d. Method needs at least 2 samples per chain.' % n)
-    chains = np.vstack([chains[:n], chains[-n:]])
+    chains = np.vstack([chains[:, :n], chains[:, -n:]])
 
     # Compute mean within-chain variance
     w = _within(chains)
@@ -252,7 +262,7 @@ def rhat(chains, warm_up=0.0):
     return rhat
 
 
-def rhat_all_params(chains):
+def rhat_all_params(chains, warm_up):
     r"""
     Calculates :math:`\hat{R} = \sqrt{(W(n - 1) / n + (1 / n) B) / W}` as per
     [1]_ for all parameters. It does this after splitting each chain into two.
