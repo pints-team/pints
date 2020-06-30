@@ -10,7 +10,7 @@ relevant code.
 ## Before you get started
 - [Using Python](using-python.md)
 - [Installing PINTS](../README.md#installing-pints)
-- [An introduction to optimisation and Bayesian inference](optimisation/beginners-tutorial.ipynb)
+- [An introduction to Bayesian inference and optimisation](stats/beginners-tutorial.ipynb)
 
 
 ## Getting started
