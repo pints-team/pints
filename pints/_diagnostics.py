@@ -59,15 +59,15 @@ def _within(chains):
     r"""
     Calculates mean within-chain variance.
 
-    The mean within :math:`W` of the :math:`m` chains of length :math:`n` is
-    defined as
+    The mean within chain variance :math:`W` of :math:`m` chains of length
+    :math:`n` is defined as
 
     .. math::
-        W = \frac{1}{m'}\sum _{j=1}^{m'}s_j^2\quad \text{where}\quad
-        s_j^2=\frac{1}{n'-1}\sum _{i=1}^n'(\psi _{ij} - \bar{\psi} _j)^2.
+        W = \frac{1}{m}\sum _{j=1}^{m}s_j^2\quad \text{where}\quad
+        s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\psi _{ij} - \bar{\psi} _j)^2.
 
     Here, :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
-    chain and :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
+    chain and :math:`\bar{\psi _j}=\sum _{i=1}^{n}\psi _{ij}/n` is the within
     chain mean of the parameter :math:`\psi`.
 
     Parameters
@@ -84,15 +84,40 @@ def _within(chains):
     return w
 
 
-def between(samples):
+def _between(chains):
+    r"""
+    Calculates mean between-chain variance.
+
+    The mean between-chain variance :math:`W` of :math:`m` chains of length
+    :math:`n` is defined as
+
+    .. math::
+        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2,
+
+    where :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
+    chain, :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
+    chain mean of the parameter :math:`\psi`, and
+    :math:`\bar{\psi } = \sum _{j=1}^{m}\bar{\psi} _{j}/m` is the between
+    chain mean of the within chain means.
+
+    Parameters
+    ----------
+    chains {np.ndarray, shape=(m, n)}
+        A numpy array with the :math:`n` samples for `:math:`m` chains.
     """
-    Calculates between-chain variance.
-    """
-    mu = list(map(lambda x: np.mean(x), samples))
-    mu_overall = np.mean(mu)
-    m = len(samples)
-    t = len(samples[0])
-    return (t / (m - 1.0)) * np.sum((mu - mu_overall) ** 2)
+    # Get number of samples
+    n = chains.shape[1]
+
+    # Compute within-chain mean
+    within_chain_means = np.mean(chains, axis=1)
+
+    # Compute variance across chains of within-chain means
+    between_chain_var = np.var(within_chain_means, ddof=1)
+
+    # Weight variance with number of samples per chain
+    b = n * between_chain_var
+
+    return b
 
 
 def reorder(param_number, chains):
@@ -168,7 +193,7 @@ def rhat(chains, warm_up=0.0):
 
     .. math::
         W = \frac{1}{m'}\sum _{j=1}^{m'}s_j^2\quad \text{where}\quad
-        s_j^2=\frac{1}{n'-1}\sum _{i=1}^n'(\psi _{ij} - \bar{\psi} _j)^2,
+        s_j^2=\frac{1}{n'-1}\sum _{i=1}^{n'}(\psi _{ij} - \bar{\psi} _j)^2,
 
     .. math::
         B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2.
@@ -203,14 +228,30 @@ def rhat(chains, warm_up=0.0):
     chains = chains[:, int(n * warm_up):]
     n = chains.shape[1]
 
+    # Split chains in half
+    n = int(n // 2)  # new length of chains
+    if n < 2:
+        raise ValueError(
+            'Number of samples per chain after warm-up and chain splitting is '
+            '%d. Method needs at least 2 samples per chain.' % n)
+    chains = np.vstack(chains[:n], chains[-n:])
+
+    if n <= 1:
+        raise ValueError(
+            'There length of the ')
+
     # Compute mean within-chain variance
-    W = _within(chains)
+    w = _within(chains)
 
     # Compute mean between-chain variance
-    B = between(chains)
+    b = _between(chains)
 
-    # Check asnda
-    return np.sqrt((W + (1.0 / n) * (B - W)) / W)
+    # Compute R^hat
+    try:
+        rhat = np.sqrt((w + (b - w)) / (w * n))
+    except ZeroDivisionError:
+
+    return rhat
 
 
 def rhat_all_params(chains):
