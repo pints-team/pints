@@ -4,16 +4,21 @@ Transformations
 
 .. currentmodule:: pints
 
-:class:`Transform` are objects that provide some convenience parameter
-transformation from the model parameter space to a search space. It can be
-passed to the :class:`OptimisationController` and :class:`MCMCController` when
-doing optimisation and inference.
+:class:`Transform` objects provide methods to transform between different
+representations of a parameter space; for example from a "model space" where
+parameters have units and some physical counterpart to a "search space" where
+parameters are non-dimensionalised and less-recognisable to the modeller but
+easier to deal with mathematically.
 
-Parameter transformation is important in many situations, for example
+To perform optimisation or sampling in a transformed space, users can choose to
+write their :class:`pints.ForwardModel` in "search space" directly.
+But an alternative is to write the ``ForwardModel`` in model parameters, and
+pass a :class:`Transform` object to e.g. an :classs:`OptimisationController` or :class:`MCMCController`.
+
+Parameter transformation can be useful in many situations, for example
 transforming from a constrainted parameter space to some unconstrained variable
-search space using :class:`RectangularBoundariesTransform`. Once the
-`Transform` object is defined and passed to a controller, all the
-transformation work is done behind the scenes by the controller.
+search space using :class:`RectangularBoundariesTransform` leads to crucial
+performance improvements for many methods.
 
 Example::
 
