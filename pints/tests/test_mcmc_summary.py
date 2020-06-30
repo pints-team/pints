@@ -66,7 +66,6 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_log_to_screen(False)
 
         cls.chains = mcmc.run()
-        cls.time = mcmc.time()
 
     def test_errors(self):
         # test errors occur when incorrectly calling MCMCSummary
