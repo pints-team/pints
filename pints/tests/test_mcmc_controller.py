@@ -544,6 +544,33 @@ class TestMCMCController(unittest.TestCase):
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
 
+    def test_post_run_statistics(self):
+        # Test method to obtain post-run statistics
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+
+        mcmc = pints.MCMCController(self.log_posterior, len(xs), xs)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(10)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_file(False)
+
+        # Before run, methods return None
+        self.assertIsNone(mcmc.time())
+
+        t = pints.Timer()
+        mcmc.run()
+        t_upper = t.time()
+
+        # Check post-run output
+        self.assertIsInstance(mcmc.time(), float)
+        self.assertGreater(mcmc.time(), 0)
+        self.assertGreater(t_upper, mcmc.time())
+
 
 class TestMCMCControllerLogging(unittest.TestCase):
     """

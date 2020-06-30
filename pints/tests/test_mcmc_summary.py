@@ -8,7 +8,6 @@
 #
 from __future__ import print_function, unicode_literals
 import numpy as np
-import time
 import unittest
 
 import pints
@@ -66,10 +65,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_initial_phase_iterations(50)
         mcmc.set_log_to_screen(False)
 
-        start = time.time()
         cls.chains = mcmc.run()
-        end = time.time()
-        cls.time = end - start
 
     def test_errors(self):
         # test errors occur when incorrectly calling MCMCSummary

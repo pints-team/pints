@@ -241,6 +241,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertIsInstance(opt, pints.OptimisationController)
 
     def test_post_run_statistics(self):
+
         # Test the methods to return statistics, post-run.
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
@@ -251,12 +252,23 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(50, 1e-11)
 
         np.random.seed(123)
+
+        # Before run methods return None
+        self.assertIsNone(opt.iterations())
+        self.assertIsNone(opt.evaluations())
+        self.assertIsNone(opt.time())
+
+        t = pints.Timer()
         opt.run()
+        t_upper = t.time()
 
         self.assertEqual(opt.iterations(), 75)
         self.assertEqual(opt.evaluations(), 450)
-        t = opt.time()
-        self.assertTrue(0 < t < 5)
+
+        # Time after run is greater than zero
+        self.assertIsInstance(opt.time(), float)
+        self.assertGreater(opt.time(), 0)
+        self.assertGreater(t_upper, opt.time())
 
 
 if __name__ == '__main__':
