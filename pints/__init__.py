@@ -183,7 +183,6 @@ from ._optimisers._xnes import XNES
 from ._diagnostics import (
     effective_sample_size,
     rhat,
-    rhat_all_params,
 )
 
 

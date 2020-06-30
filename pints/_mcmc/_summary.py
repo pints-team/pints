@@ -151,7 +151,7 @@ class MCMCSummary(object):
             stacked, [2.5, 25, 50, 75, 97.5], axis=0)
 
         # Rhat
-        self._rhat = pints.rhat_all_params(self._chains)
+        self._rhat = pints.rhat(self._chains)
 
         # Effective sample size
         self._ess = np.zeros(self._n_parameters)
