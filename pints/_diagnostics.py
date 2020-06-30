@@ -55,13 +55,33 @@ def effective_sample_size(samples):
     return [ess_single_param(samples[:, i]) for i in range(0, n_params)]
 
 
-def within(samples):
+def _within(chains):
+    r"""
+    Calculates mean within-chain variance.
+
+    The mean within :math:`W` of the :math:`m` chains of length :math:`n` is
+    defined as
+
+    .. math::
+        W = \frac{1}{m'}\sum _{j=1}^{m'}s_j^2\quad \text{where}\quad
+        s_j^2=\frac{1}{n'-1}\sum _{i=1}^n'(\psi _{ij} - \bar{\psi} _j)^2.
+
+    Here, :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
+    chain and :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
+    chain mean of the parameter :math:`\psi`.
+
+    Parameters
+    ----------
+    chains {np.ndarray, shape=(m, n)}
+        A numpy array with the :math:`n` samples for `:math:`m` chains.
     """
-    Calculates within-chain variance.
-    """
-    mu = list(map(lambda x: np.var(x, ddof=1), samples))
-    W = np.mean(mu)
-    return W
+    # Compute unbiased within-chain variance estimate
+    within_chain_var = np.var(chains, axis=1, ddof=1)
+
+    # Compute mean-within chain variance
+    w = np.mean(within_chain_var)
+
+    return w
 
 
 def between(samples):
@@ -100,31 +120,42 @@ def reorder_all_params(chains):
     return samples_all
 
 
-def rhat(chains):
+def rhat(chains, warm_up=0.0):
     r"""
-    Returns the convergence measure :math:`\hat{R}` according to [1]_.
+    Returns the convergence measure :math:`\hat{R}` for the approximate
+    posterior of a model parameter according to [1]_.
+
+    Parameters
+    ----------
+    chains {np.ndarray, shape=(m, n)}
+        A numpy array with the :math:`n` samples for `:math:`m` chains.
+    warm_up {float}
+        First portion of each chain that will not be used for the
+        computation of :math:`\hat{R}`.
+
+    Background
+    ----------
 
     :math:`\hat{R}` diagnoses convergence by checking mixing and stationarity
-    of :math:`M` chains (at least two, :math:`M\geq 2`). To diminish the
-    influence of starting values, the first half of each chain is considered
-    as warm up and does not enter the calculation. Subsequently, the truncated
-    chains are split in half yet again, and the mean of the variances within
-    and between the resulting chains are computed. Based on the mean within
-    variance :math:`W` and the mean between variance :math:`B` (definition
-    below) is an estimator of the marginal posterior variance constructed
+    of :math:`m` chains (at least two, :math:`m\geq 2`). To diminish the
+    influence of starting values, the first portion of each chain can be
+    excluded from the computation. Subsequently, the truncated
+    chains are split in half, resulting in a total number of :math:`m'=2m`
+    chains of length :math:`n'=(1-\text{warm_up})n/2`. The mean of the
+    variances within and between the resulting chains are computed, :math:`W`
+    and :math:`B` respectively. Based on those variances an estimator of the
+    marginal posterior variance is constructed
 
     .. math::
-        \widehat{\text{var}}^+ = \frac{n-1}{n}W + \frac{1}{n}B,
+        \widehat{\text{var}}^+ = \frac{n'-1}{n'}W + \frac{1}{n'}B,
 
-    where :math:`n` is the length of the individual chains (i.e. :math:`4n` is
-    the length of the original chains). The estimator overestimates the
-    variance of the marginal posterior if the chains are not well mixed and
-    stationary, but is unbiased if the original chains equal the target
-    distribution. At the same time, the mean within variance :math:`W`
-    underestimates the marginal posterior variance for finite :math:`n`, but
-    converges to the true variance for :math:`n\rightarrow \infty`. By
-    comparing :math:`\widehat{\text{var}}^+` and :math:`W` the mixing and
-    stationarity of the chains can be quantified
+    The estimator overestimates the variance of the marginal posterior
+    if the chains are not well mixed and stationary, but is unbiased if the
+    original chains equal the target distribution. At the same time, the mean
+    within variance :math:`W` underestimates the marginal posterior variance
+    for finite :math:`n`, but converges to the true variance for
+    :math:`n\rightarrow \infty`. By comparing :math:`\widehat{\text{var}}^+`
+    and :math:`W` the mixing and stationarity of the chains can be quantified
 
     .. math::
         \hat{R} = \sqrt{\frac{\widehat{\text{var}}^+}{W}}.
@@ -132,25 +163,54 @@ def rhat(chains):
     For well mixed and stationary chains :math:`\hat{R}` will be close to one.
 
     The mean within :math:`W` and mean between :math:`B` variance of the
-    :math:`m=2M` chains of length :math:`n` (original length of the chains
-    :math:`4n`) is defined as
+    :math:`m'=2m` chains of length :math:`n'=(1-\text{warm_up})n/2` are defined
+    as
 
     .. math::
-        W = \frac{1}{m}\sum _{j=1}^{m}s_j^2\quad \text{where}\quad
-        s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\psi _{ij} - \bar{\psi} _j)^2,
+        W = \frac{1}{m'}\sum _{j=1}^{m'}s_j^2\quad \text{where}\quad
+        s_j^2=\frac{1}{n'-1}\sum _{i=1}^n'(\psi _{ij} - \bar{\psi} _j)^2,
 
     .. math::
-        B = \frac{n}{m-1}\sum _{j=1}^m(\bar{\psi} _j - \bar{\psi})^2.
+        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2.
 
-    Here :math:`\bar{\psi _j}=\sum _{i=1}^n\psi _{ij}/n` is the within chain
-    mean of the parameter :math:`\psi` and
-    :math:`\bar{\psi _j} = \sum _{j=1}^m\bar{\psi} _{j}/m` is the between
+    Here, :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
+    chain, :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
+    chain mean of the parameter :math:`\psi` and
+    :math:`\bar{\psi } = \sum _{j=1}^{m'}\bar{\psi} _{j}/m'` is the between
     chain mean of the within chain means.
+
+    References
+    ----------
+    ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
     """
-    W = within(chains)
+    if chains.ndim != 2:
+        raise ValueError(
+            'Dimension of chains is %d. Method computes R^hat for one '
+            'parameter and therefore only accepts 2 dimensional arrays.')
+    if chains.shape[0] < 2:
+        raise ValueError(
+            'Number of chains is %d. Method needs at least 2 chains.' %
+            chains.shape[0])
+    if warm_up > 1:
+        raise ValueError(
+            'warum_up is set to %f. warm_up only takes values in [0,1].' %
+            warm_up)
+
+    # Get number of samples
+    n = chains.shape[1]
+
+    # Exclude warm up
+    chains = chains[:, int(n * warm_up):]
+    n = chains.shape[1]
+
+    # Compute mean within-chain variance
+    W = _within(chains)
+
+    # Compute mean between-chain variance
     B = between(chains)
-    t = len(chains[0])
-    return np.sqrt((W + (1.0 / t) * (B - W)) / W)
+
+    # Check asnda
+    return np.sqrt((W + (1.0 / n) * (B - W)) / W)
 
 
 def rhat_all_params(chains):
