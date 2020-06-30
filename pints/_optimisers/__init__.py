@@ -602,20 +602,21 @@ class OptimisationController(object):
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
-        time_taken = timer.time()
+
+        # Stop timer
+        self._time = timer.time()
 
         # Log final values and show halt message
         if logging:
             logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
-            logger.log(time_taken)
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
         # Save post-run statistics
         self._evaluations = evaluations
         self._iterations = iteration
-        self._time = time_taken
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
@@ -744,7 +745,7 @@ class OptimisationController(object):
     def time(self):
         """
         Returns the time needed for the last run, in seconds, or ``None`` if
-        the controller hasn't ran yet.
+        the controller hasn't run yet.
         """
         return self._time
 
