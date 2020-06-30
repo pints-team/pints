@@ -562,10 +562,14 @@ class TestMCMCController(unittest.TestCase):
         # Before run, methods return None
         self.assertIsNone(mcmc.time())
 
-        # Check post-run output
+        t = pints.Timer()
         mcmc.run()
+        t_upper = t.time()
+
+        # Check post-run output
         self.assertIsInstance(mcmc.time(), float)
         self.assertGreater(mcmc.time(), 0)
+        self.assertGreater(t_upper, mcmc.time())
 
 
 class TestMCMCControllerLogging(unittest.TestCase):

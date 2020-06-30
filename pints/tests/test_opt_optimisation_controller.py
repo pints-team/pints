@@ -258,7 +258,9 @@ class TestOptimisationController(unittest.TestCase):
         self.assertIsNone(opt.evaluations())
         self.assertIsNone(opt.time())
 
+        t = pints.Timer()
         opt.run()
+        t_upper = t.time()
 
         self.assertEqual(opt.iterations(), 75)
         self.assertEqual(opt.evaluations(), 450)
@@ -266,6 +268,7 @@ class TestOptimisationController(unittest.TestCase):
         # Time after run is greater than zero
         self.assertIsInstance(opt.time(), float)
         self.assertGreater(opt.time(), 0)
+        self.assertGreater(t_upper, opt.time())
 
 
 if __name__ == '__main__':

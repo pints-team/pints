@@ -68,7 +68,9 @@ class TestNestedController(unittest.TestCase):
         # Time before run is None
         self.assertIsNone(sampler.time())
 
+        t = pints.Timer()
         samples = sampler.run()
+        t_upper = t.time()
 
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
@@ -76,6 +78,7 @@ class TestNestedController(unittest.TestCase):
         # Time after run is greater than zero
         self.assertIsInstance(sampler.time(), float)
         self.assertGreater(sampler.time(), 0)
+        self.assertGreater(t_upper, sampler.time())
 
     def test_construction_errors(self):
         # Tests if invalid constructor calls are picked up.
