@@ -225,3 +225,15 @@ def rhat(chains, warm_up=0.0):
 
     return rhat
 
+
+def rhat_all_params(chains):
+    """ Deprecated alias of :func:`rhat`. """
+    import logging
+    logging.basicConfig()
+    log = logging.getLogger(__name__)
+    log.warning(
+        'The function `pints.rhat_all_params` is deprecated.'
+        ' Please use `pints.rhat` instead.')
+
+    return rhat(chains)
+

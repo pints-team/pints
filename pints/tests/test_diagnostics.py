@@ -173,6 +173,26 @@ class TestDiagnostics(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, message[0], pints.rhat, chains, warm_up)
 
+    def test_rhat_all_params(self):
+        # Tests that rhat_all works
+
+        x = np.array([[[-1.10580535, 2.26589882],
+                       [0.35604827, 1.03523364],
+                       [-1.62581126, 0.47308597],
+                       [1.03999619, 0.58203464]],
+                      [[-1.04755457, -2.28410098],
+                       [0.17577692, -0.79433186],
+                       [-0.07979098, -1.87816551],
+                       [-1.39836319, 0.95119085]],
+                      [[-1.1182588, -0.34647435],
+                       [1.36928142, -1.4079284],
+                       [0.92272047, -1.49997615],
+                       [0.89531238, 0.63207977]]])
+
+        y = pints._diagnostics.rhat_all_params(x)
+        d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
+        self.assertLess(np.linalg.norm(d), 0.01)
+
 
 if __name__ == '__main__':
     unittest.main()
