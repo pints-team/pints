@@ -194,10 +194,6 @@ def rhat(chains, warm_up=0.0):
             + 'Method computes R^hat for one '
             ' or multiple parameters and therefore only accepts 2 or 3 '
             'dimensional arrays.')
-    if chains.shape[0] < 2:
-        raise ValueError(
-            'Number of chains is %d. Method needs at least 2 chains.' %
-            chains.shape[0])
     if warm_up > 1 or warm_up < 0:
         raise ValueError(
             'warum_up is set to %f. warm_up only takes values in [0,1].' %
