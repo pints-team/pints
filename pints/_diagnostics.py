@@ -192,7 +192,7 @@ def rhat(chains, warm_up=0.0):
         raise ValueError(
             'Dimension of chains is %d. ' % chains.ndim
             + 'Method computes R^hat for one '
-            ' or multiple parameters and therefore only accepts 2 or 3 '
+            'or multiple parameters and therefore only accepts 2 or 3 '
             'dimensional arrays.')
     if warm_up > 1 or warm_up < 0:
         raise ValueError(
@@ -208,10 +208,10 @@ def rhat(chains, warm_up=0.0):
 
     # Split chains in half
     n = n // 2  # new length of chains
-    if n < 2:
+    if n < 1:
         raise ValueError(
             'Number of samples per chain after warm-up and chain splitting is '
-            '%d. Method needs at least 2 samples per chain.' % n)
+            '%d. Method needs at least 1 sample per chain.' % n)
     chains = np.vstack([chains[:, :n], chains[:, -n:]])
 
     # Compute mean within-chain variance
@@ -221,12 +221,7 @@ def rhat(chains, warm_up=0.0):
     b = _between(chains)
 
     # Compute R^hat
-    try:
-        rhat = np.sqrt((n - 1.0) / n + b / (w * n))
-    except ZeroDivisionError as e:
-        raise ZeroDivisionError(
-            'Vanishing mean within-chain variance leads to :',
-            e)
+    rhat = np.sqrt((n - 1.0) / n + b / (w * n))
 
     return rhat
 
