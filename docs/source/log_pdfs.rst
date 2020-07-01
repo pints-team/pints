@@ -22,6 +22,7 @@ Overview:
 - :class:`LogPosterior`
 - :class:`ProblemLogLikelihood`
 - :class:`SumOfIndependentLogPDFs`
+- :class:`HierarchicalLogPosterior`
 
 
 .. autoclass:: LogPDF
@@ -33,4 +34,6 @@ Overview:
 .. autoclass:: ProblemLogLikelihood
 
 .. autoclass:: SumOfIndependentLogPDFs
+
+.. autoclass:: HierarchicalLogPosterior
 

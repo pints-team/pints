@@ -221,6 +221,210 @@ class LogPosterior(LogPDF):
         return self._n_parameters
 
 
+class HierarchicalLogPosterior(LogPDF):
+    r"""
+    Represents the log-posterior of an hierarchical model
+
+    .. math::
+        \log \mathbb{P}(\theta ,\psi ^{(1)}, \ldots ,\psi ^{(n)} |
+        D^{(1)}, \ldots ,D^{(n)}) =
+        \sum _{i=1}^n \log \mathbb{P}(y | \psi ^{(i)})
+        \Big | _{y = D^{(i)}} +
+        \sum _{i=1}^n \mathbb{P}(\psi ^{(i)} | \theta) + \mathbb{P}(\theta ) +
+        \text{constant},
+
+    where :math:`y` is the observable output of the hierarchical model whose
+    distribution is parametrised by :math:`\psi`. The top level parameters
+    :math:`\theta` determine the distribution of :math:`\psi`. We refer to
+    :math:`\sum _{i=1}^n\log\mathbb{P}(y|\psi ^{(i)})\Big |_{y=D^{(i)}}`
+    as the bottom-level log-likelihood, and to
+    :math:`\sum _{i=1}^n \mathbb{P}(\psi _i | \theta)` as the top-level
+    log-likelihood.
+
+    Hierarchical modelling of :math:`n` data sets :math:`D^{(1)}\ldots,D^{(n)}`
+    is the compromise between a pooled analysis, in which one set of model
+    parameters :math:`\psi` is assumed to be suitable for all observations, and
+    an unpooled analysis where an independent set of parameters
+    :math:`\psi ^{(i)}` is inferred for each data set :math:`D^{(i)}`. In
+    hierarchical models the :math:`\psi ^{(i)}` are assumed to
+    follow a top level distribution parameterised by parameters :math:`\theta`.
+
+    The :class:`HierarchicalLogPosterior` takes a list of bottom-level
+    log-likelihoods of length :math:`n`, a list of top-level likelihoods of
+    length :math:`b`, and a list of priors of length :math:`t`. The
+    bottom-level log-likelihoods represent the likelihoods for the
+    parameters :math:`\psi ^{(i)}` for each data set :math:`D^{(i)}`, where
+    each parameter set is of size :math:`b`. The top-level log-likelihoods
+    represent the likelihoods of the parameters :math:`\theta` for a given set
+    of bottom parameters :math:`\psi ^{(1)}, \ldots , \psi ^{(n)}`. For each of
+    the :math:`t` top-level parameters :math:`\theta` is a prior passed to the
+    hierarchical log-posterior class.
+
+    The log-posterior can be evaluated by passing an array-like object with
+    parameters (:math:`\theta, \psi ^{(1)}, \ldots , \psi ^{(n)}`) of length
+    :math:`t + nb`. Parameters are sorted such that top-level parameters come
+    before bottom-level parameters. The parameter order within the
+    log-likelihoods is preserved, and parameters from different
+    log-likelihoods are appended.
+
+    Optionally, a subset of the parameters :math:`\psi` can be chosen to be
+    pooled by passing a boolean array-like object ``non_hierarchical_params``
+    of length :math:`b` to the HierarchicalLogPosterior. ``True`` indicates
+    pooling. With :math:`p` pooled parameters the length of the parameters
+    reduces to :math:`t + p + n(b-p)`. Pooled parameters count as top-level
+    parameters, and therefore come before the remaing bottom-level parameters.
+
+    Extends :class:`LogPDF`
+
+    Parameters
+    ----------
+    bottom_log_likelihood : List of :class:`LogPDF` of length :math:`n`
+        A list of log-likelihoods of the parameters :math:`\psi^{(i)}` for each
+        data set :math:`D^{(1)}, \dots, D^{(n)}`. All log-likelihoods in the
+        list live on the same :math:`b`-dimensional parameter space.
+    top_log_likelihood : List of :class:`LogPrior` of length :math:`b`
+        A list of log-likelihoods of the parameters :math:`\theta` for a given
+        set of bottom-level parameters
+        :math:`\psi ^{(1)}, \ldots , \psi ^{(n)}`. If :math:`p` of the
+        :math:`b` bottom-level parameters are pooled, only :math:`b-p`
+        top-level likelihoods can be passed.
+    log_prior : List of :class:`LogPrior` of length :math:`t`
+        A list of log-priors for the top-level parameters :math:`\theta`. If
+        :math:`p` of the bottom-level parameters are pooled, :math:`t+p`
+        log-priors need to be passed to the HierarchicalPosterior.
+    non_hierarchical_params : Array-like boolean of length :math:`b`
+        Mask which determines which of the :math:`b` parameters :math:`\psi`
+        may be pooled.
+
+    Example
+    -------
+    ::
+
+        # Three schools problem: Assume data for the different schools has
+        # already been integrated into three pints.SingleOutputProblem with
+        # one parameter each for the mean score of the school.
+        #
+        # Bottom-level model is Normal distribution, where for illustration we
+        # choose to pool the variance parameter. Top-level model is also a
+        # Normal distribution.
+
+        # Bottom-level log-likelihoods
+        bottom_log_likelihood_school_one = pints.GaussianLogLikelihood(
+            problem_school_one)
+        bottom_log_likelihood_school_two = pints.GaussianLogLikelihood(
+            problem_school_two)
+        bottom_log_likelihood_school_three = pints.GaussianLogLikelihood(
+            problem_school_three)
+
+        # Top-level log-likelihoods
+        top_log_likelihood = pints.GaussianLogPrior(
+            mean=0, sd=1)  # Initial values have no effect
+
+        # Log-priors
+        bottom_variance_log_prior = pints.HalfCauchyLogPrior(
+            location=0, scale=5)
+        top_mean_log_prior = pints.NormalLogPrior(
+            mean=0, standatd_deviation=5)
+        top_variance_log_prior = pints.HalfCauchyLogPrior(
+            location=0, scale=5)
+
+        # Hierarchical log-posterior
+        log_posterior = pints.HierarchicalLogPosterior(
+            bottom_log_likelihood=[
+                bottom_log_likelihood_school_one,
+                bottom_log_likelihood_school_two,
+                bottom_log_likelihood_school_three],
+            top_log_likelihood=[
+                top_log_likelihood]
+            log_prior=[
+                bottom_variance_log_prior,
+                top_mean_log_prior,
+                top_variance_log_prior]
+            non_hierarchical_params=[
+                False, True])
+
+        # Evaluation of hierarchical log-prior
+        mock_top_mean = 2.5
+        mock_top_variance = 4
+        mock_bottom_variance = 1
+        mock_mean_school_one = 1
+        mock_mean_school_two = 2
+        mock_mean_school_three = 3
+
+        value = log_posterior([
+            mock_top_mean,
+            mock_top_variance,
+            mock_bottom_variance,
+            mock_mean_school_one,
+            mock_mean_school_two,
+            mock_mean_school_three])
+    """
+    def __init__(
+            self,
+            bottom_log_likelihood,
+            top_log_likelihood,
+            log_prior,
+            non_hierarchical_params=None):
+        super(HierarchicalLogPosterior, self).__init__()
+
+        # Check arguments
+        if not isinstance(log_prior, LogPrior):
+            raise ValueError(
+                'Given prior must extend pints.LogPrior.')
+        if not isinstance(log_likelihood, LogPDF):
+            raise ValueError(
+                'Given log_likelihood must extend pints.LogPDF.')
+
+        # Check dimensions
+        self._n_parameters = log_prior.n_parameters()
+        if log_likelihood.n_parameters() != self._n_parameters:
+            raise ValueError(
+                'Given log_prior and log_likelihood must have same dimension.')
+
+        # Store prior and likelihood
+        self._log_prior = log_prior
+        self._log_likelihood = log_likelihood
+
+        # Store -inf, for later use
+        self._minf = -float('inf')
+
+    def __call__(self, x):
+        # Evaluate log-prior first, assuming this is very cheap
+        log_prior = self._log_prior(x)
+        if log_prior == self._minf:
+            return self._minf
+        return log_prior + self._log_likelihood(x)
+
+    def evaluateS1(self, x):
+        """
+        Evaluates this LogPDF, and returns the result plus the partial
+        derivatives of the result with respect to the parameters.
+
+        The returned data has the shape ``(L, L')`` where ``L`` is a scalar
+        value and ``L'`` is a sequence of length ``n_parameters``.
+
+        *This method only works if the underlying :class:`LogPDF` and
+        :class:`LogPrior` implement the optional method
+        :meth:`LogPDF.evaluateS1()`!*
+        """
+        #TODO: Is there an optimisation to be made here?
+        a, da = self._log_prior.evaluateS1(x)
+        b, db = self._log_likelihood.evaluateS1(x)
+        return a + b, da + db
+
+    def log_likelihood(self):
+        """ Returns the :class:`LogLikelihood` used by this posterior. """
+        return self._log_likelihood
+
+    def log_prior(self):
+        """ Returns the :class:`LogPrior` used by this posterior. """
+        return self._log_prior
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
 class SumOfIndependentLogPDFs(LogPDF):
     """
     Calculates a sum of :class:`LogPDF` objects, all defined on the same

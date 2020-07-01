@@ -85,6 +85,7 @@ from ._log_pdfs import (
     LogPosterior,
     ProblemLogLikelihood,
     SumOfIndependentLogPDFs,
+    HierarchicalLogPosterior,
 )
 
 #
