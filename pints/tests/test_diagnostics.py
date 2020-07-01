@@ -123,6 +123,56 @@ class TestDiagnostics(unittest.TestCase):
         d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
         self.assertLess(np.linalg.norm(d), 0.01)
 
+    def test_bad_rhat_inputs(self):
+        # Tests whether exceptions are thrown should the input to rhat not be
+        # valid
+
+        # Pass chain of dimension 1
+        chains = np.empty(shape=1)
+        message = (
+            'Dimension of chains is 1. '
+            + 'Method computes R^hat for one '
+            'or multiple parameters and therefore only accepts 2 or 3 '
+            'dimensional arrays.')
+        self.assertRaisesRegex(
+            ValueError, message[0], pints.rhat, chains)
+
+        # Pass chain of dimension 4
+        chains = np.empty(shape=(1, 1, 1, 1))
+        message = (
+            'Dimension of chains is 4. '
+            + 'Method computes R^hat for one '
+            'or multiple parameters and therefore only accepts 2 or 3 '
+            'dimensional arrays.')
+        self.assertRaisesRegex(
+            ValueError, message[0], pints.rhat, chains)
+
+        # Pass bad warm-up arguments
+        chains = np.empty(shape=(2, 4))
+
+        # warm-up greater than 100%
+        warm_up = 1.1
+        message = (
+            'warum_up is set to 1.1. warm_up only takes values in [0,1].')
+        self.assertRaisesRegex(
+            ValueError, message[0], pints.rhat, chains, warm_up)
+
+        # Negative warm-up
+        warm_up = -0.1
+        message = (
+            'warum_up is set to -0.1. warm_up only takes values in [0,1].')
+        self.assertRaisesRegex(
+            ValueError, message[0], pints.rhat, chains, warm_up)
+
+        # Pass chains with too little samples (n<4)
+        chains = np.empty(shape=(1, 4))
+        warm_up = 0.9
+        message = (
+            'Number of samples per chain after warm-up and chain splitting is '
+            '1. Method needs at least 2 samples per chain.')
+        self.assertRaisesRegex(
+            ValueError, message[0], pints.rhat, chains, warm_up)
+
 
 if __name__ == '__main__':
     unittest.main()
