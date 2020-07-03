@@ -1,4 +1,4 @@
-name: Unit tests on multiple python versions
+name: Unit tests (python versions)
 
 on:
   push:
@@ -11,7 +11,6 @@ on:
 jobs:
 
   build-and-test:
-    name: unit test (python coverage)
     runs-on: ubuntu-latest
     strategy:
       matrix:
