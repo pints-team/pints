@@ -237,6 +237,89 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
 
+class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming a mixture of a base-level Gaussian
+    error and an heteroscedastic Gaussian error, with the magnitude of the
+    error variance scaling with the problem output
+
+    .. math::
+        X(t) = f(t; \theta) + (\sigma _{\text{base}} + \sigma _{\text{rel}}
+        f(t; \theta)^\eta ) \epsilon ,
+
+    where :math:`\epsilon` is a i.i.d. standard Gaussian random variable
+
+    .. math::
+        \epsilon \sim \mathcal{N}(0, 1).
+
+    For each output in the problem, this likelihood introduces three new scalar
+    parameters: a base-level scale :math:`\sigma _{\text{base}}`; an
+    exponential power :math:`\eta` ;and a scale relative to the model output
+    :math:`\sigma _{\text{rel}}`.
+
+    The resulting log-likelihood of a combined Gaussian error model is
+
+    .. math::
+        \log L(\theta, \sigma _{\text{base}}, \eta , \sigma _{\text{rel}} | X)
+        = -\frac{n}{2} \log 2 \pi
+        -\sum_{i=1}^{n}\log
+        \left( \sigma _{\text{base}} +
+        \sigma _{\text{rel}}f(t_i, \theta)^\eta \right)
+        -\frac{1}{2}\sum_{i=1}^{n}
+        \frac{(X(t_i) - f(t_i, \theta))^2}
+        {(\sigma _{\text{base}} + \sigma _{\text{rel}}f(t_i, \theta)^\eta)^2}
+
+    where :math:`n` is the number of time points in the series.
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    ``problem``
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem three parameters are added
+        (:math:`\sigma _{\text{base}}`, :math:`\eta`,
+        :math:`\sigma _{\text{rel}}`),
+        for a multi-output problem 3 times ``n_outputs`` parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(CombinedGaussianLogLikelihood, self).__init__(problem)
+
+        # Get number of times and number of noise parameters
+        self._nt = len(self._times)
+        self._np = 3 * problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + self._np
+
+        # Pre-calculate the constant part of the likelihood
+        self._logn = -0.5 * self._nt * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        # Get parameters from input
+        noise_parameters = x[-self._np:]
+        sigma_base = np.asarray(noise_parameters[0::3])
+        eta = np.asarray(noise_parameters[1::3])
+        sigma_rel = np.asarray(noise_parameters[2::3])
+
+        # Evaluate noise-free model
+        function_values = self._problem.evaluate(x[:-self._np])
+
+        # Compute total variance
+        sigma_tot = sigma_base + sigma_rel * function_values**eta
+
+        # Compute log-likelihood
+        log_likelihood = \
+            np.sum(self._logn
+                   - np.sum(np.log(sigma_tot), axis=0)
+                   - 0.5 * np.sum(
+                       (self._values - function_values)**2
+                       / sigma_tot, axis=0))
+
+        return log_likelihood
+
+
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
