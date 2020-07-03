@@ -319,6 +319,11 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         return log_likelihood
 
+        # Write tests for call
+
+        # Write sensitivity
+        # Write tests for that
+
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
