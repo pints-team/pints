@@ -673,8 +673,8 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         """
         See :meth:`LogPDF.evaluateS1()`.
 
-        *This method only works if the underlying :class:`LogPDF` object
-        implements the optional method :meth:`LogPDF.evaluateS1()`!*
+        This method only works if the underlying :class:`LogPDF` object
+        implements the optional method :meth:`LogPDF.evaluateS1()`!
         """
         a, b = self._log_likelihood.evaluateS1(x)
         return self._f * a, self._f * np.asarray(b)

@@ -169,16 +169,27 @@ class CauchyLogPrior(pints.LogPrior):
 
 class ComposedLogPrior(pints.LogPrior):
     r"""
-    N-dimensional LogPrior composed of one or more other Ni-dimensional
-    LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
-    log-prior assumes the input log-priors are all independent from each other.
+    N-dimensional :class:`LogPrior` composed of one or more other :math:`N_i`-
+    dimensional LogPriors, such that :math:`\sum _i N_i = N`. The evaluation
+    of the composed log-prior assumes the input log-priors are all independent
+    from each other.
 
-    For example, a composed log prior::
+    For example, a composed log prior
 
-        p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)
+        ``p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)``,
 
-    where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
-    itself.
+    where ``log_prior1``, ``log_prior2``, and ``log_prior3`` each have
+    dimension 1, 2 and 1, will have dimension 4.
+
+    The dimensionality of the individual priors does not have to be the same,
+    i.e. :math:`N_i\neq N_j` is allowed.
+
+    The input parameters of the :class:`ComposedLogPrior` have to be ordered in
+    the same way as the individual priors. In the above example the prior may
+    be evaluated by ``p(x)``, where:
+
+        ``x = [parameter1_log_prior1, parameter1_log_prior2,
+        parameter2_log_prior2, parameter1_log_prior3]``.
 
     Extends :class:`LogPrior`.
     """
