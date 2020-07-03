@@ -341,7 +341,7 @@ class HierarchicalLogPosterior(LogPDF):
                 top_mean_log_prior,
                 top_variance_log_prior]
             non_hierarchical_params=[
-                False, True])
+                False, True])  # Bottom-mean: hierarchical, -variance: pooled
 
         # Evaluation of hierarchical log-prior
         mock_top_mean = 2.5
