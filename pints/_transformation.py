@@ -62,6 +62,22 @@ class Transform(object):
         """
         return np.log(np.abs(np.linalg.det(self.jacobian(x))))
 
+    def log_jacobian_det_S1(self, x):
+        """
+        Computes the logarithm of the absolute value of the determinant of the
+        Jacobian, and returns the result plus the partial derivatives of the
+        result with respect to the parameters.
+
+        The returned data is a tuple ``(S, S')`` where ``S`` is a scalar value
+        and ``S'`` is a sequence of length ``n_parameters``.
+
+        Note that the derivative returned is of the determinant of the
+        Jacobian, so ``S' = d/dq S(q)``, evaluated at ``q=x``.
+
+        *This is an optional method.*
+        """
+        raise NotImplementedError
+
     def n_parameters(self):
         """
         Returns the dimension of the parameter space this transformation is
@@ -135,24 +151,32 @@ class TransformedLogPDF(pints.LogPDF):
         # Compute evaluateS1 of LogPDF in the model space
         logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
 
-        # Calculate the PDF change of variable, see self.__call__()
-        log_jacobian_det = self._transform.log_jacobian_det(x)
-        logpdf = logpdf_nojac + log_jacobian_det
+        # Compute log Jacobian and its derivatives
+        logjac, dlogjac = self._transform.log_jacobian_det_S1(x)
 
-        # Calculate the S1 change of variable. From Chain Rule Wikipedia:
-        # https://w.wiki/Us8
+        # Calculate the PDF change of variable, see self.__call__()
+        logpdf = logpdf_nojac + logjac
+
+        # Calculate the PDF S1 change of variable.
         #
         # For some transformation x = h(p) and its inverse p = g(x) applied
-        # to some function E
+        # to some distribution pi(p) where pi(x) = pi(p) |det(J)|, then
         #
-        # dE/dx_i = \sum_l dE/dp_l * dp_l/dx_i  (d denotes partial derivative)
+        # d/dx_i log(pi(x)) = d/dx_i log(|det(J)|) + d/dx_i log(pi(p))
         #
-        # Or in matrix form, for Jacobian matrix J
+        # Applying the chain rule (Wikipedia: https://w.wiki/Us8) to the second
+        # term d/dx_i log(pi(p))
+        #
+        # d/dx_i log(pi(p)) = \sum_l (d/dp_l log(pi(p))) * dp_l/dx_i
+        # (d denotes partial derivative)
+        #
+        # Or in matrix form, for Jacobian matrix J and E = log(pi(p))
         #
         # (dEdx)^T = J_(E.g) = J_E(p) J_g = (dEdp)^T J_g
         #
         jacobian = self._transform.jacobian(x)
         dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
+        dlogpdf += pints.vector(dlogjac)
 
         return logpdf, dlogpdf
 
