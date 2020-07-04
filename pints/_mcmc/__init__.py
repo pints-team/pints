@@ -290,18 +290,18 @@ class MCMCController(object):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
-    method : class
-        The class of :class:`MCMCSampler` to use. If no method is specified,
-        :class:`HaarioBardenetACMC` is used.
     transform : pints.Transform
         A :class:`pints.Transform` that transform the model parameter space to
         search space. If no transform is specified, search will be performed
         in the model space.
+    method : class
+        The class of :class:`MCMCSampler` to use. If no method is specified,
+        :class:`HaarioBardenetACMC` is used.
     """
 
     def __init__(
-            self, log_pdf, chains, x0, sigma0=None, method=None,
-            transform=None):
+            self, log_pdf, chains, x0, sigma0=None, transform=None,
+            method=None):
 
         # Check function
         if not isinstance(log_pdf, pints.LogPDF):
@@ -1058,7 +1058,8 @@ class MCMCSampling(MCMCController):
         log.warning(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
+                                           method=method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
@@ -1089,4 +1090,4 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method).run()
+        log_pdf, chains, x0, sigma0, method=method).run()
