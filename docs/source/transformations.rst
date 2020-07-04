@@ -16,7 +16,7 @@ But an alternative is to write the ``ForwardModel`` in model parameters, and
 pass a :class:`Transform` object to e.g. an :class:`OptimisationController` or :class:`MCMCController`.
 
 Parameter transformation can be useful in many situations, for example
-transforming from a constrainted parameter space to an unconstrained search
+transforming from a constrained parameter space to an unconstrained search
 space using :class:`RectangularBoundariesTransform` leads to crucial
 performance improvements for many methods.
 
