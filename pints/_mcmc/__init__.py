@@ -288,7 +288,7 @@ class MCMCController(object):
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
-        of the parameterspace) or as a ``(d, )`` vector, in which case
+        of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
     transform : pints.Transform
         A :class:`pints.Transform` that transform the model parameter space to
@@ -338,9 +338,11 @@ class MCMCController(object):
                     # Convert from 1d array
                     sigma0 = sigma0.reshape((n_parameters,))
                     sigma0 = np.diag(sigma0)
-                else:
+                elif sigma0.shape != (n_parameters, n_parameters):
                     # Check if 2d matrix of correct size
-                    sigma0 = sigma0.reshape((n_parameters, n_parameters))
+                        raise ValueError(
+                            'sigma0 must be either a (d, d) matrix or a (d, ) '
+                            'vector, where d is the number of parameters.')
                 # Transform sigma0
                 jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
                 sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)

@@ -184,6 +184,11 @@ class TestMCMCController(unittest.TestCase):
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             transform=logt)
+        sigma0 = np.arange(16).reshape(2, 2, 2, 2)
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
 
         # Test multi-chain with single-chain mcmc
 
