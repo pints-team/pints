@@ -28,6 +28,12 @@ class Transform(object):
         """
         return TransformedLogPDF(log_pdf, self)
 
+    def apply_log_prior(self, log_prior):
+        """
+        Returns a transformed log-prior class.
+        """
+        return TransformedLogPrior(log_prior, self)
+
     def apply_error_measure(self, error_measure):
         """
         Returns a transformed error measure class.
@@ -183,6 +189,21 @@ class TransformedLogPDF(pints.LogPDF):
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
+
+
+class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
+    """
+    A log-prior that is transformed from the model space to the search space.
+
+    Extends :class:`pints.LogPrior`, :class:`pints.TransformedLogPDF`.
+    """
+    def sample(self, n):
+        """ See :meth:`LogPrior.sample()`. """
+        ps = self._log_pdf.sample(n)
+        xs = np.zeros(ps.shape)
+        for i, p in enumerate(ps):
+            xs[i, :] = self._transform.to_search(p)
+        return xs
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
@@ -526,10 +547,6 @@ class IdentityTransform(Transform):
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
         return np.eye(self._n_parameters)
-
-    def log_jacobian_det(self, x):
-        """ See :meth:`Transform.log_jacobian_det()`. """
-        return 0.
 
     def log_jacobian_det_S1(self, x):
         """ See :meth:`Transform.log_jacobian_det_S1()`. """

@@ -299,6 +299,24 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertRaises(ValueError, pints.TransformedLogPDF, r,
                           pints.LogTransform(3))
 
+    def test_transformed_log_prior(self):
+        # Test TransformedLogPrior class
+
+        d = 2
+        t = pints.LogTransform(2)
+        r = pints.UniformLogPrior([0.1, 0.1], [0.9, 0.9])
+        tr = t.apply_log_prior(r)
+
+        # Test sample
+        n = 1
+        x = tr.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        self.assertTrue(np.all(x < 0.))
+        n = 1000
+        x = tr.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        self.assertTrue(np.all(x < 0.))
+
     def test_transformed_boundaries(self):
         # Test TransformedBoundaries class
 
