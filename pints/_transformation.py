@@ -58,8 +58,8 @@ class Transform(object):
 
     def log_jacobian_det(self, q):
         """
-        Returns the logarithm of the absolute value of the Jacobian
-        determinant for a parameter vector ``q`` in the search space.
+        Returns the logarithm of the absolute value of the determinant of the
+        Jacobian for a parameter vector ``q`` in the search space.
 
         *This is an optional method. It is needed when transformation is
         performed on :class:`LogPDF` and/or that requires ``evaluateS1()``;
@@ -93,22 +93,23 @@ class Transform(object):
 
     def to_model(self, q):
         """
-        Returns the inverse of transformation of a vector from the search space
-        ``q`` to the model parameter space ``p``.
+        Transforms a parameter vector ``q`` from the search space to the model
+        space.
         """
         raise NotImplementedError
 
     def to_search(self, p):
         """
-        Returns the forward transformation of a vector from the model parameter
-        space ``p`` to the search space ``q``.
+        Transforms a parameter vector ``p`` from the model space to the search
+        space.
         """
         raise NotImplementedError
 
 
 class TransformedLogPDF(pints.LogPDF):
     """
-    A log-PDF that is transformed from the model space to the search space.
+    A :class:`pints.LogPDF` that accepts parameters in a transformed search
+    space.
 
     Extends :class:`pints.LogPDF`.
 
@@ -193,7 +194,8 @@ class TransformedLogPDF(pints.LogPDF):
 
 class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
     """
-    A log-prior that is transformed from the model space to the search space.
+    A :class:`pints.LogPrior` that accepts parameters in a transformed search
+    space.
 
     Extends :class:`pints.LogPrior`, :class:`pints.TransformedLogPDF`.
     """
@@ -213,8 +215,8 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
     """
-    An error measure that is transformed from the model space to the search
-    space.
+    An :class:`pints.ErrorMeasure` that accepts parameters in a transformed
+    search space.
 
     Extends :class:`pints.ErrorMeasure`.
 
@@ -272,7 +274,8 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
 
 class TransformedBoundaries(pints.Boundaries):
     """
-    Boundaries that are transformed from the model space to the search space.
+    A :class:`pints.Boundaries` that accepts parameters in a transformed
+    search space.
 
     Extends :class:`pints.Boundaries`.
 
