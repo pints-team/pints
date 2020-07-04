@@ -71,8 +71,8 @@ class Transform(object):
         The returned data is a tuple ``(S, S')`` where ``S`` is a scalar value
         and ``S'`` is a sequence of length ``n_parameters``.
 
-        Note that the derivative returned is of the determinant of the
-        Jacobian, so ``S' = d/dq S(q)``, evaluated at ``q=x``.
+        Note that the derivative returned is of the log of the determinant of
+        the Jacobian, so ``S' = d/dq log(|det(J(q))|)``, evaluated at ``q=x``.
 
         *This is an optional method.*
         """
@@ -152,10 +152,10 @@ class TransformedLogPDF(pints.LogPDF):
         logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
 
         # Compute log Jacobian and its derivatives
-        logjac, dlogjac = self._transform.log_jacobian_det_S1(x)
+        logjacdet, dlogjacdet = self._transform.log_jacobian_det_S1(x)
 
         # Calculate the PDF change of variable, see self.__call__()
-        logpdf = logpdf_nojac + logjac
+        logpdf = logpdf_nojac + logjacdet
 
         # Calculate the PDF S1 change of variable.
         #
@@ -176,7 +176,7 @@ class TransformedLogPDF(pints.LogPDF):
         #
         jacobian = self._transform.jacobian(x)
         dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
-        dlogpdf += pints.vector(dlogjac)
+        dlogpdf += pints.vector(dlogjacdet)
 
         return logpdf, dlogpdf
 
@@ -301,6 +301,11 @@ class LogTransform(Transform):
     .. math::
         |\frac{d}{dx} \exp(x)| = \exp(x).
 
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dx} \log(|J(x)|) = 1.
+
     Extends :class:`Transform`.
 
     Parameters
@@ -320,6 +325,13 @@ class LogTransform(Transform):
         """ See :meth:`Transform.log_jacobian_det()`. """
         x = pints.vector(x)
         return np.sum(x)
+
+    def log_jacobian_det_S1(self, x):
+        """ See :meth:`Transform.log_jacobian_det_S1()`. """
+        x = pints.vector(x)
+        logjacdet = self.log_jacobian_det(x)
+        dlogjacdet = np.ones(self._n_parameters)
+        return logjacdet, dlogjacdet
 
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
@@ -352,6 +364,11 @@ class LogitTransform(Transform):
         |\frac{d}{dx} \text{logit}^{-1}(x)| = \text{logit}^{-1}(x) \times
         (1 - \text{logit}^{-1}(x)).
 
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dx} \log(|J(x)|) = 2 \exp(-x) \text{logit}^{-1}(x) - 1.
+
     Extends :class:`Transform`.
 
     Parameters
@@ -371,6 +388,13 @@ class LogitTransform(Transform):
         """ See :meth:`Transform.log_jacobian_det()`. """
         x = pints.vector(x)
         return np.sum(np.log(expit(x)) + np.log(1. - expit(x)))
+
+    def log_jacobian_det_S1(self, x):
+        """ See :meth:`Transform.log_jacobian_det_S1()`. """
+        x = pints.vector(x)
+        logjacdet = self.log_jacobian_det(x)
+        dlogjacdet = 2. * np.exp(-x) * expit(x) - 1.
+        return logjacdet, dlogjacdet
 
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
@@ -406,6 +430,11 @@ class RectangularBoundariesTransform(Transform):
     .. math::
         |\frac{d}{dx} f^{-1}(x)| = \frac{b - a}{\exp(x) (1 + \exp(-x)) ^ 2}
         \log|\frac{d}{dx} f^{-1}(x)| = \log(b - a) - 2 \log(1 + \exp(-x)) - x
+
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dx} \log(|J(x)|) = 2 \exp(-x) \text{logit}^{-1}(x) - 1.
 
     For example, to create a transform with :math:`p_1 \in [0, 4)`,
     :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
@@ -452,6 +481,13 @@ class RectangularBoundariesTransform(Transform):
         s = self._softplus(-x)
         return np.sum(np.log(self._b - self._a) - 2. * s - x)
 
+    def log_jacobian_det_S1(self, x):
+        """ See :meth:`Transform.log_jacobian_det_S1()`. """
+        x = pints.vector(x)
+        logjacdet = self.log_jacobian_det(x)
+        dlogjacdet = 2. * np.exp(-x) * expit(x) - 1.
+        return logjacdet, dlogjacdet
+
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
@@ -490,6 +526,10 @@ class IdentityTransform(Transform):
     def jacobian(self, x):
         """ See :meth:`Transform.jacobian()`. """
         return np.eye(self._n_parameters)
+
+    def log_jacobian_det_S1(self, x):
+        """ See :meth:`Transform.log_jacobian_det_S1()`. """
+        return np.zeros(self._n_parameters)
 
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
@@ -570,6 +610,20 @@ class ComposedTransform(Transform):
             hi += transform.n_parameters()
             output += transform.log_jacobian_det(x[lo:hi])
         return output
+
+    def log_jacobian_det_S1(self, x):
+        """ See :meth:`Transform.log_jacobian_det_S1()`. """
+        x = pints.vector(x)
+        output = 0
+        output_s1 = np.zeros(x.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            j, js1 = transform.log_jacobian_det_S1(x[lo:hi])
+            output += j
+            output_s1[lo:hi] = np.asarray(js1)
+        return output, output_s1
 
     def to_model(self, x):
         """ See :meth:`Transform.to_model()`. """
