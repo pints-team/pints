@@ -301,18 +301,18 @@ class OptimisationController(object):
         this information.
     boundaries
         An optional set of boundaries on the parameter space.
-    method
-        The class of :class:`pints.Optimiser` to use for the optimisation.
-        If no method is specified, :class:`CMAES` is used.
     transform
         A :class:`pints.Transform` that transform the model parameter space to
         search space. If no transform is specified, search will be performed
         in the model space.
+    method
+        The class of :class:`pints.Optimiser` to use for the optimisation.
+        If no method is specified, :class:`CMAES` is used.
     """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, method=None,
-            transform=None):
+            self, function, x0, sigma0=None, boundaries=None, transform=None,
+            method=None):
 
         # Convert x0 to vector
         # This converts e.g. (1, 7) shapes to (7, ), giving users a bit more
@@ -809,8 +809,8 @@ class Optimisation(OptimisationController):
     """ Deprecated alias for :class:`OptimisationController`. """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, method=None,
-            transform=None):
+            self, function, x0, sigma0=None, boundaries=None, transform=None,
+            method=None):
         # Deprecated on 2019-02-12
         import logging
         logging.basicConfig()
@@ -819,13 +819,13 @@ class Optimisation(OptimisationController):
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
-            function, x0, sigma0=None, boundaries=None, method=None,
-            transform=None)
+            function, x0, sigma0=None, boundaries=None, transform=None,
+            method=None)
 
 
 def optimise(
-        function, x0, sigma0=None, boundaries=None, method=None,
-        transform=None):
+        function, x0, sigma0=None, boundaries=None, transform=None,
+        method=None):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.
@@ -847,13 +847,13 @@ def optimise(
         this information.
     boundaries
         An optional set of boundaries on the parameter space.
-    method
-        The class of :class:`pints.Optimiser` to use for the optimisation.
-        If no method is specified, :class:`CMAES` is used.
     transform
         A :class:`pints.Transform` that transform the model parameter space to
         search space. If no transform is specified, search will be performed
         in the model space.
+    method
+        The class of :class:`pints.Optimiser` to use for the optimisation.
+        If no method is specified, :class:`CMAES` is used.
 
     Returns
     -------
@@ -863,7 +863,7 @@ def optimise(
         The corresponding score.
     """
     return OptimisationController(
-        function, x0, sigma0, boundaries, method, transform).run()
+        function, x0, sigma0, boundaries, transform, method).run()
 
 
 class TriangleWaveTransform(object):

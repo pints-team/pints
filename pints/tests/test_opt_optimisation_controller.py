@@ -53,7 +53,7 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         t = pints.RectangularBoundariesTransform(b)
-        opt = pints.OptimisationController(r, x0, s, b, method, transform=t)
+        opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -65,9 +65,9 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
         s = 0.1
         t = pints.RectangularBoundariesTransform(b)
-        pints.OptimisationController(r, x0, boundaries=b, method=method,
-                                     transform=t)
-        opt = pints.OptimisationController(r, x0, s, b, method, transform=t)
+        pints.OptimisationController(r, x0, boundaries=b, transform=t,
+                                     method=method)
+        opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -84,7 +84,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -101,7 +101,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(3)
@@ -166,7 +166,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -188,7 +188,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0.008, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -206,7 +206,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -279,7 +279,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(50, 1e-11)
 
