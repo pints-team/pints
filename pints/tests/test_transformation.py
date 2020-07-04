@@ -26,6 +26,7 @@ class TestTransform(unittest.TestCase):
         x = [-2.3025850929940455, 0., 2.3025850929940459, 6.9067547786485539]
         j = np.diag(p)
         log_j_det = np.sum(x)
+        log_j_det_s1 = np.ones(4)
 
         # Test forward transform
         for xi, pi in zip(x, p):
@@ -47,7 +48,12 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(t4.jacobian(x), j))
 
         # Test log-Jacobian determinant
-        self.assertEqual(t4.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(t4.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t4.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
 
         # Test invalid inputs
         self.assertTrue(np.isnan(t1.to_search(-1.)))
@@ -64,6 +70,7 @@ class TestTransform(unittest.TestCase):
         x = [-2.1972245773362191, -0.6946475559351799, 0., 2.1972245773362196]
         j = np.diag([0.09, 0.222111, 0.25, 0.09])
         log_j_det = -7.7067636004918398
+        log_j_det_s1 = [0.8, 0.334, 0., -0.8]
 
         # Test forward transform
         for xi, pi in zip(x, p):
@@ -85,7 +92,12 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(t4.jacobian(x), j))
 
         # Test log-Jacobian determinant
-        self.assertEqual(t4.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(t4.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t4.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
         # Test invalid inputs
         self.assertTrue(np.isnan(t1.to_search(-1.)))
@@ -117,6 +129,7 @@ class TestTransform(unittest.TestCase):
         x = [-2.8332133440562162, 0.9555114450274365]
         j = np.diag([0.4722222222222225, 3.6111111111111098])
         log_j_det = 0.5337099175995788
+        log_j_det_s1 = [0.8888888888888888, -0.4444444444444445]
 
         # Test forward transform
         self.assertTrue(np.allclose(t1.to_search([p[0]]), [x[0]]))
@@ -138,8 +151,16 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(t2b.jacobian(x), j))
 
         # Test log-Jacobian determinant
-        self.assertEqual(t2.log_jacobian_det(x), log_j_det)
-        self.assertEqual(t2b.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(t2.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(t2b.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t2.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
+        calc_val, calc_deriv = t2b.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
     def test_identity_transform(self):
         # Test IdentityTransform class
@@ -152,6 +173,7 @@ class TestTransform(unittest.TestCase):
         x = [-177., 0.333, 10., 99.99]
         j = np.eye(4)
         log_j_det = 0.
+        log_j_det_s1 = np.zeros(4)
 
         # Test forward transform
         for xi, pi in zip(x, p):
@@ -175,6 +197,11 @@ class TestTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
 
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t4.log_jacobian_det_S1(x)
+        self.assertEqual(calc_val, log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
+
     def test_composed_transform(self):
         # Test ComposedTransform class
 
@@ -191,6 +218,7 @@ class TestTransform(unittest.TestCase):
         x = [0.1, -2.8332133440562162, 0.9555114450274365, 6.9067547786485539]
         j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
         log_j_det = 7.4404646962481324
+        log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
 
         # Test forward transform
         self.assertTrue(np.allclose(t.to_search(p), x))
@@ -206,6 +234,11 @@ class TestTransform(unittest.TestCase):
 
         # Test log-Jacobian determinant
         self.assertEqual(t.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
         # Test invalid constructors
         self.assertRaises(ValueError, pints.ComposedTransform)
@@ -257,7 +290,7 @@ class TestTransformedWrappers(unittest.TestCase):
         # Test evaluateS1()
         rx, s1 = r.evaluateS1(x)
         trx = rx + log_j_det
-        ts1 = np.matmul(s1, j)
+        ts1 = np.matmul(s1, j) + np.ones(2)
         trtx, trts1 = tr.evaluateS1(tx)
         self.assertTrue(np.allclose(trtx, trx))
         self.assertTrue(np.allclose(trts1, ts1))
