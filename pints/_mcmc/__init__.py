@@ -340,9 +340,9 @@ class MCMCController(object):
                     sigma0 = np.diag(sigma0)
                 elif sigma0.shape != (n_parameters, n_parameters):
                     # Check if 2d matrix of correct size
-                        raise ValueError(
-                            'sigma0 must be either a (d, d) matrix or a (d, ) '
-                            'vector, where d is the number of parameters.')
+                    raise ValueError(
+                        'sigma0 must be either a (d, d) matrix or a (d, ) '
+                        'vector, where d is the number of parameters.')
                 # Transform sigma0
                 jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
                 sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)
