@@ -15,6 +15,47 @@ import numpy as np
 
 class TestTransform(unittest.TestCase):
 
+    def test_transform_abstract_class(self):
+        # Test methods defined in the abstract class
+
+        class Trans(pints.Transform):
+            """A testing transformation class"""
+            def jacobian(self, q):
+                """ See :meth:`Transform.jacobian()`. """
+                q = pints.vector(q)
+                return np.diag(np.exp(q))
+
+            def to_model(self, q):
+                """ See :meth:`Transform.to_model()`. """
+                q = pints.vector(q)
+                return np.exp(q)
+
+        # Test input parameters
+        t = Trans()
+
+        p = [0.1, 1., 10., 999.]
+        x = [-2.3025850929940455, 0., 2.3025850929940459, 6.9067547786485539]
+        j = np.diag(p)
+        log_j_det = np.sum(x)
+
+        # Test inverse transform
+        self.assertTrue(np.allclose(t.to_model(x), p))
+
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t.jacobian(x), j))
+
+        # Test log-Jacobian determinant
+        self.assertAlmostEqual(t.log_jacobian_det(x), log_j_det)
+
+    def test_covariance_matrix(self):
+        # TODO
+        pass
+
     def test_log_transform(self):
         # Test LogTransform class
 
