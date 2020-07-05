@@ -314,21 +314,6 @@ class MCMCController(object):
         if transform:
             log_pdf = transform.apply_log_pdf(log_pdf)
             x0 = [transform.to_search(x) for x in x0]
-            #
-            # Following Eq. 5 in
-            # http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
-            #
-            # For transformation x = g(p) and Jacobian J(x) = d/dx g^{-1}(x),
-            # then the covariance matrices C(.) for x and p follow
-            #
-            # C(x) = (d/dp g(E(p))) C(p) (d/dp g(E(p)))^T
-            #        = J^{-1}(E(x)) C(p) J^{-1}(E(x))^T
-            #
-            # Using the property that J^{-1} = dg/dp, from the inverse function
-            # theorem, i.e. the matrix inverse of the Jacobian matrix of an
-            # invertible function is the Jacobian matrix of the inverse
-            # function.
-            #
             if sigma0 is not None:
                 # Transform sigma0 if provided
                 sigma0 = np.asarray(sigma0)
@@ -344,8 +329,7 @@ class MCMCController(object):
                         'sigma0 must be either a (d, d) matrix or a (d, ) '
                         'vector, where d is the number of parameters.')
                 # Transform sigma0
-                jacobian = np.linalg.pinv(transform.jacobian(x0[0]))
-                sigma0 = np.matmul(np.matmul(jacobian, sigma0), jacobian.T)
+                sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
         self._transform = transform
 
         # Store function

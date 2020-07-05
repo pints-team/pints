@@ -46,6 +46,32 @@ class Transform(object):
         """
         return TransformedBoundaries(boundaries, self)
 
+    def convert_covariance_matrix(self, C, q):
+        r"""
+        Converts a convariance matrix ``C`` from the model space to the search
+        space around a parameter vector ``q`` provided in the search space.
+
+        The transformation is performed using a linear approximation [1]_:
+
+        .. math::
+
+            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T \\
+                 &= J^{-1}(q) C(p) (J^{-1}(q))^T.
+
+        Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
+        inverse function theorem, i.e. the matrix inverse of the Jacobian
+        matrix of an invertible function is the Jacobian matrix of the inverse
+        function.
+
+        References
+        ----------
+        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
+               Erik Jørgensen and Asger Roer Pedersen,
+               http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
+        """
+        jac_inv = np.linalg.pinv(self.jacobian(q))
+        return np.matmul(np.matmul(jac_inv, C), jac_inv.T)
+
     def jacobian(self, q):
         """
         Returns the Jacobian for a parameter vector ``q`` in the search space.
