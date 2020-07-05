@@ -689,6 +689,10 @@ class IdentityTransform(Transform):
         """ See :meth:`Transform.jacobian()`. """
         return np.eye(self._n_parameters)
 
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transform.log_jacobian_det()`. """
+        return 0.
+
     def log_jacobian_det_S1(self, q):
         """ See :meth:`Transform.log_jacobian_det_S1()`. """
         return self.log_jacobian_det(q), np.zeros(self._n_parameters)

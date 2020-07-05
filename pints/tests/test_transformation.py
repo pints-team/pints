@@ -52,9 +52,13 @@ class TestTransform(unittest.TestCase):
         # Test log-Jacobian determinant
         self.assertAlmostEqual(t.log_jacobian_det(x), log_j_det)
 
-    def test_covariance_matrix(self):
-        # TODO
-        pass
+        # Test standard deviation and covariance matrix transformations
+        sd = np.array([0.01, 0.1, 1., 99.9])
+        cov = np.diag(sd ** 2)
+        tsd = np.ones(4) * 0.1
+        tcov = np.eye(4) * 0.1 ** 2
+        self.assertTrue(np.allclose(t.convert_standard_deviation(sd, x), tsd))
+        self.assertTrue(np.allclose(t.convert_covariance_matrix(cov, x), tcov))
 
     def test_log_transform(self):
         # Test LogTransform class
