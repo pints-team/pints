@@ -312,7 +312,7 @@ class MCMCController(object):
         # transformed search space and will know nothing about the model
         # parameter space.
         if transform:
-            log_pdf = transform.apply_log_pdf(log_pdf)
+            log_pdf = transform.convert_log_pdf(log_pdf)
             x0 = [transform.to_search(x) for x in x0]
             if sigma0 is not None:
                 # Transform sigma0 if provided

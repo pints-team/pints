@@ -22,25 +22,25 @@ class Transform(object):
     search space ``q`` by using ``q = trans.to_search(p)`` and the inverse by
     using ``p = trans.to_model(q)``.
     """
-    def apply_log_pdf(self, log_pdf):
+    def convert_log_pdf(self, log_pdf):
         """
         Returns a transformed log-PDF class.
         """
         return TransformedLogPDF(log_pdf, self)
 
-    def apply_log_prior(self, log_prior):
+    def convert_log_prior(self, log_prior):
         """
         Returns a transformed log-prior class.
         """
         return TransformedLogPrior(log_prior, self)
 
-    def apply_error_measure(self, error_measure):
+    def convert_error_measure(self, error_measure):
         """
         Returns a transformed error measure class.
         """
         return TransformedErrorMeasure(error_measure, self)
 
-    def apply_boundaries(self, boundaries):
+    def convert_boundaries(self, boundaries):
         """
         Returns a transformed boundaries class.
         """

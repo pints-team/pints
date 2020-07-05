@@ -326,7 +326,7 @@ class TestTransformedWrappers(unittest.TestCase):
         x = [0.1, 0.1]
         tx = [-2.3025850929940455, -2.3025850929940455]
         j = np.diag(x)
-        tr = t.apply_error_measure(r)
+        tr = t.convert_error_measure(r)
 
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x))
@@ -352,7 +352,7 @@ class TestTransformedWrappers(unittest.TestCase):
         tx = [-2.9957322735539909, 0.0099503308531681]
         j = np.diag(x)
         log_j_det = -2.9857819427008230
-        tr = t.apply_log_pdf(r)
+        tr = t.convert_log_pdf(r)
 
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x) + log_j_det)
@@ -376,7 +376,7 @@ class TestTransformedWrappers(unittest.TestCase):
         d = 2
         t = pints.LogTransform(2)
         r = pints.UniformLogPrior([0.1, 0.1], [0.9, 0.9])
-        tr = t.apply_log_prior(r)
+        tr = t.convert_log_prior(r)
 
         # Test sample
         n = 1
@@ -393,7 +393,7 @@ class TestTransformedWrappers(unittest.TestCase):
 
         t = pints.LogTransform(2)
         b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
-        tb = t.apply_boundaries(b)
+        tb = t.convert_boundaries(b)
         xi = [0.02, 1.01]
         txi = [-3.9120230054281460, 0.0099503308531681]
         xo = [10., 50.]

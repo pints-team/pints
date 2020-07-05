@@ -335,14 +335,14 @@ class OptimisationController(object):
         # parameter space.
         if transform:
             if self._minimising:
-                function = transform.apply_error_measure(function)
+                function = transform.convert_error_measure(function)
             else:
-                function = transform.apply_log_pdf(function)
+                function = transform.convert_log_pdf(function)
             x0 = transform.to_search(x0)
             if sigma0 is not None:
                 sigma0 = transform.convert_standard_deviation(sigma0, x0)
             if boundaries:
-                boundaries = transform.apply_boundaries(boundaries)
+                boundaries = transform.convert_boundaries(boundaries)
         self._transform = transform
 
         # Store function
@@ -619,11 +619,13 @@ class OptimisationController(object):
             print('Unexpected termination.')
             print('Current best score: ' + str(fbest))
             print('Current best position:')
+
             # Inverse transform search parameters
             if self._transform:
                 xbest = self._transform.to_model(self._optimiser.xbest())
             else:
                 xbest = self._optimiser.xbest()
+
             for p in xbest:
                 print(pints.strfloat(p))
             print('-' * 40)
