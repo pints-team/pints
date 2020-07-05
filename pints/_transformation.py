@@ -278,13 +278,23 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
     space.
 
     Extends :class:`pints.LogPrior`, :class:`pints.TransformedLogPDF`.
+
+    Parameters
+    ----------
+    log_prior
+        A :class:`pints.LogPrior`.
+    transform
+        A :class:`pints.Transform`.
     """
+    def __init__(self, log_prior, transform):
+        super(TransformedLogPrior, self).__init__(log_prior, transform)
+
     def sample(self, n):
         """
-        See :meth:`LogPrior.sample()`.
+        See :meth:`pints.LogPrior.sample()`.
 
-        However, note that this does *not* sample from the transformed
-        log-prior but simply transform the samples from the original log-prior.
+        *Note that this does not sample from the transformed log-prior but
+        simply transform the samples from the original log-prior.*
         """
         ps = self._log_pdf.sample(n)
         qs = np.zeros(ps.shape)

@@ -34,6 +34,7 @@ Overview:
 - :class:`LogitTransform`
 - :class:`RectangularBoundariesTransform`
 - :class:`TransformedLogPDF`
+- :class:`TransformedLogPrior`
 - :class:`TransformedErrorMeasure`
 - :class:`TransformedBoundaries`
 
@@ -51,6 +52,8 @@ Overview:
 .. autoclass:: RectangularBoundariesTransform
 
 .. autoclass:: TransformedLogPDF
+
+.. autoclass:: TransformedLogPrior
 
 .. autoclass:: TransformedErrorMeasure
 

@@ -239,6 +239,7 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 from ._transformation import (
     Transform,
     TransformedLogPDF,
+    TransformedLogPrior,
     TransformedErrorMeasure,
     TransformedBoundaries,
     LogTransform,
