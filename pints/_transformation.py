@@ -67,7 +67,7 @@ class Transform(object):
         References
         ----------
         .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
-               Erik Jørgensen and Asger Roer Pedersen,
+               Erik Jorgensen and Asger Roer Pedersen,
                http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
@@ -105,7 +105,7 @@ class Transform(object):
         References
         ----------
         .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
-               Erik Jørgensen and Asger Roer Pedersen,
+               Erik Jorgensen and Asger Roer Pedersen,
                http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
