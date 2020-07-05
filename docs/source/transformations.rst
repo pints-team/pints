@@ -4,7 +4,7 @@ Transformations
 
 .. currentmodule:: pints
 
-:class:`Transform` objects provide methods to transform between different
+:class:`Transformation` objects provide methods to transform between different
 representations of a parameter space; for example from a "model space" where
 parameters have units and some physical counterpart to a "search space" where
 parameters are non-dimensionalised and less-recognisable to the modeller but
@@ -13,43 +13,44 @@ easier to deal with mathematically.
 To perform optimisation or sampling in a transformed space, users can choose to
 write their :class:`pints.ForwardModel` in "search space" directly.
 But an alternative is to write the ``ForwardModel`` in model parameters, and
-pass a :class:`Transform` object to e.g. an :class:`OptimisationController` or :class:`MCMCController`.
+pass a :class:`Transformation` object to e.g. an
+:class:`OptimisationController` or :class:`MCMCController`.
 
 Parameter transformation can be useful in many situations, for example
 transforming from a constrained parameter space to an unconstrained search
-space using :class:`RectangularBoundariesTransform` leads to crucial
+space using :class:`RectangularBoundariesTransformation` leads to crucial
 performance improvements for many methods.
 
 Example::
 
-    transform = pints.LogTransform(n_parameters)
+    transform = pints.LogTransformation(n_parameters)
     mcmc = pints.MCMCController(log_posterior, n_chains, x0, transform=transform)
 
 Overview:
 
-- :class:`Transform`
-- :class:`ComposedTransform`
-- :class:`IdentityTransform`
-- :class:`LogTransform`
-- :class:`LogitTransform`
-- :class:`RectangularBoundariesTransform`
+- :class:`Transformation`
+- :class:`ComposedTransformation`
+- :class:`IdentityTransformation`
+- :class:`LogTransformation`
+- :class:`LogitTransformation`
+- :class:`RectangularBoundariesTransformation`
 - :class:`TransformedLogPDF`
 - :class:`TransformedLogPrior`
 - :class:`TransformedErrorMeasure`
 - :class:`TransformedBoundaries`
 
 
-.. autoclass:: Transform
+.. autoclass:: Transformation
 
-.. autoclass:: ComposedTransform
+.. autoclass:: ComposedTransformation
 
-.. autoclass:: IdentityTransform
+.. autoclass:: IdentityTransformation
 
-.. autoclass:: LogTransform
+.. autoclass:: LogTransformation
 
-.. autoclass:: LogitTransform
+.. autoclass:: LogitTransformation
 
-.. autoclass:: RectangularBoundariesTransform
+.. autoclass:: RectangularBoundariesTransformation
 
 .. autoclass:: TransformedLogPDF
 

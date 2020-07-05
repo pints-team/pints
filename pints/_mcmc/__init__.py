@@ -290,10 +290,10 @@ class MCMCController(object):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
-    transform : pints.Transform
-        A :class:`pints.Transform` that transform the model parameter space to
-        search space. If no transform is specified, search will be performed
-        in the model space.
+    transform : pints.Transformation
+        A :class:`pints.Transformation` that transform the model parameter
+        space to search space. If no transform is specified, search will be
+        performed in the model space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.

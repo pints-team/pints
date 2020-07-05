@@ -158,7 +158,7 @@ class TestMCMCController(unittest.TestCase):
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0)
 
         # Test transformation
-        logt = pints.LogTransform(n_parameters)
+        logt = pints.LogTransformation(n_parameters)
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
                                     transform=logt)
         mcmc.set_max_iterations(n_iterations)
@@ -300,7 +300,7 @@ class TestMCMCController(unittest.TestCase):
             method=meth)
 
         # Test transformation
-        logt = pints.LogTransform(n_parameters)
+        logt = pints.LogTransformation(n_parameters)
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
                                     method=meth, transform=logt)
         self.assertEqual(len(mcmc.samplers()), 1)
@@ -720,7 +720,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('evals_0.csv', text)
 
         # Test transformation
-        logt = pints.LogTransform(len(self.xs[0]))
+        logt = pints.LogTransformation(len(self.xs[0]))
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
                                     transform=logt)
         mcmc.set_initial_phase_iterations(5)
@@ -840,7 +840,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('evals_0.csv', text)
 
         # Test transformation
-        logt = pints.LogTransform(len(self.xs[0]))
+        logt = pints.LogTransformation(len(self.xs[0]))
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
                                     transform=logt)
         mcmc.set_initial_phase_iterations(5)

@@ -52,7 +52,7 @@ class TestOptimisationController(unittest.TestCase):
         x0 = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        t = pints.RectangularBoundariesTransform(b)
+        t = pints.RectangularBoundariesTransformation(b)
         opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
@@ -64,7 +64,7 @@ class TestOptimisationController(unittest.TestCase):
         x0 = [0.1, 0.1]
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
         s = 0.1
-        t = pints.RectangularBoundariesTransform(b)
+        t = pints.RectangularBoundariesTransformation(b)
         pints.OptimisationController(r, x0, boundaries=b, transform=t,
                                      method=method)
         opt = pints.OptimisationController(r, x0, s, b, t, method)

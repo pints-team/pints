@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests Transform functions in Pints
+# Tests Transformation functions in Pints
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -13,20 +13,20 @@ import pints.toy
 import numpy as np
 
 
-class TestTransform(unittest.TestCase):
+class TestTransformation(unittest.TestCase):
 
     def test_transform_abstract_class(self):
         # Test methods defined in the abstract class
 
-        class Trans(pints.Transform):
+        class Trans(pints.Transformation):
             """A testing transformation class"""
             def jacobian(self, q):
-                """ See :meth:`Transform.jacobian()`. """
+                """ See :meth:`Transformation.jacobian()`. """
                 q = pints.vector(q)
                 return np.diag(np.exp(q))
 
             def to_model(self, q):
-                """ See :meth:`Transform.to_model()`. """
+                """ See :meth:`Transformation.to_model()`. """
                 q = pints.vector(q)
                 return np.exp(q)
 
@@ -61,11 +61,11 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(t.convert_covariance_matrix(cov, x), tcov))
 
     def test_log_transform(self):
-        # Test LogTransform class
+        # Test LogTransformation class
 
         # Test input parameters
-        t1 = pints.LogTransform(1)
-        t4 = pints.LogTransform(4)
+        t1 = pints.LogTransformation(1)
+        t4 = pints.LogTransformation(4)
 
         p = [0.1, 1., 10., 999.]
         x = [-2.3025850929940455, 0., 2.3025850929940459, 6.9067547786485539]
@@ -110,11 +110,11 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.isinf(t1.to_search(0)))
 
     def test_logit_transform(self):
-        # Test LogitTransform class
+        # Test LogitTransformation class
 
         # Test input parameters
-        t1 = pints.LogitTransform(1)
-        t4 = pints.LogitTransform(4)
+        t1 = pints.LogitTransformation(1)
+        t4 = pints.LogitTransformation(4)
 
         p = [0.1, 0.333, 0.5, 0.9]
         x = [-2.1972245773362191, -0.6946475559351799, 0., 2.1972245773362196]
@@ -160,7 +160,7 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.isinf(t1.to_search(1.)))
 
     def test_rectangular_boundaries_transform(self):
-        # Test RectangularBoundariesTransform class
+        # Test RectangularBoundariesTransformation class
 
         lower1 = np.array([1])
         upper1 = np.array([10])
@@ -169,15 +169,16 @@ class TestTransform(unittest.TestCase):
         upper2 = np.array([10, 20])
 
         # Test normal construction with lower and upper
-        t1 = pints.RectangularBoundariesTransform(lower1, upper1)
-        t2 = pints.RectangularBoundariesTransform(lower2, upper2)
+        t1 = pints.RectangularBoundariesTransformation(lower1, upper1)
+        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
 
         # Test construction with rectangular boundaries object
         b2 = pints.RectangularBoundaries(lower2, upper2)
-        t2b = pints.RectangularBoundariesTransform(b2)
+        t2b = pints.RectangularBoundariesTransformation(b2)
 
         # Test bad constructor
-        self.assertRaises(ValueError, pints.RectangularBoundariesTransform,
+        self.assertRaises(ValueError,
+                          pints.RectangularBoundariesTransformation,
                           lower2)
 
         p = [1.5, 15.]
@@ -224,11 +225,11 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
     def test_identity_transform(self):
-        # Test IdentityTransform class
+        # Test IdentityTransformation class
 
         # Test input parameters
-        t1 = pints.IdentityTransform(1)
-        t4 = pints.IdentityTransform(4)
+        t1 = pints.IdentityTransformation(1)
+        t4 = pints.IdentityTransformation(4)
 
         p = [-177., 0.333, 10., 99.99]
         x = [-177., 0.333, 10., 99.99]
@@ -269,16 +270,16 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
 
     def test_composed_transform(self):
-        # Test ComposedTransform class
+        # Test ComposedTransformation class
 
         # Test input parameters
-        t1 = pints.IdentityTransform(1)
+        t1 = pints.IdentityTransformation(1)
         lower2 = np.array([1, 2])
         upper2 = np.array([10, 20])
-        t2 = pints.RectangularBoundariesTransform(lower2, upper2)
-        t3 = pints.LogTransform(1)
+        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
+        t3 = pints.LogTransformation(1)
 
-        t = pints.ComposedTransform(t1, t2, t3)
+        t = pints.ComposedTransformation(t1, t2, t3)
 
         p = [0.1, 1.5, 15., 999.]
         x = [0.1, -2.8332133440562162, 0.9555114450274365, 6.9067547786485539]
@@ -312,8 +313,8 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
         # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedTransform)
-        self.assertRaises(ValueError, pints.ComposedTransform, np.log)
+        self.assertRaises(ValueError, pints.ComposedTransformation)
+        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
 
 
 class TestTransformedWrappers(unittest.TestCase):
@@ -321,7 +322,7 @@ class TestTransformedWrappers(unittest.TestCase):
     def test_transformed_error_measure(self):
         # Test TransformedErrorMeasure class
 
-        t = pints.LogTransform(2)
+        t = pints.LogTransformation(2)
         r = pints.toy.ParabolicError()
         x = [0.1, 0.1]
         tx = [-2.3025850929940455, -2.3025850929940455]
@@ -341,12 +342,12 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedErrorMeasure, r,
-                          pints.LogTransform(3))
+                          pints.LogTransformation(3))
 
     def test_transformed_log_pdf(self):
         # Test TransformedLogPDF class
 
-        t = pints.LogTransform(2)
+        t = pints.LogTransformation(2)
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = [0.05, 1.01]
         tx = [-2.9957322735539909, 0.0099503308531681]
@@ -368,13 +369,13 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedLogPDF, r,
-                          pints.LogTransform(3))
+                          pints.LogTransformation(3))
 
     def test_transformed_log_prior(self):
         # Test TransformedLogPrior class
 
         d = 2
-        t = pints.LogTransform(2)
+        t = pints.LogTransformation(2)
         r = pints.UniformLogPrior([0.1, 0.1], [0.9, 0.9])
         tr = t.convert_log_prior(r)
 
@@ -391,7 +392,7 @@ class TestTransformedWrappers(unittest.TestCase):
     def test_transformed_boundaries(self):
         # Test TransformedBoundaries class
 
-        t = pints.LogTransform(2)
+        t = pints.LogTransformation(2)
         b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
         tb = t.convert_boundaries(b)
         xi = [0.02, 1.01]
@@ -410,7 +411,7 @@ class TestTransformedWrappers(unittest.TestCase):
 
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedBoundaries, b,
-                          pints.LogTransform(3))
+                          pints.LogTransformation(3))
 
 
 if __name__ == '__main__':

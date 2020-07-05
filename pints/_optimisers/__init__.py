@@ -302,9 +302,9 @@ class OptimisationController(object):
     boundaries
         An optional set of boundaries on the parameter space.
     transform
-        A :class:`pints.Transform` that transform the model parameter space to
-        search space. If no transform is specified, search will be performed
-        in the model space.
+        A :class:`pints.Transformation` that transform the model parameter
+        space to search space. If no transform is specified, search will be
+        performed in the model space.
     method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
@@ -826,9 +826,9 @@ def optimise(
     boundaries
         An optional set of boundaries on the parameter space.
     transform
-        A :class:`pints.Transform` that transform the model parameter space to
-        search space. If no transform is specified, search will be performed
-        in the model space.
+        A :class:`pints.Transformation` that transform the model parameter
+        space to search space. If no transform is specified, search will be
+        performed in the model space.
     method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
