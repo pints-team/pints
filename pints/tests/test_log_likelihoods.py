@@ -278,6 +278,280 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         self.assertEqual(score, -49.51182454195375)
 
 
+class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.0, -10.7, 15.5])
+        cls.data_multi = np.asarray([
+            [3.4, 4.3, 22.0, -7.3],
+            [11.1, 12.2, 13.9, 5.0],
+            [-0.4, -12.3, -8.3, -1.2]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -20.441037907121299)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -20.441037907121299)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -20.441037907121299)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0, 0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -75.443307614807225)
+
+    def test_call_two_dim_array_multi_non_equal_priors(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, [1, 0, 5, 2], [2, 4, 7, 8])
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0, 0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -71.62076263891457)
+
+    def test_bad_constructor_single(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Check negative bound
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, -1, 2)
+
+        # Check vanishing interval width
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 0, 0)
+
+        # Check higher lower bound than upper bound
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 1)
+
+        # Check worng prior dimension
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 3])
+
+    def test_bad_constructor_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Check wrong prior dimensions
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2, 3], [2, 4])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 4, 5])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 3], [2, 2])
+
+    def test_gaussian_integrated_uniform_log_likelihood_single(self):
+        # Tests :class:`pints.GaussianIntegratedUniformLogLikelihood` for
+        # instances of :class:`pints.SingleOutputProblem`.
+        model = pints.toy.ConstantModel(1)
+        parameters = [0]
+        times = np.asarray([1, 2, 3])
+        n_times = len(times)
+        model.simulate(parameters, times)
+        bare_values = np.asarray([1.0, -10.7, 15.5])
+
+        # Test Case I: values as list
+        values = bare_values.tolist()
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood([0]), -20.441037907121299)
+
+        # test incorrect constructors
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, -1, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 0, 0)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 1)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 3])
+
+        # Test Case II: values as array of shape (n_times,)
+        values = np.reshape(bare_values, (n_times,))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood([0]), -20.441037907121299)
+
+        # test incorrect constructors
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, -1, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 0, 0)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 1)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 3])
+
+        # Test Case III: values as array of shape (n_times, 1)
+        values = np.reshape(bare_values, (n_times, 1))
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood([0]), -20.441037907121299)
+
+        # test incorrect constructors
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, -1, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 0, 0)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 1)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 3])
+
+    def test_gaussian_integrated_uniform_log_likelihood_multi(self):
+        # Tests :class:`pints.GaussianIntegratedUniformLogLikelihood` for
+        # instances of :class:`pints.MultiOutputProblem`.
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([[3.4, 4.3, 22.0, -7.3],
+                             [11.1, 12.2, 13.9, 5.0],
+                             [-0.4, -12.3, -8.3, -1.2]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, 2, 4)
+        self.assertAlmostEqual(log_likelihood(parameters), -75.443307614807225)
+
+        # test non-equal prior limits
+        model = pints.toy.ConstantModel(4)
+        parameters = [0, 0, 0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = np.asarray([[3.4, 4.3, 22.0, -7.3],
+                             [11.1, 12.2, 13.9, 5.0],
+                             [-0.4, -12.3, -8.3, -1.2]])
+        problem = pints.MultiOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianIntegratedUniformLogLikelihood(
+            problem, [1, 0, 5, 2], [2, 4, 7, 8])
+        self.assertAlmostEqual(log_likelihood(parameters), -71.62076263891457)
+
+        # test incorrect constructors
+        model = pints.toy.ConstantModel(2)
+        parameters = [0, 0]
+        times = np.asarray([1, 2, 3])
+        model.simulate(parameters, times)
+        values = [[1, 2],
+                  [3, 4],
+                  [5, 6]]
+        problem = pints.MultiOutputProblem(model, times, values)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 2, 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2, 3], [2, 4])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], [2, 4, 5])
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 3], [2, 2])
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
