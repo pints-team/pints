@@ -264,10 +264,10 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         = -\frac{n}{2} \log 2 \pi
         -\sum_{i=1}^{n}\log
         \left( \sigma _{\text{base}} +
-        \sigma _{\text{rel}}f(t_i, \theta)^\eta \right)
+        \sigma _{\text{rel}}f(t_i; \theta)^\eta \right)
         -\frac{1}{2}\sum_{i=1}^{n}
-        \frac{(X(t_i) - f(t_i, \theta))^2}
-        {(\sigma _{\text{base}} + \sigma _{\text{rel}}f(t_i, \theta)^\eta)^2}
+        \frac{(X(t_i) - f(t_i; \theta))^2}
+        {(\sigma _{\text{base}} + \sigma _{\text{rel}}f(t_i; \theta)^\eta)^2}
 
     where :math:`n` is the number of time points in the series.
 
@@ -306,7 +306,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Evaluate noise-free model
         function_values = self._problem.evaluate(x[:-self._np])
 
-        # Compute total variance
+        # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * function_values**eta
 
         # Compute log-likelihood
@@ -319,11 +319,90 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         return log_likelihood
 
-        # Write tests for call
+    def evaluateS1(self, x):
+        r"""
+        See :meth:`LogPDF.evaluateS1()`.
 
-        # Write sensitivity
-        # Write tests for that
+        Partial derivatives of the log-likelihood with respect to it's
+        parameters are computed as
 
+        .. math::
+            \frac{\partial \log L}{\partial \theta _k}
+            =& -\sigma _{\text{rel}}\eta \sum_{i=1}^{n}\frac{
+            f(t_i; \theta)^{\eta-1}}
+            {\sigma _{\text{base}} +\sigma _{\text{rel}}f(t_i; \theta)^\eta}
+            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
+            &+ \sum_{i=1}^{n}
+            \frac{(X(t_i) - f(t_i; \theta))}
+            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
+            f(t_i, \theta)^\eta)^2}
+            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
+            &+ \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
+            \frac{(X(t_i) - f(t_i; \theta))^2 f(t_i, \theta)^{\eta-1}}
+            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
+            f(t_i, \theta)^\eta)^3}
+            \frac{\partial f(t_i, \theta)}{\partial \theta _k}
+
+        .. math::
+            \frac{\partial \log L}{\partial \sigma _{\text{base}}}
+            = -\sum_{i=1}^{n}\frac{1}{\sigma _{\text{base}} +
+            \sigma _{\text{rel}}f(t_i; \theta)^\eta}
+            +\sum_{i=1}^{n}
+            \frac{(X(t_i) - f(t_i; \theta))^2}
+            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
+            f(t_i; \theta)^\eta)^3}
+
+        .. math::
+            \frac{\partial \log L}{\partial \eta}
+            = -\sigma _{\text{rel}}\eta\sum_{i=1}^{n}
+            \frac{f(t_i, \theta)^{\eta-1}}{\sigma _{\text{base}} +
+            \sigma _{\text{rel}}f(t_i; \theta)^\eta}
+            + \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
+            \frac{(X(t_i) - f(t_i; \theta))^2 f(t_i, \theta)^{\eta-1}}
+            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
+            f(t_i, \theta)^\eta)^3}
+        """
+        # Get parameters from input
+        noise_parameters = x[-self._np:]
+        sigma_base = np.asarray(noise_parameters[0::3])
+        eta = np.asarray(noise_parameters[1::3])
+        sigma_rel = np.asarray(noise_parameters[2::3])
+
+        # Evaluate noise-free model, and get residuals
+        y, dy = self._problem.evaluateS1(x[:-self._np])
+
+        # Reshape dy, in case we're working with a single-output problem
+        # shape = (n_times, n_outputs, n_model_params)
+        dy = dy.reshape(self._nt, self._np // 3, self._n_parameters - self._np)
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+
+        # Note: Must be (data - simulation), sign now matters!
+        error = self._values - y
+
+        # Compute total standard deviation
+        sigma_tot = sigma_base + sigma_rel * y**eta
+
+        # Compute dsigma_tot/df / sigma_tot
+        dsigma_tot = sigma_rel * eta * y**(eta - 1) / sigma_tot
+
+        # Calculate derivatives in the model parameters
+        dL = - np.sum(((dsigma_tot).T * dy.T).T, axis=0) + \
+            np.sum(((error * sigma_tot**(-2.0)).T * dy.T).T, axis=0) + \
+            np.sum(
+                ((error**2.0 * dsigma_tot * sigma_tot**(-2.0)).T * dy.T).T,
+                axis=0)
+
+        # Calculate derivative with respect to sigma_base
+        dsigma_base = np.sum(dsigma_tot**(-1.0), axis=0)
+
+        # Calculate derivative wrt sigma
+        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
+        dL = np.concatenate((dL, np.array(list(dsigma))))
+
+        # Return
+        return L, dL
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
