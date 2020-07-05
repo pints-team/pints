@@ -40,6 +40,11 @@ class TestTransform(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
+
         # Test n_parameters
         self.assertEqual(t1.n_parameters(), 1)
         self.assertEqual(t4.n_parameters(), 4)
@@ -83,6 +88,11 @@ class TestTransform(unittest.TestCase):
             calc_pi = t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
+
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
 
         # Test n_parameters
         self.assertEqual(t1.n_parameters(), 1)
@@ -141,6 +151,12 @@ class TestTransform(unittest.TestCase):
         self.assertTrue(np.allclose(t2.to_model(x), p))
         self.assertTrue(np.allclose(t2b.to_model(x), p))
 
+        # Test many invesre transform
+        ps = [p, p]
+        xs = [x, x]
+        self.assertTrue(np.allclose(t2.multiple_to_model(xs), ps))
+        self.assertTrue(np.allclose(t2b.multiple_to_model(xs), ps))
+
         # Test n_parameters
         self.assertEqual(t1.n_parameters(), 1)
         self.assertEqual(t2.n_parameters(), 2)
@@ -187,6 +203,11 @@ class TestTransform(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
+
         # Test n_parameters
         self.assertEqual(t1.n_parameters(), 1)
         self.assertEqual(t4.n_parameters(), 4)
@@ -225,6 +246,11 @@ class TestTransform(unittest.TestCase):
 
         # Test inverse transform
         self.assertTrue(np.allclose(t.to_model(x), p))
+
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
 
         # Test n_parameters
         self.assertEqual(t.n_parameters(), 4)

@@ -827,9 +827,8 @@ class MCMCController(object):
                 n_c, n_s, n_p = samples.shape
                 samples_user = np.zeros((n_c, n_s, n_p))
                 for c in range(n_c):
-                    for s in range(n_s):
-                        samples_user[c, s, :] = \
-                            self._transform.to_model(samples[c, s, :])
+                    samples_user[c, :, :] = \
+                        self._transform.multiple_to_model(samples[c, :, :])
                 samples = samples_user
                 del(samples_user)
 
