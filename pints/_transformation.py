@@ -255,6 +255,7 @@ class TransformedLogPDF(pints.LogPDF):
 
         # Calculate the PDF S1 using change of variable
         # Wikipedia: https://w.wiki/Us8
+        #
         # This can be done in matrix form, for Jacobian matrix J and
         # E = log(pi(p)):
         #
@@ -304,9 +305,19 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
-    """
+    r"""
     A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
     search space.
+
+    For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
+    and a :class:`pints.Transform` :math:`q = f(p)`, the transformation is done
+    using
+
+    .. math::
+        \frac{\partial E(q)}{\partial q_i} &=
+            \frac{\partial E(f^{-1}(q))}{\partial q_i}\\
+            &= \sum_l \frac{\partial E(p)}{\partial p_l}
+            \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.ErrorMeasure`.
 
@@ -340,17 +351,14 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
         # Compute evaluateS1 of ErrorMeasure in the model space
         e, de_nojac = self._error.evaluateS1(p)
 
-        # Calculate the S1 change of variable. From Chain Rule Wikipedia:
-        # https://w.wiki/Us8
+        # Calculate the S1 using change of variable
+        # Wikipedia: https://w.wiki/Us8
         #
-        # For some transformation q = h(p) and its inverse p = g(q) applied
-        # to some function E
+        # This can be done in matrix form, for Jacobian matrix J and
+        # E = log(pi(p)):
         #
-        # dE/dq_i = \sum_l dE/dp_l * dp_l/dq_i  (d denotes partial derivative)
-        #
-        # Or in matrix form, for Jacobian matrix J
-        #
-        # (dEdq)^T = J_(E.g) = J_E(p) J_g = (dEdp)^T J_g
+        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
+        # (\nabla denotes the del operator)
         #
         jacobian = self._transform.jacobian(q)
         de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
