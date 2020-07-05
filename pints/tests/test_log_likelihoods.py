@@ -12,6 +12,94 @@ import pints.toy
 import numpy as np
 
 
+class TestAR1LogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.0, -10.7, 15.5])
+        cls.data_multi = np.asarray([
+            [3.5, 7.6, 8.5, 3.4],
+            [1.1, -10.3, 15.6, 5.5],
+            [-10, -30.5, -5, 7.6]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.AR1LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.5, 5]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -19.706737485492436)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.AR1LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.5, 5]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -19.706737485492436)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.AR1LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.5, 5]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -19.706737485492436)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.AR1LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [
+            0, 0, 0, 0, 0.5, 1.0, -0.25, 3.0, 0.9, 10.0, 0.0, 2.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -179.22342804581092)
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -891,60 +979,6 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
-
-    def test_ar1_single(self):
-        # Tests :class:`pints.AR1LogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-        model = pints.toy.ConstantModel(1)
-        times = np.asarray([1, 2, 3])
-        n_times = len(times)
-        bare_values = np.asarray([1.0, -10.7, 15.5])
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.AR1LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.5, 5]), -19.706737485492436)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times, ))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.AR1LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.5, 5]), -19.706737485492436)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.AR1LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.5, 5]), -19.706737485492436)
-
-    def test_ar1_multi(self):
-        # Tests :class:`pints.AR1LogLikelihood` for
-        # instances of :class:`pints.MultiOutputProblem`.
-        model = pints.toy.ConstantModel(4)
-        parameters = [0, 0, 0, 0]
-        times = np.arange(1, 5)
-        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
-                             [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6],
-                             [-12, -10.1, -4, 2.3]])
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.AR1LogLikelihood(problem)
-        # Test AR1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, sigma=1) +
-        #      AR1Logpdf((7.6,-10.3,-30.5, -10.1)|mean=0, rho=-0.25, sigma=3) +
-        #      AR1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, sigma=10) +
-        #      AR1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, sigma=2)
-        #      = -109.4752924909364 -93.58199 - 18.3833..
-        #        -16.4988
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [0.5, 1.0,
-                                         -0.25, 3.0,
-                                         0.9, 10.0,
-                                         0.0, 2.0]),
-            -237.93936126949615)
 
     def test_arma11_single(self):
         # Tests :class:`pints.ARMA11LogLikelihood` for
