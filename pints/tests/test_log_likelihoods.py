@@ -100,6 +100,96 @@ class TestAR1LogLikelihood(unittest.TestCase):
         self.assertEqual(score, -179.22342804581092)
 
 
+class TestARMA11LogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3, 4])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([3, -4.5, 10.5, 0.3])
+        cls.data_multi = np.asarray([
+            [3.5, 7.6, 8.5, 3.4],
+            [1.1, -10.3, 15.6, 5.5],
+            [-10, -30.5, -5, 7.6],
+            [-12, -10.1, -4, 2.3]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.9, -0.4, 1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -171.53031588534171)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.9, -0.4, 1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -171.53031588534171)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0.9, -0.4, 1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -171.53031588534171)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [
+            0, 0, 0, 0, 0.5, 0.34, 1.0, -0.25, 0.1, 3.0, 0.9, 0.0, 10.0, 0.0,
+            0.9, 2.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -214.17034137601107)
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -980,59 +1070,7 @@ class TestLogLikelihood(unittest.TestCase):
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
 
-    def test_arma11_single(self):
-        # Tests :class:`pints.ARMA11LogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-        model = pints.toy.ConstantModel(1)
-        times = np.asarray([1, 2, 3, 4])
-        n_times = len(times)
-        bare_values = np.asarray([3, -4.5, 10.5, 0.3])
 
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.ARMA11LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.ARMA11LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.ARMA11LogLikelihood(problem)
-        self.assertAlmostEqual(
-            log_likelihood([0, 0.9, -0.4, 1]), -171.53031588534171)
-
-    def test_arma11_multi(self):
-        # Tests :class:`pints.ARMA11LogLikelihood` for
-        # instances of :class:`pints.MultiOutputProblem`.
-        model = pints.toy.ConstantModel(4)
-        parameters = [0, 0, 0, 0]
-        times = np.arange(1, 5)
-        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
-                             [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6],
-                             [-12, -10.1, -4, 2.3]])
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.ARMA11LogLikelihood(problem)
-        # ARMA1Logpdf((3.5,1.1,-10, -12)|mean=0, rho=0.5, phi=0.34 sigma=1) +
-        # ARMA1Logpdf((7.6,-10.3,-30.5, -10.1)|
-        #             mean=0, rho=-0.25, phi=0.1, sigma=3) +
-        # ARMA1Logpdf((8.5,15.6,-5, -4)|mean=0, rho=0.9, phi=0.0, sigma=10) +
-        # ARMA1Logpdf((3.4,5.5,7.6, 2.3)|mean=0, rho=0.0, phi=0.9, sigma=2)
-        #      = -116.009 -74.94 -14.32 -8.88
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [0.5, 0.34, 1.0,
-                                         -0.25, 0.1, 3.0,
-                                         0.9, 0.0, 10.0,
-                                         0.0, 0.9, 2.0]),
-            -214.17034137601107)
 
     def test_multiplicative_gaussian_single(self):
         # Tests :class:`pints.MultiplicativeGaussianLogLikelihood` for
