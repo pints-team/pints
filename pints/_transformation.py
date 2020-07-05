@@ -172,9 +172,43 @@ class Transform(object):
 
 
 class TransformedLogPDF(pints.LogPDF):
-    """
+    r"""
     A :class:`pints.LogPDF` that accepts parameters in a transformed search
     space.
+
+    When a :class:`TransformedLogPDF` object, initialised with a
+    :class:`pints.LogPDF` of :math:`\pi(p)` and a :class:`Transform` of
+    :math:`q = f(p)`, is called with a vector argument :math:`q` in the search
+    space, it returns :math:`\log(\pi(q))`` where :math:`\pi(q)` is the
+    transformed unnormalised PDF of the input PDF, using
+
+    .. math::
+        \pi(q) = \pi(f^{-1}(q)) |det(J(f^{-1}(q)))|.
+
+    :math:`J` is the Jacobian matrix:
+
+    .. math::
+        J = [\frac{\partial f^{-1}}{\partial q_1} \quad
+             \frac{\partial f^{-1}}{\partial q_2} \quad \cdots].
+
+    Hence
+
+    .. math::
+        \log(\pi(q)) = \log(\pi(f^{-1}(q))) + \log(|det(J(f^{-1}(q)))|).
+
+    For the first order sensitivity, the transformation is done using
+
+    .. math::
+        \frac{\partial \log(\pi(q))}{\partial q_i} =
+            \frac{\partial \log(|det(J)|)}{\partial q_i}
+            + \frac{\partial \log(\pi(f^{-1}(q)))}{\partial q_i}.
+
+    The second term can be calculated using the calculated using the chain rule
+
+    .. math::
+        \frac{\partial \log(\pi(f^{-1}(q)))}{\partial q_i} =
+            \sum_l \frac{\partial \log(\pi(p))}{\partial p_l}
+            \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.LogPDF`.
 
@@ -200,18 +234,8 @@ class TransformedLogPDF(pints.LogPDF):
         # Compute LogPDF in the model space
         logpdf_nojac = self._log_pdf(p)
 
-        # Calculate the PDF change of variable. From Wikipedia:
-        # https://w.wiki/UsJ
-        #
-        # For some model parameter vector b and distribution p(b), consider a
-        # transformation a = f(b), then
-        #
-        # p(a) = p(f^{-1}(a)) |det(J(f^{-1}(a)))|
-        #
-        # where J is the Jacobian matrix. For log PDF, it becomes
-        #
-        # log(p(a)) = log(p(f^{-1}(a))) + log(|det(J(f^{-1}(a)))|)
-        #
+        # Calculate the PDF using change of variable
+        # Wikipedia: https://w.wiki/UsJ
         log_jacobian_det = self._transform.log_jacobian_det(q)
         return logpdf_nojac + log_jacobian_det
 
@@ -229,25 +253,16 @@ class TransformedLogPDF(pints.LogPDF):
         # Calculate the PDF change of variable, see self.__call__()
         logpdf = logpdf_nojac + logjacdet
 
-        # Calculate the PDF S1 change of variable.
+        # Calculate the PDF S1 using change of variable
+        # Wikipedia: https://w.wiki/Us8
+        # This can be done in matrix form, for Jacobian matrix J and
+        # E = log(pi(p)):
         #
-        # For some transformation q = h(p) and its inverse p = g(q) applied
-        # to some distribution pi(p) where pi(q) = pi(p) |det(J)|, then
-        #
-        # d/dq_i log(pi(q)) = d/dq_i log(|det(J)|) + d/dq_i log(pi(p))
-        #
-        # Applying the chain rule (Wikipedia: https://w.wiki/Us8) to the second
-        # term d/dq_i log(pi(p))
-        #
-        # d/dq_i log(pi(p)) = \sum_l (d/dp_l log(pi(p))) * dp_l/dq_i
-        # (d denotes partial derivative)
-        #
-        # Or in matrix form, for Jacobian matrix J and E = log(pi(p))
-        #
-        # (dEdq)^T = J_(E.g) = J_E(p) J_g = (dEdp)^T J_g
+        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
+        # (\nabla denotes the del operator)
         #
         jacobian = self._transform.jacobian(q)
-        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be second
+        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be 2nd
         dlogpdf += pints.vector(dlogjacdet)
 
         return logpdf, dlogpdf
