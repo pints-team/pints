@@ -51,7 +51,8 @@ class Transform(object):
         Converts a convariance matrix ``C`` from the model space to the search
         space around a parameter vector ``q`` provided in the search space.
 
-        The transformation is performed using a linear approximation [1]_:
+        The transformation is performed using a linear approximation [1]_ with
+        the Jacobian :math:`J`:
 
         .. math::
 
@@ -71,6 +72,44 @@ class Transform(object):
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
         return np.matmul(np.matmul(jac_inv, C), jac_inv.T)
+
+    def convert_standard_deviation(self, s, q):
+        r"""
+        Converts standard deviation ``s``, either a scalar or a vector, from
+        the model space to the search space around a parameter vector ``q``
+        provided in the search space.
+
+        The transformation is performed using a linear approximation [1]_ with
+        the Jacobian :math:`J`:
+
+        .. math::
+
+            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T \\
+                 &= J^{-1}(q) C(p) (J^{-1}(q))^T.
+
+        Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
+        inverse function theorem, i.e. the matrix inverse of the Jacobian
+        matrix of an invertible function is the Jacobian matrix of the inverse
+        function.
+
+        If :math:`C(p) = var(p) \cdot I`, where :math:`var(.)` is the variance
+        and :math:`I` is the identity matrix, then
+
+        .. math::
+            C(q) = var(q) \cdot I = diag(J^{-1}(q))^2 var(p) I
+
+        Therefore the standard deviation ``s`` can be transformed using
+
+        s(q) = diag(J^{-1}(q)) \times s(p)
+
+        References
+        ----------
+        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
+               Erik Jørgensen and Asger Roer Pedersen,
+               http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
+        """
+        jac_inv = np.linalg.pinv(self.jacobian(q))
+        return s * np.diagonal(jac_inv)
 
     def jacobian(self, q):
         """
@@ -241,7 +280,7 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
     """
-    An :class:`pints.ErrorMeasure` that accepts parameters in a transformed
+    A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
     search space.
 
     Extends :class:`pints.ErrorMeasure`.

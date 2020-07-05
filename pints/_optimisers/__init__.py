@@ -339,32 +339,8 @@ class OptimisationController(object):
             else:
                 function = transform.apply_log_pdf(function)
             x0 = transform.to_search(x0)
-            #
-            # Following Eq. 3 in
-            # http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
-            #
-            # For transformation x = g(p) and Jacobian J(x) = d/dx g^{-1}(x),
-            # then the covariance matrices C(.) for x and p follow
-            #
-            # C(x) = (d/dp g(E(p))) C(p) (d/dp g(E(p)))^T
-            #        = J^{-1}(E(x)) C(p) J^{-1}(E(x))^T
-            #
-            # Using the property that J^{-1} = dg/dp, from the inverse function
-            # theorem, i.e. the matrix inverse of the Jacobian matrix of an
-            # invertible function is the Jacobian matrix of the inverse
-            # function.
-            #
-            # If C(p) = V(p) = var(p) * I, where I is the identity matrix, then
-            #
-            # C(x) = V(x) = var(x) * I = diag(J^{-1}(E(x)))^2 * var(p) * I
-            #
-            # Therefore the standard deviation sigma0 can be transformed using
-            #
-            # std(x) = diag(J^{-1}(E(x))) * sigma0
-            #
             if sigma0 is not None:
-                jacobian = np.linalg.pinv(transform.jacobian(x0))
-                sigma0 *= np.diagonal(jacobian)
+                sigma0 = transform.convert_standard_deviation(sigma0, x0)
             if boundaries:
                 boundaries = transform.apply_boundaries(boundaries)
         self._transform = transform
