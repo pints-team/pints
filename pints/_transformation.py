@@ -157,6 +157,18 @@ class Transform(object):
         """
         raise NotImplementedError
 
+    def multiple_to_model(self, qs):
+        """
+        Transforms a series of parameter vectors ``qs`` from the search space
+        to the model space. ``qs`` must be provided in the shape
+        (``n_vectors``, ``n_parameters``).
+        """
+        qs = np.asarray(qs)
+        ps = np.zeros(qs.shape)
+        for i, q in enumerate(qs):
+            ps[i, :] = self.to_model(q)
+        return ps
+
     def n_parameters(self):
         """
         Returns the dimension of the parameter space this transformation is
@@ -472,6 +484,11 @@ class LogTransform(Transform):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
 
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transform.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return np.exp(qs)
+
     def to_model(self, q):
         """ See :meth:`Transform.to_model()`. """
         q = pints.vector(q)
@@ -534,6 +551,11 @@ class LogitTransform(Transform):
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transform.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return expit(qs)
 
     def to_model(self, q):
         """ See :meth:`Transform.to_model()`. """
@@ -627,6 +649,11 @@ class RectangularBoundariesTransform(Transform):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
 
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transform.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return (self._b - self._a) * expit(qs) + self._a
+
     def to_model(self, q):
         """ See :meth:`Transform.to_model()`. """
         q = pints.vector(q)
@@ -669,6 +696,10 @@ class IdentityTransform(Transform):
     def n_parameters(self):
         """ See :meth:`Transform.n_parameters()`. """
         return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transform.multiple_to_model()`. """
+        return np.asarray(qs)
 
     def to_model(self, q):
         """ See :meth:`Transform.to_model()`. """
@@ -759,6 +790,18 @@ class ComposedTransform(Transform):
             output += j
             output_s1[lo:hi] = np.asarray(js1)
         return output, output_s1
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transform.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        output = np.zeros(qs.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            output[:, lo:hi] = np.asarray(
+                transform.multiple_to_model(qs[:, lo:hi]))
+        return output
 
     def to_model(self, q):
         """ See :meth:`Transform.to_model()`. """
