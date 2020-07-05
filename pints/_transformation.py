@@ -196,14 +196,14 @@ class TransformedLogPDF(pints.LogPDF):
     A :class:`pints.LogPDF` that accepts parameters in a transformed search
     space.
 
-    When a :class:`TransformedLogPDF` object, initialised with a
+    When a :class:`TransformedLogPDF` object (initialised with a
     :class:`pints.LogPDF` of :math:`\pi(p)` and a :class:`Transformation` of
-    :math:`q = f(p)`, is called with a vector argument :math:`q` in the search
+    :math:`q = f(p)`) is called with a vector argument :math:`q` in the search
     space, it returns :math:`\log(\pi(q))`` where :math:`\pi(q)` is the
     transformed unnormalised PDF of the input PDF, using
 
     .. math::
-        \pi(q) = \pi(f^{-1}(q)) |det(J(f^{-1}(q)))|.
+        \pi(q) = \pi(f^{-1}(q)) \,\, |det(J(f^{-1}(q)))|.
 
     :math:`J` is the Jacobian matrix:
 
@@ -519,7 +519,8 @@ class LogitTransformation(Transformation):
     The first order derivative of the log determinant of the Jacobian is
 
     .. math::
-        \frac{d}{dq} \log(|J(q)|) = 2 \exp(-q) \text{logit}^{-1}(q) - 1.
+        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
+                                    \text{logit}^{-1}(q) - 1.
 
     Extends :class:`Transformation`.
 
@@ -585,13 +586,19 @@ class RectangularBoundariesTransformation(Transformation):
     The Jacobian adjustment of the transformation is given by
 
     .. math::
-        |\frac{d}{dq} f^{-1}(q)| = \frac{b - a}{\exp(q) (1 + \exp(-q)) ^ 2}
-        \log|\frac{d}{dq} f^{-1}(q)| = \log(b - a) - 2 \log(1 + \exp(-q)) - q
+        |\frac{d}{dq} f^{-1}(q)| = \frac{b - a}{\exp(q) (1 + \exp(-q)) ^ 2}.
+
+    The log-determinant of the Jacobian matrix is given by
+
+    .. math::
+        \log|\frac{d}{dq} f^{-1}(q)| = \sum_i \left( \log(b_i - a_i) -
+            2 \times \log(1 + \exp(-q_i)) - q_i \right)
 
     The first order derivative of the log determinant of the Jacobian is
 
     .. math::
-        \frac{d}{dq} \log(|J(q)|) = 2 \exp(-q) \text{logit}^{-1}(q) - 1.
+        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
+            \text{logit}^{-1}(q) - 1.
 
     For example, to create a transform with :math:`p_1 \in [0, 4)`,
     :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
