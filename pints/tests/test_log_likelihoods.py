@@ -1432,8 +1432,6 @@ class TestLogLikelihood(unittest.TestCase):
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
 
-
-
     def test_multiplicative_gaussian_single(self):
         # Tests :class:`pints.MultiplicativeGaussianLogLikelihood` for
         # instances of :class:`pints.SingleOutputProblem`.
