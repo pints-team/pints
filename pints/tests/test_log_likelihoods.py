@@ -278,59 +278,6 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         self.assertEqual(score, -49.51182454195375)
 
 
-    def test_cauchy_log_likelihood_single(self):
-        # Tests :class:`pints.CauchyLogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-
-        # Check evaluation
-        model = pints.toy.ConstantModel(1)
-        times = np.asarray([1, 2, 3])
-        n_times = len(times)
-        bare_values = np.asarray([1.0, -10.7, 15.5])
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-    def test_cauchy_log_likelihood_multi(self):
-        # Tests :class:`pints.CauchyLogLikelihood` for
-        # instances of :class:`pints.MultiOutputProblem`.
-
-        model = pints.toy.ConstantModel(4)
-        parameters = [0, 0, 0, 0]
-        times = np.arange(1, 4)
-        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
-                             [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6]])
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf((3.5,1.1,-10)|mean=0, scale=13) +
-        #      Cauchy_logpdf((7.6,-10.3,-30.5)|mean=0, scale=8) +
-        #      Cauchy_logpdf((8.5,15.6,-5)|mean=0, scale=13.5) +
-        #      Cauchy_logpdf((3.4,5.5,7.6)|mean=0, scale=10.5)
-        #      = -49.51....
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [13, 8, 13.5, 10.5]),
-            -49.51182454195375)
-
-
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
