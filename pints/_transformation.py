@@ -112,19 +112,27 @@ class Transform(object):
         return s * np.diagonal(jac_inv)
 
     def jacobian(self, q):
-        """
-        Returns the Jacobian for a parameter vector ``q`` in the search space.
+        r"""
+        Returns the Jacobian matrix of the transformation calculated at the
+        parameter vector ``q`` in the search space. For a transformation
+        :math:`q = f(p)`, the Jacobian matrix is defined as
 
-        *This is an optional method. It is needed when `sigma0` is provided in
-        :meth:`pints.OptimisationController` or :meth:`pints.MCMCController`,
-        or when the method requires ``evaluateS1()``.*
+        .. math::
+            J = [\frac{\partial f^{-1}}{\partial q_1} \quad
+                 \frac{\partial f^{-1}}{\partial q_2} \quad \cdots].
+
+        *This is an optional method. It is needed when transformation of
+        standard deviation :meth:`Transform.convert_standard_deviation` or
+        covariance matrix :meth:`Transform.convert_covariance_matrix` is
+        needed, or when ``evaluateS1()`` is needed.*
         """
         raise NotImplementedError
 
     def log_jacobian_det(self, q):
         """
         Returns the logarithm of the absolute value of the determinant of the
-        Jacobian for a parameter vector ``q`` in the search space.
+        Jacobian matrix of the transformation :meth:`Transform.jacobian`
+        calculated at the parameter vector ``q`` in the search space.
 
         *This is an optional method. It is needed when transformation is
         performed on :class:`LogPDF` and/or that requires ``evaluateS1()``;
