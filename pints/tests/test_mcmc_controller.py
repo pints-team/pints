@@ -164,7 +164,11 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
-        self.assertTrue(np.all(chains > 0))  # Test chains inverse transformed
+        # Test chains inverse transformed
+        # log-transform of the parameter in [0.01, 0.02] will always be
+        # negative values, so checking it larger than zero make sure it's
+        # transformed back to the model space.
+        self.assertTrue(np.all(chains > 0))
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
@@ -306,7 +310,11 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[0], n_chains)
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
-        self.assertTrue(np.all(chains > 0))  # Test chains inverse transformed
+        # Test chains inverse transformed
+        # log-transform of the parameter in [0.01, 0.02] will always be
+        # negative values, so checking it larger than zero make sure it's
+        # transformed back to the model space.
+        self.assertTrue(np.all(chains > 0))
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
                              method=meth, transform=logt)
@@ -760,6 +768,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                 self.assertTrue(np.all(chains1 == chains2))
 
                 # Test files contain inverse transformed samples
+                # log-transform of the parameter in [0.01, 0.02] will always
+                # be negative values, so checking it larger than zero make sure
+                # it's transformed back to the model space.
                 self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()
@@ -882,6 +893,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                     chains2.shape, (self.nchains, 20, len(self.xs)))
 
                 # Test files contain inverse transformed samples
+                # log-transform of the parameter in [0.01, 0.02] will always
+                # be negative values, so checking it larger than zero make sure
+                # it's transformed back to the model space.
                 self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()

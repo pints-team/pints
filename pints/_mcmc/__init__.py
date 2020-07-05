@@ -433,7 +433,7 @@ class MCMCController(object):
         # Note: Not copying this, for efficiency. At this point we're done with
         # the chains, so nothing will go wrong if the user messes the array up.
         # Note: Any inverse transform for parameters should be performed before
-        # stored to memory.
+        # storing to memory or logging to screen.
         return self._samples
 
     def initial_phase_iterations(self):
@@ -820,8 +820,9 @@ class MCMCController(object):
         if self._evaluations_in_memory:
             self._evaluations = evaluations
 
-        # Inverse transform to model space if transform is provided
         if self._chains_in_memory:
+
+            # Inverse transform to model space if transform is provided
             if self._transform:
                 n_c, n_s, n_p = samples.shape
                 samples_user = np.zeros((n_c, n_s, n_p))
@@ -829,17 +830,14 @@ class MCMCController(object):
                     for s in range(n_s):
                         samples_user[c, s, :] = \
                             self._transform.to_model(samples[c, s, :])
-            else:
-                samples_user = samples
-        else:
-            samples_user = None
+                samples = samples_user
+                del(samples_user)
 
-        # Store generated chains in memory
-        if self._chains_in_memory:
-            self._samples = samples_user
+            # Store generated chains in memory
+            self._samples = samples
 
         # Return generated chains
-        return samples_user
+        return samples if self._chains_in_memory else None
 
     def sampler(self):
         """
