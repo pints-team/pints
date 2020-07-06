@@ -429,6 +429,215 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
                           problem, [1, 3], [2, 2])
 
 
+class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(3)
+
+        # Generate test data
+        cls.times = [1, 2, 3, 4]
+        cls.n_times = len(cls.times)
+        cls.data_single = np.arange(1, 5) / 5.0
+        cls.data_multi = np.array([
+            [10.7, 3.5, 3.8],
+            [1.1, 3.2, -1.4],
+            [9.3, 0.0, 4.5],
+            [1.2, -3, -10]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [-1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -7.3420590096957925)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [-1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -7.3420590096957925)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [-1]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -7.3420590096957925)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -196.9122623984561)
+
+    def test_evaluateS1_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create a scaled and not scaled log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Compute derivatives for scaled and unscaled likelihood
+        test_parameters = [3]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that score is computed correctly
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that partials have the correct shape
+        self.assertEqual(deriv.shape, (1, ))
+
+        # Check that partials are comuted correctly
+        self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    def test_evaluateS1_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create a scaled and not scaled log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Compute derivatives for scaled and unscaled likelihood
+        test_parameters = [3]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that score is computed correctly
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that partials have the correct shape
+        self.assertEqual(deriv.shape, (1, ))
+
+        # Check that partials are comuted correctly
+        self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    def test_evaluateS1_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create a scaled and not scaled log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+        # Compute derivatives for scaled and unscaled likelihood
+        test_parameters = [3]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that score is computed correctly
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that partials have the correct shape
+        self.assertEqual(deriv.shape, (1, ))
+
+        # Check that partials are comuted correctly
+        self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    def test_evaluateS1_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+
+        # Compute derivatives for scaled and unscaled likelihood
+        test_parameters = [0, 0, 0]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that score is computed correctly
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that partials have the correct shape
+        self.assertEqual(deriv.shape, (3, ))
+
+        # Check that partials are comuted correctly
+        self.assertAlmostEqual(deriv[0], 22.3)
+        self.assertAlmostEqual(deriv[1], 2 * 3.7000000000000002)
+        self.assertAlmostEqual(deriv[2], -9.3)
+
+    def test_deprecated_alias(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create deprecated alias
+        log_likelihood = pints.KnownNoiseLogLikelihood(problem, 0.1)
+
+        # Check inheritance from current class
+        self.assertIsInstance(
+            log_likelihood, pints.GaussianKnownSigmaLogLikelihood)
+
+    def test_bad_constructor(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Check wrong prior dimensions
+        self.assertRaises(
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
+        self.assertRaises(
+            ValueError,
+            pints.GaussianKnownSigmaLogLikelihood, problem, [0.1, 0.2])
+        self.assertRaises(
+            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -709,123 +918,6 @@ class TestScaledLogLikelihood(unittest.TestCase):
 
 
 class TestLogLikelihood(unittest.TestCase):
-
-    def test_gaussian_known_sigma_log_likelihood_single(self):
-        # Tests :class:`pints.GaussianKnownSigmaLogLikelihood` for instances of
-        # :class:`pints.SingleOutputProblem`.
-
-        # Known noise value checks
-        model = pints.toy.ConstantModel(1)
-        n_times = 10
-        times = np.linspace(0, 10, n_times)
-        bare_values = np.arange(10) / 5.0
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Check evaluation
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
-        self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
-
-        # Check derivatives
-        l, dl = log_likelihood.evaluateS1([3])
-        self.assertAlmostEqual(l, -23.777369746461702)
-        self.assertAlmostEqual(dl[0], -9.3333333333333321)
-        self.assertEqual(len(dl), 1)
-
-        # Test deprecated aliases
-        l1 = pints.KnownNoiseLogLikelihood(problem, 0.1)
-        self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Check evaluation
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
-        self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
-
-        # Check derivatives
-        l, dl = log_likelihood.evaluateS1([3])
-        self.assertAlmostEqual(l, -23.777369746461702)
-        self.assertAlmostEqual(dl[0], -9.3333333333333321)
-        self.assertEqual(len(dl), 1)
-
-        # Test deprecated aliases
-        l1 = pints.KnownNoiseLogLikelihood(problem, 0.1)
-        self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-
-        # Check evaluation
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
-        self.assertAlmostEqual(log_likelihood([-1]), -21.999591968683927)
-
-        # Check derivatives
-        l, dl = log_likelihood.evaluateS1([3])
-        self.assertAlmostEqual(l, -23.777369746461702)
-        self.assertAlmostEqual(dl[0], -9.3333333333333321)
-        self.assertEqual(len(dl), 1)
-
-        # Test deprecated aliases
-        l1 = pints.KnownNoiseLogLikelihood(problem, 0.1)
-        self.assertIsInstance(l1, pints.GaussianKnownSigmaLogLikelihood)
-
-        # Test invalid constructors
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, 0)
-        self.assertRaises(
-            ValueError,
-            pints.GaussianKnownSigmaLogLikelihood, problem, [0.1, 0.2])
-        self.assertRaises(
-            ValueError, pints.GaussianKnownSigmaLogLikelihood, problem, -1)
-
-    def test_gaussian_known_sigma_log_likelihood_multi(self):
-        # Tests :class:`pints.GaussianKnownSigmaLogLikelihood` for instances of
-        # :class:`pints.MultiOutputProblem`.
-
-        # Check evaluation
-        model = pints.toy.ConstantModel(3)
-        parameters = [0, 0, 0]
-        sigma = 1
-        times = [1, 2, 3, 4]
-        values = [[10.7, 3.5, 3.8],
-                  [1.1, 3.2, -1.4],
-                  [9.3, 0.0, 4.5],
-                  [1.2, -3, -10]]
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
-        # Test Gaussian_logpdf((10.7, 1.1, 9.3, 1.2)|mean=0, sigma=1) +
-        #      Gaussian_logpdf((3.5, 3.2, 0.0, -3)|mean=0, sigma=1) +
-        #      Gaussian_logpdf((3.8, -1.4, 4.5, -10)|mean=0, sigma=1)
-        #      = -196.91...
-        self.assertAlmostEqual(
-            log_likelihood(parameters),
-            -196.9122623984561
-        )
-
-        # Check derivatives
-        l, dl = log_likelihood.evaluateS1(parameters)
-        self.assertAlmostEqual(l, -196.9122623984561)
-        self.assertAlmostEqual(dl[0], 22.3)
-        self.assertAlmostEqual(dl[1], 2 * 3.7000000000000002)
-        self.assertAlmostEqual(dl[2], -9.3)
-
-        # Test multiple output model dimensions of sensitivities
-        d = 20
-        model = pints.toy.ConstantModel(d)
-        parameters = [0 for i in range(d)]
-        times = [1, 2, 3, 4]
-        values = np.ones((len(times), d))
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
-        l = log_likelihood(parameters)
-        l1, dl = log_likelihood.evaluateS1(parameters)
-        self.assertEqual(len(dl), len(parameters))
-        self.assertEqual(l, l1)
 
     def test_gaussian_log_likelihood_single(self):
         # Tests :class:`pints.GaussianLogLikelihood` for instances of
