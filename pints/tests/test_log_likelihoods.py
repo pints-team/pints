@@ -404,7 +404,13 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
                           pints.GaussianIntegratedUniformLogLikelihood,
                           problem, 2, 1)
 
-        # Check worng prior dimension
+        # Check wrong prior dimensions
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, [1, 2], 2)
+        self.assertRaises(ValueError,
+                          pints.GaussianIntegratedUniformLogLikelihood,
+                          problem, 1, [2, 3])
         self.assertRaises(ValueError,
                           pints.GaussianIntegratedUniformLogLikelihood,
                           problem, [1, 2], [2, 3])
@@ -874,6 +880,54 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             log_likelihood, pints.GaussianLogLikelihood)
 
 
+class TestKnownNoiseLogLikelihood(unittest.TestCase):
+
+    def test_known_noise_gaussian_single_and_multi(self):
+        # Tests the output of single-series against multi-series known noise
+        # log-likelihoods.
+
+        # Define boring 1-output and 2-output models
+        class NullModel1(pints.ForwardModel):
+            def n_parameters(self):
+                return 1
+
+            def simulate(self, x, times):
+                return np.zeros(times.shape)
+
+        class NullModel2(pints.ForwardModel):
+            def n_parameters(self):
+                return 1
+
+            def n_outputs(self):
+                return 2
+
+            def simulate(self, x, times):
+                return np.zeros((len(times), 2))
+
+        # Create two single output problems
+        times = np.arange(10)
+        np.random.seed(1)
+        sigma1 = 3
+        sigma2 = 5
+        values1 = np.random.uniform(0, sigma1, times.shape)
+        values2 = np.random.uniform(0, sigma2, times.shape)
+        model1d = NullModel1()
+        problem1 = pints.SingleOutputProblem(model1d, times, values1)
+        problem2 = pints.SingleOutputProblem(model1d, times, values2)
+        log1 = pints.GaussianKnownSigmaLogLikelihood(problem1, sigma1)
+        log2 = pints.GaussianKnownSigmaLogLikelihood(problem2, sigma2)
+
+        # Create one multi output problem
+        values3 = np.array([values1, values2]).swapaxes(0, 1)
+        model2d = NullModel2()
+        problem3 = pints.MultiOutputProblem(model2d, times, values3)
+        log3 = pints.GaussianKnownSigmaLogLikelihood(
+            problem3, [sigma1, sigma2])
+
+        # Check if we get the right output
+        self.assertAlmostEqual(log1(0) + log2(0), log3(0))
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -1205,103 +1259,6 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(
             log_likelihood(parameters + [2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]),
             -47.83720347766945)
-
-    def test_cauchy_log_likelihood_single(self):
-        # Tests :class:`pints.CauchyLogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-
-        # Check evaluation
-        model = pints.toy.ConstantModel(1)
-        times = np.asarray([1, 2, 3])
-        n_times = len(times)
-        bare_values = np.asarray([1.0, -10.7, 15.5])
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf(values|mean=0, scale = 10) = -12.34..
-        self.assertAlmostEqual(log_likelihood([0, 10]), -12.3394986541736)
-
-    def test_cauchy_log_likelihood_multi(self):
-        # Tests :class:`pints.CauchyLogLikelihood` for
-        # instances of :class:`pints.MultiOutputProblem`.
-
-        model = pints.toy.ConstantModel(4)
-        parameters = [0, 0, 0, 0]
-        times = np.arange(1, 4)
-        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
-                             [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6]])
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.CauchyLogLikelihood(problem)
-        # Test Cauchy_logpdf((3.5,1.1,-10)|mean=0, scale=13) +
-        #      Cauchy_logpdf((7.6,-10.3,-30.5)|mean=0, scale=8) +
-        #      Cauchy_logpdf((8.5,15.6,-5)|mean=0, scale=13.5) +
-        #      Cauchy_logpdf((3.4,5.5,7.6)|mean=0, scale=10.5)
-        #      = -49.51....
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [13, 8, 13.5, 10.5]),
-            -49.51182454195375)
-
-    def test_known_noise_gaussian_single_and_multi(self):
-        # Tests the output of single-series against multi-series known noise
-        # log-likelihoods.
-
-        # Define boring 1-output and 2-output models
-        class NullModel1(pints.ForwardModel):
-            def n_parameters(self):
-                return 1
-
-            def simulate(self, x, times):
-                return np.zeros(times.shape)
-
-        class NullModel2(pints.ForwardModel):
-            def n_parameters(self):
-                return 1
-
-            def n_outputs(self):
-                return 2
-
-            def simulate(self, x, times):
-                return np.zeros((len(times), 2))
-
-        # Create two single output problems
-        times = np.arange(10)
-        np.random.seed(1)
-        sigma1 = 3
-        sigma2 = 5
-        values1 = np.random.uniform(0, sigma1, times.shape)
-        values2 = np.random.uniform(0, sigma2, times.shape)
-        model1d = NullModel1()
-        problem1 = pints.SingleOutputProblem(model1d, times, values1)
-        problem2 = pints.SingleOutputProblem(model1d, times, values2)
-        log1 = pints.GaussianKnownSigmaLogLikelihood(problem1, sigma1)
-        log2 = pints.GaussianKnownSigmaLogLikelihood(problem2, sigma2)
-
-        # Create one multi output problem
-        values3 = np.array([values1, values2]).swapaxes(0, 1)
-        model2d = NullModel2()
-        problem3 = pints.MultiOutputProblem(model2d, times, values3)
-        log3 = pints.GaussianKnownSigmaLogLikelihood(
-            problem3, [sigma1, sigma2])
-
-        # Check if we get the right output
-        self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
     def test_sum_of_independent_log_pdfs(self):
 
