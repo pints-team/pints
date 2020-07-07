@@ -1445,7 +1445,7 @@ class TestStudentTLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that scaled likelihood returns expected value
-        self.assertEqual(score, -47.83720347766945)
+        self.assertEqual(score, -47.83720347766944)
 
 
 if __name__ == '__main__':
