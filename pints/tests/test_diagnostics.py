@@ -131,7 +131,7 @@ class TestDiagnostics(unittest.TestCase):
         chains = np.empty(shape=1)
         message = (
             'Dimension of chains is 1. '
-            + 'Method computes R^hat for one '
+            + 'Method computes Rhat for one '
             'or multiple parameters and therefore only accepts 2 or 3 '
             'dimensional arrays.')
         self.assertRaisesRegex(
