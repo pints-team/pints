@@ -170,7 +170,8 @@ def rhat(chains, warm_up=0.0):
 
     References
     ----------
-    ..  [1] "Bayesian data analysis", 3rd edition, Gelman et al., 2014.
+    ..  [1] "Bayesian data analysis", ch. 11.4 'Inference and assessing
+        convergence', 3rd edition, Gelman et al., 2014.
 
     Parameters
     ----------
