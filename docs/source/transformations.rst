@@ -28,34 +28,34 @@ Example::
 
 Overview:
 
-- :class:`Transformation`
 - :class:`ComposedTransformation`
 - :class:`IdentityTransformation`
-- :class:`LogTransformation`
 - :class:`LogitTransformation`
+- :class:`LogTransformation`
 - :class:`RectangularBoundariesTransformation`
+- :class:`Transformation`
+- :class:`TransformedBoundaries`
+- :class:`TransformedErrorMeasure`
 - :class:`TransformedLogPDF`
 - :class:`TransformedLogPrior`
-- :class:`TransformedErrorMeasure`
-- :class:`TransformedBoundaries`
 
-
-.. autoclass:: Transformation
 
 .. autoclass:: ComposedTransformation
 
 .. autoclass:: IdentityTransformation
 
-.. autoclass:: LogTransformation
-
 .. autoclass:: LogitTransformation
 
+.. autoclass:: LogTransformation
+
 .. autoclass:: RectangularBoundariesTransformation
+
+.. autoclass:: Transformation
+
+.. autoclass:: TransformedBoundaries
+
+.. autoclass:: TransformedErrorMeasure
 
 .. autoclass:: TransformedLogPDF
 
 .. autoclass:: TransformedLogPrior
-
-.. autoclass:: TransformedErrorMeasure
-
-.. autoclass:: TransformedBoundaries

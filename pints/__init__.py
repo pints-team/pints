@@ -237,16 +237,16 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 # Transformation
 #
 from ._transformation import (
+    ComposedTransformation,
+    IdentityTransformation,
+    LogitTransformation,
+    LogTransformation,
+    RectangularBoundariesTransformation,
     Transformation,
+    TransformedBoundaries,
+    TransformedErrorMeasure,
     TransformedLogPDF,
     TransformedLogPrior,
-    TransformedErrorMeasure,
-    TransformedBoundaries,
-    LogTransformation,
-    LogitTransformation,
-    RectangularBoundariesTransformation,
-    IdentityTransformation,
-    ComposedTransformation,
 )
 
 
