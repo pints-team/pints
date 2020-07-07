@@ -19,6 +19,7 @@ relevant code.
 - [Optimisation in a transformed parameter space - using a Transform object](./optimisation/transformed-parameters.ipynb)
 - [Optimisation in a transformed parameter space - using a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
 - [Sampling in a transformed parameter space - using a Transform object](./sampling/transformed-parameters.ipynb)
+- [Sampling in a transformed parameter space - with or without Jacobian adjustment](./sampling/transformation-with-and-without-jacobian.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 
 
