@@ -197,7 +197,7 @@ def rhat(chains, warm_up=0.0):
             'dimensional arrays.')
     if warm_up > 1 or warm_up < 0:
         raise ValueError(
-            '`warum_up` is set to %f. `warm_up` only takes values in [0,1].' %
+            '`warm_up` is set to %f. `warm_up` only takes values in [0,1].' %
             warm_up)
 
     # Get number of samples

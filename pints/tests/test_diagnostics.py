@@ -153,14 +153,14 @@ class TestDiagnostics(unittest.TestCase):
         # warm-up greater than 100%
         warm_up = 1.1
         message = (
-            '`warum_up` is set to 1.1. `warm_up` only takes values in [0,1].')
+            '`warm_up` is set to 1.1. `warm_up` only takes values in [0,1].')
         self.assertRaisesRegex(
             ValueError, message[0], pints.rhat, chains, warm_up)
 
         # Negative warm-up
         warm_up = -0.1
         message = (
-            '`warum_up` is set to -0.1. `warm_up` only takes values in [0,1].')
+            '`warm_up` is set to -0.1. `warm_up` only takes values in [0,1].')
         self.assertRaisesRegex(
             ValueError, message[0], pints.rhat, chains, warm_up)
 
