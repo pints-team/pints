@@ -928,6 +928,94 @@ class TestKnownNoiseLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
 
+class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(3)
+
+        # Generate test data
+        cls.times = np.array([1, 2, 3, 4])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.9, 2.1, 1.8, 2.2])
+        cls.data_multi = np.array([
+            [10.7, 3.5, 3.8],
+            [1.1, 3.2, -1.4],
+            [9.3, 0.0, 4.5],
+            [1.2, -3, -10]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with known and unknown sigma
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 2.0, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -9.224056577298253)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with known and unknown sigma
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 2.0, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -9.224056577298253)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with known and unknown sigma
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 2.0, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -9.224056577298253)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihoods with known and unknown sigma
+        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -46.324126706784014)
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -1322,50 +1410,6 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
-
-    def test_multiplicative_gaussian_single(self):
-        # Tests :class:`pints.MultiplicativeGaussianLogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-        model = pints.toy.ConstantModel(1)
-        parameters = [2]
-        times = np.asarray([1, 2, 3, 4])
-        n_times = len(times)
-        bare_values = np.asarray([1.9, 2.1, 1.8, 2.2])
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
-        self.assertAlmostEqual(log_likelihood(parameters + [2.0, 1.0]),
-                               -9.224056577298253)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
-        self.assertAlmostEqual(log_likelihood(parameters + [2.0, 1.0]),
-                               -9.224056577298253)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
-        self.assertAlmostEqual(log_likelihood(parameters + [2.0, 1.0]),
-                               -9.224056577298253)
-
-    def test_multiplicative_gaussian_multi(self):
-        # Tests :class:`pints.MultiplicativeGaussianLogLikelihood` for
-        # instances of :class:`pints.MultiOutputProblem`.
-        model = pints.toy.ConstantModel(2)
-        parameters = [1, 2]
-        times = np.asarray([1, 2, 3])
-        values = np.asarray([[1.1, 0.9, 1.5], [1.5, 2.5, 2.0]]).transpose()
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
-
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [1.0, 2.0, 1.0, 1.0]),
-            -12.176330824267543)
 
 
 if __name__ == '__main__':
