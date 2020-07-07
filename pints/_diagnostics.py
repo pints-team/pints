@@ -192,7 +192,7 @@ def rhat(chains, warm_up=0.0):
     if not (chains.ndim == 2 or chains.ndim == 3):
         raise ValueError(
             'Dimension of chains is %d. ' % chains.ndim
-            + 'Method computes R^hat for one '
+            + 'Method computes Rhat for one '
             'or multiple parameters and therefore only accepts 2 or 3 '
             'dimensional arrays.')
     if warm_up > 1 or warm_up < 0:
@@ -221,7 +221,7 @@ def rhat(chains, warm_up=0.0):
     # Compute mean between-chain variance
     b = _between(chains)
 
-    # Compute R^hat
+    # Compute Rhat
     rhat = np.sqrt((n - 1.0) / n + b / (w * n))
 
     return rhat
