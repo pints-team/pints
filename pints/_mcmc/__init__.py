@@ -291,8 +291,8 @@ class MCMCController(object):
         of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
     transform : pints.Transformation
-        A :class:`pints.Transformation` that transform the model parameter
-        space to search space. If no transform is specified, search will be
+        A :class:`pints.Transformation` that transforms the model parameter
+        space to a search space. If no transform is specified, search will be
         performed in the model space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
