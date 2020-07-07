@@ -1295,58 +1295,7 @@ class TestScaledLogLikelihood(unittest.TestCase):
             ValueError, pints.ScaledLogLikelihood, self.model_single)
 
 
-class TestLogLikelihood(unittest.TestCase):
-
-    def test_student_t_log_likelihood_single(self):
-        # Tests :class:`pints.StudentTLogLikelihood` for
-        # instances of :class:`pints.SingleOutputProblem`.
-
-        # Check evaluation
-        model = pints.toy.ConstantModel(1)
-        times = np.asarray([1, 2, 3])
-        n_times = len(times)
-        bare_values = np.asarray([1.0, -10.7, 15.5])
-
-        # Test Case I: values as list
-        values = bare_values.tolist()
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.StudentTLogLikelihood(problem)
-        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
-        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
-
-        # Test Case II: values as array of shape (n_times,)
-        values = np.reshape(bare_values, (n_times,))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.StudentTLogLikelihood(problem)
-        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
-        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
-
-        # Test Case III: values as array of shape (n_times, 1)
-        values = np.reshape(bare_values, (n_times, 1))
-        problem = pints.SingleOutputProblem(model, times, values)
-        log_likelihood = pints.StudentTLogLikelihood(problem)
-        # Test Student-t_logpdf(values|mean=0, df = 3, scale = 10) = -11.74..
-        self.assertAlmostEqual(log_likelihood([0, 3, 10]), -11.74010919785115)
-
-    def test_student_t_log_likelihood_multi(self):
-        # Multi-output test for Student-t noise log-likelihood methods
-
-        model = pints.toy.ConstantModel(4)
-        parameters = [0, 0, 0, 0]
-        times = np.arange(1, 4)
-        values = np.asarray([[3.5, 7.6, 8.5, 3.4],
-                             [1.1, -10.3, 15.6, 5.5],
-                             [-10, -30.5, -5, 7.6]])
-        problem = pints.MultiOutputProblem(model, times, values)
-        log_likelihood = pints.StudentTLogLikelihood(problem)
-        # Test Student-t_logpdf((3.5,1.1,-10)|mean=0, df=2, scale=13) +
-        #      Student-t_logpdf((7.6,-10.3,-30.5)|mean=0, df=1, scale=8) +
-        #      Student-t_logpdf((8.5,15.6,-5)|mean=0, df=2.5, scale=13.5) +
-        #      Student-t_logpdf((3.4,5.5,7.6)|mean=0, df=3.4, scale=10.5)
-        #      = -47.83....
-        self.assertAlmostEqual(
-            log_likelihood(parameters + [2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]),
-            -47.83720347766945)
+class TestSumOfIndependentLogPDFs(unittest.TestCase):
 
     def test_sum_of_independent_log_pdfs(self):
 
@@ -1410,6 +1359,93 @@ class TestLogLikelihood(unittest.TestCase):
         self.assertEqual(dy.shape, (nx, ))
         y1, dy1 = l1.evaluateS1(x)
         self.assertTrue(np.all(3 * dy1 == dy))
+
+
+class TestStudentTLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.0, -10.7, 15.5])
+        cls.data_multi = np.asarray([
+            [3.5, 7.6, 8.5, 3.4],
+            [1.1, -10.3, 15.6, 5.5],
+            [-10, -30.5, -5, 7.6]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 3, 10]
+        score = log_likelihood(test_parameters)
+
+        # Check that scaled likelihood returns expected value
+        self.assertEqual(score, -11.74010919785115)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 3, 10]
+        score = log_likelihood(test_parameters)
+
+        # Check that scaled likelihood returns expected value
+        self.assertEqual(score, -11.74010919785115)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 3, 10]
+        score = log_likelihood(test_parameters)
+
+        # Check that scaled likelihood returns expected value
+        self.assertEqual(score, -11.74010919785115)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.StudentTLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0, 0, 2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]
+        score = log_likelihood(test_parameters)
+
+        # Check that scaled likelihood returns expected value
+        self.assertEqual(score, -47.83720347766945)
 
 
 if __name__ == '__main__':
