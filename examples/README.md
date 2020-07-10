@@ -118,6 +118,10 @@ relevant code.
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
 
+## Interfaces
+- [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
+- [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
+
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)
