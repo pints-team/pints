@@ -551,34 +551,38 @@ class ComposedTransformation(Transformation):
             lo = hi
             hi += transform.n_parameters()
             jaco = transform.jacobian(q[lo:hi])
+            # Due to the composed transformation are independent, we can stack
+            # the Jacobian matrices J_i and J_{i+1} as
+            #
+            # J = [ J_i     0    ]
+            #     [  0   J_{i+1} ]
+            #
             pack = np.zeros((output.shape[0], jaco.shape[1]))
             output = np.block([[output, pack], [pack.T, jaco]])
         return output
 
-    def log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
         q = pints.vector(q)
-        output = 0
+        matrix_shape = (self.n_parameters(), self.n_parameters())
         lo = hi = 0
+        output_S1 = np.zeros((self.n_parameters(),) + matrix_shape)
         for transform in self._transforms:
             lo = hi
             hi += transform.n_parameters()
-            output += transform.log_jacobian_det(q[lo:hi])
-        return output
-
-    def log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        q = pints.vector(q)
-        output = 0
-        output_s1 = np.zeros(q.shape)
-        lo = hi = 0
-        for transform in self._transforms:
-            lo = hi
-            hi += transform.n_parameters()
-            j, js1 = transform.log_jacobian_det_S1(q[lo:hi])
-            output += j
-            output_s1[lo:hi] = np.asarray(js1)
-        return output, output_s1
+            _, jac_S1 = transform.jacobian_S1(q[lo:hi])
+            for i, jac_S1_i in enumerate(jac_S1):
+                # Due to the composed transformation are independent, we can
+                # pack the derivative of the Jacobian matrices J_i with zeros:
+                #
+                #     [ 0   0   0 ]
+                # J = [ 0  J_i  0 ]
+                #     [ 0   0   0 ]
+                #
+                o = np.zeros(matrix_shape)
+                o[lo:hi, lo:hi] = jac_S1_i[:, :]
+                output_S1[lo + i, :, :] = o
+        return self.jacobian(q), output_S1
 
     def multiple_to_model(self, qs):
         """ See :meth:`Transformation.multiple_to_model()`. """
