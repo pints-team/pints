@@ -245,257 +245,6 @@ class ElementWiseTransformation(Transformation):
     """
 
 
-class TransformedBoundaries(pints.Boundaries):
-    """
-    A :class:`pints.Boundaries` that accepts parameters in a transformed
-    search space.
-
-    Extends :class:`pints.Boundaries`.
-
-    Parameters
-    ----------
-    boundaries
-        A :class:`pints.Boundaries`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, boundaries, transform):
-        self._boundaries = boundaries
-        self._transform = transform
-        self._n_parameters = self._boundaries.n_parameters()
-
-        if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for boundaries and '
-                             'transform must match.')
-
-    def check(self, q):
-        """ See :meth:`Boundaries.check()`. """
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-        # Check Boundaries in the model space
-        return self._boundaries.check(p)
-
-    def n_parameters(self):
-        """ See :meth:`Boundaries.n_parameters()`. """
-        return self._n_parameters
-
-    def range(self):
-        """
-        Returns the size of the search space (i.e. ``upper - lower``).
-        """
-        upper = self._transform.to_search(self._boundaries.upper())
-        lower = self._transform.to_search(self._boundaries.lower())
-        return upper - lower
-
-
-class TransformedErrorMeasure(pints.ErrorMeasure):
-    r"""
-    A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
-    search space.
-
-    For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
-    and a :class:`pints.Transformation`
-    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`, the transformation
-    is done using
-
-    .. math::
-        \frac{\partial E(\boldsymbol{q})}{\partial q_i} &=
-        \frac{\partial E(\boldsymbol{f}^{-1}(\boldsymbol{q}))}{\partial q_i}\\
-        &= \sum_l \frac{\partial E(\boldsymbol{p})}{\partial p_l}
-        \frac{\partial p_l}{\partial q_i}.
-
-    Extends :class:`pints.ErrorMeasure`.
-
-    Parameters
-    ----------
-    error
-        A :class:`pints.ErrorMeasure`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, error, transform):
-        self._error = error
-        self._transform = transform
-        self._n_parameters = self._error.n_parameters()
-        if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for error and transform '
-                             'must match.')
-
-    def __call__(self, q):
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-        # Compute ErrorMeasure in the model space
-        return self._error(p)
-
-    def evaluateS1(self, q):
-        """ See :meth:`ErrorMeasure.evaluateS1()`. """
-
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-
-        # Compute evaluateS1 of ErrorMeasure in the model space
-        e, de_nojac = self._error.evaluateS1(p)
-
-        # Calculate the S1 using change of variable
-        # Wikipedia: https://w.wiki/Us8
-        #
-        # This can be done in matrix form, for Jacobian matrix J and
-        # E = log(pi(p)):
-        #
-        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
-        # (\nabla denotes the del operator)
-        #
-        jacobian = self._transform.jacobian(q)
-        de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
-
-        return e, de
-
-    def n_parameters(self):
-        """ See :meth:`ErrorMeasure.n_parameters()`. """
-        return self._n_parameters
-
-
-class TransformedLogPDF(pints.LogPDF):
-    r"""
-    A :class:`pints.LogPDF` that accepts parameters in a transformed search
-    space.
-
-    When a :class:`TransformedLogPDF` object (initialised with a
-    :class:`pints.LogPDF` of :math:`\pi(\boldsymbol{p})` and a
-    :class:`Transformation` of
-    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`) is called with a
-    vector argument :math:`\boldsymbol{q}` in the search space, it returns
-    :math:`\log(\pi(\boldsymbol{q}))`` where :math:`\pi(\boldsymbol{q})` is the
-    transformed unnormalised PDF of the input PDF, using
-
-    .. math::
-        \pi(\boldsymbol{q}) = \pi(\boldsymbol{f}^{-1}(\boldsymbol{q}))
-            \,\, |det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|.
-
-    :math:`\mathbf{J}` is the Jacobian matrix:
-
-    .. math::
-        \mathbf{J} =
-            [\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
-             \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad \cdots].
-
-    Hence
-
-    .. math::
-        \log(\pi(\boldsymbol{q})) =
-            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))
-            + \log(|det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|).
-
-    For the first order sensitivity, the transformation is done using
-
-    .. math::
-        \frac{\partial \log(\pi(\boldsymbol{q}))}{\partial q_i} =
-            \frac{\partial \log(|det(\mathbf{J})|)}{\partial q_i}
-            + \frac{\partial
-                \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i}.
-
-    The second term can be calculated using the calculated using the chain rule
-
-    .. math::
-        \frac{\partial
-            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i} =
-            \sum_l \frac{\partial \log(\pi(\boldsymbol{p}))}{\partial p_l}
-            \frac{\partial p_l}{\partial q_i}.
-
-    Extends :class:`pints.LogPDF`.
-
-    Parameters
-    ----------
-    log_pdf
-        A :class:`pints.LogPDF`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, log_pdf, transform):
-        self._log_pdf = log_pdf
-        self._transform = transform
-        self._n_parameters = self._log_pdf.n_parameters()
-        if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for log_pdf and transform '
-                             'must match.')
-
-    def __call__(self, q):
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-
-        # Compute LogPDF in the model space
-        logpdf_nojac = self._log_pdf(p)
-
-        # Calculate the PDF using change of variable
-        # Wikipedia: https://w.wiki/UsJ
-        log_jacobian_det = self._transform.log_jacobian_det(q)
-        return logpdf_nojac + log_jacobian_det
-
-    def evaluateS1(self, q):
-        """ See :meth:`LogPDF.evaluateS1()`. """
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-
-        # Compute evaluateS1 of LogPDF in the model space
-        logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
-
-        # Compute log Jacobian and its derivatives
-        logjacdet, dlogjacdet = self._transform.log_jacobian_det_S1(q)
-
-        # Calculate the PDF change of variable, see self.__call__()
-        logpdf = logpdf_nojac + logjacdet
-
-        # Calculate the PDF S1 using change of variable
-        # Wikipedia: https://w.wiki/Us8
-        #
-        # This can be done in matrix form, for Jacobian matrix J and
-        # E = log(pi(p)):
-        #
-        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
-        # (\nabla denotes the del operator)
-        #
-        jacobian = self._transform.jacobian(q)
-        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be 2nd
-        dlogpdf += pints.vector(dlogjacdet)
-
-        return logpdf, dlogpdf
-
-    def n_parameters(self):
-        """ See :meth:`LogPDF.n_parameters()`. """
-        return self._n_parameters
-
-
-class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
-    """
-    A :class:`pints.LogPrior` that accepts parameters in a transformed search
-    space.
-
-    Extends :class:`pints.LogPrior`, :class:`pints.TransformedLogPDF`.
-
-    Parameters
-    ----------
-    log_prior
-        A :class:`pints.LogPrior`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, log_prior, transform):
-        super(TransformedLogPrior, self).__init__(log_prior, transform)
-
-    def sample(self, n):
-        """
-        See :meth:`pints.LogPrior.sample()`.
-
-        *Note that this does not sample from the transformed log-prior but
-        simply transforms the samples from the original log-prior.*
-        """
-        ps = self._log_pdf.sample(n)
-        qs = np.zeros(ps.shape)
-        for i, p in enumerate(ps):
-            qs[i, :] = self._transform.to_search(p)
-        return qs
-
-
 class ComposedTransformation(Transformation):
     r"""
     N-dimensional :class:`Transformation` composed of one or more other
@@ -1044,3 +793,254 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
     def _softplus(self, q):
         """ Returns the softplus function. """
         return np.log(1. + np.exp(q))
+
+
+class TransformedBoundaries(pints.Boundaries):
+    """
+    A :class:`pints.Boundaries` that accepts parameters in a transformed
+    search space.
+
+    Extends :class:`pints.Boundaries`.
+
+    Parameters
+    ----------
+    boundaries
+        A :class:`pints.Boundaries`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, boundaries, transform):
+        self._boundaries = boundaries
+        self._transform = transform
+        self._n_parameters = self._boundaries.n_parameters()
+
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for boundaries and '
+                             'transform must match.')
+
+    def check(self, q):
+        """ See :meth:`Boundaries.check()`. """
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+        # Check Boundaries in the model space
+        return self._boundaries.check(p)
+
+    def n_parameters(self):
+        """ See :meth:`Boundaries.n_parameters()`. """
+        return self._n_parameters
+
+    def range(self):
+        """
+        Returns the size of the search space (i.e. ``upper - lower``).
+        """
+        upper = self._transform.to_search(self._boundaries.upper())
+        lower = self._transform.to_search(self._boundaries.lower())
+        return upper - lower
+
+
+class TransformedErrorMeasure(pints.ErrorMeasure):
+    r"""
+    A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
+    search space.
+
+    For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
+    and a :class:`pints.Transformation`
+    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`, the transformation
+    is done using
+
+    .. math::
+        \frac{\partial E(\boldsymbol{q})}{\partial q_i} &=
+        \frac{\partial E(\boldsymbol{f}^{-1}(\boldsymbol{q}))}{\partial q_i}\\
+        &= \sum_l \frac{\partial E(\boldsymbol{p})}{\partial p_l}
+        \frac{\partial p_l}{\partial q_i}.
+
+    Extends :class:`pints.ErrorMeasure`.
+
+    Parameters
+    ----------
+    error
+        A :class:`pints.ErrorMeasure`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, error, transform):
+        self._error = error
+        self._transform = transform
+        self._n_parameters = self._error.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for error and transform '
+                             'must match.')
+
+    def __call__(self, q):
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+        # Compute ErrorMeasure in the model space
+        return self._error(p)
+
+    def evaluateS1(self, q):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
+        # Compute evaluateS1 of ErrorMeasure in the model space
+        e, de_nojac = self._error.evaluateS1(p)
+
+        # Calculate the S1 using change of variable
+        # Wikipedia: https://w.wiki/Us8
+        #
+        # This can be done in matrix form, for Jacobian matrix J and
+        # E = log(pi(p)):
+        #
+        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
+        # (\nabla denotes the del operator)
+        #
+        jacobian = self._transform.jacobian(q)
+        de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
+
+        return e, de
+
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
+        return self._n_parameters
+
+
+class TransformedLogPDF(pints.LogPDF):
+    r"""
+    A :class:`pints.LogPDF` that accepts parameters in a transformed search
+    space.
+
+    When a :class:`TransformedLogPDF` object (initialised with a
+    :class:`pints.LogPDF` of :math:`\pi(\boldsymbol{p})` and a
+    :class:`Transformation` of
+    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`) is called with a
+    vector argument :math:`\boldsymbol{q}` in the search space, it returns
+    :math:`\log(\pi(\boldsymbol{q}))`` where :math:`\pi(\boldsymbol{q})` is the
+    transformed unnormalised PDF of the input PDF, using
+
+    .. math::
+        \pi(\boldsymbol{q}) = \pi(\boldsymbol{f}^{-1}(\boldsymbol{q}))
+            \,\, |det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|.
+
+    :math:`\mathbf{J}` is the Jacobian matrix:
+
+    .. math::
+        \mathbf{J} =
+            [\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
+             \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad \cdots].
+
+    Hence
+
+    .. math::
+        \log(\pi(\boldsymbol{q})) =
+            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))
+            + \log(|det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|).
+
+    For the first order sensitivity, the transformation is done using
+
+    .. math::
+        \frac{\partial \log(\pi(\boldsymbol{q}))}{\partial q_i} =
+            \frac{\partial \log(|det(\mathbf{J})|)}{\partial q_i}
+            + \frac{\partial
+                \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i}.
+
+    The second term can be calculated using the calculated using the chain rule
+
+    .. math::
+        \frac{\partial
+            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i} =
+            \sum_l \frac{\partial \log(\pi(\boldsymbol{p}))}{\partial p_l}
+            \frac{\partial p_l}{\partial q_i}.
+
+    Extends :class:`pints.LogPDF`.
+
+    Parameters
+    ----------
+    log_pdf
+        A :class:`pints.LogPDF`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, log_pdf, transform):
+        self._log_pdf = log_pdf
+        self._transform = transform
+        self._n_parameters = self._log_pdf.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for log_pdf and transform '
+                             'must match.')
+
+    def __call__(self, q):
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
+        # Compute LogPDF in the model space
+        logpdf_nojac = self._log_pdf(p)
+
+        # Calculate the PDF using change of variable
+        # Wikipedia: https://w.wiki/UsJ
+        log_jacobian_det = self._transform.log_jacobian_det(q)
+        return logpdf_nojac + log_jacobian_det
+
+    def evaluateS1(self, q):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
+        # Compute evaluateS1 of LogPDF in the model space
+        logpdf_nojac, dlogpdf_nojac = self._log_pdf.evaluateS1(p)
+
+        # Compute log Jacobian and its derivatives
+        logjacdet, dlogjacdet = self._transform.log_jacobian_det_S1(q)
+
+        # Calculate the PDF change of variable, see self.__call__()
+        logpdf = logpdf_nojac + logjacdet
+
+        # Calculate the PDF S1 using change of variable
+        # Wikipedia: https://w.wiki/Us8
+        #
+        # This can be done in matrix form, for Jacobian matrix J and
+        # E = log(pi(p)):
+        #
+        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
+        # (\nabla denotes the del operator)
+        #
+        jacobian = self._transform.jacobian(q)
+        dlogpdf = np.matmul(dlogpdf_nojac, jacobian)  # Jacobian must be 2nd
+        dlogpdf += pints.vector(dlogjacdet)
+
+        return logpdf, dlogpdf
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
+class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
+    """
+    A :class:`pints.LogPrior` that accepts parameters in a transformed search
+    space.
+
+    Extends :class:`pints.LogPrior`, :class:`pints.TransformedLogPDF`.
+
+    Parameters
+    ----------
+    log_prior
+        A :class:`pints.LogPrior`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, log_prior, transform):
+        super(TransformedLogPrior, self).__init__(log_prior, transform)
+
+    def sample(self, n):
+        """
+        See :meth:`pints.LogPrior.sample()`.
+
+        *Note that this does not sample from the transformed log-prior but
+        simply transforms the samples from the original log-prior.*
+        """
+        ps = self._log_pdf.sample(n)
+        qs = np.zeros(ps.shape)
+        for i, p in enumerate(ps):
+            qs[i, :] = self._transform.to_search(p)
+        return qs
