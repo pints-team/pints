@@ -170,7 +170,8 @@ class Transformation(object):
         Note that the derivative returned is of the log of the determinant of
         the Jacobian, so ``S' = d/dq log(|det(J(q))|)``, evaluated at input.
 
-        *This is an optional method.*
+        *This is an optional method. It is needed when transformation is
+        performed on :class:`LogPDF` and that requires ``evaluateS1()``.*
         """
         raise NotImplementedError
 
