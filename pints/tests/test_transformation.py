@@ -328,6 +328,50 @@ class TestTransformation(unittest.TestCase):
         self.assertEqual(calc_val, log_j_det)
         self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
 
+    def test_scaling_transform(self):
+        # Test ScalingTransformation class
+
+        # Test input parameters
+        t = pints.ScalingTransformation(
+            1. / np.array([-177., 0.333, 10., 99.99]))
+
+        p = [-177., 0.333, 10., 99.99]
+        x = [1., 1., 1., 1.]
+        j = np.diag([-177., 0.333, 10., 99.99])
+        j_s1 = np.zeros((4, 4, 4))
+        log_j_det = 10.9841922175539395
+        log_j_det_s1 = np.zeros(4)
+
+        # Test forward transform
+        self.assertTrue(np.allclose(t.to_search(p), x))
+
+        # Test inverse transform
+        self.assertTrue(np.allclose(t.to_model(x), p))
+
+        # Test many inverse transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
+
+        # Test n_parameters
+        self.assertEqual(t.n_parameters(), 4)
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t.jacobian(x), j))
+
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t.log_jacobian_det_S1(x)
+        self.assertEqual(calc_val, log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
+
     def test_composed_transform(self):
         # Test ComposedTransformation class
 
