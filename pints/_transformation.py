@@ -191,6 +191,115 @@ class Transformation(object):
         raise NotImplementedError
 
 
+class TransformedBoundaries(pints.Boundaries):
+    """
+    A :class:`pints.Boundaries` that accepts parameters in a transformed
+    search space.
+
+    Extends :class:`pints.Boundaries`.
+
+    Parameters
+    ----------
+    boundaries
+        A :class:`pints.Boundaries`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, boundaries, transform):
+        self._boundaries = boundaries
+        self._transform = transform
+        self._n_parameters = self._boundaries.n_parameters()
+
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for boundaries and '
+                             'transform must match.')
+
+    def check(self, q):
+        """ See :meth:`Boundaries.check()`. """
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+        # Check Boundaries in the model space
+        return self._boundaries.check(p)
+
+    def n_parameters(self):
+        """ See :meth:`Boundaries.n_parameters()`. """
+        return self._n_parameters
+
+    def range(self):
+        """
+        Returns the size of the search space (i.e. ``upper - lower``).
+        """
+        upper = self._transform.to_search(self._boundaries.upper())
+        lower = self._transform.to_search(self._boundaries.lower())
+        return upper - lower
+
+
+class TransformedErrorMeasure(pints.ErrorMeasure):
+    r"""
+    A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
+    search space.
+
+    For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
+    and a :class:`pints.Transformation` :math:`q = f(p)`, the transformation is
+    done using
+
+    .. math::
+        \frac{\partial E(q)}{\partial q_i} &=
+            \frac{\partial E(f^{-1}(q))}{\partial q_i}\\
+            &= \sum_l \frac{\partial E(p)}{\partial p_l}
+            \frac{\partial p_l}{\partial q_i}.
+
+    Extends :class:`pints.ErrorMeasure`.
+
+    Parameters
+    ----------
+    error
+        A :class:`pints.ErrorMeasure`.
+    transform
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, error, transform):
+        self._error = error
+        self._transform = transform
+        self._n_parameters = self._error.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for error and transform '
+                             'must match.')
+
+    def __call__(self, q):
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+        # Compute ErrorMeasure in the model space
+        return self._error(p)
+
+    def evaluateS1(self, q):
+        """ See :meth:`ErrorMeasure.evaluateS1()`. """
+
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
+        # Compute evaluateS1 of ErrorMeasure in the model space
+        e, de_nojac = self._error.evaluateS1(p)
+
+        # Calculate the S1 using change of variable
+        # Wikipedia: https://w.wiki/Us8
+        #
+        # This can be done in matrix form, for Jacobian matrix J and
+        # E = log(pi(p)):
+        #
+        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
+        # (\nabla denotes the del operator)
+        #
+        jacobian = self._transform.jacobian(q)
+        de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
+
+        return e, de
+
+    def n_parameters(self):
+        """ See :meth:`ErrorMeasure.n_parameters()`. """
+        return self._n_parameters
+
+
 class TransformedLogPDF(pints.LogPDF):
     r"""
     A :class:`pints.LogPDF` that accepts parameters in a transformed search
@@ -324,405 +433,6 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         return qs
 
 
-class TransformedErrorMeasure(pints.ErrorMeasure):
-    r"""
-    A :class:`pints.ErrorMeasure` that accepts parameters in a transformed
-    search space.
-
-    For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
-    and a :class:`pints.Transformation` :math:`q = f(p)`, the transformation is
-    done using
-
-    .. math::
-        \frac{\partial E(q)}{\partial q_i} &=
-            \frac{\partial E(f^{-1}(q))}{\partial q_i}\\
-            &= \sum_l \frac{\partial E(p)}{\partial p_l}
-            \frac{\partial p_l}{\partial q_i}.
-
-    Extends :class:`pints.ErrorMeasure`.
-
-    Parameters
-    ----------
-    error
-        A :class:`pints.ErrorMeasure`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, error, transform):
-        self._error = error
-        self._transform = transform
-        self._n_parameters = self._error.n_parameters()
-        if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for error and transform '
-                             'must match.')
-
-    def __call__(self, q):
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-        # Compute ErrorMeasure in the model space
-        return self._error(p)
-
-    def evaluateS1(self, q):
-        """ See :meth:`ErrorMeasure.evaluateS1()`. """
-
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-
-        # Compute evaluateS1 of ErrorMeasure in the model space
-        e, de_nojac = self._error.evaluateS1(p)
-
-        # Calculate the S1 using change of variable
-        # Wikipedia: https://w.wiki/Us8
-        #
-        # This can be done in matrix form, for Jacobian matrix J and
-        # E = log(pi(p)):
-        #
-        # (\nabla_q E)^T = J_(E.g) = J_(E(p)) J_(g) = (\nabla_p E)^T J_(g)
-        # (\nabla denotes the del operator)
-        #
-        jacobian = self._transform.jacobian(q)
-        de = np.matmul(de_nojac, jacobian)  # Jacobian must be the second term
-
-        return e, de
-
-    def n_parameters(self):
-        """ See :meth:`ErrorMeasure.n_parameters()`. """
-        return self._n_parameters
-
-
-class TransformedBoundaries(pints.Boundaries):
-    """
-    A :class:`pints.Boundaries` that accepts parameters in a transformed
-    search space.
-
-    Extends :class:`pints.Boundaries`.
-
-    Parameters
-    ----------
-    boundaries
-        A :class:`pints.Boundaries`.
-    transform
-        A :class:`pints.Transformation`.
-    """
-    def __init__(self, boundaries, transform):
-        self._boundaries = boundaries
-        self._transform = transform
-        self._n_parameters = self._boundaries.n_parameters()
-
-        if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for boundaries and '
-                             'transform must match.')
-
-    def check(self, q):
-        """ See :meth:`Boundaries.check()`. """
-        # Get parameters in the model space
-        p = self._transform.to_model(q)
-        # Check Boundaries in the model space
-        return self._boundaries.check(p)
-
-    def n_parameters(self):
-        """ See :meth:`Boundaries.n_parameters()`. """
-        return self._n_parameters
-
-    def range(self):
-        """
-        Returns the size of the search space (i.e. ``upper - lower``).
-        """
-        upper = self._transform.to_search(self._boundaries.upper())
-        lower = self._transform.to_search(self._boundaries.lower())
-        return upper - lower
-
-
-class LogTransformation(Transformation):
-    r"""
-    Logarithm transformation of the model parameters:
-
-    .. math::
-        q = \log(p),
-
-    where :math:`p` is the model parameter vector and :math:`q` is the
-    search space vector.
-
-    The Jacobian adjustment of the log transformation is given by
-
-    .. math::
-        |\frac{d}{dq} \exp(q)| = \exp(q).
-
-    The first order derivative of the log determinant of the Jacobian is
-
-    .. math::
-        \frac{d}{dq} \log(|J(q)|) = 1.
-
-    Extends :class:`Transformation`.
-
-    Parameters
-    ----------
-    n_parameters
-        Number of model parameters this transformation is defined over.
-    """
-    def __init__(self, n_parameters):
-        self._n_parameters = n_parameters
-
-    def jacobian(self, q):
-        """ See :meth:`Transformation.jacobian()`. """
-        q = pints.vector(q)
-        return np.diag(np.exp(q))
-
-    def log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
-        q = pints.vector(q)
-        return np.sum(q)
-
-    def log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        q = pints.vector(q)
-        logjacdet = self.log_jacobian_det(q)
-        dlogjacdet = np.ones(self._n_parameters)
-        return logjacdet, dlogjacdet
-
-    def n_parameters(self):
-        """ See :meth:`Transformation.n_parameters()`. """
-        return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return np.exp(qs)
-
-    def to_model(self, q):
-        """ See :meth:`Transformation.to_model()`. """
-        q = pints.vector(q)
-        return np.exp(q)
-
-    def to_search(self, p):
-        """ See :meth:`Transformation.to_search()`. """
-        p = pints.vector(p)
-        return np.log(p)
-
-
-class LogitTransformation(Transformation):
-    r"""
-    Logit (or log-odds) transformation of the model parameters:
-
-    .. math::
-        q = \text{logit}(p) = \log(\frac{p}{1 - p}),
-
-    where :math:`p` is the model parameter vector and :math:`q` is the
-    search space vector.
-
-    The Jacobian adjustment of the logit transformation is given by
-
-    .. math::
-        |\frac{d}{dq} \text{logit}^{-1}(q)| = \text{logit}^{-1}(q) \times
-        (1 - \text{logit}^{-1}(q)).
-
-    The first order derivative of the log determinant of the Jacobian is
-
-    .. math::
-        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
-                                    \text{logit}^{-1}(q) - 1.
-
-    Extends :class:`Transformation`.
-
-    Parameters
-    ----------
-    n_parameters
-        Number of model parameters this transformation is defined over.
-    """
-    def __init__(self, n_parameters):
-        self._n_parameters = n_parameters
-
-    def jacobian(self, q):
-        """ See :meth:`Transformation.jacobian()`. """
-        q = pints.vector(q)
-        return np.diag(expit(q) * (1. - expit(q)))
-
-    def log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
-        q = pints.vector(q)
-        return np.sum(np.log(expit(q)) + np.log(1. - expit(q)))
-
-    def log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        q = pints.vector(q)
-        logjacdet = self.log_jacobian_det(q)
-        dlogjacdet = 2. * np.exp(-q) * expit(q) - 1.
-        return logjacdet, dlogjacdet
-
-    def n_parameters(self):
-        """ See :meth:`Transformation.n_parameters()`. """
-        return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return expit(qs)
-
-    def to_model(self, q):
-        """ See :meth:`Transformation.to_model()`. """
-        q = pints.vector(q)
-        return expit(q)
-
-    def to_search(self, p):
-        """ See :meth:`Transformation.to_search()`. """
-        p = pints.vector(p)
-        return logit(p)
-
-
-class RectangularBoundariesTransformation(Transformation):
-    r"""
-    A generalised version of logit transformation for the model parameters,
-    which transform an interval or ractangular boundaries :math:`[a, b)` to
-    all real number:
-
-    .. math::
-        q = f(p) = \log(p - a) - \log(b - p),
-
-    where :math:`p` is the model parameter vector and :math:`q` is the
-    search space vector. The range includes the lower (:math:`a`), but not the
-    upper (:math:`b`) boundaries. Note that :class:`LogitTransformation` is a
-    special case where :math:`a = 0` and :math:`b = 1`.
-
-    The Jacobian adjustment of the transformation is given by
-
-    .. math::
-        |\frac{d}{dq} f^{-1}(q)| = \frac{b - a}{\exp(q) (1 + \exp(-q)) ^ 2}.
-
-    The log-determinant of the Jacobian matrix is given by
-
-    .. math::
-        \log|\frac{d}{dq} f^{-1}(q)| = \sum_i \left( \log(b_i - a_i) -
-            2 \times \log(1 + \exp(-q_i)) - q_i \right)
-
-    The first order derivative of the log determinant of the Jacobian is
-
-    .. math::
-        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
-            \text{logit}^{-1}(q) - 1.
-
-    For example, to create a transform with :math:`p_1 \in [0, 4)`,
-    :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
-
-        transform = pints.RectangularBoundariesTransformation([0, 1, 2],
-                                                              [4, 5, 6])
-
-    or::
-
-        boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
-        transform = pints.RectangularBoundariesTransformation(boundaries)
-
-    Extends :class:`Transformation`.
-    """
-    def __init__(self, lower_or_boundaries, upper=None):
-        # Parse input arguments
-        if upper is None:
-            if not isinstance(lower_or_boundaries,
-                              pints.RectangularBoundaries):
-                raise ValueError(
-                    'RectangularBoundariesTransformation requires a lower and '
-                    'an upper bound, or a single RectangularBoundaries object.'
-                )
-            boundaries = lower_or_boundaries
-        else:
-            # Create RectangularBoundaries for all the input checks
-            boundaries = pints.RectangularBoundaries(lower_or_boundaries,
-                                                     upper)
-
-        self._a = boundaries.lower()
-        self._b = boundaries.upper()
-
-        # Cache dimension
-        self._n_parameters = boundaries.n_parameters()
-        del(boundaries)
-
-    def jacobian(self, q):
-        """ See :meth:`Transformation.jacobian()`. """
-        q = pints.vector(q)
-        diag = (self._b - self._a) / (np.exp(q) * (1. + np.exp(-q)) ** 2)
-        return np.diag(diag)
-
-    def log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
-        q = pints.vector(q)
-        s = self._softplus(-q)
-        return np.sum(np.log(self._b - self._a) - 2. * s - q)
-
-    def log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        q = pints.vector(q)
-        logjacdet = self.log_jacobian_det(q)
-        dlogjacdet = 2. * np.exp(-q) * expit(q) - 1.
-        return logjacdet, dlogjacdet
-
-    def n_parameters(self):
-        """ See :meth:`Transformation.n_parameters()`. """
-        return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return (self._b - self._a) * expit(qs) + self._a
-
-    def to_model(self, q):
-        """ See :meth:`Transformation.to_model()`. """
-        q = pints.vector(q)
-        return (self._b - self._a) * expit(q) + self._a
-
-    def to_search(self, p):
-        p = pints.vector(p)
-        """ See :meth:`Transformation.to_search()`. """
-        return np.log(p - self._a) - np.log(self._b - p)
-
-    def _softplus(self, q):
-        """ Returns the softplus function. """
-        return np.log(1. + np.exp(q))
-
-
-class IdentityTransformation(Transformation):
-    """
-    Identity transformation does nothing to the input parameters, i.e. the
-    search space under this transformation is the same as the model space.
-    And its Jacobian matrix is the identity matrix.
-
-    Extends :class:`Transformation`.
-
-    Parameters
-    ----------
-    n_parameters
-        Number of model parameters this transformation is defined over.
-    """
-    def __init__(self, n_parameters):
-        self._n_parameters = n_parameters
-
-    def jacobian(self, q):
-        """ See :meth:`Transformation.jacobian()`. """
-        return np.eye(self._n_parameters)
-
-    def log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
-        return 0.
-
-    def log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        return self.log_jacobian_det(q), np.zeros(self._n_parameters)
-
-    def n_parameters(self):
-        """ See :meth:`Transformation.n_parameters()`. """
-        return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        return np.asarray(qs)
-
-    def to_model(self, q):
-        """ See :meth:`Transformation.to_model()`. """
-        return pints.vector(q)
-
-    def to_search(self, p):
-        """ See :meth:`Transformation.to_search()`. """
-        return pints.vector(p)
-
-
 class ComposedTransformation(Transformation):
     r"""
     N-dimensional :class:`Transformation` composed of one or more other
@@ -844,3 +554,293 @@ class ComposedTransformation(Transformation):
     def n_parameters(self):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
+
+
+class IdentityTransformation(Transformation):
+    """
+    Identity transformation does nothing to the input parameters, i.e. the
+    search space under this transformation is the same as the model space.
+    And its Jacobian matrix is the identity matrix.
+
+    Extends :class:`Transformation`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters this transformation is defined over.
+    """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        return np.eye(self._n_parameters)
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        return 0.
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        return self.log_jacobian_det(q), np.zeros(self._n_parameters)
+
+    def n_parameters(self):
+        """ See :meth:`Transformation.n_parameters()`. """
+        return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transformation.multiple_to_model()`. """
+        return np.asarray(qs)
+
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        return pints.vector(q)
+
+    def to_search(self, p):
+        """ See :meth:`Transformation.to_search()`. """
+        return pints.vector(p)
+
+
+class LogitTransformation(Transformation):
+    r"""
+    Logit (or log-odds) transformation of the model parameters:
+
+    .. math::
+        q = \text{logit}(p) = \log(\frac{p}{1 - p}),
+
+    where :math:`p` is the model parameter vector and :math:`q` is the
+    search space vector.
+
+    The Jacobian adjustment of the logit transformation is given by
+
+    .. math::
+        |\frac{d}{dq} \text{logit}^{-1}(q)| = \text{logit}^{-1}(q) \times
+        (1 - \text{logit}^{-1}(q)).
+
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
+                                    \text{logit}^{-1}(q) - 1.
+
+    Extends :class:`Transformation`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters this transformation is defined over.
+    """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        q = pints.vector(q)
+        return np.diag(expit(q) * (1. - expit(q)))
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        q = pints.vector(q)
+        return np.sum(np.log(expit(q)) + np.log(1. - expit(q)))
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        q = pints.vector(q)
+        logjacdet = self.log_jacobian_det(q)
+        dlogjacdet = 2. * np.exp(-q) * expit(q) - 1.
+        return logjacdet, dlogjacdet
+
+    def n_parameters(self):
+        """ See :meth:`Transformation.n_parameters()`. """
+        return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transformation.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return expit(qs)
+
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        q = pints.vector(q)
+        return expit(q)
+
+    def to_search(self, p):
+        """ See :meth:`Transformation.to_search()`. """
+        p = pints.vector(p)
+        return logit(p)
+
+
+class LogTransformation(Transformation):
+    r"""
+    Logarithm transformation of the model parameters:
+
+    .. math::
+        q = \log(p),
+
+    where :math:`p` is the model parameter vector and :math:`q` is the
+    search space vector.
+
+    The Jacobian adjustment of the log transformation is given by
+
+    .. math::
+        |\frac{d}{dq} \exp(q)| = \exp(q).
+
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dq} \log(|J(q)|) = 1.
+
+    Extends :class:`Transformation`.
+
+    Parameters
+    ----------
+    n_parameters
+        Number of model parameters this transformation is defined over.
+    """
+    def __init__(self, n_parameters):
+        self._n_parameters = n_parameters
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        q = pints.vector(q)
+        return np.diag(np.exp(q))
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        q = pints.vector(q)
+        return np.sum(q)
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        q = pints.vector(q)
+        logjacdet = self.log_jacobian_det(q)
+        dlogjacdet = np.ones(self._n_parameters)
+        return logjacdet, dlogjacdet
+
+    def n_parameters(self):
+        """ See :meth:`Transformation.n_parameters()`. """
+        return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transformation.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return np.exp(qs)
+
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        q = pints.vector(q)
+        return np.exp(q)
+
+    def to_search(self, p):
+        """ See :meth:`Transformation.to_search()`. """
+        p = pints.vector(p)
+        return np.log(p)
+
+
+class RectangularBoundariesTransformation(Transformation):
+    r"""
+    A generalised version of logit transformation for the model parameters,
+    which transform an interval or ractangular boundaries :math:`[a, b)` to
+    all real number:
+
+    .. math::
+        q = f(p) = \log(p - a) - \log(b - p),
+
+    where :math:`p` is the model parameter vector and :math:`q` is the
+    search space vector. The range includes the lower (:math:`a`), but not the
+    upper (:math:`b`) boundaries. Note that :class:`LogitTransformation` is a
+    special case where :math:`a = 0` and :math:`b = 1`.
+
+    The Jacobian adjustment of the transformation is given by
+
+    .. math::
+        |\frac{d}{dq} f^{-1}(q)| = \frac{b - a}{\exp(q) (1 + \exp(-q)) ^ 2}.
+
+    The log-determinant of the Jacobian matrix is given by
+
+    .. math::
+        \log|\frac{d}{dq} f^{-1}(q)| = \sum_i \left( \log(b_i - a_i) -
+            2 \times \log(1 + \exp(-q_i)) - q_i \right)
+
+    The first order derivative of the log determinant of the Jacobian is
+
+    .. math::
+        \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
+            \text{logit}^{-1}(q) - 1.
+
+    For example, to create a transform with :math:`p_1 \in [0, 4)`,
+    :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
+
+        transform = pints.RectangularBoundariesTransformation([0, 1, 2],
+                                                              [4, 5, 6])
+
+    or::
+
+        boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
+        transform = pints.RectangularBoundariesTransformation(boundaries)
+
+    Extends :class:`Transformation`.
+    """
+    def __init__(self, lower_or_boundaries, upper=None):
+        # Parse input arguments
+        if upper is None:
+            if not isinstance(lower_or_boundaries,
+                              pints.RectangularBoundaries):
+                raise ValueError(
+                    'RectangularBoundariesTransformation requires a lower and '
+                    'an upper bound, or a single RectangularBoundaries object.'
+                )
+            boundaries = lower_or_boundaries
+        else:
+            # Create RectangularBoundaries for all the input checks
+            boundaries = pints.RectangularBoundaries(lower_or_boundaries,
+                                                     upper)
+
+        self._a = boundaries.lower()
+        self._b = boundaries.upper()
+
+        # Cache dimension
+        self._n_parameters = boundaries.n_parameters()
+        del(boundaries)
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        q = pints.vector(q)
+        diag = (self._b - self._a) / (np.exp(q) * (1. + np.exp(-q)) ** 2)
+        return np.diag(diag)
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        q = pints.vector(q)
+        s = self._softplus(-q)
+        return np.sum(np.log(self._b - self._a) - 2. * s - q)
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        q = pints.vector(q)
+        logjacdet = self.log_jacobian_det(q)
+        dlogjacdet = 2. * np.exp(-q) * expit(q) - 1.
+        return logjacdet, dlogjacdet
+
+    def n_parameters(self):
+        """ See :meth:`Transformation.n_parameters()`. """
+        return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transformation.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return (self._b - self._a) * expit(qs) + self._a
+
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        q = pints.vector(q)
+        return (self._b - self._a) * expit(q) + self._a
+
+    def to_search(self, p):
+        p = pints.vector(p)
+        """ See :meth:`Transformation.to_search()`. """
+        return np.log(p - self._a) - np.log(self._b - p)
+
+    def _softplus(self, q):
+        """ Returns the softplus function. """
+        return np.log(1. + np.exp(q))
