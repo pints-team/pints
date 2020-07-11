@@ -582,13 +582,13 @@ class ComposedTransformation(Transformation):
         return self._n_parameters
 
 
-class IdentityTransformation(Transformation):
+class IdentityTransformation(ElementWiseTransformation):
     """
     Identity transformation does nothing to the input parameters, i.e. the
     search space under this transformation is the same as the model space.
     And its Jacobian matrix is the identity matrix.
 
-    Extends :class:`Transformation`.
+    Extends :class:`ElementWiseTransformation`.
 
     Parameters
     ----------
@@ -627,7 +627,7 @@ class IdentityTransformation(Transformation):
         return pints.vector(p)
 
 
-class LogitTransformation(Transformation):
+class LogitTransformation(ElementWiseTransformation):
     r"""
     Logit (or log-odds) transformation of the model parameters:
 
@@ -649,7 +649,7 @@ class LogitTransformation(Transformation):
         \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
                                     \text{logit}^{-1}(q) - 1.
 
-    Extends :class:`Transformation`.
+    Extends :class:`ElementWiseTransformation`.
 
     Parameters
     ----------
@@ -696,7 +696,7 @@ class LogitTransformation(Transformation):
         return logit(p)
 
 
-class LogTransformation(Transformation):
+class LogTransformation(ElementWiseTransformation):
     r"""
     Logarithm transformation of the model parameters:
 
@@ -716,7 +716,7 @@ class LogTransformation(Transformation):
     .. math::
         \frac{d}{dq} \log(|J(q)|) = 1.
 
-    Extends :class:`Transformation`.
+    Extends :class:`ElementWiseTransformation`.
 
     Parameters
     ----------
@@ -763,7 +763,7 @@ class LogTransformation(Transformation):
         return np.log(p)
 
 
-class RectangularBoundariesTransformation(Transformation):
+class RectangularBoundariesTransformation(ElementWiseTransformation):
     r"""
     A generalised version of logit transformation for the model parameters,
     which transform an interval or ractangular boundaries :math:`[a, b)` to
@@ -805,7 +805,7 @@ class RectangularBoundariesTransformation(Transformation):
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
         transform = pints.RectangularBoundariesTransformation(boundaries)
 
-    Extends :class:`Transformation`.
+    Extends :class:`ElementWiseTransformation`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
