@@ -244,6 +244,7 @@ from ._transformation import (
     LogitTransformation,
     LogTransformation,
     RectangularBoundariesTransformation,
+    ScalingTransformation,
     Transformation,
     TransformedBoundaries,
     TransformedErrorMeasure,

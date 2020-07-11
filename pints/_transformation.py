@@ -795,6 +795,56 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
         return np.log(1. + np.exp(q))
 
 
+class ScalingTransformation(ElementWiseTransformation):
+    """
+    Scaling transformation scales the input parameters by multiplying with an
+    array ``scalings`` element-wisely. And its Jacobian matrix is a diagonal
+    matrix with the values of ``1 / scalings`` on the diagonal.
+
+    Extends :class:`ElementWiseTransformation`.
+    """
+    def __init__(self, scalings):
+        self.s = pints.vector(scalings)
+        self.inv_s = 1. / self.s
+        self._n_parameters = len(self.s)
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        return np.diag(self.inv_s)
+
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        n = self._n_parameters
+        return self.jacobian(q), np.zeros((n, n, n))
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        return np.sum(np.log(np.abs(self.inv_s)))
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        return self.log_jacobian_det(q), np.zeros(self._n_parameters)
+
+    def n_parameters(self):
+        """ See :meth:`Transformation.n_parameters()`. """
+        return self._n_parameters
+
+    def multiple_to_model(self, qs):
+        """ See :meth:`Transformation.multiple_to_model()`. """
+        qs = np.asarray(qs)
+        return self.inv_s * qs
+
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        q = pints.vector(q)
+        return self.inv_s * q
+
+    def to_search(self, p):
+        """ See :meth:`Transformation.to_search()`. """
+        p = pints.vector(p)
+        return self.s * p
+
+
 class TransformedBoundaries(pints.Boundaries):
     """
     A :class:`pints.Boundaries` that accepts parameters in a transformed

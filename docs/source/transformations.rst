@@ -39,6 +39,7 @@ Overview:
 - :class:`LogitTransformation`
 - :class:`LogTransformation`
 - :class:`RectangularBoundariesTransformation`
+- :class:`ScalingTransformation`
 - :class:`Transformation`
 - :class:`TransformedBoundaries`
 - :class:`TransformedErrorMeasure`
@@ -59,6 +60,8 @@ Overview:
 .. autoclass:: LogTransformation
 
 .. autoclass:: RectangularBoundariesTransformation
+
+.. autoclass:: ScalingTransformation
 
 .. autoclass:: Transformation
 
