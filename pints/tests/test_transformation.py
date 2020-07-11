@@ -225,6 +225,10 @@ class TestTransformation(unittest.TestCase):
         p = [1.5, 15.]
         x = [-2.8332133440562162, 0.9555114450274365]
         j = np.diag([0.4722222222222225, 3.6111111111111098])
+        j_s1_diag = [0.4197530864197533, -1.6049382716049378]
+        j_s1 = np.zeros((2, 2, 2))
+        for i in range(2):
+            j_s1[i, i, i] = j_s1_diag[i]
         log_j_det = 0.5337099175995788
         log_j_det_s1 = [0.8888888888888888, -0.4444444444444445]
 
@@ -253,6 +257,14 @@ class TestTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(t2.jacobian(x), j))
         self.assertTrue(np.allclose(t2b.jacobian(x), j))
 
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t2.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
+        calc_mat, calc_deriv = t2b.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
+
         # Test log-Jacobian determinant
         self.assertAlmostEqual(t2.log_jacobian_det(x), log_j_det)
         self.assertAlmostEqual(t2b.log_jacobian_det(x), log_j_det)
@@ -275,6 +287,7 @@ class TestTransformation(unittest.TestCase):
         p = [-177., 0.333, 10., 99.99]
         x = [-177., 0.333, 10., 99.99]
         j = np.eye(4)
+        j_s1 = np.zeros((4, 4, 4))
         log_j_det = 0.
         log_j_det_s1 = np.zeros(4)
 
@@ -301,6 +314,11 @@ class TestTransformation(unittest.TestCase):
 
         # Test Jacobian
         self.assertTrue(np.allclose(t4.jacobian(x), j))
+
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t4.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
 
         # Test log-Jacobian determinant
         self.assertEqual(t4.log_jacobian_det(x), log_j_det)
