@@ -173,7 +173,26 @@ class Transformation(object):
         *This is an optional method. It is needed when transformation is
         performed on :class:`LogPDF` and that requires ``evaluateS1()``.*
         """
-        raise NotImplementedError
+        # Directly calculate the derivative using jacobian_S1()
+        #
+        # d/dq log(|det(J(q))|) = 1/|det(J(q))| * sign(det(J(q)))
+        #                         * d/dq det(J(q))
+        #
+        # The second term is given by Eq. 46 in the Matrix Cookbook (2012)
+        # http://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
+        #
+        # d/dq det(J(q)) = det(J) Tr(J^{-1} d/dq J)
+        #
+        # Therefore
+        #
+        # d/dq log(|det(J(q))|) = Tr(J^{-1} d/dq J)
+        #
+        q = pints.vector(q)
+        jac, jac_S1 = self.jacobian_S1(q)
+        out_S1 = np.zeros(q.shape)
+        for i, jac_S1_i in enumerate(jac_S1):
+            out_S1[i] = np.trace(np.matmul(np.linalg.pinv(jac), jac_S1_i))
+        return self.log_jacobian_det(q), out_S1
 
     def multiple_to_model(self, qs):
         """
