@@ -623,6 +623,86 @@ class ComposedTransformation(Transformation):
         return self._n_parameters
 
 
+class ComposedElementWiseTransformation(ElementWiseTransformation,
+                                        ComposedTransformation):
+    r"""
+    N-dimensional :class:`ElementWiseTransformation` composed of one or more
+    other :math:`N_i`-dimensional ``ElementWiseTransformation``, such that
+    :math:`\sum _i N_i = N`. The evaluation and transformation of the composed
+    transformations assume the input transformations are all independent from
+    each other.
+
+    For example, a composed transform::
+
+        t = pints.ComposedElementWiseTransformation(transform1,
+                                                    transform2,
+                                                    transform3)
+
+    where ``transform1``, ``transform2``, and ``transform3`` each have
+    dimension 1, 2 and 1, will have dimension 4.
+
+    The dimensionality of the individual priors does not have to be the same,
+    i.e. :math:`N_i\neq N_j` is allowed.
+
+    The input parameters of the :class:`ComposedElementWiseTransformation` have
+    to be ordered in the same way as the individual tranforms for the parameter
+    vector. In the above example the transform may be performed by
+    ``t.to_search(p)``, where::
+
+        p = [parameter1_transform1,
+             parameter1_transform2,
+             parameter2_transform2,
+             parameter1_transform3]
+
+    Extends :class:`ElementWiseTransformation`.
+    """
+    def __init__(self, *transforms):
+        super(ComposedElementWiseTransformation, self).__init__(*transforms)
+
+        # Check all are ElementWiseTransformation
+        for transform in self._transforms:
+            if not isinstance(transform, pints.ElementWiseTransformation):
+                raise ValueError('All sub-transforms must extend '
+                                 'pints.ElementWiseTransformation.')
+
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        q = pints.vector(q)
+        diag = np.zeros(q.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            diag[lo:hi] = np.diagonal(transform.jacobian(q[lo:hi]))
+        output = np.diag(diag)
+        return output
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        q = pints.vector(q)
+        output = 0
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            output += transform.log_jacobian_det(q[lo:hi])
+        return output
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        q = pints.vector(q)
+        output = 0
+        output_S1 = np.zeros(q.shape)
+        lo = hi = 0
+        for transform in self._transforms:
+            lo = hi
+            hi += transform.n_parameters()
+            j, j_S1 = transform.log_jacobian_det_S1(q[lo:hi])
+            output += j
+            output_S1[lo:hi] = np.asarray(j_S1)
+        return output, output_S1
+
+
 class IdentityTransformation(ElementWiseTransformation):
     """
     Identity transformation does nothing to the input parameters, i.e. the
