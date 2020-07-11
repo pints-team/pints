@@ -343,6 +343,10 @@ class TestTransformation(unittest.TestCase):
         p = [0.1, 1.5, 15., 999.]
         x = [0.1, -2.8332133440562162, 0.9555114450274365, 6.9067547786485539]
         j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
+        j_s1 = np.zeros((4, 4, 4))
+        j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
+        for i in range(4):
+            j_s1[i, i, i] = j_s1_diag[i]
         log_j_det = 7.4404646962481324
         log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
 
@@ -362,6 +366,79 @@ class TestTransformation(unittest.TestCase):
 
         # Test Jacobian
         self.assertTrue(np.allclose(t.jacobian(x), j))
+
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
+
+        # Test log-Jacobian determinant
+        self.assertEqual(t.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
+
+        # Test invalid constructors
+        self.assertRaises(ValueError, pints.ComposedTransformation)
+        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
+
+        # Test ComposedTransformation gives the same result as the
+        # ComposedElementWiseTransformation when using
+        # ElementWiseTransformation
+        t_elem = pints.ComposedElementWiseTransformation(t1, t2, t3)
+        # Test log-Jacobian determinant
+        self.assertAlmostEqual(t.log_jacobian_det(x),
+                               t_elem.log_jacobian_det(x))
+        # Test log-Jacobian determinant derivatives
+        _, t_deriv = t.log_jacobian_det_S1(x)
+        _, t_elem_deriv = t_elem.log_jacobian_det_S1(x)
+        self.assertTrue(np.allclose(t_deriv, t_elem_deriv))
+
+    def test_composed_elementwise_transform(self):
+        # Test ComposedElementWiseTransformation class
+
+        # Test input parameters
+        t1 = pints.IdentityTransformation(1)
+        lower2 = np.array([1, 2])
+        upper2 = np.array([10, 20])
+        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
+        t3 = pints.LogTransformation(1)
+
+        t = pints.ComposedElementWiseTransformation(t1, t2, t3)
+
+        p = [0.1, 1.5, 15., 999.]
+        x = [0.1, -2.8332133440562162, 0.9555114450274365, 6.9067547786485539]
+        j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
+        j_s1 = np.zeros((4, 4, 4))
+        j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
+        for i in range(4):
+            j_s1[i, i, i] = j_s1_diag[i]
+        log_j_det = 7.4404646962481324
+        log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
+
+        # Test forward transform
+        self.assertTrue(np.allclose(t.to_search(p), x))
+
+        # Test inverse transform
+        self.assertTrue(np.allclose(t.to_model(x), p))
+
+        # Test many invesre transform
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
+
+        # Test n_parameters
+        self.assertEqual(t.n_parameters(), 4)
+
+        # Test Jacobian
+        self.assertTrue(np.allclose(t.jacobian(x), j))
+
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
 
         # Test log-Jacobian determinant
         self.assertEqual(t.log_jacobian_det(x), log_j_det)
