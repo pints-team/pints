@@ -257,14 +257,15 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     search space.
 
     For the first order sensitivity of a :class:`pints.ErrorMeasure` :math:`E`
-    and a :class:`pints.Transformation` :math:`q = f(p)`, the transformation is
-    done using
+    and a :class:`pints.Transformation`
+    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`, the transformation
+    is done using
 
     .. math::
-        \frac{\partial E(q)}{\partial q_i} &=
-            \frac{\partial E(f^{-1}(q))}{\partial q_i}\\
-            &= \sum_l \frac{\partial E(p)}{\partial p_l}
-            \frac{\partial p_l}{\partial q_i}.
+        \frac{\partial E(\boldsymbol{q})}{\partial q_i} &=
+        \frac{\partial E(\boldsymbol{f}^{-1}(\boldsymbol{q}))}{\partial q_i}\\
+        &= \sum_l \frac{\partial E(\boldsymbol{p})}{\partial p_l}
+        \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.ErrorMeasure`.
 
@@ -323,37 +324,45 @@ class TransformedLogPDF(pints.LogPDF):
     space.
 
     When a :class:`TransformedLogPDF` object (initialised with a
-    :class:`pints.LogPDF` of :math:`\pi(p)` and a :class:`Transformation` of
-    :math:`q = f(p)`) is called with a vector argument :math:`q` in the search
-    space, it returns :math:`\log(\pi(q))`` where :math:`\pi(q)` is the
+    :class:`pints.LogPDF` of :math:`\pi(\boldsymbol{p})` and a
+    :class:`Transformation` of
+    :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`) is called with a
+    vector argument :math:`\boldsymbol{q}` in the search space, it returns
+    :math:`\log(\pi(\boldsymbol{q}))`` where :math:`\pi(\boldsymbol{q})` is the
     transformed unnormalised PDF of the input PDF, using
 
     .. math::
-        \pi(q) = \pi(f^{-1}(q)) \,\, |det(J(f^{-1}(q)))|.
+        \pi(\boldsymbol{q}) = \pi(\boldsymbol{f}^{-1}(\boldsymbol{q}))
+            \,\, |det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|.
 
-    :math:`J` is the Jacobian matrix:
+    :math:`\mathbf{J}` is the Jacobian matrix:
 
     .. math::
-        J = [\frac{\partial f^{-1}}{\partial q_1} \quad
-             \frac{\partial f^{-1}}{\partial q_2} \quad \cdots].
+        \mathbf{J} =
+            [\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
+             \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad \cdots].
 
     Hence
 
     .. math::
-        \log(\pi(q)) = \log(\pi(f^{-1}(q))) + \log(|det(J(f^{-1}(q)))|).
+        \log(\pi(\boldsymbol{q})) =
+            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))
+            + \log(|det(\mathbf{J}(\boldsymbol{f}^{-1}(\boldsymbol{q})))|).
 
     For the first order sensitivity, the transformation is done using
 
     .. math::
-        \frac{\partial \log(\pi(q))}{\partial q_i} =
-            \frac{\partial \log(|det(J)|)}{\partial q_i}
-            + \frac{\partial \log(\pi(f^{-1}(q)))}{\partial q_i}.
+        \frac{\partial \log(\pi(\boldsymbol{q}))}{\partial q_i} =
+            \frac{\partial \log(|det(\mathbf{J})|)}{\partial q_i}
+            + \frac{\partial
+                \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i}.
 
     The second term can be calculated using the calculated using the chain rule
 
     .. math::
-        \frac{\partial \log(\pi(f^{-1}(q)))}{\partial q_i} =
-            \sum_l \frac{\partial \log(\pi(p))}{\partial p_l}
+        \frac{\partial
+            \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i} =
+            \sum_l \frac{\partial \log(\pi(\boldsymbol{p}))}{\partial p_l}
             \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.LogPDF`.
