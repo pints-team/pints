@@ -487,7 +487,7 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         See :meth:`pints.LogPrior.sample()`.
 
         *Note that this does not sample from the transformed log-prior but
-        simply transform the samples from the original log-prior.*
+        simply transforms the samples from the original log-prior.*
         """
         ps = self._log_pdf.sample(n)
         qs = np.zeros(ps.shape)
@@ -923,11 +923,12 @@ class LogTransformation(ElementWiseTransformation):
 class RectangularBoundariesTransformation(ElementWiseTransformation):
     r"""
     A generalised version of logit transformation for the model parameters,
-    which transform an interval or ractangular boundaries :math:`[a, b)` to
+    which transform an interval or rectangular boundaries :math:`[a, b)` to
     all real number:
 
     .. math::
-        q = f(p) = \log(p - a) - \log(b - p),
+        q = f(p) = \text{logit}\left(\frac{p - a}{b - a}\right)
+                 = \log(p - a) - \log(b - p),
 
     where :math:`p` is the model parameter vector and :math:`q` is the
     search space vector. The range includes the lower (:math:`a`), but not the

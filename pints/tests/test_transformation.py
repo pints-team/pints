@@ -55,7 +55,7 @@ class TestTransformation(unittest.TestCase):
         # Test inverse transform
         self.assertTrue(np.allclose(t.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
@@ -112,7 +112,7 @@ class TestTransformation(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
@@ -170,7 +170,7 @@ class TestTransformation(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
@@ -242,7 +242,7 @@ class TestTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(t2.to_model(x), p))
         self.assertTrue(np.allclose(t2b.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p]
         xs = [x, x]
         self.assertTrue(np.allclose(t2.multiple_to_model(xs), ps))
@@ -303,7 +303,7 @@ class TestTransformation(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(t4.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
@@ -356,7 +356,7 @@ class TestTransformation(unittest.TestCase):
         # Test inverse transform
         self.assertTrue(np.allclose(t.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
@@ -424,7 +424,7 @@ class TestTransformation(unittest.TestCase):
         # Test inverse transform
         self.assertTrue(np.allclose(t.to_model(x), p))
 
-        # Test many invesre transform
+        # Test many inverse transform
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
