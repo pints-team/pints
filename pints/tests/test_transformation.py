@@ -449,8 +449,20 @@ class TestTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
         # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedTransformation)
-        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
+                          np.log)
+
+        class Trans(pints.Transformation):
+            """A testing identity transformation class"""
+            def n_parameters(self):
+                return 1
+
+        self.assertRaisesRegex(
+            ValueError, 'All sub-transforms must extend ' +
+            'pints.ElementWiseTransformation.',
+            pints.ComposedElementWiseTransformation,
+            Trans())
 
 
 class TestTransformedWrappers(unittest.TestCase):
