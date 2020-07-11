@@ -128,6 +128,23 @@ class Transformation(object):
         """
         raise NotImplementedError
 
+    def jacobian_S1(self, q):
+        r"""
+        Computes the Jacobian matrix of the transformation calculated at the
+        parameter vector ``q`` in the search space, and returns the result
+        along with the partial derivatives of the result with respect to the
+        parameters.
+
+        The returned data is a tuple ``(S, S')`` where ``S`` is a
+        ``n_parameters`` by ``n_parameters`` matrix and ``S'`` is a sequence of
+        ``n_parameters`` matrices.
+
+        *This is an optional method. It is needed when the transformation is
+        used along with a non-element-wise transformation in
+        :class:`ComposedTransformation`.*
+        """
+        raise NotImplementedError
+
     def log_jacobian_det(self, q):
         """
         Returns the logarithm of the absolute value of the determinant of the
@@ -602,6 +619,11 @@ class IdentityTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.jacobian()`. """
         return np.eye(self._n_parameters)
 
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        n = self._n_parameters
+        return self.jacobian(q), np.zeros((n, n, n))
+
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
         return 0.
@@ -643,6 +665,12 @@ class LogitTransformation(ElementWiseTransformation):
         |\frac{d}{dq} \text{logit}^{-1}(q)| = \text{logit}^{-1}(q) \times
         (1 - \text{logit}^{-1}(q)).
 
+    And its derivative is given by
+
+    .. math::
+        \frac{d^2}{dq^2} \text{logit}^{-1}(q) = \frac{d f^{-1}(q)}{dq} \times
+            \left( \frac{\exp(-q) - 1}{exp(-q) + 1} \right).
+
     The first order derivative of the log determinant of the Jacobian is
 
     .. math::
@@ -663,6 +691,16 @@ class LogitTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.jacobian()`. """
         q = pints.vector(q)
         return np.diag(expit(q) * (1. - expit(q)))
+
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        q = pints.vector(q)
+        n = self._n_parameters
+        jac = self.jacobian(q)
+        jac_S1 = np.zeros((n, n, n))
+        rn = np.arange(n)
+        jac_S1[rn, rn, rn] = np.diagonal(jac) * (np.exp(-q) - 1.) * expit(q)
+        return jac, jac_S1
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
@@ -711,6 +749,11 @@ class LogTransformation(ElementWiseTransformation):
     .. math::
         |\frac{d}{dq} \exp(q)| = \exp(q).
 
+    And its derivative is given by
+
+    .. math::
+        \frac{d^2}{dq^2} \exp(q) = \exp(q).
+
     The first order derivative of the log determinant of the Jacobian is
 
     .. math::
@@ -730,6 +773,16 @@ class LogTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.jacobian()`. """
         q = pints.vector(q)
         return np.diag(np.exp(q))
+
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        q = pints.vector(q)
+        n = self._n_parameters
+        jac = self.jacobian(q)
+        jac_S1 = np.zeros((n, n, n))
+        rn = np.arange(n)
+        jac_S1[rn, rn, rn] = np.diagonal(jac)
+        return jac, jac_S1
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
@@ -781,6 +834,12 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
 
     .. math::
         |\frac{d}{dq} f^{-1}(q)| = \frac{b - a}{\exp(q) (1 + \exp(-q)) ^ 2}.
+
+    And its derivative is given by
+
+    .. math::
+        \frac{d^2}{dq^2} f^{-1}(q) = \frac{d f^{-1}(q)}{dq} \times
+            \left( \frac{\exp(-q) - 1}{exp(-q) + 1} \right).
 
     The log-determinant of the Jacobian matrix is given by
 
@@ -834,6 +893,16 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
         q = pints.vector(q)
         diag = (self._b - self._a) / (np.exp(q) * (1. + np.exp(-q)) ** 2)
         return np.diag(diag)
+
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        q = pints.vector(q)
+        n = self._n_parameters
+        jac = self.jacobian(q)
+        jac_S1 = np.zeros((n, n, n))
+        rn = np.arange(n)
+        jac_S1[rn, rn, rn] = np.diagonal(jac) * (np.exp(-q) - 1.) * expit(q)
+        return jac, jac_S1
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
