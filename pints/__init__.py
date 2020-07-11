@@ -237,7 +237,9 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 # Transformation
 #
 from ._transformation import (
+    ComposedElementWiseTransformation,
     ComposedTransformation,
+    ElementWiseTransformation,
     IdentityTransformation,
     LogitTransformation,
     LogTransformation,
