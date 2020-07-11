@@ -19,11 +19,21 @@ class TestTransformation(unittest.TestCase):
         # Test methods defined in the abstract class
 
         class Trans(pints.Transformation):
-            """A testing transformation class"""
+            """A testing log-transformation class"""
             def jacobian(self, q):
                 """ See :meth:`Transformation.jacobian()`. """
                 q = pints.vector(q)
                 return np.diag(np.exp(q))
+
+            def jacobian_S1(self, q):
+                """ See :meth:`Transformation.jacobian_S1()`. """
+                q = pints.vector(q)
+                n = len(q)
+                jac = self.jacobian(q)
+                jac_S1 = np.zeros((n, n, n))
+                rn = np.arange(n)
+                jac_S1[rn, rn, rn] = np.diagonal(jac)
+                return jac, jac_S1
 
             def to_model(self, q):
                 """ See :meth:`Transformation.to_model()`. """
@@ -36,7 +46,11 @@ class TestTransformation(unittest.TestCase):
         p = [0.1, 1., 10., 999.]
         x = [-2.3025850929940455, 0., 2.3025850929940459, 6.9067547786485539]
         j = np.diag(p)
+        j_s1 = np.zeros((4, 4, 4))
+        for i in range(4):
+            j_s1[i, i, i] = p[i]
         log_j_det = np.sum(x)
+        log_j_det_s1 = np.ones(4)
 
         # Test inverse transform
         self.assertTrue(np.allclose(t.to_model(x), p))
@@ -49,8 +63,18 @@ class TestTransformation(unittest.TestCase):
         # Test Jacobian
         self.assertTrue(np.allclose(t.jacobian(x), j))
 
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = t.jacobian_S1(x)
+        self.assertTrue(np.allclose(calc_mat, j))
+        self.assertTrue(np.allclose(calc_deriv, j_s1))
+
         # Test log-Jacobian determinant
         self.assertAlmostEqual(t.log_jacobian_det(x), log_j_det)
+
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = t.log_jacobian_det_S1(x)
+        self.assertAlmostEqual(calc_val, log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
 
         # Test standard deviation and covariance matrix transformations
         sd = np.array([0.01, 0.1, 1., 99.9])
