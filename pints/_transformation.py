@@ -191,6 +191,23 @@ class Transformation(object):
         raise NotImplementedError
 
 
+class ElementWiseTransformation(Transformation):
+    r"""
+    Abstract base class for objects that provide *element-wise* transformations
+    between two parameter spaces: the model parameter space and a search space.
+    That is, for a parameter vector :math:`\boldsymbol{p}` in the model space
+    and a parameter vector :math:`\boldsymbol{q}` in the search space, the
+    transformation :math:`\boldsymbol{f}` relating the two vectors takes the
+    form
+
+    .. math::
+        q_i = f_i(p_i),
+
+    where :math:`x_i` denotes the :math:`i^{\text{th}}` element of the vector
+    :math:`\boldsymbol{x}`.
+    """
+
+
 class TransformedBoundaries(pints.Boundaries):
     """
     A :class:`pints.Boundaries` that accepts parameters in a transformed
