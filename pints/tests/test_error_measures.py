@@ -102,65 +102,257 @@ class MiniLogPDF(pints.LogPDF):
         return 10, np.array([1, 2, 3])
 
 
+class TestMeanSquaredError(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(2)
+
+        # Generate test data
+        cls.times = [1, 2, 3]
+        cls.n_times = len(cls.times)
+        cls.data_single = np.array([1, 1, 1])
+        cls.data_multi = np.array([
+            [1, 4],
+            [1, 4],
+            [1, 4]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = mean(input - 1) ** 2
+        self.assertEqual(score, 4)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = mean(input - 1) ** 2
+        self.assertEqual(score, 4)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = mean(input - 1) ** 2
+        self.assertEqual(score, 4)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3, 4]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # exp = (mean(input[0] - 1) ** 2 + mean(2 * input[1] - 4) ** 2) / 2
+        self.assertEqual(score, 10)
+
+    def test_call_two_dim_array_multi_weighted(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create error measure with weighted input
+        weights = [1, 2]
+        error = pints.MeanSquaredError(problem, weights=weights)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3, 4]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # exp = (weight[0] * mean(input[0] - 1) ** 2 +
+        # weight[1] * mean(2 * input[1] - 4) ** 2) / 2
+        self.assertEqual(score, 18)
+
+    def test_evaluateS1_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score, deriv = error.evaluateS1(test_parameters)
+
+        # Check that returned error is correct
+        self.assertEqual(score, error(test_parameters))
+
+        # Check that partial derivatives are returned for each parameter
+        self.assertEqual(deriv.shape, (1,))
+
+        # Check that partials are correct
+        # Expected = 2 * mean(input - 1)
+        self.assertEqual(deriv, 2 * (test_parameters[0] - 1))
+
+    def test_evaluateS1_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score, deriv = error.evaluateS1(test_parameters)
+
+        # Check that returned error is correct
+        self.assertEqual(score, error(test_parameters))
+
+        # Check that partial derivatives are returned for each parameter
+        self.assertEqual(deriv.shape, (1,))
+
+        # Check that partials are correct
+        # Expected = 2 * mean(input - 1)
+        self.assertEqual(deriv, 2 * (test_parameters[0] - 1))
+
+    def test_evaluateS1_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score, deriv = error.evaluateS1(test_parameters)
+
+        # Check that returned error is correct
+        self.assertEqual(score, error(test_parameters))
+
+        # Check that partial derivatives are returned for each parameter
+        self.assertEqual(deriv.shape, (1,))
+
+        # Check that partials are correct
+        # Expected = 2 * mean(input - 1)
+        self.assertEqual(deriv, 2 * (test_parameters[0] - 1))
+
+    def test_evaluateS1_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create error measure
+        error = pints.MeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3, 4]
+        score, deriv = error.evaluateS1(test_parameters)
+
+        # Check that returned error is correct
+        self.assertEqual(score, error(test_parameters))
+
+        # Check that partial derivatives are returned for each parameter
+        self.assertEqual(deriv.shape, (2,))
+
+        # Check that partials are correct
+        # Expectation = [mean(input[0] - 1), 2 * mean(2 * input[1] - 4)]
+        self.assertEqual(deriv[0], test_parameters[0] - 1)
+        self.assertEqual(deriv[1], 2 * (2 * test_parameters[1] - 4))
+
+    def test_evaluateS1_two_dim_array_multi_weighted(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create error measure with weighted inputs
+        weights = [1, 2]
+        error = pints.MeanSquaredError(problem, weights=weights)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3, 4]
+        score, deriv = error.evaluateS1(test_parameters)
+
+        # Check that returned error is correct
+        self.assertEqual(score, error(test_parameters))
+
+        # Check that partial derivatives are returned for each parameter
+        self.assertEqual(deriv.shape, (2,))
+
+        # Check that partials are correct
+        # expectation = [weight [0] * mean(input[0] - 1),
+        # weight[1] * 2 * mean(2 * input[1] - 4)]
+        self.assertEqual(deriv[0], weights[0] * (test_parameters[0] - 1))
+        self.assertEqual(
+            deriv[1], weights[1] * 2 * (2 * test_parameters[1] - 4))
+
+    def test_bad_constructor(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Test invalid weight shape
+        weights = [1, 2, 3]
+        self.assertRaisesRegex(
+            ValueError,
+            'Number of weights must match number of problem outputs.',
+            pints.MeanSquaredError, problem, weights)
+
+
 class TestErrorMeasures(unittest.TestCase):
     """
     Tests the ErrorMeasure classes
     """
     def __init__(self, name):
         super(TestErrorMeasures, self).__init__(name)
-
-    def test_mean_squared_error_single(self):
-        # Tests :class:`pints.MeanSquaredError` with a single output.
-
-        # Set up problem
-        model = pints.toy.ConstantModel(1)
-        times = [1, 2, 3]
-
-        # Test Case I: Input as List
-        values = [1, 1, 1]
-        p = pints.SingleOutputProblem(model, times, values)
-
-        # Test for different parameters: expected = mean(input - 1) ** 2
-        e = pints.MeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([1]), 0)
-        self.assertEqual(e([3]), 4)
-
-        # Derivative of error for different parameters:
-        # expected = 2 * mean(input - 1)
-        x = 1
-        y, dy = e.evaluateS1([x])
-        self.assertEqual(y, e([x]))
-        self.assertEqual(dy.shape, (1,))
-        self.assertEqual(dy, 2 * (x - 1))
-        x = 3
-        y, dy = e.evaluateS1([x])
-        self.assertEqual(y, e([x]))
-        self.assertEqual(dy.shape, (1,))
-        self.assertEqual(dy, 2 * (x - 1))
-
-        # Test Case II: Input as array of shape (n_times, 1)
-        values = np.array([1, 1, 1])[:, np.newaxis]
-        p = pints.SingleOutputProblem(model, times, values)
-
-        # Test for different parameters: expected = mean(input - 1) ** 2
-        e = pints.MeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([1]), 0)
-        self.assertEqual(e([3]), 4)
-
-        # Derivative of error for different parameters:
-        # expected = 2 * mean(input - 1)
-        x = 1
-        y, dy = e.evaluateS1([x])
-        self.assertEqual(y, e([x]))
-        self.assertEqual(dy.shape, (1,))
-        self.assertEqual(dy, 2 * (x - 1))
-        x = 3
-        y, dy = e.evaluateS1([x])
-        self.assertEqual(y, e([x]))
-        self.assertEqual(dy.shape, (1,))
-        self.assertEqual(dy, 2 * (x - 1))
 
     def test_mean_squared_error_multi(self):
         # Tests :class:`pints.MeanSquaredError` with multiple outputs.
