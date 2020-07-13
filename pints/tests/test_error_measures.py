@@ -501,7 +501,7 @@ class TestProbabilityBasedError(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError,
             'Given log_pdf must be an instance of pints.LogPDF.',
-            pints.NormalisedRootMeanSquaredError, MiniProblem())
+            pints.ProbabilityBasedError, MiniProblem())
 
 
 class TestRootMeanSquaredError(unittest.TestCase):
