@@ -347,61 +347,115 @@ class TestMeanSquaredError(unittest.TestCase):
             pints.MeanSquaredError, problem, weights)
 
 
+class TestNormalisedRootMeanSquaredError(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(2)
+
+        # Generate test data
+        cls.times = [1, 2, 3]
+        cls.n_times = len(cls.times)
+        cls.data_single = np.array([2, 2, 2])
+        cls.data_multi = np.array([
+            [1, 4],
+            [1, 4],
+            [1, 4]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.NormalisedRootMeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
+        self.assertEqual(score, 0.5)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.NormalisedRootMeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
+        self.assertEqual(score, 0.5)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.NormalisedRootMeanSquaredError(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [3]
+        score = error(test_parameters)
+
+        # Check that error returns expected value
+        # Expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
+        self.assertEqual(score, 0.5)
+
+    def test_not_implemented_error(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create error measure
+        error = pints.NormalisedRootMeanSquaredError(problem)
+
+        # Check that not implemented error is raised for evaluateS1
+        self.assertRaisesRegex(
+            NotImplementedError,
+            '',
+            error.evaluateS1, 1)
+
+    def test_bad_constructor(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Check that an error is raised for multi-output problems
+        self.assertRaisesRegex(
+            ValueError,
+            'This measure is only defined for single output problems.',
+            pints.NormalisedRootMeanSquaredError, problem)
+
+
 class TestErrorMeasures(unittest.TestCase):
     """
     Tests the ErrorMeasure classes
     """
     def __init__(self, name):
         super(TestErrorMeasures, self).__init__(name)
-
-    def test_normalised_root_mean_squared_error(self):
-        # Tests :class:`pints.NormalisedRootMeanSquaredError` with a single
-        # output.
-
-        # Set up problem
-        model = pints.toy.ConstantModel(1)
-        times = [1, 2, 3]
-
-        # Test Case I: Input as List
-        values = [2, 2, 2]
-        p = pints.SingleOutputProblem(model, times, values)
-
-        # Test for different parameters:
-        # expected = sqrt(mean((input - 1) ** 2)) / sqrt(mean(2 ** 2))
-        e = pints.NormalisedRootMeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([2]), 0)
-        self.assertEqual(e([3]), 0.5)  # sqrt(1^2) / sqrt(2^2) = 0.5
-
-        # Check derivatives
-        self.assertRaisesRegex(
-            NotImplementedError,
-            '',
-            e.evaluateS1, 1)
-
-        # Test Case II: Input as array of shape (n_times, 1)
-        values = np.array([2, 2, 2])[:, np.newaxis]
-        p = pints.SingleOutputProblem(model, times, values)
-
-        # Test for different parameters:
-        # expected = sqrt(mean((input - 2) ** 2)) / sqrt(mean(2 ** 2))
-        e = pints.NormalisedRootMeanSquaredError(p)
-        self.assertEqual(e.n_parameters(), 1)
-        self.assertEqual(e([2]), 0)
-        self.assertEqual(e([3]), 0.5)  # sqrt(2^2) / sqrt(2^2) = 0.5
-
-        # Check derivatives
-        self.assertRaisesRegex(
-            NotImplementedError,
-            '',
-            e.evaluateS1, 1)
-
-        # Test invalid problem
-        p = MultiMiniProblem()
-        self.assertRaisesRegex(
-            ValueError,
-            'This measure is only defined for single output problems.',
-            pints.NormalisedRootMeanSquaredError, p)
 
     def test_probability_based_error(self):
         # Tests :class:`pints.ProbabilityBasedError`.
