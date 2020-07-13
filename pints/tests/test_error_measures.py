@@ -486,6 +486,23 @@ class TestProbabilityBasedError(unittest.TestCase):
         self.assertEqual(deriv[1], -2)
         self.assertEqual(deriv[2], -3)
 
+    def test_n_parameters(self):
+        # Create error measure
+        error = pints.ProbabilityBasedError(self.problem)
+
+        # Get number of parameters
+        n_parameters = error.n_parameters()
+
+        # Check number of parameters
+        self.assertEqual(n_parameters, 3)
+
+    def test_bad_constructor(self):
+        # Check that an error is raised for multi-output problems
+        self.assertRaisesRegex(
+            ValueError,
+            'Given log_pdf must be an instance of pints.LogPDF.',
+            pints.NormalisedRootMeanSquaredError, MiniProblem())
+
 
 class TestRootMeanSquaredError(unittest.TestCase):
 
