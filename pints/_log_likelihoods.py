@@ -243,7 +243,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     :class:`pints.SingleOutputProblem` or a :class:`pints.MultiOutputProblem`
     assuming that the error of the model predictions is a mixture of a
     Gaussian base-level noise (constant variance
-    :math:`\sigma ^2_{\text{base}}`) and Gaussian heteroscedastic noise
+    :math:`\sigma ^2_{\text{base}}`) and a Gaussian heteroscedastic noise
     (variance scaling with model predictions).
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
@@ -268,18 +268,37 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     The resulting log-likelihood of a combined Gaussian error model is
 
     .. math::
-        \log L(\theta, \sigma _{\text{base}}, \eta , \sigma _{\text{rel}} | X^{\text{obs}})
-        = -\frac{n}{2} \log 2 \pi
-        -\sum_{i=1}^{n}\log \sigma _{\text{tot}, i}
-        - \sum_{i=1}^{n}
-        \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
-        {2\sigma ^2_{\text{tot}, i}}
+        \log L(\theta, \sigma _{\text{base}}, \eta ,
+        \sigma _{\text{rel}} | X^{\text{obs}})
+        = -\frac{n_t}{2} \log 2 \pi
+        -\sum_{i=1}^{n_t}\log \sigma _{\text{tot}, i}
+        - \sum_{i=1}^{n_t}
+        \frac{(X^{\text{obs}}_i - f(t_i| \theta))^2}
+        {2\sigma ^2_{\text{tot}, i}},
 
-    where :math:`n` is the number of measured time points in the time series,
-    :math:`X^{\text{obs}}(t_i)` the observation at time point :math:`t_i`, and
+    where :math:`n_t` is the number of measured time points in the time series,
+    :math:`X^{\text{obs}}_i` is the observation at time point :math:`t_i`, and
     :math:`\sigma _{\text{tot}, i}=\sigma _{\text{base}} +\sigma _{\text{rel}}
-    f(t_i; \theta)^\eta` is the total standard deviation of the error at time
+    f(t_i| \theta)^\eta` is the total standard deviation of the error at time
     :math:`t_i`.
+
+    For a system with :math:`n_o` outputs, this becomes
+
+    .. math::
+        \log L(\theta, \sigma _{\text{base}}, \eta ,
+        \sigma _{\text{rel}} | X^{\text{obs}})
+        = -\frac{n_tn_o}{2} \log 2 \pi
+        -\sum_{j=1}^{n_0}\sum_{i=1}^{n_t}\log \sigma _{\text{tot}, ij}
+        - \sum_{j=1}^{n_0}\sum_{i=1}^{n_t}
+        \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
+        {2\sigma ^2_{\text{tot}, ij}},
+
+    where :math:`n_o` is the number of outputs of the model,
+    :math:`X^{\text{obs}}_{ij}` is the observation at time point :math:`t_i`,
+    of output :math:`j` and
+    :math:`\sigma _{\text{tot}, ij}=\sigma _{\text{base}} +\sigma _{\text{rel}}
+    f_j(t_i| \theta)^\eta` is the total standard deviation of the error at time
+    :math:`t_i` of output :math:`j`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -298,13 +317,14 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
-        self._np = 3 * problem.n_outputs()
+        no = problem.n_outputs()
+        self._np = 3 * no
 
         # Add parameters to problem
         self._n_parameters = problem.n_parameters() + self._np
 
         # Pre-calculate the constant part of the likelihood
-        self._logn = -0.5 * self._nt * np.log(2 * np.pi)
+        self._logn = -0.5 * self._nt * no * np.log(2 * np.pi)
 
     def __call__(self, x):
         # Get parameters from input
@@ -316,16 +336,17 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Evaluate noise-free model (n_times, n_outputs)
         function_values = self._problem.evaluate(x[:-self._np])
 
+        # Compute error (n_times, n_outputs)
+        error = self._values - function_values
+
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * function_values**eta
 
         # Compute log-likelihood
         # (inner sums over time points, outer sum over parameters)
-        log_likelihood = self._logn + np.sum(
-            -np.sum(np.log(sigma_tot), axis=0)
-                   - 0.5 * np.sum(
-                       (self._values - function_values)**2
-                       / sigma_tot, axis=0))
+        log_likelihood = self._logn - np.sum(
+            np.sum(np.log(sigma_tot), axis=0)
+            + 0.5 * np.sum(error**2 / sigma_tot**2, axis=0))
 
         return log_likelihood
 
@@ -333,44 +354,43 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         r"""
         See :meth:`LogPDF.evaluateS1()`.
 
-        The partial derivative of the log-likelihood w.r.t. the model
+        The partial derivatives of the log-likelihood for a w.r.t. the model
         parameters are
 
         .. math::
             \frac{\partial \log L}{\partial \theta _k}
-            =& -\sigma _{\text{rel}}\eta \sum_{i=1}^{n}\frac{
-            f(t_i; \theta)^{\eta-1}}
-            {\sigma _{\text{tot}, i}}
-            \frac{\partial f(t_i, \theta)}{\partial \theta _k}
-            + \sum_{i=1}^{n}
-            \frac{X^{\text{obs}}(t_i) - f(t_i; \theta)}
-            {\sigma ^2_{\text{tot}, i}}
-            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
-            &+ \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
-            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1}
-            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
+            =& -\sigma _{\text{rel}}\eta \sum_{i,j}\frac{
+            f_j(t_i| \theta)^{\eta-1}}
+            {\sigma _{\text{tot}, ij}}
+            \frac{\partial f_j(t_i| \theta)}{\partial \theta _k}
+            + \sum_{i,j}
+            \frac{X^{\text{obs}}_{ij} - f_j(t_i| \theta)}
+            {\sigma ^2_{\text{tot}, ij}}
+            \frac{\partial f_j(t_i| \theta)}{\partial \theta _k} \\
+            &+ \sigma _{\text{rel}}\eta \sum_{i,j}
+            \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta-1}
+            \frac{\partial f_j(t_i| \theta)}{\partial \theta _k} \\
             \frac{\partial \log L}{\partial \sigma _{\text{base}}}
-            =& -\sum_{i=1}^{n}\frac{1}{\sigma _{\text{tot}, i}}
-            +\sum_{i=1}^{n}
-            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
-            {\sigma ^3_{\text{tot}, i}} \\
+            =& -\sum_{i,j}\frac{1}{\sigma _{\text{tot}, ij}}
+            +\sum_{i,j}
+            \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
+            {\sigma ^3_{\text{tot}, ij}} \\
             \frac{\partial \log L}{\partial \eta}
-            =& -\sigma _{\text{rel}}\eta\sum_{i=1}^{n}
-            \frac{f(t_i, \theta)^{\eta-1}}{\sigma _{\text{tot}, i}}
-            + \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
-            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1} \\
+            =& -\sigma _{\text{rel}}\eta\sum_{i,j}
+            \frac{f_j(t_i| \theta)^{\eta-1}}{\sigma _{\text{tot}, ij}}
+            + \sigma _{\text{rel}}\eta \sum_{i,j}
+            \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta-1} \\
             \frac{\partial \log L}{\partial \sigma _{\text{rel}}}
-            =& -\sum_{i=1}^{n}
-            \frac{f(t_i, \theta)^{\eta}}{\sigma _{\text{tot}, i}}
-            + \sum_{i=1}^{n}
-            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
-            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta}
+            =& -\sum_{i,j}
+            \frac{f_j(t_i| \theta)^{\eta}}{\sigma _{\text{tot}, ij}}
+            + \sum_{i,j}
+            \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta},
 
-        Note that partial derivatives of this log-likelihood w.r.t. it's
-        parameters are costly, especially if there are many data points
-        and the number of outputs of the model is high.
+        where :math:`i` sums over the measurement time points and :math:`j`
+        over the outputs of the model.
         """
         # Get parameters from input
         noise_parameters = x[-self._np:]
