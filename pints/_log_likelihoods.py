@@ -268,7 +268,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     The resulting log-likelihood of a combined Gaussian error model is
 
     .. math::
-        \log L(\theta, \sigma _{\text{base}}, \eta , \sigma _{\text{rel}} | X)
+        \log L(\theta, \sigma _{\text{base}}, \eta , \sigma _{\text{rel}} | X^{\text{obs}})
         = -\frac{n}{2} \log 2 \pi
         -\sum_{i=1}^{n}\log \sigma _{\text{tot}, i}
         - \sum_{i=1}^{n}
@@ -313,16 +313,16 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         eta = np.asarray(noise_parameters[1::3])
         sigma_rel = np.asarray(noise_parameters[2::3])
 
-        # Evaluate noise-free model
+        # Evaluate noise-free model (n_times, n_outputs)
         function_values = self._problem.evaluate(x[:-self._np])
 
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * function_values**eta
 
         # Compute log-likelihood
-        log_likelihood = \
-            np.sum(self._logn
-                   - np.sum(np.log(sigma_tot), axis=0)
+        # (inner sums over time points, outer sum over parameters)
+        log_likelihood = self._logn + np.sum(
+            -np.sum(np.log(sigma_tot), axis=0)
                    - 0.5 * np.sum(
                        (self._values - function_values)**2
                        / sigma_tot, axis=0))
@@ -343,29 +343,29 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
             {\sigma _{\text{tot}, i}}
             \frac{\partial f(t_i, \theta)}{\partial \theta _k}
             + \sum_{i=1}^{n}
-            \frac{X(t_i) - f(t_i; \theta)}
+            \frac{X^{\text{obs}}(t_i) - f(t_i; \theta)}
             {\sigma ^2_{\text{tot}, i}}
             \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
             &+ \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2}
+            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
             {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1}
             \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
             \frac{\partial \log L}{\partial \sigma _{\text{base}}}
             =& -\sum_{i=1}^{n}\frac{1}{\sigma _{\text{tot}, i}}
             +\sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2}
+            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
             {\sigma ^3_{\text{tot}, i}} \\
             \frac{\partial \log L}{\partial \eta}
             =& -\sigma _{\text{rel}}\eta\sum_{i=1}^{n}
             \frac{f(t_i, \theta)^{\eta-1}}{\sigma _{\text{tot}, i}}
             + \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2}
+            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
             {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1} \\
             \frac{\partial \log L}{\partial \sigma _{\text{rel}}}
             =& -\sum_{i=1}^{n}
             \frac{f(t_i, \theta)^{\eta}}{\sigma _{\text{tot}, i}}
             + \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2}
+            \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
             {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta}
 
         Note that partial derivatives of this log-likelihood w.r.t. it's
