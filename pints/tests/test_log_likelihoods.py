@@ -954,8 +954,14 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with known and unknown sigma
+        # Create Gaussian and MuliplicativeGaussian LogLikelihood
+        gaussian_log_likelihood = pints.GaussianLogLikelihood(problem)
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Check that likelihoods agree for eta=0
+        self.assertEqual(
+            log_likelihood([2.0, 0.0, 1.0]),
+            gaussian_log_likelihood([2.0, 1.0]))
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 2.0, 1.0]
@@ -972,8 +978,14 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with known and unknown sigma
+        # Create Gaussian and MuliplicativeGaussian LogLikelihood
+        gaussian_log_likelihood = pints.GaussianLogLikelihood(problem)
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Check that likelihoods agree for eta=0
+        self.assertEqual(
+            log_likelihood([2.0, 0.0, 1.0]),
+            gaussian_log_likelihood([2.0, 1.0]))
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 2.0, 1.0]
@@ -990,8 +1002,14 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with known and unknown sigma
+        # Create Gaussian and MuliplicativeGaussian LogLikelihood
+        gaussian_log_likelihood = pints.GaussianLogLikelihood(problem)
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Check that likelihoods agree for eta=0
+        self.assertEqual(
+            log_likelihood([2.0, 0.0, 1.0]),
+            gaussian_log_likelihood([2.0, 1.0]))
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 2.0, 1.0]
@@ -1005,15 +1023,23 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(
             self.model_multi, self.times, self.data_multi)
 
-        # Create log_likelihoods with known and unknown sigma
+        # Create Gaussian and MuliplicativeGaussian LogLikelihood
+        gaussian_log_likelihood = pints.GaussianLogLikelihood(problem)
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+
+        # Check that likelihoods agree for eta=0
+        gaussian_test_parameters = [2.0, 2.0, 2.0, 1.0, 1.0, 1.0]
+        test_parameters = [2.0, 2.0, 2.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]
+        self.assertEqual(
+            log_likelihood(test_parameters),
+            gaussian_log_likelihood(gaussian_test_parameters))
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -68.37865150369615)
+        self.assertEqual(score, -46.324126706784014)
 
 
 class TestScaledLogLikelihood(unittest.TestCase):
