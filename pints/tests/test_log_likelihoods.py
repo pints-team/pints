@@ -1013,7 +1013,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -46.324126706784014)
+        self.assertEqual(score, -68.37865150369615)
 
 
 class TestScaledLogLikelihood(unittest.TestCase):
