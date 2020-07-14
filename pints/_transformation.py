@@ -51,13 +51,14 @@ class Transformation(object):
         Converts a convariance matrix ``C`` from the model space to the search
         space around a parameter vector ``q`` provided in the search space.
 
-        The transformation is performed using a linear approximation [1]_ with
-        the Jacobian :math:`J`:
+        The transformation is performed using a first order linear
+        approximation [1]_ with the Jacobian :math:`J`:
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T \\
-                 &= J^{-1}(q) C(p) (J^{-1}(q))^T.
+            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T
+                    + \mathcal{O}(C(p)^2) \\
+                 &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
 
         Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
         inverse function theorem, i.e. the matrix inverse of the Jacobian
@@ -79,28 +80,26 @@ class Transformation(object):
         the model space to the search space around a parameter vector ``q``
         provided in the search space.
 
-        The transformation is performed using a linear approximation [1]_ with
-        the Jacobian :math:`J`:
+        The transformation is performed using a first order linear
+        approximation [1]_ with the Jacobian :math:`J`:
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T \\
-                 &= J^{-1}(q) C(p) (J^{-1}(q))^T.
+            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T
+                    + \mathcal{O}(C(p)^2) \\
+                 &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
 
         Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
         inverse function theorem, i.e. the matrix inverse of the Jacobian
         matrix of an invertible function is the Jacobian matrix of the inverse
         function.
 
-        If :math:`C(p) = var(p) \cdot I`, where :math:`var(.)` is the variance
-        and :math:`I` is the identity matrix, then
+        To transform the provided standard deviation ``s``, we assume the
+        covariance matrix :math:`C(p)` above is a diagonal matrix with
+        :math:`s^2` on the diagonal, such that
 
         .. math::
-            C(q) = var(q) \cdot I = diag(J^{-1}(q))^2 var(p) I
-
-        Therefore the standard deviation ``s`` can be transformed using
-
-        s(q) = diag(J^{-1}(q)) \times s(p)
+            s(q_i) = (J^{-1}(q) (J^{-1}(q))^T)^{1/2}_{i, i} s(p_i).
 
         References
         ----------
@@ -109,7 +108,7 @@ class Transformation(object):
                http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
-        return s * np.diagonal(jac_inv)
+        return s * np.sqrt(np.diagonal(np.matmul(jac_inv, jac_inv.T)))
 
     def jacobian(self, q):
         r"""
