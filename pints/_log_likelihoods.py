@@ -645,11 +645,11 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Compute likelihood
         log_likelihood = \
-            np.sum(-self._logn
-                   - np.sum(np.log(function_values**eta * sigma), axis=0)
-                   - 0.5 / sigma**2
-                   * np.sum((self._values - function_values)**2
-                            / function_values ** (2 * eta), axis=0))
+            -self._logn - np.sum(
+                np.sum(np.log(function_values**eta * sigma), axis=0)
+                + 0.5 / sigma**2 * np.sum(
+                    (self._values - function_values)**2
+                    / function_values ** (2 * eta), axis=0))
 
         return log_likelihood
 
