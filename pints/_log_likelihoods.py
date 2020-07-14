@@ -625,21 +625,25 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Get number of times and number of outputs
         self._nt = len(self._times)
-        self._no = problem.n_outputs()
+        no = problem.n_outputs()
+        self._np = 2 * no  # 2 parameters added per output
 
         # Add parameters to problem
-        self._n_parameters = problem.n_parameters() + 2 * self._no
+        self._n_parameters = problem.n_parameters() + self._np
 
         # Pre-calculate the constant part of the likelihood
-        self._logn = 0.5 * self._nt * self._no * np.log(2 * np.pi)
+        self._logn = 0.5 * self._nt * no * np.log(2 * np.pi)
 
     def __call__(self, x):
-        m = 2 * self._no
-        noise_parameters = x[-m:]
+        # Get noise parameters
+        noise_parameters = x[-self._np:]
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
-        function_values = self._problem.evaluate(x[:-m])
 
+        # Evaluate function (n_times, n_output)
+        function_values = self._problem.evaluate(x[:-self._np])
+
+        # Compute likelihood
         log_likelihood = \
             np.sum(-self._logn
                    - np.sum(np.log(function_values**eta * sigma), axis=0)
