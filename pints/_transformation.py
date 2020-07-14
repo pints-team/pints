@@ -52,18 +52,26 @@ class Transformation(object):
         space around a parameter vector ``q`` provided in the search space.
 
         The transformation is performed using a first order linear
-        approximation [1]_ with the Jacobian :math:`J`:
+        approximation [1]_ with the Jacobian :math:`\mathbf{J}`:
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) \left(\frac{dg(p)}{dp}\right)^T
-                    + \mathcal{O}(C(p)^2) \\
-                 &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
+            \mathbf{C}(\boldsymbol{q}) &=
+                \frac{d\boldsymbol{g}(\boldsymbol{p})}{d\boldsymbol{p}}
+                \mathbf{C}(\boldsymbol{p})
+                \left(
+                    \frac{d\boldsymbol{g}(\boldsymbol{p})}{d\boldsymbol{p}}
+                \right)^T + \mathcal{O}(\mathbf{C}(\boldsymbol{p})^2) \\
+                &= \mathbf{J}^{-1}(\boldsymbol{q})
+                \mathbf{C}(\boldsymbol{p})
+                (\mathbf{J}^{-1}(\boldsymbol{q}))^T
+                + \mathcal{O}(\mathbf{C}(\boldsymbol{p})^2).
 
-        Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
-        inverse function theorem, i.e. the matrix inverse of the Jacobian
-        matrix of an invertible function is the Jacobian matrix of the inverse
-        function.
+        Using the property that
+        :math:`\mathbf{J}^{-1} = \frac{d\boldsymbol{g}}{d\boldsymbol{p}}`,
+        from the inverse function theorem, i.e. the matrix inverse of the
+        Jacobian matrix of an invertible function is the Jacobian matrix of the
+        inverse function.
 
         References
         ----------
@@ -81,25 +89,38 @@ class Transformation(object):
         provided in the search space.
 
         The transformation is performed using a first order linear
-        approximation [1]_ with the Jacobian :math:`J`:
+        approximation [1]_ with the Jacobian :math:`\mathbf{J}`:
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) \left(\frac{dg(p)}{dp}\right)^T
-                    + \mathcal{O}(C(p)^2) \\
-                 &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
+            \mathbf{C}(\boldsymbol{q}) &=
+                \frac{d\boldsymbol{g}(\boldsymbol{p})}{d\boldsymbol{p}}
+                \mathbf{C}(\boldsymbol{p})
+                \left(
+                    \frac{d\boldsymbol{g}(\boldsymbol{p})}{d\boldsymbol{p}}
+                \right)^T + \mathcal{O}(\mathbf{C}(\boldsymbol{p})^2) \\
+                &= \mathbf{J}^{-1}(\boldsymbol{q})
+                \mathbf{C}(\boldsymbol{p})
+                (\mathbf{J}^{-1}(\boldsymbol{q}))^T
+                + \mathcal{O}(\mathbf{C}(\boldsymbol{p})^2).
 
-        Using the property that :math:`J^{-1} = \frac{dg}{dp}`, from the
-        inverse function theorem, i.e. the matrix inverse of the Jacobian
-        matrix of an invertible function is the Jacobian matrix of the inverse
-        function.
+        Using the property that
+        :math:`\mathbf{J}^{-1} = \frac{d\boldsymbol{g}}{d\boldsymbol{p}}`,
+        from the inverse function theorem, i.e. the matrix inverse of the
+        Jacobian matrix of an invertible function is the Jacobian matrix of the
+        inverse function.
 
-        To transform the provided standard deviation ``s``, we assume the
-        covariance matrix :math:`C(p)` above is a diagonal matrix with
-        :math:`s^2` on the diagonal, such that
+        To transform the provided standard deviation :math:`\boldsymbol{s}`, we
+        assume the covariance matrix :math:`\mathbf{C}(\boldsymbol{p})` above
+        is a diagonal matrix with :math:`\boldsymbol{s}^2` on the diagonal,
+        such that
 
         .. math::
-            s(q_i) = \left(J^{-1}(q) (J^{-1}(q))^T\right)^{1/2}_{i, i} s(p_i).
+            s_i(\boldsymbol{q}) =
+                \left(
+                    \mathbf{J}^{-1} (\mathbf{J}^{-1})^T
+                \right)^{1/2}_{i, i}
+                s_i(\boldsymbol{p}).
 
         References
         ----------
@@ -114,11 +135,14 @@ class Transformation(object):
         r"""
         Returns the Jacobian matrix of the transformation calculated at the
         parameter vector ``q`` in the search space. For a transformation
-        :math:`q = f(p)`, the Jacobian matrix is defined as
+        :math:`\boldsymbol{q} = \boldsymbol{f}(\boldsymbol{p})`, the Jacobian
+        matrix is defined as
 
         .. math::
-            J = \left[\frac{\partial f^{-1}}{\partial q_1} \quad
-                 \frac{\partial f^{-1}}{\partial q_2} \quad \cdots \right].
+            \mathbf{J} =
+                \left[\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
+                 \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad
+                 \cdots \right].
 
         *This is an optional method.* It is needed when transformation of
         standard deviation :meth:`Transformation.convert_standard_deviation` or
