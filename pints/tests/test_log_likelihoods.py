@@ -278,6 +278,170 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         self.assertEqual(score, -49.51182454195375)
 
 
+class TestCombinedGaussianLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(3)
+
+        # Generate test data
+        cls.times = np.array([1, 2, 3, 4])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.array([1, 2, 3, 4]) / 5.0
+        cls.data_multi = np.array([
+            [10.7, 3.5, 3.8],
+            [1.1, 3.2, -1.4],
+            [9.3, 0.0, 4.5],
+            [1.2, -3, -10]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create combined log_likelihood and related ones
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        base_log_likelihood = pints.GaussianLogLikelihood(problem)
+        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that likelihood agrees with GaussianLoglikelihood for
+        # sigma_rel = 0
+        test_parameters = [2.0, 0.5, 1.1, 0.0]
+        score = log_likelihood(test_parameters)
+        base_score = base_log_likelihood(test_parameters[:2])
+        self.assertEqual(score, base_score)
+
+        # Check that likelihood agrees with
+        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
+        test_parameters = [2.0, 0.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        rel_score = rel_log_likelihood(
+            test_parameters[:1] + test_parameters[2:])
+        self.assertEqual(score, rel_score)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -8.222479586661642)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create combined log_likelihood and related ones
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        base_log_likelihood = pints.GaussianLogLikelihood(problem)
+        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that likelihood agrees with GaussianLoglikelihood for
+        # sigma_rel = 0
+        test_parameters = [2.0, 0.5, 1.1, 0.0]
+        score = log_likelihood(test_parameters)
+        base_score = base_log_likelihood(test_parameters[:2])
+        self.assertEqual(score, base_score)
+
+        # Check that likelihood agrees with
+        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
+        test_parameters = [2.0, 0.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        rel_score = rel_log_likelihood(
+            test_parameters[:1] + test_parameters[2:])
+        self.assertEqual(score, rel_score)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -8.222479586661642)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create combined log_likelihood and related ones
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        base_log_likelihood = pints.GaussianLogLikelihood(problem)
+        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that likelihood agrees with GaussianLoglikelihood for
+        # sigma_rel = 0
+        test_parameters = [2.0, 0.5, 1.1, 0.0]
+        score = log_likelihood(test_parameters)
+        base_score = base_log_likelihood(test_parameters[:2])
+        self.assertEqual(score, base_score)
+
+        # Check that likelihood agrees with
+        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
+        test_parameters = [2.0, 0.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        rel_score = rel_log_likelihood(
+            test_parameters[:1] + test_parameters[2:])
+        self.assertEqual(score, rel_score)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -8.222479586661642)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create combined log_likelihood and related ones
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        base_log_likelihood = pints.GaussianLogLikelihood(problem)
+        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that likelihood agrees with GaussianLoglikelihood for
+        # sigma_rel = 0
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.5, 1.1, 0.0, 0.5, 1.1, 0.0, 0.5, 1.1, 0.0]
+        base_test_parameters = [2.0, 2.0, 2.0, 0.5, 0.5, 0.5]
+        score = log_likelihood(test_parameters)
+        base_score = base_log_likelihood(base_test_parameters)
+        self.assertEqual(score, base_score)
+
+        # Check that likelihood agrees with
+        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.0, 1.1, 1.0, 0.0, 1.1, 1.0, 0.0, 1.1, 1.0]
+        rel_test_parameters = [2.0, 2.0, 2.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        rel_score = rel_log_likelihood(rel_test_parameters)
+        self.assertEqual(score, rel_score)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.5, 1.1, 1.0, 0.5, 1.1, 1.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -42.87921520701031)
+
+
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
     @classmethod
