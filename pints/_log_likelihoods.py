@@ -566,7 +566,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     the magnitude of the error variance scaling with the problem output.
 
     For each output in the problem, this likelihood introduces two new scalar
-    parameters: an exponential power ``eta`` and a scale ``sigma``.
+    parameters: an exponential power :math:`\eta` and a scale :math:`\sigma`.
 
     This likelihood is applicable to a model given by
 
@@ -578,20 +578,36 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     .. math::
         v(t) \sim \text{ iid } N(0, \sigma)
 
-    Note that the scalar parameter ``eta`` controls the exponential dependence
-    of the noise on the function output, while the scalar parameter ``sigma``
-    provides a baseline level of the noise standard deviation. This model leads
-    to a log likelihood of
+    Note that the scalar parameter :math:`\eta` controls the exponential
+    dependence of the noise on the function output, while the scalar parameter
+    :math:`\sigma` provides a baseline level of the noise standard deviation.
+    This model leads to a log likelihood of
 
     .. math::
-        \log{L(\theta, \sigma, \eta | \boldsymbol{x})} =
+        \log{L(\theta, \eta , \sigma | X^{\text{obs}})} =
             -\frac{n_t}{2} \log{2 \pi}
             -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
             -\frac{1}{2}\sum_{i=1}^{n_t}
-                \frac{(X(t_i) - f(t_i, \theta))^2}
+                \frac{(X^{\text{obs}}_{i} - f(t_i, \theta))^2}
                 {(f(t_i, \theta)^\eta \sigma)^2}
 
-    where ``n_t`` is the number of time points in the series.
+    where :math:`n_t` is the number of time points in the series, and
+    :math:`X^{\text{obs}}_{i}` the measurement at time :math:`t_i`.
+
+    For a system with :math:`n_o` outputs, this becomes
+
+    .. math::
+        \log{L(\theta, \eta , \sigma | \boldsymbol{x})} =
+            -\frac{n_tn_o}{2} \log{2 \pi}
+            -\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}{\log{f_j(t_i, \theta)^\eta
+            \sigma _j}}
+            -\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}
+                \frac{(X^{\text{obs}}_{ij} - f_j(t_i, \theta))^2}
+                {2(f_j(t_i, \theta)^\eta \sigma _j)^2},
+
+    where :math:`n_o` is the number of outputs of the model, and
+    :math:`X^{\text{obs}}_{ij}` the measurement of output :math:`j` at
+    time point :math:`t_i`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -599,8 +615,9 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     ----------
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem two parameters are added (``eta``, ``sigma``),
-        for a multi-output problem 2 times ``n_outputs`` parameters are added.
+        single-output problem two parameters are added (:math:`\eta`,
+        :math:`\sigma`), for a multi-output problem 2 times :math:`n_o`
+        parameters are added.
     """
 
     def __init__(self, problem):
@@ -614,7 +631,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         self._n_parameters = problem.n_parameters() + 2 * self._no
 
         # Pre-calculate the constant part of the likelihood
-        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+        self._logn = 0.5 * self._nt * self._no * np.log(2 * np.pi)
 
     def __call__(self, x):
         m = 2 * self._no
