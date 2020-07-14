@@ -239,13 +239,21 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
 class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming a mixture of a base-level Gaussian
-    error and an heteroscedastic Gaussian error, with the magnitude of the
-    error variance scaling with the problem output
+    Calculates the log-likelihood for either a
+    :class:`pints.SingleOutputProblem` or a :class:`pints.MultiOutputProblem`
+    assuming that the error of the model predictions is a mixture of a
+    Gaussian base-level noise (constant variance
+    :math:`\sigma ^2_{\text{base}}`) and Gaussian heteroscedastic noise
+    (variance scaling with model predictions).
+
+    For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
+    , the CombinedGaussianLogLikelihood assumes that the model predictions
+    :math:`X` are Gaussian distributed
 
     .. math::
-        X(t) = f(t; \theta) + (\sigma _{\text{base}} + \sigma _{\text{rel}}
-        f(t; \theta)^\eta ) \epsilon ,
+        X(t| \theta , \sigma _{\text{base}}, \sigma _{\text{rel}}) =
+        f(t| \theta) + (\sigma _{\text{base}} + \sigma _{\text{rel}}
+        f(t| \theta)^\eta ) \, \epsilon ,
 
     where :math:`\epsilon` is a i.i.d. standard Gaussian random variable
 
@@ -262,14 +270,16 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     .. math::
         \log L(\theta, \sigma _{\text{base}}, \eta , \sigma _{\text{rel}} | X)
         = -\frac{n}{2} \log 2 \pi
-        -\sum_{i=1}^{n}\log
-        \left( \sigma _{\text{base}} +
-        \sigma _{\text{rel}}f(t_i; \theta)^\eta \right)
-        -\frac{1}{2}\sum_{i=1}^{n}
-        \frac{(X(t_i) - f(t_i; \theta))^2}
-        {(\sigma _{\text{base}} + \sigma _{\text{rel}}f(t_i; \theta)^\eta)^2}
+        -\sum_{i=1}^{n}\log \sigma _{\text{tot}, i}
+        - \sum_{i=1}^{n}
+        \frac{(X^{\text{obs}}(t_i) - f(t_i; \theta))^2}
+        {2\sigma ^2_{\text{tot}, i}}
 
-    where :math:`n` is the number of time points in the series.
+    where :math:`n` is the number of measured time points in the time series,
+    :math:`X^{\text{obs}}(t_i)` the observation at time point :math:`t_i`, and
+    :math:`\sigma _{\text{tot}, i}=\sigma _{\text{base}} +\sigma _{\text{rel}}
+    f(t_i; \theta)^\eta` is the total standard deviation of the error at time
+    :math:`t_i`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -323,44 +333,44 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         r"""
         See :meth:`LogPDF.evaluateS1()`.
 
-        Partial derivatives of the log-likelihood with respect to it's
-        parameters are computed as
+        The partial derivative of the log-likelihood w.r.t. the model
+        parameters are
 
         .. math::
             \frac{\partial \log L}{\partial \theta _k}
             =& -\sigma _{\text{rel}}\eta \sum_{i=1}^{n}\frac{
             f(t_i; \theta)^{\eta-1}}
-            {\sigma _{\text{base}} +\sigma _{\text{rel}}f(t_i; \theta)^\eta}
-            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
-            &+ \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))}
-            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
-            f(t_i, \theta)^\eta)^2}
+            {\sigma _{\text{tot}, i}}
+            \frac{\partial f(t_i, \theta)}{\partial \theta _k}
+            + \sum_{i=1}^{n}
+            \frac{X(t_i) - f(t_i; \theta)}
+            {\sigma ^2_{\text{tot}, i}}
             \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
             &+ \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2 f(t_i, \theta)^{\eta-1}}
-            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
-            f(t_i, \theta)^\eta)^3}
-            \frac{\partial f(t_i, \theta)}{\partial \theta _k}
-
-        .. math::
+            \frac{(X(t_i) - f(t_i; \theta))^2}
+            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1}
+            \frac{\partial f(t_i, \theta)}{\partial \theta _k} \\
             \frac{\partial \log L}{\partial \sigma _{\text{base}}}
-            = -\sum_{i=1}^{n}\frac{1}{\sigma _{\text{base}} +
-            \sigma _{\text{rel}}f(t_i; \theta)^\eta}
+            =& -\sum_{i=1}^{n}\frac{1}{\sigma _{\text{tot}, i}}
             +\sum_{i=1}^{n}
             \frac{(X(t_i) - f(t_i; \theta))^2}
-            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
-            f(t_i; \theta)^\eta)^3}
-
-        .. math::
+            {\sigma ^3_{\text{tot}, i}} \\
             \frac{\partial \log L}{\partial \eta}
-            = -\sigma _{\text{rel}}\eta\sum_{i=1}^{n}
-            \frac{f(t_i, \theta)^{\eta-1}}{\sigma _{\text{base}} +
-            \sigma _{\text{rel}}f(t_i; \theta)^\eta}
+            =& -\sigma _{\text{rel}}\eta\sum_{i=1}^{n}
+            \frac{f(t_i, \theta)^{\eta-1}}{\sigma _{\text{tot}, i}}
             + \sigma _{\text{rel}}\eta \sum_{i=1}^{n}
-            \frac{(X(t_i) - f(t_i; \theta))^2 f(t_i, \theta)^{\eta-1}}
-            {(\sigma _{\text{base}} + \sigma _{\text{rel}}
-            f(t_i, \theta)^\eta)^3}
+            \frac{(X(t_i) - f(t_i; \theta))^2}
+            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta-1} \\
+            \frac{\partial \log L}{\partial \sigma _{\text{rel}}}
+            =& -\sum_{i=1}^{n}
+            \frac{f(t_i, \theta)^{\eta}}{\sigma _{\text{tot}, i}}
+            + \sum_{i=1}^{n}
+            \frac{(X(t_i) - f(t_i; \theta))^2}
+            {\sigma ^3_{\text{tot}, i}}f(t_i, \theta)^{\eta}
+
+        Note that partial derivatives of this log-likelihood w.r.t. it's
+        parameters are costly, especially if there are many data points
+        and the number of outputs of the model is high.
         """
         # Get parameters from input
         noise_parameters = x[-self._np:]
@@ -403,6 +413,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Return
         return L, dL
+
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
