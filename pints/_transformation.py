@@ -56,7 +56,7 @@ class Transformation(object):
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T
+            C(q) &= \frac{dg(p)}{dp} C(p) \left(\frac{dg(p)}{dp}\right)^T
                     + \mathcal{O}(C(p)^2) \\
                  &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
 
@@ -85,7 +85,7 @@ class Transformation(object):
 
         .. math::
 
-            C(q) &= \frac{dg(p)}{dp} C(p) (\frac{dg(p)}{dp})^T
+            C(q) &= \frac{dg(p)}{dp} C(p) \left(\frac{dg(p)}{dp}\right)^T
                     + \mathcal{O}(C(p)^2) \\
                  &= J^{-1}(q) C(p) (J^{-1}(q))^T + \mathcal{O}(C(p)^2).
 
@@ -99,7 +99,7 @@ class Transformation(object):
         :math:`s^2` on the diagonal, such that
 
         .. math::
-            s(q_i) = (J^{-1}(q) (J^{-1}(q))^T)^{1/2}_{i, i} s(p_i).
+            s(q_i) = \left(J^{-1}(q) (J^{-1}(q))^T\right)^{1/2}_{i, i} s(p_i).
 
         References
         ----------
@@ -117,13 +117,13 @@ class Transformation(object):
         :math:`q = f(p)`, the Jacobian matrix is defined as
 
         .. math::
-            J = [\frac{\partial f^{-1}}{\partial q_1} \quad
-                 \frac{\partial f^{-1}}{\partial q_2} \quad \cdots].
+            J = \left[\frac{\partial f^{-1}}{\partial q_1} \quad
+                 \frac{\partial f^{-1}}{\partial q_2} \quad \cdots \right].
 
-        *This is an optional method. It is needed when transformation of
+        *This is an optional method.* It is needed when transformation of
         standard deviation :meth:`Transformation.convert_standard_deviation` or
         covariance matrix :meth:`Transformation.convert_covariance_matrix` is
-        needed, or when ``evaluateS1()`` is needed.*
+        needed, or when ``evaluateS1()`` is needed.
         """
         raise NotImplementedError
 
@@ -138,9 +138,9 @@ class Transformation(object):
         ``n_parameters`` by ``n_parameters`` matrix and ``S'`` is a sequence of
         ``n_parameters`` matrices.
 
-        *This is an optional method. It is needed when the transformation is
+        *This is an optional method.* It is needed when the transformation is
         used along with a non-element-wise transformation in
-        :class:`ComposedTransformation`.*
+        :class:`ComposedTransformation`.
         """
         raise NotImplementedError
 
@@ -150,10 +150,10 @@ class Transformation(object):
         Jacobian matrix of the transformation :meth:`Transformation.jacobian`
         calculated at the parameter vector ``q`` in the search space.
 
-        *This is an optional method. It is needed when transformation is
+        *This is an optional method.* It is needed when transformation is
         performed on :class:`LogPDF` and/or that requires ``evaluateS1()``;
         e.g. not necessary if it's used for :class:`ErrorMeasure` without
-        :meth:`ErrorMeasure.evaluateS1()`.*
+        :meth:`ErrorMeasure.evaluateS1()`.
         """
         return np.log(np.abs(np.linalg.det(self.jacobian(q))))
 
@@ -169,8 +169,8 @@ class Transformation(object):
         Note that the derivative returned is of the log of the determinant of
         the Jacobian, so ``S' = d/dq log(|det(J(q))|)``, evaluated at input.
 
-        *This is an optional method. It is needed when transformation is
-        performed on :class:`LogPDF` and that requires ``evaluateS1()``.*
+        *This is an optional method.* It is needed when transformation is
+        performed on :class:`LogPDF` and that requires ``evaluateS1()``.
         """
         # Directly calculate the derivative using jacobian_S1()
         #
@@ -975,8 +975,9 @@ class TransformedLogPDF(pints.LogPDF):
 
     .. math::
         \mathbf{J} =
-            [\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
-             \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad \cdots].
+            \left[\frac{\partial \boldsymbol{f}^{-1}}{\partial q_1} \quad
+             \frac{\partial \boldsymbol{f}^{-1}}{\partial q_2} \quad
+             \cdots \right].
 
     Hence
 
@@ -989,11 +990,11 @@ class TransformedLogPDF(pints.LogPDF):
 
     .. math::
         \frac{\partial \log(\pi(\boldsymbol{q}))}{\partial q_i} =
-            \frac{\partial \log(|det(\mathbf{J})|)}{\partial q_i}
-            + \frac{\partial
-                \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i}.
+            \frac{\partial
+                \log(\pi(\boldsymbol{f}^{-1}(\boldsymbol{q})))}{\partial q_i}
+            + \frac{\partial \log(|det(\mathbf{J})|)}{\partial q_i}.
 
-    The second term can be calculated using the calculated using the chain rule
+    The first term can be calculated using the chain rule
 
     .. math::
         \frac{\partial
