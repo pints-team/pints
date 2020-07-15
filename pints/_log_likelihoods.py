@@ -248,7 +248,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
     , the CombinedGaussianLogLikelihood assumes that the model predictions
-    :math:`X` are Gaussian distributed
+    :math:`X` are Gaussian distributed according to
 
     .. math::
         X(t| \theta , \sigma _{\text{base}}, \sigma _{\text{rel}}) =
