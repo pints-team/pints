@@ -294,8 +294,8 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         {2\sigma ^2_{\text{tot}, ij}},
 
     where :math:`n_o` is the number of outputs of the model,
-    :math:`X^{\text{obs}}_{ij}` is the observation at time point :math:`t_i`,
-    of output :math:`j` and
+    :math:`X^{\text{obs}}_{ij}` is the observation at time point :math:`t_i`
+    of output :math:`j`, and
     :math:`\sigma _{\text{tot}, ij}=\sigma _{\text{base}, j} +
     \sigma _{\text{rel}, j}f_j(t_i| \theta)^{\eta _j}` is the total standard
     deviation of the error at time :math:`t_i` of output :math:`j`.
