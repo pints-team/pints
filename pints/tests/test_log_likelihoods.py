@@ -304,26 +304,8 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create combined log_likelihood and related ones
+        # Create log_likelihood
         log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
-        base_log_likelihood = pints.GaussianLogLikelihood(problem)
-        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
-            problem)
-
-        # Check that likelihood agrees with GaussianLoglikelihood for
-        # sigma_rel = 0
-        test_parameters = [2.0, 0.5, 1.1, 0.0]
-        score = log_likelihood(test_parameters)
-        base_score = base_log_likelihood(test_parameters[:2])
-        self.assertEqual(score, base_score)
-
-        # Check that likelihood agrees with
-        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
-        test_parameters = [2.0, 0.0, 1.1, 1.0]
-        score = log_likelihood(test_parameters)
-        rel_score = rel_log_likelihood(
-            test_parameters[:1] + test_parameters[2:])
-        self.assertEqual(score, rel_score)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -340,26 +322,8 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create combined log_likelihood and related ones
+        # Create log_likelihood
         log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
-        base_log_likelihood = pints.GaussianLogLikelihood(problem)
-        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
-            problem)
-
-        # Check that likelihood agrees with GaussianLoglikelihood for
-        # sigma_rel = 0
-        test_parameters = [2.0, 0.5, 1.1, 0.0]
-        score = log_likelihood(test_parameters)
-        base_score = base_log_likelihood(test_parameters[:2])
-        self.assertEqual(score, base_score)
-
-        # Check that likelihood agrees with
-        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
-        test_parameters = [2.0, 0.0, 1.1, 1.0]
-        score = log_likelihood(test_parameters)
-        rel_score = rel_log_likelihood(
-            test_parameters[:1] + test_parameters[2:])
-        self.assertEqual(score, rel_score)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -376,26 +340,8 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create combined log_likelihood and related ones
+        # Create log_likelihood
         log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
-        base_log_likelihood = pints.GaussianLogLikelihood(problem)
-        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
-            problem)
-
-        # Check that likelihood agrees with GaussianLoglikelihood for
-        # sigma_rel = 0
-        test_parameters = [2.0, 0.5, 1.1, 0.0]
-        score = log_likelihood(test_parameters)
-        base_score = base_log_likelihood(test_parameters[:2])
-        self.assertEqual(score, base_score)
-
-        # Check that likelihood agrees with
-        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
-        test_parameters = [2.0, 0.0, 1.1, 1.0]
-        score = log_likelihood(test_parameters)
-        rel_score = rel_log_likelihood(
-            test_parameters[:1] + test_parameters[2:])
-        self.assertEqual(score, rel_score)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -409,29 +355,8 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(
             self.model_multi, self.times, self.data_multi)
 
-        # Create combined log_likelihood and related ones
+        # Create log_likelihood
         log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
-        base_log_likelihood = pints.GaussianLogLikelihood(problem)
-        rel_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
-            problem)
-
-        # Check that likelihood agrees with GaussianLoglikelihood for
-        # sigma_rel = 0
-        test_parameters = [
-            2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 0.0, 0.0, 0.0]
-        base_test_parameters = [2.0, 2.0, 2.0, 0.5, 0.5, 0.5]
-        score = log_likelihood(test_parameters)
-        base_score = base_log_likelihood(base_test_parameters)
-        self.assertEqual(score, base_score)
-
-        # Check that likelihood agrees with
-        # MultiplicativeGaussianLoglikelihood for sigma_base = 0
-        test_parameters = [
-            2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
-        rel_test_parameters = [2.0, 2.0, 2.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0]
-        score = log_likelihood(test_parameters)
-        rel_score = rel_log_likelihood(rel_test_parameters)
-        self.assertEqual(score, rel_score)
 
         # Evaluate likelihood for test parameters
         test_parameters = [
@@ -440,6 +365,80 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
 
         # Check that likelihood returns expected value
         self.assertEqual(score, -42.87921520701031)
+
+    def test_call_gaussian_log_likelihood_agrees_single(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create CombinedGaussianLL and GaussianLL
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
+        # sigma_rel = 0 and sigma_base = sigma
+        test_parameters = [2.0, 0.5, 1.1, 0.0]
+        gauss_test_parameters = [2.0, 0.5]
+        score = log_likelihood(test_parameters)
+        gauss_score = gauss_log_likelihood(gauss_test_parameters)
+        self.assertEqual(score, gauss_score)
+
+    def test_call_gaussian_log_likelihood_agrees_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create CombinedGaussianLL and GaussianLL
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
+        # sigma_rel = 0 and sigma_base = sigma
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 0.0, 0.0, 0.0]
+        gauss_test_parameters = [2.0, 2.0, 2.0, 0.5, 0.5, 0.5]
+        score = log_likelihood(test_parameters)
+        gauss_score = gauss_log_likelihood(gauss_test_parameters)
+        self.assertEqual(score, gauss_score)
+
+    def test_call_multiplicative_gaussian_log_likelihood_agrees_single(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create CombinedGaussianLL and MultplicativeGaussianLL
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        multi_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that CombinedGaussianLL agrees with
+        # MultiplicativeGaussianLoglikelihood when sigma_base = 0,
+        # eta = eta, and sigma_rel = sigma
+        test_parameters = [2.0, 0.0, 1.1, 1.0]
+        multi_test_parameters = [2.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        multi_score = multi_log_likelihood(multi_test_parameters)
+        self.assertEqual(score, multi_score)
+
+    def test_call_multiplicative_gaussian_log_likelihood_agrees_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create CombinedGaussianLL and MultplicativeGaussianLL
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        multi_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
+            problem)
+
+        # Check that CombinedGaussianLL agrees with
+        # MultiplicativeGaussianLoglikelihood when sigma_base = 0,
+        # eta = eta, and sigma_rel = sigma
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
+        multi_test_parameters = [2.0, 2.0, 2.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+        multi_score = multi_log_likelihood(multi_test_parameters)
+        self.assertEqual(score, multi_score)
 
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
