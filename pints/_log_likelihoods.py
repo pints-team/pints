@@ -401,32 +401,33 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         eta = np.asarray(noise_parameters[self._no:2 * self._no])
         sigma_rel = np.asarray(noise_parameters[2 * self._no:])
 
-        # Add dimension to parameters for broadcasting to (n_times, n_outputs),
-        # i.e. (n_outputs) -> (,n_outputs)
-        sigma_base = sigma_base[np.newaxis, :]
-        eta = eta[np.newaxis, :]
-        sigma_rel = sigma_rel[np.newaxis, :]
-
         # Evaluate noise-free model, and get residuals
-        # y shape = (n_times, n_outputs)
-        # dy shape = (n_times, n_outputs) or (n_times, n_outputs, n_model_para)
+        # y shape = (n_times,) or (n_times, n_outputs)
+        # dy shape = (n_times, n_model_parameters) or
+        # (n_times, n_outputs, n_model_para)
         y, dy = self._problem.evaluateS1(parameters[:-self._np])
 
-        # Reshape dy, in case we're working with a single-output problem
-        # Shape = (n_times, n_outputs, n_model_params)
-        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._np)
+        # Reshape y and dy, in case we're working with a single-output problem
+        # Shape y = (n_times, n_outputs)
+        # Shape dy = (n_model_parameters, n_times, n_outputs)
+        y = y.reshape(self._nt, self._no)
+        dy = np.transpose(
+            dy.reshape(self._nt, self._no, self._n_parameters - self._np),
+            axes=(2, 0, 1))
 
         # Compute y^(eta-1)
         y_pow_eta_minus_one = y**(eta - 1)
 
         # Compute error
         # Note: Must be (data - simulation), sign now matters!
-        error = self._values - y
+        # Shape: (n_times, output)
+        error = self._values.reshape(self._nt, self._no) - y
 
         # Compute error squared
         error_squared = error**2
 
         # Compute one over total standard deviation
+        # Shape (n_times, n_outputs)
         inv_sigma_tot = (sigma_base + sigma_rel * y**eta)**(-1)
 
         # Compute one over total variance
@@ -436,16 +437,16 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         inv_sigma_tot_cubed = inv_sigma_tot**3
 
         # Compute likelihood
-        L = -self._logn + np.sum(np.log(inv_sigma_tot), axis=(0, 1)) - 0.5 \
+        L = self._logn + np.sum(np.log(inv_sigma_tot), axis=(0, 1)) - 0.5 \
             * np.sum(error_squared * inv_var_tot, axis=(0, 1))
 
         # Compute derivative w.r.t. model parameters
         dtheta = -np.sum(sigma_rel * eta * np.sum(
-            y_pow_eta_minus_one * inv_sigma_tot * dy, axis=0), axis=1) + \
-            np.sum(error * inv_var_tot * dy, axis=(0, 1)) + np.sum(
+            y_pow_eta_minus_one * inv_sigma_tot * dy, axis=1), axis=1) + \
+            np.sum(error * inv_var_tot * dy, axis=(1, 2)) + np.sum(
                 sigma_rel * eta * np.sum(
                     error_squared * inv_sigma_tot_cubed * y_pow_eta_minus_one
-                    * dy, axis=0),
+                    * dy, axis=1),
                 axis=1)
 
         # Compute derivative w.r.t. sigma base
