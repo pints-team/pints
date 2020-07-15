@@ -511,10 +511,21 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
-        score = log_likelihood(test_parameters)
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
 
-        # Check that likelihood returns expected value
-        self.assertEqual(score, -8.222479586661642)
+        # Check that likelihood score agrees with call
+        # There are floating point deviations because in evaluateS1
+        # log(sigma_tot) is for efficiency computed as -log(1/sigma_tot)
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that number of partials is correct
+        self.assertEqual(deriv.shape, (4,))
+
+        # Check that partials are computed correctly
+        self.assertEqual(deriv[0], -2.0553513340073835)
+        self.assertEqual(deriv[1], -1.0151215581116324)
+        self.assertEqual(deriv[2], -1.1967783819557953)
+        self.assertEqual(deriv[3], -2.1759606944650822)
 
     # def test_evaluateS1_two_dim_array_multi(self):
     #     # Create an object with links to the model and time series
