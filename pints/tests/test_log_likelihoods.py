@@ -527,21 +527,38 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv[2], -1.1967783819557953)
         self.assertEqual(deriv[3], -2.1759606944650822)
 
-    # def test_evaluateS1_two_dim_array_multi(self):
-    #     # Create an object with links to the model and time series
-    #     problem = pints.MultiOutputProblem(
-    #         self.model_multi, self.times, self.data_multi)
+    def test_evaluateS1_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
 
-    #     # Create log_likelihood
-    #     log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        # Create log_likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
 
-    #     # Evaluate likelihood for test parameters
-    #     test_parameters = [
-    #         2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
-    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+        # Evaluate likelihood for test parameters
+        test_parameters = [
+            2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
 
-    #     # Check that likelihood returns expected value
-    #     self.assertEqual(score, -42.87921520701031)
+        # Check that likelihood score agrees with call
+        self.assertEqual(score, log_likelihood(test_parameters))
+
+        # Check that number of partials is correct
+        self.assertEqual(deriv.shape, (12,))
+
+        # Check that partials are computed correctly
+        self.assertEqual(deriv[0], 8.585990509232374)
+        self.assertEqual(deriv[1], -1.6726936107293917)
+        self.assertEqual(deriv[2], -0.6632862192355309)
+        self.assertEqual(deriv[3], 5.547071959874058)
+        self.assertEqual(deriv[4], -0.2868738955802226)
+        self.assertEqual(deriv[5], 0.1813851785335695)
+        self.assertEqual(deriv[6], 6.539724973509424)
+        self.assertEqual(deriv[7], -0.3624847291390523)
+        self.assertEqual(deriv[8], 0.23867647052817906)
+        self.assertEqual(deriv[9], 11.890409042744405)
+        self.assertEqual(deriv[10], -1.3181262877783717)
+        self.assertEqual(deriv[11], 1.3018716574264304)
 
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
