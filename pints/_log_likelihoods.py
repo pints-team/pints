@@ -320,21 +320,21 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
-        no = problem.n_outputs()
-        self._np = 3 * no
+        self._no = problem.n_outputs()
+        self._np = 3 * self._no
 
         # Add parameters to problem
         self._n_parameters = problem.n_parameters() + self._np
 
         # Pre-calculate the constant part of the likelihood
-        self._logn = -0.5 * self._nt * no * np.log(2 * np.pi)
+        self._logn = -0.5 * self._nt * self._no * np.log(2 * np.pi)
 
     def __call__(self, parameters):
         # Get parameters from input
         noise_parameters = parameters[-self._np:]
-        sigma_base = np.asarray(noise_parameters[0::3])
-        eta = np.asarray(noise_parameters[1::3])
-        sigma_rel = np.asarray(noise_parameters[2::3])
+        sigma_base = np.asarray(noise_parameters[:self._no])
+        eta = np.asarray(noise_parameters[self._no:2 * self._no])
+        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
 
         # Evaluate noise-free model (n_times, n_outputs)
         function_values = self._problem.evaluate(parameters[:-self._np])
@@ -397,9 +397,9 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         """
         # Get parameters from input
         noise_parameters = parameters[-self._np:]
-        sigma_base = np.asarray(noise_parameters[0::3])
-        eta = np.asarray(noise_parameters[1::3])
-        sigma_rel = np.asarray(noise_parameters[2::3])
+        sigma_base = np.asarray(noise_parameters[:self._no])
+        eta = np.asarray(noise_parameters[self._no:2 * self._no])
+        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
 
         # Add dimension to parameters for broadcasting to (n_times, n_outputs),
         # i.e. (n_outputs) -> (,n_outputs)
@@ -414,7 +414,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Reshape dy, in case we're working with a single-output problem
         # Shape = (n_times, n_outputs, n_model_params)
-        dy = dy.reshape(self._nt, self._np // 3, self._n_parameters - self._np)
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._np)
 
         # Compute y^(eta-1)
         y_pow_eta_minus_one = y**(eta - 1)
