@@ -560,6 +560,30 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv[10], -1.3181262877783717)
         self.assertEqual(deriv[11], 1.3018716574264304)
 
+    def test_evaluateS1_gaussian_log_likelihood_agrees_single(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create CombinedGaussianLL and GaussianLL
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
+        # sigma_rel = 0 and sigma_base = sigma
+        test_parameters = [2.0, 0.5, 1.1, 0.0]
+        gauss_test_parameters = [2.0, 0.5]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+        gauss_score, gauss_deriv = gauss_log_likelihood.evaluateS1(
+            gauss_test_parameters)
+
+        # Check that scores are the same
+        self.assertEqual(score, gauss_score)
+
+        # Check that partials for model params and sigma_base agree
+        self.assertEqual(deriv[0], gauss_deriv[0])
+        self.assertEqual(deriv[1], gauss_deriv[1])
+
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
