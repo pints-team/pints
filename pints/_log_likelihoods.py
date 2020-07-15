@@ -309,7 +309,10 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         single-output problem three parameters are added
         (:math:`\sigma _{\text{base}}`, :math:`\eta`,
         :math:`\sigma _{\text{rel}}`),
-        for a multi-output problem 3 times ``n_outputs`` parameters are added.
+        for a multi-output problem :math:`3n_o` parameters are added
+        (:math:`\sigma _{\text{base},1},\ldots , \sigma _{\text{base},n_o},
+        \eta _1,\ldots , \eta _{n_o}, \sigma _{\text{rel},1}, \ldots ,
+        \sigma _{\text{rel},n_o})`.
     """
 
     def __init__(self, problem):
