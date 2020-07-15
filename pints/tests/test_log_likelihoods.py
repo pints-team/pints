@@ -418,7 +418,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         # Check that likelihood agrees with GaussianLoglikelihood for
         # sigma_rel = 0
         test_parameters = [
-            2.0, 2.0, 2.0, 0.5, 1.1, 0.0, 0.5, 1.1, 0.0, 0.5, 1.1, 0.0]
+            2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 0.0, 0.0, 0.0]
         base_test_parameters = [2.0, 2.0, 2.0, 0.5, 0.5, 0.5]
         score = log_likelihood(test_parameters)
         base_score = base_log_likelihood(base_test_parameters)
@@ -427,7 +427,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         # Check that likelihood agrees with
         # MultiplicativeGaussianLoglikelihood for sigma_base = 0
         test_parameters = [
-            2.0, 2.0, 2.0, 0.0, 1.1, 1.0, 0.0, 1.1, 1.0, 0.0, 1.1, 1.0]
+            2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
         rel_test_parameters = [2.0, 2.0, 2.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0]
         score = log_likelihood(test_parameters)
         rel_score = rel_log_likelihood(rel_test_parameters)
@@ -435,7 +435,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
 
         # Evaluate likelihood for test parameters
         test_parameters = [
-            2.0, 2.0, 2.0, 0.5, 1.1, 1.0, 0.5, 1.1, 1.0, 0.5, 1.1, 1.0]
+            2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
