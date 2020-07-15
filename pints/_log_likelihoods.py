@@ -296,9 +296,9 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     where :math:`n_o` is the number of outputs of the model,
     :math:`X^{\text{obs}}_{ij}` is the observation at time point :math:`t_i`,
     of output :math:`j` and
-    :math:`\sigma _{\text{tot}, ij}=\sigma _{\text{base}} +\sigma _{\text{rel}}
-    f_j(t_i| \theta)^\eta` is the total standard deviation of the error at time
-    :math:`t_i` of output :math:`j`.
+    :math:`\sigma _{\text{tot}, ij}=\sigma _{\text{base}, j} +
+    \sigma _{\text{rel}, j}f_j(t_i| \theta)^{\eta _j}` is the total standard
+    deviation of the error at time :math:`t_i` of output :math:`j`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -326,15 +326,15 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Pre-calculate the constant part of the likelihood
         self._logn = -0.5 * self._nt * no * np.log(2 * np.pi)
 
-    def __call__(self, x):
+    def __call__(self, parameters):
         # Get parameters from input
-        noise_parameters = x[-self._np:]
+        noise_parameters = parameters[-self._np:]
         sigma_base = np.asarray(noise_parameters[0::3])
         eta = np.asarray(noise_parameters[1::3])
         sigma_rel = np.asarray(noise_parameters[2::3])
 
         # Evaluate noise-free model (n_times, n_outputs)
-        function_values = self._problem.evaluate(x[:-self._np])
+        function_values = self._problem.evaluate(parameters[:-self._np])
 
         # Compute error (n_times, n_outputs)
         error = self._values - function_values
@@ -350,86 +350,118 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         return log_likelihood
 
-    def evaluateS1(self, x):
+    def evaluateS1(self, parameters):
         r"""
         See :meth:`LogPDF.evaluateS1()`.
 
-        The partial derivatives of the log-likelihood for a w.r.t. the model
+        The partial derivatives of the log-likelihood w.r.t. the model
         parameters are
 
         .. math::
             \frac{\partial \log L}{\partial \theta _k}
-            =& -\sigma _{\text{rel}}\eta \sum_{i,j}\frac{
-            f_j(t_i| \theta)^{\eta-1}}
+            =& -\sum_{i,j}\sigma _{\text{rel},j}\eta _j\frac{
+            f_j(t_i| \theta)^{\eta _j-1}}
             {\sigma _{\text{tot}, ij}}
             \frac{\partial f_j(t_i| \theta)}{\partial \theta _k}
             + \sum_{i,j}
             \frac{X^{\text{obs}}_{ij} - f_j(t_i| \theta)}
             {\sigma ^2_{\text{tot}, ij}}
             \frac{\partial f_j(t_i| \theta)}{\partial \theta _k} \\
-            &+ \sigma _{\text{rel}}\eta \sum_{i,j}
+            &+\sum_{i,j}\sigma _{\text{rel},j}\eta _j
             \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
-            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta-1}
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta _j-1}
             \frac{\partial f_j(t_i| \theta)}{\partial \theta _k} \\
-            \frac{\partial \log L}{\partial \sigma _{\text{base}}}
-            =& -\sum_{i,j}\frac{1}{\sigma _{\text{tot}, ij}}
-            +\sum_{i,j}
+            \frac{\partial \log L}{\partial \sigma _{\text{base}, j}}
+            =& -\sum ^{n_t}_{i=1}\frac{1}{\sigma _{\text{tot}, ij}}
+            +\sum ^{n_t}_{i=1}
             \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
             {\sigma ^3_{\text{tot}, ij}} \\
-            \frac{\partial \log L}{\partial \eta}
-            =& -\sigma _{\text{rel}}\eta\sum_{i,j}
-            \frac{f_j(t_i| \theta)^{\eta-1}}{\sigma _{\text{tot}, ij}}
-            + \sigma _{\text{rel}}\eta \sum_{i,j}
+            \frac{\partial \log L}{\partial \eta _j}
+            =& -\sigma _{\text{rel},j}\eta _j\sum ^{n_t}_{i=1}
+            \frac{f_j(t_i| \theta)^{\eta _j-1}}{\sigma _{\text{tot}, ij}}
+            + \sigma _{\text{rel},j}\eta _j \sum ^{n_t}_{i=1}
             \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
-            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta-1} \\
-            \frac{\partial \log L}{\partial \sigma _{\text{rel}}}
-            =& -\sum_{i,j}
-            \frac{f_j(t_i| \theta)^{\eta}}{\sigma _{\text{tot}, ij}}
-            + \sum_{i,j}
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta _j-1} \\
+            \frac{\partial \log L}{\partial \sigma _{\text{rel},j}}
+            =& -\sum ^{n_t}_{i=1}
+            \frac{f_j(t_i| \theta)^{\eta _j}}{\sigma _{\text{tot}, ij}}
+            + \sum ^{n_t}_{i=1}
             \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
-            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta},
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta _j},
 
         where :math:`i` sums over the measurement time points and :math:`j`
         over the outputs of the model.
         """
         # Get parameters from input
-        noise_parameters = x[-self._np:]
+        noise_parameters = parameters[-self._np:]
         sigma_base = np.asarray(noise_parameters[0::3])
         eta = np.asarray(noise_parameters[1::3])
         sigma_rel = np.asarray(noise_parameters[2::3])
 
+        # Add dimension to parameters for broadcasting to (n_times, n_outputs),
+        # i.e. (n_outputs) -> (,n_outputs)
+        sigma_base = sigma_base[np.newaxis, :]
+        eta = eta[np.newaxis, :]
+        sigma_rel = sigma_rel[np.newaxis, :]
+
         # Evaluate noise-free model, and get residuals
-        y, dy = self._problem.evaluateS1(x[:-self._np])
+        # y shape = (n_times, n_outputs)
+        # dy shape = (n_times, n_outputs) or (n_times, n_outputs, n_model_para)
+        y, dy = self._problem.evaluateS1(parameters[:-self._np])
 
         # Reshape dy, in case we're working with a single-output problem
-        # shape = (n_times, n_outputs, n_model_params)
+        # Shape = (n_times, n_outputs, n_model_params)
         dy = dy.reshape(self._nt, self._np // 3, self._n_parameters - self._np)
 
-        # Calculate log-likelihood
-        L = self.__call__(x)
+        # Compute y^(eta-1)
+        y_pow_eta_minus_one = y**(eta - 1)
 
+        # Compute error
         # Note: Must be (data - simulation), sign now matters!
         error = self._values - y
 
-        # Compute total standard deviation
-        sigma_tot = sigma_base + sigma_rel * y**eta
+        # Compute error squared
+        error_squared = error**2
 
-        # Compute dsigma_tot/df / sigma_tot
-        dsigma_tot = sigma_rel * eta * y**(eta - 1) / sigma_tot
+        # Compute one over total standard deviation
+        inv_sigma_tot = (sigma_base + sigma_rel * y**eta)**(-1)
 
-        # Calculate derivatives in the model parameters
-        dL = - np.sum(((dsigma_tot).T * dy.T).T, axis=0) + \
-            np.sum(((error * sigma_tot**(-2.0)).T * dy.T).T, axis=0) + \
+        # Compute one over total variance
+        inv_var_tot = inv_sigma_tot**2
+
+        # Compute one over total standard deviation cubed
+        inv_sigma_tot_cubed = inv_sigma_tot**3
+
+        # Compute likelihood
+        L = -self._logn + np.sum(np.log(inv_sigma_tot), axis=(0, 1)) - 0.5 \
+            * np.sum(error_squared * inv_var_tot, axis=(0, 1))
+
+        # Compute derivative w.r.t. model parameters
+        dtheta = -np.sum(sigma_rel * eta * np.sum(
+            y_pow_eta_minus_one * inv_sigma_tot * dy, axis=0), axis=1) + \
+            np.sum(error * inv_var_tot * dy, axis=(0, 1)) + np.sum(
+                sigma_rel * eta * np.sum(
+                    error_squared * inv_sigma_tot_cubed * y_pow_eta_minus_one
+                    * dy, axis=0),
+                axis=1)
+
+        # Compute derivative w.r.t. sigma base
+        dsigma_base = - np.sum(inv_sigma_tot, axis=0) + np.sum(
+            error_squared * inv_sigma_tot_cubed, axis=0)
+
+        # Compute derivative w.r.t. eta
+        deta = sigma_rel * eta * (
+            -np.sum(y_pow_eta_minus_one * inv_sigma_tot, axis=0) +
             np.sum(
-                ((error**2.0 * dsigma_tot * sigma_tot**(-2.0)).T * dy.T).T,
-                axis=0)
+                error_squared * inv_sigma_tot_cubed * y_pow_eta_minus_one,
+                axis=0))
 
-        # Calculate derivative with respect to sigma_base
-        dsigma_base = np.sum(dsigma_tot**(-1.0), axis=0)
+        # Compute derivative w.r.t. sigma rel
+        dsigma_rel = -np.sum(y**eta * inv_sigma_tot, axis=0) + np.sum(
+            error_squared * inv_sigma_tot_cubed * y**eta, axis=0)
 
-        # Calculate derivative wrt sigma
-        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
-        dL = np.concatenate((dL, np.array(list(dsigma))))
+        # Collect partial derivatives
+        dL = np.hstack((dtheta, dsigma_base, deta, dsigma_rel))
 
         # Return
         return L, dL
