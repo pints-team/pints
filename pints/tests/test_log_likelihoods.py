@@ -440,6 +440,87 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         multi_score = multi_log_likelihood(multi_test_parameters)
         self.assertEqual(score, multi_score)
 
+    def test_evaluateS1_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that likelihood score agrees with call
+        # There are floating point deviations because in evaluateS1
+        # log(sigma_tot) is for efficiency computed as -log(1/sigma_tot)
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+        # Check that number of partials is correct
+        self.assertEqual(deriv.shape, (4,))
+
+        # Check that partials are computed correctly
+        self.assertEqual(deriv[0], -2.0553513340073835)
+        self.assertEqual(deriv[1], -1.0151215581116324)
+        self.assertEqual(deriv[2], -1.1967783819557953)
+        self.assertEqual(deriv[3], -2.1759606944650822)
+
+    def test_evaluateS1_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -8.222479586661642)
+
+    def test_evaluateS1_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2.0, 0.5, 1.1, 1.0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertEqual(score, -8.222479586661642)
+
+    # def test_evaluateS1_two_dim_array_multi(self):
+    #     # Create an object with links to the model and time series
+    #     problem = pints.MultiOutputProblem(
+    #         self.model_multi, self.times, self.data_multi)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [
+    #         2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
+    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+    #     # Check that likelihood returns expected value
+    #     self.assertEqual(score, -42.87921520701031)
+
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
