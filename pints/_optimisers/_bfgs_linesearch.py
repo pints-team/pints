@@ -17,8 +17,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
     Broyden-Fletcher-Goldfarb-Shanno algorithm [2], [3], [4]
 
     The Hager-Zhang line search algorithm [1] is implemented in this class
-    # TODO: when this is working move everything to an abstract class
-
+    
     [1] Hager, W. W.; Zhang, H. Algorithm 851: CG_DESCENT,
     a Conjugate Gradient Method with Guaranteed Descent.
     ACM Trans. Math. Softw. 2006, 32 (1), 113-137.
@@ -186,7 +185,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
 
         self.__set_wolfe_line_search_parameters(x[0], x[1])
 
-    def __set_wolfe_line_search_parameters(self, c1: float, c2: float):
+    def __set_wolfe_line_search_parameters(self, c1, c2):
         """
         Sets the parameters for the wolfe conditions.
 
@@ -326,7 +325,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
                         self._proposed_alpha = self.__secant_for_alpha(a, A)
 
                         # checking the proposed point is in range
-                        if self._proposed_alpha < A | self._proposed_alpha > B:
+                        if self._proposed_alpha < A or self._proposed_alpha > B:
                             # If the point is out of range there is no need to
                             # check wolfe conditions.
                             self.__2nd_wolfe_check_needed = False
@@ -473,9 +472,8 @@ class BFGS(pints.LineSearchBasedOptimiser):
                              and approx_wolfe_applies)
 
         # If wolfe conditions meet the line search is stopped
-        # and the hessian matrix and newton direction are updated by the
-        # L-BFGS/BFGS approximation of the hessian described in reference [2]
-        # [3], and [4]. If the line search has converged we also accept the
+        # and the inverse hessian matrix and newton direction are updated.
+        # If the line search has converged we also accept the
         # steps and update.
         if exact_wolfe or approximate_wolfe or self.__converged_ls:
 
@@ -484,72 +482,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
             print('updating Hessian and changing newton direction')
 
             # Updating inverse hessian.
-
-            # identity matrix
-            I = np.identity(self._n_parameters)
-
-            # We do this if we haven't exhausted existing memory yet, this is
-            # identical to the BFGS algorithm
-            if self.__k <= self._m - 1:
-                k = self.__k
-                # Defining the next column.
-                self._S[:, k] = self._proposed - self._current
-                self._Y[:, k] = proposed_dfdx - self._current_dfdx
-
-                # Defining B_0. Scaling taken from [4].
-                self._B = ((np.matmul(np.transpose(self._Y[:, k]),
-                                      self._S[:, k])
-                            / (norm(self._Y[:, k], ord=2) ** 2)) * I)
-
-                # Updating inverse hessian.
-                for k in range(self.__k + 1):
-
-                    V = (I - np.matmul(self._Y[:, k],
-                                       np.transpose(self._S[:, k]))
-                         / np.matmul(np.transpose(self._Y[:, k]),
-                                     self._S[:, k]))
-
-                    self._B = np.matmul(np.transpose(V), np.matmul(self._B, V))
-                    self._B += (np.matmul(self._S[:, k],
-                                          np.transpose(self._S[:, k]))
-                                / np.matmul(np.transpose(self._Y[:, k]),
-                                            self._S[:, k]))
-
-            # We have exhausted the limited memory and now enter
-            # the LM-BFGS algorithm
-            else:
-
-                m = self._m - 1
-                # Shifting everything one column to the left.
-                self._S[:, 0:m] = self._S[:, 1:self._m]
-                self._Y[:, 0:m] = self._Y[:, 1:self._m]
-
-                # Renewing last column.
-                self._S[:, m] = self._proposed - self._current
-                self._Y[:, m] = proposed_dfdx - self._current_dfdx
-
-                # Defining B_0. Scaling taken from [4].
-                self._B = ((np.matmul(np.transpose(self._Y[:, m]),
-                                      self._S[:, m])
-                            / (norm(self._Y[:, m], ord=2) ** 2)) * I)
-
-                # Updating inverse hessian.
-                for k in range(self._m):
-
-                    V = (I - np.matmul(self._Y[:, k],
-                                       np.transpose(self._S[:, k]))
-                         / np.matmul(np.transpose(self._Y[:, k]),
-                                     self._S[:, k]))
-
-                    self._B = np.matmul(np.transpose(V), np.matmul(self._B, V))
-                    self._B += (np.matmul(self._S[:, k],
-                                          np.transpose(self._S[:, k]))
-                                / np.matmul(np.transpose(self._Y[:, k]),
-                                            self._S[:, k]))
-
-                self._B = ((np.matmul(np.transpose(self._Y[:, m]),
-                                      self._S[:, m])
-                            / (norm(self._Y[:, m], ord=2)**2)) * I)
+            self._B = self.inverse_hessian_update(proposed_f, proposed_dfdx)
 
             # Move to proposed point
             self._current = self._proposed
@@ -690,7 +623,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
                 b = c
                 return self.__bisect_or_secant(a, b)
 
-    def __bisect_or_secant(self, a: float, b: float):
+    def __bisect_or_secant(self, a, b):
         '''
         This function is part of the Hager-Zhang line search method [1].
 
@@ -1049,3 +982,76 @@ class BFGS(pints.LineSearchBasedOptimiser):
 
     #     return A, B
 
+    def inverse_hessian_update(self, proposed_f, proposed_dfdx):
+        '''the inverse hessian matrix and newton direction are updated by the
+        L-BFGS/BFGS approximation of the hessian described in reference [2]
+        [3], and [4].
+        '''
+
+        # identity matrix
+        I = np.identity(self._n_parameters)
+
+        # We do this if we haven't exhausted existing memory yet, this is
+        # identical to the BFGS algorithm
+        if self.__k <= self._m - 1:
+            k = self.__k
+            # Defining the next column.
+            self._S[:, k] = self._proposed - self._current
+            self._Y[:, k] = proposed_dfdx - self._current_dfdx
+
+            # Defining B_0. Scaling taken from [4].
+            B = ((np.matmul(np.transpose(self._Y[:, k]),
+                                  self._S[:, k])
+                        / (norm(self._Y[:, k], ord=2) ** 2)) * I)
+
+            # Updating inverse hessian.
+            for k in range(self.__k + 1):
+
+                V = (I - np.matmul(self._Y[:, k],
+                                   np.transpose(self._S[:, k]))
+                     / np.matmul(np.transpose(self._Y[:, k]),
+                                 self._S[:, k]))
+
+                B = np.matmul(np.transpose(V), np.matmul(self._B, V))
+                B += (np.matmul(self._S[:, k],
+                                      np.transpose(self._S[:, k]))
+                            / np.matmul(np.transpose(self._Y[:, k]),
+                                        self._S[:, k]))
+
+        # We have exhausted the limited memory and now enter
+        # the LM-BFGS algorithm
+        else:
+
+            m = self._m - 1
+            # Shifting everything one column to the left.
+            self._S[:, 0:m] = self._S[:, 1:self._m]
+            self._Y[:, 0:m] = self._Y[:, 1:self._m]
+
+            # Renewing last column.
+            self._S[:, m] = self._proposed - self._current
+            self._Y[:, m] = proposed_dfdx - self._current_dfdx
+
+            # Defining B_0. Scaling taken from [4].
+            B = ((np.matmul(np.transpose(self._Y[:, m]),
+                                  self._S[:, m])
+                        / (norm(self._Y[:, m], ord=2) ** 2)) * I)
+
+            # Updating inverse hessian.
+            for k in range(self._m):
+
+                V = (I - np.matmul(self._Y[:, k],
+                                   np.transpose(self._S[:, k]))
+                     / np.matmul(np.transpose(self._Y[:, k]),
+                                 self._S[:, k]))
+
+                B = np.matmul(np.transpose(V), np.matmul(self._B, V))
+                B += (np.matmul(self._S[:, k],
+                                      np.transpose(self._S[:, k]))
+                            / np.matmul(np.transpose(self._Y[:, k]),
+                                        self._S[:, k]))
+
+                B = ((np.matmul(np.transpose(self._Y[:, m]),
+                                      self._S[:, m])
+                            / (norm(self._Y[:, m], ord=2)**2)) * I)
+
+        return B

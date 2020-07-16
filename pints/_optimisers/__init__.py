@@ -284,6 +284,14 @@ class LineSearchBasedOptimiser(Optimiser):
     Base class for optimisers that incorporate a line search
     within their algorithm.
 
+    The Hager-Zhang line search algorithm [1] is implemented
+    in this class.
+
+    [1] Hager, W. W.; Zhang, H. Algorithm 851: CG_DESCENT,
+    a Conjugate Gradient Method with Guaranteed Descent.
+    ACM Trans. Math. Softw. 2006, 32 (1), 113-137.
+    https://doi.org/10.1145/1132973.1132979.
+
     Extends :class:`Optimiser`.
     """
 
