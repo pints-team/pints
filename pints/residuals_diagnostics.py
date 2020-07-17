@@ -11,6 +11,61 @@ import numpy as np
 import scipy.special
 
 
+def plot_residuals_autocorrelation_bins():
+    pass
+
+
+def plot_residuals_distance(residuals, times=None):
+    r"""
+    Plot a distance matrix of the residuals.
+
+    Given a time series with observed residuals
+
+    .. math::
+        e_i=y_i-f(t_i, \theta)
+
+    this function generates and plots the distance matrix :math:`D` whose
+    entries are defined by
+
+    .. math::
+        D_{i, j} = |e_i - e_j|
+
+    The plot of this matrix may be helpful for identifying a time series with
+    correlated noise. When the noise terms are correlated, the distance matrix
+    :math:`D` is likely to have a banded appearance.
+
+    Typically, this diagnostic can be called after obtaining the residuals of
+    an IID fit, as one part of the effort to evaluate whether the IID fit is
+    satisfactory or a more complex noise model is needed.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    residuals
+        An array containing the residuals, with shape ``(n_outputs, n_times)``.
+    times
+        The array of time points (optional). Time points are not used in the
+        calculation of the distance matrix, but when provided they can be used
+        for the axis labels.
+    """
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    D = np.abs(residuals[:, np.newaxis] - residuals)
+    D = np.flip(D, axis=0)
+
+    if times is None:
+        ax.imshow(d, cmap='Greys_r')
+    else:
+        ax.imshow(d, cmap='Greys_r', extent=[min(times),max(times),min(times),max(times)])
+
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Time')
+
+
+
 def plot_residuals_autocorrelation(parameters,
                                    problem,
                                    max_lag=10,
