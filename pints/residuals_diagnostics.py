@@ -11,8 +11,94 @@ import numpy as np
 import scipy.special
 
 
-def plot_residuals_autocorrelation_bins():
-    pass
+def plot_residuals_binned_autocorrelation(parameters,
+                                          problem,
+                                          thinning=None,
+                                          n_bins=25):
+    r"""
+    Plot the autocorrelation of the residuals within bins.
+
+    Given a time series with observed residuals
+
+    .. math::
+        e_i = y_i - f(t_i; \theta)
+
+    This method divides the vector of residuals into some number of equally
+    sized bins. The lag 1 autocorrelation is calculated for the residuals
+    within each bin. The plot shows the lag 1 autocorrelation in each bin over
+    time.
+
+    This diagnostic is particularly useful for diagnosing time series whose
+    noise exhibits autocorrelation at certain time periods.
+
+    When passing an array of parameters (from an MCMC sampler), this method
+    will plot the autocorrelations of the posterior median residual values.
+
+    Typically, this diagnostic can be called after obtaining the residuals of
+    an IID fit, in order to determine whether the IID fit is satisfactory or a
+    more complex noise model is needed.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
+    n_bins
+        Optional int value giving the number of bins into which to divide the
+        time series. By default, it is fixed to 25.
+    """
+    import matplotlib.pyplot as plt
+
+    times = problem.times()
+
+    # Get the number of problem outputs
+    n_outputs = problem.n_outputs()
+
+    # Get the matrix of residuals values
+    residuals = calculate_residuals(parameters, problem, thinning=thinning)
+
+    # Get the posterior median residuals
+    residuals = np.median(residuals, axis=0)
+
+    # Make the figure, with one axes for each output
+    fig = plt.figure()
+    for output in range(n_outputs):
+        ax = fig.add_subplot(n_outputs, 1, output + 1)
+
+        # Get the residuals along this output
+        e = residuals[output, :]
+
+        # Divide the residuals into bins
+        binned_data = np.array_split(e, n_bins)
+        binned_times = np.array_split(times, n_bins)
+
+        # Calculate lag 1 autocorrelation and time in each bin
+        bin_autocorrs = []
+        bin_times = []
+        for data, t in zip(binned_data, binned_times):
+            r = acorr(data, 1)[-1]
+            bin_autocorrs.append(r)
+            bin_times.append(np.mean(t))
+
+        # Plot the binned data
+        ax.plot(bin_times, bin_autocorrs)
+
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Lag 1 autocorrelation')
+
+    return fig
 
 
 def plot_residuals_distance(parameters, problem, thinning=None):
@@ -72,30 +158,29 @@ def plot_residuals_distance(parameters, problem, thinning=None):
     # Get the matrix of residuals values
     residuals = calculate_residuals(parameters, problem, thinning=thinning)
 
-    # Get the number of samples
-    n_samples = residuals.shape[0]
+    # Get the posterior median residuals
+    residuals = np.median(residuals, axis=0)
 
-    # If there are multiple samples, get the posterior median residuals
-    if n_samples > 1:
-        residuals = np.median(residuals, axis=0)
-
-    # Make the figure
+    # Make the figure, with one axes for each output
     fig = plt.figure()
     for output in range(n_outputs):
-        ax = fig.add_subplot(1, n_outputs, n_outputs + 1)
+        ax = fig.add_subplot(n_outputs, 1, output + 1)
 
+        # Get the residuals along this output
         e = residuals[output, :]
 
         # Calculate the distance matrix
         D = np.abs(e[:, np.newaxis] - e)
         D = np.flip(D, axis=0)
 
-        ax.imshow(d,
-                  cmap='Greys_r',
-                  extent=[min(times), max(times), min(times), max(times)])
+        im = ax.imshow(D,
+                       cmap='Greys_r',
+                       extent=[min(times), max(times), min(times), max(times)])
 
         ax.set_xlabel('Time')
         ax.set_ylabel('Time')
+
+        fig.colorbar(im)
 
     return fig
 
