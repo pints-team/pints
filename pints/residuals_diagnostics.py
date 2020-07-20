@@ -94,16 +94,20 @@ def plot_residuals_binned_autocorrelation(parameters,
         bin_autocorrs = []
         bin_times = []
         for data, t in zip(binned_data, binned_times):
-            print(data)
             r = acorr(data, 1)[-1]
             bin_autocorrs.append(r)
             bin_times.append(np.mean(t))
 
         # Plot the binned data
-        ax.plot(bin_times, bin_autocorrs)
+        ax.plot(bin_times, bin_autocorrs, 'o-', color='red')
+
+        ax.set_ylim(-1, 1)
 
         ax.set_xlabel('Time')
         ax.set_ylabel('Lag 1 autocorrelation')
+
+        # Draw a horizontal line at 0 autocorrelation
+        ax.axhline(0, color='C0', zorder=-10)
 
     return fig
 
