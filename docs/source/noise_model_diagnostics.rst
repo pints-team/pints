@@ -10,6 +10,8 @@ Plotting functions:
 
 - :func:`plot_residuals_autocorrelation`
 - :func:`plot_residuals_vs_output`
+- :func:`plot_residuals_binned_autocorrelation`
+- :func:`plot_residuals_distance`
 
 Diagnostics:
 
@@ -23,6 +25,10 @@ Plotting functions
 .. autofunction:: plot_residuals_autocorrelation
 
 .. autofunction:: plot_residuals_vs_output
+
+.. autofunction:: plot_residuals_binned_autocorrelation
+
+.. autofunction:: plot_residuals_distance
 
 Diagnostics
 -----------
