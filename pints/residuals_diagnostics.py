@@ -15,14 +15,14 @@ def plot_residuals_autocorrelation_bins():
     pass
 
 
-def plot_residuals_distance(residuals, times=None):
+def plot_residuals_distance(parameters, problem, thinning=None):
     r"""
     Plot a distance matrix of the residuals.
 
     Given a time series with observed residuals
 
     .. math::
-        e_i=y_i-f(t_i, \theta)
+        e_i = y_i - f(t_i; \theta)
 
     this function generates and plots the distance matrix :math:`D` whose
     entries are defined by
@@ -34,36 +34,70 @@ def plot_residuals_distance(residuals, times=None):
     correlated noise. When the noise terms are correlated, the distance matrix
     :math:`D` is likely to have a banded appearance.
 
+    For problems with multiple outputs, one distance matrix is generated for
+    each output.
+
+    When passing an array of parameters (from an MCMC sampler), this method
+    will plot the distance matrix of the posterior median residual values.
+
     Typically, this diagnostic can be called after obtaining the residuals of
-    an IID fit, as one part of the effort to evaluate whether the IID fit is
-    satisfactory or a more complex noise model is needed.
+    an IID fit, in order to determine whether the IID fit is satisfactory or a
+    more complex noise model is needed.
 
     This function returns a ``matplotlib`` figure.
 
     Parameters
     ----------
-    residuals
-        An array containing the residuals, with shape ``(n_outputs, n_times)``.
-    times
-        The array of time points (optional). Time points are not used in the
-        calculation of the distance matrix, but when provided they can be used
-        for the axis labels.
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
     """
     import matplotlib.pyplot as plt
+
+    times = problem.times()
+
+    # Get the number of problem outputs
+    n_outputs = problem.n_outputs()
+
+    # Get the matrix of residuals values
+    residuals = calculate_residuals(parameters, problem, thinning=thinning)
+
+    # Get the number of samples
+    n_samples = residuals.shape[0]
+
+    # If there are multiple samples, get the posterior median residuals
+    if n_samples > 1:
+        residuals = np.median(residuals, axis=0)
+
+    # Make the figure
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
+    for output in range(n_outputs):
+        ax = fig.add_subplot(1, n_outputs, n_outputs + 1)
 
-    D = np.abs(residuals[:, np.newaxis] - residuals)
-    D = np.flip(D, axis=0)
+        e = residuals[output, :]
 
-    if times is None:
-        ax.imshow(d, cmap='Greys_r')
-    else:
-        ax.imshow(d, cmap='Greys_r', extent=[min(times),max(times),min(times),max(times)])
+        # Calculate the distance matrix
+        D = np.abs(e[:, np.newaxis] - e)
+        D = np.flip(D, axis=0)
 
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Time')
+        ax.imshow(d,
+                  cmap='Greys_r',
+                  extent=[min(times), max(times), min(times), max(times)])
 
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Time')
+
+    return fig
 
 
 def plot_residuals_autocorrelation(parameters,
