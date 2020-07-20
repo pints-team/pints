@@ -56,8 +56,8 @@ def plot_residuals_binned_autocorrelation(parameters,
         (default), some thinning will be applied so that about 200 samples will
         be used.
     n_bins
-        Optional int value giving the number of bins into which to divide the
-        time series. By default, it is fixed to 25.
+        Optional int value (greater than zero) giving the number of bins into
+        which to divide the time series. By default, it is fixed to 25.
     """
     import matplotlib.pyplot as plt
 
@@ -71,6 +71,12 @@ def plot_residuals_binned_autocorrelation(parameters,
 
     # Get the posterior median residuals
     residuals = np.median(residuals, axis=0)
+
+    n_bins = int(n_bins)
+    if n_bins < 1:
+        raise ValueError('n_bins must be an integer value greater than zero.')
+    if n_bins > len(times):
+        raise ValueError('n_bins must not exceed the number of time points')
 
     # Make the figure, with one axes for each output
     fig = plt.figure()
@@ -88,6 +94,7 @@ def plot_residuals_binned_autocorrelation(parameters,
         bin_autocorrs = []
         bin_times = []
         for data, t in zip(binned_data, binned_times):
+            print(data)
             r = acorr(data, 1)[-1]
             bin_autocorrs.append(r)
             bin_times.append(np.mean(t))
