@@ -106,6 +106,8 @@ def plot_residuals_binned_autocorrelation(parameters,
         ax.set_xlabel('Time')
         ax.set_ylabel('Lag 1 autocorrelation')
 
+        ax.set_title('Output %d' % (output + 1))
+
         # Draw a horizontal line at 0 autocorrelation
         ax.axhline(0, color='C0', zorder=-10)
 
@@ -190,6 +192,8 @@ def plot_residuals_distance(parameters, problem, thinning=None):
 
         ax.set_xlabel('Time')
         ax.set_ylabel('Time')
+
+        ax.set_title('Output %d' % (output + 1))
 
         fig.colorbar(im)
 

@@ -72,6 +72,7 @@ relevant code.
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
+- [Noise model diagnostic plots](./plotting/residuals-autocorrelation-diagnostics.ipynb)
 - [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
