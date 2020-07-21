@@ -171,66 +171,82 @@ class TestLogTransformation(unittest.TestCase):
         self.assertTrue(np.isinf(self.t1.to_search(0)))
 
 
-class RestOfTests(unittest.TestCase):
-    def test_logit_transform(self):
-        # Test LogitTransformation class
+class TestLogitTransformation(unittest.TestCase):
+    # Test LogitTransformation class
 
-        # Test input parameters
-        t1 = pints.LogitTransformation(1)
-        t4 = pints.LogitTransformation(4)
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t1 = pints.LogitTransformation(1)
+        cls.t4 = pints.LogitTransformation(4)
 
-        p = [0.1, 0.333, 0.5, 0.9]
-        x = [-2.1972245773362191, -0.6946475559351799, 0., 2.1972245773362196]
-        j = np.diag([0.09, 0.222111, 0.25, 0.09])
-        j_s1_diag = [0.072, 0.074185074, 0., -0.072]
-        j_s1 = np.zeros((4, 4, 4))
+        cls.p = [0.1, 0.333, 0.5, 0.9]
+        cls.x = [-2.1972245773362191, -0.6946475559351799, 0.,
+                 2.1972245773362196]
+        cls.j = np.diag([0.09, 0.222111, 0.25, 0.09])
+        cls.j_s1_diag = [0.072, 0.074185074, 0., -0.072]
+        cls.j_s1 = np.zeros((4, 4, 4))
         for i in range(4):
-            j_s1[i, i, i] = j_s1_diag[i]
-        log_j_det = -7.7067636004918398
-        log_j_det_s1 = [0.8, 0.334, 0., -0.8]
+            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
+        cls.log_j_det = -7.7067636004918398
+        cls.log_j_det_s1 = [0.8, 0.334, 0., -0.8]
 
+    def test_to_search(self):
         # Test forward transform
-        for xi, pi in zip(x, p):
-            calc_xi = t1.to_search(pi)
+        for xi, pi in zip(self.x, self.p):
+            calc_xi = self.t1.to_search(pi)
             self.assertAlmostEqual(calc_xi[0], xi)
-        self.assertTrue(np.allclose(t4.to_search(p), x))
+        self.assertTrue(np.allclose(self.t4.to_search(self.p), self.x))
 
+    def test_to_model(self):
         # Test inverse transform
-        for xi, pi in zip(x, p):
-            calc_pi = t1.to_model(xi)
+        for xi, pi in zip(self.x, self.p):
+            calc_pi = self.t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
-        self.assertTrue(np.allclose(t4.to_model(x), p))
+        self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
 
+    def test_multiple_to_model(self):
         # Test many inverse transform
+        p = self.p
+        x = self.x
         ps = [p, p, p, p]
         xs = [x, x, x, x]
-        self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
+        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
 
+    def test_n_parameters(self):
         # Test n_parameters
-        self.assertEqual(t1.n_parameters(), 1)
-        self.assertEqual(t4.n_parameters(), 4)
+        self.assertEqual(self.t1.n_parameters(), 1)
+        self.assertEqual(self.t4.n_parameters(), 4)
 
+    def test_jacobian(self):
         # Test Jacobian
-        self.assertTrue(np.allclose(t4.jacobian(x), j))
+        self.assertTrue(np.allclose(self.t4.jacobian(self.x), self.j))
 
+    def test_jacobian_S1(self):
         # Test Jacobian derivatives
-        calc_mat, calc_deriv = t4.jacobian_S1(x)
-        self.assertTrue(np.allclose(calc_mat, j))
-        self.assertTrue(np.allclose(calc_deriv, j_s1))
+        calc_mat, calc_deriv = self.t4.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
+    def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
-        self.assertAlmostEqual(t4.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(self.t4.log_jacobian_det(self.x),
+                               self.log_j_det)
 
+    def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = t4.log_jacobian_det_S1(x)
-        self.assertAlmostEqual(calc_val, log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
+        calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+    def test_invalid_inputs(self):
         # Test invalid inputs
-        self.assertTrue(np.isnan(t1.to_search(-1.)))
-        self.assertTrue(np.isnan(t1.to_search(2.)))
-        self.assertTrue(np.isinf(t1.to_search(1.)))
+        self.assertTrue(np.isnan(self.t1.to_search(-1.)))
+        self.assertTrue(np.isnan(self.t1.to_search(2.)))
+        self.assertTrue(np.isinf(self.t1.to_search(1.)))
 
+
+class RestOfTests(unittest.TestCase):
     def test_rectangular_boundaries_transform(self):
         # Test RectangularBoundariesTransformation class
 
