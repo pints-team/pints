@@ -30,6 +30,9 @@ class TestTransformation(pints.Transformation):
         jac_S1[rn, rn, rn] = np.diagonal(jac)
         return jac, jac_S1
 
+    def n_parameters(self):
+        return 4
+
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
         q = pints.vector(q)
@@ -65,6 +68,10 @@ class TestTransformationAbstractionClass(unittest.TestCase):
         ps = [p, p, p, p]
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
+
+    def test_n_parameters(self):
+        # Test n_parameters
+        self.assertEqual(self.t.n_parameters(), 4)
 
     def test_jacobian(self):
         # Test Jacobian
@@ -573,6 +580,18 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         cls.log_j_det = 7.4404646962481324
         cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
 
+    def test_bad_constructor(self):
+        # Test invalid constructors
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
+                          np.log)
+
+        self.assertRaisesRegex(
+            ValueError, 'All sub-transforms must extend ' +
+            'pints.ElementWiseTransformation.',
+            pints.ComposedElementWiseTransformation,
+            TestTransformation())
+
     def test_to_search(self):
         # Test forward transform
         self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
@@ -612,23 +631,6 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
         self.assertAlmostEqual(calc_val, self.log_j_det)
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
-
-    def test_bad_constructor(self):
-        # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
-                          np.log)
-
-        class Trans(pints.Transformation):
-            """A testing identity transformation class"""
-            def n_parameters(self):
-                return 1
-
-        self.assertRaisesRegex(
-            ValueError, 'All sub-transforms must extend ' +
-            'pints.ElementWiseTransformation.',
-            pints.ComposedElementWiseTransformation,
-            Trans())
 
 
 class TestTransformedWrappers(unittest.TestCase):
