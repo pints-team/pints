@@ -246,9 +246,12 @@ class TestLogitTransformation(unittest.TestCase):
         self.assertTrue(np.isinf(self.t1.to_search(1.)))
 
 
-class RestOfTests(unittest.TestCase):
-    def test_rectangular_boundaries_transform(self):
-        # Test RectangularBoundariesTransformation class
+class TestRectangularBoundariesTransformation(unittest.TestCase):
+    # Test RectangularBoundariesTransformation class
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
 
         lower1 = np.array([1])
         upper1 = np.array([10])
@@ -257,73 +260,80 @@ class RestOfTests(unittest.TestCase):
         upper2 = np.array([10, 20])
 
         # Test normal construction with lower and upper
-        t1 = pints.RectangularBoundariesTransformation(lower1, upper1)
-        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
+        cls.t1 = pints.RectangularBoundariesTransformation(lower1, upper1)
+        cls.t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
 
         # Test construction with rectangular boundaries object
         b2 = pints.RectangularBoundaries(lower2, upper2)
-        t2b = pints.RectangularBoundariesTransformation(b2)
+        cls.t2b = pints.RectangularBoundariesTransformation(b2)
 
+        cls.p = [1.5, 15.]
+        cls.x = [-2.8332133440562162, 0.9555114450274365]
+        cls.j = np.diag([0.4722222222222225, 3.6111111111111098])
+        cls.j_s1_diag = [0.4197530864197533, -1.6049382716049378]
+        cls.j_s1 = np.zeros((2, 2, 2))
+        for i in range(2):
+            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
+        cls.log_j_det = 0.5337099175995788
+        cls.log_j_det_s1 = [0.8888888888888888, -0.4444444444444445]
+
+    def test_bad_constructor(self):
         # Test bad constructor
         self.assertRaises(ValueError,
                           pints.RectangularBoundariesTransformation,
-                          lower2)
-
-        p = [1.5, 15.]
-        x = [-2.8332133440562162, 0.9555114450274365]
-        j = np.diag([0.4722222222222225, 3.6111111111111098])
-        j_s1_diag = [0.4197530864197533, -1.6049382716049378]
-        j_s1 = np.zeros((2, 2, 2))
-        for i in range(2):
-            j_s1[i, i, i] = j_s1_diag[i]
-        log_j_det = 0.5337099175995788
-        log_j_det_s1 = [0.8888888888888888, -0.4444444444444445]
+                          [1, 2])
 
         # Test forward transform
-        self.assertTrue(np.allclose(t1.to_search([p[0]]), [x[0]]))
-        self.assertTrue(np.allclose(t2.to_search(p), x))
-        self.assertTrue(np.allclose(t2b.to_search(p), x))
+        self.assertTrue(np.allclose(self.t1.to_search([self.p[0]]),
+                                    [self.x[0]]))
+        self.assertTrue(np.allclose(self.t2.to_search(self.p), self.x))
+        self.assertTrue(np.allclose(self.t2b.to_search(self.p), self.x))
 
         # Test inverse transform
-        self.assertTrue(np.allclose(t1.to_model([x[0]]), [p[0]]))
-        self.assertTrue(np.allclose(t2.to_model(x), p))
-        self.assertTrue(np.allclose(t2b.to_model(x), p))
+        self.assertTrue(np.allclose(self.t1.to_model([self.x[0]]),
+                                    [self.p[0]]))
+        self.assertTrue(np.allclose(self.t2.to_model(self.x), self.p))
+        self.assertTrue(np.allclose(self.t2b.to_model(self.x), self.p))
 
         # Test many inverse transform
-        ps = [p, p]
-        xs = [x, x]
-        self.assertTrue(np.allclose(t2.multiple_to_model(xs), ps))
-        self.assertTrue(np.allclose(t2b.multiple_to_model(xs), ps))
+        ps = [self.p, self.p]
+        xs = [self.x, self.x]
+        self.assertTrue(np.allclose(self.t2.multiple_to_model(xs), ps))
+        self.assertTrue(np.allclose(self.t2b.multiple_to_model(xs), ps))
 
         # Test n_parameters
-        self.assertEqual(t1.n_parameters(), 1)
-        self.assertEqual(t2.n_parameters(), 2)
-        self.assertEqual(t2b.n_parameters(), 2)
+        self.assertEqual(self.t1.n_parameters(), 1)
+        self.assertEqual(self.t2.n_parameters(), 2)
+        self.assertEqual(self.t2b.n_parameters(), 2)
 
         # Test Jacobian
-        self.assertTrue(np.allclose(t2.jacobian(x), j))
-        self.assertTrue(np.allclose(t2b.jacobian(x), j))
+        self.assertTrue(np.allclose(self.t2.jacobian(self.x), self.j))
+        self.assertTrue(np.allclose(self.t2b.jacobian(self.x), self.j))
 
         # Test Jacobian derivatives
-        calc_mat, calc_deriv = t2.jacobian_S1(x)
-        self.assertTrue(np.allclose(calc_mat, j))
-        self.assertTrue(np.allclose(calc_deriv, j_s1))
-        calc_mat, calc_deriv = t2b.jacobian_S1(x)
-        self.assertTrue(np.allclose(calc_mat, j))
-        self.assertTrue(np.allclose(calc_deriv, j_s1))
+        calc_mat, calc_deriv = self.t2.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
+        calc_mat, calc_deriv = self.t2b.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
         # Test log-Jacobian determinant
-        self.assertAlmostEqual(t2.log_jacobian_det(x), log_j_det)
-        self.assertAlmostEqual(t2b.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(self.t2.log_jacobian_det(self.x),
+                               self.log_j_det)
+        self.assertAlmostEqual(self.t2b.log_jacobian_det(self.x),
+                               self.log_j_det)
 
         # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = t2.log_jacobian_det_S1(x)
-        self.assertAlmostEqual(calc_val, log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
-        calc_val, calc_deriv = t2b.log_jacobian_det_S1(x)
-        self.assertAlmostEqual(calc_val, log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
+        calc_val, calc_deriv = self.t2.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
+        calc_val, calc_deriv = self.t2b.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+
+class RestOfTests(unittest.TestCase):
     def test_identity_transform(self):
         # Test IdentityTransformation class
 
