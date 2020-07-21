@@ -13,77 +13,92 @@ import pints.toy
 import numpy as np
 
 
-class TestTransformation(unittest.TestCase):
+class TestTransformation(pints.Transformation):
+    """A testing log-transformation class"""
+    def jacobian(self, q):
+        """ See :meth:`Transformation.jacobian()`. """
+        q = pints.vector(q)
+        return np.diag(np.exp(q))
 
-    def test_transform_abstract_class(self):
-        # Test methods defined in the abstract class
+    def jacobian_S1(self, q):
+        """ See :meth:`Transformation.jacobian_S1()`. """
+        q = pints.vector(q)
+        n = len(q)
+        jac = self.jacobian(q)
+        jac_S1 = np.zeros((n, n, n))
+        rn = np.arange(n)
+        jac_S1[rn, rn, rn] = np.diagonal(jac)
+        return jac, jac_S1
 
-        class Trans(pints.Transformation):
-            """A testing log-transformation class"""
-            def jacobian(self, q):
-                """ See :meth:`Transformation.jacobian()`. """
-                q = pints.vector(q)
-                return np.diag(np.exp(q))
+    def to_model(self, q):
+        """ See :meth:`Transformation.to_model()`. """
+        q = pints.vector(q)
+        return np.exp(q)
 
-            def jacobian_S1(self, q):
-                """ See :meth:`Transformation.jacobian_S1()`. """
-                q = pints.vector(q)
-                n = len(q)
-                jac = self.jacobian(q)
-                jac_S1 = np.zeros((n, n, n))
-                rn = np.arange(n)
-                jac_S1[rn, rn, rn] = np.diagonal(jac)
-                return jac, jac_S1
 
-            def to_model(self, q):
-                """ See :meth:`Transformation.to_model()`. """
-                q = pints.vector(q)
-                return np.exp(q)
+class TestTransformationAbstractionClass(unittest.TestCase):
+    # Test methods defined in the abstract class
 
-        # Test input parameters
-        t = Trans()
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t = TestTransformation()
 
-        p = [0.1, 1., 10., 999.]
-        x = [-2.3025850929940455, 0., 2.3025850929940459, 6.9067547786485539]
-        j = np.diag(p)
-        j_s1 = np.zeros((4, 4, 4))
+        cls.p = [0.1, 1., 10., 999.]
+        cls.x = [-2.3025850929940455, 0., 2.3025850929940459,
+                 6.9067547786485539]
+        cls.j = np.diag(cls.p)
+        cls.j_s1 = np.zeros((4, 4, 4))
         for i in range(4):
-            j_s1[i, i, i] = p[i]
-        log_j_det = np.sum(x)
-        log_j_det_s1 = np.ones(4)
+            cls.j_s1[i, i, i] = cls.p[i]
+        cls.log_j_det = np.sum(cls.x)
+        cls.log_j_det_s1 = np.ones(4)
 
+    def test_inverse_transform(self):
         # Test inverse transform
-        self.assertTrue(np.allclose(t.to_model(x), p))
+        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
 
+    def test_multiple_to_model(self):
         # Test many inverse transform
+        p = self.p
+        x = self.x
         ps = [p, p, p, p]
         xs = [x, x, x, x]
-        self.assertTrue(np.allclose(t.multiple_to_model(xs), ps))
+        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
 
+    def test_jacobian(self):
         # Test Jacobian
-        self.assertTrue(np.allclose(t.jacobian(x), j))
+        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
 
+    def test_jacobian_S1(self):
         # Test Jacobian derivatives
-        calc_mat, calc_deriv = t.jacobian_S1(x)
-        self.assertTrue(np.allclose(calc_mat, j))
-        self.assertTrue(np.allclose(calc_deriv, j_s1))
+        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
+    def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
-        self.assertAlmostEqual(t.log_jacobian_det(x), log_j_det)
+        self.assertAlmostEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
 
+    def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = t.log_jacobian_det_S1(x)
-        self.assertAlmostEqual(calc_val, log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, log_j_det_s1))
+        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+    def test_convert_std_and_cov(self):
         # Test standard deviation and covariance matrix transformations
         sd = np.array([0.01, 0.1, 1., 99.9])
         cov = np.diag(sd ** 2)
         tsd = np.ones(4) * 0.1
         tcov = np.eye(4) * 0.1 ** 2
-        self.assertTrue(np.allclose(t.convert_standard_deviation(sd, x), tsd))
-        self.assertTrue(np.allclose(t.convert_covariance_matrix(cov, x), tcov))
+        self.assertTrue(
+            np.allclose(self.t.convert_standard_deviation(sd, self.x), tsd))
+        self.assertTrue(
+            np.allclose(self.t.convert_covariance_matrix(cov, self.x), tcov))
 
+
+class RestOfTests(unittest.TestCase):
     def test_log_transform(self):
         # Test LogTransformation class
 
