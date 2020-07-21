@@ -573,13 +573,15 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         cls.log_j_det = 7.4404646962481324
         cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
 
-    def test_composed_elementwise_transform(self):
+    def test_to_search(self):
         # Test forward transform
         self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
 
+    def test_to_model(self):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
 
+    def test_multiple_to_model(self):
         # Test many inverse transform
         p = self.p
         x = self.x
@@ -587,25 +589,31 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
 
+    def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t.n_parameters(), 4)
 
+    def test_jacobian(self):
         # Test Jacobian
         self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
 
+    def test_jacobian_S1(self):
         # Test Jacobian derivatives
         calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
         self.assertTrue(np.allclose(calc_mat, self.j))
         self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
+    def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
         self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
 
+    def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
         calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
         self.assertAlmostEqual(calc_val, self.log_j_det)
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+    def test_bad_constructor(self):
         # Test invalid constructors
         self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
         self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
