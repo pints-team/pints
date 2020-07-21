@@ -425,9 +425,11 @@ class TestScalingTransformation(unittest.TestCase):
         # Test forward transform
         self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
 
+    def test_to_model(self):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
 
+    def test_multiple_to_model(self):
         # Test many inverse transform
         p = self.p
         x = self.x
@@ -435,20 +437,25 @@ class TestScalingTransformation(unittest.TestCase):
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
 
+    def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t.n_parameters(), 4)
 
+    def test_jacobian(self):
         # Test Jacobian
-        self.assertTrue(np.allclose(self.t.jacobian(x), self.j))
+        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
 
+    def test_jacobian_S1(self):
         # Test Jacobian derivatives
         calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
         self.assertTrue(np.allclose(calc_mat, self.j))
         self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
+    def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
         self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
 
+    def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
         calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
         self.assertEqual(calc_val, self.log_j_det)
