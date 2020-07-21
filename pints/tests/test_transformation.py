@@ -341,58 +341,64 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
 
-class RestOfTests(unittest.TestCase):
-    def test_identity_transform(self):
-        # Test IdentityTransformation class
+class TestIdentityTransformation(unittest.TestCase):
+    # Test IdentityTransformation class
 
-        # Test input parameters
-        t1 = pints.IdentityTransformation(1)
-        t4 = pints.IdentityTransformation(4)
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t1 = pints.IdentityTransformation(1)
+        cls.t4 = pints.IdentityTransformation(4)
 
-        p = [-177., 0.333, 10., 99.99]
-        x = [-177., 0.333, 10., 99.99]
-        j = np.eye(4)
-        j_s1 = np.zeros((4, 4, 4))
-        log_j_det = 0.
-        log_j_det_s1 = np.zeros(4)
+        cls.p = [-177., 0.333, 10., 99.99]
+        cls.x = [-177., 0.333, 10., 99.99]
+        cls.j = np.eye(4)
+        cls.j_s1 = np.zeros((4, 4, 4))
+        cls.log_j_det = 0.
+        cls.log_j_det_s1 = np.zeros(4)
 
+    def test_to_search(self):
         # Test forward transform
-        for xi, pi in zip(x, p):
-            calc_xi = t1.to_search(pi)
+        for xi, pi in zip(self.x, self.p):
+            calc_xi = self.t1.to_search(pi)
             self.assertAlmostEqual(calc_xi[0], xi)
-        self.assertTrue(np.allclose(t4.to_search(p), x))
+        self.assertTrue(np.allclose(self.t4.to_search(self.p), self.x))
 
         # Test inverse transform
-        for xi, pi in zip(x, p):
-            calc_pi = t1.to_model(xi)
+        for xi, pi in zip(self.x, self.p):
+            calc_pi = self.t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
-        self.assertTrue(np.allclose(t4.to_model(x), p))
+        self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
 
         # Test many inverse transform
+        p = self.p
+        x = self.x
         ps = [p, p, p, p]
         xs = [x, x, x, x]
-        self.assertTrue(np.allclose(t4.multiple_to_model(xs), ps))
+        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
 
         # Test n_parameters
-        self.assertEqual(t1.n_parameters(), 1)
-        self.assertEqual(t4.n_parameters(), 4)
+        self.assertEqual(self.t1.n_parameters(), 1)
+        self.assertEqual(self.t4.n_parameters(), 4)
 
         # Test Jacobian
-        self.assertTrue(np.allclose(t4.jacobian(x), j))
+        self.assertTrue(np.allclose(self.t4.jacobian(self.x), self.j))
 
         # Test Jacobian derivatives
-        calc_mat, calc_deriv = t4.jacobian_S1(x)
-        self.assertTrue(np.allclose(calc_mat, j))
-        self.assertTrue(np.allclose(calc_deriv, j_s1))
+        calc_mat, calc_deriv = self.t4.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
         # Test log-Jacobian determinant
-        self.assertEqual(t4.log_jacobian_det(x), log_j_det)
+        self.assertEqual(self.t4.log_jacobian_det(self.x), self.log_j_det)
 
         # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = t4.log_jacobian_det_S1(x)
-        self.assertEqual(calc_val, log_j_det)
-        self.assertTrue(np.all(np.equal(calc_deriv, log_j_det_s1)))
+        calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
+        self.assertEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
 
+
+class RestOfTransformationTests(unittest.TestCase):
     def test_scaling_transform(self):
         # Test ScalingTransformation class
 
