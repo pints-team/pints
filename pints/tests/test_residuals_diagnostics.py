@@ -347,5 +347,6 @@ class TestResidualsDiagnostics(unittest.TestCase):
             n_bins=1000
         )
 
+
 if __name__ == '__main__':
     unittest.main()
