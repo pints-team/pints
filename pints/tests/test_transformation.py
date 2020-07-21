@@ -364,12 +364,14 @@ class TestIdentityTransformation(unittest.TestCase):
             self.assertAlmostEqual(calc_xi[0], xi)
         self.assertTrue(np.allclose(self.t4.to_search(self.p), self.x))
 
+    def test_to_model(self):
         # Test inverse transform
         for xi, pi in zip(self.x, self.p):
             calc_pi = self.t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
 
+    def test_multiple_to_model(self):
         # Test many inverse transform
         p = self.p
         x = self.x
@@ -377,21 +379,26 @@ class TestIdentityTransformation(unittest.TestCase):
         xs = [x, x, x, x]
         self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
 
+    def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t1.n_parameters(), 1)
         self.assertEqual(self.t4.n_parameters(), 4)
 
+    def test_jacobian(self):
         # Test Jacobian
         self.assertTrue(np.allclose(self.t4.jacobian(self.x), self.j))
 
+    def test_jacobian_S1(self):
         # Test Jacobian derivatives
         calc_mat, calc_deriv = self.t4.jacobian_S1(self.x)
         self.assertTrue(np.allclose(calc_mat, self.j))
         self.assertTrue(np.allclose(calc_deriv, self.j_s1))
 
+    def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
         self.assertEqual(self.t4.log_jacobian_det(self.x), self.log_j_det)
 
+    def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
         calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
         self.assertEqual(calc_val, self.log_j_det)
