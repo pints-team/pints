@@ -67,7 +67,9 @@ def plot_residuals_binned_autocorrelation(parameters,
                                   thinning=thinning,
                                   n_bins=n_bins,
                                   calculate=lag_one_autocorr_resids,
-                                  label='Lag 1 autocorrelation')
+                                  label='Lag 1 autocorrelation',
+                                  ylim=(-1, 1),
+                                  draw_horizontal=True)
 
 
 def plot_residuals_binned_std(parameters,
@@ -130,7 +132,9 @@ def _plot_residuals_binned(parameters,
                            thinning=None,
                            n_bins=25,
                            calculate=np.std,
-                           label='Standard deviation'):
+                           label='Standard deviation',
+                           ylim=None,
+                           draw_horizontal=False):
     """
     Make a matplotlib plot of some function of the binned residuals.
 
@@ -163,6 +167,12 @@ def _plot_residuals_binned(parameters,
     label : str
         A label to put on the y axis of the plot, describing what function of
         the binned residuals is being plotted.
+    ylim : tuple
+        Optional bounds for the y-axis of the plot.
+    draw_horizontal : bool
+        Whether or not to draw a horizontal line at y=0 on the plot. This line
+        may be desired when zero is an important reference point for the value
+        being calculated in each bin.
     """
     import matplotlib.pyplot as plt
 
@@ -205,15 +215,17 @@ def _plot_residuals_binned(parameters,
         # Plot the binned data
         ax.plot(bin_times, bin_values, 'o-', color='red')
 
-        ax.set_ylim(-1, 1)
+        if ylim is not None:
+            ax.set_ylim(*ylim)
 
         ax.set_xlabel('Time')
         ax.set_ylabel(label)
 
         ax.set_title('Output %d' % (output + 1))
 
-        # Draw a horizontal line at 0 autocorrelation
-        ax.axhline(0, color='C0', zorder=-10)
+        if draw_horizontal:
+            # Draw a horizontal line at 0 autocorrelation
+            ax.axhline(0, color='C0', zorder=-10)
 
     return fig
 
