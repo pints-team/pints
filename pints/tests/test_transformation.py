@@ -635,6 +635,30 @@ class TestScalingTransformation(unittest.TestCase):
 
 class TestTransformedWrappers(unittest.TestCase):
 
+    def test_transformed_boundaries(self):
+        # Test TransformedBoundaries class
+
+        t = pints.LogTransformation(2)
+        b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
+        tb = t.convert_boundaries(b)
+        xi = [0.02, 1.01]
+        txi = [-3.9120230054281460, 0.0099503308531681]
+        xo = [10., 50.]
+        txo = [2.3025850929940459, 3.9120230054281460]
+        tr = [1.6094379124341001, 0.1000834585569826]
+
+        # Test before and after transformed give the same result
+        self.assertEqual(tb.check(txi), b.check(xi))
+        self.assertEqual(tb.check(txo), b.check(xo))
+        self.assertEqual(tb.n_parameters(), b.n_parameters())
+
+        # Test transformed range
+        self.assertTrue(np.allclose(tb.range(), tr))
+
+        # Test invalid transform
+        self.assertRaises(ValueError, pints.TransformedBoundaries, b,
+                          pints.LogTransformation(3))
+
     def test_transformed_error_measure(self):
         # Test TransformedErrorMeasure class
 
@@ -704,30 +728,6 @@ class TestTransformedWrappers(unittest.TestCase):
         x = tr.sample(n)
         self.assertEqual(x.shape, (n, d))
         self.assertTrue(np.all(x < 0.))
-
-    def test_transformed_boundaries(self):
-        # Test TransformedBoundaries class
-
-        t = pints.LogTransformation(2)
-        b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
-        tb = t.convert_boundaries(b)
-        xi = [0.02, 1.01]
-        txi = [-3.9120230054281460, 0.0099503308531681]
-        xo = [10., 50.]
-        txo = [2.3025850929940459, 3.9120230054281460]
-        tr = [1.6094379124341001, 0.1000834585569826]
-
-        # Test before and after transformed give the same result
-        self.assertEqual(tb.check(txi), b.check(xi))
-        self.assertEqual(tb.check(txo), b.check(xo))
-        self.assertEqual(tb.n_parameters(), b.n_parameters())
-
-        # Test transformed range
-        self.assertTrue(np.allclose(tb.range(), tr))
-
-        # Test invalid transform
-        self.assertRaises(ValueError, pints.TransformedBoundaries, b,
-                          pints.LogTransformation(3))
 
 
 if __name__ == '__main__':
