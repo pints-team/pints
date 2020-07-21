@@ -39,7 +39,7 @@ class TestTransformation(pints.Transformation):
         return np.exp(q)
 
 
-class TestTransformationAbstractionClass(unittest.TestCase):
+class TestAbstractClassTransformation(unittest.TestCase):
     # Test methods defined in the abstract class
 
     @classmethod
@@ -105,24 +105,185 @@ class TestTransformationAbstractionClass(unittest.TestCase):
             np.allclose(self.t.convert_covariance_matrix(cov, self.x), tcov))
 
 
-class TestLogTransformation(unittest.TestCase):
-    # Test LogTransformation class
+class TestComposedElementWiseTransformation(unittest.TestCase):
+    # Test ComposedElementWiseTransformation class
 
     @classmethod
     def setUpClass(cls):
         # Create Transformation class
-        cls.t1 = pints.LogTransformation(1)
-        cls.t4 = pints.LogTransformation(4)
+        t1 = pints.IdentityTransformation(1)
+        lower2 = np.array([1, 2])
+        upper2 = np.array([10, 20])
+        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
+        t3 = pints.LogTransformation(1)
 
-        cls.p = [0.1, 1., 10., 999.]
-        cls.x = [-2.3025850929940455, 0., 2.3025850929940459,
+        cls.t = pints.ComposedElementWiseTransformation(t1, t2, t3)
+
+        cls.p = [0.1, 1.5, 15., 999.]
+        cls.x = [0.1, -2.8332133440562162, 0.9555114450274365,
                  6.9067547786485539]
-        cls.j = np.diag(cls.p)
+        cls.j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
+        cls.j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
         cls.j_s1 = np.zeros((4, 4, 4))
         for i in range(4):
-            cls.j_s1[i, i, i] = cls.p[i]
-        cls.log_j_det = np.sum(cls.x)
-        cls.log_j_det_s1 = np.ones(4)
+            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
+        cls.log_j_det = 7.4404646962481324
+        cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
+
+    def test_bad_constructor(self):
+        # Test invalid constructors
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
+        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
+                          np.log)
+
+        self.assertRaisesRegex(
+            ValueError, 'All sub-transforms must extend ' +
+            'pints.ElementWiseTransformation.',
+            pints.ComposedElementWiseTransformation,
+            TestTransformation())
+
+    def test_to_search(self):
+        # Test forward transform
+        self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
+
+    def test_to_model(self):
+        # Test inverse transform
+        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
+
+    def test_multiple_to_model(self):
+        # Test many inverse transform
+        p = self.p
+        x = self.x
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
+
+    def test_n_parameters(self):
+        # Test n_parameters
+        self.assertEqual(self.t.n_parameters(), 4)
+
+    def test_jacobian(self):
+        # Test Jacobian
+        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
+
+    def test_jacobian_S1(self):
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
+
+    def test_log_jacobian_det(self):
+        # Test log-Jacobian determinant
+        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
+
+    def test_log_jacobian_det_S1(self):
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
+
+
+class TestComposedTransformation(unittest.TestCase):
+    # Test ComposedTransformation class
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t1 = pints.IdentityTransformation(1)
+        lower2 = np.array([1, 2])
+        upper2 = np.array([10, 20])
+        cls.t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
+        cls.t3 = pints.LogTransformation(1)
+
+        cls.t = pints.ComposedTransformation(cls.t1, cls.t2, cls.t3)
+
+        cls.p = [0.1, 1.5, 15., 999.]
+        cls.x = [0.1, -2.8332133440562162, 0.9555114450274365,
+                 6.9067547786485539]
+        cls.j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
+        cls.j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
+        cls.j_s1 = np.zeros((4, 4, 4))
+        for i in range(4):
+            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
+        cls.log_j_det = 7.4404646962481324
+        cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
+
+    def test_bad_constructor(self):
+        # Test invalid constructors
+        self.assertRaises(ValueError, pints.ComposedTransformation)
+        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
+
+    def test_to_search(self):
+        # Test forward transform
+        self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
+
+    def test_to_model(self):
+        # Test inverse transform
+        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
+
+    def test_multiple_to_model(self):
+        # Test many inverse transform
+        p = self.p
+        x = self.x
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
+
+    def test_n_parameters(self):
+        # Test n_parameters
+        self.assertEqual(self.t.n_parameters(), 4)
+
+    def test_jacobian(self):
+        # Test Jacobian
+        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
+
+    def test_jacobian_S1(self):
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
+
+    def test_log_jacobian_det(self):
+        # Test log-Jacobian determinant
+        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
+
+    def test_log_jacobian_det_S1(self):
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
+
+    def test_against_elementwise_transformation(self):
+        # Test ComposedTransformation gives the same result as the
+        # ComposedElementWiseTransformation when using
+        # ElementWiseTransformation
+        t_elem = pints.ComposedElementWiseTransformation(self.t1,
+                                                         self.t2,
+                                                         self.t3)
+        # Test log-Jacobian determinant
+        self.assertAlmostEqual(self.t.log_jacobian_det(self.x),
+                               t_elem.log_jacobian_det(self.x))
+        # Test log-Jacobian determinant derivatives
+        _, t_deriv = self.t.log_jacobian_det_S1(self.x)
+        _, t_elem_deriv = t_elem.log_jacobian_det_S1(self.x)
+        self.assertTrue(np.allclose(t_deriv, t_elem_deriv))
+
+
+class TestIdentityTransformation(unittest.TestCase):
+    # Test IdentityTransformation class
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t1 = pints.IdentityTransformation(1)
+        cls.t4 = pints.IdentityTransformation(4)
+
+        cls.p = [-177., 0.333, 10., 99.99]
+        cls.x = [-177., 0.333, 10., 99.99]
+        cls.j = np.eye(4)
+        cls.j_s1 = np.zeros((4, 4, 4))
+        cls.log_j_det = 0.
+        cls.log_j_det_s1 = np.zeros(4)
 
     def test_to_search(self):
         # Test forward transform
@@ -163,19 +324,13 @@ class TestLogTransformation(unittest.TestCase):
 
     def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
-        self.assertAlmostEqual(self.t4.log_jacobian_det(self.x),
-                               self.log_j_det)
+        self.assertEqual(self.t4.log_jacobian_det(self.x), self.log_j_det)
 
     def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
         calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
-        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertEqual(calc_val, self.log_j_det)
         self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
-
-    def test_invalid_inputs(self):
-        # Test invalid inputs
-        self.assertTrue(np.isnan(self.t1.to_search(-1.)))
-        self.assertTrue(np.isinf(self.t1.to_search(0)))
 
 
 class TestLogitTransformation(unittest.TestCase):
@@ -251,6 +406,79 @@ class TestLogitTransformation(unittest.TestCase):
         self.assertTrue(np.isnan(self.t1.to_search(-1.)))
         self.assertTrue(np.isnan(self.t1.to_search(2.)))
         self.assertTrue(np.isinf(self.t1.to_search(1.)))
+
+
+class TestLogTransformation(unittest.TestCase):
+    # Test LogTransformation class
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.t1 = pints.LogTransformation(1)
+        cls.t4 = pints.LogTransformation(4)
+
+        cls.p = [0.1, 1., 10., 999.]
+        cls.x = [-2.3025850929940455, 0., 2.3025850929940459,
+                 6.9067547786485539]
+        cls.j = np.diag(cls.p)
+        cls.j_s1 = np.zeros((4, 4, 4))
+        for i in range(4):
+            cls.j_s1[i, i, i] = cls.p[i]
+        cls.log_j_det = np.sum(cls.x)
+        cls.log_j_det_s1 = np.ones(4)
+
+    def test_to_search(self):
+        # Test forward transform
+        for xi, pi in zip(self.x, self.p):
+            calc_xi = self.t1.to_search(pi)
+            self.assertAlmostEqual(calc_xi[0], xi)
+        self.assertTrue(np.allclose(self.t4.to_search(self.p), self.x))
+
+    def test_to_model(self):
+        # Test inverse transform
+        for xi, pi in zip(self.x, self.p):
+            calc_pi = self.t1.to_model(xi)
+            self.assertAlmostEqual(calc_pi[0], pi)
+        self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
+
+    def test_multiple_to_model(self):
+        # Test many inverse transform
+        p = self.p
+        x = self.x
+        ps = [p, p, p, p]
+        xs = [x, x, x, x]
+        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
+
+    def test_n_parameters(self):
+        # Test n_parameters
+        self.assertEqual(self.t1.n_parameters(), 1)
+        self.assertEqual(self.t4.n_parameters(), 4)
+
+    def test_jacobian(self):
+        # Test Jacobian
+        self.assertTrue(np.allclose(self.t4.jacobian(self.x), self.j))
+
+    def test_jacobian_S1(self):
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = self.t4.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
+
+    def test_log_jacobian_det(self):
+        # Test log-Jacobian determinant
+        self.assertAlmostEqual(self.t4.log_jacobian_det(self.x),
+                               self.log_j_det)
+
+    def test_log_jacobian_det_S1(self):
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
+        self.assertAlmostEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
+
+    def test_invalid_inputs(self):
+        # Test invalid inputs
+        self.assertTrue(np.isnan(self.t1.to_search(-1.)))
+        self.assertTrue(np.isinf(self.t1.to_search(0)))
 
 
 class TestRectangularBoundariesTransformation(unittest.TestCase):
@@ -348,70 +576,6 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
 
-class TestIdentityTransformation(unittest.TestCase):
-    # Test IdentityTransformation class
-
-    @classmethod
-    def setUpClass(cls):
-        # Create Transformation class
-        cls.t1 = pints.IdentityTransformation(1)
-        cls.t4 = pints.IdentityTransformation(4)
-
-        cls.p = [-177., 0.333, 10., 99.99]
-        cls.x = [-177., 0.333, 10., 99.99]
-        cls.j = np.eye(4)
-        cls.j_s1 = np.zeros((4, 4, 4))
-        cls.log_j_det = 0.
-        cls.log_j_det_s1 = np.zeros(4)
-
-    def test_to_search(self):
-        # Test forward transform
-        for xi, pi in zip(self.x, self.p):
-            calc_xi = self.t1.to_search(pi)
-            self.assertAlmostEqual(calc_xi[0], xi)
-        self.assertTrue(np.allclose(self.t4.to_search(self.p), self.x))
-
-    def test_to_model(self):
-        # Test inverse transform
-        for xi, pi in zip(self.x, self.p):
-            calc_pi = self.t1.to_model(xi)
-            self.assertAlmostEqual(calc_pi[0], pi)
-        self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
-
-    def test_n_parameters(self):
-        # Test n_parameters
-        self.assertEqual(self.t1.n_parameters(), 1)
-        self.assertEqual(self.t4.n_parameters(), 4)
-
-    def test_jacobian(self):
-        # Test Jacobian
-        self.assertTrue(np.allclose(self.t4.jacobian(self.x), self.j))
-
-    def test_jacobian_S1(self):
-        # Test Jacobian derivatives
-        calc_mat, calc_deriv = self.t4.jacobian_S1(self.x)
-        self.assertTrue(np.allclose(calc_mat, self.j))
-        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
-
-    def test_log_jacobian_det(self):
-        # Test log-Jacobian determinant
-        self.assertEqual(self.t4.log_jacobian_det(self.x), self.log_j_det)
-
-    def test_log_jacobian_det_S1(self):
-        # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
-        self.assertEqual(calc_val, self.log_j_det)
-        self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
-
-
 class TestScalingTransformation(unittest.TestCase):
     # Test ScalingTransformation class
 
@@ -467,170 +631,6 @@ class TestScalingTransformation(unittest.TestCase):
         calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
         self.assertEqual(calc_val, self.log_j_det)
         self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
-
-
-class TestComposedTransformation(unittest.TestCase):
-    # Test ComposedTransformation class
-
-    @classmethod
-    def setUpClass(cls):
-        # Create Transformation class
-        cls.t1 = pints.IdentityTransformation(1)
-        lower2 = np.array([1, 2])
-        upper2 = np.array([10, 20])
-        cls.t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
-        cls.t3 = pints.LogTransformation(1)
-
-        cls.t = pints.ComposedTransformation(cls.t1, cls.t2, cls.t3)
-
-        cls.p = [0.1, 1.5, 15., 999.]
-        cls.x = [0.1, -2.8332133440562162, 0.9555114450274365,
-                 6.9067547786485539]
-        cls.j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
-        cls.j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
-        cls.j_s1 = np.zeros((4, 4, 4))
-        for i in range(4):
-            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
-        cls.log_j_det = 7.4404646962481324
-        cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
-
-    def test_bad_constructor(self):
-        # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedTransformation)
-        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
-
-    def test_to_search(self):
-        # Test forward transform
-        self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
-
-    def test_to_model(self):
-        # Test inverse transform
-        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
-
-    def test_n_parameters(self):
-        # Test n_parameters
-        self.assertEqual(self.t.n_parameters(), 4)
-
-    def test_jacobian(self):
-        # Test Jacobian
-        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
-
-    def test_jacobian_S1(self):
-        # Test Jacobian derivatives
-        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
-        self.assertTrue(np.allclose(calc_mat, self.j))
-        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
-
-    def test_log_jacobian_det(self):
-        # Test log-Jacobian determinant
-        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
-
-    def test_log_jacobian_det_S1(self):
-        # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
-        self.assertAlmostEqual(calc_val, self.log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
-
-    def test_against_elementwise_transformation(self):
-        # Test ComposedTransformation gives the same result as the
-        # ComposedElementWiseTransformation when using
-        # ElementWiseTransformation
-        t_elem = pints.ComposedElementWiseTransformation(self.t1,
-                                                         self.t2,
-                                                         self.t3)
-        # Test log-Jacobian determinant
-        self.assertAlmostEqual(self.t.log_jacobian_det(self.x),
-                               t_elem.log_jacobian_det(self.x))
-        # Test log-Jacobian determinant derivatives
-        _, t_deriv = self.t.log_jacobian_det_S1(self.x)
-        _, t_elem_deriv = t_elem.log_jacobian_det_S1(self.x)
-        self.assertTrue(np.allclose(t_deriv, t_elem_deriv))
-
-
-class TestComposedElementWiseTransformation(unittest.TestCase):
-    # Test ComposedElementWiseTransformation class
-
-    @classmethod
-    def setUpClass(cls):
-        # Create Transformation class
-        t1 = pints.IdentityTransformation(1)
-        lower2 = np.array([1, 2])
-        upper2 = np.array([10, 20])
-        t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
-        t3 = pints.LogTransformation(1)
-
-        cls.t = pints.ComposedElementWiseTransformation(t1, t2, t3)
-
-        cls.p = [0.1, 1.5, 15., 999.]
-        cls.x = [0.1, -2.8332133440562162, 0.9555114450274365,
-                 6.9067547786485539]
-        cls.j = np.diag([1., 0.4722222222222225, 3.6111111111111098, 999.])
-        cls.j_s1_diag = [0., 0.4197530864197533, -1.6049382716049378, 999.]
-        cls.j_s1 = np.zeros((4, 4, 4))
-        for i in range(4):
-            cls.j_s1[i, i, i] = cls.j_s1_diag[i]
-        cls.log_j_det = 7.4404646962481324
-        cls.log_j_det_s1 = [0., 0.8888888888888888, -0.4444444444444445, 1.]
-
-    def test_bad_constructor(self):
-        # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
-                          np.log)
-
-        self.assertRaisesRegex(
-            ValueError, 'All sub-transforms must extend ' +
-            'pints.ElementWiseTransformation.',
-            pints.ComposedElementWiseTransformation,
-            TestTransformation())
-
-    def test_to_search(self):
-        # Test forward transform
-        self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
-
-    def test_to_model(self):
-        # Test inverse transform
-        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
-
-    def test_n_parameters(self):
-        # Test n_parameters
-        self.assertEqual(self.t.n_parameters(), 4)
-
-    def test_jacobian(self):
-        # Test Jacobian
-        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
-
-    def test_jacobian_S1(self):
-        # Test Jacobian derivatives
-        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
-        self.assertTrue(np.allclose(calc_mat, self.j))
-        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
-
-    def test_log_jacobian_det(self):
-        # Test log-Jacobian determinant
-        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
-
-    def test_log_jacobian_det_S1(self):
-        # Test log-Jacobian determinant derivatives
-        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
-        self.assertAlmostEqual(calc_val, self.log_j_det)
-        self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
 
 class TestTransformedWrappers(unittest.TestCase):
