@@ -333,5 +333,4 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     f = f[selection]
 
     # Return output
-    return x, y, f, regions
-
+    return x, y, f, regions.tolist()
