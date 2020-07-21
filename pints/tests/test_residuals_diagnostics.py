@@ -295,6 +295,57 @@ class TestResidualsDiagnostics(unittest.TestCase):
             n_bins=1000
         )
 
+    def test_plot_residuals_binned_std(self):
+        # Test the function that plots the binned residuals standard deviation
+
+        # Test that it runs with an optimisation result
+        pints.residuals_diagnostics.plot_residuals_binned_std(
+            np.array([self.found_parameters1]),
+            self.problem1,
+            n_bins=5
+        )
+
+        # Test that it runs with multiple ouputs and MCMC
+        fig = pints.residuals_diagnostics.\
+            plot_residuals_binned_std(
+                self.samples2[0],
+                self.problem2,
+                n_bins=5
+            )
+
+        # Test that the multiple output figure has multiple axes
+        self.assertGreaterEqual(len(fig.axes), 2)
+
+        # Check the message when the thinning is invalid
+        self.assertRaisesRegexp(
+            ValueError,
+            'Thinning rate must be',
+            pints.residuals_diagnostics.plot_residuals_binned_std,
+            self.samples2[0],
+            self.problem2,
+            thinning=0,
+            n_bins=5
+        )
+
+        # Check the message when the number of bins is invalid
+        self.assertRaisesRegexp(
+            ValueError,
+            'n_bins must be',
+            pints.residuals_diagnostics.plot_residuals_binned_std,
+            self.samples2[0],
+            self.problem2,
+            n_bins=-1
+        )
+
+        # Check the message when the number of bins is too big
+        self.assertRaisesRegexp(
+            ValueError,
+            'n_bins must not exceed',
+            pints.residuals_diagnostics.plot_residuals_binned_std,
+            self.samples2[0],
+            self.problem2,
+            n_bins=1000
+        )
 
 if __name__ == '__main__':
     unittest.main()
