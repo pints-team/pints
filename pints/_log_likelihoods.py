@@ -262,7 +262,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     For each output in the problem, this likelihood introduces three new scalar
     parameters: a base-level scale :math:`\sigma _{\text{base}}`; an
-    exponential power :math:`\eta` ;and a scale relative to the model output
+    exponential power :math:`\eta`; and a scale relative to the model output
     :math:`\sigma _{\text{rel}}`.
 
     The resulting log-likelihood of a combined Gaussian error model is
