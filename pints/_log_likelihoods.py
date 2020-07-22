@@ -562,34 +562,37 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming heteroscedastic Gaussian errors, with
-    the magnitude of the error variance scaling with the problem output.
+    Calculates the log-likelihood for a time-series model assuming a
+    heteroscedastic Gaussian error of the model predictions
+    :math:`f(t, \theta )`. The standard deviation of a heteroscedascic
+    Gaussian error scales with the model predictions.
 
-    For each output in the problem, this likelihood introduces two new scalar
-    parameters: an exponential power :math:`\eta` and a scale :math:`\sigma`.
+    This likelihood introduces two new scalar parameters for each dimension of
+    the model output: an exponential power :math:`\eta` and a scale
+    :math:`\sigma`.
 
-    This likelihood is applicable to a model given by
+    A heteroscedascic Gaussian noise model assumes that the observable
+    :math:`X` is Gaussian distributed around the model predictions
+    :math:`f(t, \theta )` with a standard deviation that scales with
+    :math:`f(t, \theta )`
 
     .. math::
-        X(t) = f(t; \theta) + f(t; \theta)^\eta v(t)
+        X(t) = f(t, \theta) + \sigma f(t, \theta)^\eta v(t)
 
-    where v(t) is iid Gaussian:
+    where :math:`v(t)` is a standard i.i.d. Gaussian random variable
 
     .. math::
-        v(t) \sim \text{ iid } N(0, \sigma)
+        v(t) \sim \mathcal{N}(0, 1).
 
-    Note that the scalar parameter :math:`\eta` controls the exponential
-    dependence of the noise on the function output, while the scalar parameter
-    :math:`\sigma` provides a baseline level of the noise standard deviation.
-    This model leads to a log likelihood of
+    This model leads to a log likelihood of the model parameters of
 
     .. math::
         \log{L(\theta, \eta , \sigma | X^{\text{obs}})} =
             -\frac{n_t}{2} \log{2 \pi}
             -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
-            -\frac{1}{2}\sum_{i=1}^{n_t}
-                \frac{(X^{\text{obs}}_{i} - f(t_i, \theta))^2}
-                {(f(t_i, \theta)^\eta \sigma)^2}
+            -\frac{1}{2}\sum_{i=1}^{n_t}\left(
+                \frac{X^{\text{obs}}_{i} - f(t_i, \theta)}
+                {f(t_i, \theta)^\eta \sigma}\right) ^2,
 
     where :math:`n_t` is the number of time points in the series, and
     :math:`X^{\text{obs}}_{i}` the measurement at time :math:`t_i`.
@@ -597,13 +600,13 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     For a system with :math:`n_o` outputs, this becomes
 
     .. math::
-        \log{L(\theta, \eta , \sigma | \boldsymbol{x})} =
-            -\frac{n_tn_o}{2} \log{2 \pi}
+        \log{L(\theta, \eta , \sigma | X^{\text{obs}})} =
+            -\frac{n_t n_o}{2} \log{2 \pi}
             -\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}{\log{f_j(t_i, \theta)^\eta
             \sigma _j}}
-            -\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}
-                \frac{(X^{\text{obs}}_{ij} - f_j(t_i, \theta))^2}
-                {2(f_j(t_i, \theta)^\eta \sigma _j)^2},
+            -\frac{1}{2}\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}\left(
+                \frac{X^{\text{obs}}_{ij} - f_j(t_i, \theta)}
+                {f_j(t_i, \theta)^\eta \sigma _j}\right) ^2,
 
     where :math:`n_o` is the number of outputs of the model, and
     :math:`X^{\text{obs}}_{ij}` the measurement of output :math:`j` at
