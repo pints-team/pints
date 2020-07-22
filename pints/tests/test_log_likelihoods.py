@@ -613,6 +613,37 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv[4], gauss_deriv[4])
         self.assertEqual(deriv[5], gauss_deriv[5])
 
+    def test_evaluateS1_finite_difference_single(self):
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log-likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+        # Compute derivatives with evaluateS1
+        test_parameters = np.array([2.0, 0.5, 1.1, 1.0])
+        _, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that finite difference approximately agrees with evaluateS1
+        # Theta
+        eps = np.array([1E-3, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[0] * eps[0], score_after - score_before)
+
+        # Sigma base
+        eps = np.array([0, 1E-3, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[1] * eps[1], score_after - score_before)
+
+        # Eta
+        eps = np.array([0, 0, 1E-5, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[2] * eps[2], score_after - score_before)
+
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
