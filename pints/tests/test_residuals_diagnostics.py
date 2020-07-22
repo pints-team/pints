@@ -88,7 +88,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
                                                         thinning=10)
 
         # Check the message when the input is wrong dimension
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             r'\`parameters\` must be of shape \(n_samples\, n_parameters\)\.',
             pints.residuals_diagnostics.calculate_residuals,
@@ -97,7 +97,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the thinning is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             r'Thinning rate must be \`None\` or an integer greater than '
             r'zero\.',
@@ -159,7 +159,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(fig.axes), 2)
 
         # Test an invalid significance level
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             r'significance level must fall between 0 and 1',
             pints.residuals_diagnostics.plot_residuals_autocorrelation,
@@ -169,7 +169,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Test an invalid credible interval
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             r'posterior interval must fall between 0 and 1',
             pints.residuals_diagnostics.plot_residuals_autocorrelation,
@@ -197,7 +197,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(fig.axes), 2)
 
         # Check the message when the input is wrong dimension
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             r'\`parameters\` must be of shape',
             pints.residuals_diagnostics.plot_residuals_vs_output,
@@ -206,7 +206,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the thinning is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'Thinning rate must be',
             pints.residuals_diagnostics.plot_residuals_vs_output,
