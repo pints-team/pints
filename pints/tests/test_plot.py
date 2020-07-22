@@ -31,100 +31,103 @@ class TestPlot(unittest.TestCase):
     Tests Pints plot methods.
     """
 
-    def __init__(self, name):
-        super(TestPlot, self).__init__(name)
+    @classmethod
+    def setUpClass(cls):
+
+        # Number of samples: Make this as small as possible to speed up testing
+        n_samples = 300
 
         # Create toy model (single output)
-        self.model = toy.LogisticModel()
-        self.real_parameters = [0.015, 500]
-        self.times = np.linspace(0, 1000, 100)  # small problem
-        self.values = self.model.simulate(self.real_parameters, self.times)
+        cls.model = toy.LogisticModel()
+        cls.real_parameters = [0.015, 500]
+        cls.times = np.linspace(0, 1000, 100)  # small problem
+        cls.values = cls.model.simulate(cls.real_parameters, cls.times)
 
         # Add noise
-        self.noise = 10
-        self.values += np.random.normal(0, self.noise, self.values.shape)
-        self.real_parameters.append(self.noise)
-        self.real_parameters = np.array(self.real_parameters)
+        cls.noise = 10
+        cls.values += np.random.normal(0, cls.noise, cls.values.shape)
+        cls.real_parameters.append(cls.noise)
+        cls.real_parameters = np.array(cls.real_parameters)
 
         # Create an object with links to the model and time series
-        self.problem = pints.SingleOutputProblem(
-            self.model, self.times, self.values)
+        cls.problem = pints.SingleOutputProblem(
+            cls.model, cls.times, cls.values)
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.lower = [0.01, 400, self.noise * 0.1]
-        self.upper = [0.02, 600, self.noise * 100]
-        self.log_prior = pints.UniformLogPrior(
-            self.lower,
-            self.upper
+        cls.lower = [0.01, 400, cls.noise * 0.1]
+        cls.upper = [0.02, 600, cls.noise * 100]
+        cls.log_prior = pints.UniformLogPrior(
+            cls.lower,
+            cls.upper
         )
 
         # Create a log likelihood
-        self.log_likelihood = pints.GaussianLogLikelihood(self.problem)
+        cls.log_likelihood = pints.GaussianLogLikelihood(cls.problem)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior = pints.LogPosterior(
-            self.log_likelihood, self.log_prior)
+        cls.log_posterior = pints.LogPosterior(
+            cls.log_likelihood, cls.log_prior)
 
         # Run MCMC
-        self.x0 = [
-            self.real_parameters * 1.1,
-            self.real_parameters * 0.9,
-            self.real_parameters * 1.05
+        cls.x0 = [
+            cls.real_parameters * 1.1,
+            cls.real_parameters * 0.9,
+            cls.real_parameters * 1.05
         ]
-        mcmc = pints.MCMCController(self.log_posterior, 3, self.x0)
-        mcmc.set_max_iterations(300)  # make it as small as possible
+        mcmc = pints.MCMCController(cls.log_posterior, 3, cls.x0)
+        mcmc.set_max_iterations(n_samples)
         mcmc.set_log_to_screen(False)
-        self.samples = mcmc.run()
+        cls.samples = mcmc.run()
 
         # Create toy model (multi-output)
-        self.model2 = toy.LotkaVolterraModel()
-        self.real_parameters2 = self.model2.suggested_parameters()
-        self.times2 = self.model2.suggested_times()[::10]  # down sample it
-        self.values2 = self.model2.simulate(self.real_parameters2, self.times2)
+        cls.model2 = toy.LotkaVolterraModel()
+        cls.real_parameters2 = cls.model2.suggested_parameters()
+        cls.times2 = cls.model2.suggested_times()[::10]  # downsample it
+        cls.values2 = cls.model2.simulate(cls.real_parameters2, cls.times2)
 
         # Add noise
-        self.noise2 = 0.05
-        self.values2 += np.random.normal(0, self.noise2, self.values2.shape)
+        cls.noise2 = 0.05
+        cls.values2 += np.random.normal(0, cls.noise2, cls.values2.shape)
 
         # Create an object with links to the model and time series
-        self.problem2 = pints.MultiOutputProblem(
-            self.model2, self.times2, np.log(self.values2))
+        cls.problem2 = pints.MultiOutputProblem(
+            cls.model2, cls.times2, np.log(cls.values2))
 
         # Create a uniform prior over both the parameters and the new noise
         # variable
-        self.log_prior2 = pints.UniformLogPrior([0, 0, 0, 0], [6, 6, 6, 6])
+        cls.log_prior2 = pints.UniformLogPrior([0, 0, 0, 0], [6, 6, 6, 6])
         # Create a log likelihood
-        self.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
-            self.problem2, self.noise2)
+        cls.log_likelihood2 = pints.GaussianKnownSigmaLogLikelihood(
+            cls.problem2, cls.noise2)
 
         # Create an un-normalised log-posterior (log-likelihood + log-prior)
-        self.log_posterior2 = pints.LogPosterior(
-            self.log_likelihood2, self.log_prior2)
+        cls.log_posterior2 = pints.LogPosterior(
+            cls.log_likelihood2, cls.log_prior2)
 
         # Run MCMC
-        self.x02 = [
-            self.real_parameters2 * 1.1,
-            self.real_parameters2 * 0.9,
-            self.real_parameters2 * 1.05
+        cls.x02 = [
+            cls.real_parameters2 * 1.1,
+            cls.real_parameters2 * 0.9,
+            cls.real_parameters2 * 1.05
         ]
-        mcmc = pints.MCMCController(self.log_posterior2, 3, self.x02)
-        mcmc.set_max_iterations(300)  # make it as small as possible
+        mcmc = pints.MCMCController(cls.log_posterior2, 3, cls.x02)
+        mcmc.set_max_iterations(n_samples)
         mcmc.set_log_to_screen(False)
-        self.samples2 = mcmc.run()
+        cls.samples2 = mcmc.run()
 
         # Create toy model (single-output, single-parameter)
-        self.real_parameters3 = [0]
-        self.log_posterior3 = toy.GaussianLogPDF(self.real_parameters3, [1])
-        self.lower3 = [-3]
-        self.upper3 = [3]
+        cls.real_parameters3 = [0]
+        cls.log_posterior3 = toy.GaussianLogPDF(cls.real_parameters3, [1])
+        cls.lower3 = [-3]
+        cls.upper3 = [3]
 
         # Run MCMC
-        self.x03 = [[1], [-2], [3]]
-        mcmc = pints.MCMCController(self.log_posterior3, 3, self.x03)
-        mcmc.set_max_iterations(300)  # make it as small as possible
+        cls.x03 = [[1], [-2], [3]]
+        mcmc = pints.MCMCController(cls.log_posterior3, 3, cls.x03)
+        mcmc.set_max_iterations(n_samples)
         mcmc.set_log_to_screen(False)
-        self.samples3 = mcmc.run()
+        cls.samples3 = mcmc.run()
 
     def test_function(self):
         # Tests the function function.
