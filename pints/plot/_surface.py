@@ -326,11 +326,15 @@ def _voronoi_regions(x, y, f, xlim, ylim):
             selection.append(k)
 
     # Filter out bad regions
-    regions = np.array(regions)
+    regions = np.array(regions, dtype=object)
     regions = regions[selection]
     x = x[selection]
     y = y[selection]
     f = f[selection]
 
     # Return output
+    # Note: Regions is transformed back to a list, which fixes an issue with
+    # matplotlib 3.3.0 (which does not expect "ragged" ndarrays made of
+    # objects).
     return x, y, f, regions.tolist()
+
