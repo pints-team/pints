@@ -564,8 +564,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood for a time-series model assuming a
     heteroscedastic Gaussian error of the model predictions
-    :math:`f(t, \theta )`. The standard deviation of a heteroscedascic
-    Gaussian error scales with the model predictions.
+    :math:`f(t, \theta )`.
 
     This likelihood introduces two new scalar parameters for each dimension of
     the model output: an exponential power :math:`\eta` and a scale
