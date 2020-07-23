@@ -352,6 +352,7 @@ def run_notebook_tests():
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = [
         'examples/optimisation/maximum-likelihood.ipynb',
+        # Books in interfaces require extra dependences
         'examples/interfaces/statsmodels-arima.ipynb',
         'examples/interfaces/statsmodels-state-space.ipynb',
     ]
@@ -364,6 +365,29 @@ def run_notebook_tests():
     print('Testing notebooks')
     ok = True
     for notebook in list_notebooks('examples', True, ignore_list):
+        ok &= test_notebook(notebook)
+    if not ok:
+        print('\nErrors encountered in notebooks')
+        sys.exit(1)
+    print('\nOK')
+
+
+def run_notebook_interfaces_tests():
+    """
+    Runs Jupyter notebook interfaces tests. Exits if they fail.
+    """
+
+    # Ignore books with deliberate errors, but check they still exist
+    ignore_list = []
+
+    for ignored_book in ignore_list:
+        if not os.path.isfile(ignored_book):
+            raise Exception('Ignored notebook not found: ' + ignored_book)
+
+    # Scan and run
+    print('Testing notebooks')
+    ok = True
+    for notebook in list_notebooks('examples/interfaces', True, ignore_list):
         ok &= test_notebook(notebook)
     if not ok:
         print('\nErrors encountered in notebooks')
@@ -497,6 +521,11 @@ if __name__ == '__main__':
         help='Test only the fast Jupyter notebooks in `examples`.',
     )
     parser.add_argument(
+        '--interfaces',
+        action='store_true',
+        help='Test only the fast Jupyter notebooks in `examples/interfaces`.',
+    )
+    parser.add_argument(
         '-debook',
         nargs=2,
         metavar=('in', 'out'),
@@ -542,6 +571,9 @@ if __name__ == '__main__':
     elif args.books:
         has_run = True
         run_notebook_tests()
+    if args.interfaces:
+        has_run = True
+        run_notebook_interfaces_tests()
     if args.debook:
         has_run = True
         export_notebook(*args.debook)
