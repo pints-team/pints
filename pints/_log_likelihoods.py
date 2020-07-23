@@ -244,7 +244,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     assuming that the error of the model predictions is a mixture of a
     Gaussian base-level noise (constant variance
     :math:`\sigma ^2_{\text{base}}`) and a Gaussian heteroscedastic noise
-    (variance scaling with model predictions).
+    (variance scaling with magnitude of model predictions).
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
     , the CombinedGaussianLogLikelihood assumes that the model predictions
@@ -381,10 +381,12 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
             {\sigma ^3_{\text{tot}, ij}} \\
             \frac{\partial \log L}{\partial \eta _j}
             =& -\sigma _{\text{rel},j}\eta _j\sum ^{n_t}_{i=1}
-            \frac{f_j(t_i| \theta)^{\eta _j-1}}{\sigma _{\text{tot}, ij}}
+            \frac{f_j(t_i| \theta)^{\eta _j}\log f_j(t_i| \theta)}
+            {\sigma _{\text{tot}, ij}}
             + \sigma _{\text{rel},j}\eta _j \sum ^{n_t}_{i=1}
             \frac{(X^{\text{obs}}_{ij} - f_j(t_i| \theta))^2}
-            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta _j-1} \\
+            {\sigma ^3_{\text{tot}, ij}}f_j(t_i| \theta)^{\eta _j}
+            \log f_j(t_i| \theta) \\
             \frac{\partial \log L}{\partial \sigma _{\text{rel},j}}
             =& -\sum ^{n_t}_{i=1}
             \frac{f_j(t_i| \theta)^{\eta _j}}{\sigma _{\text{tot}, ij}}
@@ -396,6 +398,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         over the outputs of the model.
         """
         # Get parameters from input
+        # Shape sigma_base, eta, sigma_rel = (n_outputs,)
         noise_parameters = parameters[-self._np:]
         sigma_base = np.asarray(noise_parameters[:self._no])
         eta = np.asarray(noise_parameters[self._no:2 * self._no])
@@ -404,7 +407,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Evaluate noise-free model, and get residuals
         # y shape = (n_times,) or (n_times, n_outputs)
         # dy shape = (n_times, n_model_parameters) or
-        # (n_times, n_outputs, n_model_para)
+        # (n_times, n_outputs, n_model_parameters)
         y, dy = self._problem.evaluateS1(parameters[:-self._np])
 
         # Reshape y and dy, in case we're working with a single-output problem
@@ -416,6 +419,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
             axes=(2, 0, 1))
 
         # Compute y^(eta-1)
+        # Broadcasting makes eta shape (n_outputs,) -> (n_times, n_outputs)
         y_pow_eta_minus_one = y**(eta - 1)
 
         # Compute error
@@ -454,10 +458,10 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
             error_squared * inv_sigma_tot_cubed, axis=0)
 
         # Compute derivative w.r.t. eta
-        deta = sigma_rel * eta * (
-            -np.sum(y_pow_eta_minus_one * inv_sigma_tot, axis=0) +
+        deta = -sigma_rel * (
+            np.sum(y**eta * np.log(np.absolute(y)) * inv_sigma_tot, axis=0) -
             np.sum(
-                error_squared * inv_sigma_tot_cubed * y_pow_eta_minus_one,
+                error_squared * inv_sigma_tot_cubed * y**eta * np.log(np.absolute(y)),
                 axis=0))
 
         # Compute derivative w.r.t. sigma rel
