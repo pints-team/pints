@@ -418,9 +418,9 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
             dy.reshape(self._nt, self._no, self._n_parameters - self._np),
             axes=(2, 0, 1))
 
-        # Compute y^(eta-1)
+        # Compute y^eta
         # Broadcasting makes eta shape (n_outputs,) -> (n_times, n_outputs)
-        y_pow_eta_minus_one = y**(eta - 1)
+        y_pow_eta = y**eta
 
         # Compute error
         # Note: Must be (data - simulation), sign now matters!
@@ -432,7 +432,7 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Compute one over total standard deviation
         # Shape (n_times, n_outputs)
-        inv_sigma_tot = (sigma_base + sigma_rel * y**eta)**(-1)
+        inv_sigma_tot = (sigma_base + sigma_rel * y_pow_eta)**(-1)
 
         # Compute one over total variance
         inv_var_tot = inv_sigma_tot**2
@@ -446,10 +446,10 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Compute derivative w.r.t. model parameters
         dtheta = -np.sum(sigma_rel * eta * np.sum(
-            y_pow_eta_minus_one * inv_sigma_tot * dy, axis=1), axis=1) + \
+            y**(eta - 1) * inv_sigma_tot * dy, axis=1), axis=1) + \
             np.sum(error * inv_var_tot * dy, axis=(1, 2)) + np.sum(
                 sigma_rel * eta * np.sum(
-                    error_squared * inv_sigma_tot_cubed * y_pow_eta_minus_one
+                    error_squared * inv_sigma_tot_cubed * y**(eta - 1)
                     * dy, axis=1),
                 axis=1)
 
@@ -459,14 +459,14 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Compute derivative w.r.t. eta
         deta = -sigma_rel * (
-            np.sum(y**eta * np.log(np.absolute(y)) * inv_sigma_tot, axis=0) -
+            np.sum(y_pow_eta * np.log(y) * inv_sigma_tot, axis=0) -
             np.sum(
-                error_squared * inv_sigma_tot_cubed * y**eta * np.log(np.absolute(y)),
+                error_squared * inv_sigma_tot_cubed * y_pow_eta * np.log(y),
                 axis=0))
 
         # Compute derivative w.r.t. sigma rel
-        dsigma_rel = -np.sum(y**eta * inv_sigma_tot, axis=0) + np.sum(
-            error_squared * inv_sigma_tot_cubed * y**eta, axis=0)
+        dsigma_rel = -np.sum(y_pow_eta * inv_sigma_tot, axis=0) + np.sum(
+            error_squared * inv_sigma_tot_cubed * y_pow_eta, axis=0)
 
         # Collect partial derivatives
         dL = np.hstack((dtheta, dsigma_base, deta, dsigma_rel))
