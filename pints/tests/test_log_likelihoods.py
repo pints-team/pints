@@ -466,7 +466,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         # Check that partials are computed correctly
         self.assertEqual(deriv[0], -2.0553513340073835)
         self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.1967783819557953)
+        self.assertEqual(deriv[2], -1.5082610203777322)
         self.assertEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_one_dim_array(self):
@@ -495,7 +495,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         # Check that partials are computed correctly
         self.assertEqual(deriv[0], -2.0553513340073835)
         self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.1967783819557953)
+        self.assertEqual(deriv[2], -1.5082610203777322)
         self.assertEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_two_dim_array_single(self):
@@ -524,7 +524,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         # Check that partials are computed correctly
         self.assertEqual(deriv[0], -2.0553513340073835)
         self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.1967783819557953)
+        self.assertEqual(deriv[2], -1.5082610203777322)
         self.assertEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_two_dim_array_multi(self):
@@ -553,9 +553,9 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv[3], 5.547071959874058)
         self.assertEqual(deriv[4], -0.2868738955802226)
         self.assertEqual(deriv[5], 0.1813851785335695)
-        self.assertEqual(deriv[6], 6.539724973509424)
-        self.assertEqual(deriv[7], -0.3624847291390523)
-        self.assertEqual(deriv[8], 0.23867647052817906)
+        self.assertEqual(deriv[6], 8.241803503682762)
+        self.assertEqual(deriv[7], -1.82731103999105)
+        self.assertEqual(deriv[8], 2.33264086991343)
         self.assertEqual(deriv[9], 11.890409042744405)
         self.assertEqual(deriv[10], -1.3181262877783717)
         self.assertEqual(deriv[11], 1.3018716574264304)
@@ -630,19 +630,25 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         eps = np.array([1E-3, 0, 0, 0])
         score_before = log_likelihood(test_parameters - eps / 2)
         score_after = log_likelihood(test_parameters + eps / 2)
-        self.assertAlmostEqual(deriv[0] * eps[0], score_after - score_before)
+        self.assertAlmostEqual(deriv[0], (score_after - score_before) / eps[0])
 
         # Sigma base
         eps = np.array([0, 1E-3, 0, 0])
         score_before = log_likelihood(test_parameters - eps / 2)
         score_after = log_likelihood(test_parameters + eps / 2)
-        self.assertAlmostEqual(deriv[1] * eps[1], score_after - score_before)
+        self.assertAlmostEqual(deriv[1], (score_after - score_before) / eps[1])
 
         # Eta
-        eps = np.array([0, 0, 1E-5, 0])
+        eps = np.array([0, 0, 1E-4, 0])
         score_before = log_likelihood(test_parameters - eps / 2)
         score_after = log_likelihood(test_parameters + eps / 2)
-        self.assertAlmostEqual(deriv[2] * eps[2], score_after - score_before)
+        self.assertAlmostEqual(deriv[2], (score_after - score_before) / eps[2])
+
+        # Sigma rel
+        eps = np.array([0, 0, 0, 1E-4])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[3], (score_after - score_before) / eps[3])
 
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
