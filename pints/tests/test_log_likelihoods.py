@@ -650,6 +650,94 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score_after = log_likelihood(test_parameters + eps / 2)
         self.assertAlmostEqual(deriv[3], (score_after - score_before) / eps[3])
 
+    def test_evaluateS1_finite_difference_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log-likelihood
+        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+
+        # Compute derivatives with evaluateS1
+        test_parameters = [
+            2.0, 1.9, 2.1, 0.5, 0.4, 0.6, 1.1, 1.0, 1.2, 1.0, 0.9, 1.1]
+        _, deriv = log_likelihood.evaluateS1(test_parameters)
+
+        # Check that finite difference approximately agrees with evaluateS1
+        # Theta output 1
+        eps = np.array([1E-4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[0], (score_after - score_before) / eps[0])
+
+        # Theta output 2
+        eps = np.array([0, 1E-4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[1], (score_after - score_before) / eps[1])
+
+        # Theta output 3
+        eps = np.array([0, 0, 1E-4, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[2], (score_after - score_before) / eps[2])
+
+        # Sigma base output 1
+        eps = np.array([0, 0, 0, 1E-4, 0, 0, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[3], (score_after - score_before) / eps[3])
+
+        # Sigma base output 2
+        eps = np.array([0, 0, 0, 0, 1E-4, 0, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[4], (score_after - score_before) / eps[4])
+
+        # Sigma base output 3
+        eps = np.array([0, 0, 0, 0, 0, 1E-4, 0, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[5], (score_after - score_before) / eps[5])
+
+        # Eta output 1
+        eps = np.array([0, 0, 0, 0, 0, 0, 1E-4, 0, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[6], (score_after - score_before) / eps[6])
+
+        # Eta output 2
+        eps = np.array([0, 0, 0, 0, 0, 0, 0, 1E-4, 0, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[7], (score_after - score_before) / eps[7])
+
+        # Eta output 3
+        eps = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1E-4, 0, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[8], (score_after - score_before) / eps[8])
+
+        # Sigma rel ouput 1
+        eps = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1E-4, 0, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(deriv[9], (score_after - score_before) / eps[9])
+
+        # Sigma rel ouput 2
+        eps = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1E-4, 0])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(
+            deriv[10], (score_after - score_before) / eps[10])
+
+        # Sigma rel ouput 3
+        eps = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1E-4])
+        score_before = log_likelihood(test_parameters - eps / 2)
+        score_after = log_likelihood(test_parameters + eps / 2)
+        self.assertAlmostEqual(
+            deriv[11], (score_after - score_before) / eps[11])
+
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
