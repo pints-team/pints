@@ -82,6 +82,7 @@ relevant code.
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
+- [Combined Gaussian error](./stats/combined_gaussian_error.ipynb)
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
