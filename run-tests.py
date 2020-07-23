@@ -385,7 +385,7 @@ def run_notebook_interfaces_tests():
             raise Exception('Ignored notebook not found: ' + ignored_book)
 
     # Scan and run
-    print('Testing notebooks')
+    print('Testing interfaces notebooks')
     ok = True
     for notebook in list_notebooks('examples/interfaces', True, ignore_list):
         ok &= test_notebook(notebook)
