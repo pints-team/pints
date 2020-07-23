@@ -351,7 +351,9 @@ def run_notebook_tests():
 
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = [
-        'examples/optimisation/maximum-likelihood.ipynb'
+        'examples/optimisation/maximum-likelihood.ipynb',
+        'examples/interfaces/statsmodels-arima.ipynb',
+        'examples/interfaces/statsmodels-state-space.ipynb',
     ]
 
     for ignored_book in ignore_list:
