@@ -1,4 +1,4 @@
-name: Notebooks: interfaces
+name: Notebooks (interfaces)
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 jobs:
 
   build-and-test:
-    name: notebooks
+    name: interfaces
     runs-on: ubuntu-latest
 
     steps:
