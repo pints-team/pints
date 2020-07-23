@@ -418,7 +418,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         multi_test_parameters = [2.0, 1.1, 1.0]
         score = log_likelihood(test_parameters)
         multi_score = multi_log_likelihood(multi_test_parameters)
-        self.assertEqual(score, multi_score)
+        self.assertAlmostEqual(score, multi_score)
 
     def test_call_multiplicative_gaussian_log_likelihood_agrees_multi(self):
         # Create an object with links to the model and time series
