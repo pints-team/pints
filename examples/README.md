@@ -70,15 +70,15 @@ relevant code.
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
+- [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
 - [Noise model diagnostic plots (correlation)](./plotting/residuals-autocorrelation-diagnostics.ipynb)
 - [Noise model diagnostic plots (magnitude)](./plotting/residuals-variance-diagnostics.ipynb)
-- [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
-- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling
