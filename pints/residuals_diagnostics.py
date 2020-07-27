@@ -16,7 +16,8 @@ def plot_residuals_binned_autocorrelation(parameters,
                                           thinning=None,
                                           n_bins=25):
     r"""
-    Plot the autocorrelation of the residuals within bins.
+    Plot the autocorrelation of the residuals within bins (i.e. discrete time
+    windows across the series).
 
     Given a time series with observed residuals
 
@@ -28,14 +29,14 @@ def plot_residuals_binned_autocorrelation(parameters,
     within each bin. The plot shows the lag 1 autocorrelation in each bin over
     time.
 
-    This diagnostic is particularly useful for diagnosing time series whose
-    noise exhibits autocorrelation at certain time periods.
+    This diagnostic is useful for diagnosing time series with noise whose
+    autocorrelation varies over time.
 
     When passing an array of parameters (from an MCMC sampler), this method
-    will plot the autocorrelations of the posterior median residual values.
+    plots the autocorrelations of the posterior median residual values.
 
-    Typically, this diagnostic can be called after obtaining the residuals of
-    an IID fit, in order to determine whether the IID fit is satisfactory or a
+    Typically, this diagnostic is called after obtaining the residuals of an
+    IID fit, in order to determine whether the IID fit is satisfactory or a
     more complex noise model is needed.
 
     This function returns a ``matplotlib`` figure.
@@ -255,8 +256,8 @@ def plot_residuals_distance(parameters, problem, thinning=None):
     When passing an array of parameters (from an MCMC sampler), this method
     will plot the distance matrix of the posterior median residual values.
 
-    Typically, this diagnostic can be called after obtaining the residuals of
-    an IID fit, in order to determine whether the IID fit is satisfactory or a
+    Typically, this diagnostic is called after obtaining the residuals of an
+    IID fit, in order to determine whether the IID fit is satisfactory or a
     more complex noise model is needed.
 
     This function returns a ``matplotlib`` figure.
