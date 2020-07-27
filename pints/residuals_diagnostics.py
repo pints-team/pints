@@ -78,7 +78,8 @@ def plot_residuals_binned_std(parameters,
                               thinning=None,
                               n_bins=25):
     r"""
-    Plot the standard deviation of the residuals within bins.
+    Plot the standard deviation of the residuals within bins (i.e. discrete
+    time windows across the series).
 
     Given a time series with observed residuals
 
