@@ -315,13 +315,18 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         \sigma _{\text{rel},n_o})`.
     """
 
-    def __init__(self, problem):
+    def __init__(self, problem, eta=None):
         super(CombinedGaussianLogLikelihood, self).__init__(problem)
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
         self._no = problem.n_outputs()
-        self._np = 3 * self._no
+        self._np = 2 * self._no if eta else 3 * self._no
+
+        # Remember fixed eta
+        self._eta = eta
+        if self._eta:
+            self._eta = np.asarray(self._eta)
 
         # Add parameters to problem
         self._n_parameters = problem.n_parameters() + self._np
@@ -333,8 +338,12 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Get parameters from input
         noise_parameters = parameters[-self._np:]
         sigma_base = np.asarray(noise_parameters[:self._no])
-        eta = np.asarray(noise_parameters[self._no:2 * self._no])
-        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
+        if self._eta:
+            eta = self._eta
+            sigma_rel = np.asarray(noise_parameters[self._no:])
+        else:
+            eta = np.asarray(noise_parameters[self._no:2 * self._no])
+            sigma_rel = np.asarray(noise_parameters[2 * self._no:])
 
         # Evaluate noise-free model (n_times, n_outputs)
         function_values = self._problem.evaluate(parameters[:-self._np])
@@ -401,8 +410,12 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Shape sigma_base, eta, sigma_rel = (n_outputs,)
         noise_parameters = parameters[-self._np:]
         sigma_base = np.asarray(noise_parameters[:self._no])
-        eta = np.asarray(noise_parameters[self._no:2 * self._no])
-        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
+        if self._eta:
+            eta = self._eta
+            sigma_rel = np.asarray(noise_parameters[self._no:])
+        else:
+            eta = np.asarray(noise_parameters[self._no:2 * self._no])
+            sigma_rel = np.asarray(noise_parameters[2 * self._no:])
 
         # Evaluate noise-free model, and get residuals
         # y shape = (n_times,) or (n_times, n_outputs)
@@ -457,19 +470,23 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         dsigma_base = - np.sum(inv_sigma_tot, axis=0) + np.sum(
             error_squared * inv_sigma_tot_cubed, axis=0)
 
-        # Compute derivative w.r.t. eta
-        deta = -sigma_rel * (
-            np.sum(y_pow_eta * np.log(y) * inv_sigma_tot, axis=0) -
-            np.sum(
-                error_squared * inv_sigma_tot_cubed * y_pow_eta * np.log(y),
-                axis=0))
+        if not self._eta:
+            # Compute derivative w.r.t. eta
+            deta = -sigma_rel * (
+                np.sum(y_pow_eta * np.log(y) * inv_sigma_tot, axis=0) -
+                np.sum(
+                    error_squared * inv_sigma_tot_cubed * y_pow_eta *
+                    np.log(y), axis=0))
 
         # Compute derivative w.r.t. sigma rel
         dsigma_rel = -np.sum(y_pow_eta * inv_sigma_tot, axis=0) + np.sum(
             error_squared * inv_sigma_tot_cubed * y_pow_eta, axis=0)
 
         # Collect partial derivatives
-        dL = np.hstack((dtheta, dsigma_base, deta, dsigma_rel))
+        if self._eta:
+            dL = np.hstack((dtheta, dsigma_base, dsigma_rel))
+        else:
+            dL = np.hstack((dtheta, dsigma_base, deta, dsigma_rel))
 
         # Return
         return L, dL
