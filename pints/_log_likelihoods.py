@@ -315,18 +315,32 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         \sigma _{\text{rel},n_o})`.
     """
 
-    def __init__(self, problem, eta=None):
+    def __init__(self, problem, sigma_base=None, eta=None, sigma_rel=None):
         super(CombinedGaussianLogLikelihood, self).__init__(problem)
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
         self._no = problem.n_outputs()
-        self._np = 2 * self._no if eta else 3 * self._no
+        self._np = 0
+        if not sigma_base:
+            self._np += self._no
+        if not eta:
+            self._np += self._no
+        if not sigma_rel:
+            self._np += self._no
 
-        # Remember fixed eta
+        # Remember fixed parameters
+        self._sigma_base = sigma_base
+        if self._sigma_base:
+            self._sigma_base = np.asarray(self._sigma_base)
+
         self._eta = eta
         if self._eta:
             self._eta = np.asarray(self._eta)
+
+        self._sigma_rel = sigma_rel
+        if self._sigma_rel:
+            self._sigma_rel = np.asarray(self._sigma_rel)
 
         # Add parameters to problem
         self._n_parameters = problem.n_parameters() + self._np
@@ -335,24 +349,36 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
         self._logn = -0.5 * self._nt * self._no * np.log(2 * np.pi)
 
     def __call__(self, parameters):
+        sigma_base = self._sigma_base
+        eta = self._eta
+        sigma_rel = self._sigma_rel
+
         # Get parameters from input
-        noise_parameters = parameters[-self._np:]
-        sigma_base = np.asarray(noise_parameters[:self._no])
-        if self._eta:
-            eta = self._eta
-            sigma_rel = np.asarray(noise_parameters[self._no:])
-        else:
-            eta = np.asarray(noise_parameters[self._no:2 * self._no])
-            sigma_rel = np.asarray(noise_parameters[2 * self._no:])
+        if self._np:
+            noise_parameters = parameters[-self._np:]
+            if not sigma_base:
+                sigma_base = np.asarray(noise_parameters[:self._no])
+            if not eta and self._sigma_base:
+                eta = np.asarray(noise_parameters[:self._no])
+            elif not eta:
+                eta = np.asarray(noise_parameters[self._no:2 * self._no])
+            if not sigma_rel and self._sigma_base and self._eta:
+                sigma_rel = np.asarray(noise_parameters[:self._no])
+            elif not sigma_rel and (not self._sigma_base or not self._eta):
+                sigma_rel = np.asarray(noise_parameters[self._no:2 * self._no])
+            elif not sigma_rel:
+                sigma_rel = np.asarray(noise_parameters[-self._no:])
 
         # Evaluate noise-free model (n_times, n_outputs)
-        function_values = self._problem.evaluate(parameters[:-self._np])
+        if self._np:
+            parameters = parameters[:-self._np]
+        function_values = self._problem.evaluate(parameters)
 
         # Compute error (n_times, n_outputs)
         error = self._values - function_values
 
         # Compute total standard deviation
-        sigma_tot = sigma_base + sigma_rel * function_values**eta
+        sigma_tot = sigma_base + sigma_rel * function_values ** eta
 
         # Compute log-likelihood
         # (inner sums over time points, outer sum over parameters)
