@@ -307,10 +307,10 @@ class MCMCController(object):
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
 
-        # Apply a transformation (if given).  From this point onward the MCMC
+        # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
         # nothing about the model parameter space.
-        if transform:
+        if transform is not None:
             # Convert log pdf
             log_pdf = transform.convert_log_pdf(log_pdf)
 

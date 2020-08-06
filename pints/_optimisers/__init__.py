@@ -330,20 +330,28 @@ class OptimisationController(object):
         # Check if minimising or maximising
         self._minimising = not isinstance(function, pints.LogPDF)
 
-        # Transform everything
-        # From this point onward the optimisation will see only the
-        # transformed search space and will know nothing about the model
-        # parameter space.
-        if transform:
+        # Apply a transformation (if given). From this point onward the
+        # optimiser will see only the transformed search space and will know
+        # nothing about the model parameter space.
+        if transform is not None:
+            # Convert error measure or log pdf
             if self._minimising:
                 function = transform.convert_error_measure(function)
             else:
                 function = transform.convert_log_pdf(function)
+
+            # Convert initial position
             x0 = transform.to_search(x0)
+
+            # Convert sigma0, if provided
             if sigma0 is not None:
                 sigma0 = transform.convert_standard_deviation(sigma0, x0)
             if boundaries:
                 boundaries = transform.convert_boundaries(boundaries)
+
+        # Store transform for later detransformation: if using a transform, any
+        # parameters logged to the filesystem or printed to screen should be
+        # detransformed first!
         self._transform = transform
 
         # Store function
