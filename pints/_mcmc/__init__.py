@@ -291,9 +291,9 @@ class MCMCController(object):
         of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
     transform : pints.Transformation
-        A :class:`pints.Transformation` that transforms the model parameter
-        space to a search space. If no transform is specified, search will be
-        performed in the model space.
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
@@ -307,15 +307,18 @@ class MCMCController(object):
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
 
-        # Transform everything
-        # From this point onward the MCMC sampler will see only the
-        # transformed search space and will know nothing about the model
-        # parameter space.
+        # Apply a transformation (if given).  From this point onward the MCMC
+        # sampler will see only the transformed search space and will know
+        # nothing about the model parameter space.
         if transform:
+            # Convert log pdf
             log_pdf = transform.convert_log_pdf(log_pdf)
+
+            # Convert initial positions
             x0 = [transform.to_search(x) for x in x0]
+
+            # Convert sigma0, if provided
             if sigma0 is not None:
-                # Transform sigma0 if provided
                 sigma0 = np.asarray(sigma0)
                 n_parameters = log_pdf.n_parameters()
                 # Make sure sigma0 is a (covariance) matrix
@@ -328,8 +331,11 @@ class MCMCController(object):
                     raise ValueError(
                         'sigma0 must be either a (d, d) matrix or a (d, ) '
                         'vector, where d is the number of parameters.')
-                # Transform sigma0
                 sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
+
+        # Store transform for later detransformation: if using a transform, any
+        # parameters logged to the filesystem or printed to screen should be
+        # detransformed first!
         self._transform = transform
 
         # Store function
@@ -432,8 +438,6 @@ class MCMCController(object):
         """
         # Note: Not copying this, for efficiency. At this point we're done with
         # the chains, so nothing will go wrong if the user messes the array up.
-        # Note: Any inverse transform for parameters should be performed before
-        # storing to memory or logging to screen.
         return self._samples
 
     def initial_phase_iterations(self):
@@ -622,11 +626,10 @@ class MCMCController(object):
                 evaluations = np.zeros((self._n_chains, self._max_iterations))
 
         # Some samplers need intermediate steps, where None is returned instead
-        # of a sample. Samplers can run asynchronously, so that one returns
-        # None while another returns a sample.
-        # To deal with this, we maintain a list of 'active' samplers that have
-        # not reach `max_iterations` yet, and store the number of samples we
-        # have in each chain.
+        # of a sample. But samplers can run asynchronously, so that one returns
+        # None while another returns a sample. To deal with this, we maintain a
+        # list of 'active' samplers that have not reached `max_iterations` yet,
+        # and we store the number of samples that we have in each chain.
         if self._single_chain:
             active = list(range(self._n_chains))
             n_samples = [0] * self._n_chains
