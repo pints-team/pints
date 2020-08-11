@@ -312,7 +312,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -8.222479586661642)
+        self.assertAlmostEqual(score, -8.222479586661642)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -330,7 +330,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -8.222479586661642)
+        self.assertAlmostEqual(score, -8.222479586661642)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -348,7 +348,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -8.222479586661642)
+        self.assertAlmostEqual(score, -8.222479586661642)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -364,7 +364,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -42.87921520701031)
+        self.assertAlmostEqual(score, -42.87921520701031)
 
     def test_call_gaussian_log_likelihood_agrees_single(self):
         # Create an object with links to the model and time series
@@ -381,7 +381,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         gauss_test_parameters = [2.0, 0.5]
         score = log_likelihood(test_parameters)
         gauss_score = gauss_log_likelihood(gauss_test_parameters)
-        self.assertEqual(score, gauss_score)
+        self.assertAlmostEqual(score, gauss_score)
 
     def test_call_gaussian_log_likelihood_agrees_multi(self):
         # Create an object with links to the model and time series
@@ -399,7 +399,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         gauss_test_parameters = [2.0, 2.0, 2.0, 0.5, 0.5, 0.5]
         score = log_likelihood(test_parameters)
         gauss_score = gauss_log_likelihood(gauss_test_parameters)
-        self.assertEqual(score, gauss_score)
+        self.assertAlmostEqual(score, gauss_score)
 
     def test_call_multiplicative_gaussian_log_likelihood_agrees_single(self):
         # Create an object with links to the model and time series
@@ -438,7 +438,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         multi_test_parameters = [2.0, 2.0, 2.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0]
         score = log_likelihood(test_parameters)
         multi_score = multi_log_likelihood(multi_test_parameters)
-        self.assertEqual(score, multi_score)
+        self.assertAlmostEqual(score, multi_score)
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -461,13 +461,13 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
         # Check that number of partials is correct
-        self.assertEqual(deriv.shape, (4,))
+        self.assertAlmostEqual(deriv.shape, (4,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], -2.055351334007383)
-        self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.5082610203777322)
-        self.assertEqual(deriv[3], -2.1759606944650822)
+        self.assertAlmostEqual(deriv[0], -2.055351334007383)
+        self.assertAlmostEqual(deriv[1], -1.0151215581116324)
+        self.assertAlmostEqual(deriv[2], -1.5082610203777322)
+        self.assertAlmostEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -490,13 +490,13 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
         # Check that number of partials is correct
-        self.assertEqual(deriv.shape, (4,))
+        self.assertAlmostEqual(deriv.shape, (4,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], -2.055351334007383)
-        self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.5082610203777322)
-        self.assertEqual(deriv[3], -2.1759606944650822)
+        self.assertAlmostEqual(deriv[0], -2.055351334007383)
+        self.assertAlmostEqual(deriv[1], -1.0151215581116324)
+        self.assertAlmostEqual(deriv[2], -1.5082610203777322)
+        self.assertAlmostEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -519,13 +519,13 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
         # Check that number of partials is correct
-        self.assertEqual(deriv.shape, (4,))
+        self.assertAlmostEqual(deriv.shape, (4,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], -2.0553513340073835)
-        self.assertEqual(deriv[1], -1.0151215581116324)
-        self.assertEqual(deriv[2], -1.5082610203777322)
-        self.assertEqual(deriv[3], -2.1759606944650822)
+        self.assertAlmostEqual(deriv[0], -2.0553513340073835)
+        self.assertAlmostEqual(deriv[1], -1.0151215581116324)
+        self.assertAlmostEqual(deriv[2], -1.5082610203777322)
+        self.assertAlmostEqual(deriv[3], -2.1759606944650822)
 
     def test_evaluateS1_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -541,24 +541,24 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         score, deriv = log_likelihood.evaluateS1(test_parameters)
 
         # Check that likelihood score agrees with call
-        self.assertEqual(score, log_likelihood(test_parameters))
+        self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
         # Check that number of partials is correct
-        self.assertEqual(deriv.shape, (12,))
+        self.assertAlmostEqual(deriv.shape, (12,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], 8.585990509232376)
-        self.assertEqual(deriv[1], -1.6726936107293917)
-        self.assertEqual(deriv[2], -0.6632862192355309)
-        self.assertEqual(deriv[3], 5.547071959874058)
-        self.assertEqual(deriv[4], -0.2868738955802226)
-        self.assertEqual(deriv[5], 0.1813851785335695)
-        self.assertEqual(deriv[6], 8.241803503682762)
-        self.assertEqual(deriv[7], -1.82731103999105)
-        self.assertEqual(deriv[8], 2.33264086991343)
-        self.assertEqual(deriv[9], 11.890409042744405)
-        self.assertEqual(deriv[10], -1.3181262877783717)
-        self.assertEqual(deriv[11], 1.3018716574264304)
+        self.assertAlmostEqual(deriv[0], 8.585990509232376)
+        self.assertAlmostEqual(deriv[1], -1.6726936107293917)
+        self.assertAlmostEqual(deriv[2], -0.6632862192355309)
+        self.assertAlmostEqual(deriv[3], 5.547071959874058)
+        self.assertAlmostEqual(deriv[4], -0.2868738955802226)
+        self.assertAlmostEqual(deriv[5], 0.1813851785335695)
+        self.assertAlmostEqual(deriv[6], 8.241803503682762)
+        self.assertAlmostEqual(deriv[7], -1.82731103999105)
+        self.assertAlmostEqual(deriv[8], 2.33264086991343)
+        self.assertAlmostEqual(deriv[9], 11.890409042744405)
+        self.assertAlmostEqual(deriv[10], -1.3181262877783717)
+        self.assertAlmostEqual(deriv[11], 1.3018716574264304)
 
     def test_evaluateS1_gaussian_log_likelihood_agrees_single(self):
         # Create an object with links to the model and time series
@@ -578,11 +578,11 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
             gauss_test_parameters)
 
         # Check that scores are the same
-        self.assertEqual(score, gauss_score)
+        self.assertAlmostEqual(score, gauss_score)
 
         # Check that partials for model params and sigma_base agree
-        self.assertEqual(deriv[0], gauss_deriv[0])
-        self.assertEqual(deriv[1], gauss_deriv[1])
+        self.assertAlmostEqual(deriv[0], gauss_deriv[0])
+        self.assertAlmostEqual(deriv[1], gauss_deriv[1])
 
     def test_evaluateS1_gaussian_log_likelihood_agrees_multi(self):
         # Create an object with links to the model and time series
@@ -603,15 +603,15 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
             gauss_test_parameters)
 
         # Check that scores are the same
-        self.assertEqual(score, gauss_score)
+        self.assertAlmostEqual(score, gauss_score)
 
         # Check that partials for model params and sigma_base agree
-        self.assertEqual(deriv[0], gauss_deriv[0])
-        self.assertEqual(deriv[1], gauss_deriv[1])
-        self.assertEqual(deriv[2], gauss_deriv[2])
-        self.assertEqual(deriv[3], gauss_deriv[3])
-        self.assertEqual(deriv[4], gauss_deriv[4])
-        self.assertEqual(deriv[5], gauss_deriv[5])
+        self.assertAlmostEqual(deriv[0], gauss_deriv[0])
+        self.assertAlmostEqual(deriv[1], gauss_deriv[1])
+        self.assertAlmostEqual(deriv[2], gauss_deriv[2])
+        self.assertAlmostEqual(deriv[3], gauss_deriv[3])
+        self.assertAlmostEqual(deriv[4], gauss_deriv[4])
+        self.assertAlmostEqual(deriv[5], gauss_deriv[5])
 
     def test_evaluateS1_finite_difference_single(self):
         # Create an object with links to the model and time series
@@ -773,7 +773,7 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -20.441037907121299)
+        self.assertAlmostEqual(score, -20.441037907121299)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -792,7 +792,7 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -20.441037907121299)
+        self.assertAlmostEqual(score, -20.441037907121299)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -811,7 +811,7 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -20.441037907121299)
+        self.assertAlmostEqual(score, -20.441037907121299)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -827,7 +827,7 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -75.443307614807225)
+        self.assertAlmostEqual(score, -75.443307614807225)
 
     def test_call_two_dim_array_multi_non_equal_priors(self):
         # Create an object with links to the model and time series
@@ -843,7 +843,7 @@ class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -71.62076263891457)
+        self.assertAlmostEqual(score, -71.62076263891457)
 
     def test_bad_constructor_single(self):
         # Create an object with links to the model and time series
