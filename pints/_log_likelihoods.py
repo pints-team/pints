@@ -239,12 +239,8 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
 class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates the log-likelihood for either a
-    :class:`pints.SingleOutputProblem` or a :class:`pints.MultiOutputProblem`
-    assuming that the error of the model predictions is a mixture of a
-    Gaussian base-level noise (constant variance
-    :math:`\sigma ^2_{\text{base}}`) and a Gaussian heteroscedastic noise
-    (variance scaling with magnitude of model predictions).
+    Calculates the log-likelihood assuming a mixed error model of a
+    Gaussian base-level noise and a Gaussian heteroscedastic noise.
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
     , the CombinedGaussianLogLikelihood assumes that the model predictions
