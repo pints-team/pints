@@ -237,14 +237,14 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
 
-class ConstantAndMultiplicativeGaussianLogLikelihood(
+class LinearHeteroscedasticGaussianLogLikelihood(
         pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood assuming a mixed error model of a
     Gaussian base-level noise and a Gaussian heteroscedastic noise.
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
-    , the ConstantAndMultiplicativeGaussianLogLikelihood assumes that the
+    , the LinearHeteroscedasticGaussianLogLikelihood assumes that the
     model predictions :math:`X` are Gaussian distributed according to
 
     .. math::
@@ -313,7 +313,7 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
     """
 
     def __init__(self, problem):
-        super(ConstantAndMultiplicativeGaussianLogLikelihood, self).__init__(
+        super(LinearHeteroscedasticGaussianLogLikelihood, self).__init__(
             problem)
 
         # Get number of times and number of noise parameters

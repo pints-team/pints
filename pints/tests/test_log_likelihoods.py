@@ -278,7 +278,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         self.assertEqual(score, -49.51182454195375)
 
 
-class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
+class TestLinearHeteroscedasticGaussianLogLikelihood(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -305,7 +305,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -323,7 +324,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -341,7 +343,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -356,7 +359,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [
@@ -372,7 +376,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, self.data_single)
 
         # Create CombinedGaussianLL and GaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
@@ -389,7 +394,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create CombinedGaussianLL and GaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
@@ -407,7 +413,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, self.data_single)
 
         # Create CombinedGaussianLL and MultplicativeGaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         multi_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
             problem)
 
@@ -426,7 +433,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create CombinedGaussianLL and MultplicativeGaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         multi_log_likelihood = pints.MultiplicativeGaussianLogLikelihood(
             problem)
 
@@ -449,7 +457,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -478,7 +487,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -507,7 +517,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [2.0, 0.5, 1.1, 1.0]
@@ -533,7 +544,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Evaluate likelihood for test parameters
         test_parameters = [
@@ -566,7 +578,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, self.data_single)
 
         # Create CombinedGaussianLL and GaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
@@ -590,7 +603,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create CombinedGaussianLL and GaussianLL
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
         gauss_log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Check that CombinedGaussianLL agrees with GaussianLoglikelihood when
@@ -619,7 +633,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, self.data_single)
 
         # Create log-likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Compute derivatives with evaluateS1
         test_parameters = np.array([2.0, 0.5, 1.1, 1.0])
@@ -656,7 +671,8 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log-likelihood
-        log_likelihood = pints.CombinedGaussianLogLikelihood(problem)
+        log_likelihood = pints.LinearHeteroscedasticGaussianLogLikelihood(
+            problem)
 
         # Compute derivatives with evaluateS1
         test_parameters = [
