@@ -237,14 +237,15 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
 
-class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
+class ConstantAndMultiplicativeGaussianLogLikelihood(
+        pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood assuming a mixed error model of a
     Gaussian base-level noise and a Gaussian heteroscedastic noise.
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
-    , the CombinedGaussianLogLikelihood assumes that the model predictions
-    :math:`X` are Gaussian distributed according to
+    , the ConstantAndMultiplicativeGaussianLogLikelihood assumes that the
+    model predictions :math:`X` are Gaussian distributed according to
 
     .. math::
         X(t| \theta , \sigma _{\text{base}}, \sigma _{\text{rel}}) =
@@ -312,7 +313,8 @@ class CombinedGaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(CombinedGaussianLogLikelihood, self).__init__(problem)
+        super(ConstantAndMultiplicativeGaussianLogLikelihood, self).__init__(
+            problem)
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
