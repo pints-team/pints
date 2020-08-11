@@ -278,7 +278,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         self.assertEqual(score, -49.51182454195375)
 
 
-class TestCombinedGaussianLogLikelihood(unittest.TestCase):
+class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
