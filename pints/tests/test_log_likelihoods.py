@@ -464,7 +464,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv.shape, (4,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], -2.0553513340073835)
+        self.assertEqual(deriv[0], -2.055351334007383)
         self.assertEqual(deriv[1], -1.0151215581116324)
         self.assertEqual(deriv[2], -1.5082610203777322)
         self.assertEqual(deriv[3], -2.1759606944650822)
@@ -493,7 +493,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv.shape, (4,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], -2.0553513340073835)
+        self.assertEqual(deriv[0], -2.055351334007383)
         self.assertEqual(deriv[1], -1.0151215581116324)
         self.assertEqual(deriv[2], -1.5082610203777322)
         self.assertEqual(deriv[3], -2.1759606944650822)
@@ -547,7 +547,7 @@ class TestCombinedGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(deriv.shape, (12,))
 
         # Check that partials are computed correctly
-        self.assertEqual(deriv[0], 8.585990509232374)
+        self.assertEqual(deriv[0], 8.585990509232376)
         self.assertEqual(deriv[1], -1.6726936107293917)
         self.assertEqual(deriv[2], -0.6632862192355309)
         self.assertEqual(deriv[3], 5.547071959874058)
