@@ -72,8 +72,5 @@ setup(
             'nbconvert',
             'traitlets',
         ],
-        'stan': [
-            'pystan',
-        ]
     },
 )

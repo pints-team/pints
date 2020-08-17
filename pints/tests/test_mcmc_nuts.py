@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the Hamiltonian MCMC routine.
-#
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
@@ -51,9 +49,7 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
@@ -103,9 +99,7 @@ class TestNutsMCMC(unittest.TestCase):
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
+        # Tests the parameter interface for this sampler.
         x0 = np.array([2, 2])
         mcmc = pints.NoUTurnMCMC(x0)
 

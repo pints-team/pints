@@ -17,6 +17,7 @@ interface, that can be used to sample from an unknown
     differential_evolution_mcmc
     dram_ac_mcmc
     dream_mcmc
+    dual_averaging
     emcee_hammer_mcmc
     haario_ac_mcmc
     haario_bardenet_ac_mcmc
@@ -32,4 +33,3 @@ interface, that can be used to sample from an unknown
     slice_rank_shrinking_mcmc
     slice_stepout_mcmc
     summary_mcmc
-    dual_averaging

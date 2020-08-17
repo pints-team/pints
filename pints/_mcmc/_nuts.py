@@ -12,7 +12,7 @@ import pints
 import numpy as np
 
 
-class NutsState:
+class NutsState(object):
     """
     Class to hold information about the current state of the NUTS hamiltonian
     integration path.
@@ -474,8 +474,8 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
 class NoUTurnMCMC(pints.SingleChainMCMC):
     r"""
 
-    Implements No U-Turn Sampler (NUTS) with dual averaging, as described in
-    Algorithm 6 in [1]_.
+    Implements the No U-Turn Sampler (NUTS) with dual averaging, as described
+    in Algorithm 6 in [1]_.
 
     Implements the multinomial sampling suggested in [2]_. Implements a mass
     matrix for the dynamics, which is detailed in [2]_. Both the step size and
