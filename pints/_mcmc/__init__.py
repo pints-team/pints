@@ -996,7 +996,6 @@ class MCMCController(object):
         return self._time
 
 
-
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 
