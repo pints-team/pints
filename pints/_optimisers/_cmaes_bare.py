@@ -55,9 +55,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
 
-        # Python logger
-        self._logger = logging.getLogger(__name__)
-
         # Number of iterations run
         self._iterations = 0
 
