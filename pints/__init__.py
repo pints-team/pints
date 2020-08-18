@@ -215,10 +215,9 @@ from ._mcmc._hamiltonian import HamiltonianMCMC
 
 if sys.hexversion >= 0x03030000:
     from ._mcmc._nuts import NoUTurnMCMC
-else:
-    print(
-        'WARNING: Pints No-U-Turn sampler unsupported for Python version < 3.3'
-    )
+else:   # pragma: no python 3 cover
+    import warnings
+    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
