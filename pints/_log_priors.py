@@ -957,10 +957,8 @@ class NormalLogPrior(GaussianLogPrior):
 
     def __init__(self, mean, standard_deviation):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.NormalLogPrior` is deprecated.'
             ' Please use `pints.GaussianLogPrior` instead.')
         super(NormalLogPrior, self).__init__(mean, standard_deviation)

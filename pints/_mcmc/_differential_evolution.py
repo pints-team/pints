@@ -9,7 +9,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import logging
+import warnings
 
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
@@ -54,9 +54,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Warn user against using too few chains
         if self._chains < 1.5 * self._n_parameters:
-            log = logging.getLogger(__name__)
-            log.warning('This method should be run with n_chains >= ' +
-                        '1.5 * n_parameters')
+            warnings.warn('This method should be run with n_chains >= '
+                          '1.5 * n_parameters')
 
         # Set initial state
         self._running = False

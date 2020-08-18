@@ -551,10 +551,8 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 
     def __init__(self, problem, sigma):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianKnownSigmaLogLikelihood` instead.')
         super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
@@ -777,10 +775,9 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
 
     def __init__(self, problem):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
+
