@@ -9,8 +9,11 @@
 import numpy as np
 
 
-class DualAveragingAdaption:
+class DualAveragingAdaption(object):
     r"""
+    Dual Averaging method to adaptively tune the step size and mass matrix of a
+    Hamiltonian Monte Carlo (HMC) routine (as used e.g. in NUTS).
+
     Implements a Dual Averaging scheme to adapt the step size ``epsilon``, as
     per [1]_ (section 3.2.1 and algorithm 6), and estimates the inverse mass
     matrix using the sample covariance of the accepted parameter, as suggested
@@ -51,20 +54,19 @@ class DualAveragingAdaption:
            adaptively setting path lengths in Hamiltonian Monte Carlo.
            Journal of Machine Learning Research, 15(1), 1593-1623.
 
-    .. [2] Betancourt, M. (2018). `A Conceptual Introduction to Hamiltonian
-           Monte Carlo`, https://arxiv.org/abs/1701.02434.
+    .. [2] Betancourt, M. (2018). A Conceptual Introduction to Hamiltonian
+           Monte Carlo. https://arxiv.org/abs/1701.02434.
 
-    Attributes
+    Parameters
     ----------
-
-    inv_mass_matrix: ndarray
-        inverse of the adapted mass matrix
-
-    mass_matrix: ndarray
-        the adapted mass matrix
-
-    epsilon: float
-        the adapted step size epsilon
+    num_warmup_steps
+        ???
+    target_accept_prob
+        ???
+    init_epsilon
+        An initial guess for the step size epsilon
+    init_inv_mass_matrix
+        An initial guess for the inverse adapted mass matrix
 
     """
 
@@ -84,7 +86,10 @@ class DualAveragingAdaption:
         self._kappa = 0.75
 
         # variables for dual averaging
-        self._epsilon = init_epsilon
+        self._epsilon = init_epsilon    # The adapted step size
+        self._mass_matrix = None        # The adapted mass matrix (set below)
+        self._inv_mass_matrix = None    # The inverse adapted mass matrix
+
         self._mu = np.log(10 * self._epsilon)
         self._log_epsilon_bar = np.log(1)
         self._h_bar = 0.0
@@ -125,9 +130,8 @@ class DualAveragingAdaption:
         self._h_bar = (1 - eta) * self._h_bar \
             + eta * (self._target_accept_prob - accept_prob)
 
-        log_epsilon = self._mu  \
-            - (np.sqrt(counter) / self._gamma) \
-            * self._h_bar
+        log_epsilon = (
+            self._mu - (np.sqrt(counter) / self._gamma) * self._h_bar)
 
         x_eta = counter**(-self._kappa)
         self._log_epsilon_bar = x_eta * log_epsilon + \
@@ -215,14 +219,13 @@ class DualAveragingAdaption:
         """
         Perform a single step of the adaption.
 
-        Arguments
-        ---------
-
+        Parameters
+        ----------
         x: ndarray
-            the next accepted mcmc parameter point
-
+            The next accepted mcmc parameter point.
         accept_prob: float
-            the acceptance probability of the last NUTS/HMC mcmc step
+            The acceptance probability of the last NUTS/HMC mcmc step.
+
         """
 
         if not self._adapting:
