@@ -347,10 +347,11 @@ To do this:
 - Make sure the version number has changed since the last release.
 - Use the [GitHub releases page](https://github.com/pints-team/pints/releases/new) to create a new release. Each release will create a tag in the git repository, which should have the format `v1.2.3`.
     - The first number is for big events, the second for regular releases (e.g. new features), the final for bugfixes and smaller improvements. This is subjective.
-    - Beyond that, there is no significance to these numbers (e.g. it doesn't matter if they're odd or even).
+    - Beyond that, there is no significance to these numbers (e.g. it doesn't matter if they're odd or even, `v0.9.9` is followed by `v0.9.10`).
 - Check what has changed since the last release, and write some release notes to summarise what's new.
 - Creating the new release in github **will automatically update PyPI**, so do this with care.
   - Keep in mind that PyPI version numbers are eternal: You cannot modify a release, only create a new one with a new version number.
+- Once the new release is done, create a PR to update the version number (final digit) to indicate that the code in the repo is no longer the version on PIP.
 
 
 ### Setuptools
