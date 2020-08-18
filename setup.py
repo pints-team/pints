@@ -74,5 +74,5 @@ setup(
             'traitlets',
         ],
     },
-    python_requires='>=3.5',
+    python_requires='==2.7, >=3.5',
 )
