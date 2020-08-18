@@ -53,6 +53,8 @@ Finally, if you really, really, _really_ love developing Pints, have a look at t
 To install Pints with all developer options, use:
 
 ```
+$ git clone https://github.com/pints-team/pints.git
+$ cd pints
 $ pip install -e .[dev,docs]
 ```
 
@@ -60,6 +62,8 @@ This will
 
 1. Install all the dependencies for Pints, including the ones for documentation (docs) and development (dev).
 2. Tell Python to use your local pints files when you use `import pints` anywhere on your system.
+
+You may also want to create a virtual environment first, using [virtualenv](https://docs.python.org/3/tutorial/venv.html) or [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 
 
 
@@ -332,6 +336,22 @@ Notebooks are tested daily.
 ### Version number
 
 A central version number is stored in `pints/version`.
+
+### New releases on PyPI (for `pip`)
+
+Occasionally, we'll make a new release for PINTS, and update the version on PyPI (which is where `pip` will download it from, for non-dev users).
+
+To do this:
+
+- Decide a new release is necessary, discuss it in the group.
+- Make sure the version number has changed since the last release.
+- Use the [GitHub releases page](https://github.com/pints-team/pints/releases/new) to create a new release. Each release will create a tag in the git repository, which should have the format `v1.2.3`.
+    - The first number is for big events, the second for regular releases (e.g. new features), the final for bugfixes and smaller improvements. This is subjective.
+    - Beyond that, there is no significance to these numbers (e.g. it doesn't matter if they're odd or even).
+- Check what has changed since the last release, and write some release notes to summarise what's new.
+- Creating the new release in github **will automatically update PyPI**, so do this with care.
+  - Keep in mind that PyPI version numbers are eternal: You cannot modify a release, only create a new one with a new version number.
+
 
 ### Setuptools
 
