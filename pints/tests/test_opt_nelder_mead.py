@@ -218,6 +218,4 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
     unittest.main()
