@@ -351,16 +351,19 @@ class Logger(object):
                 # Write data
                 for row in rows:
                     line = []
-                    i = iter(row)
+                    column = iter(row)
                     for width, dtype, f1, f2 in self._field_formats:
-                        if dtype == _FLOAT:
-                            x = '{:.17e}'.format(next(i))
+                        v = next(column)
+                        if v is None:
+                            x = ''
+                        elif dtype == _FLOAT:
+                            x = '{:.17e}'.format(v)
                         elif dtype == _TIME:
-                            x = str(next(i))
+                            x = str(v)
                         elif dtype == _TEXT:
-                            x = '"' + str(next(i)) + '"'
+                            x = '"' + str(v) + '"'
                         else:
-                            x = str(int(next(i)))
+                            x = str(int(v))
                         line.append(x)
                     f.write(','.join(line) + '\n')
 
