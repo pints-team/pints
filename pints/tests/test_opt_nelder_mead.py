@@ -56,8 +56,12 @@ class TestNelderMead(unittest.TestCase):
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
-        with self.assertLogs(level='WARN'):
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             pints.OptimisationController(r, x, boundaries=b, method=method)
+            self.assertEqual(len(w), 1)
+            self.assertIn('does not support boundaries', str(w[-1].message))
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
