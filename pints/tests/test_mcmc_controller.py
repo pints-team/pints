@@ -571,6 +571,10 @@ class TestMCMCController(unittest.TestCase):
         self.assertGreater(mcmc.time(), 0)
         self.assertGreater(t_upper, mcmc.time())
 
+        # Tets number of evaluations is a realistic number (should be 30 for
+        # a simple method)
+        self.assertEqual(mcmc.n_evaluations(), 30)
+
 
 class TestMCMCControllerLogging(unittest.TestCase):
     """
