@@ -30,13 +30,15 @@ def _load_version_int():
             version = f.read().strip().split(',')
         major, minor, revision = [int(x) for x in version]
         return major, minor, revision
-    except Exception as e:
+    except Exception as e:      # pragma: no cover
         raise RuntimeError('Unable to read version number (' + str(e) + ').')
 
 __version_int__ = _load_version_int()
 __version__ = '.'.join([str(x) for x in __version_int__])
-if sys.version_info[0] < 3:
-    del(x)  # Before Python3, list comprehension iterators leaked
+if sys.version_info[0] < 3:     # pragma: no python 3 cover
+    # Before Python3, list comprehension iterators leaked, which would have
+    # created a global ``pints.x`` at this point.
+    del(x)
 
 #
 # Expose pints version
@@ -169,6 +171,7 @@ from ._optimisers import (
     TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
+from ._optimisers._cmaes_bare import BareCMAES
 from ._optimisers._gradient_descent import GradientDescent
 from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
@@ -182,7 +185,6 @@ from ._optimisers._xnes import XNES
 from ._diagnostics import (
     effective_sample_size,
     rhat,
-    rhat_all_params,
 )
 
 

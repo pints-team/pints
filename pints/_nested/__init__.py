@@ -307,10 +307,13 @@ class NestedController(object):
                 raise ValueError(
                     'Given method must extend pints.NestedSampler.'
                 )
-
         self._sampler = method(log_prior=self._log_prior)
+
         # Check if sensitivities are required
         self._needs_sensitivities = self._sampler.needs_sensitivities()
+
+        # Performance metrics
+        self._time = None
 
     def active_points(self):
         """
@@ -384,8 +387,6 @@ class NestedController(object):
         # Start logging
         self._logging = self._log_to_screen or self._log_filename
         if self._logging:
-            # Create timer
-            self._timer = pints.Timer()
 
             if self._log_to_screen:
                 # Show current settings
@@ -527,7 +528,11 @@ class NestedController(object):
         # Set parallel
         self._evaluator = self._initialise_evaluator(f)
 
+        # Set number of active points
         self._n_active_points = self._sampler.n_active_points()
+
+        # Start timing
+        self._timer = pints.Timer()
 
         # Set up progress reporting
         self._next_message = 0
@@ -649,6 +654,9 @@ class NestedController(object):
         n = self._posterior_samples
         self._m_posterior_samples = self.sample_from_posterior(n)
 
+        # Stop timer
+        self._time = self._timer.time()
+
         return self._m_posterior_samples
 
     def sample_from_posterior(self, posterior_samples):
@@ -746,6 +754,13 @@ class NestedController(object):
             raise ValueError(
                 'Number of posterior samples must be greater than zero.')
         self._posterior_samples = posterior_samples
+
+    def time(self):
+        """
+        Returns the time needed for the last run, in seconds, or ``None`` if
+        the controller hasn't run yet.
+        """
+        return self._time
 
     def _update_logger(self):
         """

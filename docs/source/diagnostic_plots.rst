@@ -11,6 +11,7 @@ Plotting functions:
 
 - :func:`function`
 - :func:`function_between_points`
+- :func:`surface`
 
 Diagnosing MCMC results:
 
@@ -26,6 +27,8 @@ Functions
 .. autofunction:: function
 
 .. autofunction:: function_between_points
+
+.. autofunction:: surface
 
 MCMC Diagnostics
 ----------------

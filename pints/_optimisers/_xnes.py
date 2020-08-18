@@ -58,7 +58,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Ready for tell now
         self._ready_for_tell = True
 
-        # Create new samples
+        # Create new samples (normalised, and user values)
         self._zs = np.array([np.random.normal(0, 1, self._n_parameters)
                              for i in range(self._population_size)])
         self._xs = np.array([self._mu + np.dot(self._A, self._zs[i])

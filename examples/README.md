@@ -7,6 +7,12 @@ These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
 
+## Before you get started
+- [Using Python](using-python.md)
+- [Installing PINTS](../README.md#installing-pints)
+- [An introduction to Bayesian inference and optimisation](stats/beginners-tutorial.ipynb)
+
+
 ## Getting started
 - [Optimisation: First example](./optimisation/first-example.ipynb)
 - [Sampling: First example](./sampling/first-example.ipynb)
@@ -16,7 +22,6 @@ relevant code.
 
 
 ## Digging deeper
-
 - [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 
@@ -25,6 +30,7 @@ relevant code.
 
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
+- [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
 - [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
@@ -37,6 +43,8 @@ relevant code.
 - [Convenience methods fmin() and curve\_fit()](./optimisation/convenience.ipynb)
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
+- [Spotting unidentifiable parameters with MCMC](./optimisation/spotting-unidentifiable-parameters.ipynb)
+- [Visualising a 2d error surface](./plotting/optimisation-2d-surface.ipynb)
 
 
 ## Sampling
