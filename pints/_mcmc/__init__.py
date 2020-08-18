@@ -977,7 +977,7 @@ class MCMCController(object):
             self._parallel = False
             self._n_workers = 1
 
-    def number_evaluations(self):
+    def n_evaluations(self):
         """
         Returns the number of evaluations performed during the last run, or
         ``None`` if the controller hasn't ran yet.
