@@ -52,7 +52,6 @@ out4 = (
 )
 
 
-
 class TestLogger(unittest.TestCase):
     """
     Tests the Logger class.
