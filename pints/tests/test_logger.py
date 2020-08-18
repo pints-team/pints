@@ -50,13 +50,20 @@ out4 = (
     '40,1.23456788999999989e+00,4.23456789098765400e-123,-12,10000,' +
     '12345.6,"no"\n'
 )
+out5 = (
+    '#  Lat.    Val  Count Time     Q  \n' +
+    '1   4       12  10      0:00.0 yes\n' +
+    '2   3.234   230 100     0:07.9 yes\n' +
+    '   -2.2346      1000              \n' +
+    '40  1.2346 -12  10000 205:45.6 no \n'
+)
 
 
 class TestLogger(unittest.TestCase):
     """
     Tests the Logger class.
     """
-    def test_logger(self):
+    def test_all_simultaneously(self):
         # Normal use, all data at once
         with StreamCapture() as c:
             # Test logger with no fields
@@ -86,6 +93,7 @@ class TestLogger(unittest.TestCase):
         self.assertRaises(RuntimeError, log.set_filename, 'a')
         self.assertRaises(RuntimeError, log.set_stream, sys.stdout)
 
+    def test_partial_row_not_shown(self):
         # Normal use, all data at once, plus extra bit
         with StreamCapture() as c:
             log = pints.Logger()
@@ -101,6 +109,7 @@ class TestLogger(unittest.TestCase):
             log.log(1, 2, 3)    # not enough for more output!
         self.assertOutput(expected=out1, returned=c.text())
 
+    def test_row_by_row(self):
         # Normal use, data row by row
         with StreamCapture() as c:
             log = pints.Logger()
@@ -118,6 +127,7 @@ class TestLogger(unittest.TestCase):
                 log.log(*data[i * n:(i + 1) * n])
         self.assertOutput(expected=out1, returned=c.text())
 
+    def test_field_by_field(self):
         # Normal use, data field by field
         with StreamCapture() as c:
             log = pints.Logger()
@@ -134,6 +144,7 @@ class TestLogger(unittest.TestCase):
                 log.log(d)
         self.assertOutput(expected=out1, returned=c.text())
 
+    def test_various_chunks(self):
         # Log in different sized chunks
         order = [3, 2, 1, 1, 4, 6, 3, 2, 6]
         self.assertEqual(sum(order), len(data))
@@ -154,6 +165,7 @@ class TestLogger(unittest.TestCase):
                 offset += n
         self.assertOutput(expected=out1, returned=c.text())
 
+    def test_file_only_fields_hidden_on_screen(self):
         # Log with file-only fields, and shorter name
         with StreamCapture() as c:
             log = pints.Logger()
@@ -167,6 +179,7 @@ class TestLogger(unittest.TestCase):
             log.log(*data)
         self.assertOutput(expected=out2, returned=c.text())
 
+    def test_file_writing_txt(self):
         # Log with file-only fields, and shorter name, and file
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
@@ -186,6 +199,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out2, returned=c.text())
         self.assertOutput(expected=out3, returned=out)
 
+    def test_file_writing_csv(self):
         # Repeat in csv mode
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
@@ -205,6 +219,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected=out2, returned=c.text())
         self.assertOutput(expected=out4, returned=out)
 
+    def test_file_writing_no_screen_csv(self):
         # Repeat without screen output
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
@@ -225,6 +240,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected='', returned=c.text())
         self.assertOutput(expected=out4, returned=out)
 
+    def test_file_writing_no_screen_txt(self):
         # Repeat without screen output, outside of csv mode
         with StreamCapture() as c:
             with TemporaryDirectory() as d:
@@ -259,6 +275,7 @@ class TestLogger(unittest.TestCase):
         self.assertOutput(expected='', returned=c.text())
         self.assertOutput(expected=out3, returned=out)
 
+    def test_no_output(self):
         # Repeat without any output
         with StreamCapture() as c:
             log = pints.Logger()
