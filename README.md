@@ -60,12 +60,14 @@ $ pip install --upgrade pip
 Then navigate to the path where you downloaded PINTS to, and install both PINTS and its dependencies by typing:
 
 ```
-$ pip install .
+$ pip install pints
 ```
 
 To install PINTS as a [developer](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md), use
 
 ```
+$ git clone https://github.com/pints-team/pints.git
+$ cd pints
 $ pip install -e .[dev,docs]
 ```
 
