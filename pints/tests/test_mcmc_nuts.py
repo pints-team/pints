@@ -98,6 +98,7 @@ class TestNutsMCMC(unittest.TestCase):
         chain = np.array(chain)
         self.assertGreater(chain.shape[0], 1)
         self.assertEqual(chain.shape[1], len(x0))
+        self.assertGreater(mcmc.divergent_iterations().shape[0], 0)
 
     def test_logging(self):
         # Test logging includes name and custom fields.
