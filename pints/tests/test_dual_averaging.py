@@ -27,7 +27,8 @@ class TestDualAveraging(unittest.TestCase):
                                                init_epsilon,
                                                init_inv_mass_matrix)
 
-        # should adjust the input 2.0 to 1.0, which is the target accept probability
+        # should adjust the input 2.0 to 1.0, which is the target accept
+        # probability
         averager.adapt_epsilon(2.0)
         self.assertEqual(averager._h_bar, 0.0)
 
@@ -39,10 +40,12 @@ class TestDualAveraging(unittest.TestCase):
 
         with StreamCapture() as c:
             with self.assertRaises(AttributeError):
-                averager = pints.DualAveragingAdaption(num_warmup_steps,
-                                                       target_accept_prob,
-                                                       init_epsilon,
-                                                       init_inv_mass_matrix)
+                pints.DualAveragingAdaption(
+                    num_warmup_steps,
+                    target_accept_prob,
+                    init_epsilon,
+                    init_inv_mass_matrix
+                )
             self.assertIn("WARNING", c.text())
 
     def test_dual_averaging(self):
@@ -53,7 +56,8 @@ class TestDualAveraging(unittest.TestCase):
         init_inv_mass_matrix = np.array([[1, 0], [0, 1]])
         target_mass_matrix = np.array([[10, 0], [0, 10]])
 
-        # raises an exception if the requested number of warm-up steps is too low
+        # raises an exception if the requested number of warm-up steps is
+        # too low
         with self.assertRaises(ValueError):
             averager = pints.DualAveragingAdaption(10,
                                                    target_accept_prob,
@@ -94,7 +98,8 @@ class TestDualAveraging(unittest.TestCase):
             if i >= averager._initial_window:
                 stored_x[:, i - averager._initial_window] = x
 
-        # before the end of the window the mass matrix should not have been updated
+        # before the end of the window the mass matrix should not have been
+        # updated
         np.testing.assert_array_equal(
             averager.get_inv_mass_matrix(), init_inv_mass_matrix)
         x = np.random.multivariate_normal(np.zeros(2) + 123,
