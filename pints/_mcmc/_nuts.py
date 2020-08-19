@@ -322,6 +322,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
+        print(hamiltonian_dash)
         if np.isnan(hamiltonian_dash):
             comparison = float('-inf')
         else:
