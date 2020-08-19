@@ -569,7 +569,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # use inverse transform sampling
         us = np.random.uniform(0, 1, n)
-        return np.array([self.icdf(u) for u in us])
+        samples = np.array([self.icdf(u) for u in us])
+
+        # Samples have shape (n,). Outputs needs to be (n, 1)
+        return np.expand_dims(a=samples, axis=1)
 
 
 class InverseGammaLogPrior(pints.LogPrior):
