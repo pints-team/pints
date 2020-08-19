@@ -48,6 +48,57 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertGreater(chain.shape[0], 1)
         self.assertEqual(chain.shape[1], len(x0))
 
+    def test_method_with_dense_mass(self):
+
+        # Create log pdf
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
+
+        # Create mcmc
+        x0 = np.array([2, 2])
+        sigma = [[3, 0], [0, 3]]
+        mcmc = pints.NoUTurnMCMC(x0, sigma)
+        mcmc.set_use_dense_mass_matrix(True)
+
+        # Perform short run
+        chain = []
+        for i in range(2 * mcmc.number_adaption_steps()):
+            x = mcmc.ask()
+            fx, gr = log_pdf.evaluateS1(x)
+            sample = mcmc.tell((fx, gr))
+            if sample is not None:
+                chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
+        chain = np.array(chain)
+        self.assertGreater(chain.shape[0], 1)
+        self.assertEqual(chain.shape[1], len(x0))
+
+    def test_method_near_boundary(self):
+
+        # Create log pdf
+        log_pdf = pints.UniformLogPrior([0, 0], [1, 1])
+
+        # Create mcmc
+        x0 = np.array([0.999, 0.999])
+        sigma = [[1, 0], [0, 1]]
+        mcmc = pints.NoUTurnMCMC(x0, sigma)
+
+        # Perform short run
+        chain = []
+        for i in range(2 * mcmc.number_adaption_steps()):
+            x = mcmc.ask()
+            fx, gr = log_pdf.evaluateS1(x)
+            sample = mcmc.tell((fx, gr))
+            if sample is not None:
+                chain.append(sample)
+            if np.all(sample == x):
+                self.assertEqual(mcmc.current_log_pdf(), fx)
+
+        chain = np.array(chain)
+        self.assertGreater(chain.shape[0], 1)
+        self.assertEqual(chain.shape[1], len(x0))
+
     def test_logging(self):
         # Test logging includes name and custom fields.
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
