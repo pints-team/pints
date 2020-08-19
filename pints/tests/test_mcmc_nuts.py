@@ -33,12 +33,17 @@ class TestNutsMCMC(unittest.TestCase):
         # This method needs sensitivities
         self.assertTrue(mcmc.needs_sensitivities())
 
-        # Perform short run
+        # Perform short run, test logging while we are at it
+        logger = pints.Logger()
+        logger.set_stream(None)
+        mcmc._log_init(logger)
         chain = []
         for i in range(2 * mcmc.number_adaption_steps()):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
             sample = mcmc.tell((fx, gr))
+            mcmc._log_write(logger)
+
             if sample is not None:
                 chain.append(sample)
             if np.all(sample == x):
