@@ -237,14 +237,14 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
 
-class LinearHeteroscedasticGaussianLogLikelihood(
+class ConstantAndMultiplicativeGaussianLogLikelihood(
         pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood assuming a mixed error model of a
     Gaussian base-level noise and a Gaussian heteroscedastic noise.
 
     For a time series model :math:`f(t| \theta)` with parameters :math:`\theta`
-    , the LinearHeteroscedasticGaussianLogLikelihood assumes that the
+    , the ConstantAndMultiplicativeGaussianLogLikelihood assumes that the
     model predictions :math:`X` are Gaussian distributed according to
 
     .. math::
@@ -262,7 +262,8 @@ class LinearHeteroscedasticGaussianLogLikelihood(
     exponential power :math:`\eta`; and a scale relative to the model output
     :math:`\sigma _{\text{rel}}`.
 
-    The resulting log-likelihood of a combined Gaussian error model is
+    The resulting log-likelihood of a constant and multiplicative Gaussian
+    error model is
 
     .. math::
         \log L(\theta, \sigma _{\text{base}}, \eta ,
@@ -313,7 +314,7 @@ class LinearHeteroscedasticGaussianLogLikelihood(
     """
 
     def __init__(self, problem):
-        super(LinearHeteroscedasticGaussianLogLikelihood, self).__init__(
+        super(ConstantAndMultiplicativeGaussianLogLikelihood, self).__init__(
             problem)
 
         # Get number of times and number of noise parameters
@@ -329,10 +330,10 @@ class LinearHeteroscedasticGaussianLogLikelihood(
 
     def __call__(self, parameters):
         # Get parameters from input
-        noise_parameters = parameters[-self._np:]
-        sigma_base = np.asarray(noise_parameters[:self._no])
-        eta = np.asarray(noise_parameters[self._no:2 * self._no])
-        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
+        noise_parameters = np.asarray(parameters[-self._np:])
+        sigma_base = noise_parameters[:self._no]
+        eta = noise_parameters[self._no:2 * self._no]
+        sigma_rel = noise_parameters[2 * self._no:]
 
         # Evaluate noise-free model (n_times, n_outputs)
         function_values = self._problem.evaluate(parameters[:-self._np])
@@ -397,10 +398,10 @@ class LinearHeteroscedasticGaussianLogLikelihood(
         """
         # Get parameters from input
         # Shape sigma_base, eta, sigma_rel = (n_outputs,)
-        noise_parameters = parameters[-self._np:]
-        sigma_base = np.asarray(noise_parameters[:self._no])
-        eta = np.asarray(noise_parameters[self._no:2 * self._no])
-        sigma_rel = np.asarray(noise_parameters[2 * self._no:])
+        noise_parameters = np.asarray(parameters[-self._np:])
+        sigma_base = noise_parameters[:self._no]
+        eta = noise_parameters[self._no:2 * self._no]
+        sigma_rel = noise_parameters[-self._no:]
 
         # Evaluate noise-free model, and get residuals
         # y shape = (n_times,) or (n_times, n_outputs)
