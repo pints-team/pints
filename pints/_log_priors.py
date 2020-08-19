@@ -571,7 +571,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
         us = np.random.uniform(0, 1, n)
         samples = np.array([self.icdf(u) for u in us])
 
-        # Samples have shape (n,). Outputs needs to be (n, 1)
+        # Samples have shape (n,). Output needs to be (n, 1)
         return np.expand_dims(a=samples, axis=1)
 
 
