@@ -505,12 +505,14 @@ class TestPrior(unittest.TestCase):
         v_samples = p1.sample(n)
         self.assertEqual(len(v_samples), n)
         self.assertTrue(np.all(v_samples > 0))
+        self.assertTrue(v_samples.shape, (n, 1))
 
         # test medians
         p1 = pints.HalfCauchyLogPrior(-3, 10)
         n = 1000000
         v_samples = p1.sample(n)
         self.assertTrue(np.abs(np.median(v_samples) - 10.45) < 0.1)
+        self.assertTrue(v_samples.shape, (n, 1))
 
     def test_inverse_gamma_prior(self):
 
