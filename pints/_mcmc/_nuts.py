@@ -326,7 +326,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
         if np.isnan(hamiltonian_dash):
             comparison = float('-inf')
-        else:
+        else:  # pragma: no cover
             comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
