@@ -79,6 +79,39 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertGreater(chain.shape[0], 1)
         self.assertEqual(chain.shape[1], len(x0))
 
+    def test_model_that_gives_nan(self):
+        # This model will return a nan in the gradient evaluation, which
+        # originally tripped up the find_reasonable_epsilon function in nuts.
+        # Run it for a bit so that we get coverage on the if statement!
+
+        model = pints.toy.LogisticModel()
+        real_parameters = model.suggested_parameters()
+        times = model.suggested_parameters()
+        org_values = model.simulate(real_parameters, times)
+        np.random.seed(1)
+        noise = 0.2
+        values = org_values + np.random.normal(0, noise, org_values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise)
+
+        log_prior = pints.UniformLogPrior(
+            [0.01, 40],
+            [0.2, 60]
+        )
+
+        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
+
+        xs = [real_parameters * 1.1]
+        nuts_mcmc = pints.MCMCController(log_posterior,
+                                         len(xs), xs,
+                                         method=pints.NoUTurnMCMC)
+
+        nuts_mcmc.set_max_iterations(10)
+        nuts_mcmc.set_log_to_screen(False)
+        nuts_chains = nuts_mcmc.run()
+
+        self.assertFalse(np.isnan(np.sum(nuts_chains)))
+
     def test_method_near_boundary(self):
 
         # Create log pdf

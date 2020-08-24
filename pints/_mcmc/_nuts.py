@@ -310,7 +310,10 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     L_dash, grad_L_dash, theta_dash, r_dash = \
         yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
     hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
-    comparison = hamiltonian_dash - hamiltonian
+    if np.isnan(hamiltonian_dash):
+        comparison = float('-inf')
+    else:
+        comparison = hamiltonian_dash - hamiltonian
 
     # determine whether we are doubling or halving
     alpha = 2 * int(comparison > np.log(0.5)) - 1
@@ -321,7 +324,10 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
-        comparison = hamiltonian_dash - hamiltonian
+        if np.isnan(hamiltonian_dash):
+            comparison = float('-inf')
+        else:
+            comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
 
