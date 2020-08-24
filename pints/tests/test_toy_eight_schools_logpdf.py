@@ -31,6 +31,15 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         val = f([1, 0.5, 0.4, 1, 1, 1, 1, 1, 1, 1])
         self.assertAlmostEqual(val, -38.24061255483484, places=6)
 
+        # Default settings with non-ones input
+        f1, dp = f.evaluateS1([n + 1 for n in range(10)])
+        self.assertEqual(f1, f([n + 1 for n in range(10)]))
+        self.assertAlmostEqual(f1, -83.0819420614)
+        self.assertEqual(len(dp), 10)
+        self.assertEqual(dp[0], 10.96)
+        self.assertAlmostEqual(dp[1], 31.3620689655, places=6)
+        self.assertEqual(dp[2], -7.0 / 18)
+
         # non-centered paramerisation
         f = pints.toy.EightSchoolsLogPDF(centered=False)
         f1, dp = f.evaluateS1(np.ones(10))

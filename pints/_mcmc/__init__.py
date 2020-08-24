@@ -367,6 +367,7 @@ class MCMCController(object):
         self._evaluations_in_memory = False
         self._samples = None
         self._evaluations = None
+        self._time = None
 
         # Writing chains and evaluations to disk
         self._chain_files = None
@@ -765,12 +766,15 @@ class MCMCController(object):
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
 
+        # Finished running
+        self._time = timer.time()
+
         # Log final state and show halt message
         if logging:
             logger.log(iteration, n_evaluations)
             for sampler in self._samplers:
                 sampler._log_write(logger)
-            logger.log(timer.time())
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
@@ -975,6 +979,13 @@ class MCMCController(object):
         else:
             self._parallel = False
             self._n_workers = 1
+
+    def time(self):
+        """
+        Returns the time needed for the last run, in seconds, or ``None`` if
+        the controller hasn't run yet.
+        """
+        return self._time
 
 
 class MCMCSampling(MCMCController):

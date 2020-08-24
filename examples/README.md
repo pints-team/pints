@@ -7,6 +7,12 @@ These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
 
+## Before you get started
+- [Using Python](using-python.md)
+- [Installing PINTS](../README.md#installing-pints)
+- [An introduction to Bayesian inference and optimisation](stats/beginners-tutorial.ipynb)
+
+
 ## Getting started
 - [Optimisation: First example](./optimisation/first-example.ipynb)
 - [Sampling: First example](./sampling/first-example.ipynb)
@@ -15,10 +21,17 @@ relevant code.
 - [Writing a custom LogPrior](./stats/custom-prior.ipynb)
 
 
+## Digging deeper
+- [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
+- [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
+
+
 ## Optimisation
 
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
+- [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
+- [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
 - [XNES](./optimisation/xnes.ipynb)
@@ -27,17 +40,18 @@ relevant code.
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
 
 ### Further optimisation
-- [Ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 - [Convenience methods fmin() and curve\_fit()](./optimisation/convenience.ipynb)
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
-- [Transformed parameter space](./optimisation/transformed-parameters.ipynb)
+- [Spotting unidentifiable parameters with MCMC](./optimisation/spotting-unidentifiable-parameters.ipynb)
+- [Visualising a 2d error surface](./plotting/optimisation-2d-surface.ipynb)
 
 
 ## Sampling
 
 ### MCMC without gradients
 - [Differential Evolution MCMC](./sampling/differential-evolution-mcmc.ipynb)
+- [DRAM ACMC](./sampling/adaptive-covariance-dram.ipynb)
 - [DREAM MCMC](./sampling/dream-mcmc.ipynb)
 - [Emcee Hammer](./sampling/emcee-hammer.ipynb)
 - [Haario Adaptive Covariance MCMC](./sampling/adaptive-covariance-haario.ipynb)
@@ -64,9 +78,11 @@ relevant code.
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
+- [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling

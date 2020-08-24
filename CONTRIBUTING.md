@@ -324,7 +324,7 @@ Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) 
 
 All example notebooks should be listed in [examples/README.md](https://github.com/pints-team/pints/examples/README.md). Please follow the (naming and writing) style of existing notebooks where possible.
 
-Where possible, notebooks are tested daily. A list of slow notebooks (which time-out and fail tests) is maintained in `.slow-books`, these notebooks will be excluded from daily testing.
+Notebooks are tested daily.
 
 
 ## Infrastructure
@@ -354,30 +354,17 @@ It's always worth using an up-to-date version of pip. On older systems especiall
 $ pip install --upgrade pip
 ```
 
-### Travis CI
+### GitHub Actions
 
-All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on https://travis-ci.org/pints-team/pints.
-
-Configuration files:
-
-```
-.travis.yaml
-```
-
-Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks. Notebooks listed in `.slow-books` are excluded from these tests.
-
-### Appveyor
-
-Windows testing is done using [appveyor](http://appveyor.com/), tests are published on https://ci.appveyor.com/project/MichaelClerx/pints.
+All committed code is tested using [GitHub Actions](https://help.github.com/en/actions), tests are published on https://github.com/pints-team/pints/actions.
 
 Configuration files:
 
 ```
-.appveyor.yml
+.github/workflows/*.yml
 ```
 
-See ([here](https://www.appveyor.com/docs/appveyor-yml/)) for the syntax.
-
+Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks.
 
 ### Codecov
 

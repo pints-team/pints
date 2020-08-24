@@ -1,0 +1,42 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+
+  build-and-test:
+    name: coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+          architecture: x64
+
+      - name: install pints
+        run: |
+          python --version
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install .
+          python -m pip install coverage codecov
+
+      - name: run coverage
+        run: |
+          coverage run run-tests.py --unit
+
+      - name: codecov
+        if: success()
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          codecov

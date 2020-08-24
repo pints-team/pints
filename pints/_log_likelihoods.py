@@ -14,26 +14,45 @@ import scipy.special
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming AR1 noise model
+    Calculates a log-likelihood assuming AR(1) (autoregressive order 1) errors.
+
+    In this error model, the ith error term
+    :math:`\epsilon_i = x_i - f_i(\theta)` is assumed to obey the following
+    relationship.
 
     .. math::
-        \log{L(\theta, \sigma'|\boldsymbol{x})} =
-            -\frac{N}{2}\log{2\pi}
-            -N\log{\sigma'}
-            -\frac{1}{2\sigma'^2}
-                \sum_{i=2}^N{(\epsilon_i x_i - \rho \epsilon_{i-1} )^2}
+        \epsilon_i = \rho \epsilon_{i-1} + \nu_i
 
-    where
+    where :math:`\nu_i` is IID Gaussian white noise with variance
+    :math:`\sigma^2 (1-\rho^2)`. Therefore, this likelihood is appropriate when
+    error terms are autocorrelated, and the parameter :math:`\rho`
+    determines the level of autocorrelation.
+
+    This model is parameterised as such because it leads to a simple marginal
+    distribution :math:`\epsilon_i \sim N(0, \sigma)`.
+
+    This class treats the error at the first time point (i=1) as fixed, which
+    simplifies the calculations. For sufficiently long time-series, this
+    conditioning on the first observation has at most a small effect on the
+    likelihood. Further details as well as the alternative unconditional
+    likelihood are available in [1]_ , chapter 5.2.
+
+    Noting that
 
     .. math::
-        \epsilon_i = x_i - f_i(\theta)
+        \nu_i = \epsilon_i - \rho \epsilon_{i-1} \sim N(0, \sigma^2 (1-\rho^2))
 
-    and
+    we thus calculate the likelihood as the product of normal likelihoods from
+    :math:`i=2,...,N`, for a time series with N time points.
 
     .. math::
-        \sigma' = \sigma \sqrt{1-\rho^2}
+        L(\theta, \sigma, \rho|\boldsymbol{x}) =
+            -\frac{N-1}{2} \log(2\pi)
+            - (N-1) \log(\sigma')
+            - \frac{1}{2\sigma'^2} \sum_{i=2}^N (\epsilon_i
+                                 - \rho \epsilon_{i-1})^2
 
-    .
+    for :math:`\sigma' = \sigma \sqrt{1-\rho^2}`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -44,6 +63,10 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         single-output problem two parameters are added (rho, sigma),
         for a multi-output problem 2 * ``n_outputs`` parameters are added.
 
+    References
+    ----------
+    .. [1] Hamilton, James D. Time series analysis. Vol. 2. New Jersey:
+           Princeton, 1994.
     """
 
     def __init__(self, problem):
@@ -73,29 +96,41 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
 
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming ARMA(1,1) noise model.
+    Calculates a log-likelihood assuming ARMA(1,1) errors.
+
+    The ARMA(1,1) model has 1 autoregressive term and 1 moving average term. It
+    assumes that the errors :math:`\epsilon_i = x_i - f_i(\theta)` obey
 
     .. math::
-        \log{L(\theta, \sigma|\boldsymbol{x})} =
-            -\frac{N}{2}\log{2\pi}
-            -N\log{\sigma}
-            -\frac{1}{2\sigma^2}
-                \sum_{i=3}^N{(\nu_i - \phi \nu_{i-1})^2}
+        \epsilon_i = \rho \epsilon_{i-1} + \nu_i + \phi \nu_{i-1}
 
-    where
+    where :math:`\nu_i` is IID Gaussian white noise with standard deviation
+    :math:`\sigma'`.
+
+    .. math::
+        \sigma' = \sigma \sqrt{\frac{1 - \rho^2}{1 + 2  \phi  \rho + \phi^2}}
+
+    This model is parameterised as such because it leads to a simple marginal
+    distribution :math:`\epsilon_i \sim N(0, \sigma)`.
+
+    Due to the complexity of the exact ARMA(1,1) likelihood, this class
+    calculates a likelihood conditioned on initial values. This topic is
+    discussed further in [2]_ , chapter 5.6. Thus, for a time series defined at
+    points :math:`i=1,...,N`, summation begins at :math:`i=3`, and the
+    conditional log-likelihood is
+
+    .. math::
+        L(\theta, \sigma, \rho, \phi|\boldsymbol{x}) =
+            -\frac{N-2}{2} \log(2\pi)
+            - (N-2) \log(\sigma')
+            - \frac{1}{2\sigma'^2} \sum_{i=3}^N (\nu_i)^2
+
+    where the values of :math:`\nu_i` are calculated from the observations
+    according to
 
     .. math::
         \nu_i = \epsilon_i - \rho \epsilon_{i-1}
-
-    and
-
-    .. math::
-        \epsilon_i = x_i - f_i(\theta)
-
-    and
-
-    .. math::
-        \sigma = \sigma\sqrt{\frac{1-\rho^2}{1 + 2\phi\rho + \phi^2}}`
+        - \phi (\epsilon_{i-1} - \rho \epsilon_{i-2})
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -105,6 +140,11 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem three parameters are added (rho, phi, sigma),
         for a multi-output problem 3 * ``n_outputs`` parameters are added.
+
+    References
+    ----------
+    .. [2] Hamilton, James D. Time series analysis. Vol. 2. New Jersey:
+           Princeton, 1994.
     """
 
     def __init__(self, problem):
@@ -135,6 +175,66 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         autocorr_error = v[1:] - phi * v[:-1]
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
+
+
+class CauchyLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent Cauchy-distributed noise
+    at each time point, and adds one parameter: the scale (``sigma``).
+
+    For a noise characterised by ``sigma``, the log-likelihood is of the form:
+
+    .. math::
+        \log{L(\theta, \sigma)} =
+              -N\log \pi - N\log \sigma
+              -\sum_{i=1}^N\log(1 +
+            \frac{x_i - f(\theta)}{\sigma}^2)
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem one parameter is added ``sigma``, where
+        ``sigma`` is scale, for a multi-output problem ``n_outputs``
+        parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(CauchyLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem (one for each output)
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate
+        self._n = len(self._times)
+        self._n_log_pi = self._n * np.log(np.pi)
+
+    def __call__(self, x):
+        # For multiparameter problems the parameters are stored as
+        # (model_params_1, model_params_2, ..., model_params_k,
+        # sigma_1, sigma_2,...)
+        n = self._n
+        m = self._no
+
+        # problem parameters
+        problem_parameters = x[:-m]
+        error = self._values - self._problem.evaluate(problem_parameters)
+
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+
+        # Calculate
+        return np.sum(
+            - self._n_log_pi
+            - n * np.log(sigma)
+            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
+        )
 
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
@@ -275,66 +375,6 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             self._n_minus_1_over_2 * np.log(sse) +
             self._log_gamma +
             log_temp
-        )
-
-
-class CauchyLogLikelihood(pints.ProblemLogLikelihood):
-    r"""
-    Calculates a log-likelihood assuming independent Cauchy-distributed noise
-    at each time point, and adds one parameter: the scale (``sigma``).
-
-    For a noise characterised by ``sigma``, the log-likelihood is of the form:
-
-    .. math::
-        \log{L(\theta, \sigma)} =
-              -N\log \pi - N\log \sigma
-              -\sum_{i=1}^N\log(1 +
-            \frac{x_i - f(\theta)}{\sigma}^2)
-
-    Extends :class:`ProblemLogLikelihood`.
-
-    Parameters
-    ----------
-    problem
-        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem one parameter is added ``sigma``, where
-        ``sigma`` is scale, for a multi-output problem ``n_outputs``
-        parameters are added.
-    """
-
-    def __init__(self, problem):
-        super(CauchyLogLikelihood, self).__init__(problem)
-
-        # Get number of times, number of outputs
-        self._nt = len(self._times)
-        self._no = problem.n_outputs()
-
-        # Add parameters to problem (one for each output)
-        self._n_parameters = problem.n_parameters() + self._no
-
-        # Pre-calculate
-        self._n = len(self._times)
-        self._n_log_pi = self._n * np.log(np.pi)
-
-    def __call__(self, x):
-        # For multiparameter problems the parameters are stored as
-        # (model_params_1, model_params_2, ..., model_params_k,
-        # sigma_1, sigma_2,...)
-        n = self._n
-        m = self._no
-
-        # problem parameters
-        problem_parameters = x[:-m]
-        error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
-
-        # Calculate
-        return np.sum(
-            - self._n_log_pi
-            - n * np.log(sigma)
-            - np.sum(np.log(1 + (error / sigma)**2), axis=0)
         )
 
 
@@ -522,36 +562,54 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
 
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
-    Calculates a log-likelihood assuming heteroscedastic Gaussian errors, with
-    the magnitude of the error variance scaling with the problem output.
+    Calculates the log-likelihood for a time-series model assuming a
+    heteroscedastic Gaussian error of the model predictions
+    :math:`f(t, \theta )`.
 
-    For each output in the problem, this likelihood introduces two new scalar
-    parameters: an exponential power ``eta`` and a scale ``sigma``.
+    This likelihood introduces two new scalar parameters for each dimension of
+    the model output: an exponential power :math:`\eta` and a scale
+    :math:`\sigma`.
 
-    This likelihood is applicable to a model given by
-
-    .. math::
-        X(t) = f(t; \theta) + f(t; \theta)^\eta v(t)
-
-    where v(t) is iid Gaussian:
-
-    .. math::
-        v(t) \sim \text{ iid } N(0, \sigma)
-
-    Note that the scalar parameter ``eta`` controls the exponential dependence
-    of the noise on the function output, while the scalar parameter ``sigma``
-    provides a baseline level of the noise standard deviation. This model leads
-    to a log likelihood of
+    A heteroscedascic Gaussian noise model assumes that the observable
+    :math:`X` is Gaussian distributed around the model predictions
+    :math:`f(t, \theta )` with a standard deviation that scales with
+    :math:`f(t, \theta )`
 
     .. math::
-        \log{L(\theta, \sigma, \eta | \boldsymbol{x})} =
+        X(t) = f(t, \theta) + \sigma f(t, \theta)^\eta v(t)
+
+    where :math:`v(t)` is a standard i.i.d. Gaussian random variable
+
+    .. math::
+        v(t) \sim \mathcal{N}(0, 1).
+
+    This model leads to a log likelihood of the model parameters of
+
+    .. math::
+        \log{L(\theta, \eta , \sigma | X^{\text{obs}})} =
             -\frac{n_t}{2} \log{2 \pi}
             -\sum_{i=1}^{n_t}{\log{f(t_i, \theta)^\eta \sigma}}
-            -\frac{1}{2}\sum_{i=1}^{n_t}
-                \frac{(X(t_i) - f(t_i, \theta))^2}
-                {(f(t_i, \theta)^\eta \sigma)^2}
+            -\frac{1}{2}\sum_{i=1}^{n_t}\left(
+                \frac{X^{\text{obs}}_{i} - f(t_i, \theta)}
+                {f(t_i, \theta)^\eta \sigma}\right) ^2,
 
-    where ``n_t`` is the number of time points in the series.
+    where :math:`n_t` is the number of time points in the series, and
+    :math:`X^{\text{obs}}_{i}` the measurement at time :math:`t_i`.
+
+    For a system with :math:`n_o` outputs, this becomes
+
+    .. math::
+        \log{L(\theta, \eta , \sigma | X^{\text{obs}})} =
+            -\frac{n_t n_o}{2} \log{2 \pi}
+            -\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}{\log{f_j(t_i, \theta)^\eta
+            \sigma _j}}
+            -\frac{1}{2}\sum ^{n_o}_{j=1}\sum_{i=1}^{n_t}\left(
+                \frac{X^{\text{obs}}_{ij} - f_j(t_i, \theta)}
+                {f_j(t_i, \theta)^\eta \sigma _j}\right) ^2,
+
+    where :math:`n_o` is the number of outputs of the model, and
+    :math:`X^{\text{obs}}_{ij}` the measurement of output :math:`j` at
+    time point :math:`t_i`.
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -559,8 +617,9 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     ----------
     ``problem``
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
-        single-output problem two parameters are added (``eta``, ``sigma``),
-        for a multi-output problem 2 times ``n_outputs`` parameters are added.
+        single-output problem two parameters are added (:math:`\eta`,
+        :math:`\sigma`), for a multi-output problem 2 times :math:`n_o`
+        parameters are added.
     """
 
     def __init__(self, problem):
@@ -568,27 +627,31 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Get number of times and number of outputs
         self._nt = len(self._times)
-        self._no = problem.n_outputs()
+        no = problem.n_outputs()
+        self._np = 2 * no  # 2 parameters added per output
 
         # Add parameters to problem
-        self._n_parameters = problem.n_parameters() + 2 * self._no
+        self._n_parameters = problem.n_parameters() + self._np
 
         # Pre-calculate the constant part of the likelihood
-        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+        self._logn = 0.5 * self._nt * no * np.log(2 * np.pi)
 
     def __call__(self, x):
-        m = 2 * self._no
-        noise_parameters = x[-m:]
+        # Get noise parameters
+        noise_parameters = x[-self._np:]
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
-        function_values = self._problem.evaluate(x[:-m])
 
+        # Evaluate function (n_times, n_output)
+        function_values = self._problem.evaluate(x[:-self._np])
+
+        # Compute likelihood
         log_likelihood = \
-            np.sum(-self._logn
-                   - np.sum(np.log(function_values**eta * sigma), axis=0)
-                   - 0.5 / sigma**2
-                   * np.sum((self._values - function_values)**2
-                            / function_values ** (2 * eta), axis=0))
+            -self._logn - np.sum(
+                np.sum(np.log(function_values**eta * sigma), axis=0)
+                + 0.5 / sigma**2 * np.sum(
+                    (self._values - function_values)**2
+                    / function_values ** (2 * eta), axis=0))
 
         return log_likelihood
 
@@ -633,8 +696,8 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         """
         See :meth:`LogPDF.evaluateS1()`.
 
-        *This method only works if the underlying :class:`LogPDF` object
-        implements the optional method :meth:`LogPDF.evaluateS1()`!*
+        This method only works if the underlying :class:`LogPDF` object
+        implements the optional method :meth:`LogPDF.evaluateS1()`!
         """
         a, b = self._log_likelihood.evaluateS1(x)
         return self._f * a, self._f * np.asarray(b)

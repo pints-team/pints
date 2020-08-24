@@ -26,6 +26,10 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     criteria etc. Users who don't need this functionality can use optimisers
     via the :class:`OptimisationController` class instead.
 
+    All PINTS optimisers are _minimisers_. To maximise a function simply pass
+    in the negative of its evaluations to :meth:`tell()` (this is handled
+    automatically by the :class:`OptimisationController`).
+
     All optimisers implement the :class:`pints.Loggable` and
     :class:`pints.TunableMethod` interfaces.
 
@@ -153,6 +157,13 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
+    def needs_sensitivities(self):
+        """
+        Returns ``True`` if this methods needs sensitivities to be passed in to
+        ``tell`` along with the evaluated error.
+        """
+        return False
+
     def running(self):
         """
         Returns ``True`` if this an optimisation is in progress.
@@ -171,6 +182,11 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the optimiser algorithm, using the evaluations
         ``fx`` of the points ``x`` previously specified by ``ask``.
+
+        For methods that require sensitivities (see
+        :meth:`needs_sensitivities`), ``fx`` should be a tuple
+        ``(objective, sensitivities)``, containing the values returned by
+        :meth:`pints.ErrorMeasure.evaluateS1()`.
         """
         raise NotImplementedError
 
@@ -322,6 +338,9 @@ class OptimisationController(object):
             raise ValueError('Method must be subclass of pints.Optimiser.')
         self._optimiser = method(x0, sigma0, boundaries)
 
+        # Check if sensitivities are required
+        self._needs_sensitivities = self._optimiser.needs_sensitivities()
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -419,6 +438,11 @@ class OptimisationController(object):
         # information)
         unchanged_iterations = 0
 
+        # Choose method to evaluate
+        f = self._function
+        if self._needs_sensitivities:
+            f = f.evaluateS1
+
         # Create evaluator object
         if self._parallel:
             # Get number of workers
@@ -428,10 +452,9 @@ class OptimisationController(object):
             # particles!
             if isinstance(self._optimiser, PopulationBasedOptimiser):
                 n_workers = min(n_workers, self._optimiser.population_size())
-            evaluator = pints.ParallelEvaluator(
-                self._function, n_workers=n_workers)
+            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
         else:
-            evaluator = pints.SequentialEvaluator(self._function)
+            evaluator = pints.SequentialEvaluator(f)
 
         # Keep track of best position and score
         fbest = float('inf')
@@ -579,20 +602,21 @@ class OptimisationController(object):
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
-        time_taken = timer.time()
+
+        # Stop timer
+        self._time = timer.time()
 
         # Log final values and show halt message
         if logging:
             logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
-            logger.log(time_taken)
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
         # Save post-run statistics
         self._evaluations = evaluations
         self._iterations = iteration
-        self._time = time_taken
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
@@ -721,7 +745,7 @@ class OptimisationController(object):
     def time(self):
         """
         Returns the time needed for the last run, in seconds, or ``None`` if
-        the controller hasn't ran yet.
+        the controller hasn't run yet.
         """
         return self._time
 
@@ -860,6 +884,13 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
 
+    Returns
+    -------
+    xbest : numpy array
+        The best parameter set obtained.
+    fbest : float
+        The corresponding score.
+
     Example
     -------
     ::
@@ -915,8 +946,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     opt.set_log_to_screen(True if verbose else False)
 
     # Run and return
-    popt, fopt = opt.run()
-    return popt
+    return opt.run()
 
 
 class _CurveFitError(pints.ErrorMeasure):
