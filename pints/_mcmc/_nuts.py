@@ -19,10 +19,9 @@ class NutsState(object):
 
     NUTS builds up the integration path implicitly via recursion up a binary
     tree, this class handles combining states from different subtrees (see
-    `update`).
-
-    NUTS integrates both backwards ("minus") and forwards ("plus") in time, so
-    this state must keep track of both end points of the integration path.
+    `update`). The algorithm integrates both backwards ("minus") and forwards
+    ("plus") in time, so this state must keep track of both end points of the
+    integration path.
 
     Attributes
     ----------
