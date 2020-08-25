@@ -67,6 +67,7 @@ relevant code.
 - [Hamiltonian MCMC](./sampling/hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling/mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling/monomial-gamma-hmc.ipynb)
+- [No-U-Turn MCMC](./sampling/nuts-mcmc.ipynb)
 - [Relativistic MCMC](./sampling/relativistic-mcmc.ipynb)
 - [Slice Sampling: Rank Shrinking MCMC](./sampling/slice-rank-shrinking-mcmc.ipynb)
 
@@ -122,7 +123,6 @@ relevant code.
 - [Rosenbrock function](./toy/distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
-
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
