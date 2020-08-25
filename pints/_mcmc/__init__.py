@@ -1001,10 +1001,8 @@ class MCMCSampling(MCMCController):
 
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
         super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)

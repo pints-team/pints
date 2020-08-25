@@ -756,10 +756,8 @@ class Optimisation(OptimisationController):
     def __init__(
             self, function, x0, sigma0=None, boundaries=None, method=None):
         # Deprecated on 2019-02-12
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
