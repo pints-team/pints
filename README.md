@@ -57,7 +57,7 @@ These can easily be installed using `pip`. To do this, first make sure you have 
 $ pip install --upgrade pip
 ```
 
-Then navigate to the path where you downloaded PINTS to, and install both PINTS and its dependencies by typing:
+Then install both PINTS and its dependencies by typing:
 
 ```
 $ pip install pints
