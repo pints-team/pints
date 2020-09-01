@@ -61,14 +61,6 @@ class TestAbstractClassTransformation(unittest.TestCase):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
 
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
-
     def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t.n_parameters(), 4)
@@ -150,14 +142,6 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
 
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
-
     def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t.n_parameters(), 4)
@@ -220,14 +204,6 @@ class TestComposedTransformation(unittest.TestCase):
     def test_to_model(self):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
 
     def test_n_parameters(self):
         # Test n_parameters
@@ -299,14 +275,6 @@ class TestIdentityTransformation(unittest.TestCase):
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
 
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
-
     def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t1.n_parameters(), 1)
@@ -366,14 +334,6 @@ class TestLogitTransformation(unittest.TestCase):
             calc_pi = self.t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
 
     def test_n_parameters(self):
         # Test n_parameters
@@ -440,14 +400,6 @@ class TestLogTransformation(unittest.TestCase):
             calc_pi = self.t1.to_model(xi)
             self.assertAlmostEqual(calc_pi[0], pi)
         self.assertTrue(np.allclose(self.t4.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t4.multiple_to_model(xs), ps))
 
     def test_n_parameters(self):
         # Test n_parameters
@@ -532,13 +484,6 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(self.t2.to_model(self.x), self.p))
         self.assertTrue(np.allclose(self.t2b.to_model(self.x), self.p))
 
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        ps = [self.p, self.p]
-        xs = [self.x, self.x]
-        self.assertTrue(np.allclose(self.t2.multiple_to_model(xs), ps))
-        self.assertTrue(np.allclose(self.t2b.multiple_to_model(xs), ps))
-
     def test_n_parameters(self):
         # Test n_parameters
         self.assertEqual(self.t1.n_parameters(), 1)
@@ -599,14 +544,6 @@ class TestScalingTransformation(unittest.TestCase):
     def test_to_model(self):
         # Test inverse transform
         self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
-
-    def test_multiple_to_model(self):
-        # Test many inverse transform
-        p = self.p
-        x = self.x
-        ps = [p, p, p, p]
-        xs = [x, x, x, x]
-        self.assertTrue(np.allclose(self.t.multiple_to_model(xs), ps))
 
     def test_n_parameters(self):
         # Test n_parameters
