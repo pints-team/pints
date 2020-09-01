@@ -607,6 +607,8 @@ class MCMCController(object):
             logger.add_time('Time m:s')
 
         # Pre-allocate arrays for chain storage
+        # Note: we store the inverse transformed (to model space) parameters
+        # only if transform is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -672,11 +674,18 @@ class MCMCController(object):
                     y = self._samplers[i].tell(fx)
 
                     if y is not None:
+                        # Inverse transform to model space if transform is
+                        # provided
+                        if self._transform:
+                            y_store = self._transform.to_model(y)
+                        else:
+                            y_store = y
+
                         # Store sample in memory
                         if self._chains_in_memory:
-                            samples[i][n_samples[i]] = y
+                            samples[i][n_samples[i]] = y_store
                         else:
-                            samples[i] = y
+                            samples[i] = y_store
 
                         # Update current evaluations
                         if store_evaluations:
@@ -723,11 +732,19 @@ class MCMCController(object):
                 intermediate_step = ys is None
 
                 if not intermediate_step:
+                    # Inverse transform to model space if transform is provided
+                    if self._transform:
+                        ys_store = np.zeros(ys.shape)
+                        for i, y in enumerate(ys):
+                            ys_store[i] = self._transform.to_model(y)
+                    else:
+                        ys_store = ys
+
                     # Store samples in memory
                     if self._chains_in_memory:
-                        samples[:, iteration] = ys
+                        samples[:, iteration] = ys_store
                     else:
-                        samples = ys
+                        samples = ys_store
 
                     # Update current evaluations
                     if store_evaluations:
@@ -773,17 +790,10 @@ class MCMCController(object):
             # Write samples to disk
             if self._chains_in_memory:
                 for i, chain_logger in enumerate(chain_loggers):
-                    if self._transform:
-                        chain_logger.log(*self._transform.to_model(
-                            samples[i][iteration]))
-                    else:
-                        chain_logger.log(*samples[i][iteration])
+                    chain_logger.log(*samples[i][iteration])
             else:
                 for i, chain_logger in enumerate(chain_loggers):
-                    if self._transform:
-                        chain_logger.log(*self._transform.to_model(samples[i]))
-                    else:
-                        chain_logger.log(*samples[i])
+                    chain_logger.log(*samples[i])
 
             # Show progress
             if logging and iteration >= next_message:
@@ -824,17 +834,6 @@ class MCMCController(object):
             self._evaluations = evaluations
 
         if self._chains_in_memory:
-
-            # Inverse transform to model space if transform is provided
-            if self._transform:
-                n_c, n_s, n_p = samples.shape
-                samples_user = np.zeros((n_c, n_s, n_p))
-                for c in range(n_c):
-                    samples_user[c, :, :] = \
-                        self._transform.multiple_to_model(samples[c, :, :])
-                samples = samples_user
-                del(samples_user)
-
             # Store generated chains in memory
             self._samples = samples
 
