@@ -221,7 +221,7 @@ class Transformation(object):
         """
         Transforms a series of parameter vectors ``qs`` from the search space
         to the model space. ``qs`` must be provided in the shape
-        (``n_vectors``, ``n_parameters``).
+        ``(n_vectors, n_parameters)``.
         """
         qs = np.asarray(qs)
         ps = np.zeros(qs.shape)
@@ -271,7 +271,7 @@ class ElementWiseTransformation(Transformation):
 class ComposedTransformation(Transformation):
     r"""
     N-dimensional :class:`Transformation` composed of one or more other
-    :math:`N_i`-dimensional ``Transformation``, such that
+    :math:`N_i`-dimensional ``Transformations``, such that
     :math:`\sum _i N_i = N`. The evaluation and transformation of the composed
     transformations assume the input transformations are all independent from
     each other.
@@ -694,7 +694,7 @@ class LogTransformation(ElementWiseTransformation):
 
 class RectangularBoundariesTransformation(ElementWiseTransformation):
     r"""
-    A generalised version of logit transformation for the model parameters,
+    A generalised version of the logit transformation for the model parameters,
     which transform an interval or rectangular boundaries :math:`[a, b)` to
     all real number:
 
