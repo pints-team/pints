@@ -75,8 +75,8 @@ class Transformation(object):
 
         References
         ----------
-        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
-               Erik Jorgensen and Asger Roer Pedersen,
+        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data.
+               Erik Jorgensen and Asger Roer Pedersen.
                http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
@@ -124,8 +124,8 @@ class Transformation(object):
 
         References
         ----------
-        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data
-               Erik Jorgensen and Asger Roer Pedersen,
+        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data.
+               Erik Jorgensen and Asger Roer Pedersen.
                http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
@@ -188,7 +188,7 @@ class Transformation(object):
         return np.log(np.abs(np.linalg.det(self.jacobian(q))))
 
     def log_jacobian_det_S1(self, q):
-        """
+        r"""
         Computes the logarithm of the absolute value of the determinant of the
         Jacobian, and returns the result plus the partial derivatives of the
         result with respect to the parameters.
@@ -199,15 +199,35 @@ class Transformation(object):
         Note that the derivative returned is of the log of the determinant of
         the Jacobian, so ``S' = d/dq log(|det(J(q))|)``, evaluated at input.
 
+        The absolute value of the determinant of the Jacobian is provided by
+        :meth:`Transformation.log_jacobian_det`. The default implementation
+        calculates the derivatives of the log-determinant using [1]_
+
+        .. math::
+            \frac{d}{dq} \log(|det(\mathbf{J})|) =
+                trace(\mathbf{J}^{-1} \frac{d}{dq} \mathbf{J}),
+
+        where the derivative of the Jacobian matrix is provided by
+        :meth:`Transformation.jacobian_S1` and the matrix inversion is
+        numerically calculated. If there is an analytic expression for the
+        specific transformation, a reimplementation of this method may be
+        preferred.
+
         *This is an optional method.* It is needed when transformation is
         performed on :class:`LogPDF` and that requires ``evaluateS1()``.
+
+        References
+        ----------
+        .. [1] The Matrix Cookbook.
+               Kaare Brandt Petersen and Michael Syskind Pedersen.
+               2012.
         """
-        # Directly calculate the derivative using jacobian_S1()
+        # Directly calculate the derivative using jacobian_S1(), we have
         #
         # d/dq log(|det(J(q))|) = 1/|det(J(q))| * sign(det(J(q)))
         #                         * d/dq det(J(q))
         #
-        # The second term is given by Eq. 46 in the Matrix Cookbook (2012)
+        # The last term is given by Eq. 46 in the Matrix Cookbook (2012)
         # http://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
         #
         # d/dq det(J(q)) = det(J) Tr(J^{-1} d/dq J)
