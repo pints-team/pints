@@ -174,10 +174,15 @@ class Transformation(object):
         Jacobian matrix of the transformation :meth:`Transformation.jacobian`
         calculated at the parameter vector ``q`` in the search space.
 
-        *This is an optional method.* It is needed when transformation is
-        performed on :class:`LogPDF` and/or that requires ``evaluateS1()``;
-        e.g. not necessary if it's used for :class:`ErrorMeasure` without
-        :meth:`ErrorMeasure.evaluateS1()`.
+        The default implementation numerically calculates the determinant of
+        the full matrix. If there is an analytic expression for the specific
+        transformation, a reimplementation of this method may be preferred.
+
+        *This is an optional method that only works if the optional method
+        :meth:`Transformation.jacobian` is implemented.* It is needed when
+        transformation is performed on :class:`LogPDF` and/or that requires
+        ``evaluateS1()``; e.g. not necessary if it's used for
+        :class:`ErrorMeasure` without :meth:`ErrorMeasure.evaluateS1()`.
         """
         return np.log(np.abs(np.linalg.det(self.jacobian(q))))
 
