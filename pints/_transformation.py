@@ -279,6 +279,8 @@ class ElementWiseTransformation(Transformation):
 
     where :math:`x_i` denotes the :math:`i^{\text{th}}` element of the vector
     :math:`\boldsymbol{x}`.
+
+    Extends :class:`Transformation`.
     """
 
 
