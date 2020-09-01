@@ -166,6 +166,13 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         self.assertAlmostEqual(calc_val, self.log_j_det)
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
+
 
 class TestComposedTransformation(unittest.TestCase):
     # Test ComposedTransformation class
@@ -244,6 +251,13 @@ class TestComposedTransformation(unittest.TestCase):
         _, t_elem_deriv = t_elem.log_jacobian_det_S1(self.x)
         self.assertTrue(np.allclose(t_deriv, t_elem_deriv))
 
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
+
 
 class TestIdentityTransformation(unittest.TestCase):
     # Test IdentityTransformation class
@@ -299,6 +313,13 @@ class TestIdentityTransformation(unittest.TestCase):
         calc_val, calc_deriv = self.t4.log_jacobian_det_S1(self.x)
         self.assertEqual(calc_val, self.log_j_det)
         self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
+
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t4.to_model(self.t4.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
 
 
 class TestLogitTransformation(unittest.TestCase):
@@ -367,6 +388,13 @@ class TestLogitTransformation(unittest.TestCase):
         self.assertTrue(np.isnan(self.t1.to_search(2.)))
         self.assertTrue(np.isinf(self.t1.to_search(1.)))
 
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t4.to_model(self.t4.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
+
 
 class TestLogTransformation(unittest.TestCase):
     # Test LogTransformation class
@@ -431,6 +459,13 @@ class TestLogTransformation(unittest.TestCase):
         # Test invalid inputs
         self.assertTrue(np.isnan(self.t1.to_search(-1.)))
         self.assertTrue(np.isinf(self.t1.to_search(0)))
+
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t4.to_model(self.t4.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
 
 
 class TestRectangularBoundariesTransformation(unittest.TestCase):
@@ -520,6 +555,17 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
         self.assertAlmostEqual(calc_val, self.log_j_det)
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t2.to_model(self.t2.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t2.to_search(self.t2.to_model(self.x))))
+        self.assertTrue(
+            np.allclose(self.p, self.t2b.to_model(self.t2b.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t2b.to_search(self.t2b.to_model(self.x))))
+
 
 class TestScalingTransformation(unittest.TestCase):
     # Test ScalingTransformation class
@@ -568,6 +614,13 @@ class TestScalingTransformation(unittest.TestCase):
         calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
         self.assertEqual(calc_val, self.log_j_det)
         self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
+
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
 
 
 class TestTransformedWrappers(unittest.TestCase):
