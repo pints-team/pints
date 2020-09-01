@@ -217,18 +217,6 @@ class Transformation(object):
             out_S1[i] = np.trace(np.matmul(np.linalg.pinv(jac), jac_S1_i))
         return self.log_jacobian_det(q), out_S1
 
-    def multiple_to_model(self, qs):
-        """
-        Transforms a series of parameter vectors ``qs`` from the search space
-        to the model space. ``qs`` must be provided in the shape
-        ``(n_vectors, n_parameters)``.
-        """
-        qs = np.asarray(qs)
-        ps = np.zeros(qs.shape)
-        for i, q in enumerate(qs):
-            ps[i, :] = self.to_model(q)
-        return ps
-
     def n_parameters(self):
         """
         Returns the dimension of the parameter space this transformation is
@@ -355,18 +343,6 @@ class ComposedTransformation(Transformation):
                 o[lo:hi, lo:hi] = jac_S1_i[:, :]
                 output_S1[lo + i, :, :] = o
         return self.jacobian(q), output_S1
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        output = np.zeros(qs.shape)
-        lo = hi = 0
-        for transform in self._transforms:
-            lo = hi
-            hi += transform.n_parameters()
-            output[:, lo:hi] = np.asarray(
-                transform.multiple_to_model(qs[:, lo:hi]))
-        return output
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
@@ -512,10 +488,6 @@ class IdentityTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
 
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        return np.asarray(qs)
-
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
         return pints.vector(q)
@@ -594,11 +566,6 @@ class LogitTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
 
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return expit(qs)
-
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
         q = pints.vector(q)
@@ -675,11 +642,6 @@ class LogTransformation(ElementWiseTransformation):
     def n_parameters(self):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return np.exp(qs)
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
@@ -798,11 +760,6 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
 
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return (self._b - self._a) * expit(qs) + self._a
-
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
         q = pints.vector(q)
@@ -851,11 +808,6 @@ class ScalingTransformation(ElementWiseTransformation):
     def n_parameters(self):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
-
-    def multiple_to_model(self, qs):
-        """ See :meth:`Transformation.multiple_to_model()`. """
-        qs = np.asarray(qs)
-        return self.inv_s * qs
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
