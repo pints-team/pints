@@ -481,9 +481,9 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
 
 class IdentityTransformation(ElementWiseTransformation):
     """
-    Identity transformation does nothing to the input parameters, i.e. the
-    search space under this transformation is the same as the model space.
-    And its Jacobian matrix is the identity matrix.
+    :class`Transformation` that returns the input (untransformed) parameters,
+    i.e. the search space under this transformation is the same as the model
+    space. And its Jacobian matrix is the identity matrix.
 
     Extends :class:`ElementWiseTransformation`.
 
