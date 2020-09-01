@@ -48,7 +48,7 @@ class ToyModel(object):
     """
     def suggested_parameters(self):
         """
-        Returns an numpy array of the parameter values that are representative
+        Returns an NumPy array of the parameter values that are representative
         of the model.
 
         For example, these parameters might reproduce a particular result that
@@ -58,7 +58,7 @@ class ToyModel(object):
 
     def suggested_times(self):
         """
-        Returns an numpy array of time points that is representative of the
+        Returns an NumPy array of time points that is representative of the
         model
         """
         raise NotImplementedError

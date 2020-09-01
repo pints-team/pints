@@ -267,12 +267,12 @@ def acorr(x, max_lag):
     This function uses the same procedure as ``matplotlib.pyplot.acorr``, but
     it just calculates the autocorrelation without plotting anything.
 
-    Returns the autocorrelation as a numpy array.
+    Returns the autocorrelation as a NumPy array.
 
     Parameters
     ----------
     x
-        A 1d numpy array containing the time series for which to calculate
+        A 1d NumPy array containing the time series for which to calculate
         autocorrelation.
     max_lag
         An int specifying the highest lag to consider.
@@ -296,7 +296,7 @@ def calculate_residuals(parameters, problem, thinning=None):
     Either a single set of parameters or a chain of MCMC samples can be
     provided.
 
-    The residuals are returned as a 3-dimensional numpy array with shape
+    The residuals are returned as a 3-dimensional NumPy array with shape
     ``(n_samples, n_outputs, n_times)``.
 
     Parameters
