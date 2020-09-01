@@ -527,7 +527,9 @@ class IdentityTransformation(ElementWiseTransformation):
 
 class LogitTransformation(ElementWiseTransformation):
     r"""
-    Logit (or log-odds) transformation of the model parameters:
+    Logit (or log-odds) transformation of the model parameters.
+
+    The transformation is given by
 
     .. math::
         q = \text{logit}(p) = \log(\frac{p}{1 - p}),
@@ -609,6 +611,8 @@ class LogTransformation(ElementWiseTransformation):
     r"""
     Logarithm transformation of the model parameters:
 
+    The transformation is given by
+
     .. math::
         q = \log(p),
 
@@ -686,7 +690,9 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
     r"""
     A generalised version of the logit transformation for the model parameters,
     which transform an interval or rectangular boundaries :math:`[a, b)` to
-    all real number:
+    all real number.
+
+    The transformation is given by
 
     .. math::
         q = f(p) = \text{logit}\left(\frac{p - a}{b - a}\right)
