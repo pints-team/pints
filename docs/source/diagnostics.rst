@@ -14,6 +14,7 @@ Overview:
 
 .. autofunction:: rhat
 
-.. autofunction:: effective_sample_size
+.. autofunction:: rhat_all_params
 
+.. autofunction:: effective_sample_size
 
