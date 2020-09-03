@@ -507,6 +507,10 @@ class IdentityTransformation(Transformation):
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
 
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return True
+
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
         return np.eye(self._n_parameters)
@@ -576,6 +580,10 @@ class LogitTransformation(Transformation):
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
+
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return True
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
@@ -655,6 +663,10 @@ class LogTransformation(Transformation):
     """
     def __init__(self, n_parameters):
         self._n_parameters = n_parameters
+
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return True
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
@@ -773,6 +785,10 @@ class RectangularBoundariesTransformation(Transformation):
         self._n_parameters = boundaries.n_parameters()
         del(boundaries)
 
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return True
+
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
         q = pints.vector(q)
@@ -833,6 +849,10 @@ class ScalingTransformation(Transformation):
         self.s = pints.vector(scalings)
         self.inv_s = 1. / self.s
         self._n_parameters = len(self.s)
+
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return True
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
