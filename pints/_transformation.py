@@ -331,6 +331,10 @@ class ComposedTransformation(Transformation):
         # Store
         self._transforms = transforms
 
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return self._elementwise
+
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
         if self._elementwise:
@@ -400,10 +404,6 @@ class ComposedTransformation(Transformation):
     def n_parameters(self):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
-
-    def elementwise(self):
-        """ See :meth:`Transformation.elementwise()`. """
-        return self._elementwise
 
     def _elementwise_jacobian(self, q):
         """
