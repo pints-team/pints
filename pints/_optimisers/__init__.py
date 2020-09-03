@@ -610,20 +610,21 @@ class OptimisationController(object):
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
-        time_taken = timer.time()
+
+        # Stop timer
+        self._time = timer.time()
 
         # Log final values and show halt message
         if logging:
             logger.log(iteration, evaluations, fbest_user)
             self._optimiser._log_write(logger)
-            logger.log(time_taken)
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
         # Save post-run statistics
         self._evaluations = evaluations
         self._iterations = iteration
-        self._time = time_taken
 
         # Return best position and score
         return self._optimiser.xbest(), fbest_user
@@ -752,7 +753,7 @@ class OptimisationController(object):
     def time(self):
         """
         Returns the time needed for the last run, in seconds, or ``None`` if
-        the controller hasn't ran yet.
+        the controller hasn't run yet.
         """
         return self._time
 
@@ -763,10 +764,8 @@ class Optimisation(OptimisationController):
     def __init__(
             self, function, x0, sigma0=None, boundaries=None, method=None):
         # Deprecated on 2019-02-12
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
@@ -891,6 +890,13 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
         The :class:`pints.Optimiser` to use. If no method is specified,
         ``pints.CMAES`` is used.
 
+    Returns
+    -------
+    xbest : numpy array
+        The best parameter set obtained.
+    fbest : float
+        The corresponding score.
+
     Example
     -------
     ::
@@ -946,8 +952,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     opt.set_log_to_screen(True if verbose else False)
 
     # Run and return
-    popt, fopt = opt.run()
-    return popt
+    return opt.run()
 
 
 class _CurveFitError(pints.ErrorMeasure):

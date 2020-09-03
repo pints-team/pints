@@ -8,13 +8,12 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
-import logging
 import numpy as np
+import pints
+import warnings
 
 from numpy.linalg import norm
 from scipy.special import gamma
-
-import pints
 
 
 class BareCMAES(pints.PopulationBasedOptimiser):
@@ -55,9 +54,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Best solution found
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
-
-        # Python logger
-        self._logger = logging.getLogger(__name__)
 
         # Number of iterations run
         self._iterations = 0
@@ -118,8 +114,8 @@ class BareCMAES(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning('All points requested by CMA-ES are'
-                                     ' outside the boundaries.')
+                warnings.warn('All points requested by CMA-ES are outside the'
+                              ' boundaries.')
         else:
             self._user_xs = self._xs
 

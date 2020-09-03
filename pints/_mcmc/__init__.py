@@ -367,6 +367,8 @@ class MCMCController(object):
         self._evaluations_in_memory = False
         self._samples = None
         self._evaluations = None
+        self._n_evaluations = None
+        self._time = None
 
         # Writing chains and evaluations to disk
         self._chain_files = None
@@ -446,6 +448,13 @@ class MCMCController(object):
         """
         return self._samplers[0].needs_initial_phase()
 
+    def n_evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't run yet.
+        """
+        return self._n_evaluations
+
     def parallel(self):
         """
         Returns the number of parallel worker processes this routine will be
@@ -476,7 +485,7 @@ class MCMCController(object):
 
         # Iteration and evaluation counting
         iteration = 0
-        n_evaluations = 0
+        self._n_evaluations = 0
 
         # Choose method to evaluate
         f = self._log_pdf
@@ -628,7 +637,7 @@ class MCMCController(object):
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
-            n_evaluations += len(fxs)
+            self._n_evaluations += len(fxs)
 
             # Update chains
             if self._single_chain:
@@ -752,7 +761,7 @@ class MCMCController(object):
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
-                logger.log(iteration, n_evaluations)
+                logger.log(iteration, self._n_evaluations)
                 for sampler in self._samplers:
                     sampler._log_write(logger)
                 logger.log(timer.time())
@@ -774,12 +783,15 @@ class MCMCController(object):
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
 
+        # Finished running
+        self._time = timer.time()
+
         # Log final state and show halt message
         if logging:
-            logger.log(iteration, n_evaluations)
+            logger.log(iteration, self._n_evaluations)
             for sampler in self._samplers:
                 sampler._log_write(logger)
-            logger.log(timer.time())
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
@@ -985,16 +997,21 @@ class MCMCController(object):
             self._parallel = False
             self._n_workers = 1
 
+    def time(self):
+        """
+        Returns the time needed for the last run, in seconds, or ``None`` if
+        the controller hasn't run yet.
+        """
+        return self._time
+
 
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
         super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)

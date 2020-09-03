@@ -35,6 +35,7 @@ class BetaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -122,6 +123,7 @@ class CauchyLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, scale):
         # Test inputs
         if float(scale) <= 0:
@@ -169,19 +171,31 @@ class CauchyLogPrior(pints.LogPrior):
 
 class ComposedLogPrior(pints.LogPrior):
     r"""
-    N-dimensional LogPrior composed of one or more other Ni-dimensional
-    LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
-    log-prior assumes the input log-priors are all independent from each other.
+    N-dimensional :class:`LogPrior` composed of one or more other :math:`N_i`-
+    dimensional LogPriors, such that :math:`\sum _i N_i = N`. The evaluation
+    of the composed log-prior assumes the input log-priors are all independent
+    from each other.
 
-    For example, a composed log prior::
+    For example, a composed log prior
 
-        p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)
+        ``p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)``,
 
-    where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
-    itself.
+    where ``log_prior1``, ``log_prior2``, and ``log_prior3`` each have
+    dimension 1, 2 and 1, will have dimension 4.
+
+    The dimensionality of the individual priors does not have to be the same,
+    i.e. :math:`N_i\neq N_j` is allowed.
+
+    The input parameters of the :class:`ComposedLogPrior` have to be ordered in
+    the same way as the individual priors. In the above example the prior may
+    be evaluated by ``p(x)``, where:
+
+        ``x = [parameter1_log_prior1, parameter1_log_prior2,
+        parameter2_log_prior2, parameter1_log_prior3]``.
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, *priors):
         # Check if sub-priors given
         if len(priors) < 1:
@@ -287,6 +301,7 @@ class ExponentialLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, rate):
         # Parse input arguments
         self._rate = float(rate)
@@ -355,6 +370,7 @@ class GammaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -437,6 +453,7 @@ class GaussianLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, mean, sd):
         # Parse input arguments
         self._mean = float(mean)
@@ -503,6 +520,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, scale):
         # Test inputs
         if float(scale) <= 0:
@@ -558,7 +576,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # use inverse transform sampling
         us = np.random.uniform(0, 1, n)
-        return np.array([self.icdf(u) for u in us])
+        samples = np.array([self.icdf(u) for u in us])
+
+        # Samples have shape (n,). Output needs to be (n, 1)
+        return np.expand_dims(a=samples, axis=1)
 
 
 class InverseGammaLogPrior(pints.LogPrior):
@@ -584,6 +605,7 @@ class InverseGammaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -749,6 +771,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, mean, cov):
         # Check input
         mean = pints.vector(mean)
@@ -763,6 +786,11 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         self._cov = cov
         self._n_parameters = mean.shape[0]
         self._cov_inverse = np.linalg.inv(self._cov)
+        self._cholesky_L, self._cholesky_lower = scipy.linalg.cho_factor(
+            self._cov)
+        log_det_cov = 2 * np.sum(np.log(self._cholesky_L.diagonal()))
+        self._const_factor = - 0.5 * log_det_cov \
+                             - 0.5 * len(self._mean) * np.log(2 * np.pi)
 
         # Factors needed for pseudo-cdf calculation
         self._sigma12_sigma22_inv_l = []
@@ -791,8 +819,13 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             self._mu2.append(mu2)
 
     def __call__(self, x):
-        return scipy.stats.multivariate_normal.logpdf(
-            x, mean=self._mean, cov=self._cov)
+        tmp = x - self._mean
+        return self._const_factor \
+            - 0.5 * tmp.dot(
+                scipy.linalg.cho_solve(
+                    (self._cholesky_L, self._cholesky_lower), tmp
+                )
+            )
 
     def convert_from_unit_cube(self, u):
         """
@@ -811,7 +844,9 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
+        return self(x), -scipy.linalg.cho_solve(
+            (self._cholesky_L, self._cholesky_lower), x - self._mean
+        )
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -946,10 +981,8 @@ class NormalLogPrior(GaussianLogPrior):
 
     def __init__(self, mean, standard_deviation):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.NormalLogPrior` is deprecated.'
             ' Please use `pints.GaussianLogPrior` instead.')
         super(NormalLogPrior, self).__init__(mean, standard_deviation)
@@ -989,6 +1022,7 @@ class StudentTLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, df, scale):
         # Test inputs
         if float(df) <= 0:
@@ -1076,6 +1110,7 @@ class UniformLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
         if upper is None:
@@ -1128,7 +1163,7 @@ class UniformLogPrior(pints.LogPrior):
                         xs[j, i] < self._boundaries.upper()[i]):
                     cdfs[j, i] = ((-self._boundaries.lower()[i] + xs[j, i]) /
                                   (-self._boundaries.lower()[i] +
-                                  self._boundaries.upper()[i]))
+                                   self._boundaries.upper()[i]))
                 elif xs[j, i] >= self._boundaries.upper()[i]:
                     cdfs[j, i] = 1.0
                 else:

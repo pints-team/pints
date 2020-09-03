@@ -30,13 +30,15 @@ def _load_version_int():
             version = f.read().strip().split(',')
         major, minor, revision = [int(x) for x in version]
         return major, minor, revision
-    except Exception as e:
+    except Exception as e:      # pragma: no cover
         raise RuntimeError('Unable to read version number (' + str(e) + ').')
 
 __version_int__ = _load_version_int()
 __version__ = '.'.join([str(x) for x in __version_int__])
-if sys.version_info[0] < 3:
-    del(x)  # Before Python3, list comprehension iterators leaked
+if sys.version_info[0] < 3:     # pragma: no python 3 cover
+    # Before Python3, list comprehension iterators leaked, which would have
+    # created a global ``pints.x`` at this point.
+    del(x)
 
 #
 # Expose pints version
@@ -111,6 +113,7 @@ from ._log_likelihoods import (
     AR1LogLikelihood,
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
+    ConstantAndMultiplicativeGaussianLogLikelihood,
     GaussianIntegratedUniformLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
@@ -205,6 +208,7 @@ from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dram_ac import DramACMC
 from ._mcmc._dream import DreamMCMC
+from ._mcmc._dual_averaging import DualAveragingAdaption
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
 from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
@@ -220,6 +224,12 @@ from ._mcmc._slice_doubling import SliceDoublingMCMC
 from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
+
+if sys.hexversion >= 0x03030000:
+    from ._mcmc._nuts import NoUTurnMCMC
+else:   # pragma: no python 3 cover
+    import warnings
+    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 
 
 #

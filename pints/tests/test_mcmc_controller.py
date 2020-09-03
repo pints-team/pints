@@ -314,13 +314,13 @@ class TestMCMCController(unittest.TestCase):
             method=pints.HaarioBardenetACMC)
         mcmc.set_max_iterations(niterations)
         mcmc.set_log_to_screen(debug)
-        mcmc.set_parallel(2)
+        mcmc.set_parallel(5)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
-        self.assertEqual(mcmc._n_workers, 2)
+        self.assertEqual(mcmc._n_workers, 5)
         with StreamCapture() as c:
             chains = mcmc.run()
-        self.assertIn('with 2 worker', c.text())
+        self.assertIn('with 5 worker', c.text())
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
@@ -561,9 +561,40 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         mcmc.run()
-        with self.assertRaisesRegex(RuntimeError,
-                                    "Controller is valid for single use only"):
+        with self.assertRaisesRegex(
+            RuntimeError, 'Controller is valid for single use only'):
             mcmc.run()
+
+    def test_post_run_statistics(self):
+        # Test method to obtain post-run statistics
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+
+        mcmc = pints.MCMCController(self.log_posterior, len(xs), xs)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(10)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_file(False)
+
+        # Before run, methods return None
+        self.assertIsNone(mcmc.time())
+
+        t = pints.Timer()
+        mcmc.run()
+        t_upper = t.time()
+
+        # Check post-run output
+        self.assertIsInstance(mcmc.time(), float)
+        self.assertGreater(mcmc.time(), 0)
+        self.assertGreater(t_upper, mcmc.time())
+
+        # Tets number of evaluations is a realistic number (should be 30 for
+        # a simple method)
+        self.assertEqual(mcmc.n_evaluations(), 30)
 
 
 class TestMCMCControllerLogging(unittest.TestCase):

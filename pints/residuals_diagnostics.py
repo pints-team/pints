@@ -11,6 +11,313 @@ import numpy as np
 import scipy.special
 
 
+def plot_residuals_binned_autocorrelation(parameters,
+                                          problem,
+                                          thinning=None,
+                                          n_bins=25):
+    r"""
+    Plot the autocorrelation of the residuals within bins (i.e. discrete time
+    windows across the series).
+
+    Given a time series with observed residuals
+
+    .. math::
+        e_i = y_i - f(t_i; \theta)
+
+    This method divides the vector of residuals into some number of equally
+    sized bins. The lag 1 autocorrelation is calculated for the residuals
+    within each bin. The plot shows the lag 1 autocorrelation in each bin over
+    time.
+
+    This diagnostic is useful for diagnosing time series with noise whose
+    autocorrelation varies over time.
+
+    When passing an array of parameters (from an MCMC sampler), this method
+    plots the autocorrelations of the posterior median residual values.
+
+    Typically, this diagnostic is called after obtaining the residuals of an
+    IID fit, in order to determine whether the IID fit is satisfactory or a
+    more complex noise model is needed.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
+    n_bins
+        Optional int value (greater than zero) giving the number of bins into
+        which to divide the time series. By default, it is fixed to 25.
+    """
+    def lag_one_autocorr_resids(data):
+        return acorr(data, 1)[-1]
+
+    return _plot_residuals_binned(parameters,
+                                  problem,
+                                  thinning=thinning,
+                                  n_bins=n_bins,
+                                  calculate=lag_one_autocorr_resids,
+                                  label='Lag 1 autocorrelation',
+                                  ylim=(-1, 1),
+                                  draw_horizontal=True)
+
+
+def plot_residuals_binned_std(parameters,
+                              problem,
+                              thinning=None,
+                              n_bins=25):
+    r"""
+    Plot the standard deviation of the residuals within bins (i.e. discrete
+    time windows across the series).
+
+    Given a time series with observed residuals
+
+    .. math::
+        e_i = y_i - f(t_i; \theta)
+
+    This method divides the vector of residuals into some number of equally
+    sized bins. The standard deviation is calculated for the residuals within
+    each bin. The plot shows the standard deviation in each bin over time.
+
+    This diagnostic is particularly useful for diagnosing time series whose
+    noise exhibits a change in variance over time.
+
+    When passing an array of parameters (from an MCMC sampler), this method
+    will plot the standard deviation of the posterior median residual values.
+
+    Typically, this diagnostic can be called after obtaining the residuals of
+    an IID fit, in order to determine whether the IID fit is satisfactory or a
+    more complex noise model is needed.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
+    n_bins
+        Optional int value (greater than zero) giving the number of bins into
+        which to divide the time series. By default, it is fixed to 25.
+    """
+    return _plot_residuals_binned(parameters,
+                                  problem,
+                                  thinning=thinning,
+                                  n_bins=n_bins,
+                                  calculate=np.std,
+                                  label='Standard deviation')
+
+
+def _plot_residuals_binned(parameters,
+                           problem,
+                           thinning=None,
+                           n_bins=25,
+                           calculate=np.std,
+                           label='Standard deviation',
+                           ylim=None,
+                           draw_horizontal=False):
+    """
+    Make a matplotlib plot of some function of the binned residuals.
+
+    This is a general function which divides the residuals into bins, performs
+    some calculation from the residuals in each bin, and plots the results.
+    It supports both lag 1 autocorrelation and standard deviation.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
+    n_bins
+        Optional int value (greater than zero) giving the number of bins into
+        which to divide the time series. By default, it is fixed to 25.
+    calculate : function
+        What value to calculate within each bin. This function should take as
+        input a numpy array of residuals within a bin and return a scalar value
+        which will be added to the plot.
+    label : str
+        A label to put on the y axis of the plot, describing what function of
+        the binned residuals is being plotted.
+    ylim : tuple
+        Optional bounds for the y-axis of the plot.
+    draw_horizontal : bool
+        Whether or not to draw a horizontal line at y=0 on the plot. This line
+        may be desired when zero is an important reference point for the value
+        being calculated in each bin.
+    """
+    import matplotlib.pyplot as plt
+
+    times = problem.times()
+
+    # Get the number of problem outputs
+    n_outputs = problem.n_outputs()
+
+    # Get the matrix of residuals values
+    residuals = calculate_residuals(parameters, problem, thinning=thinning)
+
+    # Get the posterior median residuals
+    residuals = np.median(residuals, axis=0)
+
+    n_bins = int(n_bins)
+    if n_bins < 1:
+        raise ValueError('n_bins must be an integer value greater than zero.')
+    if n_bins > len(times):
+        raise ValueError('n_bins must not exceed the number of time points')
+
+    # Make the figure, with one axes for each output
+    fig = plt.figure()
+    for output in range(n_outputs):
+        ax = fig.add_subplot(n_outputs, 1, output + 1)
+
+        # Get the residuals along this output
+        e = residuals[output, :]
+
+        # Divide the residuals into bins
+        binned_data = np.array_split(e, n_bins)
+        binned_times = np.array_split(times, n_bins)
+
+        # Calculate lag 1 autocorrelation and time in each bin
+        bin_values = []
+        bin_times = []
+        for data, t in zip(binned_data, binned_times):
+            bin_values.append(calculate(data))
+            bin_times.append(np.mean(t))
+
+        # Plot the binned data
+        ax.plot(bin_times, bin_values, 'o-', color='red')
+
+        if ylim is not None:
+            ax.set_ylim(*ylim)
+
+        ax.set_xlabel('Time')
+        ax.set_ylabel(label)
+
+        ax.set_title('Output %d' % (output + 1))
+
+        if draw_horizontal:
+            # Draw a horizontal line at 0 autocorrelation
+            ax.axhline(0, color='C0', zorder=-10)
+
+    return fig
+
+
+def plot_residuals_distance(parameters, problem, thinning=None):
+    r"""
+    Plot a distance matrix of the residuals.
+
+    Given a time series with observed residuals
+
+    .. math::
+        e_i = y_i - f(t_i; \theta)
+
+    this function generates and plots the distance matrix :math:`D` whose
+    entries are defined by
+
+    .. math::
+        D_{i, j} = |e_i - e_j|
+
+    The plot of this matrix may be helpful for identifying a time series with
+    correlated noise. When the noise terms are correlated, the distance matrix
+    :math:`D` is likely to have a banded appearance.
+
+    For problems with multiple outputs, one distance matrix is generated for
+    each output.
+
+    When passing an array of parameters (from an MCMC sampler), this method
+    will plot the distance matrix of the posterior median residual values.
+
+    Typically, this diagnostic is called after obtaining the residuals of an
+    IID fit, in order to determine whether the IID fit is satisfactory or a
+    more complex noise model is needed.
+
+    This function returns a ``matplotlib`` figure.
+
+    Parameters
+    ----------
+    parameters
+        The parameter values with shape ``(n_samples, n_parameters)``. When
+        passing a single best fit parameter vector, ``n_samples`` will be 1.
+    problem
+        The problem given by a :class:`pints.SingleOutputProblem` or
+        :class:`pints.MultiOutputProblem`, with ``n_parameters`` greater than
+        or equal to the ``n_parameters`` of the ``parameters``. Extra
+        parameters not found in the problem are ignored.
+    thinning
+        Optional int value (greater than zero). If thinning is set to ``n``,
+        only every nth sample in parameters will be used. If set to ``None``
+        (default), some thinning will be applied so that about 200 samples will
+        be used.
+    """
+    import matplotlib.pyplot as plt
+
+    times = problem.times()
+
+    # Get the number of problem outputs
+    n_outputs = problem.n_outputs()
+
+    # Get the matrix of residuals values
+    residuals = calculate_residuals(parameters, problem, thinning=thinning)
+
+    # Get the posterior median residuals
+    residuals = np.median(residuals, axis=0)
+
+    # Make the figure, with one axes for each output
+    fig = plt.figure()
+    for output in range(n_outputs):
+        ax = fig.add_subplot(n_outputs, 1, output + 1)
+
+        # Get the residuals along this output
+        e = residuals[output, :]
+
+        # Calculate the distance matrix
+        D = np.abs(e[:, np.newaxis] - e)
+        D = np.flip(D, axis=0)
+
+        im = ax.imshow(D,
+                       cmap='Greys_r',
+                       extent=[min(times), max(times), min(times), max(times)])
+
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Time')
+
+        ax.set_title('Output %d' % (output + 1))
+
+        fig.colorbar(im)
+
+    return fig
+
+
 def plot_residuals_autocorrelation(parameters,
                                    problem,
                                    max_lag=10,

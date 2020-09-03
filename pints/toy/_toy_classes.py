@@ -96,7 +96,7 @@ class ToyODEModel(ToyModel):
 
         Returns
         -------
-        A matrix of dimensions ``n_parameters`` by ``n_parameters``.
+        A matrix of dimensions ``n_outputs`` by ``n_parameters``.
         """
         raise NotImplementedError
 
@@ -159,10 +159,16 @@ class ToyODEModel(ToyModel):
         -------
         A vector of length ``n_outputs + n_parameters``.
         """
+
+        # separating initial values of model outputs(y) and sensitivities(dydp)
         y = y_and_dydp[0:self.n_outputs()]
         dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
                                                       self.n_outputs()))
+
+        # calculating the direvatives w.r.t t of the model outputs
         dydt = self._rhs(y, t, p)
+
+        # calculating sensitivities
         d_dydp_dt = (
             np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
             np.transpose(self._dfdp(y, t, p)))

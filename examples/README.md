@@ -7,6 +7,12 @@ These notebooks can be downloaded and used, or you can simply copy/paste the
 relevant code.
 
 
+## Before you get started
+- [Using Python](using-python.md)
+- [Installing PINTS](../README.md#installing-pints)
+- [An introduction to Bayesian inference and optimisation](stats/beginners-tutorial.ipynb)
+
+
 ## Getting started
 - [Optimisation: First example](./optimisation/first-example.ipynb)
 - [Sampling: First example](./sampling/first-example.ipynb)
@@ -16,7 +22,6 @@ relevant code.
 
 
 ## Digging deeper
-
 - [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
 
@@ -38,6 +43,8 @@ relevant code.
 - [Convenience methods fmin() and curve\_fit()](./optimisation/convenience.ipynb)
 - [Maximum loglikelihood](./optimisation/maximum-likelihood.ipynb)
 - [Multiple objectives](./optimisation/multi-objective.ipynb)
+- [Spotting unidentifiable parameters with MCMC](./optimisation/spotting-unidentifiable-parameters.ipynb)
+- [Visualising a 2d error surface](./plotting/optimisation-2d-surface.ipynb)
 
 
 ## Sampling
@@ -60,6 +67,7 @@ relevant code.
 - [Hamiltonian MCMC](./sampling/hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling/mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling/monomial-gamma-hmc.ipynb)
+- [No-U-Turn MCMC](./sampling/nuts-mcmc.ipynb)
 - [Relativistic MCMC](./sampling/relativistic-mcmc.ipynb)
 - [Slice Sampling: Rank Shrinking MCMC](./sampling/slice-rank-shrinking-mcmc.ipynb)
 
@@ -69,18 +77,21 @@ relevant code.
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
 - [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
+- [Noise model diagnostic plots (correlation)](./plotting/residuals-autocorrelation-diagnostics.ipynb)
+- [Noise model diagnostic plots (magnitude)](./plotting/residuals-variance-diagnostics.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
-- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
+- [Constant and multiplicative Gaussian error](./stats/constant_and_multiplicative_gaussian_error.ipynb)
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
@@ -115,7 +126,6 @@ relevant code.
 - [Rosenbrock function](./toy/distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
-
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
