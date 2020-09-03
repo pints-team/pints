@@ -562,7 +562,7 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_log_to_screen(False)
         mcmc.run()
         with self.assertRaisesRegex(
-            RuntimeError, 'Controller is valid for single use only'):
+                RuntimeError, 'Controller is valid for single use only'):
             mcmc.run()
 
     def test_post_run_statistics(self):
