@@ -63,6 +63,9 @@ class TestOptimisationController(unittest.TestCase):
 
     def test_logging(self):
 
+        # Show full error output
+        self.maxDiff = None
+
         # Test with logpdf
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
