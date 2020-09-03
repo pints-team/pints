@@ -268,16 +268,18 @@ class Transformation(object):
         r"""
         Returns True if the transformation is element-wise.
 
-        Element-wise transformation is a transformation :math:`\boldsymbol{f}`
-        that relates a parameter vector :math:`\boldsymbol{p}` in the model
-        space and a parameter vector :math:`\boldsymbol{q}` in the search space
-        through
+        An element-wise transformation is a transformation
+        :math:`\boldsymbol{f}` that can be carried out element by element:
+        for a parameter vector :math:`\boldsymbol{p}` in the model space and a
+        parameter vector :math:`\boldsymbol{q}` in the search space, then it
+        has
 
         .. math::
             q_i = f(p_i),
 
         where :math:`x_i` denotes the :math:`i^{\text{th}}` element of the
-        vector :math:`\boldsymbol{x}`.
+        vector :math:`\boldsymbol{x}`, as opposed to a transformation in which
+        multiple elements are combined to create the transformed elements.
         """
         raise NotImplementedError
 
