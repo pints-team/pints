@@ -265,7 +265,7 @@ class Transformation(object):
         raise NotImplementedError
 
     def elementwise(self):
-        """
+        r"""
         Returns True if the transformation is element-wise.
 
         Element-wise transformation is a transformation :math:`\boldsymbol{f}`
@@ -319,11 +319,14 @@ class ComposedTransformation(Transformation):
 
         # Check if proper transform, count dimension
         self._n_parameters = 0
+        self._elementwise = True
         for transform in transforms:
             if not isinstance(transform, pints.Transformation):
                 raise ValueError('All sub-transforms must extend '
                                  'pints.Transformation.')
             self._n_parameters += transform.n_parameters()
+            # If any transform is not elementwise, then it is not elementwise
+            self._elementwise &= transform.elementwise()
 
         # Store
         self._transforms = transforms
@@ -396,6 +399,10 @@ class ComposedTransformation(Transformation):
         """ See :meth:`Transformation.n_parameters()`. """
         return self._n_parameters
 
+    def elementwise(self):
+        """ See :meth:`Transformation.elementwise()`. """
+        return self._elementwise
+
 
 class ComposedElementWiseTransformation(ElementWiseTransformation,
                                         ComposedTransformation):
@@ -439,7 +446,7 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
                 raise ValueError('All sub-transforms must extend '
                                  'pints.ElementWiseTransformation.')
 
-    def jacobian(self, q):
+    def _elementwise_jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
         q = pints.vector(q)
         diag = np.zeros(q.shape)
@@ -451,7 +458,7 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
         output = np.diag(diag)
         return output
 
-    def log_jacobian_det(self, q):
+    def _elementwise_log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
         q = pints.vector(q)
         output = 0
@@ -462,7 +469,7 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
             output += transform.log_jacobian_det(q[lo:hi])
         return output
 
-    def log_jacobian_det_S1(self, q):
+    def _elementwise_log_jacobian_det_S1(self, q):
         """ See :meth:`Transformation.log_jacobian_det_S1()`. """
         q = pints.vector(q)
         output = 0
