@@ -39,6 +39,12 @@ class TestTransformation(pints.Transformation):
         return np.exp(q)
 
 
+class TestNonElementWiseIdentityTransformation(pints.IdentityTransformation):
+    """A testing non-element-wise transformation class"""
+    def elementwise(self):
+        return False
+
+
 class TestAbstractClassTransformation(unittest.TestCase):
     # Test methods defined in the abstract class
 
@@ -97,8 +103,8 @@ class TestAbstractClassTransformation(unittest.TestCase):
             np.allclose(self.t.convert_covariance_matrix(cov, self.x), tcov))
 
 
-class TestComposedElementWiseTransformation(unittest.TestCase):
-    # Test ComposedElementWiseTransformation class
+class TestComposedTransformationElementWise(unittest.TestCase):
+    # Test ComposedTransformation class for element-wise case
 
     @classmethod
     def setUpClass(cls):
@@ -109,7 +115,7 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
         t3 = pints.LogTransformation(1)
 
-        cls.t = pints.ComposedElementWiseTransformation(t1, t2, t3)
+        cls.t = pints.ComposedTransformation(t1, t2, t3)
 
         cls.p = [0.1, 1.5, 15., 999.]
         cls.x = [0.1, -2.8332133440562162, 0.9555114450274365,
@@ -124,15 +130,8 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
 
     def test_bad_constructor(self):
         # Test invalid constructors
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation)
-        self.assertRaises(ValueError, pints.ComposedElementWiseTransformation,
-                          np.log)
-
-        self.assertRaisesRegex(
-            ValueError, 'All sub-transforms must extend ' +
-            'pints.ElementWiseTransformation.',
-            pints.ComposedElementWiseTransformation,
-            TestTransformation())
+        self.assertRaises(ValueError, pints.ComposedTransformation)
+        self.assertRaises(ValueError, pints.ComposedTransformation, np.log)
 
     def test_to_search(self):
         # Test forward transform
@@ -173,14 +172,18 @@ class TestComposedElementWiseTransformation(unittest.TestCase):
         self.assertTrue(
             np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
 
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t.elementwise())
+
 
 class TestComposedTransformation(unittest.TestCase):
-    # Test ComposedTransformation class
+    # Test ComposedTransformation class for non-element-wise case
 
     @classmethod
     def setUpClass(cls):
         # Create Transformation class
-        cls.t1 = pints.IdentityTransformation(1)
+        cls.t1 = TestNonElementWiseIdentityTransformation(1)
         lower2 = np.array([1, 2])
         upper2 = np.array([10, 20])
         cls.t2 = pints.RectangularBoundariesTransformation(lower2, upper2)
@@ -237,15 +240,15 @@ class TestComposedTransformation(unittest.TestCase):
         self.assertTrue(np.allclose(calc_deriv, self.log_j_det_s1))
 
     def test_against_elementwise_transformation(self):
-        # Test ComposedTransformation gives the same result as the
-        # ComposedElementWiseTransformation when using
-        # ElementWiseTransformation
-        t_elem = pints.ComposedElementWiseTransformation(self.t1,
-                                                         self.t2,
-                                                         self.t3)
+        # Test general case gives the same result as the elementwise case
+        t1 = pints.IdentityTransformation(1)  # This is element-wise
+        t_elem = pints.ComposedTransformation(t1, self.t2, self.t3)
+        self.assertTrue(t_elem.elementwise())  # This is element-wise
+
         # Test log-Jacobian determinant
         self.assertAlmostEqual(self.t.log_jacobian_det(self.x),
                                t_elem.log_jacobian_det(self.x))
+
         # Test log-Jacobian determinant derivatives
         _, t_deriv = self.t.log_jacobian_det_S1(self.x)
         _, t_elem_deriv = t_elem.log_jacobian_det_S1(self.x)
@@ -257,6 +260,10 @@ class TestComposedTransformation(unittest.TestCase):
             np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
         self.assertTrue(
             np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
+
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertFalse(self.t.elementwise())
 
 
 class TestIdentityTransformation(unittest.TestCase):
@@ -320,6 +327,11 @@ class TestIdentityTransformation(unittest.TestCase):
             np.allclose(self.p, self.t4.to_model(self.t4.to_search(self.p))))
         self.assertTrue(
             np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
+
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t1.elementwise())
+        self.assertTrue(self.t4.elementwise())
 
 
 class TestLogitTransformation(unittest.TestCase):
@@ -395,6 +407,11 @@ class TestLogitTransformation(unittest.TestCase):
         self.assertTrue(
             np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
 
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t1.elementwise())
+        self.assertTrue(self.t4.elementwise())
+
 
 class TestLogTransformation(unittest.TestCase):
     # Test LogTransformation class
@@ -466,6 +483,11 @@ class TestLogTransformation(unittest.TestCase):
             np.allclose(self.p, self.t4.to_model(self.t4.to_search(self.p))))
         self.assertTrue(
             np.allclose(self.x, self.t4.to_search(self.t4.to_model(self.x))))
+
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t1.elementwise())
+        self.assertTrue(self.t4.elementwise())
 
 
 class TestRectangularBoundariesTransformation(unittest.TestCase):
@@ -566,6 +588,11 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
         self.assertTrue(
             np.allclose(self.x, self.t2b.to_search(self.t2b.to_model(self.x))))
 
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t2.elementwise())
+        self.assertTrue(self.t2b.elementwise())
+
 
 class TestScalingTransformation(unittest.TestCase):
     # Test ScalingTransformation class
@@ -621,6 +648,10 @@ class TestScalingTransformation(unittest.TestCase):
             np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
         self.assertTrue(
             np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
+
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t.elementwise())
 
 
 class TestTransformedWrappers(unittest.TestCase):
