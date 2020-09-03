@@ -34,8 +34,6 @@ Example::
 Overview:
 
 - :class:`ComposedTransformation`
-- :class:`ComposedElementWiseTransformation`
-- :class:`ElementWiseTransformation`
 - :class:`IdentityTransformation`
 - :class:`LogitTransformation`
 - :class:`LogTransformation`
@@ -49,10 +47,6 @@ Overview:
 
 
 .. autoclass:: ComposedTransformation
-
-.. autoclass:: ComposedElementWiseTransformation
-
-.. autoclass:: ElementWiseTransformation
 
 .. autoclass:: IdentityTransformation
 
