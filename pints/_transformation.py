@@ -333,22 +333,10 @@ class ComposedTransformation(Transformation):
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
-        q = pints.vector(q)
-        lo, hi = 0, self._transforms[0].n_parameters()
-        output = self._transforms[0].jacobian(q[lo:hi])
-        for transform in self._transforms[1:]:
-            lo = hi
-            hi += transform.n_parameters()
-            jaco = transform.jacobian(q[lo:hi])
-            # Due to the composed transformation are independent, we can stack
-            # the Jacobian matrices J_i and J_{i+1} as
-            #
-            # J = [ J_i     0    ]
-            #     [  0   J_{i+1} ]
-            #
-            pack = np.zeros((output.shape[0], jaco.shape[1]))
-            output = np.block([[output, pack], [pack.T, jaco]])
-        return output
+        if self._elementwise:
+            return self._elementwise_jacobian(q)
+        else:
+            return self._general_jacobian(q)
 
     def jacobian_S1(self, q):
         """ See :meth:`Transformation.jacobian_S1()`. """
@@ -372,6 +360,20 @@ class ComposedTransformation(Transformation):
                 o[lo:hi, lo:hi] = jac_S1_i[:, :]
                 output_S1[lo + i, :, :] = o
         return self.jacobian(q), output_S1
+
+    def log_jacobian_det(self, q):
+        """ See :meth:`Transformation.log_jacobian_det()`. """
+        if self._elementwise:
+            return self._elementwise_log_jacobian_det(q)
+        else:
+            return self._general_log_jacobian_det(q)
+
+    def log_jacobian_det_S1(self, q):
+        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        if self._elementwise:
+            return self._elementwise_log_jacobian_det_S1(q)
+        else:
+            return self._general_log_jacobian_det_S1(q)
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
@@ -403,51 +405,10 @@ class ComposedTransformation(Transformation):
         """ See :meth:`Transformation.elementwise()`. """
         return self._elementwise
 
-
-class ComposedElementWiseTransformation(ElementWiseTransformation,
-                                        ComposedTransformation):
-    r"""
-    N-dimensional :class:`ElementWiseTransformation` composed of one or more
-    other :math:`N_i`-dimensional ``ElementWiseTransformation``, such that
-    :math:`\sum _i N_i = N`. The evaluation and transformation of the composed
-    transformations assume the input transformations are all independent from
-    each other.
-
-    For example, a composed transform::
-
-        t = pints.ComposedElementWiseTransformation(transform1,
-                                                    transform2,
-                                                    transform3)
-
-    where ``transform1``, ``transform2``, and ``transform3`` each have
-    dimension 1, 2 and 1, will have dimension 4.
-
-    The dimensionality of the individual priors does not have to be the same,
-    i.e. :math:`N_i\neq N_j` is allowed.
-
-    The input parameters of the :class:`ComposedElementWiseTransformation` have
-    to be ordered in the same way as the individual tranforms for the parameter
-    vector. In the above example the transform may be performed by
-    ``t.to_search(p)``, where::
-
-        p = [parameter1_transform1,
-             parameter1_transform2,
-             parameter2_transform2,
-             parameter1_transform3]
-
-    Extends :class:`ElementWiseTransformation`.
-    """
-    def __init__(self, *transforms):
-        super(ComposedElementWiseTransformation, self).__init__(*transforms)
-
-        # Check all are ElementWiseTransformation
-        for transform in self._transforms:
-            if not isinstance(transform, pints.ElementWiseTransformation):
-                raise ValueError('All sub-transforms must extend '
-                                 'pints.ElementWiseTransformation.')
-
     def _elementwise_jacobian(self, q):
-        """ See :meth:`Transformation.jacobian()`. """
+        """
+        Element-wise implementation of :meth:`Transformation.jacobian()`.
+        """
         q = pints.vector(q)
         diag = np.zeros(q.shape)
         lo = hi = 0
@@ -459,7 +420,10 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
         return output
 
     def _elementwise_log_jacobian_det(self, q):
-        """ See :meth:`Transformation.log_jacobian_det()`. """
+        """
+        Element-wise implementation of
+        :meth:`Transformation.log_jacobian_det()`.
+        """
         q = pints.vector(q)
         output = 0
         lo = hi = 0
@@ -470,7 +434,10 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
         return output
 
     def _elementwise_log_jacobian_det_S1(self, q):
-        """ See :meth:`Transformation.log_jacobian_det_S1()`. """
+        """
+        Element-wise implementation of
+        :meth:`Transformation.log_jacobian_det_S1()`.
+        """
         q = pints.vector(q)
         output = 0
         output_S1 = np.zeros(q.shape)
@@ -483,14 +450,54 @@ class ComposedElementWiseTransformation(ElementWiseTransformation,
             output_S1[lo:hi] = np.asarray(j_S1)
         return output, output_S1
 
+    def _general_jacobian(self, q):
+        """
+        General implementation of :meth:`Transformation.jacobian()`.
+        """
+        q = pints.vector(q)
+        lo, hi = 0, self._transforms[0].n_parameters()
+        output = self._transforms[0].jacobian(q[lo:hi])
+        for transform in self._transforms[1:]:
+            lo = hi
+            hi += transform.n_parameters()
+            jaco = transform.jacobian(q[lo:hi])
+            # Due to the composed transformation are independent, we can stack
+            # the Jacobian matrices J_i and J_{i+1} as
+            #
+            # J = [ J_i     0    ]
+            #     [  0   J_{i+1} ]
+            #
+            pack = np.zeros((output.shape[0], jaco.shape[1]))
+            output = np.block([[output, pack], [pack.T, jaco]])
+        return output
 
-class IdentityTransformation(ElementWiseTransformation):
+    def _general_log_jacobian_det(self, q):
+        """
+        General implementation of :meth:`Transformation.log_jacobian_det()`.
+        """
+        # The same as in Transformation.log_jacobian_det()
+        return np.log(np.abs(np.linalg.det(self.jacobian(q))))
+
+    def _general_log_jacobian_det_S1(self, q):
+        """
+        General implementation of :meth:`Transformation.log_jacobian_det_S1()`.
+        """
+        # The same as in Transformation.log_jacobian_det_S1()
+        q = pints.vector(q)
+        jac, jac_S1 = self.jacobian_S1(q)
+        out_S1 = np.zeros(q.shape)
+        for i, jac_S1_i in enumerate(jac_S1):
+            out_S1[i] = np.trace(np.matmul(np.linalg.pinv(jac), jac_S1_i))
+        return self.log_jacobian_det(q), out_S1
+
+
+class IdentityTransformation(Transformation):
     """
     :class`Transformation` that returns the input (untransformed) parameters,
     i.e. the search space under this transformation is the same as the model
     space. And its Jacobian matrix is the identity matrix.
 
-    Extends :class:`ElementWiseTransformation`.
+    Extends :class:`Transformation`.
 
     Parameters
     ----------
@@ -530,7 +537,7 @@ class IdentityTransformation(ElementWiseTransformation):
         return pints.vector(p)
 
 
-class LogitTransformation(ElementWiseTransformation):
+class LogitTransformation(Transformation):
     r"""
     Logit (or log-odds) transformation of the model parameters.
 
@@ -560,7 +567,7 @@ class LogitTransformation(ElementWiseTransformation):
         \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
                                     \text{logit}^{-1}(q) - 1.
 
-    Extends :class:`ElementWiseTransformation`.
+    Extends :class:`Transformation`.
 
     Parameters
     ----------
@@ -612,7 +619,7 @@ class LogitTransformation(ElementWiseTransformation):
         return logit(p)
 
 
-class LogTransformation(ElementWiseTransformation):
+class LogTransformation(Transformation):
     r"""
     Logarithm transformation of the model parameters:
 
@@ -639,7 +646,7 @@ class LogTransformation(ElementWiseTransformation):
     .. math::
         \frac{d}{dq} \log(|J(q)|) = 1.
 
-    Extends :class:`ElementWiseTransformation`.
+    Extends :class:`Transformation`.
 
     Parameters
     ----------
@@ -691,7 +698,7 @@ class LogTransformation(ElementWiseTransformation):
         return np.log(p)
 
 
-class RectangularBoundariesTransformation(ElementWiseTransformation):
+class RectangularBoundariesTransformation(Transformation):
     r"""
     A generalised version of the logit transformation for the model parameters,
     which transform an interval or rectangular boundaries :math:`[a, b)` to
@@ -742,7 +749,7 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
         transform = pints.RectangularBoundariesTransformation(boundaries)
 
-    Extends :class:`ElementWiseTransformation`.
+    Extends :class:`Transformation`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
@@ -814,13 +821,13 @@ class RectangularBoundariesTransformation(ElementWiseTransformation):
         return np.log(1. + np.exp(q))
 
 
-class ScalingTransformation(ElementWiseTransformation):
+class ScalingTransformation(Transformation):
     """
     Scaling transformation scales the input parameters by multiplying with an
     array ``scalings`` element-wisely. And its Jacobian matrix is a diagonal
     matrix with the values of ``1 / scalings`` on the diagonal.
 
-    Extends :class:`ElementWiseTransformation`.
+    Extends :class:`Transformation`.
     """
     def __init__(self, scalings):
         self.s = pints.vector(scalings)
