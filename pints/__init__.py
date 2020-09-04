@@ -242,6 +242,24 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
+# Transformation
+#
+from ._transformation import (
+    ComposedTransformation,
+    IdentityTransformation,
+    LogitTransformation,
+    LogTransformation,
+    RectangularBoundariesTransformation,
+    ScalingTransformation,
+    Transformation,
+    TransformedBoundaries,
+    TransformedErrorMeasure,
+    TransformedLogPDF,
+    TransformedLogPrior,
+)
+
+
+#
 # Noise generators (always import!)
 #
 from . import noise

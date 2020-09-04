@@ -105,7 +105,7 @@ class LogPrior(LogPDF):
         """
         Returns ``n`` random samples from the underlying prior distribution.
 
-        The returned value is a numpy array with shape ``(n, d)`` where ``n``
+        The returned value is a NumPy array with shape ``(n, d)`` where ``n``
         is the requested number of samples, and ``d`` is the dimension of the
         prior.
 

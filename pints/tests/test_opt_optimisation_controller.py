@@ -44,6 +44,39 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(x.shape, (2, ))
         self.assertTrue(f < 1e-6)
 
+    def test_transform(self):
+        # Test optimisation with parameter transformation.
+
+        # Test with LogPDF
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x0 = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        t = pints.RectangularBoundariesTransformation(b)
+        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        opt.run()
+
+        # Test with ErrorMeasure
+        r = pints.toy.ParabolicError()
+        x0 = [0.1, 0.1]
+        b = pints.RectangularBoundaries([-1, -1], [1, 1])
+        s = 0.1
+        t = pints.RectangularBoundariesTransformation(b)
+        pints.OptimisationController(r, x0, boundaries=b, transform=t,
+                                     method=method)
+        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        x, _ = opt.run()
+
+        # Test output are detransformed
+        self.assertEqual(x.shape, (2, ))
+        self.assertTrue(b.check(x))
+
     def test_stopping_max_iterations(self):
         # Runs an optimisation with the max_iter stopping criterion.
 
@@ -51,7 +84,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -71,7 +104,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(3)
@@ -136,7 +169,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -158,7 +191,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0.008, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -176,7 +209,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_iterations(None)
@@ -250,7 +283,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(50, 1e-11)
 

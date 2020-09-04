@@ -138,7 +138,7 @@ class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
     Parameters
     ----------
     problem
-        A :class:`pints.SingleOutputProblem`
+        A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
         super(NormalisedRootMeanSquaredError, self).__init__(problem)
@@ -207,7 +207,7 @@ class RootMeanSquaredError(ProblemErrorMeasure):
     Parameters
     ----------
     problem
-        A :class:`pints.SingleOutputProblem`
+        A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)

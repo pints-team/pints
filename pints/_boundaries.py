@@ -39,7 +39,7 @@ class Boundaries(object):
         Returns ``n`` random samples from within the boundaries, for example to
         use as starting points for an optimisation.
 
-        The returned value is a numpy array with shape ``(n, d)`` where ``n``
+        The returned value is a NumPy array with shape ``(n, d)`` where ``n``
         is the requested number of samples, and ``d`` is the dimension of the
         parameter space these boundaries are defined on.
 
