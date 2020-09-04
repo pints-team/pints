@@ -333,16 +333,23 @@ class ComposedTransformation(Transformation):
         # Store
         self._transforms = transforms
 
+        # Use elementwise or not
+        if self._elementwise:
+            self._jacobian = self._elementwise_jacobian
+            self._log_jacobian_det = self._elementwise_log_jacobian_det
+            self._log_jacobian_det_S1 = self._elementwise_log_jacobian_det_S1
+        else:
+            self._jacobian = self._general_jacobian
+            self._log_jacobian_det = self._general_log_jacobian_det
+            self._log_jacobian_det_S1 = self._general_log_jacobian_det_S1
+
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """
         return self._elementwise
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
-        if self._elementwise:
-            return self._elementwise_jacobian(q)
-        else:
-            return self._general_jacobian(q)
+        return self._jacobian(q)
 
     def jacobian_S1(self, q):
         """ See :meth:`Transformation.jacobian_S1()`. """
@@ -369,17 +376,11 @@ class ComposedTransformation(Transformation):
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
-        if self._elementwise:
-            return self._elementwise_log_jacobian_det(q)
-        else:
-            return self._general_log_jacobian_det(q)
+        return self._log_jacobian_det(q)
 
     def log_jacobian_det_S1(self, q):
         """ See :meth:`Transformation.log_jacobian_det_S1()`. """
-        if self._elementwise:
-            return self._elementwise_log_jacobian_det_S1(q)
-        else:
-            return self._general_log_jacobian_det_S1(q)
+        return self._log_jacobian_det_S1(q)
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
