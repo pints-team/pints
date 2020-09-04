@@ -96,9 +96,6 @@ class TestOptimisationController(unittest.TestCase):
 
     def test_logging(self):
 
-        # Show full error output
-        self.maxDiff = None
-
         # Test with logpdf
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
@@ -109,25 +106,24 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(3)
         opt.set_max_iterations(10)
-        self.assertEqual(opt.max_iterations(), 10)
         with StreamCapture() as c:
             opt.run()
-            log_should_be = (
-                'Maximising LogPDF\n'
-                'Using Exponential Natural Evolution Strategy (xNES)\n'
-                'Running in sequential mode.\n'
-                'Population size: 6\n'
-                'Iter. Eval. Best      Time m:s\n'
-                '0     6     -4.140462   0:00.0\n'
-                '1     12    -4.140462   0:00.0\n'
-                '2     18    -4.140462   0:00.0\n'
-                '3     24    -4.140462   0:00.0\n'
-                '6     42    -4.140462   0:00.0\n'
-                '9     60    -4.140462   0:00.0\n'
-                '10    60    -4.140462   0:00.0\n'
-                'Halting: Maximum number of iterations (10) reached.\n'
-            )
-            self.assertEqual(log_should_be, c.text())
+        lines = c.text().splitlines()
+        self.assertEqual(lines[0], 'Maximising LogPDF')
+        self.assertEqual(
+            lines[1], 'Using Exponential Natural Evolution Strategy (xNES)')
+        self.assertEqual(lines[2], 'Running in sequential mode.')
+        self.assertEqual(lines[3], 'Population size: 6')
+        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
+        self.assertEqual(lines[5][:-3], '0     6     -4.140462   0:0')
+        self.assertEqual(lines[6][:-3], '1     12    -4.140462   0:0')
+        self.assertEqual(lines[7][:-3], '2     18    -4.140462   0:0')
+        self.assertEqual(lines[8][:-3], '3     24    -4.140462   0:0')
+        self.assertEqual(lines[9][:-3], '6     42    -4.140462   0:0')
+        self.assertEqual(lines[10][:-3], '9     60    -4.140462   0:0')
+        self.assertEqual(lines[11][:-3], '10    60    -4.140462   0:0')
+        self.assertEqual(
+            lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
@@ -135,30 +131,30 @@ class TestOptimisationController(unittest.TestCase):
         # Test with error measure
         r = pints.toy.RosenbrockError()
         x = np.array([1.01, 1.01])
-        opt = pints.OptimisationController(r, x, method=method)
+        opt = pints.OptimisationController(r, x, method=pints.SNES)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
         opt.set_log_interval(4)
-        opt.set_max_iterations(10)
-        self.assertEqual(opt.max_iterations(), 10)
+        opt.set_max_iterations(11)
+        opt.optimiser().set_population_size(4)
         with StreamCapture() as c:
             opt.run()
-            log_should_be = (
-                'Minimising error measure\n'
-                'Using Exponential Natural Evolution Strategy (xNES)\n'
-                'Running in sequential mode.\n'
-                'Population size: 6\n'
-                'Iter. Eval. Best      Time m:s\n'
-                '0     6      0.888      0:00.0\n'
-                '1     12     0.888      0:00.0\n'
-                '2     18     0.29       0:00.0\n'
-                '3     24     0.29       0:00.0\n'
-                '4     30     0.0813     0:00.0\n'
-                '8     54     0.0652     0:00.0\n'
-                '10    60     0.0431     0:00.0\n'
-                'Halting: Maximum number of iterations (10) reached.\n'
-            )
-            self.assertEqual(log_should_be, c.text())
+        lines = c.text().splitlines()
+        self.assertEqual(lines[0], 'Minimising error measure')
+        self.assertEqual(
+            lines[1], 'Using Seperable Natural Evolution Strategy (SNES)')
+        self.assertEqual(lines[2], 'Running in sequential mode.')
+        self.assertEqual(lines[3], 'Population size: 4')
+        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
+        self.assertEqual(lines[5][:-3], '0     4      6.471867   0:0')
+        self.assertEqual(lines[6][:-3], '1     8      6.471867   0:0')
+        self.assertEqual(lines[7][:-3], '2     12     0.0949     0:0')
+        self.assertEqual(lines[8][:-3], '3     16     0.0949     0:0')
+        self.assertEqual(lines[9][:-3], '4     20     0.0949     0:0')
+        self.assertEqual(lines[10][:-3], '8     36     0.0165     0:0')
+        self.assertEqual(lines[11][:-3], '11    44     0.0165     0:0')
+        self.assertEqual(
+            lines[12], 'Halting: Maximum number of iterations (11) reached.')
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
