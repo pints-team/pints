@@ -348,6 +348,7 @@ The changelog is written for the benefit of PINTS _users_, and so should focus m
 Entries on testing, infrastructure, or small fixes to the documentation are optional: it is up to the developer to judge whether these will be beneficial to the user, if so they should be included, if not they should be left out to keep the release notes readable.
 
 Dates in the changelog are written in format YYYY-MM-DD [see ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html).
+If possible, entries in the changelog should include a link to the pull request that merged the changes into the main branch (and this PR in turn should link to a ticket), so that users can get more information if needed.
 
 
 
