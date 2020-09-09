@@ -997,6 +997,13 @@ class TestPrior(unittest.TestCase):
         result = p([-1e5])
         self.assertTrue(np.isfinite(result))
 
+        # Test bad truncation
+        self.assertRaises(
+            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 9.0)
+
+        self.assertRaises(
+            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 10.0)
+
     def test_truncated_normal_prior_cdf_icdf(self):
         mean = 10.0
         std = 2.0

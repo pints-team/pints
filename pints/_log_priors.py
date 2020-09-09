@@ -1116,8 +1116,10 @@ class TruncatedNormalLogPrior(pints.LogPrior):
         # Parse input arguments
         self._mean = float(mean)
         self._sd = float(sd)
-        self._a = a
-        self._b = b
+        self._a = float(a)
+        self._b = float(b)
+        if b <= a:
+            raise ValueError('Upper bound must exceed lower bound.')
 
         # Convert the upper and lower truncation levels to the Scipy definition
         self._lower = (a - self._mean) / self._sd
