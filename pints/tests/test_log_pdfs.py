@@ -349,6 +349,5 @@ class TestSumOfIndependentLogPDFs(unittest.TestCase):
         self.assertTrue(np.all(3 * dy1 == dy))
 
 
-
 if __name__ == '__main__':
     unittest.main()
