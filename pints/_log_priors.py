@@ -1079,6 +1079,83 @@ class StudentTLogPrior(pints.LogPrior):
                                  scale=self._scale, size=(n, 1))
 
 
+class TruncatedNormalLogPrior(pints.LogPrior):
+    r"""
+
+
+    Extends :class:`LogPrior`.
+    """
+
+    def __init__(self, mean, sd, a, b):
+        # Parse input arguments
+        self._mean = float(mean)
+        self._sd = float(sd)
+
+        # Convert the upper and lower truncation levels to the Scipy definition
+        self._lower = (a - self._mean) / self._sd
+        self._upper = (b - self._mean) / self._sd
+
+        # Cache constants
+        self._factor2 = 1 / self._sd**2
+
+    def __call__(self, x):
+        return scipy.stats.truncnorm.logpdf(
+            x[0],
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.truncnorm.cdf(
+            x,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        return self(x), self._factor2 * (self._mean - np.asarray(x))
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.truncnorm.ppf(
+            p,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return scipy.stats.truncnorm.stats(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            moments='m'
+        )
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.truncnorm.rvs(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            size=n
+        )
+
+
 class UniformLogPrior(pints.LogPrior):
     r"""
     Defines a uniform prior over a given range.
