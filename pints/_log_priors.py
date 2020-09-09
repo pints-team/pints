@@ -1093,20 +1093,21 @@ class TruncatedNormalLogPrior(pints.LogPrior):
     The pdf of the truncated normal distribution is given by
 
     .. math::
-        f(x|\mu, \sigma, a, b) = \frac{1}{\sigma} \frac{1}{\sqrt{2\pi}} \exp
+        f(x|\mu, \sigma, a, b) = \frac{1}{\sigma\sqrt{2\pi}} \exp
         \left(-\frac{(x-\mu)^2}{2\sigma^2}\right) \frac{1}
             {\Phi((b-\mu) / \sigma) - \Phi((a-\mu) / \sigma)}
 
-    where :math:`\mu` indicates the mean and :math:`sigma` indicates the
-    standard deviation, and :math:`\Phi` is the standard normal CDF.
+    for :math:`x \in [a, b]`, where :math:`\mu` indicates the mean and
+    :math:`\sigma` indicates the standard deviation, and :math:`\Phi` is the
+    standard normal CDF.
 
-    For example, to create a prior with mean of ``0`` and a standard deviation
-    of ``1``, bounded above at 3 and below at -2, use:
+    For example, to create a prior with mean of 0 and a standard deviation of
+    1, bounded above at 3 and below at -2, use::
 
         p = pints.TruncatedNormalLogPrior(0, 1, -2, 3)
 
-    For a normal distribution truncated in only one direction, ``numpy.inf`` or
-    ``-numpy.inf`` can be used for the unbounded direction.
+    For a normal distribution truncated on only one side, ``numpy.inf`` or
+    ``-numpy.inf`` can be used for the unbounded side.
 
     Extends :class:`LogPrior`.
     """
@@ -1147,7 +1148,10 @@ class TruncatedNormalLogPrior(pints.LogPrior):
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         dp = self._factor2 * (self._mean - np.asarray(x))
+
+        # Set values outside limits to nan
         dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
+
         return self(x), dp
 
     def icdf(self, p):
