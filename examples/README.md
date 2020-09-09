@@ -98,6 +98,7 @@ relevant code.
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
+- [Pooling parameters](./stats/pooling.ipynb)
 - [Student-t noise model](./stats/student-t-sampling-error.ipynb)
 
 
