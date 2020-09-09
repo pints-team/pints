@@ -13,7 +13,7 @@ import pints.toy
 import numpy as np
 
 
-class Testlog_posterior(unittest.TestCase):
+class TestLogPosterior(unittest.TestCase):
 
     def test_log_posterior(self):
 
@@ -66,6 +66,73 @@ class Testlog_posterior(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.LogPosterior, log_likelihood,
             pints.GaussianLogPrior(0.015, 0.3))
+
+
+class TestSumOfIndependentLogPDFs(unittest.TestCase):
+
+    def test_sum_of_independent_log_pdfs(self):
+
+        # Test single output
+        model = pints.toy.LogisticModel()
+        x = [0.015, 500]
+        sigma = 0.1
+        times = np.linspace(0, 1000, 100)
+        values = model.simulate(x, times) + 0.1
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        l2 = pints.GaussianLogLikelihood(problem)
+        ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
+        self.assertEqual(l1.n_parameters(), ll.n_parameters())
+        self.assertEqual(3 * l1(x), ll(x))
+
+        # Test single output derivatives
+        y, dy = ll.evaluateS1(x)
+        self.assertEqual(y, ll(x))
+        self.assertEqual(dy.shape, (2, ))
+        y1, dy1 = l1.evaluateS1(x)
+        self.assertTrue(np.all(3 * dy1 == dy))
+
+        # Wrong number of arguments
+        self.assertRaises(TypeError, pints.SumOfIndependentLogPDFs)
+        self.assertRaises(
+            ValueError, pints.SumOfIndependentLogPDFs, [l1])
+
+        # Wrong types
+        self.assertRaises(
+            ValueError, pints.SumOfIndependentLogPDFs, [l1, 1])
+        self.assertRaises(
+            ValueError, pints.SumOfIndependentLogPDFs, [problem, l1])
+
+        # Mismatching dimensions
+        self.assertRaises(
+            ValueError, pints.SumOfIndependentLogPDFs, [l1, l2])
+
+        # Test multi-output
+        model = pints.toy.FitzhughNagumoModel()
+        x = model.suggested_parameters()
+        nt = 10
+        nx = model.n_parameters()
+        times = np.linspace(0, 10, nt)
+        values = model.simulate(x, times) + 0.01
+        problem = pints.MultiOutputProblem(model, times, values)
+        sigma = 0.01
+        l1 = pints.GaussianKnownSigmaLogLikelihood(problem, sigma)
+        ll = pints.SumOfIndependentLogPDFs([l1, l1, l1])
+        self.assertEqual(l1.n_parameters(), ll.n_parameters())
+        self.assertEqual(3 * l1(x), ll(x))
+
+        # Test multi-output derivatives
+        y, dy = ll.evaluateS1(x)
+
+        # Note: y and ll(x) differ a bit, because the solver acts slightly
+        # different when evaluating with and without sensitivities!
+        self.assertAlmostEqual(y, ll(x), places=3)
+
+        self.assertEqual(dy.shape, (nx, ))
+        y1, dy1 = l1.evaluateS1(x)
+        self.assertTrue(np.all(3 * dy1 == dy))
+
 
 
 if __name__ == '__main__':
