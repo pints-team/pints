@@ -172,7 +172,7 @@ class PooledLogPDF(LogPDF):
     Example
     -------
     ::
-    
+
         pooled_log_likelihood = pints.PooledLogPDF(
             log_pdfs=[
                 pints.GaussianLogLikelihood(problem1),
