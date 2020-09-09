@@ -68,6 +68,221 @@ class TestLogPosterior(unittest.TestCase):
             pints.GaussianLogPrior(0.015, 0.3))
 
 
+class TestPooledLogPDF(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test log-pdfs
+        model = pints.toy.ConstantModel(1)
+
+        problem = pints.SingleOutputProblem(
+            model=model, times=[1, 2, 3, 4], values=[1, 2, 3, 4])
+        cls.log_pdf_1 = pints.GaussianLogLikelihood(problem)
+
+        problem = pints.SingleOutputProblem(
+            model=model, times=[1, 2, 3, 4], values=[1, 1, 1, 1])
+        cls.log_pdf_2 = pints.GaussianLogLikelihood(problem)
+
+    def test_bad_number_log_pdfs(self):
+        log_pdfs = [self.log_pdf_1]
+        pooled = [True, True]
+        self.assertRaisesRegex(
+            ValueError, 'PooledLogPDF requires', pints.PooledLogPDF, log_pdfs,
+            pooled)
+
+    def test_bad_log_pdfs_objects(self):
+        log_pdfs = ['log_pdf_1', 'log_pdf_2']
+        pooled = [True, True]
+        self.assertRaisesRegex(
+            ValueError, 'All log-pdfs passed', pints.PooledLogPDF, log_pdfs,
+            pooled)
+
+    def test_bad_log_pdfs_parameters(self):
+        model = pints.toy.ConstantModel(1)
+        problem = pints.SingleOutputProblem(
+            model=model, times=[1, 2, 3, 4], values=[1, 2, 3, 4])
+        log_pdf = pints.ConstantAndMultiplicativeGaussianLogLikelihood(problem)
+
+        log_pdfs = [self.log_pdf_1, log_pdf]
+        pooled = [True, True]
+
+        self.assertRaisesRegex(
+            ValueError, 'All log-pdfs passed to PooledLogPDFs',
+            pints.PooledLogPDF, log_pdfs, pooled)
+
+    def test_bad_pooled_length(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, True, True]
+        self.assertRaisesRegex(
+            ValueError, 'The array-like input `pooled` needs',
+            pints.PooledLogPDF, log_pdfs, pooled)
+
+    def test_bad_pooled_content(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, 'Yes']
+        self.assertRaisesRegex(
+            ValueError, 'The array-like input `pooled` passed',
+            pints.PooledLogPDF, log_pdfs, pooled)
+
+    def test_n_parameters(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+
+        # Pool nothing
+        pooled = [False, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        n_parameters = \
+            self.log_pdf_1.n_parameters() + self.log_pdf_2.n_parameters()
+        self.assertEqual(log_pdf.n_parameters(), n_parameters)
+
+        # Pool first parameter
+        pooled = [True, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        n_parameters = 2 * 1 + 1
+        self.assertEqual(log_pdf.n_parameters(), n_parameters)
+
+        # Pool second parameter
+        pooled = [False, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        n_parameters = 2 * 1 + 1
+        self.assertEqual(log_pdf.n_parameters(), n_parameters)
+
+        # Pool both parameters
+        pooled = [True, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        n_parameters = 2 * 1
+        self.assertEqual(log_pdf.n_parameters(), n_parameters)
+
+    def test_call_unpooled(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [False, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.2]
+        param_2 = [2, 0.1]
+
+        score = self.log_pdf_1(param_1) + self.log_pdf_2(param_2)
+        self.assertEqual(log_pdf(param_1 + param_2), score)
+
+    def test_call_partially_pooled(self):
+        # Pool first parameter
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.2]
+        param_2 = [1, 0.1]
+        param = [0.2, 0.1, 1]
+
+        score = self.log_pdf_1(param_1) + self.log_pdf_2(param_2)
+        self.assertEqual(log_pdf(param), score)
+
+        # Pool second parameter
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [False, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.1]
+        param_2 = [2, 0.1]
+        param = [1, 2, 0.1]
+
+        score = self.log_pdf_1(param_1) + self.log_pdf_2(param_2)
+        self.assertEqual(log_pdf(param), score)
+
+    def test_call_pooled(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param = [1, 0.1]
+
+        score = self.log_pdf_1(param) + self.log_pdf_2(param)
+        self.assertEqual(log_pdf(param), score)
+
+    def test_evaluateS1_unpooled(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [False, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.2]
+        param_2 = [2, 0.1]
+
+        score_1, dscore_1 = self.log_pdf_1.evaluateS1(param_1)
+        score_2, dscore_2 = self.log_pdf_2.evaluateS1(param_2)
+
+        score, dscore = log_pdf.evaluateS1(param_1 + param_2)
+        self.assertEqual(score, score_1 + score_2)
+
+        self.assertEqual(len(dscore), 4)
+        self.assertEqual(dscore[0], dscore_1[0])
+        self.assertEqual(dscore[1], dscore_1[1])
+        self.assertEqual(dscore[2], dscore_2[0])
+        self.assertEqual(dscore[3], dscore_2[1])
+
+    def test_evaluateS1_partially_pooled(self):
+        # Pool first parameter
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, False]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.2]
+        param_2 = [1, 0.1]
+        param = [0.2, 0.1, 1]
+
+        score_1, dscore_1 = self.log_pdf_1.evaluateS1(param_1)
+        score_2, dscore_2 = self.log_pdf_2.evaluateS1(param_2)
+
+        score, dscore = log_pdf.evaluateS1(param)
+        self.assertEqual(score, score_1 + score_2)
+
+        self.assertEqual(len(dscore), 3)
+        self.assertEqual(dscore[0], dscore_1[1])
+        self.assertEqual(dscore[1], dscore_2[1])
+        self.assertEqual(dscore[2], dscore_1[0] + dscore_2[0])
+
+        # Pool second parameter
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [False, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.1]
+        param_2 = [2, 0.1]
+        param = [1, 2, 0.1]
+
+        score_1, dscore_1 = self.log_pdf_1.evaluateS1(param_1)
+        score_2, dscore_2 = self.log_pdf_2.evaluateS1(param_2)
+
+        score, dscore = log_pdf.evaluateS1(param)
+        self.assertEqual(score, score_1 + score_2)
+
+        self.assertEqual(len(dscore), 3)
+        self.assertEqual(dscore[0], dscore_1[0])
+        self.assertEqual(dscore[1], dscore_2[0])
+        self.assertEqual(dscore[2], dscore_1[1] + dscore_2[1])
+
+    def test_evaluateS1_pooled(self):
+        log_pdfs = [self.log_pdf_1, self.log_pdf_2]
+        pooled = [True, True]
+        log_pdf = pints.PooledLogPDF(log_pdfs, pooled)
+
+        param_1 = [1, 0.2]
+        param_2 = [1, 0.2]
+        param = [1, 0.2]
+
+        score_1, dscore_1 = self.log_pdf_1.evaluateS1(param_1)
+        score_2, dscore_2 = self.log_pdf_2.evaluateS1(param_2)
+
+        score, dscore = log_pdf.evaluateS1(param)
+        self.assertEqual(score, score_1 + score_2)
+
+        self.assertEqual(len(dscore), 2)
+        self.assertEqual(dscore[0], dscore_1[0] + dscore_2[0])
+        self.assertEqual(dscore[1], dscore_1[1] + dscore_2[1])
+
+
 class TestSumOfIndependentLogPDFs(unittest.TestCase):
 
     def test_sum_of_independent_log_pdfs(self):
