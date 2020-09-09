@@ -1090,6 +1090,8 @@ class TruncatedNormalLogPrior(pints.LogPrior):
         # Parse input arguments
         self._mean = float(mean)
         self._sd = float(sd)
+        self._a = a
+        self._b = b
 
         # Convert the upper and lower truncation levels to the Scipy definition
         self._lower = (a - self._mean) / self._sd
@@ -1119,7 +1121,9 @@ class TruncatedNormalLogPrior(pints.LogPrior):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        return self(x), self._factor2 * (self._mean - np.asarray(x))
+        dp = self._factor2 * (self._mean - np.asarray(x))
+        dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
+        return self(x), dp
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
@@ -1152,7 +1156,7 @@ class TruncatedNormalLogPrior(pints.LogPrior):
             self._upper,
             loc=self._mean,
             scale=self._sd,
-            size=n
+            size=(n, 1)
         )
 
 
