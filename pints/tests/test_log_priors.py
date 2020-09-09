@@ -980,6 +980,23 @@ class TestPrior(unittest.TestCase):
         # Test n_parameters
         self.assertEqual(p.n_parameters(), 1)
 
+        # Test one sided truncation
+        mean = 5.0
+        std = 2.5
+        a = 0.0
+        b = np.inf
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        result = p([1e5])
+        self.assertTrue(np.isfinite(result))
+
+        mean = 5.0
+        std = 2.5
+        a = -np.inf
+        b = 10.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        result = p([-1e5])
+        self.assertTrue(np.isfinite(result))
+
     def test_truncated_normal_prior_cdf_icdf(self):
         mean = 10.0
         std = 2.0
