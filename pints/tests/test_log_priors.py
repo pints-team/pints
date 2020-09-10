@@ -977,6 +977,13 @@ class TestPrior(unittest.TestCase):
             scipy.stats.truncnorm.logpdf(0.1, -2, 2, loc=mean, scale=std)
         )
 
+        # Test input at each bound, this should return a finite number
+        x = [b]
+        self.assertTrue(np.isfinite(p(x)))
+
+        x = [a]
+        self.assertTrue(np.isfinite(p(x)))
+
         # Test n_parameters
         self.assertEqual(p.n_parameters(), 1)
 
