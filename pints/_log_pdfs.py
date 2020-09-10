@@ -117,22 +117,21 @@ class LogPrior(LogPDF):
 
 class PooledLogPDF(LogPDF):
     r"""
-    Calculates a sum of :class:`LogPDF` objects, while pooling selected
-    parameters across log-pdfs.
+    Creates an object of :class:LogPDF, with a log-pdf which is the sum of the
+    individual log-pdfs, while pooling selected parameters.
 
     This :class:`LogPDF` requires that all :class:`LogPDF` objects have the
     same number of parameters.
 
     This is useful for e.g. modelling the time-series of multiple individuals
     (each individual defines a separate :class:`LogPDF`), and some parameters
-    are expected to be the same across individuals. This may be a realistic
-    expectation for the noise parameter, if the experimental set up didn't vary
-    for the indiviudals.
+    are expected to be the same across individuals (for example, the noise
+    parameter across different individuals within the same experiment).
 
     For two :class:`LogPDF` objects :math:`L _1`  and :math:`L _2` with
     parameters :math:`(\psi _1, \theta _1`) and :math:`(\psi _2, \theta _2`)
     respectively, a pooling of the :math:`\theta _i` results in a pooled
-    log-pdf of the form
+    log-pdfs of the form
 
     .. math::
         \log L(\psi _1, \psi _2, \theta | D_1, D_2) =
@@ -231,7 +230,8 @@ class PooledLogPDF(LogPDF):
         # pooled parameters
         params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
         if self._n_pooled > 0:
-            params_ind[self._pooled] = parameters[-self._n_pooled:]
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
 
         # Compute pdf score
         total = 0
@@ -258,7 +258,8 @@ class PooledLogPDF(LogPDF):
         # pooled parameters
         params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
         if self._n_pooled > 0:
-            params_ind[self._pooled] = parameters[-self._n_pooled:]
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
 
         # Compute pdf score and partials
         total = 0
