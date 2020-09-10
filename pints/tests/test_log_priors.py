@@ -906,6 +906,155 @@ class TestPrior(unittest.TestCase):
         samples4 = p4.sample(n)
         self.assertGreater(np.mean(samples4), np.mean(samples1))
 
+    def test_truncated_normal_prior(self):
+        mean = 10
+        std = 2
+        a = -1.0
+        b = 14.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+
+        n = 10000
+
+        # Test left half of distribution
+        x = np.linspace(mean - 5.5 * std, mean, n)
+        px = [p([i]) for i in x]
+        self.assertTrue(np.all(px[1:] >= px[:-1]))
+
+        # Test right half of distribution
+        y = np.linspace(mean, mean + 2 * std, n)
+        py = [p([i]) for i in y]
+        self.assertTrue(np.all(py[1:] <= py[:-1]))
+
+        # Test means
+        mean = 1.0
+        std = 1.5
+        a = 2.0
+        b = 11.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+
+        phi = scipy.stats.norm.pdf
+        ndtr = scipy.special.ndtr
+        theoretical_mean = \
+            mean + std / (ndtr((b - mean) / std) - ndtr((a - mean) / std)) \
+            * (phi((a - mean) / std) - phi((b - mean) / std))
+        self.assertAlmostEqual(p.mean(), theoretical_mean)
+
+        # Test derivatives
+        x = [4.5]
+        y, dy = p.evaluateS1(x)
+        self.assertEqual(y, p(x))
+        self.assertEqual(dy.shape, (1, ))
+
+        dx = 1e-6
+        self.assertAlmostEqual(dy[0], (p([x[0] + dx]) - p(x)) / dx, places=4)
+
+        # Test inputs outside the truncation limits
+        x = [11.5]
+        y, dy = p.evaluateS1(x)
+        self.assertTrue(np.isneginf(p(x)))
+        self.assertTrue(np.isneginf(y))
+        self.assertTrue(np.isnan(dy))
+
+        x = [-1.0]
+        y, dy = p.evaluateS1(x)
+        self.assertTrue(np.isneginf(p(x)))
+        self.assertTrue(np.isneginf(y))
+        self.assertTrue(np.isnan(dy))
+
+        # Test specific points
+        mean = 5.0
+        std = 2.5
+        a = 0.0
+        b = 10.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        self.assertAlmostEqual(
+            p([5.0]),
+            scipy.stats.truncnorm.logpdf(5.0, -2, 2, loc=mean, scale=std)
+        )
+
+        self.assertAlmostEqual(
+            p([0.1]),
+            scipy.stats.truncnorm.logpdf(0.1, -2, 2, loc=mean, scale=std)
+        )
+
+        # Test input at each bound, this should return a finite number
+        x = [b]
+        self.assertTrue(np.isfinite(p(x)))
+
+        x = [a]
+        self.assertTrue(np.isfinite(p(x)))
+
+        # Test n_parameters
+        self.assertEqual(p.n_parameters(), 1)
+
+        # Test one sided truncation
+        mean = 5.0
+        std = 2.5
+        a = 0.0
+        b = np.inf
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        result = p([1e5])
+        self.assertTrue(np.isfinite(result))
+
+        mean = 5.0
+        std = 2.5
+        a = -np.inf
+        b = 10.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        result = p([-1e5])
+        self.assertTrue(np.isfinite(result))
+
+        # Test bad truncation
+        self.assertRaises(
+            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 9.0)
+
+        self.assertRaises(
+            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 10.0)
+
+    def test_truncated_normal_prior_cdf_icdf(self):
+        mean = 10.0
+        std = 2.0
+        a = -1.0
+        b = 14.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+
+        ndtr = scipy.special.ndtr
+        x = 3.0
+        theoretical_cdf = (ndtr((x - mean) / std) - ndtr((a - mean) / std)) \
+            / (ndtr((b - mean) / std) - ndtr((a - mean) / std))
+        self.assertAlmostEqual(p.cdf(x), theoretical_cdf)
+
+        mean = 0.0
+        std = 2.0
+        a = -4.0
+        b = 4.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        self.assertAlmostEqual(p.icdf(0.5), 0.0)
+        self.assertTrue(2.0 < p.icdf(0.99) < 4.0)
+        self.assertTrue(-4.0 < p.icdf(0.01) < -2.0)
+
+    def test_truncated_normal_prior_sampling(self):
+        mean = 10.0
+        std = 2.0
+        a = -1.0
+        b = 14.0
+        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+
+        # Check number of samples
+        d = 1
+        n = 1
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+        n = 10
+        x = p.sample(n)
+        self.assertEqual(x.shape, (n, d))
+
+        # Check that the positions of samples are within truncation limits
+        np.random.seed(1)
+        x = p.sample(10000)
+        self.assertTrue(np.max(x) <= 14.0)
+        self.assertTrue(np.min(x) >= -1.0)
+
     def test_uniform_prior(self):
         lower = np.array([1, 2])
         upper = np.array([10, 20])
