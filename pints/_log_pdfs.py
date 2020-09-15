@@ -117,46 +117,30 @@ class LogPrior(LogPDF):
 
 class PooledLogPDF(LogPDF):
     r"""
-    Creates an object of :class:LogPDF, with a log-pdf which is the sum of the
-    individual log-pdfs, while pooling selected parameters.
-
-    This :class:`LogPDF` requires that all :class:`LogPDF` objects have the
-    same number of parameters.
+    Combines :math:`m` :class:`LogPDFs<pints.LogPDF>`, each with :math:`n`
+    parameters, into a single LogPDF where :math:`k` parameters are "pooled"
+    (i.e. have the same value for each LogPDF), so that the resulting combined
+    LogPDF has :math:`m (n - k) + k` parameters.
 
     This is useful for e.g. modelling the time-series of multiple individuals
     (each individual defines a separate :class:`LogPDF`), and some parameters
     are expected to be the same across individuals (for example, the noise
     parameter across different individuals within the same experiment).
 
-    For two :class:`LogPDF` objects :math:`L _1`  and :math:`L _2` with
-    parameters :math:`(\psi _1, \theta _1`) and :math:`(\psi _2, \theta _2`)
-    respectively, a pooling of the :math:`\theta _i` results in a pooled
-    log-pdfs of the form
+    For two :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
+    :math:`L _2` with parameters :math:`(\psi _1, \theta _1`) and
+    :math:`(\psi _2, \theta _2`) respectively, a pooling of the
+    :math:`\theta _i` results in a pooled log-pdfs of the form
 
     .. math::
-        \log L(\psi _1, \psi _2, \theta | D_1, D_2) =
-            \log L(\psi _1, \theta | D_1) + \log L(\psi _2, \theta | D_2),
+        L(\psi _1, \psi _2, \theta | D_1, D_2) =
+            L(\psi _1, \theta | D_1) + L(\psi _2, \theta | D_2),
 
-    where :math:`\theta := \theta _1 = \theta _2`, and $D_i$ is the measured
-    time-series of individual :math:`i`.
+    where :math:`\theta := \theta _1 = \theta _2`, and :math:`D_i` is the
+    measured time-series of individual :math:`i`.
 
-    In general, the search of a :class:`PooledLogPDF` has dimensionality
-    :math:`nd_{\text{up}} + d_{\text{p}}`, where :math:`n` is the number of
-    individuals, :math:`d_{\text{up}}` is the dimension of the unpooled
-    :math:`psi` parameters, and :math:`d_{\text{up}}` is the dimension of the
-    pooled :math:`\theta` parameter.
-
-    The order of parameters for evaluation is largely kept, and the parameters
-    of individual log-pdfs are concatenated. However, pooled parameters are
-    always prepended. Consider for example two log-pdf with parameters
-    :math:`(\psi _{1,1}, \psi _{1, 2}, \psi _{1,3}, \psi _{1,4})` and
-    :math:`(\psi _{2,1}, \psi _{2, 2}, \psi _{2,3}, \psi _{2,4})`. Pooling the
-    first and the last parameter, i.e.
-    :math:`\theta _1 := \psi _{1,1} = \psi _{2, 1}` and
-    :math:`\theta _4 := \psi _{1,4} = \psi _{2, 4}` results in and expect
-    order of parameters
-    :math:`(\psi _{1, 2}, \psi _{1,3}, \psi _{2, 2}, \psi _{2,3}, \theta _1,
-    \theta _4)`.
+    The parameters in a :class:`PooledLogPDF` are ordered such that unpooled
+    parameters come before pooled parameters.
 
     Extends :class:`LogPDF`.
 
@@ -166,7 +150,7 @@ class PooledLogPDF(LogPDF):
         A sequence of :class:`LogPDF` objects.
     pooled
         An array-like object of dtype bool, indicating which parameters across
-        the likelihoods are pooled (`True`) or remain unpooled (`False`).
+        the likelihoods are pooled (``True``) or remain unpooled (``False``).
 
     Example
     -------
@@ -209,11 +193,10 @@ class PooledLogPDF(LogPDF):
                 'as the number of parameters of the individual log-pdfs.')
 
         # Check that pooled contains only booleans
-        for p in self._pooled:
-            if not isinstance(p, np.bool_):
-                raise ValueError(
-                    'The array-like input `pooled` passed to PooledLogPDFs '
-                    'has to contain booleans exclusively.')
+        if self._pooled.dtype != np.bool:
+            raise ValueError(
+                'The array-like input `pooled` passed to PooledLogPDFs '
+                'has to contain booleans exclusively.')
 
         # Get dimension of search space
         self._n_pooled = np.sum(self._pooled)
