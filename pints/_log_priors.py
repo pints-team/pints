@@ -1079,18 +1079,20 @@ class StudentTLogPrior(pints.LogPrior):
                                  scale=self._scale, size=(n, 1))
 
 
-class TruncatedNormalLogPrior(pints.LogPrior):
+class TruncatedGaussianLogPrior(pints.LogPrior):
     r"""
-    Defines a truncated normal log prior.
+    Defines a truncated Gaussian log prior.
 
-    The truncated normal distribution is similar to the Gaussian distribution,
-    but constrained to lie between two values.
+    This distribution is also known as the truncated Normal distribution.
+
+    The truncated Gaussian distribution is similar to the Gaussian
+    distribution, but constrained to lie between two values.
 
     The parameters are the mean ``mean`` and standard deviation ``sd``, as in
     the Gaussian distribution, as well as a lower bound ``a`` and an upper
     bound ``b``.
 
-    The pdf of the truncated normal distribution is given by
+    The pdf of the truncated Gaussian distribution is given by
 
     .. math::
         f(x|\mu, \sigma, a, b) = \frac{1}{\sigma\sqrt{2\pi}} \exp
@@ -1104,9 +1106,9 @@ class TruncatedNormalLogPrior(pints.LogPrior):
     For example, to create a prior with mean of 0 and a standard deviation of
     1, bounded above at 3 and below at -2, use::
 
-        p = pints.TruncatedNormalLogPrior(0, 1, -2, 3)
+        p = pints.TruncatedGaussianLogPrior(0, 1, -2, 3)
 
-    For a normal distribution truncated on only one side, ``numpy.inf`` or
+    For a Gaussian distribution truncated on only one side, ``numpy.inf`` or
     ``-numpy.inf`` can be used for the unbounded side.
 
     Extends :class:`LogPrior`.

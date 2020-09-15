@@ -26,7 +26,7 @@ Overview:
 - :class:`MultivariateGaussianLogPrior`
 - :class:`NormalLogPrior`
 - :class:`StudentTLogPrior`
-- :class:`TruncatedNormalLogPrior`
+- :class:`TruncatedGaussianLogPrior`
 - :class:`UniformLogPrior`
 
 
@@ -54,6 +54,6 @@ Overview:
 
 .. autoclass:: StudentTLogPrior
 
-.. autoclass:: TruncatedNormalLogPrior
+.. autoclass:: TruncatedGaussianLogPrior
 
 .. autoclass:: UniformLogPrior

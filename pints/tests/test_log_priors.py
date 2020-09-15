@@ -906,12 +906,12 @@ class TestPrior(unittest.TestCase):
         samples4 = p4.sample(n)
         self.assertGreater(np.mean(samples4), np.mean(samples1))
 
-    def test_truncated_normal_prior(self):
+    def test_truncated_gaussian_prior(self):
         mean = 10
         std = 2
         a = -1.0
         b = 14.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
 
         n = 10000
 
@@ -930,7 +930,7 @@ class TestPrior(unittest.TestCase):
         std = 1.5
         a = 2.0
         b = 11.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
 
         phi = scipy.stats.norm.pdf
         ndtr = scipy.special.ndtr
@@ -966,7 +966,7 @@ class TestPrior(unittest.TestCase):
         std = 2.5
         a = 0.0
         b = 10.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
         self.assertAlmostEqual(
             p([5.0]),
             scipy.stats.truncnorm.logpdf(5.0, -2, 2, loc=mean, scale=std)
@@ -992,7 +992,7 @@ class TestPrior(unittest.TestCase):
         std = 2.5
         a = 0.0
         b = np.inf
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
         result = p([1e5])
         self.assertTrue(np.isfinite(result))
 
@@ -1000,23 +1000,23 @@ class TestPrior(unittest.TestCase):
         std = 2.5
         a = -np.inf
         b = 10.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
         result = p([-1e5])
         self.assertTrue(np.isfinite(result))
 
         # Test bad truncation
         self.assertRaises(
-            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 9.0)
+            ValueError, pints.TruncatedGaussianLogPrior, 0.0, 1.0, 10.0, 9.0)
 
         self.assertRaises(
-            ValueError, pints.TruncatedNormalLogPrior, 0.0, 1.0, 10.0, 10.0)
+            ValueError, pints.TruncatedGaussianLogPrior, 0.0, 1.0, 10.0, 10.0)
 
-    def test_truncated_normal_prior_cdf_icdf(self):
+    def test_truncated_gaussian_prior_cdf_icdf(self):
         mean = 10.0
         std = 2.0
         a = -1.0
         b = 14.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
 
         ndtr = scipy.special.ndtr
         x = 3.0
@@ -1028,17 +1028,17 @@ class TestPrior(unittest.TestCase):
         std = 2.0
         a = -4.0
         b = 4.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
         self.assertAlmostEqual(p.icdf(0.5), 0.0)
         self.assertTrue(2.0 < p.icdf(0.99) < 4.0)
         self.assertTrue(-4.0 < p.icdf(0.01) < -2.0)
 
-    def test_truncated_normal_prior_sampling(self):
+    def test_truncated_gaussian_prior_sampling(self):
         mean = 10.0
         std = 2.0
         a = -1.0
         b = 14.0
-        p = pints.TruncatedNormalLogPrior(mean, std, a, b)
+        p = pints.TruncatedGaussianLogPrior(mean, std, a, b)
 
         # Check number of samples
         d = 1

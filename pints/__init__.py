@@ -103,7 +103,7 @@ from ._log_priors import (
     MultivariateGaussianLogPrior,
     NormalLogPrior,
     StudentTLogPrior,
-    TruncatedNormalLogPrior,
+    TruncatedGaussianLogPrior,
     UniformLogPrior,
 )
 
