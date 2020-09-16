@@ -258,8 +258,11 @@ class PooledLogPDF(LogPDF):
             # Compute pdf score and partials for individual
             score, partials = pdf.evaluateS1(params_ind)
 
-            # Add contributions to score and partials. Note that partials
-            # w.r.t. unpooled parameters receive only one contribution
+            # Add contributions to score and partials.
+            # NOTE: Partials of unpooled parameters equal partials of the
+            # associated individual likelihood; Partials of pooled parameters
+            # equals to the sum of partials from the individual likelihoods
+            # with respect to that parameter.
             total += score
             dtotal[idx * self._n_unpooled: (idx + 1) * self._n_unpooled] = \
                 partials[~self._pooled]
