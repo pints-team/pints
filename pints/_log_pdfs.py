@@ -127,9 +127,9 @@ class PooledLogPDF(LogPDF):
     are expected to be the same across individuals (for example, the noise
     parameter across different individuals within the same experiment).
 
-    For two :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
-    :math:`L _2` with parameters :math:`(\psi _1, \theta _1`) and
-    :math:`(\psi _2, \theta _2`) respectively, a pooling of the
+    For :math:`m=2` :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
+    :math:`L _2` with :math:`n=2` parameters :math:`(\psi _1, \theta _1)` and
+    :math:`(\psi _2, \theta _2)` respectively, a pooling of the
     :math:`\theta _i` results in a pooled log-pdfs of the form
 
     .. math::
@@ -137,10 +137,13 @@ class PooledLogPDF(LogPDF):
             L(\psi _1, \theta | D_1) + L(\psi _2, \theta | D_2),
 
     where :math:`\theta := \theta _1 = \theta _2`, and :math:`D_i` is the
-    measured time-series of individual :math:`i`.
+    measured time-series of individual :math:`i`. As :math:`k=1` parameters
+    where pooled across the log-likelihoods, the pooled log-likelihood has
+    3 parameters.
 
     The parameters in a :class:`PooledLogPDF` are ordered such that unpooled
-    parameters come before pooled parameters.
+    parameters come before pooled parameters. The order of the unpooled
+    parameters is determined by the order of the individual likelihoods.
 
     Extends :class:`LogPDF`.
 
