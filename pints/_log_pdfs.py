@@ -149,7 +149,7 @@ class PooledLogPDF(LogPDF):
     log_pdfs
         A sequence of :class:`LogPDF` objects.
     pooled
-        An array-like object of dtype bool, indicating which parameters across
+        A sequence of booleans indicating which parameters across
         the likelihoods are pooled (``True``) or remain unpooled (``False``).
 
     Example
