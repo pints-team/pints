@@ -120,7 +120,7 @@ class PooledLogPDF(LogPDF):
     Combines :math:`m` :class:`LogPDFs<pints.LogPDF>`, each with :math:`n`
     parameters, into a single LogPDF where :math:`k` parameters are "pooled"
     (i.e. have the same value for each LogPDF), so that the resulting combined
-    LogPDF has :math:`m (n - k) + k` parameters.
+    LogPDF has :math:`m (n - k) + k` independent parameters.
 
     This is useful for e.g. modelling the time-series of multiple individuals
     (each individual defines a separate :class:`LogPDF`), and some parameters
@@ -233,6 +233,8 @@ class PooledLogPDF(LogPDF):
     def evaluateS1(self, parameters):
         """
         See :meth:`LogPDF.evaluateS1()`.
+
+        The partial derivatives of the pooled log-likelihood with respect to 
 
         *This method only works if all the underlying :class:`LogPDF` objects
         implement the optional method :meth:`LogPDF.evaluateS1()`!*
