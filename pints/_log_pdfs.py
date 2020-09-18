@@ -134,7 +134,7 @@ class PooledLogPDF(LogPDF):
 
     .. math::
         L(\psi _1, \psi _2, \theta | D_1, D_2) =
-            L(\psi _1, \theta | D_1) + L(\psi _2, \theta | D_2),
+            L _1(\psi _1, \theta | D_1) + L _2(\psi _2, \theta | D_2),
 
     where :math:`\theta := \theta _1 = \theta _2`, and :math:`D_i` is the
     measured time-series of individual :math:`i`. As :math:`k=1` parameters
@@ -231,10 +231,30 @@ class PooledLogPDF(LogPDF):
         return total
 
     def evaluateS1(self, parameters):
-        """
+        r"""
         See :meth:`LogPDF.evaluateS1()`.
 
-        The partial derivatives of the pooled log-likelihood with respect to 
+        The partial derivatives of the pooled log-likelihood with respect to
+        unpooled parameters equals the partial derivative of the corresponding
+        indiviudal log-likelihood.
+
+        .. math::
+            \frac{\partial L}{\partial \psi} =
+            \frac{\partial L_i}{\partial \psi},
+
+        where :math:`L` is the pooled log-likelihood, :math:`\psi` an unpooled
+        parameter and :math:`L _i` the individual log-likelihood that depends
+        on :math:`\psi`.
+
+        For a pooled parameter :math:`\theta` the partial derivative of the
+        pooled log-likelihood equals to the sum of partial derivatives of all
+        individual log-likelihoods
+
+        .. math::
+            \frac{\partial L}{\partial \theta} =
+            \sum _{i=1}^n\frac{\partial L_i}{\partial \theta}.
+
+        Here :math:`n` is the number of individual log-likelihoods.
 
         *This method only works if all the underlying :class:`LogPDF` objects
         implement the optional method :meth:`LogPDF.evaluateS1()`!*
