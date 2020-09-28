@@ -21,6 +21,16 @@ class Transformation(object):
     the transformation of a parameter vector from the model space ``p`` to the
     search space ``q`` by using ``q = trans.to_search(p)`` and the inverse by
     using ``p = trans.to_model(q)``.
+
+    References
+    ----------
+    .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data.
+           Erik Jorgensen and Asger Roer Pedersen.
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
+
+    .. [2] The Matrix Cookbook.
+           Kaare Brandt Petersen and Michael Syskind Pedersen.
+           2012.
     """
     def convert_log_pdf(self, log_pdf):
         """
@@ -72,12 +82,6 @@ class Transformation(object):
         from the inverse function theorem, i.e. the matrix inverse of the
         Jacobian matrix of an invertible function is the Jacobian matrix of the
         inverse function.
-
-        References
-        ----------
-        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data.
-               Erik Jorgensen and Asger Roer Pedersen.
-               http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
         return np.matmul(np.matmul(jac_inv, C), jac_inv.T)
@@ -121,12 +125,6 @@ class Transformation(object):
                     \mathbf{J}^{-1} (\mathbf{J}^{-1})^T
                 \right)^{1/2}_{i, i}
                 s_i(\boldsymbol{p}).
-
-        References
-        ----------
-        .. [1] How to Obtain Those Nasty Standard Errors From Transformed Data.
-               Erik Jorgensen and Asger Roer Pedersen.
-               http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.9023
         """
         jac_inv = np.linalg.pinv(self.jacobian(q))
         return s * np.sqrt(np.diagonal(np.matmul(jac_inv, jac_inv.T)))
@@ -201,7 +199,7 @@ class Transformation(object):
 
         The absolute value of the determinant of the Jacobian is provided by
         :meth:`Transformation.log_jacobian_det`. The default implementation
-        calculates the derivatives of the log-determinant using [1]_
+        calculates the derivatives of the log-determinant using [2]_
 
         .. math::
             \frac{d}{dq} \log(|det(\mathbf{J})|) =
@@ -215,12 +213,6 @@ class Transformation(object):
 
         *This is an optional method.* It is needed when transformation is
         performed on :class:`LogPDF` and that requires ``evaluateS1()``.
-
-        References
-        ----------
-        .. [1] The Matrix Cookbook.
-               Kaare Brandt Petersen and Michael Syskind Pedersen.
-               2012.
         """
         # Directly calculate the derivative using jacobian_S1(), we have
         #
