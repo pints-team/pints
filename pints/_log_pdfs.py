@@ -144,16 +144,18 @@ class PooledLogPDF(LogPDF):
             L _2(\psi ^{(2)}_1, \psi _2, \psi _3, \psi ^{(2)}_4 | D_2),
 
     :math:`D_i` is the measured time-series of individual :math:`i`. As
-    :math:`k=1` parameters where pooled across the log-likelihoods, the
-    pooled log-likelihood has 5 parameters.
+    :math:`k=2` parameters where pooled across the log-likelihoods, the
+    pooled log-likelihood has six parameters in the following order:
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4,
+    \psi _2, \psi _3)`.
 
     Note that the input parameters of a :class:`PooledLogPDF` are not just a
     simple concatenation of the parameters of the individual
     :class:`LogPDFs<pints.LogPDF>`. The pooled parameters are only listed
-    once and moved to the end of the parameter list. This avoids inputting the
-    value of the pooled parameters at mutliple positions. Otherwise the order of
-    the parameters is determined firstly by the order of the likelihoods and then
-    by the order of the parameters of those likelihoods.
+    once and are moved to the end of the parameter list. This avoids inputting
+    the value of the pooled parameters at mutliple positions. Otherwise the
+    order of the parameters is determined firstly by the order of the
+    likelihoods and then by the order of the parameters of those likelihoods.
 
     Extends :class:`LogPDF`.
 
