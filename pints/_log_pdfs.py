@@ -115,6 +115,201 @@ class LogPrior(LogPDF):
         raise NotImplementedError
 
 
+class PooledLogPDF(LogPDF):
+    r"""
+    Combines :math:`m` :class:`LogPDFs<pints.LogPDF>`, each with :math:`n`
+    parameters, into a single LogPDF where :math:`k` parameters are "pooled"
+    (i.e. have the same value for each LogPDF), so that the resulting combined
+    LogPDF has :math:`m (n - k) + k` independent parameters.
+
+    This is useful for e.g. modelling the time-series of multiple individuals
+    (each individual defines a separate :class:`LogPDF`), and some parameters
+    are expected to be the same across individuals (for example, the noise
+    parameter across different individuals within the same experiment).
+
+    For two :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
+    :math:`L _2` with four parameters
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_2, \psi ^{(1)}_3, \psi ^{(1)}_4)`
+    and
+    :math:`(\psi ^{(2)}_1, \psi ^{(2)}_2, \psi ^{(2)}_3, \psi ^{(2)}_4)`
+    respectively, a pooling of the second and third parameter
+    :math:`\psi _2 := \psi ^{(1)}_2 = \psi ^{(2)}_2`,
+    :math:`\psi _3 := \psi ^{(1)}_3 = \psi ^{(2)}_3` results in a pooled
+    log-pdf of the form
+
+    .. math::
+        L(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4, \psi _2,
+                \psi _3 | D_1, D_2) =
+            L _1(\psi ^{(1)}_1, \psi _2, \psi _3, \psi ^{(1)}_4 | D_1) +
+            L _2(\psi ^{(2)}_1, \psi _2, \psi _3, \psi ^{(2)}_4 | D_2),
+
+    :math:`D_i` is the measured time-series of individual :math:`i`. As
+    :math:`k=2` parameters where pooled across the log-likelihoods, the
+    pooled log-likelihood has six parameters in the following order:
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4,
+    \psi _2, \psi _3)`.
+
+    Note that the input parameters of a :class:`PooledLogPDF` are not just a
+    simple concatenation of the parameters of the individual
+    :class:`LogPDFs<pints.LogPDF>`. The pooled parameters are only listed
+    once and are moved to the end of the parameter list. This avoids inputting
+    the value of the pooled parameters at mutliple positions. Otherwise the
+    order of the parameters is determined firstly by the order of the
+    likelihoods and then by the order of the parameters of those likelihoods.
+
+    Extends :class:`LogPDF`.
+
+    Parameters
+    ----------
+    log_pdfs
+        A sequence of :class:`LogPDF` objects.
+    pooled
+        A sequence of booleans indicating which parameters across
+        the likelihoods are pooled (``True``) or remain unpooled (``False``).
+
+    Example
+    -------
+    ::
+
+        pooled_log_likelihood = pints.PooledLogPDF(
+            log_pdfs=[
+                pints.GaussianLogLikelihood(problem1),
+                pints.GaussianLogLikelihood(problem2)],
+            pooled=[False, True])
+    """
+    def __init__(self, log_pdfs, pooled):
+        super(PooledLogPDF, self).__init__()
+
+        # Check input arguments
+        if len(log_pdfs) < 2:
+            raise ValueError(
+                'PooledLogPDF requires at least two log-pdfs.')
+        for index, pdf in enumerate(log_pdfs):
+            if not isinstance(pdf, LogPDF):
+                raise ValueError(
+                    'All log-pdfs passed to PooledLogPDFs must be instances of'
+                    ' pints.LogPDF (failed on argument '
+                    + str(index) + ').')
+
+        # Check parameter dimension across log-pdfs
+        self._log_pdfs = log_pdfs
+        n_parameters = self._log_pdfs[0].n_parameters()
+        for pdf in self._log_pdfs:
+            if pdf.n_parameters() != n_parameters:
+                raise ValueError(
+                    'All log-pdfs passed to PooledLogPDFs must have '
+                    'same dimension.')
+
+        # Check that pooled matches number of parameters
+        self._pooled = np.asarray(pooled)
+        if len(self._pooled) != n_parameters:
+            raise ValueError(
+                'The array-like input `pooled` needs to have the same length '
+                'as the number of parameters of the individual log-pdfs.')
+
+        # Check that pooled contains only booleans
+        if self._pooled.dtype != np.bool:
+            raise ValueError(
+                'The array-like input `pooled` passed to PooledLogPDFs '
+                'has to contain booleans exclusively.')
+
+        # Get dimension of search space
+        self._n_pooled = np.sum(self._pooled)
+        n_individuals = len(self._log_pdfs)
+        self._n_unpooled = np.sum(~self._pooled)
+        self._n_parameters = \
+            self._n_pooled + n_individuals * self._n_unpooled
+
+    def __call__(self, parameters):
+        # Get parameters of pooled log-pdf
+        parameters = np.asarray(parameters)
+
+        # Create container for parameters of individuals log-pdf and fill with
+        # pooled parameters
+        params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
+        if self._n_pooled > 0:
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
+
+        # Compute pdf score
+        total = 0
+        for idx, pdf in enumerate(self._log_pdfs):
+            # Get unpooled parameters for individual
+            params_ind[~self._pooled] = parameters[
+                idx * self._n_unpooled: (idx + 1) * self._n_unpooled]
+
+            # Compute pdf score contribution
+            total += pdf(params_ind)
+        return total
+
+    def evaluateS1(self, parameters):
+        r"""
+        See :meth:`LogPDF.evaluateS1()`.
+
+        The partial derivatives of the pooled log-likelihood with respect to
+        unpooled parameters equals the partial derivative of the corresponding
+        indiviudal log-likelihood.
+
+        .. math::
+            \frac{\partial L}{\partial \psi} =
+            \frac{\partial L_i}{\partial \psi},
+
+        where :math:`L` is the pooled log-likelihood, :math:`\psi` an unpooled
+        parameter and :math:`L _i` the individual log-likelihood that depends
+        on :math:`\psi`.
+
+        For a pooled parameter :math:`\theta` the partial derivative of the
+        pooled log-likelihood equals to the sum of partial derivatives of all
+        individual log-likelihoods
+
+        .. math::
+            \frac{\partial L}{\partial \theta} =
+            \sum _{i=1}^n\frac{\partial L_i}{\partial \theta}.
+
+        Here :math:`n` is the number of individual log-likelihoods.
+
+        *This method only works if all the underlying :class:`LogPDF` objects
+        implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        # Get parameters of pooled log-pdf
+        parameters = np.asarray(parameters)
+
+        # Create container for parameters of individuals log-pdf and fill with
+        # pooled parameters
+        params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
+        if self._n_pooled > 0:
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
+
+        # Compute pdf score and partials
+        total = 0
+        dtotal = np.zeros(shape=self._n_parameters)
+        for idx, pdf in enumerate(self._log_pdfs):
+            # Get unpooled parameters for individual
+            params_ind[~self._pooled] = parameters[
+                idx * self._n_unpooled: (idx + 1) * self._n_unpooled]
+
+            # Compute pdf score and partials for individual
+            score, partials = pdf.evaluateS1(params_ind)
+
+            # Add contributions to score and partials.
+            # NOTE: Partials of unpooled parameters equal partials of the
+            # associated individual likelihood; Partials of pooled parameters
+            # equals to the sum of partials from the individual likelihoods
+            # with respect to that parameter.
+            total += score
+            dtotal[idx * self._n_unpooled: (idx + 1) * self._n_unpooled] = \
+                partials[~self._pooled]
+            if self._n_pooled > 0:
+                dtotal[-self._n_pooled:] += partials[self._pooled]
+
+        return total, dtotal
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
 class ProblemLogLikelihood(LogPDF):
     """
     Represents a log-likelihood on a problem's parameter space, used to

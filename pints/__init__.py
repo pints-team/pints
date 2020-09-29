@@ -83,6 +83,7 @@ from ._log_pdfs import (
     LogPDF,
     LogPrior,
     LogPosterior,
+    PooledLogPDF,
     ProblemLogLikelihood,
     SumOfIndependentLogPDFs,
 )
