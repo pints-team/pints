@@ -127,23 +127,33 @@ class PooledLogPDF(LogPDF):
     are expected to be the same across individuals (for example, the noise
     parameter across different individuals within the same experiment).
 
-    For :math:`m=2` :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
-    :math:`L _2` with :math:`n=2` parameters :math:`(\psi _1, \theta _1)` and
-    :math:`(\psi _2, \theta _2)` respectively, a pooling of the
-    :math:`\theta _i` results in a pooled log-pdfs of the form
+    For two :class:`LogPDFs<pints.LogPDF>` :math:`L _1`  and
+    :math:`L _2` with four parameters
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_2, \psi ^{(1)}_3, \psi ^{(1)}_4)`
+    and
+    :math:`(\psi ^{(2)}_1, \psi ^{(2)}_2, \psi ^{(2)}_3, \psi ^{(2)}_4)`
+    respectively, a pooling of the second and third parameter
+    :math:`\psi _2 := \psi ^{(1)}_2 = \psi ^{(2)}_2`,
+    :math:`\psi _3 := \psi ^{(1)}_3 = \psi ^{(2)}_3` results in a pooled
+    log-pdf of the form
 
     .. math::
-        L(\psi _1, \psi _2, \theta | D_1, D_2) =
-            L _1(\psi _1, \theta | D_1) + L _2(\psi _2, \theta | D_2),
+        L(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4, \psi _2,
+                \psi _3 | D_1, D_2) =
+            L _1(\psi ^{(1)}_1, \psi _2, \psi _3, \psi ^{(1)}_4 | D_1) +
+            L _2(\psi ^{(2)}_1, \psi _2, \psi _3, \psi ^{(2)}_4 | D_2),
 
-    where :math:`\theta := \theta _1 = \theta _2`, and :math:`D_i` is the
-    measured time-series of individual :math:`i`. As :math:`k=1` parameters
-    where pooled across the log-likelihoods, the pooled log-likelihood has
-    3 parameters.
+    :math:`D_i` is the measured time-series of individual :math:`i`. As
+    :math:`k=1` parameters where pooled across the log-likelihoods, the
+    pooled log-likelihood has 5 parameters.
 
-    The parameters in a :class:`PooledLogPDF` are ordered such that unpooled
-    parameters come before pooled parameters. The order of the unpooled
-    parameters is determined by the order of the individual likelihoods.
+    Note that the input parameters of a :class:`PooledLogPDF` are not just a
+    simple concatenation of the parameters of the individual
+    :class:`LogPDFs<pints.LogPDF>`. The pooled parameters are only listed
+    once and moved to the end of the parameter list. This avoids inputting the
+    value of the pooled parameters at mutliple positions. Otherwise the order of
+    the parameters is determined firstly by the order of the likelihoods and then
+    by the order of the parameters of those likelihoods.
 
     Extends :class:`LogPDF`.
 
