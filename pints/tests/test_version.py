@@ -2,10 +2,9 @@
 #
 # Tests the version number.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import pints
@@ -34,3 +33,6 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(pints.version(), pints.__version_int__)
         self.assertEqual(pints.version(True), 'Pints ' + pints.__version__)
 
+
+if __name__ == '__main__':
+    unittest.main()

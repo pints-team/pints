@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the test.shared methods.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function, unicode_literals
 import os
@@ -21,9 +20,8 @@ class TestSharedTestModule(unittest.TestCase):
     """
 
     def test_stream_capture(self):
-        """
-        Tests the StreamCapture class.
-        """
+        # Tests the StreamCapture class.
+
         # Test stdout capture
         t1 = 'Hello everyone'
         t2 = 'How are you'
@@ -51,9 +49,8 @@ class TestSharedTestModule(unittest.TestCase):
         self.assertEqual(c.text(), (tt, et))
 
     def test_temporary_directory(self):
-        """
-        Tests the temporary directory class.
-        """
+        # Tests the temporary directory class.
+
         with TemporaryDirectory() as d:
             # Test dir creation
             tempdir = d.path('')
@@ -80,7 +77,4 @@ class TestSharedTestModule(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

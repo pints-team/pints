@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
-# Tests the basic methods of the nested sampling routines.
+# Tests the nested sampling controller.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import re
 import unittest
@@ -65,9 +64,21 @@ class TestNestedController(unittest.TestCase):
         sampler.set_n_posterior_samples(10)
         sampler.set_iterations(50)
         sampler.set_log_to_screen(False)
+
+        # Time before run is None
+        self.assertIsNone(sampler.time())
+
+        t = pints.Timer()
         samples = sampler.run()
+        t_upper = t.time()
+
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
+
+        # Time after run is greater than zero
+        self.assertIsInstance(sampler.time(), float)
+        self.assertGreater(sampler.time(), 0)
+        self.assertGreater(t_upper, sampler.time())
 
     def test_construction_errors(self):
         # Tests if invalid constructor calls are picked up.
@@ -120,9 +131,10 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
 
         # Test with fixed number of worker processes
-        sampler.set_parallel(2)
-        sampler.set_log_to_screen(True)
-        self.assertEqual(sampler.parallel(), 2)
+        sampler.set_parallel(4)
+        sampler.set_log_to_screen(False)
+        self.assertEqual(sampler.parallel(), 4)
+        sampler.run()
 
     def test_logging(self):
         # Tests logging to screen and file.

@@ -40,6 +40,7 @@ Contents
     optimisers/index
     noise_model_diagnostics
     toy/index
+    transformations
     utilities
 
 Hierarchy of methods
@@ -64,7 +65,7 @@ Sampling
 
      - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
      - :class:`DreamMCMC`, works on any :class:`LogPDF`.
-     - :class:`EmceeHameerMCMC`, works on any :class:`LogPDF`.
+     - :class:`EmceeHammerMCMC`, works on any :class:`LogPDF`.
 
 #. :class:`Nested sampling<NestedSampler>`
 

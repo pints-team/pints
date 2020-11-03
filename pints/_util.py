@@ -1,10 +1,9 @@
 #
 # Utility classes for Pints
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -79,7 +78,7 @@ class Timer(object):
 
 def vector(x):
     """
-    Copies ``x`` and returns a 1d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 1d read-only NumPy array of floats with shape
     ``(n,)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
@@ -92,14 +91,15 @@ def vector(x):
     if x.ndim != 1:
         n = np.max(x.shape)
         if np.prod(x.shape) != n:
-            raise ValueError('Unable to convert to 1d vector of scalar values')
+            raise ValueError(
+                'Unable to convert to 1d vector of scalar values.')
         x = x.reshape((n,))
     return x
 
 
 def matrix2d(x):
     """
-    Copies ``x`` and returns a 2d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 2d read-only NumPy array of floats with shape
     ``(m, n)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.

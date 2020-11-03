@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the Gaussian logpdf toy distribution.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -19,9 +18,8 @@ class TestGaussianLogPDF(unittest.TestCase):
     """
 
     def test_gaussian_logpdf(self):
-        """
-        Test GaussianLogPDF basics.
-        """
+        # Test GaussianLogPDF basics.
+
         # Test basics
         x = [1, 2, 3]
         y = [1, 1, 1]
@@ -49,9 +47,8 @@ class TestGaussianLogPDF(unittest.TestCase):
             ValueError, pints.toy.GaussianLogPDF, [1, 2, 3], [1, 2, 3, 4])
 
     def test_sampling_and_kl_divergence(self):
-        """
-        Test GaussianLogPDF.kl_divergence() and .sample().
-        """
+        # Test GaussianLogPDF.kl_divergence() and .sample().
+
         # Ensure consistent output
         np.random.seed(1)
 
@@ -104,11 +101,9 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
     def test_gaussian_sensitivity(self):
-        """
-        Tests that the gradient of the log pdf is correct
-        for a few specific examples, and that the log pdf
-        returned is correct.
-        """
+        # Tests that the gradient of the log pdf is correct for a few specific
+        # examples, and that the log pdf returned is correct.
+
         # 1d Gaussian
         f1 = pints.toy.GaussianLogPDF([0], [1])
         L, dL = f1.evaluateS1([2])

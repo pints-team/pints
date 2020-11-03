@@ -42,7 +42,8 @@ You now have everything you need to start making changes!
 10. Pints has online documentation at http://pints.readthedocs.io/. To make sure any new methods or classes you added show up there, please read the [documentation](#documentation) section.
 11. If you added a major new feature, perhaps it should be showcased in an [example notebook](#example-notebooks).
 12. When you feel your code is finished, or at least warrants serious discussion, run the [pre-commit checks](#pre-commit-checks) and then create a [pull request](https://help.github.com/articles/about-pull-requests/) (PR) on [Pints' GitHub page](https://github.com/pints-team/pints).
-13. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into Pints master repository.
+13. Update `CHANGELOG.md`, following the guidelines in the [changelog](#changelog) section.
+14. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into Pints master repository.
 
 Finally, if you really, really, _really_ love developing Pints, have a look at the current [project infrastructure](#infrastructure).
 
@@ -53,6 +54,8 @@ Finally, if you really, really, _really_ love developing Pints, have a look at t
 To install Pints with all developer options, use:
 
 ```
+$ git clone https://github.com/pints-team/pints.git
+$ cd pints
 $ pip install -e .[dev,docs]
 ```
 
@@ -60,6 +63,8 @@ This will
 
 1. Install all the dependencies for Pints, including the ones for documentation (docs) and development (dev).
 2. Tell Python to use your local pints files when you use `import pints` anywhere on your system.
+
+You may also want to create a virtual environment first, using [virtualenv](https://docs.python.org/3/tutorial/venv.html) or [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 
 
 
@@ -100,6 +105,7 @@ from __future__ import print_function, unicode_literals
 These [future imports](https://docs.python.org/2/library/__future__.html) are ignored by Python 3, but tell Python 2 to mimmick some of its features. Notably, the ``division`` package changes the result of ``3 / 2`` from ``1`` to ``1.5`` (this means you can write ``1 / x`` instead of ``1.0 / x``).
 
 
+
 ## Dependencies and reusing code
 
 While it's a bad idea for developers to "reinvent the wheel", it's important for users to get a _reasonably sized download and an easy install_. In addition, external libraries can sometimes cease to be supported, and when they contain bugs it might take a while before fixes become available as automatic downloads to Pints users.
@@ -135,6 +141,7 @@ def plot_great_things(self, x, y, z):
 This allows people to (1) use Pints without ever importing Matplotlib and (2) configure Matplotlib's back-end in their scripts, which _must_ be done before e.g. `pyplot` is first imported.
 
 
+
 ## Testing
 
 All code requires testing. We use the [unittest](https://docs.python.org/3.3/library/unittest.html) package for our tests. (These tests typically just check that the code runs without error, and so, are more _debugging_ than _testing_ in a strict sense. Nevertheless, they are very useful to have!)
@@ -164,7 +171,8 @@ Guidelines for writing unit tests:
 If you want to check your tests on Python 2 and 3, use
 
 ```
-$ python run-tests.py --unit2 --unit3
+$ python2 run-tests.py --unit
+$ python3 run-tests.py --unit
 ```
 
 When you commit anything to Pints, these checks will also be run automatically (see [infrastructure](#infrastructure)).
@@ -198,11 +206,10 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 ### Docstring template
 
-1. Each docstring should start with a single sentence explaining what it does.
+1. Each docstring should start with a [single sentence](https://www.python.org/dev/peps/pep-0257/#one-line-docstrings) explaining what it does.
 
-2. If desired, this can be followed by a blank line and one or several
-   paragraphs providing a more detailed explanation. These paragraphs can
-   include code snippets or use LaTeX expressions for mathematics (see below).
+2. If desired, [this can be followed by a blank line and one or several paragraphs](https://www.python.org/dev/peps/pep-0257/#multi-line-docstrings) providing a more detailed explanation.
+   These paragraphs can include code snippets or use LaTeX expressions for mathematics (see below).
 
 3. If the class is a subclass of some other PINTS type, it may be good to
    mention this here. For example:
@@ -324,7 +331,25 @@ Major Pints features are showcased in [Jupyter notebooks](https://jupyter.org/) 
 
 All example notebooks should be listed in [examples/README.md](https://github.com/pints-team/pints/examples/README.md). Please follow the (naming and writing) style of existing notebooks where possible.
 
-Where possible, notebooks are tested daily. A list of slow notebooks (which time-out and fail tests) is maintained in `.slow-books`, these notebooks will be excluded from daily testing.
+Notebooks are tested daily.
+
+
+
+## Changelog
+
+PINTS users will need to know what's changed between each version of PINTS we release.
+To this end, a _changelog_ is maintained in the [CHANGELOG.md file](CHANGELOG.md).
+This file lists each release (starting after 0.3.0), and indicates what has changed in the categories
+`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, and `Security`.
+There are no strict rules for how this file is formatted, but an idea of what it looks like can be gotten from [https://keepachangelog.com](https://keepachangelog.com).
+
+Starting after PINTS 0.3.0, *each PR should include one or more updates to the CHANGELOG*, and *reviewers should check this before accepting*.
+The changelog is written for the benefit of PINTS _users_, and so should focus mostly on changes to the public API, bugfixes, changes in performance.
+Entries on testing, infrastructure, or small fixes to the documentation are optional: it is up to the developer to judge whether these will be beneficial to the user, if so they should be included, if not they should be left out to keep the release notes readable.
+
+Dates in the changelog are written in format YYYY-MM-DD [see ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html).
+If possible, entries in the changelog should include a link to the pull request that merged the changes into the main branch (and this PR in turn should link to a ticket), so that users can get more information if needed.
+
 
 
 ## Infrastructure
@@ -332,6 +357,23 @@ Where possible, notebooks are tested daily. A list of slow notebooks (which time
 ### Version number
 
 A central version number is stored in `pints/version`.
+
+### New releases on PyPI (for `pip`)
+
+Occasionally, we'll make a new release for PINTS, and update the version on PyPI (which is where `pip` will download it from, for non-dev users).
+
+To do this:
+
+- Decide a new release is necessary, discuss it in the group.
+- Make sure the version number has changed since the last release.
+- Use the [GitHub releases page](https://github.com/pints-team/pints/releases/new) to create a new release. Each release will create a tag in the git repository, which should have the format `v1.2.3`.
+    - The first number is for big events, the second for regular releases (e.g. new features), the final for bugfixes and smaller improvements. This is subjective.
+    - Beyond that, there is no significance to these numbers (e.g. it doesn't matter if they're odd or even, `v0.9.9` is followed by `v0.9.10`).
+- Check what has changed since the last release, and write some release notes to summarise what's new. This can be based on the [Changelog](#changelog).
+- Creating the new release in github **will automatically update PyPI**, so do this with care.
+  - Keep in mind that PyPI version numbers are eternal: You cannot modify a release, only create a new one with a new version number.
+- Once the new release is done, create a PR to update the version number (final digit) to indicate that the code in the repo is no longer the version on PIP.
+
 
 ### Setuptools
 
@@ -354,30 +396,17 @@ It's always worth using an up-to-date version of pip. On older systems especiall
 $ pip install --upgrade pip
 ```
 
-### Travis CI
+### GitHub Actions
 
-All committed code is tested using [Travis CI](https://travis-ci.org/), tests are published on https://travis-ci.org/pints-team/pints.
-
-Configuration files:
-
-```
-.travis.yaml
-```
-
-Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks. Notebooks listed in `.slow-books` are excluded from these tests.
-
-### Appveyor
-
-Windows testing is done using [appveyor](http://appveyor.com/), tests are published on https://ci.appveyor.com/project/MichaelClerx/pints.
+All committed code is tested using [GitHub Actions](https://help.github.com/en/actions), tests are published on https://github.com/pints-team/pints/actions.
 
 Configuration files:
 
 ```
-.appveyor.yml
+.github/workflows/*.yml
 ```
 
-See ([here](https://www.appveyor.com/docs/appveyor-yml/)) for the syntax.
-
+Unit tests and flake8 testing is done for every commit. A nightly cronjob also tests the notebooks.
 
 ### Codecov
 
@@ -424,5 +453,5 @@ Configuration files:
 GitHub does some magic with particular filesnames. In particular:
 
 - The first page people see when they go to [our GitHub page](https://github.com/pints-team/pints) displays the contents of [README.md](README.md), which is written in the [Markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) format. Some guidelines can be found [here](https://help.github.com/articles/about-readmes/).
-- The license for using Pints is stored in [LICENSE.txt](LICENSE.txt), and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
+- The license for using Pints is stored in [LICENSE.md](LICENSE.md), and [automatically](https://help.github.com/articles/adding-a-license-to-a-repository/) linked to by GitHub.
 - This file, [CONTRIBUTING.md](CONTRIBUTING.md) is recognised as the contribution guidelines and a link is [automatically](https://github.com/blog/1184-contributing-guidelines) displayed when new issues or pull requests are created.

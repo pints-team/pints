@@ -18,8 +18,11 @@ Some toy classes provide extra functionality defined in the
     beeler_reuter_ap_model
     cone_logpdf
     constant_model
+    eight_schools_logpdf
     fitzhugh_nagumo_model
     gaussian_logpdf
+    german_credit_hierarchical_logpdf
+    german_credit_logpdf
     goodwin_oscillator_model
     hes1_michaelis_menten_model
     high_dimensional_gaussian_logpdf

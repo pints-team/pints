@@ -1,10 +1,9 @@
 #
 # Constant model with multiple outputs.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -108,6 +107,7 @@ class ConstantModel(pints.ForwardModelS1):
             #   [df2/dp1, df2/dp2]]
             # i.e.
             #  [[1, 0],
-            #   [0, 1]]
-            dy = np.tile(np.diag(np.ones(self._n)), (len(times), 1, 1))
+            #   [0, 2]]
+            dy = np.tile(
+                np.diag(np.arange(1, self._n + 1)), (len(times), 1, 1))
         return (y, dy)

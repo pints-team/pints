@@ -1,10 +1,9 @@
 #
 # Defines different prior distributions
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -36,6 +35,7 @@ class BetaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -123,6 +123,7 @@ class CauchyLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, scale):
         # Test inputs
         if float(scale) <= 0:
@@ -142,6 +143,13 @@ class CauchyLogPrior(pints.LogPrior):
     def cdf(self, x):
         """ See :meth:`LogPrior.cdf()`. """
         return scipy.stats.cauchy.cdf(x, self._location, self._scale)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        loc_minus_x = self._location - x[0]
+        return value, np.asarray([2 * loc_minus_x / (self._scale**2
+                                  + loc_minus_x**2)])
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
@@ -163,19 +171,31 @@ class CauchyLogPrior(pints.LogPrior):
 
 class ComposedLogPrior(pints.LogPrior):
     r"""
-    N-dimensional LogPrior composed of one or more other Ni-dimensional
-    LogPriors, such that ``sum(Ni) = N``. The evaluation of the composed
-    log-prior assumes the input log-priors are all independent from each other.
+    N-dimensional :class:`LogPrior` composed of one or more other :math:`N_i`-
+    dimensional LogPriors, such that :math:`\sum _i N_i = N`. The evaluation
+    of the composed log-prior assumes the input log-priors are all independent
+    from each other.
 
-    For example, a composed log prior::
+    For example, a composed log prior
 
-        p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)
+        ``p = pints.ComposedLogPrior(log_prior1, log_prior2, log_prior3)``,
 
-    where ``log_prior1``, 2, and 3 each have dimension 1 will have dimension 3
-    itself.
+    where ``log_prior1``, ``log_prior2``, and ``log_prior3`` each have
+    dimension 1, 2 and 1, will have dimension 4.
+
+    The dimensionality of the individual priors does not have to be the same,
+    i.e. :math:`N_i\neq N_j` is allowed.
+
+    The input parameters of the :class:`ComposedLogPrior` have to be ordered in
+    the same way as the individual priors. In the above example the prior may
+    be evaluated by ``p(x)``, where:
+
+        ``x = [parameter1_log_prior1, parameter1_log_prior2,
+        parameter2_log_prior2, parameter1_log_prior3]``.
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, *priors):
         # Check if sub-priors given
         if len(priors) < 1:
@@ -281,6 +301,7 @@ class ExponentialLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, rate):
         # Parse input arguments
         self._rate = float(rate)
@@ -349,6 +370,7 @@ class GammaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -431,6 +453,7 @@ class GaussianLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, mean, sd):
         # Parse input arguments
         self._mean = float(mean)
@@ -497,6 +520,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, scale):
         # Test inputs
         if float(scale) <= 0:
@@ -524,6 +548,15 @@ class HalfCauchyLogPrior(pints.LogPrior):
              np.arctan((-self._location + x) / self._scale) / np.pi) /
             (0.5 + self._arctan))
 
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        scale = self._scale
+        loc = self._location
+        loc_minus_x = loc - x[0]
+        dp = 2 * loc_minus_x / (scale**2 + loc_minus_x**2)
+        return value, np.asarray([dp])
+
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
         return (self._location +
@@ -543,7 +576,10 @@ class HalfCauchyLogPrior(pints.LogPrior):
 
         # use inverse transform sampling
         us = np.random.uniform(0, 1, n)
-        return np.array([self.icdf(u) for u in us])
+        samples = np.array([self.icdf(u) for u in us])
+
+        # Samples have shape (n,). Output needs to be (n, 1)
+        return np.expand_dims(a=samples, axis=1)
 
 
 class InverseGammaLogPrior(pints.LogPrior):
@@ -569,6 +605,7 @@ class InverseGammaLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, a, b):
         # Parse input arguments
         self._a = float(a)
@@ -734,6 +771,7 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, mean, cov):
         # Check input
         mean = pints.vector(mean)
@@ -748,6 +786,11 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         self._cov = cov
         self._n_parameters = mean.shape[0]
         self._cov_inverse = np.linalg.inv(self._cov)
+        self._cholesky_L, self._cholesky_lower = scipy.linalg.cho_factor(
+            self._cov)
+        log_det_cov = 2 * np.sum(np.log(self._cholesky_L.diagonal()))
+        self._const_factor = - 0.5 * log_det_cov \
+                             - 0.5 * len(self._mean) * np.log(2 * np.pi)
 
         # Factors needed for pseudo-cdf calculation
         self._sigma12_sigma22_inv_l = []
@@ -776,8 +819,13 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
             self._mu2.append(mu2)
 
     def __call__(self, x):
-        return scipy.stats.multivariate_normal.logpdf(
-            x, mean=self._mean, cov=self._cov)
+        tmp = x - self._mean
+        return self._const_factor \
+            - 0.5 * tmp.dot(
+                scipy.linalg.cho_solve(
+                    (self._cholesky_L, self._cholesky_lower), tmp
+                )
+            )
 
     def convert_from_unit_cube(self, u):
         """
@@ -796,7 +844,9 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        return self(x), -np.matmul(self._cov_inverse, x - self._mean)
+        return self(x), -scipy.linalg.cho_solve(
+            (self._cholesky_L, self._cholesky_lower), x - self._mean
+        )
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
@@ -931,10 +981,8 @@ class NormalLogPrior(GaussianLogPrior):
 
     def __init__(self, mean, standard_deviation):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.NormalLogPrior` is deprecated.'
             ' Please use `pints.GaussianLogPrior` instead.')
         super(NormalLogPrior, self).__init__(mean, standard_deviation)
@@ -974,6 +1022,7 @@ class StudentTLogPrior(pints.LogPrior):
     scale
         The scale of the distribution.
     """
+
     def __init__(self, location, df, scale):
         # Test inputs
         if float(df) <= 0:
@@ -1030,6 +1079,120 @@ class StudentTLogPrior(pints.LogPrior):
                                  scale=self._scale, size=(n, 1))
 
 
+class TruncatedGaussianLogPrior(pints.LogPrior):
+    r"""
+    Defines a truncated Gaussian log prior.
+
+    This distribution is also known as the truncated Normal distribution.
+
+    The truncated Gaussian distribution is similar to the Gaussian
+    distribution, but constrained to lie between two values.
+
+    The parameters are the mean ``mean`` and standard deviation ``sd``, as in
+    the Gaussian distribution, as well as a lower bound ``a`` and an upper
+    bound ``b``.
+
+    The pdf of the truncated Gaussian distribution is given by
+
+    .. math::
+        f(x|\mu, \sigma, a, b) = \frac{1}{\sigma\sqrt{2\pi}} \exp
+        \left(-\frac{(x-\mu)^2}{2\sigma^2}\right) \frac{1}
+            {\Phi((b-\mu) / \sigma) - \Phi((a-\mu) / \sigma)}
+
+    for :math:`x \in [a, b]`, where :math:`\mu` indicates the mean and
+    :math:`\sigma` indicates the standard deviation, and :math:`\Phi` is the
+    standard normal CDF.
+
+    For example, to create a prior with mean of 0 and a standard deviation of
+    1, bounded above at 3 and below at -2, use::
+
+        p = pints.TruncatedGaussianLogPrior(0, 1, -2, 3)
+
+    For a Gaussian distribution truncated on only one side, ``numpy.inf`` or
+    ``-numpy.inf`` can be used for the unbounded side.
+
+    Extends :class:`LogPrior`.
+    """
+
+    def __init__(self, mean, sd, a, b):
+        # Parse input arguments
+        self._mean = float(mean)
+        self._sd = float(sd)
+        self._a = float(a)
+        self._b = float(b)
+        if b <= a:
+            raise ValueError('Upper bound must exceed lower bound.')
+
+        # Convert the upper and lower truncation levels to the Scipy definition
+        self._lower = (a - self._mean) / self._sd
+        self._upper = (b - self._mean) / self._sd
+
+        # Cache constants
+        self._factor2 = 1 / self._sd**2
+
+    def __call__(self, x):
+        return scipy.stats.truncnorm.logpdf(
+            x[0],
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.truncnorm.cdf(
+            x,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        dp = self._factor2 * (self._mean - np.asarray(x))
+
+        # Set values outside limits to nan
+        dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
+
+        return self(x), dp
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.truncnorm.ppf(
+            p,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return scipy.stats.truncnorm.stats(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            moments='m'
+        )
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.truncnorm.rvs(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            size=(n, 1)
+        )
+
+
 class UniformLogPrior(pints.LogPrior):
     r"""
     Defines a uniform prior over a given range.
@@ -1061,6 +1224,7 @@ class UniformLogPrior(pints.LogPrior):
 
     Extends :class:`LogPrior`.
     """
+
     def __init__(self, lower_or_boundaries, upper=None):
         # Parse input arguments
         if upper is None:
@@ -1113,7 +1277,7 @@ class UniformLogPrior(pints.LogPrior):
                         xs[j, i] < self._boundaries.upper()[i]):
                     cdfs[j, i] = ((-self._boundaries.lower()[i] + xs[j, i]) /
                                   (-self._boundaries.lower()[i] +
-                                  self._boundaries.upper()[i]))
+                                   self._boundaries.upper()[i]))
                 elif xs[j, i] >= self._boundaries.upper()[i]:
                     cdfs[j, i] = 1.0
                 else:

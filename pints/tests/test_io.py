@@ -2,14 +2,12 @@
 #
 # Tests the Pints io methods.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function, unicode_literals
 import os
-import sys
 import pints
 import pints.io
 import numpy as np
@@ -30,9 +28,7 @@ class TestIO(unittest.TestCase):
     """
 
     def test_load_save_samples(self):
-        """
-        Tests the load_samples and save_samples() methods.
-        """
+        # Tests the load_samples and save_samples() methods.
 
         m = 10  # 10 samples
         n = 5   # 5 parameters
@@ -105,7 +101,4 @@ class TestIO(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

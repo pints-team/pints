@@ -2,10 +2,9 @@
 #
 # Tests the cone distribution.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -18,7 +17,7 @@ class TestConeLogPDF(unittest.TestCase):
     Tests the cone log-pdf toy problems.
     """
     def test_basic(self):
-        """ Tests moments, calls, CDF evaluations and sampling """
+        # Tests moments, calls, CDF evaluations and sampling
 
         # Default settings
         f = pints.toy.ConeLogPDF()
@@ -57,7 +56,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.sample, 0)
 
     def test_bad_constructors(self):
-        """ Tests bad instantiations and calls """
+        # Tests bad instantiations and calls
+
         self.assertRaises(
             ValueError, pints.toy.ConeLogPDF, 0, 1)
         self.assertRaises(
@@ -71,7 +71,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
 
     def test_bounds(self):
-        """ Tests suggested_bounds() """
+        # Tests suggested_bounds()
+
         f = pints.toy.ConeLogPDF()
         bounds = f.suggested_bounds()
         self.assertTrue(np.array_equal([[-1000, -1000], [1000, 1000]],
@@ -86,7 +87,8 @@ class TestConeLogPDF(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array(bounds).shape, [4, 2]))
 
     def test_sensitivities(self):
-        """ Tests sensitivities """
+        # Tests sensitivities
+
         f = pints.toy.ConeLogPDF()
         l, dl = f.evaluateS1([-1, 3])
         self.assertEqual(len(dl), 2)
@@ -103,7 +105,8 @@ class TestConeLogPDF(unittest.TestCase):
             self.assertAlmostEqual(elem, cons * xx[i])
 
     def test_distance_function(self):
-        """ Tests distance function """
+        # Tests distance function
+
         f = pints.toy.ConeLogPDF()
         x = f.sample(10)
         self.assertTrue(f.distance(x) > 0)
@@ -124,8 +127,4 @@ class TestConeLogPDF(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

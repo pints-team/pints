@@ -2,10 +2,9 @@
 #
 # Tests if the logistic (toy) model works.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -116,10 +115,12 @@ class TestLogistic(unittest.TestCase):
             k = parameters[1]
             other = k / p0 - 1
             c = exp1 - 1
-            self.assertAlmostEqual(exp * k * other * times[i] /
-                                   (1 + exp * other)**2, sensitivities[i, 0])
-            self.assertAlmostEqual(exp1 * c * p0**2 / (k + c * p0)**2,
-                                   sensitivities[i, 1])
+            self.assertAlmostEqual(
+                exp * k * other * times[i] / (1 + exp * other)**2,
+                sensitivities[i, 0])
+            self.assertAlmostEqual(
+                exp1 * c * p0**2 / (k + c * p0)**2,
+                sensitivities[i, 1])
 
 
 if __name__ == '__main__':

@@ -1,16 +1,15 @@
 #
 # Toy base classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
-from scipy.integrate import odeint
+import scipy
 
 
 class ToyLogPDF(pints.LogPDF):
@@ -49,7 +48,7 @@ class ToyModel(object):
     """
     def suggested_parameters(self):
         """
-        Returns an numpy array of the parameter values that are representative
+        Returns an NumPy array of the parameter values that are representative
         of the model.
 
         For example, these parameters might reproduce a particular result that
@@ -59,7 +58,7 @@ class ToyModel(object):
 
     def suggested_times(self):
         """
-        Returns an numpy array of time points that is representative of the
+        Returns an NumPy array of time points that is representative of the
         model
         """
         raise NotImplementedError
@@ -97,7 +96,7 @@ class ToyODEModel(ToyModel):
 
         Returns
         -------
-        A matrix of dimensions ``n_parameters`` by ``n_parameters``.
+        A matrix of dimensions ``n_outputs`` by ``n_parameters``.
         """
         raise NotImplementedError
 
@@ -160,10 +159,16 @@ class ToyODEModel(ToyModel):
         -------
         A vector of length ``n_outputs + n_parameters``.
         """
+
+        # separating initial values of model outputs(y) and sensitivities(dydp)
         y = y_and_dydp[0:self.n_outputs()]
         dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
                                                       self.n_outputs()))
+
+        # calculating the direvatives w.r.t t of the model outputs
         dydt = self._rhs(y, t, p)
+
+        # calculating sensitivities
         d_dydp_dt = (
             np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
             np.transpose(self._dfdp(y, t, p)))
@@ -208,13 +213,15 @@ class ToyODEModel(ToyModel):
             n_outputs = self.n_outputs()
             y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
-            result = odeint(self._rhs_S1, y0, times, (parameters,))
+            result = scipy.integrate.odeint(
+                self._rhs_S1, y0, times, (parameters,))
             values = result[:, 0:n_outputs]
             dvalues_dp = (result[:, n_outputs:].reshape(
                 (len(times), n_outputs, n_params), order="F"))
             return values[offset:], dvalues_dp[offset:]
         else:
-            values = odeint(self._rhs, self._y0, times, (parameters,))
+            values = scipy.integrate.odeint(
+                self._rhs, self._y0, times, (parameters,))
             return values[offset:]
 
     def simulateS1(self, parameters, times):
