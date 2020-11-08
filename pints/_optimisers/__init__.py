@@ -637,7 +637,7 @@ class LineSearchBasedOptimiser(Optimiser):
         # print('')
         # Return proposed points (just the one) in the search space to evaluate
         return [self._proposed]
-    
+
     def stop(self):
         """ See :meth:`Optimiser.stop()`. """
 
