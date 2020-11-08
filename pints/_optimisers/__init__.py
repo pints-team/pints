@@ -308,6 +308,7 @@ class LineSearchBasedOptimiser(Optimiser):
         # Best solution found
         self._xbest = self._x0
         self._fbest = float('inf')
+        self._dfdx_best = [float('inf'), float('inf')]
 
         # Number of iterations run
         self._iterations = 0
@@ -636,6 +637,17 @@ class LineSearchBasedOptimiser(Optimiser):
         # print('')
         # Return proposed points (just the one) in the search space to evaluate
         return [self._proposed]
+    
+    def stop(self):
+        """ See :meth:`Optimiser.stop()`. """
+
+        # We use the condition number defined in the pycma code at
+        # cma/evolution_strategy.py#L2965.
+
+        cond = norm(self._dfdx_best, ord=np.inf)
+        if cond <= 1e-6:
+            return 'Convergences i.e gradients ~ 0'
+        return False
 
     def tell(self, reply):
         """ See :meth:`Optimiser.tell()`. """
@@ -747,28 +759,10 @@ class LineSearchBasedOptimiser(Optimiser):
                 self.__2nd_wolfe_check_needed = False
                 self.__2nd_wolfe_check_done = True
 
-        # Checking if all gradients ~ 0,
-        # Therefore the classical convergence test of a quasi-newton
-        # or conjugate gradient method has been meet.
-        # TODO: Implement a means of stopping the optimiser is this
-        # condition is meet (apparently something similar is done
-        # in CMAES)
-        if self.__convergence is not True:
-
-            if norm(proposed_dfdx, ord=np.inf) <= 1e-6:
-
-                self.__convergence = True
-                print('')
-                print(20 * '*' + ' Convergence after ',
-                      self._k, ' accepted steps!' + 20 * '*')
-                print('||df/dx_i||inf <= 1e-6 with parameters:')
-                print(self._proposed)
-                print('error function evaluation: ', proposed_f)
-                print('\nInverse Hessian matrix:\n', self._B)
-
         # Update xbest and fbest
         if self._fbest > proposed_f:
             self._fbest = proposed_f
+            self._dfdx_best = proposed_dfdx
             self._xbest = self._current
 
         print('')
