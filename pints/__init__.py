@@ -176,8 +176,7 @@ from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
-from ._optimisers._bfgs_scipy import BFGS_scipy
-from ._optimisers._bfgs_linesearch import BFGS
+from ._optimisers._lbfgs import LBFGS
 
 
 #
