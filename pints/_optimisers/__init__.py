@@ -748,8 +748,11 @@ class LineSearchBasedOptimiser(Optimiser):
                 self.__2nd_wolfe_check_done = True
 
         # Checking if all gradients ~ 0,
-        # therefore the classical convergence test of a quasi-newton
+        # Therefore the classical convergence test of a quasi-newton
         # or conjugate gradient method has been meet.
+        # TODO: Implement a means of stopping the optimiser is this
+        # condition is meet (apparently something similar is done
+        # in CMAES)
         if self.__convergence is not True:
 
             if norm(proposed_dfdx, ord=np.inf) <= 1e-6:
@@ -1057,6 +1060,8 @@ class LineSearchBasedOptimiser(Optimiser):
         steps/newton direction
         update. If k = 0 this is the initial alpha the user wants to be used
         '''
+        # TODO: The Quadstep option has not been implemented yet.
+        # However, the linesearch is functional without is
         QuadStep = False
 
         # Small factor used in initial guess of step size, range (0, 1).

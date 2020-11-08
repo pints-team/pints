@@ -12,7 +12,7 @@ from numpy.linalg import norm
 import pints
 
 
-class BFGS(pints.LineSearchBasedOptimiser):
+class LBFGS(pints.LineSearchBasedOptimiser):
     """
     Broyden-Fletcher-Goldfarb-Shanno algorithm [2], [3], [4]
 
@@ -39,7 +39,7 @@ class BFGS(pints.LineSearchBasedOptimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(BFGS, self).__init__(x0, sigma0, boundaries)
+        super(LBFGS, self).__init__(x0, sigma0, boundaries)
 
         # maximum number of correction matrices stored
         self._m = 5
@@ -60,9 +60,11 @@ class BFGS(pints.LineSearchBasedOptimiser):
         """ See :meth:`Optimiser.name()`. """
         return 'Broyden-Fletcher-Goldfarb-Shanno (BFGS)'
 
-    def __set_max_correction_matrice_storage(self, m: int):
+    def __set_max_correction_matrice_storage(self, m):
         """
-        Sets the parameters for the wolfe conditions.
+        Sets the maximum number of correction matrice to be stored and used,
+        in subsequent inverse hessian updates, if ``m`` is set large enough
+        for the problem this method becomes the BFGS rather than the L-BFGS.
 
         Parameters
         ----------
@@ -79,7 +81,8 @@ class BFGS(pints.LineSearchBasedOptimiser):
             print('using default parameters: m = ', self._m)
 
     def inverse_hessian_update(self, proposed_f, proposed_dfdx):
-        '''the inverse hessian matrix and newton direction are updated by the
+        '''
+        The inverse hessian matrix and newton direction are updated by the
         L-BFGS/BFGS approximation of the hessian described in reference [2]
         [3], and [4].
         '''
