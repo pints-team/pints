@@ -16,6 +16,10 @@ from . import ToyModel
 
 class StochasticLogisticModel(pints.ForwardModel, ToyModel):
     r"""
+    This model describes the growth of a population of individuals, where the
+    birth rate per capita, initially $b_0$, decreases to $0$ as the population
+    size, $\mathcal{C}(t)$, approaches a carrying capacity, $k$, starting from
+    an initial population size, $n_0$.
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
     """
