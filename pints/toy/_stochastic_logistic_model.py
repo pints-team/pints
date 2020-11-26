@@ -26,7 +26,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
        A \xrightarrow{b_0(1-\frac{\mathcal{C}(t)}{k})} 2A.
 
     The model is simulated using the Gillespie stochastic simulation algorithm
-    [2]_.
+    [2]_, [3]_.
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
@@ -37,11 +37,16 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     References
     ----------
-    .. [1] Simpson et al. 2019.
+    .. [1] Simpson, M. et al. 2019. Process noise distinguishes between
+           indistinguishable population dynamics. bioRxiv.
+           https://doi.org/10.1101/533182
     .. [2] Gillespie, D. 1976. A General Method for Numerically Simulating the
            Stochastic Time Evolution of Coupled Chemical Reactions.
            Journal of Computational Physics. 22 (4): 403–434.
            https://doi.org/10.1016/0021-9991(76)90041-3
+    .. [3] Erban R. et al. 2007. A practical guide to stochastic simulations
+           of reaction-diffusion processes. arXiv.
+           https://arxiv.org/abs/0704.1908v2
     """
 
     def __init__(self, initial_molecule_count=2):
