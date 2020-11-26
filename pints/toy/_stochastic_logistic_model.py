@@ -42,7 +42,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
            https://doi.org/10.1101/533182
     .. [2] Gillespie, D. 1976. A General Method for Numerically Simulating the
            Stochastic Time Evolution of Coupled Chemical Reactions.
-           Journal of Computational Physics. 22 (4): 403–434.
+           Journal of Computational Physics. 22 (4): 403-434.
            https://doi.org/10.1016/0021-9991(76)90041-3
     .. [3] Erban R. et al. 2007. A practical guide to stochastic simulations
            of reaction-diffusion processes. arXiv.
