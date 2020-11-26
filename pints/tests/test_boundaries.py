@@ -11,6 +11,12 @@ import unittest
 import pints
 import numpy as np
 
+# Unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
 
 class TestRectangularBoundaries(unittest.TestCase):
     """
@@ -110,7 +116,7 @@ class TestLogPDFBoundaries(unittest.TestCase):
         self.assertFalse(b.check(0.75))
 
         # Test bad creation
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError, 'must be a pints.LogPDF', pints.LogPDFBoundaries, 5, 5)
 
         # Can't sample from this log pdf!

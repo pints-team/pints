@@ -9,9 +9,10 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import logging
+
 import numpy as np
 import pints
+import warnings
 
 
 class PSO(pints.PopulationBasedOptimiser):
@@ -83,9 +84,6 @@ class PSO(pints.PopulationBasedOptimiser):
         # Set default settings
         self.set_local_global_balance()
 
-        # Python logger
-        self._logger = logging.getLogger(__name__)
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -95,8 +93,10 @@ class PSO(pints.PopulationBasedOptimiser):
         # Ready for tell now
         self._ready_for_tell = True
 
-        # Return points
-        return self._user_xs
+        # Return a copy of the filtered points (copy is used so that 1. the
+        # user cannot modify the points and mess up the state, and 2. so that
+        # the user can store the points without us modifying them).
+        return np.copy(self._user_xs)
 
     def fbest(self):
         """ See :meth:`Optimiser.fbest()`. """
@@ -165,13 +165,10 @@ class PSO(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning(
+                warnings.warn(
                     'All initial PSO particles are outside the boundaries.')
         else:
-            self._user_xs = np.array(self._xs, copy=True)
-
-        # Set user points as read-only
-        self._user_xs.setflags(write=False)
+            self._user_xs = self._xs
 
         # Set local/global exploration balance
         self.set_local_global_balance()
@@ -283,10 +280,9 @@ class PSO(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning(
-                    'All PSO particles are outside the boundaries.')
+                warnings.warn('All PSO particles are outside the boundaries.')
         else:
-            self._user_xs = np.array(self._xs, copy=True)
+            self._user_xs = self._xs
 
         # Update global best score
         i = np.argmin(self._fl)

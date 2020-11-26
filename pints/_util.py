@@ -78,7 +78,7 @@ class Timer(object):
 
 def vector(x):
     """
-    Copies ``x`` and returns a 1d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 1d read-only NumPy array of floats with shape
     ``(n,)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
@@ -91,14 +91,15 @@ def vector(x):
     if x.ndim != 1:
         n = np.max(x.shape)
         if np.prod(x.shape) != n:
-            raise ValueError('Unable to convert to 1d vector of scalar values')
+            raise ValueError(
+                'Unable to convert to 1d vector of scalar values.')
         x = x.reshape((n,))
     return x
 
 
 def matrix2d(x):
     """
-    Copies ``x`` and returns a 2d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 2d read-only NumPy array of floats with shape
     ``(m, n)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
