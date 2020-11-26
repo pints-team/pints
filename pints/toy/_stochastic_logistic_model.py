@@ -19,9 +19,29 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
     This model describes the growth of a population of individuals, where the
     birth rate per capita, initially $b_0$, decreases to $0$ as the population
     size, $\mathcal{C}(t)$, approaches a carrying capacity, $k$, starting from
-    an initial population size, $n_0$.
+    an initial population size, $n_0$. This process follows a rate according
+    to [1]_
+
+    ..math::
+       A \xrightarrow{b_0(1-\frac{\mathcal{C}(t)}{k})} 2A.
+
+    The model is simulated using the Gillespie stochastic simulation algorithm
+    [2]_.
 
     *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+
+    Parameters
+    ----------
+    initial_molecule_count : float
+        Sets the initial population size :math:`n_0`.
+
+    References
+    ----------
+    .. [1] 
+    .. [2] Gillespie, D. 1976. A General Method for Numerically Simulating the
+           Stochastic Time Evolution of Coupled Chemical Reactions.
+           Journal of Computational Physics. 22 (4): 403–434.
+           https://doi.org/10.1016/0021-9991(76)90041-3
     """
 
     def __init__(self, initial_molecule_count=2):
