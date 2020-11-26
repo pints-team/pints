@@ -49,7 +49,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
            https://arxiv.org/abs/0704.1908v2
     """
 
-    def __init__(self, initial_molecule_count=2):
+    def __init__(self, initial_molecule_count=50):
         super(StochasticLogisticModel, self).__init__()
         self._n0 = float(initial_molecule_count)
         if self._n0 < 0:
@@ -153,7 +153,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
-        return np.array([0.1, 50])
+        return np.array([0.1, 500])
 
     def suggested_times(self):
         """ See :meth:`pints.toy.ToyModel.suggested_times()`."""
