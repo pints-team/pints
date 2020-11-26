@@ -56,7 +56,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     def simulate_raw(self, parameters):
         """
-        Returns raw times, population sizes when reactions occur
+        Returns tuple (raw times, population sizes) when reactions occur.
         """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
@@ -84,8 +84,8 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     def interpolate_values(self, time, pop_size, output_times, parameters):
         """
-        Takes raw times and population size values as inputs
-        and outputs interpolated values at output_times
+        Takes raw times and population size values as inputs and outputs
+        interpolated values at output_times.
         """
         # Interpolate as step function, increasing pop_size by 1 at each
         # event time point
@@ -119,7 +119,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         r"""
         Returns the deterministic mean of infinitely many stochastic
         simulations, which follows:
-        :math:`\frac{kC(0)}{C(0) + \exp{-kt}(k - C(0))}`.
+        :math:`\frac{kC(0)}{C(0) + (k - C(0)) \exp(-kt)}`.
         """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
@@ -151,5 +151,5 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         return np.array([0.1, 50])
 
     def suggested_times(self):
-        """ See "meth:`pints.toy.ToyModel.suggested_times()`."""
+        """ See :meth:`pints.toy.ToyModel.suggested_times()`."""
         return np.linspace(0, 100, 101)
