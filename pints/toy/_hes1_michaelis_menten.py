@@ -34,13 +34,6 @@ class Hes1Model(pints.ForwardModel, ToyModel):
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    References
-    ----------
-    .. [1] Silk, D., el al. 2011. Designing attractive models via automated
-           identification of chaotic and oscillatory dynamical regimes. Nature
-           communications, 2, p.489.
-           https://doi.org/10.1038/ncomms1496
-
     Parameters
     ----------
     y0 : float
@@ -48,6 +41,13 @@ class Hes1Model(pints.ForwardModel, ToyModel):
     implicit_parameters
         The implicit parameter of the model that is not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
+
+    References
+    ----------
+    .. [1] Silk, D., el al. 2011. Designing attractive models via automated
+           identification of chaotic and oscillatory dynamical regimes. Nature
+           communications, 2, p.489.
+           https://doi.org/10.1038/ncomms1496
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:
