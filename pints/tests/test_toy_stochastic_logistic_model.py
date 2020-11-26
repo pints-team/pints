@@ -10,7 +10,6 @@ import unittest
 import numpy as np
 import pints
 import pints.toy
-from pints.toy import StochasticLogisticModel
 
 
 class TestStochasticLogistic(unittest.TestCase):
@@ -18,8 +17,11 @@ class TestStochasticLogistic(unittest.TestCase):
     Tests if the stochastic logistic growth (toy) model works.
     """
     def test_start_with_zero(self):
+        # Set seed for random generator
+        np.random.seed(1)
+
         # Test the special case where the initial population count is zero
-        model = StochasticLogisticModel(0)
+        model = pints.toy.StochasticLogisticModel(0)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1, 50]
         values = model.simulate(parameters, times)
@@ -27,6 +29,9 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(values == np.zeros(5)))
 
     def test_start_with_one(self):
+        # Set seed for random generator
+        np.random.seed(1)
+
         # Run small simulation
         model = pints.toy.StochasticLogisticModel(1)
         times = [0, 1, 2, 100, 1000]
@@ -38,6 +43,7 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(values[1:] >= values[:-1]))
 
     def test_suggested(self):
+        np.random.seed(1)
         model = pints.toy.StochasticLogisticModel(1)
         times = model.suggested_times()
         parameters = model.suggested_parameters()
@@ -45,16 +51,16 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(parameters > 0))
 
     def test_simulate(self):
+        np.random.seed(1)
+        model = pints.toy.StochasticLogisticModel(1)
         times = np.linspace(0, 100, 101)
-        model = StochasticLogisticModel(1)
         params = [0.1, 50]
         time, raw_values = model.simulate_raw([0.1, 50])
         values = model.interpolate_values(time, raw_values, times, params)
         self.assertTrue(len(time), len(raw_values))
 
         # Test output of Gillespie algorithm
-        self.assertTrue(np.all(raw_values ==
-                               np.array(range(1, 51))))
+        self.assertTrue(np.all(raw_values == np.array(range(1, 51))))
 
         # Check simulate function returns expected values
         self.assertTrue(np.all(values[np.where(times < time[1])] == 1))
@@ -69,15 +75,18 @@ class TestStochasticLogistic(unittest.TestCase):
 
     def test_mean_variance(self):
         # test mean
+        np.random.seed(1)
         model = pints.toy.StochasticLogisticModel(1)
         v_mean = model.mean([1, 10], [5, 10])
         self.assertEqual(v_mean[0], 10 / (1 + 9 * np.exp(-5)))
         self.assertEqual(v_mean[1], 10 / (1 + 9 * np.exp(-10)))
 
     def test_errors(self):
+        np.random.seed(1)
         model = pints.toy.StochasticLogisticModel(1)
-        # parameters, times cannot be negative
         times = np.linspace(0, 100, 101)
+
+        # parameters, times cannot be negative
         parameters = [-0.1, 50]
         self.assertRaises(ValueError, model.simulate, parameters, times)
         self.assertRaises(ValueError, model.mean, parameters, times)
