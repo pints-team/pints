@@ -122,9 +122,12 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
 
     def mean(self, parameters, times):
         r"""
-        Returns the deterministic mean of infinitely many stochastic
-        simulations, which follows:
-        :math:`\frac{kC(0)}{C(0) + (k - C(0)) \exp(-kt)}`.
+        Computes the deterministic mean of infinitely many stochastic
+        simulations with times :math:`t` and parameters (:math:`b`, :math:`k`),
+        which follows:
+        :math:`\frac{kC(0)}{C(0) + (k - C(0)) \exp(-bt)}`.
+
+        Returns an array with the same length as `times`.
         """
         parameters = np.asarray(parameters)
         if len(parameters) != self.n_parameters():
@@ -149,7 +152,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         Returns the deterministic variance of infinitely many stochastic
         simulations.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
