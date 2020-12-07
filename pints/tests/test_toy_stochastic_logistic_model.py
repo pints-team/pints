@@ -12,15 +12,16 @@ import pints
 import pints.toy
 
 
-class TestStochasticLogistic(unittest.TestCase):
+class TestStochasticLogisticModel(unittest.TestCase):
     """
     Tests if the stochastic logistic growth (toy) model works.
     """
     def test_start_with_zero(self):
+        # Test the special case where the initial population count is zero
+
         # Set seed for random generator
         np.random.seed(1)
 
-        # Test the special case where the initial population count is zero
         model = pints.toy.StochasticLogisticModel(0)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1, 50]
@@ -29,10 +30,11 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(values == np.zeros(5)))
 
     def test_start_with_one(self):
+        # Run a small simulation and check it runs properly
+
         # Set seed for random generator
         np.random.seed(1)
 
-        # Run small simulation
         model = pints.toy.StochasticLogisticModel(1)
         times = [0, 1, 2, 100, 1000]
         parameters = [0.1, 50]
@@ -43,7 +45,7 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(values[1:] >= values[:-1]))
 
     def test_suggested(self):
-        np.random.seed(1)
+        # Check suggested values
         model = pints.toy.StochasticLogisticModel(1)
         times = model.suggested_times()
         parameters = model.suggested_parameters()
@@ -51,6 +53,7 @@ class TestStochasticLogistic(unittest.TestCase):
         self.assertTrue(np.all(parameters > 0))
 
     def test_simulate(self):
+        # Check each step in the simulation process
         np.random.seed(1)
         model = pints.toy.StochasticLogisticModel(1)
         times = np.linspace(0, 100, 101)
@@ -74,15 +77,14 @@ class TestStochasticLogistic(unittest.TestCase):
                                                   params)[0] == 2)
 
     def test_mean_variance(self):
-        # test mean
-        np.random.seed(1)
+        # Check the mean is what we expected
         model = pints.toy.StochasticLogisticModel(1)
         v_mean = model.mean([1, 10], [5, 10])
         self.assertEqual(v_mean[0], 10 / (1 + 9 * np.exp(-5)))
         self.assertEqual(v_mean[1], 10 / (1 + 9 * np.exp(-10)))
 
     def test_errors(self):
-        np.random.seed(1)
+        # Check the model is raising expected errors
         model = pints.toy.StochasticLogisticModel(1)
         times = np.linspace(0, 100, 101)
 

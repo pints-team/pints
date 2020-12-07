@@ -12,7 +12,7 @@ import pints
 import pints.toy
 
 
-class TestLogistic(unittest.TestCase):
+class TestLogisticModel(unittest.TestCase):
     """
     Tests if the logistic (toy) model works.
     """
