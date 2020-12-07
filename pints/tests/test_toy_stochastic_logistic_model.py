@@ -55,8 +55,8 @@ class TestStochasticLogistic(unittest.TestCase):
         model = pints.toy.StochasticLogisticModel(1)
         times = np.linspace(0, 100, 101)
         params = [0.1, 50]
-        time, raw_values = model.simulate_raw([0.1, 50])
-        values = model.interpolate_values(time, raw_values, times, params)
+        time, raw_values = model._simulate_raw([0.1, 50])
+        values = model._interpolate_values(time, raw_values, times, params)
         self.assertTrue(len(time), len(raw_values))
 
         # Test output of Gillespie algorithm
@@ -67,10 +67,10 @@ class TestStochasticLogistic(unittest.TestCase):
 
         # Check interpolation function works as expected
         temp_time = np.array([np.random.uniform(time[0], time[1])])
-        self.assertTrue(model.interpolate_values(time, raw_values, temp_time,
+        self.assertTrue(model._interpolate_values(time, raw_values, temp_time,
                                                  params)[0] == 1)
         temp_time = np.array([np.random.uniform(time[1], time[2])])
-        self.assertTrue(model.interpolate_values(time, raw_values, temp_time,
+        self.assertTrue(model._interpolate_values(time, raw_values, temp_time,
                                                  params)[0] == 2)
 
     def test_mean_variance(self):

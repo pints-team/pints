@@ -1,5 +1,5 @@
 #
-# Stochastic degradation toy model.
+# Stochastic logistic model.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -59,7 +59,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 2
 
-    def simulate_raw(self, parameters):
+    def _simulate_raw(self, parameters):
         """
         Returns tuple (raw times, population sizes) when reactions occur.
         """
@@ -87,7 +87,7 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
             mol_count.append(a)
         return time, mol_count
 
-    def interpolate_values(self, time, pop_size, output_times, parameters):
+    def _interpolate_values(self, time, pop_size, output_times, parameters):
         """
         Takes raw times and population size values as inputs and outputs
         interpolated values at output_times.
@@ -114,10 +114,10 @@ class StochasticLogisticModel(pints.ForwardModel, ToyModel):
             return np.zeros(times.shape)
 
         # run Gillespie
-        time, pop_size = self.simulate_raw(parameters)
+        time, pop_size = self._simulate_raw(parameters)
 
         # interpolate
-        values = self.interpolate_values(time, pop_size, times, parameters)
+        values = self._interpolate_values(time, pop_size, times, parameters)
         return values
 
     def mean(self, parameters, times):
