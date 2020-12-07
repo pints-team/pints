@@ -68,10 +68,10 @@ class TestStochasticLogistic(unittest.TestCase):
         # Check interpolation function works as expected
         temp_time = np.array([np.random.uniform(time[0], time[1])])
         self.assertTrue(model._interpolate_values(time, raw_values, temp_time,
-                                                 params)[0] == 1)
+                                                  params)[0] == 1)
         temp_time = np.array([np.random.uniform(time[1], time[2])])
         self.assertTrue(model._interpolate_values(time, raw_values, temp_time,
-                                                 params)[0] == 2)
+                                                  params)[0] == 2)
 
     def test_mean_variance(self):
         # test mean
