@@ -83,6 +83,11 @@ class TestStochasticLogisticModel(unittest.TestCase):
         self.assertEqual(v_mean[0], 10 / (1 + 9 * np.exp(-5)))
         self.assertEqual(v_mean[1], 10 / (1 + 9 * np.exp(-10)))
 
+        # Check model variance isn't implemented
+        parameters_4 = [0.1, 50]
+        self.assertRaises(NotImplementedError, model.variance,
+                          parameters_4, times)
+
     def test_errors(self):
         # Check the model is raising expected errors
         model = pints.toy.StochasticLogisticModel(1)
@@ -107,10 +112,6 @@ class TestStochasticLogisticModel(unittest.TestCase):
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
         self.assertRaises(ValueError, model.mean, parameters_3, times)
 
-        # model variance isn't implemented so we should throw a helpful error
-        parameters_4 = [0.1, 50]
-        self.assertRaises(NotImplementedError, model.variance,
-                          parameters_4, times)
 
         # Initial value can't be negative
         self.assertRaises(ValueError, pints.toy.StochasticLogisticModel, -1)
