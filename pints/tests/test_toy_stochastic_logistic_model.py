@@ -76,6 +76,28 @@ class TestStochasticLogisticModel(unittest.TestCase):
         self.assertTrue(model._interpolate_values(time, raw_values, temp_time,
                                                   params)[0] == 2)
 
+        # Check parameters, times cannot be negative
+        parameters_0 = [-0.1, 50]
+        self.assertRaises(ValueError, model.simulate, parameters_0, times)
+        self.assertRaises(ValueError, model.mean, parameters_0, times)
+
+        parameters_1 = [0.1, -50]
+        self.assertRaises(ValueError, model.simulate, parameters_1, times)
+        self.assertRaises(ValueError, model.mean, parameters_1, times)
+
+        times_2 = np.linspace(-10, 10, 21)
+        parameters_2 = [0.1, 50]
+        self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
+        self.assertRaises(ValueError, model.mean, parameters_2, times_2)
+
+        # Check this model takes 2 parameters
+        parameters_3 = [0.1]
+        self.assertRaises(ValueError, model.simulate, parameters_3, times)
+        self.assertRaises(ValueError, model.mean, parameters_3, times)
+
+        # Check initial value cannot be negative
+        self.assertRaises(ValueError, pints.toy.StochasticLogisticModel, -1)
+
     def test_mean_variance(self):
         # Check the mean is what we expected
         model = pints.toy.StochasticLogisticModel(1)
@@ -83,38 +105,11 @@ class TestStochasticLogisticModel(unittest.TestCase):
         self.assertEqual(v_mean[0], 10 / (1 + 9 * np.exp(-5)))
         self.assertEqual(v_mean[1], 10 / (1 + 9 * np.exp(-10)))
 
-        # Check model variance isn't implemented
-        parameters_4 = [0.1, 50]
-        self.assertRaises(NotImplementedError, model.variance,
-                          parameters_4, times)
-
-    def test_errors(self):
-        # Check the model is raising expected errors
-        model = pints.toy.StochasticLogisticModel(1)
+        # Check model variance is not implemented
         times = np.linspace(0, 100, 101)
-
-        # parameters, times cannot be negative
-        parameters = [-0.1, 50]
-        self.assertRaises(ValueError, model.simulate, parameters, times)
-        self.assertRaises(ValueError, model.mean, parameters, times)
-
-        parameters = [0.1, -50]
-        self.assertRaises(ValueError, model.simulate, parameters, times)
-        self.assertRaises(ValueError, model.mean, parameters, times)
-
-        times_2 = np.linspace(-10, 10, 21)
-        parameters_2 = [0.1, 50]
-        self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
-        self.assertRaises(ValueError, model.mean, parameters_2, times_2)
-
-        # this model should have 2 parameters
-        parameters_3 = [0.1]
-        self.assertRaises(ValueError, model.simulate, parameters_3, times)
-        self.assertRaises(ValueError, model.mean, parameters_3, times)
-
-
-        # Initial value can't be negative
-        self.assertRaises(ValueError, pints.toy.StochasticLogisticModel, -1)
+        parameters = [0.1, 50]
+        self.assertRaises(NotImplementedError, model.variance,
+                          parameters, times)
 
 
 if __name__ == '__main__':
