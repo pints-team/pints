@@ -509,7 +509,7 @@ class TestMCMCController(unittest.TestCase):
         x2 = np.array(self.real_parameters) * 0.95
         xs = [x0, x1, x2]
         n_chains = len(xs)
-        n_iterations = 10
+        n_iterations = 100
 
         # Single-chain method, using a logposterior
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
@@ -566,7 +566,7 @@ class TestMCMCController(unittest.TestCase):
         x2 = np.array(self.real_parameters) * 0.95
         xs = [x0, x1, x2]
         n_chains = len(xs)
-        n_iterations = 10
+        n_iterations = 100
         meth = pints.DifferentialEvolutionMCMC
 
         # Test with multi-chain method
@@ -607,6 +607,46 @@ class TestMCMCController(unittest.TestCase):
         for i, chain in enumerate(chains):
             likelihoods = [self.log_likelihood(x) for x in chain]
             self.assertTrue(np.all(evals[i] == likelihoods))
+
+    def test_log_pdf_storage_in_memory_single_complex(self):
+        # Test storing evaluations in memory, with a single-chain method that
+        # does tricky things, e.g. PopulationMCMC maintains internal chains
+        # that it swaps around, causing a situation where the last evaluated
+        # point on an acceptance step may not be the main chain's point!
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+        n_chains = len(xs)
+        n_iterations = 100
+
+        # Single-chain method, using a logposterior
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=pints.PopulationMCMC)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+
+        # Test shape of returned array
+        evals = mcmc.log_pdfs()
+        self.assertEqual(len(evals.shape), 3)
+        self.assertEqual(evals.shape[0], n_chains)
+        self.assertEqual(evals.shape[1], n_iterations)
+        self.assertEqual(evals.shape[2], 3)
+
+        # Test returned values
+        for i, chain in enumerate(chains):
+            posteriors = [self.log_posterior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 0] == posteriors))
+
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 1] == likelihoods))
+
+            priors = [self.log_prior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 2] == priors))
 
     def test_deprecated_alias(self):
 
