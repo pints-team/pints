@@ -147,8 +147,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
                     'Initial points for MCMC must have finite logpdf.')
 
             # Accept
-            self._current = self._proposed # already read-only
-            self._current_log_pdfs = proposed_log_pdfs
+            self._current = self._proposed  # already read-only
+            self._current_log_pdfs = proposed_log_pdf
             self._current_log_pdfs.setflags(write=False)
 
             # Clear proposal
