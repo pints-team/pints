@@ -293,7 +293,6 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
 def r_draw(i, num_chains):
     # TODO: Needs a docstring!
-    r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    while(r1 == i or r2 == i or r1 == r2):
-        r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    return r1, r2
+    options = np.arange(n - 1)
+    options[i:] += 1
+    return np.random.choice(options, 2, replace=False)
