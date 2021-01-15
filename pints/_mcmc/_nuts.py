@@ -462,6 +462,7 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         # (rather than an ndarray)
         yield (theta,
                L,
+               grad_L,
                state.alpha / state.n_alpha,
                state.n_alpha,
                state.divergent)
@@ -530,9 +531,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # current point in chain
         self._current = self._x0
-
-        # current logpdf (last logpdf returned by tell)
-        self._current_logpdf = None
 
         # next point to ask user to evaluate
         self._next = self._current
@@ -707,10 +705,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             # probability and the number of leapfrog steps taken during
             # the last mcmc step
             self._current = self._next[0]
-            self._current_logpdf = self._next[1]
-            current_acceptance = self._next[2]
-            current_n_leapfrog = self._next[3]
-            divergent = self._next[4]
+            current_logpdf = self._next[1]
+            current_gradient = self._next[2]
+            current_acceptance = self._next[3]
+            current_n_leapfrog = self._next[4]
+            divergent = self._next[5]
 
             # Increase iteration count
             self._mcmc_iteration += 1
@@ -737,7 +736,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             # Return current position as next sample in the chain
             return (
                 np.copy(self._current),
-                (self._current_log_pdf, np.copy(reply[1])),
+                (current_logpdf, np.copy(current_gradient)),
                 True
             )
         else:
