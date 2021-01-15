@@ -132,10 +132,10 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
-    def replace(self, current, current_log_pdf, proposed):
+    def replace(self, current, current_log_pdf, proposed=None):
         """
         Replaces the internal current position, current LogPDF, and proposed
-        point by the user-specified values.
+        point (if any) by the user-specified values.
 
         This method can only be used once the initial position and LogPDF have
         been set (so after at least 1 round of ask-and-tell).
