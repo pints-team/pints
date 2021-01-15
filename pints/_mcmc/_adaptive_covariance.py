@@ -115,6 +115,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         if not self._running:
             self._running = True
             self._proposed = self._x0
+            self._proposed.setflags(write=False)
 
         # Propose new point
         if self._proposed is None:
@@ -173,15 +174,21 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             raise RuntimeError(
                 'Replace can only be used when already running.')
 
-        # Check values
+        # Check position
         current = pints.vector(current)
         if len(current) != self._n_parameters:
             raise ValueError('Point `current` has the wrong dimensions.')
+        current.setflags(write=False)
+
+        # Check log pdf
         current_log_pdf = float(current_log_pdf)
+
+        # Check proposal
         if proposed is not None:
             proposed = pints.vector(proposed)
             if len(proposed) != self._n_parameters:
                 raise ValueError('Point `proposed` has the wrong dimensions.')
+            proposed.setflags(write=False)
 
         # Store
         self._current = current
@@ -254,7 +261,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._proposed = None
 
             # Return first point for chain
-            return self._current
+            return self._current, self._current_log_pdf, True
 
         # Calculate log of the ratio of proposed and current log pdf
         # Can be used in adaptation, regardless of acceptance
@@ -295,5 +302,5 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._adapt_internal(accepted, log_ratio)
 
         # Return current sample
-        return self._current
+        return self._current, self._current_log_pdf, accepted
 

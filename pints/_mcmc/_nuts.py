@@ -739,7 +739,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             self._next = next(self._nuts)
 
             # Return current position as next sample in the chain
-            return self._current
+            return (
+                np.copy(self._current),
+                (self._current_log_pdf, np.copy(reply[1]),
+                True
+            )
         else:
             # Return None to indicate there is no new sample for the chain
             return None

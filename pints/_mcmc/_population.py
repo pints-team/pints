@@ -138,9 +138,10 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Next chain to exchange / crossover with
         self._j = 1
 
-        # Ask all inner samplers for first point (should be x0, so ignore!)
+        # Ask all inner samplers for first point, which should be x0
         for chain in self._chains:
-            chain.ask()
+            x0 = chain.ask()
+            assert(np.all(x0 == self._x0))
 
         # Update sampler state
         self._running = True
@@ -275,18 +276,18 @@ class PopulationMCMC(pints.SingleChainMCMC):
             # Return first point for chain 0
             sample = np.array(self._current[0], copy=False)
             sample.setflags(write=False)
-            return sample
+            return sample, self._current_log_pdfs[0], True
 
         # Perform mutation step (update one chain)
 
         # Update chain, get new sample
-        sample = self._chains[self._i].tell(fx * (1 - self._schedule[self._i]))
+        sample, sample_log_pdf, accepted = self._chains[self._i].tell(
+            fx * (1 - self._schedule[self._i]))
 
-        # Check if accepted
-        if np.any(sample != self._current[self._i]):
-            # Update current sample and untempered log pdf
+        # Update current sample and untempered log pdf
+        if accepted:
             self._current[self._i] = sample
-            self._current_log_pdfs[self._i] = fx
+            self._current_log_pdfs[self._i] = sample_log_pdf
 
         # Clear proposal
         self._proposed = None
@@ -327,10 +328,14 @@ class PopulationMCMC(pints.SingleChainMCMC):
                 # Update state
                 self._have_exchanged = True
 
+        # Return "accepted" any time the zero-chain moves
+        changed = accepted and self._i == 0
+        changed |= self._have_exchanged and (self._i == 0 or self._j == 0)
+
         # Return new point for chain 0
         sample = np.array(self._current[0], copy=False)
         sample.setflags(write=False)
-        return sample
+        return sample, self._current_log_pdfs[0], changed
 
     def temperature_schedule(self):
         """

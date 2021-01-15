@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - [#1165](https://github.com/pints-team/pints/pull/1165) A new optional argument `transform` was added to both `OptimisationController` and `MCMCController` to transform parameters during optimisation and sampling.
 - [#1112](https://github.com/pints-team/pints/pull/1112) A new `NoUTurnMCMC` sampler (NUTS) was added, along with a `DualAveragingAdaption` class to adaptively tune related Hamiltonian Monte Carlo methods.
 ### Changed
+- [#1250](https://github.com/pints-team/pints/pull/1250) The returned values from `MCMCSampler.tell()` have been updated from current position `x` to `x, f(x), accepted`, where `f(x)` is the current log likelihood and `accepted` is a bool indicating whether tell performed an acceptance step in this call.
+- [#1250](https://github.com/pints-team/pints/pull/1250) The `proposed` argument to `SingleChainMCMC.replace` is no longer optional (to indicate that the proposed point is set to `None` unless the user provides a new proposal).
 - [#1195](https://github.com/pints-team/pints/pull/1195) The installation instructions have been updated to reflect that PINTS in now pip-installable.
 - [#1191](https://github.com/pints-team/pints/pull/1191) Warnings are now emitted using `warnings.warn` rather than `logging.getLogger(..).warning`. This makes them show up like other warnings, and allows them to be suppressed with [filterwarnings](https://docs.python.org/3/library/warnings.html#warnings.filterwarnings).
 - [#1112](https://github.com/pints-team/pints/pull/1112) The new NUTS method is only supported on Python 3.3 and newer; a warning will be emitted when importing PINTS in older versions.

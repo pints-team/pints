@@ -122,8 +122,17 @@ class SingleChainMCMC(MCMCSampler):
         Returns either the next sample in the chain, or ``None`` to indicate
         that no new sample should be added to the chain (this is used to
         implement methods that require multiple evaluations per iteration).
-        Note that, if one chain returns ``None``, all chains should return
-        ``None``.
+
+        Returns a tuple ``(x, fx, accepted)`` or ``None`` (see below), where
+        ``x`` contains the current position of the chain, ``fx`` contains the
+        corresponding log likelihood, and ``accepted`` is a boolean indicating
+        whether an acceptance step was performed.
+
+        Some methods may require multiple ask-tell calls per iteration. These
+        methods can return ``None`` to indicate an iteration is still in
+        progress. Note that the number of times ``None`` is returned must be
+        fixed: when running multiple chains in parallel they should always stay
+        in sync.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
@@ -132,7 +141,7 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
-    def replace(self, current, current_log_pdf, proposed=None):
+    def replace(self, current, current_log_pdf, proposed):
         """
         Replaces the internal current position, current LogPDF, and proposed
         point by the user-specified values.
@@ -172,8 +181,8 @@ class MultiChainMCMC(MCMCSampler):
     def __init__(self, chains, x0, sigma0=None):
 
         # Check number of chains
-        self._chains = int(chains)
-        if self._chains < 1:
+        self._n_chains = int(chains)
+        if self._n_chains < 1:
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s)
@@ -227,10 +236,14 @@ class MultiChainMCMC(MCMCSampler):
         Performs an iteration of the MCMC algorithm, using the evaluations
         ``fxs`` of the points previously specified by ``ask``.
 
-        Returns either a list of new samples, or ``None`` to indicate that no
-        new samples should be added to the chains at this iteration (this is
-        used to implement methods that require multiple evaluations per
-        iteration).
+        Returns a tuple ``(x, fx, accepted)`` or ``None`` (see below), where
+        ``x`` contains the current positions of the chains, ``fx`` contains the
+        corresponding log likelihoods, and ``accepted`` is an array of booleans
+        indicating whether an acceptance step was performed.
+
+        Some methods may require multiple ask-tell calls per iteration. These
+        methods can return ``None`` to indicate an iteration is still in
+        progress.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple

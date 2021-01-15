@@ -478,7 +478,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             self._first_expansion = True
 
             # Return first point in chain, which is x0
-            return np.array(self._current, copy=True)
+            return np.copy(self._current), self._current_log_pdf, True
 
         # While we expand the interval ``I=(l,r)``, we return None
         if not self._interval_found:
@@ -563,7 +563,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 self._current_log_y = self._current_log_pdf - self._e
 
                 # Return the accepted sample
-                return np.array(self._proposed, copy=True)
+                return np.copy(self._current), self._current_log_pdf, True
 
             else:
                 self._active_param_index += 1

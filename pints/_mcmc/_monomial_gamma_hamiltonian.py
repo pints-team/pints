@@ -456,11 +456,16 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._mcmc_iteration += 1
 
-            # Mark current as read-only, so it can be safely returned
+            # Mark current as read-only, so it can be safely returned.
+            # Gradient won't be returned (only -gradient, so no need.
             self._current.setflags(write=False)
 
             # Return first point in chain
-            return self._current
+            return (
+                self._current,
+                (-self._current_energy, -self._current_gradient),
+                True
+            )
 
         # Set gradient of current leapfrog position
         self._gradient = gradient
@@ -507,8 +512,12 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
                 self._mcmc_acceptance = (
                     (self._mcmc_iteration * self._mcmc_acceptance + accept) /
                     (self._mcmc_iteration + 1))
-                self._current.setflags(write=False)
-                return self._current
+
+                return (
+                    self._current,
+                    (-self._current_energy, -self._current_gradient),
+                    False
+                )
 
             # Accept/reject
             else:
@@ -519,7 +528,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
                     self._current_energy = energy
                     self._current_gradient = gradient
 
-                    # Mark current as read-only, so it can be safely returned
+                    # Mark current as read-only, so it can be safely returned.
+                    # Gradient won't be returned (only -gradient, so no need.
                     self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
@@ -535,4 +545,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
             (self._mcmc_iteration + 1))
 
         # Return current position as next sample in the chain
-        return self._current
+        return (
+            self._current,
+            (-self._current_energy, -self._current_gradient),
+            accept != 0
+        )

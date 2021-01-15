@@ -49,11 +49,11 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
-        if self._chains < 3:
+        if self._n_chains < 3:
             raise ValueError('Need at least 3 chains.')
 
         # Warn user against using too few chains
-        if self._chains < 1.5 * self._n_parameters:
+        if self._n_chains < 1.5 * self._n_parameters:
             warnings.warn('This method should be run with n_chains >= '
                           '1.5 * n_parameters')
 
@@ -103,13 +103,13 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             self._iter_count += 1
 
             self._proposed = np.zeros(self._current.shape)
-            for j in range(self._chains):
+            for j in range(self._n_chains):
                 if self._gaussian_error:
                     error = np.random.normal(0, self._b_star, self._mu.shape)
                 else:
                     error = np.random.uniform(-self._b_star, self._b_star,
                                               self._mu.shape)
-                r1, r2 = r_draw(j, self._chains)
+                r1, r2 = r_draw(j, self._n_chains)
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
@@ -150,6 +150,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._current = None
         self._current_log_pdfs = None
         self._proposed = self._x0
+        self._proposed.setflags(write=False)
 
         # Set mu
         # TODO: Should this be a user setting?
@@ -221,14 +222,15 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             self._proposed = None
 
             # Return first samples for chains
-            return self._current
+            accepted = np.array([True] * self._n_chains)
+            return self._current, self._current_log_pdfs, accepted
 
         # Perform iteration
         next = np.array(self._current, copy=True)
         next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
 
         # Sample uniform numbers
-        u = np.log(np.random.uniform(size=self._chains))
+        u = np.log(np.random.uniform(size=self._n_chains))
 
         # Get chains to be updated
         i = u < (proposed_log_pdfs - self._current_log_pdfs)
@@ -238,14 +240,14 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current.setflags(write=False)
         self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
 
         # Return samples to add to chains
-        self._current.setflags(write=False)
-        return self._current
+        return self._current, self._current_log_pdfs, i
 
     def set_scale_coefficient(self, b):
         """
@@ -292,7 +294,10 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
 
 def r_draw(i, num_chains):
-    # TODO: Needs a docstring!
+    """
+    Draws two integers ``a`` and ``b`` such that ``a, b >= 0``, ``a, b < n``,
+    ``a != b``, and ``a != i, b != i``.
+    """
     r1, r2 = np.random.choice(num_chains, 2, replace=False)
     while(r1 == i or r2 == i or r1 == r2):
         r1, r2 = np.random.choice(num_chains, 2, replace=False)
