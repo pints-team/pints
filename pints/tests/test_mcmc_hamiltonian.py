@@ -43,7 +43,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
             reply = mcmc.tell((fx, gr))
-            if reply is not  None:
+            if reply is not None:
                 y, fy, ac = reply
                 if i >= 50 * ifrog:
                     chain.append(y)
