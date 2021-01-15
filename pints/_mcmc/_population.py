@@ -286,8 +286,9 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Update current sample and untempered log pdf
         if accepted:
+            # Don't use sample_log_pdf here, which is tempered
             self._current[self._i] = sample
-            self._current_log_pdfs[self._i] = sample_log_pdf
+            self._current_log_pdfs[self._i] = fx
 
         # Clear proposal
         self._proposed = None
@@ -333,9 +334,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         changed |= self._have_exchanged and (self._i == 0 or self._j == 0)
 
         # Return new point for chain 0
-        sample = np.array(self._current[0], copy=False)
-        sample.setflags(write=False)
-        return sample, self._current_log_pdfs[0], changed
+        return np.copy(self._current[0]), self._current_log_pdfs[0], changed
 
     def temperature_schedule(self):
         """

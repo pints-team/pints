@@ -130,9 +130,7 @@ class SingleChainMCMC(MCMCSampler):
 
         Some methods may require multiple ask-tell calls per iteration. These
         methods can return ``None`` to indicate an iteration is still in
-        progress. Note that the number of times ``None`` is returned must be
-        fixed: when running multiple chains in parallel they should always stay
-        in sync.
+        progress.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
@@ -190,15 +188,11 @@ class MultiChainMCMC(MCMCSampler):
             raise ValueError(
                 'Number of initial positions must be equal to number of'
                 ' chains.')
+        self._n_parameters = len(x0[0])
+        if not all([len(x) == self._n_parameters for x in x0[1:]]):
+            raise ValueError('All initial points must have same dimension.')
         self._x0 = np.array([pints.vector(x) for x in x0])
         self._x0.setflags(write=False)
-
-        # Get number of parameters
-        self._n_parameters = len(self._x0[0])
-
-        # Check initial points all have correct dimension
-        if not all([len(x) == self._n_parameters for x in self._x0]):
-            raise ValueError('All initial points must have same dimension.')
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -688,14 +682,14 @@ class MCMCController(object):
                 # Single chain
 
                 # Check and update the individual chains
-                xs_iterator = iter(xs)
                 fxs_iterator = iter(fxs)
                 for i in list(active):  # new list: active may be modified
-                    x = next(xs_iterator)
-                    fx = next(fxs_iterator)
-                    y = self._samplers[i].tell(fx)
+                    reply = self._samplers[i].tell(next(fxs_iterator))
 
-                    if y is not None:
+                    if reply is not None:
+                        # Unpack
+                        y, fy, accepted = reply
+
                         # Inverse transform to model space if transform is
                         # provided
                         if self._transform:
@@ -711,11 +705,9 @@ class MCMCController(object):
 
                         # Update current evaluations
                         if store_evaluations:
-                            # Check if accepted, if so, update log_pdf and
-                            # prior to be logged
-                            accepted = np.all(y == x)
+                            # If accepted, update log_pdf and prior for logging
                             if accepted:
-                                current_logpdf[i] = fx
+                                current_logpdf[i] = fy
                                 if prior is not None:
                                     current_prior[i] = prior(y)
 
@@ -750,10 +742,13 @@ class MCMCController(object):
                 # Multi-chain methods
 
                 # Get all chains samples at once
-                ys = self._samplers[0].tell(fxs)
-                intermediate_step = ys is None
+                reply = self._samplers[0].tell(fxs)
+                intermediate_step = reply is None
 
                 if not intermediate_step:
+                    # Unpack
+                    ys, fys, accepted = reply
+
                     # Inverse transform to model space if transform is provided
                     if self._transform:
                         ys_store = np.zeros(ys.shape)
@@ -774,9 +769,8 @@ class MCMCController(object):
                         for i, y in enumerate(ys):
                             # Check if accepted, if so, update log_pdf and
                             # prior to be logged
-                            accepted = np.all(xs[i] == y)
-                            if accepted:
-                                current_logpdf[i] = fxs[i]
+                            if accepted[i]:
+                                current_logpdf[i] = fys[i]
                                 if prior is not None:
                                     current_prior[i] = prior(ys[i])
 

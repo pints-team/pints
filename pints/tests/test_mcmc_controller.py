@@ -1453,7 +1453,7 @@ class SingleListSampler(pints.SingleChainMCMC):
     def tell(self, fx):
         x = self._chain[self._i] if self._i < self._n else None
         self._i += 1
-        return x
+        return None if x is None else (x, fx, True)
 
 
 class MultiListSampler(pints.MultiChainMCMC):
@@ -1487,7 +1487,7 @@ class MultiListSampler(pints.MultiChainMCMC):
             if x[0] is None:
                 x = None
             self._i += 1
-        return x
+        return None if x is None else (x, fx, np.array([True] * self._n))
 
 
 class TestMCMCControllerSingleChainStorage(unittest.TestCase):

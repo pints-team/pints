@@ -741,7 +741,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             # Return current position as next sample in the chain
             return (
                 np.copy(self._current),
-                (self._current_log_pdf, np.copy(reply[1]),
+                (self._current_log_pdf, np.copy(reply[1])),
                 True
             )
         else:
