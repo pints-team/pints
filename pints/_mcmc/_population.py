@@ -101,10 +101,6 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdfs[0]
-
     def in_initial_phase(self):
         """
         See :meth:`MCMCController.in_initial_phase()`.

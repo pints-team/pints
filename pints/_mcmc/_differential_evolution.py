@@ -125,10 +125,6 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
-    def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
-        return self._current_log_pdfs
-
     def set_gaussian_error(self, gaussian_error):
         """
         If ``True`` sets the error process to be a gaussian error,

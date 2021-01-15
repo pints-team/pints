@@ -148,10 +148,6 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.copy(self._proposed)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def current_slice_height(self):
         """
         Returns the height of the current slice.

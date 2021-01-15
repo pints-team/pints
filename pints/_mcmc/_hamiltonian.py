@@ -144,10 +144,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._position, copy=True)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return -self._current_energy
-
     def divergent_iterations(self):
         """
         Returns the iteration number of any divergent iterations
@@ -311,7 +307,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
 
             # Return first point in chain
             return (
-                self._current
+                self._current,
                 (-self._current_energy, -self._current_gradient),
                 False
             )

@@ -48,6 +48,9 @@ class TestNutsMCMC(unittest.TestCase):
                 chain.append(sample)
             if np.all(sample == x):
                 self.assertEqual(mcmc.current_log_pdf(), fx)
+            if ac:
+                self.assertTrue(np.all(x == y))
+                self.assertEqual(fx, fy)
 
         chain = np.array(chain)
         self.assertGreater(chain.shape[0], 1)
@@ -74,6 +77,9 @@ class TestNutsMCMC(unittest.TestCase):
                 chain.append(sample)
             if np.all(sample == x):
                 self.assertEqual(mcmc.current_log_pdf(), fx)
+            if ac:
+                self.assertTrue(np.all(x == y))
+                self.assertEqual(fx, fy)
 
         chain = np.array(chain)
         self.assertGreater(chain.shape[0], 1)
@@ -132,6 +138,9 @@ class TestNutsMCMC(unittest.TestCase):
                 chain.append(sample)
             if np.all(sample == x):
                 self.assertEqual(mcmc.current_log_pdf(), fx)
+            if ac:
+                self.assertTrue(np.all(x == y))
+                self.assertEqual(fx, fy)
 
         chain = np.array(chain)
         self.assertGreater(chain.shape[0], 1)
@@ -160,9 +169,6 @@ class TestNutsMCMC(unittest.TestCase):
         # Test initial proposal is first point
         mcmc = pints.NoUTurnMCMC(x0)
         self.assertTrue(np.all(mcmc.ask() == mcmc._x0))
-
-        # Test current log pdf is None (no tell yet)
-        self.assertIsNone(mcmc.current_log_pdf())
 
         # Repeated asks
         self.assertRaises(RuntimeError, mcmc.ask)

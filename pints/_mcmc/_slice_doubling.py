@@ -375,10 +375,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._proposed, copy=True)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def current_slice_height(self):
         """
         Returns current height value used to define the current slice.

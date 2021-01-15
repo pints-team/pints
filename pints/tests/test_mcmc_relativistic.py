@@ -42,11 +42,15 @@ class TestRelativisticMCMC(unittest.TestCase):
         for i in range(100 * ifrog):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
-            sample = mcmc.tell((fx, gr))
-            if i >= 50 * ifrog and sample is not None:
-                chain.append(sample)
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+            reply = mcmc.tell((fx, gr))
+            if reply is not None:
+                y, fy, ac = reply
+                if i >= 50 * ifrog:
+                    chain.append(y)
+                if ac:
+                    self.assertTrue(np.all(x == y))
+                    self.assertEqual(fx, fy[0])
+                    self.assertTrue(np.all(gr == fy[1]))
 
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)

@@ -107,13 +107,6 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
-    def current_log_pdf(self):
-        """
-        Returns the log pdf value of the current point (i.e. of the most
-        recent point returned by :meth:`tell()`).
-        """
-        raise NotImplementedError
-
     def tell(self, fx):
         """
         Performs an iteration of the MCMC algorithm, using the logpdf

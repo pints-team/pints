@@ -34,22 +34,26 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         self.assertTrue(mcmc.needs_sensitivities())
 
         # Set number of leapfrog steps
-        ifrog = 10
+        ifrog = 4
         mcmc.set_leapfrog_steps(ifrog)
 
         # Perform short run
         chain = []
-        for i in range(100 * ifrog):
+        for i in range(50 * ifrog):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
-            sample = mcmc.tell((fx, gr))
-            if i >= 50 * ifrog and sample is not None:
-                chain.append(sample)
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+            reply = mcmc.tell((fx, gr))
+            if reply is not None:
+                y, fy, ac = reply
+                if i >= 25 * ifrog:
+                    chain.append(y)
+                if ac:
+                    self.assertTrue(np.all(x == y))
+                    self.assertEqual(fx, fy[0])
+                    self.assertTrue(np.all(gr == fy[1]))
 
         chain = np.array(chain)
-        self.assertEqual(chain.shape[0], 50)
+        self.assertEqual(chain.shape[0], 25)
         self.assertEqual(chain.shape[1], len(x0))
 
     def test_logging(self):

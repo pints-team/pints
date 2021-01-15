@@ -148,10 +148,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def epsilon(self):
         """
         Returns ``epsilon`` which is the effective step size used in proposals.

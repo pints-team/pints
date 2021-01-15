@@ -99,14 +99,6 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.ask()
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
-    def test_current_log_pdf(self):
-        # Test current_log_pdf() method
-
-        mcmc = pints.HaarioACMC(self.real_parameters)
-        mcmc.ask()
-        mcmc.tell(1.23)
-        self.assertEqual(mcmc.current_log_pdf(), 1.23)
-
     def test_eta(self):
         # Test eta getting and setting
 

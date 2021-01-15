@@ -566,10 +566,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._next, copy=True)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_logpdf
-
     def delta(self):
         """
         Returns delta used in leapfrog algorithm.

@@ -128,10 +128,6 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def eta(self):
         """
         Returns ``eta`` which controls the rate of adaptation decay

@@ -192,10 +192,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         return integrate.quad(lambda p1: self._pdf(p1, a, c, m, z),
                               -float('Inf'), p)[0]
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return -self._current_energy
-
     def divergent_iterations(self):
         """
         Returns the iteration number of any divergent iterations.
