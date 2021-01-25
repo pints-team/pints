@@ -45,8 +45,9 @@ class StanLogPDF(InterfaceLogPDF):
         self._dict = {self._names[i]: [] for i in range(len(self._names))}
 
     def __call__(self, x):
+        dict = self._dict_update(x)
         try:
-            return self._log_prob(x, adjust_transform=True)
+            return self._log_prob(self._u_to_c(dict), adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError):
                 return -np.inf
@@ -70,13 +71,14 @@ class StanLogPDF(InterfaceLogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        dict = self._dict_update(x)
         try:
-            val = self._log_prob(x, adjust_transform=True)
-            dp = self._grad_log_prob(x, adjust_transform=True)
-        except (RuntimeError, ValueError):
-            val = -np.inf
-            dp = np.ones(self._n_parameters)
-        return val, dp.reshape(-1)
+            uncons = self._u_to_c(dict)
+            val = self._log_prob(uncons, adjust_transform=True)
+            dp = self._grad_log_prob(uncons, adjust_transform=True)
+            return val, dp.reshape(-1)
+        except RuntimeError:
+            return -np.inf, np.ones(self._n_parameters).reshape(-1)
 
     def _initialise_dict_index(self, names):
         """ Initialises dictionary and index of names. """
