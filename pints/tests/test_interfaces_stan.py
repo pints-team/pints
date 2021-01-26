@@ -57,9 +57,6 @@ class TestStanLogPDF(unittest.TestCase):
         # check getters
         self.assertEqual(stanmodel.names()[0], 'mu')
         self.assertEqual(stanmodel.n_parameters(), 1)
-        various = stanmodel.pickled_form()
-        stanmodel1 = various['StanLogPDF']
-        self.assertEqual(stanmodel(data), stanmodel1(data))
 
 
 if __name__ == '__main__':

@@ -18,6 +18,32 @@ from . import InterfaceLogPDF
 
 class StanLogPDF(InterfaceLogPDF):
     def __init__(self, stan_code, stan_data, pickle_filename=None):
+        """
+        Creates a `pints.LogPDF` object from Stan code and data, which can
+        then be used in sampling, optimisation etc. Note, that this command
+        uses Pystan to interface with Stan which then goes on to compile the
+        underlying Stan model (see [1]_), so can take some time (typically
+        minutes or so) to execute.
+
+        If `pickle_filename` is provided, the object is pickled and can be
+        used to reload it later without recompiling the Stan model.
+
+        Extends :class:`pints.LogPDF`.
+
+        Parameters
+        ----------
+        stan_code
+            Stan code describing the model.
+        stan_data
+            Data in Python dictionary format as required by PyStan.
+        pickle_filename
+            Filename used to save pickled model.
+
+        References
+        ----------
+        .. [1] "Stan: a probabilistic programming language".
+               B Carpenter et al., (2017), Journal of Statistical Software
+        """
 
         if pickle_filename:
             if os.path.isfile(pickle_filename):
@@ -47,10 +73,11 @@ class StanLogPDF(InterfaceLogPDF):
     def __call__(self, x):
         dict = self._dict_update(x)
         try:
-            return self._log_prob(self._u_to_c(dict), adjust_transform=True)
+            return self._log_prob(self._u_to_c(dict),
+                                  adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError):
-                return -np.inf
+            return -np.inf
 
     def _dict_update(self, x):
         """ Updates dictionary object with parameter values. """
@@ -93,13 +120,6 @@ class StanLogPDF(InterfaceLogPDF):
         names_short = list(dict.fromkeys(names_short))
         index = [names_short.index(name) for name in names_long]
         return names_short, index
-
-    def pickled_form(self):
-        """ Returns form of model ready for pickling. """
-        outputs = {'model': self._compiled_stan,
-                   'fit': self._fit,
-                   'StanLogPDF': self}
-        return outputs
 
     def names(self):
         """ Returns names of Stan parameters. """
