@@ -71,7 +71,7 @@ class TestSNES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)

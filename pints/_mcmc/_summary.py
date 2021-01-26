@@ -8,9 +8,9 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import logging
 import numpy as np
 import pints
+import warnings
 from tabulate import tabulate
 
 
@@ -52,12 +52,10 @@ class MCMCSummary(object):
 
         # Deal with special case where only one chain is provided
         if len(chains) == 1:
-            logging.basicConfig()
-            log = logging.getLogger(__name__)
-            log.warning(
-                'Summaries calculated with one chain may be unreliable.'
-                ' It is recommended that you rerun sampling with more than'
-                ' one chain')
+            warnings.warn(
+                'Summaries calculated with one chain may be unreliable. It is'
+                ' recommended that you rerun sampling with more than one'
+                ' chain.')
 
             self._chains = chains
 

@@ -47,4 +47,3 @@ class ParabolicError(pints.ErrorMeasure):
         Returns the global optimum for this function.
         """
         return np.array(self._c, copy=True)
-

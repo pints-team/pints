@@ -46,24 +46,16 @@ In addition, there is a [full API documentation](http://pints.readthedocs.io/en/
 
 ## Installing PINTS
 
-You'll need the following requirements:
-
-- Python 2.7 or Python 3.5+
-- Python libraries: `cma matplotlib numpy scipy tabulate`
-
-These can easily be installed using `pip`. To do this, first make sure you have the latest version of pip installed:
+The latest release of PINTS can be installed without downloading (cloning) the git repository, by opening a console and typing
 
 ```
 $ pip install --upgrade pip
-```
-
-Then navigate to the path where you downloaded PINTS to, and install both PINTS and its dependencies by typing:
-
-```
 $ pip install pints
 ```
 
-To install PINTS as a [developer](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md), use
+Note that you'll need Python 3.5+ (preferred), or failing that, Python 2.7.
+
+If you prefer to have the latest cutting-edge version, you can instead install from the repository, by typing
 
 ```
 $ git clone https://github.com/pints-team/pints.git
@@ -71,19 +63,27 @@ $ cd pints
 $ pip install -e .[dev,docs]
 ```
 
-To uninstall again, type
+To uninstall again, type:
 
 ```
 $ pip uninstall pints
 ```
 
+
+## What's new in this version of PINTS?
+
+To see what's changed in the latest release, see the [CHANGELOG](https://github.com/pints-team/pints/blob/master/CHANGELOG.md).
+
+
 ## Contributing to PINTS
 
 If you'd like to help us develop PINTS by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) first.
 
+
 ## License
 
 PINTS is fully open source. For more information about its license, see [LICENSE](https://github.com/pints-team/pints/blob/master/LICENSE.md).
+
 
 ## Get in touch
 

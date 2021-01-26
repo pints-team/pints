@@ -78,7 +78,7 @@ class Timer(object):
 
 def vector(x):
     """
-    Copies ``x`` and returns a 1d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 1d read-only NumPy array of floats with shape
     ``(n,)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.
@@ -99,7 +99,7 @@ def vector(x):
 
 def matrix2d(x):
     """
-    Copies ``x`` and returns a 2d read-only numpy array of floats with shape
+    Copies ``x`` and returns a 2d read-only NumPy array of floats with shape
     ``(m, n)``.
 
     Raises a ``ValueError`` if ``x`` has an incompatible shape.

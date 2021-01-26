@@ -87,10 +87,8 @@ class AdaptiveCovarianceMCMC(HaarioBardenetACMC):
     def __init__(self, x0, sigma0=None):
 
         # Deprecated on 2019-09-26
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.AdaptiveCovarianceMCMC` is deprecated.'
             ' Please use `pints.HaarioBardenetACMC` instead.')
         super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)

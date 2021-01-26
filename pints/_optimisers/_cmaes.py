@@ -7,9 +7,9 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import logging
 import numpy as np
 import pints
+import warnings
 
 
 class CMAES(pints.PopulationBasedOptimiser):
@@ -48,9 +48,6 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
 
-        # Python logger
-        self._logger = logging.getLogger(__name__)
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -69,7 +66,7 @@ class CMAES(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning(
+                warnings.warn(
                     'All points requested by CMA-ES are outside the'
                     ' boundaries.')
 
@@ -176,9 +173,9 @@ class CMAES(pints.PopulationBasedOptimiser):
             if 'tolconditioncov' in stop:    # pragma: no cover
                 return 'Ill-conditioned covariance matrix.'
 
-            self._logger.debug(
-                'CMA-ES stopping condition(s) reached: ' +
-                '; '.join([str(x) for x in stop.keys()]))
+            # self._logger.debug(
+            #    'CMA-ES stopping condition(s) reached: ' +
+            #    '; '.join([str(x) for x in stop.keys()]))
 
         return False
 
