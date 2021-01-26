@@ -22,8 +22,11 @@ relevant code.
 
 
 ## Digging deeper
-- [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
+- [Optimisation in a transformed parameter space - using a Transform object](./optimisation/transformed-parameters.ipynb)
+- [Optimisation in a transformed parameter space - writing a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
+- [Sampling in a transformed parameter space - using a Transform object](./sampling/transformed-parameters.ipynb)
+- [Sampling in a transformed parameter space - with or without Jacobian adjustment](./sampling/transformation-with-and-without-jacobian.ipynb)
 
 
 ## Optimisation
@@ -67,6 +70,7 @@ relevant code.
 - [Hamiltonian MCMC](./sampling/hamiltonian-mcmc.ipynb)
 - [MALA MCMC](./sampling/mala-mcmc.ipynb)
 - [Monomial-Gamma HMC MCMC](./sampling/monomial-gamma-hmc.ipynb)
+- [No-U-Turn MCMC](./sampling/nuts-mcmc.ipynb)
 - [Relativistic MCMC](./sampling/relativistic-mcmc.ipynb)
 - [Slice Sampling: Rank Shrinking MCMC](./sampling/slice-rank-shrinking-mcmc.ipynb)
 
@@ -76,21 +80,25 @@ relevant code.
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
+- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 - [Effective sample size](./sampling/effective-sample-size.ipynb)
 - [Evaluating noise models using autocorrelation plots of the residuals](./plotting/residuals-autocorrelation.ipynb)
 - [Histogram plots](./plotting/mcmc-histogram-plots.ipynb)
+- [Noise model diagnostic plots (correlation)](./plotting/residuals-autocorrelation-diagnostics.ipynb)
+- [Noise model diagnostic plots (magnitude)](./plotting/residuals-variance-diagnostics.ipynb)
 - [Pairwise scatterplots](./plotting/mcmc-pairwise-scatterplots.ipynb)
 - [Predicted time series](./plotting/mcmc-predicted-time-series.ipynb)
 - [Trace plots](./plotting/mcmc-trace-plots.ipynb)
-- [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
 
 
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
+- [Constant and multiplicative Gaussian error](./stats/constant_and_multiplicative_gaussian_error.ipynb)
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
+- [Pooling parameters](./stats/pooling.ipynb)
 - [Student-t noise model](./stats/student-t-sampling-error.ipynb)
 
 
@@ -122,10 +130,6 @@ relevant code.
 - [Rosenbrock function](./toy/distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
-
-## Interfaces with other software packages
-- [Stan](./interfaces/stan.ipynb)
-
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)

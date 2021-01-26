@@ -20,6 +20,7 @@ Overview:
 - :class:`LogPDF`
 - :class:`LogPrior`
 - :class:`LogPosterior`
+- :class:`PooledLogPDF`
 - :class:`ProblemLogLikelihood`
 - :class:`SumOfIndependentLogPDFs`
 
@@ -29,6 +30,8 @@ Overview:
 .. autoclass:: LogPrior
 
 .. autoclass:: LogPosterior
+
+.. autoclass:: PooledLogPDF
 
 .. autoclass:: ProblemLogLikelihood
 

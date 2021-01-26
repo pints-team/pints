@@ -71,7 +71,7 @@ class TestBareCMAES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -140,6 +140,5 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
     unittest.main()
+
