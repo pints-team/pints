@@ -9,7 +9,6 @@
 import pints
 import unittest
 import numpy as np
-import pints.interfaces
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -18,7 +17,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 try:
-    import pystan
+    import pints.interfaces
     have_stan = True
 except ImportError:
     have_stan = False
