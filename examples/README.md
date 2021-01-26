@@ -131,6 +131,9 @@ relevant code.
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
+## Interfaces with other software packages
+- [Stan](./interfaces/stan.ipynb)
+
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)
