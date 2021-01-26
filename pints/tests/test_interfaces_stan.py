@@ -17,7 +17,14 @@ try:
 except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
+try:
+    import pystan
+    have_stan = True
+except ImportError:
+    have_stan = False
 
+
+@unittest.skipIf(not have_stan, 'PyStan not found')
 class TestStanLogPDF(unittest.TestCase):
     """ Tests StanLogPDF. """
 
