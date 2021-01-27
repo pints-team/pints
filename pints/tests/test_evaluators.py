@@ -157,7 +157,8 @@ class TestEvaluators(unittest.TestCase):
         self.assertEqual(results.get(timeout=0.01), (0, 2))
         self.assertTrue(results.empty())
         self.assertTrue(error.is_set())
-        #self.assertFalse(errors.empty())   # Fails on travis!
+        # \todo still relevant on GitHub actions?
+        # self.assertFalse(errors.empty())   # Fails on travis!
         self.assertIsNotNone(errors.get(timeout=0.01))
 
 

@@ -94,7 +94,7 @@ class ForwardModelS1(ForwardModel):
             The simulated values, as a sequence of ``n_times`` values, or
             a NumPy array of shape ``(n_times, n_outputs)``.
         y'
-            The corresponding derivatives, as a numpy array of shape
+            The corresponding derivatives, as a NumPy array of shape
             ``(n_times, n_parameters)`` or an array of shape
             ``(n_times, n_outputs, n_parameters)``.
         """
@@ -338,7 +338,7 @@ class TunableMethod(object):
     hyper-parameters of the method.
 
     Note that :meth:`set_hyper_parameters` takes an array of parameters, which
-    might be of the same type (e.g. a numpy array). So derived classes should
+    might be of the same type (e.g. a NumPy array). So derived classes should
     not raise any errors if individual hyper parameters are set using the wrong
     type (e.g. float rather than int), but should instead implicitly convert
     the argument to the correct type.

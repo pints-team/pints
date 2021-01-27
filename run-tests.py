@@ -116,9 +116,6 @@ def run_doctests():
     # unintended modules are exposed via a public interface
     doctest_rst_and_public_interface()
 
-    # Check all .slow-books exist (they haven't been, e.g., renamed or removed)
-    doctest_slow_books()
-
     print('\n{}\n# Doctests passed. #\n{}\n'.format('#' * 20, '#' * 20))
 
 
@@ -347,108 +344,43 @@ def get_all_documented_symbols():
     return documented_symbols
 
 
-def doctest_slow_books():
-    """
-    Check that all notebooks listed in .slow-books actually exist. This
-    prevents cron jobs falling over if slow notebooks are renamed without
-    editing the list.
-    """
-
-    print('\nChecking that all notebooks listed in .slow-books exist.')
-
-    with open('.slow-books', 'r') as f:
-        slow_books = [b.strip() for b in f.readlines() if
-                      b.strip().endswith('.ipynb')]
-
-    if len(slow_books) < 1:
-        print('No slow books found in .slow-books. Did something change?')
-        print('FAILED')
-        sys.exit(1)
-
-    with open('.slow-books', 'r') as f:
-        other_lines = [b.strip() for b in f.readlines() if not (
-            b.strip().startswith('#') or
-            b.strip().endswith('.ipynb') or
-            b.strip() == ''
-        )]
-
-    if len(other_lines) > 0:
-        print('The following entries are in .slow-books but are not ipynb:')
-        print('  {}'.format('\n  '.join(other_lines)))
-        print('FAILED')
-        sys.exit(1)
-
-    examples = [b[9:] for b in list_notebooks('examples')]
-    undocumented = [b for b in slow_books if b not in examples]
-
-    if len(undocumented) > 0:
-        print('The following ipynb files are in .slow-books but are not in the'
-              ' examples directory:')
-        print('  {}'.format('\n  '.join(undocumented)))
-        print('FAILED')
-        sys.exit(1)
-
-    print('All notebooks listed in .slow-books exist.')
-
-
-def run_notebook_tests(skip_slow_books=False):
+def run_notebook_tests():
     """
     Runs Jupyter notebook tests. Exits if they fail.
     """
-    debug = True
 
-    # Ignore books with deliberate errors and books that are too slow for
-    # fast testing.
-    ignore_list = []
-    if os.path.isfile('.error-books'):
-        with open('.error-books', 'r') as f:
-            for line in f.readlines():
-                line = line.strip()
-                if not line or line[:1] == '#':
-                    continue
-                if not line.startswith('examples/'):
-                    line = 'examples/' + line
-                if not line.endswith('.ipynb'):
-                    line = line + '.ipynb'
-                if not os.path.isfile(line):
-                    raise Exception('Error notebook not found: ' + line)
-                ignore_list.append(line)
-    if skip_slow_books and os.path.isfile('.slow-books'):
-        with open('.slow-books', 'r') as f:
-            for line in f.readlines():
-                line = line.strip()
-                if not line or line[:1] == '#':
-                    continue
-                if not line.startswith('examples/'):
-                    line = 'examples/' + line
-                if not line.endswith('.ipynb'):
-                    line = line + '.ipynb'
-                if not os.path.isfile(line):
-                    raise Exception('Slow notebook not found: ' + line)
-                ignore_list.append(line)
+    # Ignore books with deliberate errors, but check they still exist
+    ignore_list = [
+        'examples/optimisation/maximum-likelihood.ipynb'
+    ]
+
+    for ignored_book in ignore_list:
+        if not os.path.isfile(ignored_book):
+            raise Exception('Ignored notebook not found: ' + ignored_book)
 
     # Scan and run
     print('Testing notebooks')
     ok = True
     for notebook in list_notebooks('examples', True, ignore_list):
-        if debug:
-            print(notebook)
-        else:
-            ok &= test_notebook(notebook)
+        ok &= test_notebook(notebook)
     if not ok:
         print('\nErrors encountered in notebooks')
         sys.exit(1)
     print('\nOK')
 
 
-def list_notebooks(root, recursive=True, ignore_list=[], notebooks=[]):
+def list_notebooks(root, recursive=True, ignore_list=None, notebooks=None):
     """
     Returns a list of all notebooks in a directory.
     """
+    if notebooks is None:
+        notebooks = []
+    if ignore_list is None:
+        ignore_list = []
     for filename in os.listdir(root):
         path = os.path.join(root, filename)
         if path in ignore_list:
-            print('Skipping slow/error book: ' + path)
+            print('Skipping ignored notebook: ' + path)
             continue
 
         # Add notebooks
@@ -512,7 +444,7 @@ def test_notebook(path):
         print('ABORTED')
         sys.exit(1)
 
-    # Sucessfully run
+    # Successfully run
     print('ok (' + b.format() + ')')
     return True
 
@@ -563,11 +495,6 @@ if __name__ == '__main__':
         help='Test only the fast Jupyter notebooks in `examples`.',
     )
     parser.add_argument(
-        '--allbooks',
-        action='store_true',
-        help='Test all Jupyter notebooks in `examples`.',
-    )
-    parser.add_argument(
         '-debook',
         nargs=2,
         metavar=('in', 'out'),
@@ -610,12 +537,9 @@ if __name__ == '__main__':
         has_run = True
         run_copyright_checks()
     # Notebook tests
-    if args.allbooks:
-        has_run = True
-        run_notebook_tests()
     elif args.books:
         has_run = True
-        run_notebook_tests(True)
+        run_notebook_tests()
     if args.debook:
         has_run = True
         export_notebook(*args.debook)
