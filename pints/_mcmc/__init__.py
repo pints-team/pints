@@ -280,9 +280,18 @@ class MCMCController(object):
     chains : int
         The number of MCMC chains to generate.
     x0
-        A sequence of starting points. Can be a list of lists, a 2-dimensional
-        array, or any other structure such that ``x0[i]`` is the starting point
-        for chain ``i``.
+        Either a sequence of starting points (can be a list of lists, a
+        2-dimensional array, or any other structure such that ``x0[i]`` is the
+        starting point for chain ``i``), an object of class
+        :class:`pints.LogPrior` with the same dimensionality as the parameter
+        space or None. When an object of :class:`pints.LogPrior` is provided,
+        its :meth:`sample` method is used to generate initial points.
+
+        By default `x0=None`: in this case, if `log_pdf` is of
+        class :class:`pints.LogPosterior`, its corresponding
+        :class:`pints.LogPrior` object is used for initialisation; if not,
+        each of the points is sampled from a uniform distribution between -2
+        and 2.
     sigma0
         An optional initial covariance matrix, i.e., a guess of the covariance
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
@@ -311,13 +320,19 @@ class MCMCController(object):
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s): Most checking is done by samplers!
-        self._x0_isfunction = hasattr(x0, '__call__')
-        if self._x0_isfunction:
-            if not isinstance(x0, pints.LogPrior):
-                raise ValueError('Initialisation function must extend ' +
-                                 'pints.LogPrior.')
+        self._x0_isfunction = False
+        if x0 is None:
+            # use prior if one's available
+            if isinstance(log_pdf, pints.LogPosterior):
+                x0 = log_pdf.log_prior()
+            # do what Stan does and initialise all parameters on U(-2, 2) scale
+            else:
+                x0 = [np.random.uniform(low=-2, high=2,
+                      size=self._n_parameters) for i in range(chains)]
+        if isinstance(x0, pints.LogPrior):
             init = [x0.sample() for i in range(chains)]
             self._init_fn = x0
+            self._x0_isfunction = True
         else:
             if len(x0) != chains:
                 raise ValueError(
@@ -397,7 +412,7 @@ class MCMCController(object):
         self.set_max_iterations()
 
         # Initialisation number of tries
-        self._max_initialisation_tries = 20
+        self._max_initialisation_tries = 100
 
     def chains(self):
         """
@@ -623,8 +638,8 @@ class MCMCController(object):
         if self._x0_isfunction:
             initialised_finite, x0 = self._sample_x0(active, evaluator)
             if not initialised_finite:
-                raise ValueError('Initialisation failed since log_pdf not ' +
-                                 'finite at x0.')
+                raise ValueError('Initialisation failed since logPDF ' +
+                                 'not finite at initial points.')
             self._samplers = [self._method(a, self._sigma0) for a in x0]
 
         while running:
