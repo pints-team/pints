@@ -272,7 +272,7 @@ class TestNutsMCMC(unittest.TestCase):
 
         nuts_mcmc.set_max_iterations(50)
         nuts_mcmc.set_log_to_screen(False)
-        np.seed(5)
+        np.random.seed(5)
         nuts_chains = nuts_mcmc.run()
 
         self.assertFalse(np.isnan(np.sum(nuts_chains)))
