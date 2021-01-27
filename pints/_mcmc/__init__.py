@@ -327,8 +327,8 @@ class MCMCController(object):
                 x0 = log_pdf.log_prior()
             # do what Stan does and initialise all parameters on U(-2, 2) scale
             else:
-                x0 = [np.random.uniform(low=-2, high=2,
-                      size=self._n_parameters) for i in range(chains)]
+                x0 = pints.UniformLogPrior([-2] * self._n_parameters,
+                                           [2] * self._n_parameters)
         if isinstance(x0, pints.LogPrior):
             init = [x0.sample() for i in range(chains)]
             self._init_fn = x0
@@ -633,14 +633,22 @@ class MCMCController(object):
         timer = pints.Timer()
         running = True
 
-        # initialisation (for single chain methods only and only if prior
-        # supplied)
+        # initialisation
         if self._x0_isfunction:
-            initialised_finite, x0 = self._sample_x0(active, evaluator)
-            if not initialised_finite:
-                raise ValueError('Initialisation failed since logPDF ' +
-                                 'not finite at initial points.')
-            self._samplers = [self._method(a, self._sigma0) for a in x0]
+            if self._single_chain:
+                initialised_finite, x0 = self._sample_x0(active, evaluator)
+                if not initialised_finite:
+                    raise ValueError('Initialisation failed since logPDF ' +
+                                     'not finite at initial points.')
+                self._samplers = [self._method(a, self._sigma0) for a in x0]
+            else:
+                chain_r = list(range(self._n_chains))
+                initialised_finite, x0 = self._sample_x0(chain_r, evaluator)
+                if not initialised_finite:
+                    raise ValueError('Initialisation failed since logPDF ' +
+                                     'not finite at initial points.')
+                nch = self._n_chains
+                self._samplers = [self._method(nch, x0, self._sigma0)]
 
         while running:
             # Initial phase

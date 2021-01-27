@@ -646,6 +646,144 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(mcmc.n_evaluations(), 30)
 
 
+class TestMCMCControllerInitialisation(unittest.TestCase):
+    """
+    Tests various types of MCMC initialisation.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """ Prepare problem for tests. """
+
+        # Create toy model
+        model = pints.toy.LogisticModel()
+        cls.real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(cls.real_parameters, times)
+
+        # Add noise
+        np.random.seed(1)
+        cls.noise = 10
+        values += np.random.normal(0, cls.noise, values.shape)
+        cls.real_parameters.append(cls.noise)
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a uniform prior over both the parameters and the new noise
+        # variable
+        cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400, cls.noise * 0.1],
+            [0.02, 600, cls.noise * 100]
+        )
+
+        # Create a log-likelihood
+        cls.log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
+        cls.log_posterior = pints.LogPosterior(
+            cls.log_likelihood, cls.log_prior)
+
+        cls.nchains = 4
+
+    def test_null_initialisation(self):
+        # Tests sampler runs with automatic initialisation
+
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+    def test_other_log_prior(self):
+        # Tests sampler runs using other log prior for input
+        log_prior1 = pints.UniformLogPrior(
+            [0.01, 400, self.noise * 0.1],
+            [0.012, 410, self.noise * 0.5]
+        )
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains,
+                                    x0=log_prior1)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+        # check initial points within boundaries of other prior
+        lower = log_prior1._boundaries.lower()
+        upper = log_prior1._boundaries.upper()
+        for i in range(len(chains)):
+            for j in range(self.log_posterior.n_parameters()):
+                val = chains[i][0][j]
+                self.assertTrue(val > lower[j])
+                self.assertTrue(val < upper[j])
+
+    def test_log_pdf(self):
+        # Tests automatic initialisation for a LogPDF (which isn't of type
+        # LogPosterior)
+        log_pdf = pints.toy.GaussianLogPDF()
+        mcmc = pints.MCMCController(log_pdf, self.nchains)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+        for i in range(len(chains)):
+            for j in range(log_pdf.n_parameters()):
+                val = chains[i][0][j]
+                self.assertTrue(val > -2)
+                self.assertTrue(val < 2)
+
+    def test_failed_initialisation(self):
+        # Tests failed initialisation when initialising outside prior range
+        log_prior1 = pints.UniformLogPrior(
+            [0.00, 300, self.noise * 0.1],
+            [0.01, 400, self.noise * 0.5]
+        )
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains,
+                                    x0=log_prior1)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        self.assertRaises(ValueError, mcmc.run)
+
+    def test_multi_initialisation(self):
+        # Tests initialisation using multi-chain methods
+        mcmc = pints.MCMCController(
+            self.log_posterior, self.nchains,
+            method=pints.DifferentialEvolutionMCMC)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+        log_prior1 = pints.UniformLogPrior(
+            [0.01, 400, self.noise * 0.1],
+            [0.012, 410, self.noise * 0.5]
+        )
+
+        # try initialisation using other log prior
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains,
+                                    x0=log_prior1)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+        # check initial points within boundaries of other prior
+        lower = log_prior1._boundaries.lower()
+        upper = log_prior1._boundaries.upper()
+        for i in range(len(chains)):
+            for j in range(self.log_posterior.n_parameters()):
+                val = chains[i][0][j]
+                self.assertTrue(val > lower[j])
+                self.assertTrue(val < upper[j])
+
+
 class TestMCMCControllerLogging(unittest.TestCase):
     """
     Test logging to disk and screen.
