@@ -767,7 +767,8 @@ class TestMCMCControllerInitialisation(unittest.TestCase):
 
         # try initialisation using other log prior
         mcmc = pints.MCMCController(self.log_posterior, self.nchains,
-                                    x0=log_prior1)
+                                    x0=log_prior1,
+                                    method=pints.DifferentialEvolutionMCMC)
         mcmc.set_log_to_screen(False)
         n = 10
         mcmc.set_max_iterations(n)
@@ -782,6 +783,60 @@ class TestMCMCControllerInitialisation(unittest.TestCase):
                 val = chains[i][0][j]
                 self.assertTrue(val > lower[j])
                 self.assertTrue(val < upper[j])
+
+    def test_transformed_initialisation(self):
+        # Tests whether initialisation works on transformed models
+        transform = pints.LogTransformation(n_parameters=3)
+
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains,
+                                    transform=transform)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+        log_prior1 = pints.UniformLogPrior(
+            [0.01, 400, self.noise * 0.1],
+            [0.012, 410, self.noise * 0.5]
+        )
+
+        # check initial points within boundaries of other prior
+        lower = self.log_prior._boundaries.lower()
+        upper = self.log_prior._boundaries.upper()
+        for i in range(len(chains)):
+            for j in range(self.log_posterior.n_parameters()):
+                val = chains[i][0][j]
+                self.assertTrue(val > lower[j])
+                self.assertTrue(val < upper[j])
+
+        # try initialisation using other log prior
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains,
+                                    x0=log_prior1, transform=transform,
+                                    method=pints.HamiltonianMCMC)
+        mcmc.set_log_to_screen(False)
+        n = 10
+        mcmc.set_max_iterations(n)
+        chains = mcmc.run()
+        self.assertEqual(chains[0].shape[0], n)
+
+        # check initial points within boundaries of other prior
+        lower = log_prior1._boundaries.lower()
+        upper = log_prior1._boundaries.upper()
+        for i in range(len(chains)):
+            for j in range(self.log_posterior.n_parameters()):
+                val = chains[i][0][j]
+                self.assertTrue(val > lower[j])
+                self.assertTrue(val < upper[j])
+
+    def test_setters_and_getters(self):
+        # Tests setters and getters
+        mcmc = mcmc = pints.MCMCController(self.log_posterior, self.nchains)
+        tries = 120
+        mcmc.set_max_initialisation_tries(tries)
+        self.assertEqual(tries, mcmc.max_initialisation_tries())
+
+        self.assertRaises(ValueError, mcmc.set_max_initialisation_tries, -1)
 
 
 class TestMCMCControllerLogging(unittest.TestCase):

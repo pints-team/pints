@@ -91,7 +91,7 @@ class SingleChainMCMC(MCMCSampler):
             # Use to create diagonal matrix
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
-            self._sigma0 = np.array(sigma0)
+            self._sigma0 = np.array(sigma0, copy=True)
             if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
@@ -297,29 +297,35 @@ class MCMCController(object):
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
-        of the parameterspace) or as a ``(d, )`` vector, in which case
+        of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
+    transform : pints.Transformation
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
     """
 
-    def __init__(self, log_pdf, chains, x0=None, sigma0=None, method=None):
+    def __init__(
+            self, log_pdf, chains, x0=None, sigma0=None, transform=None,
+            method=None):
 
-        # Store function
+        # Check function
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
-        self._log_pdf = log_pdf
 
         # Get number of parameters
-        self._n_parameters = self._log_pdf.n_parameters()
+        self._n_parameters = log_pdf.n_parameters()
 
         # Check number of chains
         self._n_chains = int(chains)
         if self._n_chains < 1:
             raise ValueError('Number of chains must be at least 1.')
 
-        # Check initial position(s): Most checking is done by samplers!
+        # Get functions which can generate initial position or set initial
+        # position points if numerical values given
         self._x0_isfunction = False
         if x0 is None:
             # use prior if one's available
@@ -344,6 +350,42 @@ class MCMCController(object):
                     ' given LogPDF.')
             init = x0
 
+        # Apply a transformation (if given). From this point onward the MCMC
+        # sampler will see only the transformed search space and will know
+        # nothing about the model parameter space.
+        if transform is not None:
+            # Convert log pdf
+            log_pdf = transform.convert_log_pdf(log_pdf)
+
+        # Store transform for later detransformation: if using a transform, any
+        # parameters logged to the filesystem or printed to screen should be
+        # detransformed first!
+        self._transform = transform
+
+        # Store function
+        self._log_pdf = log_pdf
+
+        if transform is not None:
+            # Convert initial positions
+            init = [transform.to_search(x) for x in init]
+
+            # Convert sigma0, if provided
+            if sigma0 is not None:
+                sigma0 = np.asarray(sigma0)
+                n_parameters = log_pdf.n_parameters()
+                # Make sure sigma0 is a (covariance) matrix
+                if np.product(sigma0.shape) == n_parameters:
+                    # Convert from 1d array
+                    sigma0 = sigma0.reshape((n_parameters,))
+                    sigma0 = np.diag(sigma0)
+                elif sigma0.shape != (n_parameters, n_parameters):
+                    # Check if 2d matrix of correct size
+                    raise ValueError(
+                        'sigma0 must be either a (d, d) matrix or a (d, ) '
+                        'vector, where d is the number of parameters.')
+                sigma0 = transform.convert_covariance_matrix(sigma0, init[0])
+        self._sigma0 = sigma0
+
         # Don't check initial standard deviation: done by samplers!
 
         # Set default method
@@ -362,7 +404,6 @@ class MCMCController(object):
         self._single_chain = issubclass(method, pints.SingleChainMCMC)
 
         # Create sampler(s)
-        self._sigma0 = sigma0
         if self._single_chain:
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
@@ -393,6 +434,8 @@ class MCMCController(object):
         self._evaluations_in_memory = False
         self._samples = None
         self._evaluations = None
+        self._n_evaluations = None
+        self._time = None
 
         # Writing chains and evaluations to disk
         self._chain_files = None
@@ -476,6 +519,13 @@ class MCMCController(object):
         """
         return self._samplers[0].needs_initial_phase()
 
+    def n_evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't run yet.
+        """
+        return self._n_evaluations
+
     def parallel(self):
         """
         Returns the number of parallel worker processes this routine will be
@@ -500,7 +550,7 @@ class MCMCController(object):
 
         # Iteration and evaluation counting
         iteration = 0
-        n_evaluations = 0
+        self._n_evaluations = 0
 
         # Choose method to evaluate
         f = self._log_pdf
@@ -601,6 +651,8 @@ class MCMCController(object):
             logger.add_time('Time m:s')
 
         # Pre-allocate arrays for chain storage
+        # Note: we store the inverse transformed (to model space) parameters
+        # only if transform is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -620,36 +672,34 @@ class MCMCController(object):
                 evaluations = np.zeros((self._n_chains, self._max_iterations))
 
         # Some samplers need intermediate steps, where None is returned instead
-        # of a sample. Samplers can run asynchronously, so that one returns
-        # None while another returns a sample.
-        # To deal with this, we maintain a list of 'active' samplers that have
-        # not reach `max_iterations` yet, and store the number of samples we
-        # have in each chain.
+        # of a sample. But samplers can run asynchronously, so that one returns
+        # None while another returns a sample. To deal with this, we maintain a
+        # list of 'active' samplers that have not reached `max_iterations` yet,
+        # and we store the number of samples that we have in each chain.
         if self._single_chain:
             active = list(range(self._n_chains))
             n_samples = [0] * self._n_chains
 
-        # Start sampling
-        timer = pints.Timer()
-        running = True
-
         # initialisation
         if self._x0_isfunction:
             if self._single_chain:
-                initialised_finite, x0 = self._sample_x0(active, evaluator)
-                if not initialised_finite:
-                    raise ValueError('Initialisation failed since logPDF ' +
-                                     'not finite at initial points.')
-                self._samplers = [self._method(a, self._sigma0) for a in x0]
+                initialised_finite, init = self._sample_x0(active, evaluator)
             else:
                 chain_r = list(range(self._n_chains))
-                initialised_finite, x0 = self._sample_x0(chain_r, evaluator)
-                if not initialised_finite:
-                    raise ValueError('Initialisation failed since logPDF ' +
-                                     'not finite at initial points.')
-                nch = self._n_chains
-                self._samplers = [self._method(nch, x0, self._sigma0)]
+                initialised_finite, init = self._sample_x0(chain_r, evaluator)
+            if not initialised_finite:
+                raise ValueError('Initialisation failed since logPDF ' +
+                                 'not finite at initial points.')
 
+            if self._single_chain:
+                self._samplers = [self._method(a, self._sigma0) for a in init]
+            else:
+                nch = self._n_chains
+                self._samplers = [self._method(nch, init, self._sigma0)]
+
+        # Start sampling
+        timer = pints.Timer()
+        running = True
         while running:
             # Initial phase
             # Note: self._initial_phase_iterations is None when no initial
@@ -670,7 +720,7 @@ class MCMCController(object):
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
-            n_evaluations += len(fxs)
+            self._n_evaluations += len(fxs)
 
             # Update chains
             if self._single_chain:
@@ -685,11 +735,18 @@ class MCMCController(object):
                     y = self._samplers[i].tell(fx)
 
                     if y is not None:
+                        # Inverse transform to model space if transform is
+                        # provided
+                        if self._transform:
+                            y_store = self._transform.to_model(y)
+                        else:
+                            y_store = y
+
                         # Store sample in memory
                         if self._chains_in_memory:
-                            samples[i][n_samples[i]] = y
+                            samples[i][n_samples[i]] = y_store
                         else:
-                            samples[i] = y
+                            samples[i] = y_store
 
                         # Update current evaluations
                         if store_evaluations:
@@ -736,11 +793,19 @@ class MCMCController(object):
                 intermediate_step = ys is None
 
                 if not intermediate_step:
+                    # Inverse transform to model space if transform is provided
+                    if self._transform:
+                        ys_store = np.zeros(ys.shape)
+                        for i, y in enumerate(ys):
+                            ys_store[i] = self._transform.to_model(y)
+                    else:
+                        ys_store = ys
+
                     # Store samples in memory
                     if self._chains_in_memory:
-                        samples[:, iteration] = ys
+                        samples[:, iteration] = ys_store
                     else:
-                        samples = ys
+                        samples = ys_store
 
                     # Update current evaluations
                     if store_evaluations:
@@ -794,7 +859,7 @@ class MCMCController(object):
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
-                logger.log(iteration, n_evaluations)
+                logger.log(iteration, self._n_evaluations)
                 for sampler in self._samplers:
                     sampler._log_write(logger)
                 logger.log(timer.time())
@@ -816,22 +881,25 @@ class MCMCController(object):
                 halt_message = ('Halting: Maximum number of iterations ('
                                 + str(iteration) + ') reached.')
 
+        # Finished running
+        self._time = timer.time()
+
         # Log final state and show halt message
         if logging:
-            logger.log(iteration, n_evaluations)
+            logger.log(iteration, self._n_evaluations)
             for sampler in self._samplers:
                 sampler._log_write(logger)
-            logger.log(timer.time())
+            logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
-
-        # Store generated chains in memory
-        if self._chains_in_memory:
-            self._samples = samples
 
         # Store evaluations in memory
         if self._evaluations_in_memory:
             self._evaluations = evaluations
+
+        if self._chains_in_memory:
+            # Store generated chains in memory
+            self._samples = samples
 
         # Return generated chains
         return samples if self._chains_in_memory else None
@@ -872,15 +940,20 @@ class MCMCController(object):
         current_active = list(active)
         n_tries = 0
         x0 = []
+        transform = self._transform
         while not initialised_finite and (n_tries <
                                           self._max_initialisation_tries):
             xs = [init_fn.sample()[0] for i in current_active]
+            if transform is not None:
+                xs = [transform.to_search(x) for x in xs]
             fxs = evaluator.evaluate(xs)
             xs_iterator = iter(xs)
             fxs_iterator = iter(fxs)
             for i in list(current_active):
                 x = next(xs_iterator)
                 fx = next(fxs_iterator)
+                if self._needs_sensitivities:
+                    fx = fx[0]
                 if np.isfinite(fx):
                     x0.append(x)
             if len(x0) == len(active):
@@ -1017,15 +1090,6 @@ class MCMCController(object):
         """
         self._log_to_screen = True if enabled else False
 
-    def set_max_initialisation_tries(self, max_initialisation_tries):
-        """
-        Sets number of attempts to initialise samplers by sampling.
-        """
-        if max_initialisation_tries < 1:
-            raise ValueError('Number of initialisation tries must ' +
-                             'exceed 1')
-        self._max_initialisation_tries = max_initialisation_tries
-
     def set_max_iterations(self, iterations=10000):
         """
         Adds a stopping criterion, allowing the routine to halt after the
@@ -1040,6 +1104,15 @@ class MCMCController(object):
                 raise ValueError(
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
+
+    def set_max_initialisation_tries(self, max_initialisation_tries):
+        """
+        Sets number of attempts to initialise samplers by sampling.
+        """
+        if max_initialisation_tries < 1:
+            raise ValueError('Number of initialisation tries must ' +
+                             'exceed 1')
+        self._max_initialisation_tries = max_initialisation_tries
 
     def set_parallel(self, parallel=False):
         """
@@ -1062,19 +1135,25 @@ class MCMCController(object):
             self._parallel = False
             self._n_workers = 1
 
+    def time(self):
+        """
+        Returns the time needed for the last run, in seconds, or ``None`` if
+        the controller hasn't run yet.
+        """
+        return self._time
+
 
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
+                                           method=method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
@@ -1105,4 +1184,4 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method).run()
+        log_pdf, chains, x0, sigma0, method=method).run()
