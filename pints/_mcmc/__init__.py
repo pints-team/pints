@@ -689,7 +689,9 @@ class MCMCController(object):
                 initialised_finite, init = self._sample_x0(chain_r, evaluator)
             if not initialised_finite:
                 raise ValueError('Initialisation failed since logPDF ' +
-                                 'not finite at initial points.')
+                                 'not finite at initial points after ' +
+                                 str(self._max_initialisation_tries) +
+                                 'attempts.')
 
             if self._single_chain:
                 self._samplers = [self._method(a, self._sigma0) for a in init]
