@@ -244,7 +244,8 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertEqual(mcmc.hamiltonian_threshold(), threshold2)
 
     def test_build_tree_nan(self):
-        # This method gives nan in the hamiltonian_dash in the build_tree function
+        # This method gives nan in the hamiltonian_dash
+        # in the build_tree function
         # Needed for coverage
 
         model = pints.toy.LogisticModel()
