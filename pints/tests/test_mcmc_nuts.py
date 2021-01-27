@@ -243,6 +243,39 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc.set_hamiltonian_threshold(threshold2)
         self.assertEqual(mcmc.hamiltonian_threshold(), threshold2)
 
+    def test_build_tree_nan(self):
+        # This method gives nan in the hamiltonian_dash in the build_tree function
+        # Needed for coverage
+
+        model = pints.toy.LogisticModel()
+        real_parameters = np.array([0.015, 20])
+        times = np.linspace(0, 1000, 50)
+        org_values = model.simulate(real_parameters, times)
+        np.random.seed(1)
+        noise = 0.1
+        values = org_values + np.random.normal(0, noise, org_values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, noise)
+
+        log_prior = pints.UniformLogPrior(
+            [0.0001, 1],
+            [1, 500]
+        )
+
+        log_posterior = pints.LogPosterior(log_likelihood, log_prior)
+
+        xs = [[0.36083914, 1.99013825]]
+        nuts_mcmc = pints.MCMCController(log_posterior,
+                                         len(xs), xs,
+                                         method=pints.NoUTurnMCMC)
+
+        nuts_mcmc.set_max_iterations(50)
+        nuts_mcmc.set_log_to_screen(False)
+        np.seed(5)
+        nuts_chains = nuts_mcmc.run()
+
+        self.assertFalse(np.isnan(np.sum(nuts_chains)))
+
 
 if __name__ == '__main__':
     unittest.main()
