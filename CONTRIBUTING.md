@@ -1,4 +1,4 @@
-# Contributing to Pints
+# Contributing to PINTS
 
 If you'd like to contribute to Pints (thanks!), please have a look at the [guidelines below](#workflow).
 
