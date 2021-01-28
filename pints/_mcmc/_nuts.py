@@ -252,7 +252,10 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         hamiltonian_dash = L_dash \
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
 
-        comparison = hamiltonian_dash - hamiltonian0
+        if np.isnan(hamiltonian_dash):
+            comparison = float('-inf')
+        else:
+            comparison = hamiltonian_dash - hamiltonian0
         n_dash = comparison
         alpha_dash = min(1.0, np.exp(comparison))
 
