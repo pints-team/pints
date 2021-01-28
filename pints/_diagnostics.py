@@ -48,7 +48,8 @@ def ess_single_param(x):
 
 def effective_sample_size(samples):
     """
-    Calculates effective sample size (ESS) for a list of n-dimensional samples.
+    Calculates effective sample size (ESS) for a list of n-dimensional
+    samples.
     
     Parameters
     ----------
