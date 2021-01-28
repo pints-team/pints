@@ -2,10 +2,9 @@
 #
 # Tests the high-dimensional Gaussian log-pdf toy problem.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -64,8 +63,9 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         cov = [[1.0, np.sqrt(1.0 / 2.0)],
                [np.sqrt(1.0 / 2.0), 2.0]]
         mean = np.zeros(2)
-        self.assertEqual(f([1, 2]), scipy.stats.multivariate_normal.logpdf(
-            [1, 2], mean, cov))
+        self.assertEqual(
+            f([1, 2]),
+            scipy.stats.multivariate_normal.logpdf([1, 2], mean, cov))
 
         # check suggested bounds
         f = pints.toy.HighDimensionalGaussianLogPDF(dimension=2)
@@ -100,16 +100,10 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         # in order for matrix to be positive definite there are bounds
         # on the lower value of rho > - 1 / (dims - 1)
         self.assertRaises(
-            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 4, -0.34
-        )
+            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 4, -0.34)
         self.assertRaises(
-            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11
-        )
+            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11)
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

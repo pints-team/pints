@@ -1,10 +1,9 @@
 #
 # Three-state Goodwin oscillator toy model.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function
 import numpy as np
@@ -30,7 +29,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
     Parameters are :math`[k_2, k_3, m_1, m_2, m_3]`. The initial conditions
     are hard-coded at ``[0.0054, 0.053, 1.93]``.
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyODEModel`.
 
     References
     ----------
@@ -51,7 +50,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         self._y0 = [0.0054, 0.053, 1.93]
 
     def _dfdp(self, state, time, parameters):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.ToyODEModel._dfdp()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         ret = np.empty((self.n_outputs(), self.n_parameters()))
@@ -73,7 +72,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def jacobian(self, state, time, parameters):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.ToyODEModel.jacobian()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         ret = np.empty((self.n_outputs(), self.n_outputs()))
@@ -97,7 +96,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         return 5
 
     def _rhs(self, state, time, parameters):
-        """ See :meth:`pints.ToyModel._rhs()`. """
+        """ See :meth:`pints.ToyODEModel._rhs()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         dxdt = 1 / (1 + z**10) - m1 * x
@@ -107,10 +106,8 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
-
         return np.array([2, 4, 0.12, 0.08, 0.1])
 
     def suggested_times(self):
         """ See :meth:`pints.toy.ToyModel.suggested_times()`. """
-
         return np.linspace(0, 100, 200)

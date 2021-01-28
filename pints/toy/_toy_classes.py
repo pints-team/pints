@@ -1,16 +1,15 @@
 #
 # Toy base classes.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import pints
 import numpy as np
-from scipy.integrate import odeint
+import pints
+import scipy
 
 
 class ToyLogPDF(pints.LogPDF):
@@ -49,7 +48,7 @@ class ToyModel(object):
     """
     def suggested_parameters(self):
         """
-        Returns an numpy array of the parameter values that are representative
+        Returns an NumPy array of the parameter values that are representative
         of the model.
 
         For example, these parameters might reproduce a particular result that
@@ -59,54 +58,65 @@ class ToyModel(object):
 
     def suggested_times(self):
         """
-        Returns an numpy array of time points that is representative of the
+        Returns an NumPy array of time points that is representative of the
         model
         """
-        raise NotImplementedError
-
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
         raise NotImplementedError
 
 
 class ToyODEModel(ToyModel):
     """
     Defines an interface for toy problems where the underlying model is an
-    ordinary differential equation (ODE).
+    ordinary differential equation (ODE) that describes some time-series
+    generating model.
 
-    Note that toy ODE models should extend both ``ToyModel`` and one of the
-    forward model classes, e.g. :class:`pints.ForwardModel`.
+    Note that toy ODE models should extend both :class:`pints.ToyODEModel` and
+    one of the forward model classes, e.g. :class:`pints.ForwardModel` or
+    :class:`pints.ForwardModelS1`.
+
+    To use this class as the basis for a :class:`pints.ForwardModel`, the
+    method :meth:`_rhs()` should be reimplemented.
+
+    Models implementing :meth:`_rhs()`, :meth:`jacobian()` and :meth:`_dfdp()`
+    can be used to create a :class:`pints.ForwardModelS1`.
     """
     def _dfdp(self, y, t, p):
         """
-        Returns the derivative of the ODE RHS with respect to parameters, this
-        should be a matrix of dimensions ``n_parameters`` by ``n_parameters``.
+        Returns the derivative of the ODE RHS at time ``t``, with respect to
+        model parameters ``p``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A matrix of dimensions ``n_outputs`` by ``n_parameters``.
         """
         raise NotImplementedError
 
     def jacobian(self, y, t, p):
         """
         Returns the Jacobian (the derivative of the RHS ODE with respect to the
-        outputs), this should be a matrix of dimensions ``n_outputs`` by
-        ``n_outputs``.
+        outputs) at time ``t``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A matrix of dimensions ``n_outputs`` by ``n_outputs``.
         """
         raise NotImplementedError
 
@@ -120,43 +130,56 @@ class ToyODEModel(ToyModel):
 
     def _rhs(self, y, t, p):
         """
-        Returns RHS of ODE for numerical integration to obtain outputs and
-        sensitivities, this should be a vector of length ``n_outputs``.
+        Returns the evaluated RHS (``dy/dt``) for a given state vector ``y``,
+        time ``t``, and parameter vector ``p``.
 
         Parameters
         ----------
         y
-            State vector
+            The state vector at time ``t`` (with length ``n_outputs``).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A vector of length ``n_outputs``.
         """
         raise NotImplementedError
 
     def _rhs_S1(self, y_and_dydp, t, p):
         """
         Forms the RHS of ODE for numerical integration to obtain both outputs
-        and sensitivities, this should be a vector of length
-        ``n_outputs + n_parameters``.
+        and sensitivities.
 
         Parameters
         ----------
         y_and_dydp
-            Combined vector of states (elements ``0`` to ``n_states - 1``) and
-            sensitivities (elements ``n_states`` onwards)
+            A combined vector of states (elements ``0`` to ``n_outputs - 1``)
+            and sensitivities (elements ``n_outputs`` onwards).
         t
-            Time
+            The time to evaluate at (as a scalar).
         p
-            Model parameters
+            A vector of model parameters (of length ``n_parameters``).
+
+        Returns
+        -------
+        A vector of length ``n_outputs + n_parameters``.
         """
-        n_outputs = self.n_states()
-        y = y_and_dydp[0:n_outputs]
-        dydp = y_and_dydp[n_outputs:].reshape((n_outputs, self.n_parameters()))
+
+        # separating initial values of model outputs(y) and sensitivities(dydp)
+        y = y_and_dydp[0:self.n_outputs()]
+        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
+                                                      self.n_outputs()))
+
+        # calculating the direvatives w.r.t t of the model outputs
         dydt = self._rhs(y, t, p)
+
+        # calculating sensitivities
         d_dydp_dt = (
-            np.matmul(self.jacobian(y, t, p), dydp) +
-            self._dfdp(y, t, p))
+            np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
+            np.transpose(self._dfdp(y, t, p)))
         return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
 
     def simulate(self, parameters, times):
@@ -182,23 +205,32 @@ class ToyODEModel(ToyModel):
             :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
             details.
         """
-        times = np.asarray(times)
+        times = pints.vector(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
+
+        # Scipy odeint requires the first element in ``times`` to be the
+        # initial point, which ForwardModel says _has to be_ t=0
+        offset = 0
+        if len(times) < 1 or times[0] != 0:
+            times = np.concatenate(([0], times))
+            offset = 1
 
         if sensitivities:
             n_params = self.n_parameters()
             n_outputs = self.n_states()
             y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
-            result = odeint(self._rhs_S1, y0, times, (parameters,))
+            result = scipy.integrate.odeint(
+                self._rhs_S1, y0, times, (parameters,))
             values = result[:, 0:n_outputs]
             dvalues_dp = (result[:, n_outputs:].reshape(
-                (len(times), n_outputs, n_params)))
-            return values, dvalues_dp
+                (len(times), n_outputs, n_params), order="F"))
+            return values[offset:], dvalues_dp[offset:]
         else:
-            values = odeint(self._rhs, self._y0, times, (parameters,))
-            return values
+            values = scipy.integrate.odeint(
+                self._rhs, self._y0, times, (parameters,))
+            return values[offset:]
 
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModelS1.simulateS1()`. """

@@ -1,20 +1,19 @@
 #
 # Exponential natural evolution strategy optimizer: xNES
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import logging
 import numpy as np
 import pints
 import scipy
 import scipy.linalg
+import warnings
 
 
 class XNES(pints.PopulationBasedOptimiser):
@@ -47,9 +46,6 @@ class XNES(pints.PopulationBasedOptimiser):
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
 
-        # Python logger
-        self._logger = logging.getLogger(__name__)
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -59,7 +55,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Ready for tell now
         self._ready_for_tell = True
 
-        # Create new samples
+        # Create new samples (normalised, and user values)
         self._zs = np.array([np.random.normal(0, 1, self._n_parameters)
                              for i in range(self._population_size)])
         self._xs = np.array([self._mu + np.dot(self._A, self._zs[i])
@@ -75,7 +71,7 @@ class XNES(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning(
+                warnings.warn(
                     'All points requested by XNES are outside the boundaries.')
         else:
             self._user_xs = self._xs

@@ -1,15 +1,15 @@
 #
 # Fitzhugh-Nagumo toy model.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
+
 import pints
 from . import ToyODEModel
 
@@ -52,7 +52,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
             \end{matrix}\right]
         \end{align}
 
-    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, `pints.toy.ToyODEModel`.
 
     Parameters
     ----------
@@ -79,9 +79,9 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
                 raise ValueError('Initial value must have size 2.')
 
     def _dfdp(self, y, t, p):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.ToyODEModel._dfdp()`. """
         V, R = y
-        a, b, c = [float(x) for x in p]
+        a, b, c = [float(param) for param in p]
         ret = np.empty((2, 3))
         ret[0, 0] = 0
         ret[0, 1] = 0
@@ -92,9 +92,9 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def jacobian(self, y, t, p):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.ToyODEModel.jacobian()`. """
         V, R = y
-        a, b, c = [float(x) for x in p]
+        a, b, c = [float(param) for param in p]
         ret = np.empty((2, 2))
         ret[0, 0] = c * (1 - V**2)
         ret[0, 1] = c
@@ -111,7 +111,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
         return 3
 
     def _rhs(self, y, t, p):
-        """ See :meth:`pints.ToyModel._rhs()`. """
+        """ See :meth:`pints.ToyODEModel._rhs()`. """
         V, R = y
         a, b, c = [float(x) for x in p]
         dV_dt = (V - V**3 / 3 + R) * c

@@ -2,14 +2,12 @@
 #
 # Tests the basic methods of the adaptive covariance base class.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function, unicode_literals
 import numpy as np
-import time
 import unittest
 
 import pints
@@ -67,10 +65,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         mcmc.set_initial_phase_iterations(50)
         mcmc.set_log_to_screen(False)
 
-        start = time.time()
         cls.chains = mcmc.run()
-        end = time.time()
-        cls.time = end - start
 
     def test_errors(self):
         # test errors occur when incorrectly calling MCMCSummary

@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the PSO optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import re
 import unittest
@@ -74,7 +73,7 @@ class TestPSO(unittest.TestCase):
     def test_bounded_and_sigma(self):
         # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         #found_parameters, found_solution = opt.run()
         #self.assertTrue(found_solution < 1e-3)
@@ -107,10 +106,10 @@ class TestPSO(unittest.TestCase):
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
 
         # No logging
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(False)
         opt.set_log_to_file(False)
@@ -119,8 +118,8 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(c.text(), '')
 
         # Log to screen - using a LogPDF and parallelisation
-        opt = pints.OptimisationController(r, x, s, b, method)
-        opt.set_parallel(2)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
+        opt.set_parallel(4)
         opt.set_max_iterations(10)
         opt.set_log_to_screen(True)
         opt.set_log_to_file(False)
@@ -132,7 +131,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(lines[0], 'Maximising LogPDF')
         self.assertEqual(lines[1], 'Using Particle Swarm Optimisation (PSO)')
         self.assertEqual(
-            lines[2], 'Running in parallel with 2 worker processes.')
+            lines[2], 'Running in parallel with 4 worker processes.')
         self.assertEqual(lines[3], 'Population size: 6')
         self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
 

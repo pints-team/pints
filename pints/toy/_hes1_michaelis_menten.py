@@ -1,10 +1,9 @@
 #
 # HES1 Michaelis-Menten model of regulatory dynamics.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function
 import numpy as np
@@ -34,13 +33,6 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    References
-    ----------
-    .. [1] Silk, D., el al. 2011. Designing attractive models via automated
-           identification of chaotic and oscillatory dynamical regimes. Nature
-           communications, 2, p.489.
-           https://doi.org/10.1038/ncomms1496
-
     Parameters
     ----------
     y0 : float
@@ -48,6 +40,13 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
     implicit_parameters
         The implicit parameter of the model that is not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
+
+    References
+    ----------
+    .. [1] Silk, D., el al. 2011. Designing attractive models via automated
+           identification of chaotic and oscillatory dynamical regimes. Nature
+           communications, 2, p.489.
+           https://doi.org/10.1038/ncomms1496
     """
     def __init__(self, y0=None, implicit_parameters=None):
         if y0 is None:

@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the Nelder-Mead optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import numpy as np
 import unittest
@@ -57,8 +56,12 @@ class TestNelderMead(unittest.TestCase):
         r, x, s, b = self.problem()
 
         # Rectangular boundaries
-        with self.assertLogs(level='WARN'):
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
             pints.OptimisationController(r, x, boundaries=b, method=method)
+            self.assertEqual(len(w), 1)
+            self.assertIn('does not support boundaries', str(w[-1].message))
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
@@ -219,6 +222,4 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
     unittest.main()

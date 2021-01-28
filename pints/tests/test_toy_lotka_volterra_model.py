@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests if the Lotka-Volterra toy model runs.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -54,6 +53,15 @@ class TestLotkaVolterraModel(unittest.TestCase):
         self.assertAlmostEqual(values[1, 1], 4.806542, places=6)
         self.assertAlmostEqual(values[100, 0], 1.277762, places=6)
         self.assertAlmostEqual(values[100, 1], 0.000529, places=6)
+
+    def test_sensitivities(self):
+        # tests sensitivities against standards
+        model = pints.toy.LotkaVolterraModel()
+        vals = model.suggested_values()
+        self.assertEqual(vals.shape[0], 21)
+        sols, sens = model.simulateS1([0.43, 0.2, 0.9, 0.28], [5, 10])
+        self.assertAlmostEqual(sens[0, 0, 0], -4.889418, 5)
+        self.assertAlmostEqual(sens[1, 1, 3], -0.975323, 5)
 
 
 if __name__ == '__main__':

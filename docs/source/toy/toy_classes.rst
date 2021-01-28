@@ -9,3 +9,6 @@ Toy base classes
 .. autoclass:: ToyModel
 
 .. autoclass:: ToyODEModel
+
+    .. automethod:: _dfdp
+    .. automethod:: _rhs
