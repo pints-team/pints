@@ -83,6 +83,7 @@ from ._log_pdfs import (
     LogPDF,
     LogPrior,
     LogPosterior,
+    PooledLogPDF,
     ProblemLogLikelihood,
     SumOfIndependentLogPDFs,
 )
@@ -103,6 +104,7 @@ from ._log_priors import (
     MultivariateGaussianLogPrior,
     NormalLogPrior,
     StudentTLogPrior,
+    TruncatedGaussianLogPrior,
     UniformLogPrior,
 )
 
@@ -239,6 +241,24 @@ from ._nested import NestedSampler
 from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
+
+
+#
+# Transformation
+#
+from ._transformation import (
+    ComposedTransformation,
+    IdentityTransformation,
+    LogitTransformation,
+    LogTransformation,
+    RectangularBoundariesTransformation,
+    ScalingTransformation,
+    Transformation,
+    TransformedBoundaries,
+    TransformedErrorMeasure,
+    TransformedLogPDF,
+    TransformedLogPrior,
+)
 
 
 #

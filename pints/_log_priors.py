@@ -457,6 +457,9 @@ class GaussianLogPrior(pints.LogPrior):
     def __init__(self, mean, sd):
         # Parse input arguments
         self._mean = float(mean)
+
+        if sd <= 0:
+            raise ValueError('sd parameter must be positive')
         self._sd = float(sd)
 
         # Cache constants
@@ -1077,6 +1080,120 @@ class StudentTLogPrior(pints.LogPrior):
         """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.t.rvs(df=self._df, loc=self._location,
                                  scale=self._scale, size=(n, 1))
+
+
+class TruncatedGaussianLogPrior(pints.LogPrior):
+    r"""
+    Defines a truncated Gaussian log prior.
+
+    This distribution is also known as the truncated Normal distribution.
+
+    The truncated Gaussian distribution is similar to the Gaussian
+    distribution, but constrained to lie between two values.
+
+    The parameters are the mean ``mean`` and standard deviation ``sd``, as in
+    the Gaussian distribution, as well as a lower bound ``a`` and an upper
+    bound ``b``.
+
+    The pdf of the truncated Gaussian distribution is given by
+
+    .. math::
+        f(x|\mu, \sigma, a, b) = \frac{1}{\sigma\sqrt{2\pi}} \exp
+        \left(-\frac{(x-\mu)^2}{2\sigma^2}\right) \frac{1}
+            {\Phi((b-\mu) / \sigma) - \Phi((a-\mu) / \sigma)}
+
+    for :math:`x \in [a, b]`, where :math:`\mu` indicates the mean and
+    :math:`\sigma` indicates the standard deviation, and :math:`\Phi` is the
+    standard normal CDF.
+
+    For example, to create a prior with mean of 0 and a standard deviation of
+    1, bounded above at 3 and below at -2, use::
+
+        p = pints.TruncatedGaussianLogPrior(0, 1, -2, 3)
+
+    For a Gaussian distribution truncated on only one side, ``numpy.inf`` or
+    ``-numpy.inf`` can be used for the unbounded side.
+
+    Extends :class:`LogPrior`.
+    """
+
+    def __init__(self, mean, sd, a, b):
+        # Parse input arguments
+        self._mean = float(mean)
+        self._sd = float(sd)
+        self._a = float(a)
+        self._b = float(b)
+        if b <= a:
+            raise ValueError('Upper bound must exceed lower bound.')
+
+        # Convert the upper and lower truncation levels to the Scipy definition
+        self._lower = (a - self._mean) / self._sd
+        self._upper = (b - self._mean) / self._sd
+
+        # Cache constants
+        self._factor2 = 1 / self._sd**2
+
+    def __call__(self, x):
+        return scipy.stats.truncnorm.logpdf(
+            x[0],
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.truncnorm.cdf(
+            x,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        dp = self._factor2 * (self._mean - np.asarray(x))
+
+        # Set values outside limits to nan
+        dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
+
+        return self(x), dp
+
+    def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.truncnorm.ppf(
+            p,
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd
+        )
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return scipy.stats.truncnorm.stats(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            moments='m'
+        )
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 1
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return scipy.stats.truncnorm.rvs(
+            self._lower,
+            self._upper,
+            loc=self._mean,
+            scale=self._sd,
+            size=(n, 1)
+        )
 
 
 class UniformLogPrior(pints.LogPrior):

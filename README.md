@@ -69,13 +69,21 @@ To uninstall again, type:
 $ pip uninstall pints
 ```
 
+
+## What's new in this version of PINTS?
+
+To see what's changed in the latest release, see the [CHANGELOG](https://github.com/pints-team/pints/blob/master/CHANGELOG.md).
+
+
 ## Contributing to PINTS
 
 If you'd like to help us develop PINTS by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) first.
 
+
 ## License
 
 PINTS is fully open source. For more information about its license, see [LICENSE](https://github.com/pints-team/pints/blob/master/LICENSE.md).
+
 
 ## Get in touch
 

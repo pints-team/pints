@@ -22,8 +22,11 @@ relevant code.
 
 
 ## Digging deeper
-- [Searching in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
+- [Optimisation in a transformed parameter space - using a Transform object](./optimisation/transformed-parameters.ipynb)
+- [Optimisation in a transformed parameter space - writing a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
+- [Sampling in a transformed parameter space - using a Transform object](./sampling/transformed-parameters.ipynb)
+- [Sampling in a transformed parameter space - with or without Jacobian adjustment](./sampling/transformation-with-and-without-jacobian.ipynb)
 
 
 ## Optimisation
@@ -95,6 +98,7 @@ relevant code.
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
+- [Pooling parameters](./stats/pooling.ipynb)
 - [Student-t noise model](./stats/student-t-sampling-error.ipynb)
 
 
@@ -113,6 +117,7 @@ relevant code.
 - [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy/model-sir.ipynb)
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
+- [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
@@ -126,6 +131,10 @@ relevant code.
 - [Rosenbrock function](./toy/distribution-rosenbrock.ipynb)
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
+
+## Interfaces
+- [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
+- [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)

@@ -11,7 +11,7 @@ on:
 jobs:
 
   build-and-test:
-    name: copyright
+    name: Copyright
     runs-on: ubuntu-latest
 
     steps:

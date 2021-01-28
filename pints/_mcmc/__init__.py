@@ -91,7 +91,7 @@ class SingleChainMCMC(MCMCSampler):
             # Use to create diagonal matrix
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
-            self._sigma0 = np.array(sigma0)
+            self._sigma0 = np.array(sigma0, copy=True)
             if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
@@ -288,18 +288,57 @@ class MCMCController(object):
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
-        of the parameterspace) or as a ``(d, )`` vector, in which case
+        of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
+    transform : pints.Transformation
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
     """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(
+            self, log_pdf, chains, x0, sigma0=None, transform=None,
+            method=None):
 
-        # Store function
+        # Check function
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
+
+        # Apply a transformation (if given). From this point onward the MCMC
+        # sampler will see only the transformed search space and will know
+        # nothing about the model parameter space.
+        if transform is not None:
+            # Convert log pdf
+            log_pdf = transform.convert_log_pdf(log_pdf)
+
+            # Convert initial positions
+            x0 = [transform.to_search(x) for x in x0]
+
+            # Convert sigma0, if provided
+            if sigma0 is not None:
+                sigma0 = np.asarray(sigma0)
+                n_parameters = log_pdf.n_parameters()
+                # Make sure sigma0 is a (covariance) matrix
+                if np.product(sigma0.shape) == n_parameters:
+                    # Convert from 1d array
+                    sigma0 = sigma0.reshape((n_parameters,))
+                    sigma0 = np.diag(sigma0)
+                elif sigma0.shape != (n_parameters, n_parameters):
+                    # Check if 2d matrix of correct size
+                    raise ValueError(
+                        'sigma0 must be either a (d, d) matrix or a (d, ) '
+                        'vector, where d is the number of parameters.')
+                sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
+
+        # Store transform for later detransformation: if using a transform, any
+        # parameters logged to the filesystem or printed to screen should be
+        # detransformed first!
+        self._transform = transform
+
+        # Store function
         self._log_pdf = log_pdf
 
         # Get number of parameters
@@ -586,6 +625,8 @@ class MCMCController(object):
             logger.add_time('Time m:s')
 
         # Pre-allocate arrays for chain storage
+        # Note: we store the inverse transformed (to model space) parameters
+        # only if transform is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -605,11 +646,10 @@ class MCMCController(object):
                 evaluations = np.zeros((self._n_chains, self._max_iterations))
 
         # Some samplers need intermediate steps, where None is returned instead
-        # of a sample. Samplers can run asynchronously, so that one returns
-        # None while another returns a sample.
-        # To deal with this, we maintain a list of 'active' samplers that have
-        # not reach `max_iterations` yet, and store the number of samples we
-        # have in each chain.
+        # of a sample. But samplers can run asynchronously, so that one returns
+        # None while another returns a sample. To deal with this, we maintain a
+        # list of 'active' samplers that have not reached `max_iterations` yet,
+        # and we store the number of samples that we have in each chain.
         if self._single_chain:
             active = list(range(self._n_chains))
             n_samples = [0] * self._n_chains
@@ -652,11 +692,18 @@ class MCMCController(object):
                     y = self._samplers[i].tell(fx)
 
                     if y is not None:
+                        # Inverse transform to model space if transform is
+                        # provided
+                        if self._transform:
+                            y_store = self._transform.to_model(y)
+                        else:
+                            y_store = y
+
                         # Store sample in memory
                         if self._chains_in_memory:
-                            samples[i][n_samples[i]] = y
+                            samples[i][n_samples[i]] = y_store
                         else:
-                            samples[i] = y
+                            samples[i] = y_store
 
                         # Update current evaluations
                         if store_evaluations:
@@ -703,11 +750,19 @@ class MCMCController(object):
                 intermediate_step = ys is None
 
                 if not intermediate_step:
+                    # Inverse transform to model space if transform is provided
+                    if self._transform:
+                        ys_store = np.zeros(ys.shape)
+                        for i, y in enumerate(ys):
+                            ys_store[i] = self._transform.to_model(y)
+                    else:
+                        ys_store = ys
+
                     # Store samples in memory
                     if self._chains_in_memory:
-                        samples[:, iteration] = ys
+                        samples[:, iteration] = ys_store
                     else:
-                        samples = ys
+                        samples = ys_store
 
                     # Update current evaluations
                     if store_evaluations:
@@ -795,13 +850,13 @@ class MCMCController(object):
             if self._log_to_screen:
                 print(halt_message)
 
-        # Store generated chains in memory
-        if self._chains_in_memory:
-            self._samples = samples
-
         # Store evaluations in memory
         if self._evaluations_in_memory:
             self._evaluations = evaluations
+
+        if self._chains_in_memory:
+            # Store generated chains in memory
+            self._samples = samples
 
         # Return generated chains
         return samples if self._chains_in_memory else None
@@ -1014,7 +1069,8 @@ class MCMCSampling(MCMCController):
         warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
+                                           method=method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
@@ -1045,4 +1101,4 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method).run()
+        log_pdf, chains, x0, sigma0, method=method).run()
