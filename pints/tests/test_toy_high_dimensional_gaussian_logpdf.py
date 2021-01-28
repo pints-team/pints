@@ -96,6 +96,8 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalGaussianLogPDF, 0)
         self.assertRaises(
+            ValueError, pints.toy.HighDimensionalGaussianLogPDF, 1)
+        self.assertRaises(
             ValueError, pints.toy.HighDimensionalGaussianLogPDF, 2, 2)
         # in order for matrix to be positive definite there are bounds
         # on the lower value of rho > - 1 / (dims - 1)
