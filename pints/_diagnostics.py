@@ -53,7 +53,7 @@ def effective_sample_size(samples):
     Parameters
     ----------
     samples
-        A 2d array of shape ``(n_samples, n_params)``.
+        A 2d array of shape ``(n_samples, n_parameters)``.
     """
     try:
         n_samples, n_params = samples.shape
