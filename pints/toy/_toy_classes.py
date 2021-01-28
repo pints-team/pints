@@ -169,11 +169,11 @@ class ToyODEModel(ToyModel):
         """
 
         # separating initial values of model outputs(y) and sensitivities(dydp)
-        y = y_and_dydp[0:self.n_outputs()]
-        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
-                                                      self.n_outputs()))
+        y = y_and_dydp[0:self.n_states()]
+        dydp = y_and_dydp[self.n_states():].reshape((self.n_parameters(),
+                                                     self.n_states()))
 
-        # calculating the direvatives w.r.t t of the model outputs
+        # calculating the derivatives w.r.t t of the model outputs
         dydt = self._rhs(y, t, p)
 
         # calculating sensitivities
