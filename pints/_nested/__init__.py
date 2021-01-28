@@ -315,6 +315,9 @@ class NestedController(object):
         # Performance metrics
         self._time = None
 
+        # :meth:`run` can only be called once
+        self._has_run = False
+
     def active_points(self):
         """
         Returns the active points from nested sampling.
@@ -521,6 +524,11 @@ class NestedController(object):
         Runs the nested sampling routine and returns a tuple of the posterior
         samples and an estimate of the marginal likelihood.
         """
+
+        # Can only run once for each controller instance
+        if self._has_run:
+            raise RuntimeError("Controller is valid for single use only")
+        self._has_run = True
 
         # Choose method to evaluate
         f = self._initialise_callable()
