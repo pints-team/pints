@@ -8,7 +8,7 @@ on:
 jobs:
 
   build-and-test:
-    name: notebooks
+    name: Notebooks
     runs-on: ubuntu-latest
 
     steps:
