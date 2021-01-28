@@ -84,6 +84,18 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         ret[2, 3] = 0
         return ret
 
+    def initial_conditions(self):
+        """
+        Returns the initial conditions of this model.
+        """
+        return self._y0
+
+    def implicit_parameters(self):
+        """
+        Returns the implicit parameters of this model.
+        """
+        return [self._p0[0], self._p0[1], self._kdeg]
+
     def jacobian(self, state, time, parameters):
         """ See :meth:`pints.ToyModel.jacobian()`. """
         m, p1, p2 = state
@@ -145,18 +157,6 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
             raise ValueError('Implicit parameters cannot be negative.')
         self._p0 = [a, b]
         self._kdeg = c
-
-    def initial_conditions(self):
-        """
-        Returns the initial conditions of this model.
-        """
-        return self._y0
-
-    def implicit_parameters(self):
-        """
-        Returns the implicit parameters of this model.
-        """
-        return [self._p0[0], self._p0[1], self._kdeg]
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
