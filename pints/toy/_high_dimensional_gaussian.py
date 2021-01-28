@@ -23,7 +23,7 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     Parameters
     ----------
     dimension : int
-        Dimensions of multivariate Gaussian distribution (which must exced 1).
+        Dimensions of multivariate Gaussian distribution (which must exceed 1).
     rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
