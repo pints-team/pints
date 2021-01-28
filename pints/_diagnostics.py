@@ -33,7 +33,7 @@ def autocorrelate_negative(autocorrelation):
 def ess_single_param(x):
     """
     Calculates effective sample size (ESS) for samples of a single parameter.
-    
+
     Parameters
     ----------
     x
@@ -48,9 +48,8 @@ def ess_single_param(x):
 
 def effective_sample_size(samples):
     """
-    Calculates effective sample size (ESS) for a list of n-dimensional
-    samples.
-    
+    Calculates effective sample size (ESS) for a list of n-dimensional samples.
+
     Parameters
     ----------
     samples
