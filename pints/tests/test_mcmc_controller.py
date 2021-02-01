@@ -379,6 +379,11 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test with fixed number of worker processes
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(niterations)
+        mcmc.set_log_to_screen(debug)
         mcmc.set_parallel(5)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
@@ -613,6 +618,22 @@ class TestMCMCController(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        # Test simple run
+        n_chains = 1
+        n_iterations = 10
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        with self.assertRaisesRegex(
+                RuntimeError, 'Controller is valid for single use only'):
+            mcmc.run()
 
     def test_post_run_statistics(self):
         # Test method to obtain post-run statistics
