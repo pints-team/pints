@@ -108,6 +108,9 @@ class TestHes1Model(unittest.TestCase):
                                     model.n_outputs(), model.n_parameters()])))
         self.assertEqual(dvals[0][0, 0], 0.0)
         self.assertAlmostEqual(dvals[1][0, 0], 2.029494068269803)
+        self.assertAlmostEqual(dvals[2][0, 1], -197.7831610097427)
+        self.assertAlmostEqual(dvals[2][0, 2], -10.15634595324204)
+        self.assertAlmostEqual(dvals[3][0, 3], -0.4269233678552582)
 
 
 if __name__ == '__main__':
