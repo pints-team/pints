@@ -25,7 +25,7 @@ class TestHes1Model(unittest.TestCase):
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         values = model.simulate(parameters, times)
-        self.assertEqual(values.shape, (len(times),))
+        self.assertEqual(values.shape, (len(times), 1))
         self.assertTrue(np.all(values > 0))
         states = model.simulate_all_states(parameters, times)
         self.assertEqual(states.shape, (len(times), 3))
@@ -69,11 +69,11 @@ class TestHes1Model(unittest.TestCase):
 
     def test_sensitivities(self):
         # value based tests of jacobian and dfdp
-        times = np.linspace(0, 10, 101)
         parameters = [3.8, 0.035, 0.15, 7.5]
         iparameters = [4.5, 4.0, 0.04]
         y0 = 7
         model = pints.toy.Hes1Model(y0=y0, implicit_parameters=iparameters)
+        times = model.suggested_times()
         state = [4.0, 3.0, 3.5]
         jacobian = model.jacobian(state, 0.0, parameters)
         self.assertEqual(jacobian[0, 0], -0.04)
@@ -100,12 +100,14 @@ class TestHes1Model(unittest.TestCase):
         self.assertEqual(dfdp[2, 3], 0)
         values = model.simulate(parameters, times)
         values1, dvals = model.simulateS1(parameters, times)
-        self.assertTrue(np.array_equal(values.shape, [len(times), ]))
-        self.assertTrue(np.array_equal(values1.shape, [len(times), 3]))
+        self.assertTrue(np.array_equal(values.shape, [len(times), 1]))
+        self.assertTrue(np.array_equal(values1.shape, [len(times), 1]))
         self.assertTrue(
             np.array_equal(dvals.shape,
                            np.array([len(times),
-                                    model.n_states(), model.n_parameters()])))
+                                    model.n_outputs(), model.n_parameters()])))
+        self.assertEqual(dvals[0][0, 0], 0.0)
+        self.assertAlmostEqual(dvals[1][0, 0], 2.029494068269803)
 
 
 if __name__ == '__main__':

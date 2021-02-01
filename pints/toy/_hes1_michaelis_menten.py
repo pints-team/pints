@@ -49,14 +49,14 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
            https://doi.org/10.1038/ncomms1496
     """
     def __init__(self, y0=None, implicit_parameters=None):
-        if y0 is None:
-            self.set_initial_conditions(2)
-        else:
-            self.set_initial_conditions(y0)
         if implicit_parameters is None:
             self.set_implicit_parameters([5., 3., 0.03])
         else:
             self.set_implicit_parameters(implicit_parameters)
+        if y0 is None:
+            self.set_initial_conditions(2)
+        else:
+            self.set_initial_conditions(y0)
 
     def _dfdp(self, state, time, parameters):
         """ See :meth:`pints.ToyModel.jacobian()`. """
@@ -85,9 +85,9 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
 
     def initial_conditions(self):
         """
-        Returns the initial conditions of this model.
+        Returns m(0).
         """
-        return self._y0
+        return self._y0[0]
 
     def implicit_parameters(self):
         """
@@ -145,7 +145,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         """
         if y0 < 0:
             raise ValueError('Initial condition cannot be negative.')
-        self._y0 = y0
+        self._y0 = [y0, self._p0[0], self._p0[1]]
 
     def set_implicit_parameters(self, k):
         """
@@ -157,21 +157,12 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         self._p0 = [a, b]
         self._kdeg = c
 
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        y0 = [self._y0, self._p0[0], self._p0[1]]
-        solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,))
-        # Only return the observable
-        return solved_states[:, 0]
-
     def simulate_all_states(self, parameters, times):
         """
         Returns all state variables that ``simulate()`` does not return.
         """
-        y0 = [self._y0, self._p0[0], self._p0[1]]
         solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,))
+            self._rhs, self._y0, times, args=(parameters,))
         # Return all states
         return solved_states
 
