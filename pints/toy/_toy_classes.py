@@ -230,10 +230,10 @@ class ToyODEModel(ToyModel):
         else:
             values = scipy.integrate.odeint(
                 self._rhs, self._y0, times, (parameters,))
-            return values[offset:, :self.n_outputs()]
+            return values[offset:, :self.n_outputs()].squeeze()
 
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
         values, dvalues_dp = self._simulate(parameters, times, True)
         n_outputs = self.n_outputs()
-        return values[:, :n_outputs], dvalues_dp[:, :n_outputs, :]
+        return values[:, :n_outputs].squeeze(), dvalues_dp[:, :n_outputs, :]

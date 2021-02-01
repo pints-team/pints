@@ -25,7 +25,7 @@ class TestHes1Model(unittest.TestCase):
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         values = model.simulate(parameters, times)
-        self.assertEqual(values.shape, (len(times), 1))
+        self.assertEqual(values.shape, (len(times), ))
         self.assertTrue(np.all(values > 0))
         states = model.simulate_all_states(parameters, times)
         self.assertEqual(states.shape, (len(times), 3))
@@ -100,8 +100,8 @@ class TestHes1Model(unittest.TestCase):
         self.assertEqual(dfdp[2, 3], 0)
         values = model.simulate(parameters, times)
         values1, dvals = model.simulateS1(parameters, times)
-        self.assertTrue(np.array_equal(values.shape, [len(times), 1]))
-        self.assertTrue(np.array_equal(values1.shape, [len(times), 1]))
+        self.assertTrue(np.array_equal(values.shape, [len(times), ]))
+        self.assertTrue(np.array_equal(values1.shape, [len(times), ]))
         self.assertTrue(
             np.array_equal(dvals.shape,
                            np.array([len(times),
