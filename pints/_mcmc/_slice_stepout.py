@@ -602,8 +602,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             if (self._proposed[self._active_param_index] < self._l_bar or
                     self._proposed[self._active_param_index] > self._r_bar or
                     self._current_log_y >= fx):
+
+                # Reset proposal to undo last change
                 self._proposed[self._active_param_index] = (
                     self._current[self._active_param_index])
+
+                # And update fx to the corresponding log pdf (needed below!)
+                fx = self._current_log_pdf
 
             # Reset flags for next interval expansion
             self._first_expansion = True
