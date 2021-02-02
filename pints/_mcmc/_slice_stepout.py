@@ -608,6 +608,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._current[self._active_param_index])
 
                 # And update fx to the corresponding log pdf (needed below!)
+                assert(np.all(self._proposed == self._current))
                 fx = self._current_log_pdf
 
             # Reset flags for next interval expansion
