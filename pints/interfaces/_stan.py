@@ -62,7 +62,6 @@ class StanLogPDF(InterfaceLogPDF):
         self._fit = stanfit
         self._log_prob = stanfit.log_prob
         self._grad_log_prob = stanfit.grad_log_prob
-        self._u_to_c = stanfit.unconstrain_pars
         names = stanfit.unconstrained_param_names()
         self._n_parameters = len(names)
         self._names, self._index = self._initialise_dict_index(names)
@@ -73,8 +72,7 @@ class StanLogPDF(InterfaceLogPDF):
     def __call__(self, x):
         dict = self._dict_update(x)
         try:
-            return self._log_prob(self._u_to_c(dict),
-                                  adjust_transform=True)
+            return self._log_prob(list(dict.values()), adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError):
             return -np.inf
@@ -100,11 +98,11 @@ class StanLogPDF(InterfaceLogPDF):
         """ See :meth:`LogPDF.evaluateS1()`. """
         dict = self._dict_update(x)
         try:
-            uncons = self._u_to_c(dict)
-            val = self._log_prob(uncons, adjust_transform=True)
-            dp = self._grad_log_prob(uncons, adjust_transform=True)
+            vals = list(dict.values())
+            val = self._log_prob(vals, adjust_transform=True)
+            dp = self._grad_log_prob(vals, adjust_transform=True)
             return val, dp.reshape(-1)
-        except RuntimeError:
+        except (RuntimeError, ValueError):
             return -np.inf, np.ones(self._n_parameters).reshape(-1)
 
     def _initialise_dict_index(self, names):
