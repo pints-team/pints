@@ -157,7 +157,7 @@ class TestComposedTransformationElementWise(unittest.TestCase):
 
     def test_log_jacobian_det(self):
         # Test log-Jacobian determinant
-        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
+        self.assertAlmostEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
 
     def test_log_jacobian_det_S1(self):
         # Test log-Jacobian determinant derivatives
