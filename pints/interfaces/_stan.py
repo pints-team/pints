@@ -70,9 +70,9 @@ class StanLogPDF(InterfaceLogPDF):
         self._dict = {self._names[i]: [] for i in range(len(self._names))}
 
     def __call__(self, x):
-        dict = self._dict_update(x)
+        vals = self._prepare_values(x)
         try:
-            return self._log_prob(list(dict.values()), adjust_transform=True)
+            return self._log_prob(vals, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError):
             return -np.inf
@@ -96,9 +96,8 @@ class StanLogPDF(InterfaceLogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
-        dict = self._dict_update(x)
+        vals = self._prepare_values(x)
         try:
-            vals = list(dict.values())
             val = self._log_prob(vals, adjust_transform=True)
             dp = self._grad_log_prob(vals, adjust_transform=True)
             return val, dp.reshape(-1)
@@ -126,3 +125,15 @@ class StanLogPDF(InterfaceLogPDF):
     def n_parameters(self):
         """ See `InterfaceLogPDF.n_parameters`. """
         return self._n_parameters
+
+    def _prepare_values(self, x):
+        """ Flattens lists from PyStan's dictionary. """
+        dict = self._dict_update(x)
+        vals = dict.values()
+        b = []
+        for ele in vals:
+            if not isinstance(ele, list):
+                ele = [ele]
+            b.append(ele)
+        vals = [item for sublist in b for item in sublist]
+        return vals
