@@ -336,7 +336,7 @@ class MCMCController(object):
                 x0 = pints.UniformLogPrior([-2] * self._n_parameters,
                                            [2] * self._n_parameters)
         if isinstance(x0, pints.LogPrior):
-            init = [x0.sample() for i in range(chains)]
+            init = x0.sample(chains)
             self._init_fn = x0
             self._x0_isfunction = True
         else:
@@ -691,7 +691,7 @@ class MCMCController(object):
                 raise ValueError('Initialisation failed since logPDF ' +
                                  'not finite at initial points after ' +
                                  str(self._max_initialisation_tries) +
-                                 'attempts.')
+                                 ' attempts.')
 
             if self._single_chain:
                 self._samplers = [self._method(a, self._sigma0) for a in init]
@@ -945,7 +945,7 @@ class MCMCController(object):
         transform = self._transform
         while not initialised_finite and (n_tries <
                                           self._max_initialisation_tries):
-            xs = [init_fn.sample()[0] for i in current_active]
+            xs = init_fn.sample(len(current_active))
             if transform is not None:
                 xs = [transform.to_search(x) for x in xs]
             fxs = evaluator.evaluate(xs)

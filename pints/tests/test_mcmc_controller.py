@@ -796,11 +796,6 @@ class TestMCMCControllerInitialisation(unittest.TestCase):
         chains = mcmc.run()
         self.assertEqual(chains[0].shape[0], n)
 
-        log_prior1 = pints.UniformLogPrior(
-            [0.01, 400, self.noise * 0.1],
-            [0.012, 410, self.noise * 0.5]
-        )
-
         # check initial points within boundaries of other prior
         lower = self.log_prior._boundaries.lower()
         upper = self.log_prior._boundaries.upper()
@@ -811,6 +806,10 @@ class TestMCMCControllerInitialisation(unittest.TestCase):
                 self.assertTrue(val < upper[j])
 
         # try initialisation using other log prior
+        log_prior1 = pints.UniformLogPrior(
+            [0.01, 400, self.noise * 0.1],
+            [0.012, 410, self.noise * 0.5]
+        )
         mcmc = pints.MCMCController(self.log_posterior, self.nchains,
                                     x0=log_prior1, transform=transform,
                                     method=pints.HamiltonianMCMC)
