@@ -114,7 +114,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         Returns the current (measured) acceptance rate.
         """
         return self._acceptance
- 
+
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
         # Initialise on first call
