@@ -718,9 +718,9 @@ class RectangularBoundariesTransformation(Transformation):
                  = \log(p - a) - \log(b - p),
 
     where :math:`p` is the model parameter vector and :math:`q` is the
-    search space vector. The range includes the lower (:math:`a`), but not the
-    upper (:math:`b`) boundaries. Note that :class:`LogitTransformation` is a
-    special case where :math:`a = 0` and :math:`b = 1`.
+    search space vector. The range does not include the boundaries (:math:`a`
+    and :math:`b`). Note that :class:`LogitTransformation` is a special case
+    where :math:`a = 0` and :math:`b = 1`.
 
     The Jacobian adjustment of the transformation is given by
 
