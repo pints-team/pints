@@ -708,7 +708,7 @@ class LogTransformation(Transformation):
 class RectangularBoundariesTransformation(Transformation):
     r"""
     A generalised version of the logit transformation for the model parameters,
-    which transform an interval or rectangular boundaries :math:`(a, b)` to
+    which transforms an interval or rectangular boundaries :math:`(a, b)` to
     all real number.
 
     The transformation is given by
