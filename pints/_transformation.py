@@ -708,13 +708,13 @@ class LogTransformation(Transformation):
 class RectangularBoundariesTransformation(Transformation):
     r"""
     A generalised version of the logit transformation for the model parameters,
-    which transform an interval or rectangular boundaries :math:`[a, b)` to
+    which transform an interval or rectangular boundaries :math:`(a, b)` to
     all real number.
 
     The transformation is given by
 
     .. math::
-        q = f(p) = \text{logit}\left(\frac{p - a}{b - a}\right)
+        q = f(p) = \text{logit}\left(\frac{p - a}{b - p}\right)
                  = \log(p - a) - \log(b - p),
 
     where :math:`p` is the model parameter vector and :math:`q` is the
