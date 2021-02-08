@@ -2,16 +2,15 @@
 # A number of functions which can be used to generate different types of noise,
 # which can then be added to model output to simulate experimental data.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 
 
 def independent(sigma, shape):
-    """
-    Generates independent Gaussian noise (``iid N(0,sigma)``).
+    r"""
+    Generates independent Gaussian noise iid :math:`\mathcal{N}(0,\sigma)`.
 
     Returns an array of shape ``shape`` containing the generated noise.
 
@@ -37,23 +36,27 @@ def independent(sigma, shape):
 
 
 def ar1(rho, sigma, n):
-    """
+    r"""
     Generates first-order autoregressive (AR1) noise that can be added to a
     vector of simulated data.
 
     The generated noise follows the distribution
-    ``e(t) = rho * e(t - 1) + v(t)``,
 
-    where ``v(t) ~ iid N(0, sigma * sqrt(1 - rho^2))``.
+    .. math::
+        e(t) = \rho  e(t - 1) + v(t),
+
+    where :math:`v(t) \stackrel{\text{iid}}{\sim }\mathcal{N}(0, \sigma
+    \sqrt{1 - \rho ^2})`.
 
     Returns an array of length ``n`` containing the generated noise.
 
     Parameters
     ----------
     rho
-        Determines the magnitude of the noise (see above). Must be less than 1.
+        Determines the magnitude of the noise :math:`\rho` (see above). Must
+        be less than 1.
     sigma
-        The marginal standard deviation of ``e(t)`` (see above).
+        The marginal standard deviation :math:`\sigma` of ``e(t)`` (see above).
         Must be greater than zero.
     n
         The length of the signal. (Only single time-series are supported.)
@@ -89,15 +92,18 @@ def ar1(rho, sigma, n):
 
 
 def arma11(rho, theta, sigma, n):
-    """
+    r"""
     Generates an ARMA(1,1) error process of the form:
 
-    ``e(t) = (1 - rho) + rho * e(t - 1) + v(t) + theta * v[t-1]``,
+    .. math::
+        e(t) = (1 - \rho) + \rho * e(t - 1) + v(t) + \theta * v(t-1),
 
-    where ``v(t) ~ iid N(0, sigma')``,
-
+    where :math:`v(t) \stackrel{\text{iid}}{\sim }\mathcal{N}(0, \sigma ')`,
     and
-    ``sigma' = sigma * sqrt((1 - rho^2) / (1 + 2 * theta * rho + theta^2))``.
+
+    .. math::
+        \sigma ' = \sigma \sqrt{\frac{1 - \rho ^ 2}{1 + 2 \theta  \rho +
+        \theta ^ 2}}.
     """
     import numpy as np
 
@@ -230,3 +236,85 @@ def arma11_unity(rho, theta, sigma, n):
     for i in range(1, n):
         e[i] = (1 - rho) + rho * e[i - 1] + v[i] + theta * v[i - 1]
     return e
+
+
+def multiplicative_gaussian(eta, sigma, f):
+    r"""
+    Generates multiplicative Gaussian noise for a single output.
+
+    With multiplicative noise, the measurement error scales with the magnitude
+    of the output. Given a model taking the form,
+
+    .. math::
+        X(t) = f(t; \theta) + \epsilon(t)
+
+    multiplicative Gaussian noise models the noise term as:
+
+    .. math::
+        \epsilon(t) = f(t; \theta)^\eta v(t)
+
+    where v(t) is iid Gaussian:
+
+    .. math::
+        v(t) \stackrel{\text{ iid }}{\sim} \mathcal{N}(0, \sigma)
+
+    The output magnitudes ``f`` are required as an input to this function. The
+    noise terms are returned in an array of the same shape as ``f``.
+
+    Parameters
+    ----------
+    ``eta``
+        The exponential power controlling the rate at which the noise scales
+        with the output. The argument must be either a float (for single-output
+        or multi-output noise) or an array_like of floats (for multi-output
+        noise only, with one value for each output).
+    ``sigma``
+        The baseline standard deviation of the noise (must be greater than
+        zero). The argument must be either a float (for single-output
+        or multi-output noise) or an array_like of floats (for multi-output
+        noise only, with one value for each output).
+    ``f``
+        A NumPy array giving the time-series for the output over time. For
+        multiple outputs, the array should have shape ``(n_outputs, n_times)``.
+    """
+    import numpy as np
+
+    f = np.array(f)
+
+    # Check the dimensions of the inputs
+    if f.ndim > 2:
+        raise ValueError('f must have be of shape (n_outputs, n_times).')
+
+    if f.ndim == 2:
+        n_outputs = f.shape[0]
+    else:
+        n_outputs = 1
+
+    if not np.isscalar(eta):
+        eta = np.array(eta)
+        if eta.ndim > 1 or (eta.shape[0] != 1 and eta.shape[0] != n_outputs):
+            raise ValueError('eta must be a scalar or of shape (n_outputs,).')
+
+        # Reshape eta so that it broadcasts to f correctly
+        eta = eta[:, np.newaxis]
+
+    if not np.isscalar(sigma):
+        sigma = np.array(sigma)
+        if sigma.ndim > 1 or (sigma.shape[0] != 1 and
+                              sigma.shape[0] != n_outputs):
+            raise ValueError('sigma must be a scalar or of shape '
+                             '(n_outputs,).')
+
+        # Reshape sigma so that it broadcasts to f correctly
+        sigma = sigma[:, np.newaxis]
+
+    # Check the values of the inputs
+    if np.isscalar(sigma):
+        if sigma <= 0:
+            raise ValueError('Standard deviation must be greater than zero.')
+    else:
+        if np.any(sigma <= 0):
+            raise ValueError('Standard deviation must be greater than zero.')
+
+    e = np.random.normal(0, sigma, f.shape)
+    return f ** eta * e

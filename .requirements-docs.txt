@@ -5,3 +5,4 @@ scipy>=0.14
 matplotlib>=1.5
 guzzle-sphinx-theme
 sphinx>=1.5, !=1.7.3
+tabulate

@@ -2,10 +2,9 @@
 #
 # Tests the basic functionality of the EmceeHammerMCMC method.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -129,9 +128,8 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter and hyper-parameter interfaces for this sampler.
-        """
+        # Tests the parameter and hyper-parameter interfaces for this sampler.
+
         n = 3
         x0 = [self.real_parameters] * n
         mcmc = pints.EmceeHammerMCMC(n, x0)
@@ -148,9 +146,8 @@ class TestEmceeHammerMCMC(unittest.TestCase):
             ValueError, 'positive', mcmc.set_hyper_parameters, [0])
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.EmceeHammerMCMC)

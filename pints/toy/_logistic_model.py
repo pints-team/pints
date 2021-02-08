@@ -1,10 +1,9 @@
 #
 # Logistic toy model.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -24,19 +23,20 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
         \frac{\partial f(t)}{\partial r} &=
                                 \frac{k t (k / p_0 - 1) \exp(-r t)}
                                       {((k/p_0-1) \exp(-r t) + 1)^2} \\
-        \frac{\partial f(t)}{ \partial k} &= \frac{k \exp(-r t)}
+        \frac{\partial f(t)}{ \partial k} &= -\frac{k \exp(-r t)}
                                           {p_0 ((k/p_0-1)\exp(-r t) + 1)^2}
                                          + \frac{1}{(k/p_0 - 1)\exp(-r t) + 1}
 
     Has two model parameters: A growth rate :math:`r` and a carrying capacity
-    :math:`k`.
+    :math:`k`. The initial population size :math:`p_0 = f(0)` is a fixed
+    (known) parameter in the model.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     Parameters
     ----------
-    initial_population_size : int
-        Sets the initial population size :math:`f(0)`.
+    initial_population_size : float
+        Sets the initial population size :math:`p_0`.
 
     References
     ----------

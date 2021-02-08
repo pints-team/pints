@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the MALA MCMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -109,7 +108,16 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc._initialise)
 
     def test_hyper_parameters(self):
-        # Tests the parameter interface for this sampler.
+        # Tests the hyper parameter interface for this sampler.
+
+        x0 = np.array([2, 2])
+        mcmc = pints.MALAMCMC(x0)
+        self.assertTrue(np.array_equal(
+                        mcmc._scale_vector,
+                        np.diag(mcmc._sigma0))
+                        )
+        self.assertTrue(np.array_equal(mcmc.epsilon(),
+                        0.2 * np.diag(mcmc._sigma0)))
 
         mcmc = pints.MALAMCMC(np.array([2, 2]))
         self.assertEqual(mcmc.n_hyper_parameters(), 1)

@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the Rao-Blackwel adaptive covariance MCMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy as toy
@@ -91,25 +90,14 @@ class TestRaoBlackwellACMC(unittest.TestCase):
         self.assertEqual(chain.shape[1], len(x0))
         self.assertEqual(rate.shape[0], 100)
 
-    def test_options(self):
-
-        # Test setting acceptance rate
-        x0 = self.real_parameters
-        mcmc = pints.RaoBlackwellACMC(x0)
-        self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
-        mcmc.set_target_acceptance_rate(0.5)
-        self.assertEqual(mcmc.target_acceptance_rate(), 0.5)
-        mcmc.set_target_acceptance_rate(1)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 0)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, -1e-6)
-        self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
-
-        # test hyperparameter setters and getters
+    def test_hyperparameters(self):
+        # Hyperparameters unchanged from base class
+        mcmc = pints.RaoBlackwellACMC(self.real_parameters)
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1])
-        mcmc.set_hyper_parameters([0.3])
-        self.assertEqual(mcmc.eta(), 0.3)
 
+    def test_name(self):
+        # Test name method
+        mcmc = pints.RaoBlackwellACMC(self.real_parameters)
         self.assertEqual(mcmc.name(), 'Rao-Blackwell adaptive covariance MCMC')
 
     def test_logging(self):

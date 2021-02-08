@@ -1,15 +1,15 @@
 #
 # Nelder-Mead simplex method.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
+import warnings
 
 
 # Flow
@@ -134,10 +134,7 @@ class NelderMead(pints.Optimiser):
         super(NelderMead, self).__init__(x0, sigma0, boundaries)
 
         if self._boundaries is not None:
-            import logging
-            logging.basicConfig()
-            log = logging.getLogger(__name__)
-            log.warning(
+            warnings.warn(
                 'Nelder-Mead optimisation does not support boundaries.')
 
         # Parameters for reflection, expansion, and contraction

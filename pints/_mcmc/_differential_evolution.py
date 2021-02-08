@@ -1,16 +1,15 @@
 #
 # Differential evolution MCMC
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import logging
+import warnings
 
 
 class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
@@ -55,9 +54,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
 
         # Warn user against using too few chains
         if self._chains < 1.5 * self._n_parameters:
-            log = logging.getLogger(__name__)
-            log.warning('This method should be run with n_chains >= ' +
-                        '1.5 * n_parameters')
+            warnings.warn('This method should be run with n_chains >= '
+                          '1.5 * n_parameters')
 
         # Set initial state
         self._running = False
@@ -96,13 +94,14 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         if not self._running:
             self._initialise()
 
-        # set gamma to 1
-        if self._iter_count % self._gamma_switch_rate == 0:
-            self._gamma = 1
-        self._iter_count += 1
-
         # Propose new points
         if self._proposed is None:
+
+            # set gamma to 1
+            if self._iter_count % self._gamma_switch_rate == 0:
+                self._gamma = 1
+            self._iter_count += 1
+
             self._proposed = np.zeros(self._current.shape)
             for j in range(self._chains):
                 if self._gaussian_error:

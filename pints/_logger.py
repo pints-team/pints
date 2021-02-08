@@ -1,10 +1,9 @@
 #
 # Logger class
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -352,16 +351,19 @@ class Logger(object):
                 # Write data
                 for row in rows:
                     line = []
-                    i = iter(row)
+                    column = iter(row)
                     for width, dtype, f1, f2 in self._field_formats:
-                        if dtype == _FLOAT:
-                            x = '{:.17e}'.format(next(i))
+                        v = next(column)
+                        if v is None:
+                            x = ''
+                        elif dtype == _FLOAT:
+                            x = '{:.17e}'.format(v)
                         elif dtype == _TIME:
-                            x = str(next(i))
+                            x = str(v)
                         elif dtype == _TEXT:
-                            x = '"' + str(next(i)) + '"'
+                            x = '"' + str(v) + '"'
                         else:
-                            x = str(int(next(i)))
+                            x = str(int(v))
                         line.append(x)
                     f.write(','.join(line) + '\n')
 
@@ -386,19 +388,21 @@ class Logger(object):
             column = iter(row)
             formatted_row = []
             for width, dtype, f1, f2 in self._field_formats:
-                if dtype == _FLOAT:
-                    v = next(column)
+                v = next(column)
+                if v is None:
+                    x = ' ' * width
+                elif dtype == _FLOAT:
                     x = f1.format(v)
                     if len(x) > width:
                         x = f2.format(v)
                     x += ' ' * (width - len(x))
                 elif dtype == _TIME:
-                    x = self._format_time(next(column))
+                    x = self._format_time(v)
                 elif dtype == _TEXT:
-                    x = str(next(column))[:width]
+                    x = str(v)[:width]
                     x += ' ' * (width - len(x))
                 else:
-                    x = f1.format(int(next(column)))
+                    x = f1.format(int(v))
                 formatted_row.append(x)
             formatted_rows.append(formatted_row)
 

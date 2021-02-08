@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the CMAES optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -74,7 +73,7 @@ class TestCMAES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -161,6 +160,5 @@ if __name__ == '__main__':
     import sys
     if '-v' in sys.argv:
         debug = True
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
     unittest.main()
+

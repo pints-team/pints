@@ -6,3 +6,4 @@ Nested sampler base class
 
 .. autoclass:: NestedSampler
 
+.. autoclass:: NestedController

@@ -27,3 +27,7 @@ studies
 
 # Virtual environments
 venv*
+
+# Build artifacts
+build/*
+dist/*
