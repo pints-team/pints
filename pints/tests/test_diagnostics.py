@@ -42,7 +42,7 @@ class TestDiagnostics(unittest.TestCase):
 
         # Test for case with no negative elements
         x = np.array([1, 2, 3, 4, 1, 1])
-        self.assertEqual(pints._diagnostics._autocorrelate_negative(x), 7)
+        self.assertEqual(pints._diagnostics._autocorrelate_negative(x), 6)
 
     def test_effective_sample_size_single_parameter(self):
         # Tests that ESS for a single parameter is correct
