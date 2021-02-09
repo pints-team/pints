@@ -10,7 +10,7 @@ import numpy as np
 
 def autocorrelation(x):
     """
-    Calculate autocorrelation for a vector x using a spectrum density
+    Calculates autocorrelation for a vector ``x`` using a spectrum density
     calculation.
     """
     x = (x - np.mean(x)) / (np.std(x) * np.sqrt(len(x)))
