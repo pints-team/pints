@@ -20,16 +20,13 @@ def autocorrelation(x):
 
 def _autocorrelate_negative(autocorrelation):
     """
-    Takes a list of autocorrelations and finds the index of the last positive
-    element of the list before encountering a negative element. If no negative
-    element is found, it returns the index of the last element in the list.
+    Returns the index of the first negative entry in ``autocorrelation``, or
+    ``len(autocorrelation)`` if no negative entry is found.
     """
-    T = 1
-    for a in autocorrelation:
-        if a < 0:
-            return T - 1
-        T += 1
-    return T
+    try:
+        return np.where(np.asarray(autocorrelation) < 0)[0][0]
+    except IndexError:
+        return len(autocorrelation)
 
 
 def effective_sample_size_single_parameter(x):
