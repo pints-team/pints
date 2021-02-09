@@ -10,7 +10,7 @@ import numpy as np
 
 def autocorrelation(x):
     """
-    Calculate autocorrelation for a vector x using a spectrum density
+    Calculates autocorrelation for a vector ``x`` using a spectrum density
     calculation.
     """
     x = (x - np.mean(x)) / (np.std(x) * np.sqrt(len(x)))
@@ -32,7 +32,12 @@ def autocorrelate_negative(autocorrelation):
 
 def ess_single_param(x):
     """
-    Calculates ESS for a single parameter.
+    Calculates effective sample size (ESS) for samples of a single parameter.
+
+    Parameters
+    ----------
+    x
+        A sequence (e.g. a list or a 1-dimensional array) of parameter values.
     """
     rho = autocorrelation(x)
     T = autocorrelate_negative(rho)
@@ -43,7 +48,12 @@ def ess_single_param(x):
 
 def effective_sample_size(samples):
     """
-    Calculates ESS for a matrix of samples.
+    Calculates effective sample size (ESS) for a list of n-dimensional samples.
+
+    Parameters
+    ----------
+    samples
+        A 2d array of shape ``(n_samples, n_parameters)``.
     """
     try:
         n_samples, n_params = samples.shape
