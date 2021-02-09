@@ -38,24 +38,25 @@ class TestDiagnostics(unittest.TestCase):
 
         # Test for case where there is a negative element
         x = np.array([1, 2, 3, 4, -1, -1])
-        self.assertEqual(pints._diagnostics.autocorrelate_negative(x), 4)
+        self.assertEqual(pints._diagnostics._autocorrelate_negative(x), 4)
 
         # Test for case with no negative elements
         x = np.array([1, 2, 3, 4, 1, 1])
-        self.assertEqual(pints._diagnostics.autocorrelate_negative(x), 7)
+        self.assertEqual(pints._diagnostics._autocorrelate_negative(x), 7)
 
-    def test_ess_single_param(self):
+    def test_effective_sample_size_single_parameter(self):
         # Tests that ESS for a single parameter is correct
 
         # For case with negative elements in x
         x = np.array([1, 2, 3, 4, -1, -1])
-        y = pints._diagnostics.ess_single_param(x)
+        y = pints._diagnostics.effective_sample_size_single_parameter(x)
         self.assertAlmostEqual(y, 1.75076, 5)
 
         # Case with positive elements only in x
         x = np.array([1, 2, 3, 4, 1, 1])
         self.assertAlmostEqual(
-            pints._diagnostics.ess_single_param(x), 1.846154, 6)
+            pints._diagnostics.effective_sample_size_single_parameter(x),
+            1.846154, 6)
 
     def test_effective_sample_size(self):
         # Tests ess for a matrix of parameters
