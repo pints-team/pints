@@ -1,0 +1,8 @@
+Hello!
+I am a CSV file
+
+Not sure about this bit yet.
+
+One per test? One per test group? One massive json file?
+
+How do we update this after running in actions? With git? With some sort of artefact thing?
