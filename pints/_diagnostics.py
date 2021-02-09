@@ -34,7 +34,12 @@ def _autocorrelate_negative(autocorrelation):
 
 def effective_sample_size_single_parameter(x):
     """
-    Calculates effective sample size (ESS) for a single parameter.
+    Calculates effective sample size (ESS) for samples of a single parameter.
+
+    Parameters
+    ----------
+    x
+        A sequence (e.g. a list or a 1-dimensional array) of parameter values.
     """
     rho = autocorrelation(x)
     T = _autocorrelate_negative(rho)
@@ -45,7 +50,12 @@ def effective_sample_size_single_parameter(x):
 
 def effective_sample_size(samples):
     """
-    Calculates effective sample size (ESS) for a matrix of samples.
+    Calculates effective sample size (ESS) for a list of n-dimensional samples.
+
+    Parameters
+    ----------
+    samples
+        A 2d array of shape ``(n_samples, n_parameters)``.
     """
     try:
         n_samples, n_params = samples.shape
