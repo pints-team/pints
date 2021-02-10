@@ -12,11 +12,10 @@ from collections import Counter
 import pystan
 import os
 import pickle
+import pints
 
-from . import InterfaceLogPDF
 
-
-class StanLogPDF(InterfaceLogPDF):
+class StanLogPDF(pints.LogPDF):
     def __init__(self, stan_code, stan_data, pickle_filename=None):
         """
         Creates a `pints.LogPDF` object from Stan code and data, which can
@@ -27,6 +26,14 @@ class StanLogPDF(InterfaceLogPDF):
 
         If `pickle_filename` is provided, the object is pickled and can be
         used to reload it later without recompiling the Stan model.
+
+        Note that the interface assumes that the parameters are on the
+        unconstrained scale (according to Stan's "constraint transforms" [1]_).
+        So, for example, if a variable is declared to have a lower bound of
+        zero, sampling happens on the log-transformed space. The interface
+        takes care of Jacobian transformations, so a user only needs to
+        transform the variable back to the constrained space (in the example,
+        using a `exp` transform) to obtain appropriate samples.
 
         Extends :class:`pints.LogPDF`.
 
@@ -123,7 +130,7 @@ class StanLogPDF(InterfaceLogPDF):
         return self._long_names
 
     def n_parameters(self):
-        """ See `InterfaceLogPDF.n_parameters`. """
+        """ See `pints.LogPDF.n_parameters`. """
         return self._n_parameters
 
     def _prepare_values(self, x):
