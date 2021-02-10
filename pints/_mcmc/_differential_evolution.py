@@ -109,7 +109,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 else:
                     error = np.random.uniform(-self._b_star, self._b_star,
                                               self._mu.shape)
-                r1, r2 = r_draw(j, self._chains)
+                r1, r2 = self._r_draw(j, self._chains)
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
@@ -290,10 +290,12 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self.set_gaussian_error(x[3])
         self.set_relative_scaling(x[4])
 
-
-def r_draw(i, num_chains):
-    # TODO: Needs a docstring!
-    r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    while(r1 == i or r2 == i or r1 == r2):
-        r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    return r1, r2
+    def _r_draw(self, i, num_chains):
+        """
+        Chooses two chain indexes uniformly at random such that they are
+        not the same nor do they equal `i`.
+        """
+        indexes = [ind for ind in range(num_chains)]
+        indexes.pop(i)
+        r1, r2 = np.random.choice(indexes, 2, replace=False)
+        return r1, r2
