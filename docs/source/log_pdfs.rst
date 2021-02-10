@@ -2,7 +2,7 @@
 Log-PDFs
 ********
 
-.. module:: pints
+.. currentmodule:: pints
 
 :class:`LogPDFs<pints.LogPDF>` are callable objects that represent
 distributions, including likelihoods and Bayesian priors and posteriors.
@@ -15,11 +15,23 @@ Example::
     p = pints.GaussianLogPrior(mean=0, variance=1)
     x = p(0.1)
 
+Overview:
+
+- :class:`LogPDF`
+- :class:`LogPrior`
+- :class:`LogPosterior`
+- :class:`PooledLogPDF`
+- :class:`ProblemLogLikelihood`
+- :class:`SumOfIndependentLogPDFs`
+
+
 .. autoclass:: LogPDF
 
 .. autoclass:: LogPrior
 
 .. autoclass:: LogPosterior
+
+.. autoclass:: PooledLogPDF
 
 .. autoclass:: ProblemLogLikelihood
 

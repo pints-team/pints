@@ -2,7 +2,7 @@
 Metropolis-Adjusted Langevin Algorithm (MALA) MCMC
 **************************************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: MALAMCMC
 

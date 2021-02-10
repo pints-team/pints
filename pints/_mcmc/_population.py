@@ -1,12 +1,9 @@
 #
 # Population MCMC
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
-#
-# Some code in this file was adapted from Myokit (see http://myokit.org)
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -17,7 +14,7 @@ import numpy as np
 class PopulationMCMC(pints.SingleChainMCMC):
     """
     Creates a chain of samples from a target distribution, using the population
-    MCMC (simulated tempering) routine described in algorithm 1 in [1].
+    MCMC (simulated tempering) routine described in algorithm 1 in [1]_.
 
     This method uses several chains internally, but only a single one is
     updated per iteration, and only a single one is returned at the end, hence
@@ -44,10 +41,14 @@ class PopulationMCMC(pints.SingleChainMCMC):
     ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
     one whose target distribution we want to sample.
 
-    *Extends:* :class:`SingleChainMCMC`
+    Extends :class:`SingleChainMCMC`.
 
-    [1] "On population-based simulation for static inference", Ajay Jasra,
-    David A. Stephens and Christopher C. Holmes, Statistical Computing, 2007.
+    References
+    ----------
+    .. [1] "On population-based simulation for static inference", Ajay Jasra,
+           David A. Stephens and Christopher C. Holmes,
+           Statistical Computing, 2007.
+           https://doi.org/10.1007/s11222-007-9028-9
     """
     def __init__(self, x0, sigma0=None):
         super(PopulationMCMC, self).__init__(x0, sigma0)
@@ -55,23 +56,22 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Set initial state
         self._running = False
 
-        # Current points, and the log pdfs of those points (_not_ the tempered
-        # versions!)
+        # Current points, and their (untempered) log pdfs
         self._current = None
         self._current_log_pdfs = None
 
         # Single proposed point
         self._proposed = None
 
-        # Inner chains
+        # Inner samplers / chains
         self._chains = None
 
         #
         # Default settings
         #
-        self._method = pints.AdaptiveCovarianceMCMC
+        self._method = pints.HaarioBardenetACMC
         self._needs_initial_phase = True
-        self._in_initial_phase = True
+        self._in_initial_phase = self._needs_initial_phase
 
         # Temperature schedule
         self._schedule = None
@@ -91,11 +91,11 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Propose new points
         if self._proposed is None:
 
-            # Select chains to update and exchange/crossover
-            n = len(self._chains)
-            self._i, self._j = np.random.choice(n, 2, replace=False)
+            # Select chains/samplers to update and exchange/crossover
+            self._i, self._j = np.random.choice(
+                len(self._chains), 2, replace=False)
 
-            # Propose new point
+            # Propose new point (already set as write-only, or copied)
             self._proposed = self._chains[self._i].ask()
 
         # Return proposed point
@@ -118,7 +118,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         if self._running:
             raise RuntimeError('Already initialised.')
 
-        # Create inner chains
+        # Create inner samplers
         n = len(self._schedule)
         self._chains = [self._method(self._x0, self._sigma0) for i in range(n)]
 
@@ -138,7 +138,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Next chain to exchange / crossover with
         self._j = 1
 
-        # Ask all inner chains for first point (should be x0, so ignore!)
+        # Ask all inner samplers for first point (should be x0, so ignore!)
         for chain in self._chains:
             chain.ask()
 
@@ -166,20 +166,15 @@ class PopulationMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return self._needs_initial_phase
 
-    def replace(self, x, fx):
-        """
-        Not implemented for this method!
-        """
-        raise NotImplementedError
-
     def set_initial_phase(self, phase):
         """
         See :meth:`MCMCController.set_initial_phase()`.
         """
-        self._in_initial_phase = bool(phase)
-        if self._running:
-            for chain in self._chains:
-                chain.set_initial_phase(self._in_initial_phase)
+        if self._needs_initial_phase:
+            self._in_initial_phase = bool(phase)
+            if self._running:
+                for chain in self._chains:
+                    chain.set_initial_phase(self._in_initial_phase)
 
     def set_temperature_schedule(self, schedule=10):
         """
@@ -235,11 +230,37 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Ensure fx is a float
         fx = float(fx)
 
+        # Note: fx is the log of a pdf, so f(x) = log(p(x))
+        #
+        # Tempering
+        #   p_i(x) = p(x)^(1 - T[i])
+        # simplifies to:
+        #   f_i(x) = log(p(x)^(1 - T[i]))
+        #          = log(p(x)) * (1 - T[i])
+        #          = f(x) * (1 - T[i])
+        #
+        # The expression used in cross-over is
+        #
+        #   A = p_i(x_j) * p_j(x_i) / (p_i(x_i) * p_j(x_j))
+        #   accept if u(0, 1) < min(1, A)
+        #
+        # where p_i(x_j) = p(x_j) ^ (1 - T[i]).
+        #
+        # Which becomes
+        #
+        #   log(A) = f_i(x_j) + f_j(x_i) - f_i(x_i) - f_j(x_j)
+        #   accept if log(u(0, 1)) <= min(0, log(A))
+        #
+        # or
+        #
+        #   accept if log(A) >= 0 or log(A) >= log(u(0, 1))
+        #
+
         # First point?
         if self._current is None:
-            # Pass to inner chains (ignore returned x0)
-            for chain in self._chains:
-                chain.tell(fx)
+            # Pass tempered fx to inner chains (ignore returned x0)
+            for i, chain in enumerate(self._chains):
+                chain.tell(fx * (1 - self._schedule[i]))
 
             # Always accept
             n = len(self._chains)
@@ -261,8 +282,9 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Update chain, get new sample
         sample = self._chains[self._i].tell(fx * (1 - self._schedule[self._i]))
 
-        # Update current sample and untempered log pdf
+        # Check if accepted
         if np.any(sample != self._current[self._i]):
+            # Update current sample and untempered log pdf
             self._current[self._i] = sample
             self._current_log_pdfs[self._i] = fx
 
@@ -271,21 +293,38 @@ class PopulationMCMC(pints.SingleChainMCMC):
 
         # Perform exchange step
 
-        # Calculate current tempered likelihoods
-        pii = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._i]
-        pjj = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._j]
+        # Get current positions and untempered log pdfs for both chains
+        f_xi = self._current_log_pdfs[self._i]
+        f_xj = self._current_log_pdfs[self._j]
 
-        # Calculate proposed log likelihoods
-        pij = (1 - self._schedule[self._i]) * self._current_log_pdfs[self._j]
-        pji = (1 - self._schedule[self._j]) * self._current_log_pdfs[self._i]
+        # Calculate current tempered log likelihoods
+        fi_xi = (1 - self._schedule[self._i]) * f_xi
+        fj_xj = (1 - self._schedule[self._j]) * f_xj
 
-        # Accept/reject exchange step
+        # Calculate tempered log likelihoods of proposed points, after exchange
+        # Where fi_j = f(T[i], x[j]) = tempered log pdf for x[j] with T[i]
+        fi_xj = (1 - self._schedule[self._i]) * f_xj
+        fj_xi = (1 - self._schedule[self._j]) * f_xi
+
+        # Accept/reject exchange step (b = log(A))
         self._have_exchanged = False
-        if np.isfinite(pij) and np.isfinite(pji):
-            u = np.log(np.random.uniform(0, 1))
-            if u < pij + pji - (pii + pjj):
-                self._chains[self._i].replace(self._current[self._j], pij)
-                self._chains[self._j].replace(self._current[self._j], pji)
+        b = fi_xj + fj_xi - fi_xi - fj_xj
+        if not np.isnan(b):
+            if b > 0 or b > np.log(np.random.uniform(0, 1)):
+                # Copy arrays for current points: without the copy() operation
+                # this is unsafe, as it places references to arrays in other
+                # arrays, so that the contents can (and will) still be changed!
+                xi = np.copy(self._current[self._i])
+                xj = np.copy(self._current[self._j])
+                # Swap current points and untempered log pdfs
+                self._current[self._i] = xj
+                self._current[self._j] = xi
+                self._current_log_pdfs[self._i] = f_xj
+                self._current_log_pdfs[self._j] = f_xi
+                # Replace points and temperered log pdfs inside samplers
+                self._chains[self._i].replace(xj, fi_xj)
+                self._chains[self._j].replace(xi, fj_xi)
+                # Update state
                 self._have_exchanged = True
 
         # Return new point for chain 0
@@ -300,4 +339,3 @@ class PopulationMCMC(pints.SingleChainMCMC):
         distribution is ``p(theta|data) ^ (1 - T)``.
         """
         return self._schedule
-

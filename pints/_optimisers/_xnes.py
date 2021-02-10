@@ -1,38 +1,39 @@
 #
 # Exponential natural evolution strategy optimizer: xNES
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import logging
 import numpy as np
 import pints
 import scipy
 import scipy.linalg
+import warnings
 
 
 class XNES(pints.PopulationBasedOptimiser):
     """
-    Finds the best parameters using the xNES method described in [1, 2].
+    Finds the best parameters using the xNES method described in [1]_, [2]_.
 
     xNES stands for Exponential Natural Evolution Strategy, and is
-    designed for non-linear derivative-free optimization problems [1].
+    designed for non-linear derivative-free optimization problems [1]_.
 
-    *Extends:* :class:`PopulationBasedOptimiser`
+    Extends :class:`PopulationBasedOptimiser`.
 
-    [1] Glasmachers, Schaul, Schmidhuber et al. (2010) Exponential natural
-    evolution strategies.
-    Proceedings of the 12th annual conference on Genetic and evolutionary
-    computation
+    References
+    ----------
+    .. [1] Glasmachers, Schaul, Schmidhuber et al. (2010) "Exponential natural
+           evolution strategies". Proceedings of the 12th annual conference on
+           Genetic and evolutionary computation.
+           https://doi.org/10.1145/1830483.1830557
 
-    [2] PyBrain: The Python machine learning library (http://pybrain.org)
-
+    .. [2] PyBrain: The Python machine learning library
+           http://pybrain.org
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(XNES, self).__init__(x0, sigma0, boundaries)
@@ -45,9 +46,6 @@ class XNES(pints.PopulationBasedOptimiser):
         self._xbest = pints.vector(x0)
         self._fbest = float('inf')
 
-        # Python logger
-        self._logger = logging.getLogger(__name__)
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -57,7 +55,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Ready for tell now
         self._ready_for_tell = True
 
-        # Create new samples
+        # Create new samples (normalised, and user values)
         self._zs = np.array([np.random.normal(0, 1, self._n_parameters)
                              for i in range(self._population_size)])
         self._xs = np.array([self._mu + np.dot(self._A, self._zs[i])
@@ -73,7 +71,7 @@ class XNES(pints.PopulationBasedOptimiser):
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                self._logger.warning(
+                warnings.warn(
                     'All points requested by XNES are outside the boundaries.')
         else:
             self._user_xs = self._xs

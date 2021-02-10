@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the metropolis random walk MCMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -15,7 +14,11 @@ import pints.toy as toy
 
 from shared import StreamCapture
 
-debug = False
+# Consistent unit testing in Python 2 and 3
+try:
+    unittest.TestCase.assertRaisesRegex
+except AttributeError:
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 class TestMetropolisRandomWalkMCMC(unittest.TestCase):
@@ -88,13 +91,33 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
 
         x0 = self.real_parameters * 1.1
         mcmc = pints.MetropolisRandomWalkMCMC(x0)
-        self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+
+        # One round of ask-tell must have been run
+        self.assertRaisesRegex(
+            RuntimeError, 'already running', mcmc.replace, x0, 1)
+
         mcmc.ask()
+
+        # One round of ask-tell must have been run
         self.assertRaises(RuntimeError, mcmc.replace, x0, 1)
+
         mcmc.tell(0.5)
         mcmc.replace([1, 2, 3], 10)
         mcmc.replace([1, 2, 3], 10)
-        self.assertRaises(ValueError, mcmc.replace, [1, 2], 1)
+
+        # New position must have correct size
+        self.assertRaisesRegex(
+            ValueError, '`current` has the wrong dimensions',
+            mcmc.replace, [1, 2], 1)
+
+        # Proposal can be changed too
+        mcmc.ask()
+        mcmc.replace([1, 2, 3], 10, [3, 4, 5])
+
+        # New proposal must have correct size
+        self.assertRaisesRegex(
+            ValueError, '`proposed` has the wrong dimensions',
+            mcmc.replace, [1, 2, 3], 3, [3, 4])
 
     def test_flow(self):
 
@@ -131,9 +154,8 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.tell, float('-inf'))
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the hyper-parameter interface for this optimiser.
-        """
+        # Tests the hyper-parameter interface for this optimiser.
+
         x0 = self.real_parameters
         mcmc = pints.MetropolisRandomWalkMCMC(x0)
 
@@ -142,9 +164,8 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
         mcmc.set_hyper_parameters([])
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.MetropolisRandomWalkMCMC)
@@ -157,8 +178,4 @@ class TestMetropolisRandomWalkMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

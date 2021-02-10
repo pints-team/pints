@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the MALA MCMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -14,8 +13,6 @@ import pints
 import pints.toy
 
 from shared import StreamCapture
-
-debug = False
 
 
 class TestMALAMCMC(unittest.TestCase):
@@ -26,7 +23,7 @@ class TestMALAMCMC(unittest.TestCase):
     def test_method(self):
 
         # Create log pdf
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
 
         # Create mcmc
         x0 = np.array([2, 2])
@@ -57,10 +54,9 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, (fx, gr))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        # Test logging includes name and custom fields.
+
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
         mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.MALAMCMC)
@@ -75,7 +71,7 @@ class TestMALAMCMC(unittest.TestCase):
 
     def test_flow(self):
 
-        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, -1], [1, 3]])
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = np.array([2, 2])
 
         # Test initial proposal is first point
@@ -106,9 +102,8 @@ class TestMALAMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc._initialise)
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the parameter interface for this sampler.
-        """
+        # Tests the parameter interface for this sampler.
+
         x0 = np.array([2, 2])
         mcmc = pints.MALAMCMC(x0)
         self.assertTrue(np.array_equal(
@@ -134,8 +129,4 @@ class TestMALAMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

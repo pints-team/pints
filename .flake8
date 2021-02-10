@@ -3,7 +3,11 @@ exclude=
   .git,
   problems,
   pints/__init__.py,
-  env
+  pints/plot/__init__.py,
+  pints/toy/__init__.py,
+  env,
+  venv,
+  build
 ignore=
   # Block comment should start with '# '
   # Not if it's a commented out line
@@ -28,7 +32,3 @@ ignore=
   # Line break after binary operator
   W504,
 
-  # Invalid escape sequence
-  # These happen all the time in latex parts of docstrings,
-  # e.g. \sigma
-  W605,

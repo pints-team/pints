@@ -2,7 +2,8 @@
 Nested sampler base class
 *************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: NestedSampler
 
+.. autoclass:: NestedController

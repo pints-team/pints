@@ -2,7 +2,7 @@
 Boundary transformations
 ************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: TriangleWaveTransform
 

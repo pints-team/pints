@@ -2,7 +2,7 @@
 Optimiser base classes
 **********************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: Optimiser
 

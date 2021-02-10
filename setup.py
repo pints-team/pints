@@ -12,22 +12,46 @@ from setuptools import setup, find_packages
 with open('README.md') as f:
     readme = f.read()
 
+
+# Read version number from file
+def load_version():
+    try:
+        import os
+        root = os.path.abspath(os.path.dirname(__file__))
+        with open(os.path.join(root, 'pints', 'version'), 'r') as f:
+            version = f.read().strip().split(',')
+        return '.'.join([str(int(x)) for x in version])
+    except Exception as e:
+        raise RuntimeError('Unable to read version number (' + str(e) + ').')
+
+
 # Go!
 setup(
     # Module name (lowercase)
     name='pints',
-    # Remember to keep this in sync with pints/__init__.py
-    version='0.0.1',
+    version=load_version(),
+
+    # Description
     description='Probabilistic Inference in Noisy Time-Series',
     long_description=readme,
+    long_description_content_type='text/markdown',
+
+    # License name
     license='BSD 3-clause license',
+
+    # Maintainer information
     # author='',
     # author_email='',
     maintainer='Michael Clerx',
     maintainer_email='michael.clerx@cs.ox.ac.uk',
     url='https://github.com/pints-team/pints',
+
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
+
+    # Include non-python files (via MANIFEST.in)
+    include_package_data=True,
+
     # List of dependencies
     install_requires=[
         'cma>=2',
@@ -37,10 +61,10 @@ setup(
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
         'matplotlib>=1.5',
+        'tabulate',
     ],
     extras_require={
         'docs': [
-            'guzzle-sphinx-theme',      # Nice theme for docs
             'sphinx>=1.5, !=1.7.3',     # For doc generation
         ],
         'dev': [
@@ -50,5 +74,5 @@ setup(
             'traitlets',
         ],
     },
+    python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3,!=3.4',
 )
-

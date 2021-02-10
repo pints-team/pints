@@ -2,7 +2,7 @@
 PSO
 ***
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: PSO
 

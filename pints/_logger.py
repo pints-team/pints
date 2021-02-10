@@ -1,10 +1,9 @@
 #
 # Logger class
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -24,7 +23,9 @@ class Logger(object):
     """
     Logs numbers to screen and/or a file.
 
-    Example::
+    Example
+    -------
+    ::
 
         log = pints.Logger()
         log.add_counter('id', width=2)
@@ -70,19 +71,19 @@ class Logger(object):
         """
         Adds a field for positive integers.
 
-        Arguments:
+        Returns this :class:`Logger` object.
 
-        ``name``
+        Parameters
+        ----------
+        name : str
             This field's name. Will be displayed in the header.
-        ``width``
+        width : int
             A hint for the width of this column. If numbers exceed this width
             layout will break, but no information will be lost.
-        ``max_value``
+        max_value : int|None
             A hint for the maximum number this field will need to display.
-        ``file_only``
+        file_only : boolean
             If set to ``True``, this field will not be shown on screen.
-
-        Returns this :class:`Logger` object.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -113,16 +114,16 @@ class Logger(object):
         """
         Adds a field for floating point number.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``width``
-            A hint for the field's width. The minimum width is 7.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        width : int
+            A hint for the field's width. The minimum width is 7.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -164,17 +165,17 @@ class Logger(object):
         """
         Adds a field for a (positive or negative) integer.
 
-        Arguments:
+        Returns this :class:`Logger` object.
 
-        ``name``
+        Parameters
+        ----------
+        name : str
             This field's name. Will be displayed in the header.
-        ``width``
+        width : int
             A hint for the width of this column. If numbers exceed this width
             layout will break, but no information will be lost.
-        ``file_only``
+        file_only : boolean
             If set to ``True``, this field will not be shown on screen.
-
-        Returns this :class:`Logger` object.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -202,14 +203,14 @@ class Logger(object):
         """
         Adds a field for a maximum precision floating point number.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -247,16 +248,16 @@ class Logger(object):
         """
         Adds a field showing (at most ``width`` characters of) string values.
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``width``
-            The maximum width for strings to display.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        width : int
+            The maximum width for strings to display.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -282,14 +283,14 @@ class Logger(object):
         """
         Adds a field showing a formatted time (given in seconds).
 
-        Arguments:
-
-        ``name``
-            This field's name. Will be displayed in the header.
-        ``file_only``
-            If set to ``True``, this field will not be shown on screen.
-
         Returns this :class:`Logger` object.
+
+        Parameters
+        ----------
+        name : str
+            This field's name. Will be displayed in the header.
+        file_only : boolean
+            If set to ``True``, this field will not be shown on screen.
         """
         if self._have_logged:
             raise RuntimeError('Cannot add fields after logging has started.')
@@ -350,16 +351,19 @@ class Logger(object):
                 # Write data
                 for row in rows:
                     line = []
-                    i = iter(row)
+                    column = iter(row)
                     for width, dtype, f1, f2 in self._field_formats:
-                        if dtype == _FLOAT:
-                            x = '{:.17e}'.format(next(i))
+                        v = next(column)
+                        if v is None:
+                            x = ''
+                        elif dtype == _FLOAT:
+                            x = '{:.17e}'.format(v)
                         elif dtype == _TIME:
-                            x = str(next(i))
+                            x = str(v)
                         elif dtype == _TEXT:
-                            x = '"' + str(next(i)) + '"'
+                            x = '"' + str(v) + '"'
                         else:
-                            x = str(int(next(i)))
+                            x = str(int(v))
                         line.append(x)
                     f.write(','.join(line) + '\n')
 
@@ -384,19 +388,21 @@ class Logger(object):
             column = iter(row)
             formatted_row = []
             for width, dtype, f1, f2 in self._field_formats:
-                if dtype == _FLOAT:
-                    v = next(column)
+                v = next(column)
+                if v is None:
+                    x = ' ' * width
+                elif dtype == _FLOAT:
                     x = f1.format(v)
                     if len(x) > width:
                         x = f2.format(v)
                     x += ' ' * (width - len(x))
                 elif dtype == _TIME:
-                    x = self._format_time(next(column))
+                    x = self._format_time(v)
                 elif dtype == _TEXT:
-                    x = str(next(column))[:width]
+                    x = str(v)[:width]
                     x += ' ' * (width - len(x))
                 else:
-                    x = f1.format(int(next(column)))
+                    x = f1.format(int(v))
                 formatted_row.append(x)
             formatted_rows.append(formatted_row)
 

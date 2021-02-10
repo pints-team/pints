@@ -2,6 +2,6 @@
 Neal's Funnel Distribution
 **************************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: NealsFunnelLogPDF

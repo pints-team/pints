@@ -2,7 +2,7 @@
 Lotka-Volterra model
 ********************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: LotkaVolterraModel
 

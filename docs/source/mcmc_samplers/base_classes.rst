@@ -2,7 +2,7 @@
 MCMC Sampler base classes
 *************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: MCMCSampler
 

@@ -2,7 +2,7 @@
 HES1 Michaelis-Menten Model
 ***************************
 
-.. module:: pints.toy
+.. currentmodule:: pints.toy
 
 .. autoclass:: Hes1Model
 

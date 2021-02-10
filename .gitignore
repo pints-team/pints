@@ -19,5 +19,15 @@ __pycache__/
 # vscode
 .vscode
 
+# pycharm
+.idea
+
 # Studies have their own repo now
 studies
+
+# Virtual environments
+venv*
+
+# Build artifacts
+build/*
+dist/*

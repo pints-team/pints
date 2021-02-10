@@ -1,10 +1,9 @@
 #
 # High-dimensional Gaussian log-pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -19,21 +18,21 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     High-dimensional multivariate Gaussian log pdf, with off-diagonal
     correlations.
 
-    Arguments:
+    Extends :class:`pints.toy.ToyLogPDF`.
 
-    ``dimension``
-        Dimensions of Gaussian distribution.
-    ``rho``
+    Parameters
+    ----------
+    dimension : int
+        Dimensions of multivariate Gaussian distribution (which must exceed 1).
+    rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
         covariance matrix is positive semi-definite.
-
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)
-        if self._n_parameters < 1:
-            raise ValueError('Dimension must be 1 or greater.')
+        if self._n_parameters <= 1:
+            raise ValueError('Dimensions must exceed 1.')
         rho = float(rho)
         # bounds must satisfy:
         # https://stats.stackexchange.com/questions/72790/
@@ -141,4 +140,3 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         magnitude = 3 * np.sqrt(self.n_parameters())
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
         return np.transpose(bounds).tolist()
-

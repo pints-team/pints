@@ -2,7 +2,7 @@
 Nested ellipsoid sampler
 ************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: NestedEllipsoidSampler
 

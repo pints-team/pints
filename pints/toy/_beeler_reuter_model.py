@@ -1,10 +1,9 @@
 #
 # Beeler-Reuter model for mammalian ventricular action potential.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function
 import numpy as np
@@ -17,30 +16,42 @@ from . import ToyModel
 class ActionPotentialModel(pints.ForwardModel, ToyModel):
     """
     The 1977 Beeler-Reuter model of the mammalian ventricular action potential
-    (AP) [1].
+    (AP).
 
-    This model describes several ion currents, each with a maximum conductance
-    parameter, that together give rise to the cardiac AP and calcium transient.
-    In this (non-trivial) 'toy' model, we use the maximum conductances as the
-    parameters, and the AP and calcium transient as observable outputs. All
-    other model parameters are assumed to be known.
+    This model is written as an ODE with 8 states and several intermediary
+    variables: for the full model equations, please see the original paper
+    [1]_.
 
-    The parameters are _scaled_: instead of passing in the conductances
-    directly, users should provide the natural log of the maximum conductances.
-    This makes the parameters easier to find for optimisation algorithms.
+    The model contains 5 ionic currents, each described by a sub-model with
+    several kinetic parameters, and a maximum conductance parameter that
+    determines its magnitude.
+    Only the 5 conductance parameters are varied in this :class:`ToyModel`, all
+    other parameters are fixed and assumed to be known.
+    To aid in inference, a parameter transformation is used: instead of
+    specifying the maximum conductances directly, their natural logarithm
+    should be used.
+    In other words, the parameter vector passed to :meth:`simulate()` should
+    contain the logarithm of the five conductances.
 
-    References:
+    As outputs, we use the AP and the calcium transient, as these are the only
+    two states (out of the total of eight) with a physically observable
+    counterpart.
+    This makes this a fairly hard problem.
 
-    [1] Reconstruction of the action potential of ventricular myocardial
-    fibres. Beeler, Reuter (1977) Journal of Physiology
+    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
-    Arguments:
+    Parameters
+    ----------
+    y0
+        The initial state of the observables ``V`` and ``Ca_i``, where
+        ``Ca_i`` must be 0 or greater.
+        If not given, the defaults are -84.622 and 2e-7.
 
-    ``y0``
-        (Optional) The initial condition of the observables ``v`` and ``cai``,
-        where ``cai >= 0``.
-
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    References
+    ----------
+    .. [1] Reconstruction of the action potential of ventricular myocardial
+           fibres. Beeler, Reuter (1977) Journal of Physiology
+           https://doi.org/10.1113/jphysiol.1977.sp011853
     """
     def __init__(self, y0=None):
         if y0 is None:
@@ -200,7 +211,8 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
 
     def simulate_all_states(self, parameters, times):
         """
-        Returns all state variables that ``simulate()`` does not return.
+        Runs a simulation and returns all state variables, including the ones
+        that do no have a physically observable counterpart.
         """
         y0 = [self._v0,
               self._cai0,
@@ -212,13 +224,20 @@ class ActionPotentialModel(pints.ForwardModel, ToyModel):
               self._x10]
 
         solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length)
+            self._rhs, y0, times, args=(parameters,), hmax=self._I_Stim_length,
+            rtol=self._rtol, atol=self._atol)
 
         # Return all states
         return solved_states
 
     def suggested_parameters(self):
-        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
+        """
+        Returns suggested parameters for this model.
+        The returned vector is already log-transformed, and can be passed
+        directly to :meth:`simulate`.
+
+        See :meth:`pints.toy.ToyModel.suggested_parameters()`.
+        """
         # maximum conducances, in mS/cm^2
         g_Na = 4.0
         g_NaC = 0.003

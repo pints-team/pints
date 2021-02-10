@@ -1,10 +1,9 @@
 #
 # Parabolic error measure.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -13,14 +12,19 @@ import numpy as np
 
 
 class ParabolicError(pints.ErrorMeasure):
-    """
-    Error measure based ona simple parabola centered around a user specified
+    r"""
+    Error measure based on a simple parabola centered around a user specified
     point.
 
     .. math::
-        f(x) = (x - c)^s
+        f(x) = \sum (x - c)^2
 
-    *Extends:* :class:`pints.ErrorMeasure`.
+    Extends :class:`pints.ErrorMeasure`.
+
+    Parameters
+    ----------
+    c : sequence
+        The center of the parabola.
     """
     def __init__(self, c=[0, 0]):
         self._c = pints.vector(c)
@@ -28,6 +32,11 @@ class ParabolicError(pints.ErrorMeasure):
 
     def __call__(self, x):
         return np.sum((self._c - x)**2)
+
+    def evaluateS1(self, x):
+        """ See :meth:`pints.ErrorMeasure.evaluateS1()`. """
+        x = pints.vector(x) - self._c
+        return np.sum(x**2), 2 * x
 
     def n_parameters(self):
         """ See :meth:`pints.ErrorMeasure.n_parameters()`. """
@@ -38,4 +47,3 @@ class ParabolicError(pints.ErrorMeasure):
         Returns the global optimum for this function.
         """
         return np.array(self._c, copy=True)
-

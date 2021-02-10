@@ -1,0 +1,4 @@
+/* More space between class definitions, and functions */
+dl.class, dl.function {
+    margin-bottom: 40px;
+}

@@ -1,10 +1,9 @@
 #
 # I/O helper classes for Pints
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -12,13 +11,13 @@ from __future__ import print_function, unicode_literals
 
 def load_samples(filename, n=None):
     """
-    Loads samples from the given ``filename`` and returns a 2d numpy array
+    Loads samples from the given ``filename`` and returns a 2d NumPy array
     containing them.
 
     If the optional argument ``n`` is given, the method assumes there are ``n``
     files, with names based on ``filename`` such that e.g. ``test.csv`` would
     become ``test_0.csv``, ``test_1.csv``, ..., ``test_n.csv``. In this case
-    a list of 2d numpy arrays is returned.
+    a list of 2d NumPy arrays is returned.
 
     Assumes the first line in each file is a header.
 

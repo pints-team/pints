@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the Gaussian logpdf toy distribution.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import pints
 import pints.toy
@@ -19,9 +18,8 @@ class TestGaussianLogPDF(unittest.TestCase):
     """
 
     def test_gaussian_logpdf(self):
-        """
-        Test GaussianLogPDF basics.
-        """
+        # Test GaussianLogPDF basics.
+
         # Test basics
         x = [1, 2, 3]
         y = [1, 1, 1]
@@ -49,9 +47,8 @@ class TestGaussianLogPDF(unittest.TestCase):
             ValueError, pints.toy.GaussianLogPDF, [1, 2, 3], [1, 2, 3, 4])
 
     def test_sampling_and_kl_divergence(self):
-        """
-        Test GaussianLogPDF.kl_divergence() and .sample().
-        """
+        # Test GaussianLogPDF.kl_divergence() and .sample().
+
         # Ensure consistent output
         np.random.seed(1)
 
@@ -104,11 +101,9 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
     def test_gaussian_sensitivity(self):
-        """
-        Tests that the gradient of the log pdf is correct
-        for a few specific examples, and that the log pdf
-        returned is correct.
-        """
+        # Tests that the gradient of the log pdf is correct for a few specific
+        # examples, and that the log pdf returned is correct.
+
         # 1d Gaussian
         f1 = pints.toy.GaussianLogPDF([0], [1])
         L, dL = f1.evaluateS1([2])
@@ -121,8 +116,13 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(L, -4.337877066409345)
         self.assertTrue(np.array_equal(dL, [-2, -1]))
 
-        f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [0.5, 2]])
-        L, dL = f2_2.evaluateS1([-2.5, 1.5])
+        f2_2 = pints.toy.GaussianLogPDF([-5, 3], [[3, -0.5], [-0.5, 2]])
+        x = [-2.5, 1.5]
+        L, dL = f2_2.evaluateS1(x)
+        self.assertEqual(L, f2_2(x))
+        self.assertAlmostEqual(L, -4.0603030807704972)
+        self.assertAlmostEqual(dL[0], -0.73913043478260865)
+        self.assertAlmostEqual(dL[1], 0.56521739130434778)
 
         # 3d Gaussian
         f3 = pints.toy.GaussianLogPDF([1, 2, 3], [[2, 0, 0],
@@ -131,6 +131,24 @@ class TestGaussianLogPDF(unittest.TestCase):
         L, dL = f3.evaluateS1([0.5, -5, -3])
         self.assertAlmostEqual(L, -25.10903637045394)
         self.assertTrue(np.array_equal(dL, [0.25, 3.5, 3.0]))
+
+        # check incorrect covariance matrices being added
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF, [1, 2], [[1, 0.5],
+                                                             [-0.5, 2]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF,
+                          [1, 2, 3], [[1, 0.5, 0.6],
+                                      [0.5, 2, 0.75],
+                                      [0.59, 0.75, 3]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF, [1, 2], [[1, 2],
+                                                             [2, 2]])
+        self.assertRaises(ValueError,
+                          pints.toy.GaussianLogPDF,
+                          [1, 2, 3], [[1, 0.5, 3],
+                                      [0.5, 2, 0.75],
+                                      [0.59, 0.75, 3]])
 
 
 if __name__ == '__main__':

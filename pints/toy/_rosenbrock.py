@@ -1,10 +1,9 @@
 #
 # Rosenbrock error measure and log-pdf.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -15,14 +14,17 @@ from . import ToyLogPDF
 
 
 class RosenbrockError(pints.ErrorMeasure):
-    """
-    Error measure based on the rosenbrock function (see:
-    https://en.wikipedia.org/wiki/Rosenbrock_function):
+    r"""
+    Error measure based on the rosenbrock function [1]_.
 
     .. math::
         f(x,y) = (1 - x)^2 + 100(y - x^2)^2
 
-    *Extends:* :class:`pints.ErrorMeasure`.
+    Extends :class:`pints.ErrorMeasure`.
+
+    References
+    ----------
+    .. [1] https://en.wikipedia.org/wiki/Rosenbrock_function
     """
     def __init__(self):
         self._a = 1
@@ -43,15 +45,18 @@ class RosenbrockError(pints.ErrorMeasure):
 
 
 class RosenbrockLogPDF(ToyLogPDF):
-    """
-    Unnormalised LogPDF based on the Rosenbrock function (see:
-    https://en.wikipedia.org/wiki/Rosenbrock_function) although with
-    an addition 1 on the denominator to avoid a discontinuity:
+    r"""
+    Unnormalised LogPDF based on the Rosenbrock function [2]_ with an addition
+    of 1 on the denominator to avoid a discontinuity:
 
     .. math::
         f(x,y) = -log[1 + (1 - x)^2 + 100(y - x^2)^2 ]
 
-    *Extends:* :class:`pints.toy.ToyLogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
+
+    References
+    ----------
+    .. [2] https://en.wikipedia.org/wiki/Rosenbrock_function
     """
     def __init__(self):
         self._f = RosenbrockError()

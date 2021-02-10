@@ -1,15 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests if the SIR toy model runs.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import pints
 import pints.toy
+import numpy as np
 
 
 class TestSIRModel(unittest.TestCase):
@@ -44,6 +44,20 @@ class TestSIRModel(unittest.TestCase):
         # Populations are never negative
         self.assertRaises(
             ValueError, pints.toy.SIRModel, [1, 1, -1])
+
+    def test_values(self):
+        # value-based tests of model solution
+        S0 = 100
+        parameters = [0.05, 0.4, S0]
+        times = np.linspace(0, 10, 101)
+        model = pints.toy.SIRModel([S0, 10, 1])
+        values = model.simulate(parameters, times)
+        self.assertEqual(values[0, 0], 10)
+        self.assertEqual(values[0, 1], 1)
+        self.assertAlmostEqual(values[1, 0], 15.61537, places=5)
+        self.assertAlmostEqual(values[1, 1], 1.50528, places=5)
+        self.assertAlmostEqual(values[100, 0], 2.45739, places=5)
+        self.assertAlmostEqual(values[100, 1], 108.542466, places=5)
 
 
 if __name__ == '__main__':

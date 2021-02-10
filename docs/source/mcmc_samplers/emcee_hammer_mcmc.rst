@@ -2,6 +2,6 @@
 EmceeHammerMCMC
 ***************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: EmceeHammerMCMC

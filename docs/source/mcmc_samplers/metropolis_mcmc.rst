@@ -2,7 +2,7 @@
 Metropolis Random Walk MCMC
 ***************************
 
-.. module:: pints
+.. currentmodule:: pints
 
 .. autoclass:: MetropolisRandomWalkMCMC
 

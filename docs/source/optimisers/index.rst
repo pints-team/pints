@@ -2,7 +2,7 @@
 Optimisers
 **********
 
-.. module:: pints
+.. currentmodule:: pints
 
 Pints provides a number of optimisers, all implementing the :class:`Optimiser`
 interface, that can be used to find the parameters that minimise an
@@ -15,10 +15,13 @@ or the :class:`OptimisationController` class.
 
     running
     base_classes
+    convenience_methods
     boundary_transformations
+    cmaes_bare
     cmaes
+    gradient_descent
+    nelder_mead
     pso
     snes
     xnes
 
-.. autoclass:: OptimisationController
