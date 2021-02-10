@@ -295,7 +295,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         Chooses two chain indexes uniformly at random such that they are
         not the same nor do they equal `i`.
         """
-        indexes = [ind for ind in range(num_chains)]
+        indexes = list(range(num_chains))
         indexes.pop(i)
         r1, r2 = np.random.choice(indexes, 2, replace=False)
         return r1, r2
