@@ -31,7 +31,7 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc = pints.NoUTurnMCMC(x0, sigma)
 
         # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.NoUTurnMCMC.needs_sensitivities())
 
         # Perform short run, test logging while we are at it
         logger = pints.Logger()

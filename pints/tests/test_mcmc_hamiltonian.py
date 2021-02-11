@@ -31,7 +31,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         mcmc = pints.HamiltonianMCMC(x0, sigma)
 
         # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.HamiltonianMCMC.needs_sensitivities())
 
         # Set number of leapfrog steps
         ifrog = 10

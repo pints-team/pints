@@ -161,7 +161,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Covariance-Adaptive: Rank Shrinking.'
 
-    def needs_sensitivities(self):
+    @staticmethod
+    def needs_sensitivities():
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 

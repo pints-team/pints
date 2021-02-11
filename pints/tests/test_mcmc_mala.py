@@ -31,7 +31,7 @@ class TestMALAMCMC(unittest.TestCase):
         mcmc = pints.MALAMCMC(x0, sigma)
 
         # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.MALAMCMC.needs_sensitivities())
 
         # Perform short run
         chain = []

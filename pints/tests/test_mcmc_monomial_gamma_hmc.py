@@ -31,7 +31,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         mcmc = pints.MonomialGammaHamiltonianMCMC(x0, sigma)
 
         # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.MonomialGammaHamiltonianMCMC.needs_sensitivities())
 
         # Set number of leapfrog steps
         ifrog = 10

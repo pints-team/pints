@@ -35,7 +35,8 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         raise NotImplementedError
 
-    def needs_initial_phase(self):
+    @staticmethod
+    def needs_initial_phase():
         """
         Returns ``True`` if this method needs an initial phase, for example an
         adaptation-free period for adaptive covariance methods, or a warm-up
@@ -43,7 +44,8 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
         """
         return False
 
-    def needs_sensitivities(self):
+    @staticmethod
+    def needs_sensitivities():
         """
         Returns ``True`` if this methods needs sensitivities to be passed in to
         ``tell`` along with the evaluated logpdf.
@@ -126,7 +128,7 @@ class SingleChainMCMC(MCMCSampler):
         ``None``.
 
         For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
+        :meth:`MCMCSampler.needs_sensitivities`), ``fx`` should be a tuple
         ``(log_pdf, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
         """
@@ -233,7 +235,7 @@ class MultiChainMCMC(MCMCSampler):
         iteration).
 
         For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
+        :meth:`MCMCSampler.needs_sensitivities`), ``fxs`` should be a tuple
         ``(log_pdfs, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
         """
@@ -326,7 +328,6 @@ class MCMCController(object):
 
         # Get functions which can generate initial position or set initial
         # position points if numerical values given
-        self._x0_isfunction = False
         if x0 is None:
             # use prior if one's available
             if isinstance(log_pdf, pints.LogPosterior):
@@ -337,8 +338,6 @@ class MCMCController(object):
                                            [2] * self._n_parameters)
         if isinstance(x0, pints.LogPrior):
             init = x0.sample(chains)
-            self._init_fn = x0
-            self._x0_isfunction = True
         else:
             if len(x0) != chains:
                 raise ValueError(
@@ -349,6 +348,7 @@ class MCMCController(object):
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
             init = x0
+        self._init_fn = x0
 
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
@@ -408,18 +408,16 @@ class MCMCController(object):
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
             self._n_samplers = self._n_chains
-            self._samplers = [method(x, sigma0) for x in init]
         else:
             # Using a single sampler that samples multiple chains
             self._n_samplers = 1
-            self._samplers = [method(self._n_chains, init, sigma0)]
 
         # Check if sensitivities are required
-        self._needs_sensitivities = self._samplers[0].needs_sensitivities()
+        self._needs_sensitivities = self._method.needs_sensitivities()
 
         # Initial phase (needed for e.g. adaptive covariance)
         self._initial_phase_iterations = None
-        self._needs_initial_phase = self._samplers[0].needs_initial_phase()
+        self._needs_initial_phase = self._method.needs_initial_phase()
         if self._needs_initial_phase:
             self.set_initial_phase_iterations()
 
@@ -471,6 +469,53 @@ class MCMCController(object):
         # the chains, so nothing will go wrong if the user messes the array up.
         return self._samples
 
+    def _initialise_samplers(self, init_fn, single_chain,
+                             n_chains, evaluator,
+                             max_initialisation_tries, sigma0,
+                             transform, needs_sensitivities):
+        """
+        Samples an initial starting point for the chains using the supplied
+        `init` function until either a finite initialisation has been obtained
+        for all chains or a given number of trials have been exhausted.
+        """
+        chains = list(range(n_chains))
+        if callable(init_fn):
+            initialised_finite = False
+            current_active = list(chains)
+            n_tries = 0
+            x0 = []
+            while not initialised_finite and (n_tries <
+                                              max_initialisation_tries):
+                xs = init_fn.sample(len(current_active))
+                if transform is not None:
+                    xs = [transform.to_search(x) for x in xs]
+                fxs = evaluator.evaluate(xs)
+                xs_iterator = iter(xs)
+                fxs_iterator = iter(fxs)
+                for i in list(current_active):
+                    x = next(xs_iterator)
+                    fx = next(fxs_iterator)
+                    if needs_sensitivities:
+                        fx = fx[0]
+                    if np.isfinite(fx):
+                        x0.append(x)
+                if len(x0) == len(chains):
+                    initialised_finite = True
+                n_tries += 1
+            if not initialised_finite:
+                raise ValueError('Initialisation failed since logPDF ' +
+                                 'not finite at initial points after ' +
+                                 str(max_initialisation_tries) +
+                                 ' attempts.')
+        else:
+            init = init_fn
+
+        if self._single_chain:
+            self._samplers = [self._method(a, sigma0) for a in init]
+        else:
+            nch = self._n_chains
+            self._samplers = [self._method(nch, init, sigma0)]
+
     def initial_phase_iterations(self):
         """
         For methods that require an initial phase (e.g. an adaptation-free
@@ -517,7 +562,7 @@ class MCMCController(object):
         Returns true if this sampler has been created with a method that has
         an initial phase (see :meth:`MCMCSampler.needs_initial_phase()`.)
         """
-        return self._samplers[0].needs_initial_phase()
+        return self._method.needs_initial_phase()
 
     def n_evaluations(self):
         """
@@ -680,24 +725,12 @@ class MCMCController(object):
             active = list(range(self._n_chains))
             n_samples = [0] * self._n_chains
 
-        # initialisation
-        if self._x0_isfunction:
-            if self._single_chain:
-                initialised_finite, init = self._sample_x0(active, evaluator)
-            else:
-                chain_r = list(range(self._n_chains))
-                initialised_finite, init = self._sample_x0(chain_r, evaluator)
-            if not initialised_finite:
-                raise ValueError('Initialisation failed since logPDF ' +
-                                 'not finite at initial points after ' +
-                                 str(self._max_initialisation_tries) +
-                                 ' attempts.')
-
-            if self._single_chain:
-                self._samplers = [self._method(a, self._sigma0) for a in init]
-            else:
-                nch = self._n_chains
-                self._samplers = [self._method(nch, init, self._sigma0)]
+        # initialise samplers for each chain
+        self._initialise_samplers(self._init_fn, self._single_chain,
+                                  self._n_chains, evaluator,
+                                  self._max_initialisation_tries,
+                                  self._sigma0, self._transform,
+                                  self._needs_sensitivities)
 
         # Start sampling
         timer = pints.Timer()
@@ -931,37 +964,6 @@ class MCMCController(object):
         a list containing a single :class:`MultiChainMCMC` instance.
         """
         return self._samplers
-
-    def _sample_x0(self, active, evaluator):
-        """
-        Samples an initial starting point for the chains using the supplied
-        `init` function.
-        """
-        initialised_finite = False
-        init_fn = self._init_fn
-        current_active = list(active)
-        n_tries = 0
-        x0 = []
-        transform = self._transform
-        while not initialised_finite and (n_tries <
-                                          self._max_initialisation_tries):
-            xs = init_fn.sample(len(current_active))
-            if transform is not None:
-                xs = [transform.to_search(x) for x in xs]
-            fxs = evaluator.evaluate(xs)
-            xs_iterator = iter(xs)
-            fxs_iterator = iter(fxs)
-            for i in list(current_active):
-                x = next(xs_iterator)
-                fx = next(fxs_iterator)
-                if self._needs_sensitivities:
-                    fx = fx[0]
-                if np.isfinite(fx):
-                    x0.append(x)
-            if len(x0) == len(active):
-                initialised_finite = True
-            n_tries += 1
-        return initialised_finite, x0
 
     def set_chain_filename(self, chain_file):
         """

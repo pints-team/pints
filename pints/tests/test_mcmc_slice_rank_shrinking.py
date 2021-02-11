@@ -65,7 +65,7 @@ class TestSliceRankShrinking(unittest.TestCase):
             mcmc.tell((fx, grad))
 
         # Test sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.SliceRankShrinkingMCMC.needs_sensitivities())
 
     def test_basic(self):
         # Test basic methods of the class.

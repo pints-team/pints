@@ -185,7 +185,8 @@ class MALAMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Metropolis-Adjusted Langevin Algorithm (MALA)'
 
-    def needs_sensitivities(self):
+    @staticmethod
+    def needs_sensitivities():
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 

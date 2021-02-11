@@ -31,7 +31,7 @@ class TestRelativisticMCMC(unittest.TestCase):
         mcmc = pints.RelativisticMCMC(x0, sigma)
 
         # This method needs sensitivities
-        self.assertTrue(mcmc.needs_sensitivities())
+        self.assertTrue(pints.RelativisticMCMC.needs_sensitivities())
 
         # Set number of leapfrog steps
         ifrog = 10
