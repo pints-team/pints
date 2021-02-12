@@ -11,7 +11,7 @@ on:
 jobs:
 
   build-and-test:
-    name: style test
+    name: Style
     runs-on: ubuntu-latest
 
     steps:

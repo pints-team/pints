@@ -117,6 +117,7 @@ relevant code.
 - [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy/model-sir.ipynb)
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
+- [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
@@ -131,8 +132,15 @@ relevant code.
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
-## Interfaces with other software packages
+
+## Interfaces
+### To probabilistic programming languages
 - [Stan](./interfaces/stan.ipynb)
+
+### To statistical model packages
+- [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
+- [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
+
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
