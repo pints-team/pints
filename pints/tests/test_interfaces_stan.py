@@ -9,6 +9,7 @@
 import pints
 import unittest
 import numpy as np
+import pints.toy
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -31,7 +32,7 @@ class TestStanLogPDF(unittest.TestCase):
     def setUpClass(cls):
         """ Set up problem for tests. """
 
-        # Create toy model
+        # Create toy normal models
         cls.code = '''
         data {
             int<lower=0> N;
@@ -63,6 +64,36 @@ class TestStanLogPDF(unittest.TestCase):
         }'''
 
         cls.data = {'N': 1, 'y': [0]}
+
+        # create eight schools model
+        cls.code2 = """
+        data {
+            int<lower=0> J;
+            real y[J];
+            real<lower=0> sigma[J];
+        }
+
+        parameters {
+            real mu;
+            real<lower=0> tau;
+            real theta_tilde[J];
+        }
+
+        transformed parameters {
+            real theta[J];
+            for (j in 1:J)
+                theta[j] = mu + tau * theta_tilde[j];
+        }
+
+        model {
+            mu ~ normal(0, 5);
+            tau ~ cauchy(0, 5);
+            theta_tilde ~ normal(0, 1);
+            y ~ normal(theta, sigma);
+        }
+        """
+        model = pints.toy.EightSchoolsLogPDF()
+        cls.data2 = model.data()
 
     def test_calling(self):
         # tests instantiation
@@ -107,6 +138,13 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(val, stanmodel1(y))
         self.assertEqual(dp[0], -0.25)
         self.assertEqual(dp[1], 0.25)
+
+    def test_vector_parameters_model(self):
+        # tests that interface runs with Stan model with declared vector
+        # of parameters
+        stanmodel = pints.interfaces.StanLogPDF(stan_code=self.code2,
+                                                stan_data=self.data2)
+        stanmodel(np.random.uniform(size=10))
 
 
 if __name__ == '__main__':

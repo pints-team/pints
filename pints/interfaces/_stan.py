@@ -7,7 +7,6 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import numpy as np
 from collections import Counter
 import pystan
 import pints
@@ -69,11 +68,7 @@ class StanLogPDF(pints.LogPDF):
                 "No data supplied to create Stan model fit object. " +
                 "Run `create_stan_model_fit` first.")
         vals = self._prepare_values(x)
-        try:
-            return self._log_prob(vals, adjust_transform=True)
-        # if Pints proposes a value outside of Stan's parameter bounds
-        except (RuntimeError, ValueError):
-            return -np.inf
+        return self._log_prob(vals, adjust_transform=True)
 
     def _dict_update(self, x):
         """ Updates dictionary object with parameter values. """
@@ -99,12 +94,9 @@ class StanLogPDF(pints.LogPDF):
                 "No data supplied to create Stan model fit object. " +
                 "Run `create_stan_model_fit` first.")
         vals = self._prepare_values(x)
-        try:
-            val = self._log_prob(vals, adjust_transform=True)
-            dp = self._grad_log_prob(vals, adjust_transform=True)
-            return val, dp.reshape(-1)
-        except (RuntimeError, ValueError):
-            return -np.inf, np.ones(self._n_parameters).reshape(-1)
+        val = self._log_prob(vals, adjust_transform=True)
+        dp = self._grad_log_prob(vals, adjust_transform=True)
+        return val, dp.reshape(-1)
 
     def _initialise(self, stanfit):
         """ Initialises internal variables. """
