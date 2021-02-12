@@ -10,13 +10,11 @@ from __future__ import print_function, unicode_literals
 import numpy as np
 from collections import Counter
 import pystan
-import os
-import pickle
 import pints
 
 
 class StanLogPDF(pints.LogPDF):
-    def __init__(self, stan_code, stan_data, pickle_filename=None):
+    def __init__(self, stan_code, stan_data=None):
         """
         Creates a `pints.LogPDF` object from Stan code and data, which can
         then be used in sampling, optimisation etc. Note, that this command
@@ -42,9 +40,9 @@ class StanLogPDF(pints.LogPDF):
         stan_code
             Stan code describing the model.
         stan_data
-            Data in Python dictionary format as required by PyStan.
-        pickle_filename
-            Filename used to save pickled model.
+            Data in Python dictionary format as required by PyStan. Defaults to
+            None in which case `inject_data` must be called to create Stan
+            model fit object before calling.
 
         References
         ----------
@@ -52,31 +50,24 @@ class StanLogPDF(pints.LogPDF):
                B Carpenter et al., (2017), Journal of Statistical Software
         """
 
-        if pickle_filename:
-            if os.path.isfile(pickle_filename):
-                sm = pickle.load(open(pickle_filename, 'rb'))
-            else:
-                sm = pystan.StanModel(model_code=stan_code)
-                pickle.dump(sm, open(pickle_filename, 'wb'))
-        else:
-            sm = pystan.StanModel(model_code=stan_code)
-
-        stanfit = sm.sampling(data=stan_data, iter=1, chains=1,
-                              verbose=False, refresh=10,
-                              control={'adapt_engaged': False})
-        print("Stan model compiled and runs ok...ignore various warnings.")
+        # compile stan
+        sm = pystan.StanModel(model_code=stan_code)
         self._compiled_stan = sm
-        self._fit = stanfit
-        self._log_prob = stanfit.log_prob
-        self._grad_log_prob = stanfit.grad_log_prob
-        names = stanfit.unconstrained_param_names()
-        self._n_parameters = len(names)
-        self._names, self._index = self._initialise_dict_index(names)
-        self._long_names = names
-        self._counter = Counter(self._index)
-        self._dict = {self._names[i]: [] for i in range(len(self._names))}
+
+        # only create stanfit if data supplied
+        if stan_data is None:
+            stanfit = None
+        else:
+            stanfit = sm.sampling(data=stan_data, iter=1, chains=1,
+                                  verbose=False, refresh=0,
+                                  control={'adapt_engaged': False})
+        self._initialise(stanfit)
 
     def __call__(self, x):
+        if self._fit is None:
+            raise RuntimeError(
+                "No data supplied to create Stan model fit object. " +
+                "Run `create_stan_model_fit` first.")
         vals = self._prepare_values(x)
         try:
             return self._log_prob(vals, adjust_transform=True)
@@ -103,6 +94,10 @@ class StanLogPDF(pints.LogPDF):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        if self._fit is None:
+            raise RuntimeError(
+                "No data supplied to create Stan model fit object. " +
+                "Run `create_stan_model_fit` first.")
         vals = self._prepare_values(x)
         try:
             val = self._log_prob(vals, adjust_transform=True)
@@ -110,6 +105,29 @@ class StanLogPDF(pints.LogPDF):
             return val, dp.reshape(-1)
         except (RuntimeError, ValueError):
             return -np.inf, np.ones(self._n_parameters).reshape(-1)
+
+    def _initialise(self, stanfit):
+        """ Initialises internal variables. """
+        if stanfit is None:
+            self._fit = None
+            self._log_prob = None
+            self._grad_log_prob = None
+            self._n_parameters = None
+            self._names = None
+            self._index = None
+            self._long_names = None
+            self._counter = None
+            self._dict = None
+        else:
+            self._fit = stanfit
+            self._log_prob = stanfit.log_prob
+            self._grad_log_prob = stanfit.grad_log_prob
+            names = stanfit.unconstrained_param_names()
+            self._n_parameters = len(names)
+            self._names, self._index = self._initialise_dict_index(names)
+            self._long_names = names
+            self._counter = Counter(self._index)
+            self._dict = {self._names[i]: [] for i in range(len(self._names))}
 
     def _initialise_dict_index(self, names):
         """ Initialises dictionary and index of names. """
@@ -132,6 +150,21 @@ class StanLogPDF(pints.LogPDF):
     def n_parameters(self):
         """ See `pints.LogPDF.n_parameters`. """
         return self._n_parameters
+
+    def create_stan_model_fit(self, stan_data):
+        """
+        Creates a callable Stan model fit object using supplied data.
+
+        Parameters
+        ----------
+        stan_data
+            Data in Python dictionary format as required by PyStan.
+        """
+        stanfit = self._compiled_stan.sampling(
+            data=stan_data, iter=1, chains=1,
+            verbose=False, refresh=0,
+            control={'adapt_engaged': False})
+        self._initialise(stanfit)
 
     def _prepare_values(self, x):
         """ Flattens lists from PyStan's dictionary. """
