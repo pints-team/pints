@@ -145,8 +145,7 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(dp[1], 0.25)
 
     def test_vector_parameters_model(self):
-        # tests that interface runs with Stan model with declared vector
-        # of parameters
+        # tests interface with stan models with vectorised parameters
         stanmodel = pints.interfaces.StanLogPDF(stan_code=self.code2,
                                                 stan_data=self.data2)
         stanmodel(np.random.uniform(size=10))
