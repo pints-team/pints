@@ -126,6 +126,11 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(dp[0], 1.25)
         self.assertEqual(dp[1], 0.625)
 
+        # test -inf returned with negative sd
+        x_err = [1, -1]
+        self.assertEqual(stanmodel(x_err), -np.inf)
+        self.assertEqual(stanmodel.evaluateS1(x_err)[0], -np.inf)
+
         # check constrained model
         stanmodel.create_stan_model_fit(stan_data=self.data)
         stanmodel1 = pints.interfaces.StanLogPDF(stan_code=self.code1,
