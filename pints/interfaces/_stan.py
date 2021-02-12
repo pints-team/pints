@@ -41,8 +41,8 @@ class StanLogPDF(pints.LogPDF):
             Stan code describing the model.
         stan_data
             Data in Python dictionary format as required by PyStan. Defaults to
-            None in which case `inject_data` must be called to create Stan
-            model fit object before calling.
+            None in which case `update_data` must be called to create a valid
+            Stan model fit object before calling.
 
         References
         ----------
@@ -67,7 +67,7 @@ class StanLogPDF(pints.LogPDF):
         if self._fit is None:
             raise RuntimeError(
                 "No data supplied to create Stan model fit object. " +
-                "Run `create_stan_model_fit` first.")
+                "Run `update_data` first.")
         vals = self._prepare_values(x)
         try:
             return self._log_prob(vals, adjust_transform=True)
@@ -97,7 +97,7 @@ class StanLogPDF(pints.LogPDF):
         if self._fit is None:
             raise RuntimeError(
                 "No data supplied to create Stan model fit object. " +
-                "Run `create_stan_model_fit` first.")
+                "Run `update_data` first.")
         vals = self._prepare_values(x)
         try:
             val = self._log_prob(vals, adjust_transform=True)
@@ -151,9 +151,9 @@ class StanLogPDF(pints.LogPDF):
         """ See `pints.LogPDF.n_parameters`. """
         return self._n_parameters
 
-    def create_stan_model_fit(self, stan_data):
+    def update_data(self, stan_data):
         """
-        Creates a callable Stan model fit object using supplied data.
+        Updates data passed to the underlying Stan model.
 
         Parameters
         ----------

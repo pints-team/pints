@@ -105,7 +105,7 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertRaises(RuntimeError, stanmodel.evaluateS1, x)
 
         # test vals and sensitivities: first supply data
-        stanmodel.create_stan_model_fit(stan_data=self.data)
+        stanmodel.update_data(stan_data=self.data)
         # add log(2) since this accounts for constant
         self.assertAlmostEqual(stanmodel(x), -0.8181471805599453)
         val, dp = stanmodel.evaluateS1(x)
@@ -119,7 +119,7 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(stanmodel.n_parameters(), 2)
 
         # change data
-        stanmodel.create_stan_model_fit(stan_data={'N': 2, 'y': [3, 4]})
+        stanmodel.update_data(stan_data={'N': 2, 'y': [3, 4]})
         self.assertAlmostEqual(stanmodel(x), -3.011294361119891)
         val, dp = stanmodel.evaluateS1(x)
         self.assertEqual(val, stanmodel(x))
@@ -132,7 +132,7 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(stanmodel.evaluateS1(x_err)[0], -np.inf)
 
         # check constrained model
-        stanmodel.create_stan_model_fit(stan_data=self.data)
+        stanmodel.update_data(stan_data=self.data)
         stanmodel1 = pints.interfaces.StanLogPDF(stan_code=self.code1,
                                                  stan_data=self.data)
         # note the below contains the Jacobian transform -log(2)
