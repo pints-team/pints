@@ -220,11 +220,13 @@ class DreamMCMC(pints.MultiChainMCMC):
         # logger.log(self._acceptance)
         # TODO
 
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
+    @staticmethod
+    def name():
+        """ See :staticmeth:`pints.MCMCSampler.name()`. """
         return 'DiffeRential Evolution Adaptive Metropolis (DREAM) MCMC'
 
-    def needs_initial_phase(self):
+    @staticmethod
+    def needs_initial_phase():
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return True
 

@@ -158,7 +158,8 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._Y[self._proposal_count] = proposed
         return proposed
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Delayed Rejection Adaptive Metropolis (Dram) MCMC'
 

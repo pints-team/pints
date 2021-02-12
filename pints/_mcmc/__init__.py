@@ -20,7 +20,8 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
     :class:`pints.TunableMethod` interfaces.
     """
 
-    def name(self):
+    @staticmethod
+    def name():
         """
         Returns this method's full name.
         """
@@ -610,6 +611,22 @@ class MCMCController(object):
         else:
             evaluator = pints.SequentialEvaluator(f)
 
+        # Some samplers need intermediate steps, where None is returned instead
+        # of a sample. But samplers can run asynchronously, so that one returns
+        # None while another returns a sample. To deal with this, we maintain a
+        # list of 'active' samplers that have not reached `max_iterations` yet,
+        # and we store the number of samples that we have in each chain.
+        if self._single_chain:
+            active = list(range(self._n_chains))
+            n_samples = [0] * self._n_chains
+
+        # initialise samplers for each chain
+        self._initialise_samplers(self._init_fn, self._single_chain,
+                                  self._n_chains, evaluator,
+                                  self._max_initialisation_tries,
+                                  self._sigma0, self._transform,
+                                  self._needs_sensitivities)
+
         # Initial phase
         if self._needs_initial_phase:
             for sampler in self._samplers:
@@ -664,7 +681,7 @@ class MCMCController(object):
         logging = self._log_to_screen or self._log_filename
         if logging:
             if self._log_to_screen:
-                print('Using ' + str(self._samplers[0].name()))
+                print('Using ' + str(self._method.name()))
                 print('Generating ' + str(self._n_chains) + ' chains.')
                 if self._parallel:
                     print('Running in parallel with ' + str(n_workers) +
@@ -715,22 +732,6 @@ class MCMCController(object):
             else:
                 # Store pdf
                 evaluations = np.zeros((self._n_chains, self._max_iterations))
-
-        # Some samplers need intermediate steps, where None is returned instead
-        # of a sample. But samplers can run asynchronously, so that one returns
-        # None while another returns a sample. To deal with this, we maintain a
-        # list of 'active' samplers that have not reached `max_iterations` yet,
-        # and we store the number of samples that we have in each chain.
-        if self._single_chain:
-            active = list(range(self._n_chains))
-            n_samples = [0] * self._n_chains
-
-        # initialise samplers for each chain
-        self._initialise_samplers(self._init_fn, self._single_chain,
-                                  self._n_chains, evaluator,
-                                  self._max_initialisation_tries,
-                                  self._sigma0, self._transform,
-                                  self._needs_sensitivities)
 
         # Start sampling
         timer = pints.Timer()

@@ -98,9 +98,9 @@ class TestHaarioBardenetACMC(unittest.TestCase):
 
     def test_name(self):
         # Test name method
-        mcmc = pints.HaarioBardenetACMC(self.real_parameters)
         self.assertEqual(
-            mcmc.name(), 'Haario-Bardenet adaptive covariance MCMC')
+            pints.HaarioBardenetACMC.name(),
+            'Haario-Bardenet adaptive covariance MCMC')
 
     def test_logging(self):
         # Test logging includes name.

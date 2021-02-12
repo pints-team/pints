@@ -80,7 +80,8 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         return np.random.multivariate_normal(
             self._current, self._lambda * self._sigma)
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Rao-Blackwell adaptive covariance MCMC'
 
@@ -90,4 +91,3 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         self._X = np.copy(self._current)
 
         return super(RaoBlackwellACMC, self).tell(fx)
-

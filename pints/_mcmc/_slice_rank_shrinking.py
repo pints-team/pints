@@ -157,7 +157,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         """
         return self._current_log_y
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Covariance-Adaptive: Rank Shrinking.'
 

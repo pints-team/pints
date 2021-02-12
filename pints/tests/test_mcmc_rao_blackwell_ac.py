@@ -97,8 +97,8 @@ class TestRaoBlackwellACMC(unittest.TestCase):
 
     def test_name(self):
         # Test name method
-        mcmc = pints.RaoBlackwellACMC(self.real_parameters)
-        self.assertEqual(mcmc.name(), 'Rao-Blackwell adaptive covariance MCMC')
+        self.assertEqual(pints.RaoBlackwellACMC.name(),
+                         'Rao-Blackwell adaptive covariance MCMC')
 
     def test_logging(self):
 

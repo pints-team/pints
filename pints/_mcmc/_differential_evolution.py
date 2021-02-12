@@ -193,7 +193,8 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         else:
             self._b_star = np.repeat(self._b, self._n_parameters)
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Differential Evolution MCMC'
 

@@ -136,7 +136,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         # Test initial phase setting
 
         mcmc = pints.HaarioACMC(self.real_parameters)
-        self.assertTrue(mcmc.needs_initial_phase())
+        self.assertTrue(pints.HaarioACMC.needs_initial_phase())
         self.assertTrue(mcmc.in_initial_phase())
         mcmc.set_initial_phase(True)
         self.assertTrue(mcmc.in_initial_phase())

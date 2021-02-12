@@ -74,7 +74,8 @@ class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
         return np.random.multivariate_normal(
             self._current, self._sigma * np.exp(self._log_lambda))
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Haario-Bardenet adaptive covariance MCMC'
 
@@ -92,4 +93,3 @@ class AdaptiveCovarianceMCMC(HaarioBardenetACMC):
             'The class `pints.AdaptiveCovarianceMCMC` is deprecated.'
             ' Please use `pints.HaarioBardenetACMC` instead.')
         super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
-

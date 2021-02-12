@@ -163,7 +163,7 @@ class TestDramACMC(unittest.TestCase):
         scale1 = scale1[::-1]
         self.assertTrue(np.array_equal(scale, scale1))
 
-        self.assertEqual(mcmc.name(), (
+        self.assertEqual(pints.DramACMC.name(), (
             'Delayed Rejection Adaptive Metropolis (Dram) MCMC'))
 
     def test_logging(self):

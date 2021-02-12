@@ -53,8 +53,8 @@ class TestSliceDoubling(unittest.TestCase):
 
     def test_name(self):
         # Tests the sampler's name
-        mcmc = pints.SliceDoublingMCMC(np.array([1, 2]))
-        self.assertEqual(mcmc.name(), 'Slice Sampling - Doubling')
+        self.assertEqual(pints.SliceDoublingMCMC.name(),
+                         'Slice Sampling - Doubling')
 
     def test_width(self):
         # Test width methods

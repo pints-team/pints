@@ -76,7 +76,7 @@ class TestDreamMCMC(unittest.TestCase):
         self.assertFalse(mcmc.constant_crossover())
 
         # Starts in initial phase
-        self.assertTrue(mcmc.needs_initial_phase())
+        self.assertTrue(pints.DreamMCMC.needs_initial_phase())
         self.assertTrue(mcmc.in_initial_phase())
 
         # Perform short run

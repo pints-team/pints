@@ -161,7 +161,8 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 1
 
-    def needs_initial_phase(self):
+    @staticmethod
+    def needs_initial_phase():
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return True
 
@@ -296,4 +297,3 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
 
         # Return current sample
         return self._current
-

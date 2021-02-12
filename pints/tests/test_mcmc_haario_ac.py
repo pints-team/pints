@@ -97,8 +97,8 @@ class TestHaarioACMC(unittest.TestCase):
 
     def test_name(self):
         # Test name method
-        mcmc = pints.HaarioACMC(self.real_parameters)
-        self.assertEqual(mcmc.name(), 'Haario adaptive covariance MCMC')
+        self.assertEqual(pints.HaarioACMC.name(),
+                         'Haario adaptive covariance MCMC')
 
     def test_logging(self):
 

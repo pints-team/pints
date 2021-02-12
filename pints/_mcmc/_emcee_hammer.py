@@ -124,7 +124,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Update sampler state
         self._running = True
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Emcee Hammer MCMC'
 

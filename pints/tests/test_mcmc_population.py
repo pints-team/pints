@@ -62,7 +62,7 @@ class TestPopulationMCMC(unittest.TestCase):
 
         # PopulationMCMC uses adaptive covariance internally, so requires an
         # initial phase
-        self.assertTrue(mcmc.needs_initial_phase())
+        self.assertTrue(pints.PopulationMCMC.needs_initial_phase())
         self.assertTrue(mcmc.in_initial_phase())
 
         # Test schedule

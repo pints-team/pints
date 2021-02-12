@@ -76,7 +76,7 @@ class TestSliceRankShrinking(unittest.TestCase):
 
         # Test name
         self.assertEqual(
-            mcmc.name(),
+            pints.SliceRankShrinkingMCMC.name(),
             'Slice Sampling - Covariance-Adaptive: Rank Shrinking.')
 
         # Test set_sigma_c(), sigma_c()

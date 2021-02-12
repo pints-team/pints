@@ -297,7 +297,8 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         """
         return self._m
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Monomial-Gamma Hamiltonian Monte Carlo'
 

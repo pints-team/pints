@@ -53,8 +53,8 @@ class TestSliceStepout(unittest.TestCase):
 
     def test_name(self):
         # Tests the sampler's name
-        mcmc = pints.SliceStepoutMCMC(np.array([1, 2]))
-        self.assertEqual(mcmc.name(), 'Slice Sampling - Stepout')
+        self.assertEqual(pints.SliceStepoutMCMC.name(),
+                         'Slice Sampling - Stepout')
 
     def test_width(self):
         # Test width methods

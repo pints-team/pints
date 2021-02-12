@@ -619,7 +619,8 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 1
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'No-U-Turn MCMC'
 

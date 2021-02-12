@@ -158,10 +158,12 @@ class PopulationMCMC(pints.SingleChainMCMC):
         logger.log(self._j)
         logger.log('yes' if self._have_exchanged else 'no')
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Population MCMC'
 
+    @staticmethod
     def needs_initial_phase(self):
         """ See :meth:`pints.MCMCSampler.needs_initial_phase()`. """
         return self._needs_initial_phase

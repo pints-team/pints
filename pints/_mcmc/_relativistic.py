@@ -216,7 +216,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 4
 
-    def name(self):
+    @staticmethod
+    def name():
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Relativistic MCMC'
 
