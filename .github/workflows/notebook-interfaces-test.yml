@@ -1,22 +1,15 @@
-name: Unit tests (OS versions)
+name: Notebooks (interfaces)
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - '**'
+  schedule:
+    # 4am daily
+    - cron:  '0 4 * * *'
 
 jobs:
 
   build-and-test:
-    name: OS unit tests
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-16.04, macos-latest, windows-latest]
+    name: interfaces
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
@@ -32,7 +25,9 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
+          python -m pip install .[dev]
 
-      - name: run unit tests
+      - name: run jupyter notebooks
         run: |
-          python run-tests.py --unit
+          python -m pip install statsmodels
+          python run-tests.py --interfaces
