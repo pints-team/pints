@@ -67,16 +67,20 @@ class TestStanLogPDF(unittest.TestCase):
     def test_calling(self):
         # tests instantiation
         stanmodel = pints.interfaces.StanLogPDF(stan_code=self.code)
-        stanmodel.create_stan_model_fit(stan_data=self.data)
 
-        # test vals and sensitivities
+        # tests mistakenly calling model before data supplied
         x = [1, 2]
+        self.assertRaises(RuntimeError, stanmodel, x)
+        self.assertRaises(RuntimeError, stanmodel.evaluateS1, x)
+
+        # test vals and sensitivities: first supply data
+        stanmodel.create_stan_model_fit(stan_data=self.data)
         # add log(2) since this accounts for constant
         self.assertAlmostEqual(stanmodel(x), -0.8181471805599453)
         val, dp = stanmodel.evaluateS1(x)
         self.assertEqual(val, stanmodel(x))
-        self.assertEqual(dp[0], -1 / 4)
-        self.assertEqual(dp[1], -3 / 8)
+        self.assertEqual(dp[0], -0.25)
+        self.assertEqual(dp[1], -0.375)
 
         # check getters
         self.assertEqual(stanmodel.names()[0], 'mu')
@@ -101,8 +105,8 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(stanmodel1(y) - np.log(2), stanmodel(x))
         val, dp = stanmodel1.evaluateS1(y)
         self.assertEqual(val, stanmodel1(y))
-        self.assertEqual(dp[0], -1 / 4)
-        self.assertEqual(dp[1], 1 / 4)
+        self.assertEqual(dp[0], -0.25)
+        self.assertEqual(dp[1], 0.25)
 
 
 if __name__ == '__main__':
