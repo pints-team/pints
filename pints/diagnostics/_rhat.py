@@ -5,64 +5,8 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+
 import numpy as np
-
-
-def autocorrelation(x):
-    """
-    Calculates autocorrelation for a vector ``x`` using a spectrum density
-    calculation.
-    """
-    x = (x - np.mean(x)) / (np.std(x) * np.sqrt(len(x)))
-    result = np.correlate(x, x, mode='full')
-    return result[int(result.size / 2):]
-
-
-def _autocorrelate_negative(autocorrelation):
-    """
-    Returns the index of the first negative entry in ``autocorrelation``, or
-    ``len(autocorrelation)`` if no negative entry is found.
-    """
-    try:
-        return np.where(np.asarray(autocorrelation) < 0)[0][0]
-    except IndexError:
-        return len(autocorrelation)
-
-
-def effective_sample_size_single_parameter(x):
-    """
-    Calculates effective sample size (ESS) for samples of a single parameter.
-
-    Parameters
-    ----------
-    x
-        A sequence (e.g. a list or a 1-dimensional array) of parameter values.
-    """
-    rho = autocorrelation(x)
-    T = _autocorrelate_negative(rho)
-    n = len(x)
-    ess = n / (1 + 2 * np.sum(rho[0:T]))
-    return ess
-
-
-def effective_sample_size(samples):
-    """
-    Calculates effective sample size (ESS) for a list of n-dimensional samples.
-
-    Parameters
-    ----------
-    samples
-        A 2d array of shape ``(n_samples, n_parameters)``.
-    """
-    try:
-        n_samples, n_params = samples.shape
-    except (ValueError, IndexError):
-        raise ValueError('Samples must be given as a 2d array.')
-    if n_samples < 2:
-        raise ValueError('At least two samples must be given.')
-
-    return [effective_sample_size_single_parameter(samples[:, i])
-            for i in range(0, n_params)]
 
 
 def _within(chains):
@@ -133,7 +77,7 @@ def _between(chains):
 def rhat(chains, warm_up=0.0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
-    posterior according to [1]_.
+    marginal posteriors of the parameters according to [1]_.
 
     :math:`\hat{R}` diagnoses convergence by checking mixing and stationarity
     of :math:`m` chains (at least two, :math:`m\geq 2`). To diminish the

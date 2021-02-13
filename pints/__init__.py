@@ -159,7 +159,6 @@ from ._evaluation import (
     SequentialEvaluator,
 )
 
-
 #
 # Optimisation
 #
@@ -180,17 +179,6 @@ from ._optimisers._nelder_mead import NelderMead
 from ._optimisers._pso import PSO
 from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
-
-
-#
-# Diagnostics
-#
-from ._diagnostics import (
-    effective_sample_size,
-    rhat,
-    rhat_all_params,
-)
-
 
 #
 #  MCMC
@@ -233,7 +221,6 @@ else:   # pragma: no python 3 cover
     import warnings
     warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 
-
 #
 # Nested samplers
 #
@@ -241,7 +228,6 @@ from ._nested import NestedSampler
 from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
-
 
 #
 # Transformation
@@ -259,7 +245,6 @@ from ._transformation import (
     TransformedLogPDF,
     TransformedLogPrior,
 )
-
 
 #
 # Noise generators (always import!)
