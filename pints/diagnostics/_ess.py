@@ -224,8 +224,8 @@ def effective_sample_size(samples, combine_chains=True):
     by the normalised within chain variances
 
     .. math::
-        \bar{\rho}_n = \frac{1}{M}\sum ^M_{m=1}w_m \hat{\rho}_{nm}\quad
-        \text{and} \quad w_m = \frac{\sigma ^2_m}{W},
+        \bar{\rho}_n = \sum ^M_{m=1}w_m \hat{\rho}_{nm}\quad
+        \text{and} \quad w_m = \frac{\sigma ^2_m}{MW},
 
     where :math:`\hat{\rho}_{nm}` is the autocorrelation of chain
     :math:`m` at lag :math:`n`. :math:`W` is the mean within chain variance
@@ -295,47 +295,32 @@ def effective_sample_size(samples, combine_chains=True):
 
         return eff_sample_sizes
 
+    # Create container for combined ESSs
+    eff_sample_sizes = np.empty(shape=n_parameters)
 
-    # n_chain, n_draw = ary.shape
-    # acov = _autocov(ary, axis=1)
-    # chain_mean = ary.mean(axis=1)
-    # mean_var = np.mean(acov[:, 0]) * n_draw / (n_draw - 1.0)
-    # var_plus = mean_var * (n_draw - 1.0) / n_draw
-    # if n_chain > 1:
-    #     var_plus += _numba_var(svar, np.var, chain_mean, axis=None, ddof=1)
+    # Compute unnormalised weights for autocorrelations
+    within_chain_variances = np.var(samples, axis=1, ddof=1)
 
-    rho_hat_t = np.zeros(n_draw)
-    rho_hat_even = 1.0
-    rho_hat_t[0] = rho_hat_even
-    rho_hat_odd = 1.0 - (mean_var - np.mean(acov[:, 1])) / var_plus
-    rho_hat_t[1] = rho_hat_odd
+    # Compute ESS for each parameter
+    for param_id in range(n_parameters):
+        # Compute weighted autocorrelations
+        autocorr = np.average(
+            autocorrs[:, param_id],
+            axis=0,
+            weights=within_chain_variances[:, param_id])
 
-    # Geyer's initial positive sequence
-    t = 1
-    while t < (n_draw - 3) and (rho_hat_even + rho_hat_odd) > 0.0:
-        rho_hat_even = 1.0 - (mean_var - np.mean(acov[:, t + 1])) / var_plus
-        rho_hat_odd = 1.0 - (mean_var - np.mean(acov[:, t + 2])) / var_plus
-        if (rho_hat_even + rho_hat_odd) >= 0:
-            rho_hat_t[t + 1] = rho_hat_even
-            rho_hat_t[t + 2] = rho_hat_odd
-        t += 2
+        # Compute autocorrelation sum
+        trunc_index = _get_geyer_truncation(autocorr)
+        autocorr = np.sum(autocorr[1:trunc_index])
 
-    max_t = t - 2
-    # improve estimation
-    if rho_hat_even > 0:
-        rho_hat_t[max_t + 1] = rho_hat_even
-    # Geyer's initial monotone sequence
-    t = 1
-    while t <= max_t - 2:
-        if (rho_hat_t[t + 1] + rho_hat_t[t + 2]) > (rho_hat_t[t - 1] + rho_hat_t[t]):
-            rho_hat_t[t + 1] = (rho_hat_t[t - 1] + rho_hat_t[t]) / 2.0
-            rho_hat_t[t + 2] = rho_hat_t[t + 1]
-        t += 2
+        # Compute effective samples size
+        ess = n_chains * n_samples / (1 + 2 * autocorr)
 
-    ess = n_chain * n_draw
-    tau_hat = -1.0 + 2.0 * np.sum(rho_hat_t[: max_t + 1]) + np.sum(rho_hat_t[max_t + 1 : max_t + 2])
-    tau_hat = max(tau_hat, 1 / np.log10(ess))
-    ess = (1 if relative else ess) / tau_hat
-    if np.isnan(rho_hat_t).any():
-        ess = np.nan
-    return ess
+        # Add to conatainer
+        eff_sample_sizes[param_id] = ess
+
+    # Remove padded dimensions
+    if n_parameters == 1:
+        return eff_sample_sizes[0]
+
+    return eff_sample_sizes
