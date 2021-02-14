@@ -110,24 +110,26 @@ def autocorrelation(chains):
     """
     # Make sure samples have the correct dimensions
     chains = np.asarray(chains)
-    if (chains.dims < 2) or (chains.dims > 3):
+    if (chains.ndim < 2) or (chains.ndim > 3):
         raise ValueError(
             'The chains array must have 2 or 3 dimensions.')
 
     # Reshape chains for later convenience
-    if chains.dims == 2:
+    if chains.ndim == 2:
         # Add chain dimension
         chains = chains[np.newaxis, :, :]
 
     # Standardise sample (center and normalise by std.)
-    chains = (chains - np.mean(chains, axis=1)) / np.std(chains, axis=1)
+    std = np.std(chains, axis=1)[:, np.newaxis, :]
+    mean = np.mean(chains, axis=1)[:, np.newaxis, :]
+    chains = (chains - mean) / std
 
     # Create container for autocorrelations
     n_chains, n_samples, n_parameters = chains.shape
     autocorrelations = np.empty(shape=(n_chains, n_samples, n_parameters))
 
     # Compute autocorrelations for each chain and each parameter
-    chains = chains.swapaxes(chains, axis1=1, axis2=2)
+    chains = chains.swapaxes(1, 2)
     for chain_id, chain_samples in enumerate(chains):
         for param_id, parameter_samples in enumerate(chain_samples):
             # Compute mean correlation
@@ -140,10 +142,10 @@ def autocorrelation(chains):
             # exactly overlap with the other samples, i.e. we compute compute
             # the correlation of each sample with itself.
             # (autocorr has length 2*n_samples - 1)
-            autocorr = autocorr[n_samples:]
+            autocorr = autocorr[n_samples - 1:]
 
             # Add to container
-            autocorrelations[chain_id, :, param_id]
+            autocorrelations[chain_id, :, param_id] = autocorr
 
     return autocorrelations
 
@@ -239,18 +241,18 @@ def effective_sample_size(chains, combine_chains=True):
     """
     # Make sure chains have the correct dimensions
     chains = np.asarray(chains)
-    if (chains.dims < 2) or (chains.dims > 3):
+    if (chains.ndim < 2) or (chains.ndim > 3):
         raise ValueError(
             'The chains array must have 2 or 3 dimensions.')
 
     # Reshape chains for later convenience
-    if chains.dims == 2:
+    if chains.ndim == 2:
         # Add chain dimension
         chains = chains[np.newaxis, :, :]
 
     # Compute autocorrelation of each chain and reshape for convenience
     autocorrs = autocorrelation(chains)
-    autocorrs = np.swapaxes(autocorrs, axis1=1, axis2=2)
+    autocorrs = autocorrs.swapaxes(1, 2)
 
     # Return individual ESS if only one chain has been passed or
     # combine_chains=False
@@ -260,9 +262,9 @@ def effective_sample_size(chains, combine_chains=True):
         eff_sample_sizes = np.empty(shape=(n_chains, n_parameters))
 
         # Compute ESS for each chain
-        for chain_id, chain_autorrs in autocorrs:
+        for chain_id, chain_autorrs in enumerate(autocorrs):
             # Compute ESS for each parameter
-            for param_id, autocorr in chain_autorrs:
+            for param_id, autocorr in enumerate(chain_autorrs):
                 # Compute autocorrelation sum
                 trunc_index = _get_geyer_truncation(autocorr)
                 autocorr = np.sum(autocorr[1:trunc_index])
