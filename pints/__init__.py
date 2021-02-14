@@ -181,6 +181,15 @@ from ._optimisers._snes import SNES
 from ._optimisers._xnes import XNES
 
 #
+# Diagnostics
+#
+from ._diagnostics import (
+    effective_sample_size,
+    rhat,
+    rhat_all_params,
+)
+
+#
 #  MCMC
 #
 from ._mcmc import (
