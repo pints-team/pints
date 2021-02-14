@@ -9,6 +9,44 @@
 import numpy as np
 
 
+def _get_geyer_truncation(autocorrelation):
+    """
+    Estmiates the lag index of a autocorrelation sequence at which the
+    estimation noise starts to dominate.
+
+    The theory is following Geyer (1992) and essentially looks at the
+    sum of even and odd lag pairs starting at 0. If the sum is negative
+    the noise dominates the estimate.
+
+    E.g.
+    If sum of lag 0 and 1 is positive, check sum of lag 2 and 3.
+    If sum of lag 2 and 3 is positive, check sum of lag 4 and 5.
+    etc.
+    if sum of lag n and n+1 is negative, truncate the autocorrelation
+    sequence at n-1.
+    """
+    # Split sequence into even and odd
+    even = autocorrelation[::2]
+    odd = autocorrelation[1::2]
+
+    # Make sure there are equally many even and odd entries
+    max_index = np.min([len(even), len(odd)])
+    even = even[:max_index]
+    odd = odd[:max_index]
+
+    # Compute sum and determine first negative entry
+    even_and_odd_sum = even + odd
+    mask = even_and_odd_sum < 0
+    index = np.argmax(mask)
+    if np.alltrue(~mask):
+        index = max_index
+
+    # Get truncation index for original sequence
+    truncation_index = 2 * index - 1
+
+    return truncation_index
+
+
 def autocorrelation(samples):
     r"""
     Calculates the autocorrelation of samples for different lags.
@@ -62,7 +100,7 @@ def autocorrelation(samples):
         simultaneously for :math:`m` chains.
     :type samples: np.ndarray of shape (n, p) or (m, n, p)
     """
-    # Make sure samples are one-dimensional
+    # Make sure samples have the correct dimensions
     samples = np.asarray(samples)
     if (samples.dims < 2) or (samples.dims > 3):
         raise ValueError(
@@ -215,12 +253,77 @@ def effective_sample_size(samples, combine_chains=True):
         :class:`numpy.ndarray` of shape (m, p).
     :type combine_chains: bool, optional
     """
-    try:
-        n_samples, n_params = samples.shape
-    except (ValueError, IndexError):
-        raise ValueError('Samples must be given as a 2d array.')
-    if n_samples < 2:
-        raise ValueError('At least two samples must be given.')
+    # Make sure samples have the correct dimensions
+    samples = np.asarray(samples)
+    if (samples.dims < 2) or (samples.dims > 3):
+        raise ValueError(
+            'The samples array must have 2 or 3 dimensions.')
 
-    return [effective_sample_size_single_parameter(samples[:, i])
-            for i in range(0, n_params)]
+    # Reshape samples for later convenience
+    if samples.dims == 2:
+        # Add chain dimension
+        samples = samples[np.newaxis, :, :]
+
+    # Compute autocorrelation of each chain and reshape for convenience
+    autocorrs = autocorrelation(samples)
+    autocorrs = np.swapaxes(autocorrs, axis1=1, axis2=2)
+
+    # Return individual ESS if only one chain has been passed or
+    # combine_chains=False
+    n_chains, _, n_parameters = samples.shape
+    if (n_chains == 1) or (combine_chains is False):
+        # Create container for ESSs
+        eff_samples_sizes = np.empty(shape=(n_chains, n_parameters))
+
+        # Compute ESS for each chain
+        for chain_id, chain_autorrs in autocorrs:
+            # Compute ESS for each parameter
+            for param_id, autocorr in chain_autorrs:
+                # Get stable correlation estimates
+                trunc_index = _get_geyer_truncation(autocorr)
+                autocorr = autocorr
+
+
+    # n_chain, n_draw = ary.shape
+    # acov = _autocov(ary, axis=1)
+    # chain_mean = ary.mean(axis=1)
+    # mean_var = np.mean(acov[:, 0]) * n_draw / (n_draw - 1.0)
+    # var_plus = mean_var * (n_draw - 1.0) / n_draw
+    # if n_chain > 1:
+    #     var_plus += _numba_var(svar, np.var, chain_mean, axis=None, ddof=1)
+
+    rho_hat_t = np.zeros(n_draw)
+    rho_hat_even = 1.0
+    rho_hat_t[0] = rho_hat_even
+    rho_hat_odd = 1.0 - (mean_var - np.mean(acov[:, 1])) / var_plus
+    rho_hat_t[1] = rho_hat_odd
+
+    # Geyer's initial positive sequence
+    t = 1
+    while t < (n_draw - 3) and (rho_hat_even + rho_hat_odd) > 0.0:
+        rho_hat_even = 1.0 - (mean_var - np.mean(acov[:, t + 1])) / var_plus
+        rho_hat_odd = 1.0 - (mean_var - np.mean(acov[:, t + 2])) / var_plus
+        if (rho_hat_even + rho_hat_odd) >= 0:
+            rho_hat_t[t + 1] = rho_hat_even
+            rho_hat_t[t + 2] = rho_hat_odd
+        t += 2
+
+    max_t = t - 2
+    # improve estimation
+    if rho_hat_even > 0:
+        rho_hat_t[max_t + 1] = rho_hat_even
+    # Geyer's initial monotone sequence
+    t = 1
+    while t <= max_t - 2:
+        if (rho_hat_t[t + 1] + rho_hat_t[t + 2]) > (rho_hat_t[t - 1] + rho_hat_t[t]):
+            rho_hat_t[t + 1] = (rho_hat_t[t - 1] + rho_hat_t[t]) / 2.0
+            rho_hat_t[t + 2] = rho_hat_t[t + 1]
+        t += 2
+
+    ess = n_chain * n_draw
+    tau_hat = -1.0 + 2.0 * np.sum(rho_hat_t[: max_t + 1]) + np.sum(rho_hat_t[max_t + 1 : max_t + 2])
+    tau_hat = max(tau_hat, 1 / np.log10(ess))
+    ess = (1 if relative else ess) / tau_hat
+    if np.isnan(rho_hat_t).any():
+        ess = np.nan
+    return ess
