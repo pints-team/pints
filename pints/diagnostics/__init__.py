@@ -12,5 +12,6 @@ from ._ess import (  # noqa
 )
 
 from ._rhat import (  # noqa
-    rhat
+    rhat,
+    rhat_all_params
 )
