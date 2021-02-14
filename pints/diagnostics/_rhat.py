@@ -36,11 +36,11 @@ def _within_variance(chains):
 
     .. math::
         W = \frac{1}{m}\sum _{j=1}^{m}s_j^2\quad \text{where}\quad
-        s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\psi _{ij} - \bar{\psi} _j)^2.
+        s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\theta _{ij} - \bar{\theta} _j)^2.
 
-    Here, :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
-    chain and :math:`\bar{\psi _j}=\sum _{i=1}^{n}\psi _{ij}/n` is the within
-    chain mean of the parameter :math:`\psi`.
+    Here, :math:`\theta _{ij}` is the :math:`j`th sample of the :math:`i`th
+    chain and :math:`\bar{\theta _j}=\sum _{i=1}^{n}\theta _{ij}/n` is the within
+    chain mean of the parameter :math:`\theta`.
 
     Parameters
     ----------
@@ -83,12 +83,12 @@ def _between_variance(chains):
     :math:`n` is defined as
 
     .. math::
-        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2,
+        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\theta} _j - \bar{\theta})^2,
 
-    where :math:`\psi _{ij}` is the :math:`j`th sample of the :math:`i`th
-    chain, :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
-    chain mean of the parameter :math:`\psi`, and
-    :math:`\bar{\psi } = \sum _{j=1}^{m}\bar{\psi} _{j}/m` is the between
+    where :math:`\theta _{ij}` is the :math:`j`th sample of the :math:`i`th
+    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the within
+    chain mean of the parameter :math:`\theta`, and
+    :math:`\bar{\theta } = \sum _{j=1}^{m}\bar{\theta} _{j}/m` is the between
     chain mean of the within chain means.
 
     Parameters
@@ -139,10 +139,10 @@ def multivariate_rhat(chains, warmup_iter=0):
     .. math::
         W^{\mu \nu} = \frac{1}{m'}\sum _{j=1}^{m'}s^{\mu \nu}_j, \quad
         B^{\mu \nu} = \frac{n'}{m'-1}\sum _{j=1}^{m'}
-        (\bar{\psi} ^{\mu}_j - \bar{\psi}^{\mu})
-        (\bar{\psi} ^{\nu}_j - \bar{\psi}^{\nu}),
+        (\bar{\theta} ^{\mu}_j - \bar{\theta}^{\mu})
+        (\bar{\theta} ^{\nu}_j - \bar{\theta}^{\nu}),
 
-    where :math:`\psi ^{\mu}_{ij}` is the :math:`i^{\text{th}}` sample of the
+    where :math:`\theta ^{\mu}_{ij}` is the :math:`i^{\text{th}}` sample of the
     :math:`j^{\text{th}}` chain of the :math:`\mu^{\text{th}}` dimension in
     parameter space, and :math:`s^{\mu \nu}_j` is the estimated covariance
     between parameter :math:`\mu` and :math:`\nu` in the
@@ -150,8 +150,8 @@ def multivariate_rhat(chains, warmup_iter=0):
 
     .. math::
         s^{\mu \nu}_j = \frac{1}{n'-1}\sum _{i=1}^{n'}
-        (\psi ^{\mu}_{ij} - \bar{\psi} ^{\mu}_j)
-        (\psi ^{\nu}_{ij} - \bar{\psi} ^{\nu}_j).
+        (\theta ^{\mu}_{ij} - \bar{\theta} ^{\mu}_j)
+        (\theta ^{\nu}_{ij} - \bar{\theta} ^{\nu}_j).
 
     Parameters
     ----------
@@ -248,15 +248,15 @@ def rhat(chains, warmup_iter=0):
 
     .. math::
         W = \frac{1}{m'}\sum _{j=1}^{m'}s_j^2\quad \text{where}\quad
-        s_j^2=\frac{1}{n'-1}\sum _{i=1}^{n'}(\psi _{ij} - \bar{\psi} _j)^2,
+        s_j^2=\frac{1}{n'-1}\sum _{i=1}^{n'}(\theta _{ij} - \bar{\theta} _j)^2,
 
     .. math::
-        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\psi} _j - \bar{\psi})^2.
+        B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\theta} _j - \bar{\theta})^2.
 
-    Here, :math:`\psi _{ij}` is the jth sample of the ith
-    chain, :math:`\bar{\psi _j}=\sum _{i=1}^{n'}\psi _{ij}/n'` is the within
-    chain mean of the parameter :math:`\psi` and
-    :math:`\bar{\psi } = \sum _{j=1}^{m'}\bar{\psi} _{j}/m'` is the between
+    Here, :math:`\theta _{ij}` is the jth sample of the ith
+    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the within
+    chain mean of the parameter :math:`\theta` and
+    :math:`\bar{\theta } = \sum _{j=1}^{m'}\bar{\theta} _{j}/m'` is the between
     chain mean of the within chain means.
 
     References
