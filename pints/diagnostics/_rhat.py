@@ -9,7 +9,25 @@
 import numpy as np
 
 
-def _within(chains):
+def _within_covariance(chains):
+    """
+    Computes the within chain covariance according to mulivariate rhat.
+    """
+    # Get number of chains and number of parameters
+    n_chains, _, n_parameters = chains.shape
+
+    # Compute unbiased within-chain covariance estimate
+    within_chain_cov = np.empty(shape=(n_chains, n_parameters, n_parameters))
+    for chain_id, chain in enumerate(chains):
+        within_chain_cov[chain_id] = np.cov(chain, ddof=1, rowvar=False)
+
+    # Compute mean-within chain variance
+    w = np.mean(within_chain_cov, axis=0)
+
+    return w
+
+
+def _within_variance(chains):
     r"""
     Calculates mean within-chain variance.
 
@@ -38,7 +56,26 @@ def _within(chains):
     return w
 
 
-def _between(chains):
+def _between_covariance(chains):
+    """
+    Computes the between chain covariance according to mulivariate rhat.
+    """
+    # Get number of samples
+    n = chains.shape[1]
+
+    # Compute within-chain mean
+    within_chain_means = np.mean(chains, axis=1)
+
+    # Compute covariance across chains of within-chain means
+    between_chain_cov = np.cov(within_chain_means, ddof=1, rowvar=False)
+
+    # Weight variance with number of samples per chain
+    b = n * between_chain_cov
+
+    return b
+
+
+def _between_variance(chains):
     r"""
     Calculates mean between-chain variance.
 
@@ -72,6 +109,104 @@ def _between(chains):
     b = n * between_chain_var
 
     return b
+
+
+def multivariate_rhat(chains, warmup_iter=0):
+    r"""
+    Returns a multivariate extension of the convergence measure
+    :math:`\hat{R}`.
+
+    :math:`\hat{R}` as implemented in :func:`rhat` quantifies the
+    convergence of the marginal posterior distributions of the parameters.
+    Convergence of the marginal posteriors does however not imply convergence
+    of the joint posteriors.
+
+    The multivariate :math:`\hat{R}` is estimated by
+
+    .. math::
+        \hat{R} = \sqrt{\frac{\det \widehat{\text{cov}}^+}{\det W}},
+
+    where in analogy to :func:`rhat` the variance estimators are generalised
+    to covariance estimators
+
+    .. math::
+        \widehat{\text{cov}}^+ = \frac{n'-1}{n'}W + \frac{1}{n'}B.
+
+    Here, :math:`W` and :math:`B` are the mean within chain covariance and the
+    between chain covariance
+
+    .. math::
+        W^{\mu \nu} = \frac{1}{m'}\sum _{j=1}^{m'}s^{\mu \nu}_j, \quad
+        B^{\mu \nu} = \frac{n'}{m'-1}\sum _{j=1}^{m'}
+        (\bar{\psi} ^{\mu}_j - \bar{\psi}^{\mu})
+        (\bar{\psi} ^{\nu}_j - \bar{\psi}^{\nu}),
+
+    where :math:`\psi ^{\mu}_{ij}` is the :math:`i`th sample of the
+    :math:`j`th chain of the :math:`\mu`th dimension in parameter space,
+    and :math:`s^{\mu \nu}_j` is the estimated covariance between parameter
+    :math:`\mu` and :math:`\nu` in the :math:`j`th chain
+
+    .. math::
+        s^{\mu \nu}_j = \frac{1}{n'-1}\sum _{i=1}^{n'}
+        (\psi ^{\mu}_{ij} - \bar{\psi} ^{\mu}_j)
+        (\psi ^{\nu}_{ij} - \bar{\psi} ^{\nu}_j).
+
+    Parameters
+    ----------
+    chains : np.ndarray of shape (m, n, p)
+        A numpy array with :math:`n` samples for each of :math:`m` chains and
+        :math:`p` parameters.
+    warm_up : float
+        First portion of each chain that will not be used for the
+        computation of :math:`\hat{R}`.
+
+    Returns
+    -------
+    rhat : float
+        The multivariate :math:`\hat{R}` of the posterior.
+    """
+    if chains.ndim != 3:
+        raise ValueError(
+            'Dimension of chains is %d. ' % chains.ndim
+            + 'Method computes Rhat for a multivariate posterior '
+            'and therefore only accepts 3 dimensional arrays.')
+
+    n_parameters = chains.shape[2]
+    if not n_parameters > 1:
+        raise ValueError(
+            'The chains have to contain samples for more than 1 parameter.')
+
+    n_samples = chains.shape[1]
+    warmup_iter = int(warmup_iter)
+    if (warmup_iter < 0) or (warmup_iter > n_samples):
+        raise ValueError(
+            'The warmup iterations must be positive and smaller than the '
+            'total number of iterations.')
+
+    # Exclude warm-up
+    chains = chains[:, warmup_iter:]
+    n_samples = chains.shape[1]
+
+    # Split chains in half
+    n_samples = n_samples // 2  # new length of chains
+    if n_samples < 1:
+        raise ValueError(
+            'Number of samples per chain after warm-up and chain splitting is '
+            '%d. Method needs at least 1 sample per chain.' % n_samples)
+    chains = np.vstack([chains[:, :n_samples], chains[:, -n_samples:]])
+
+    # Compute mean within-chain covariance
+    w = _within_covariance(chains)
+
+    # Compute mean between-chain covariance
+    b = _between_covariance(chains)
+
+    # Compute Rhat
+    rhat = np.sqrt(
+        (n_samples - 1.0) / n_samples + np.linalg.det(b)
+        / (np.linalg.det(w) * n_samples))
+
+    return rhat
 
 
 def rhat(chains, warmup_iter=0):
@@ -170,23 +305,12 @@ def rhat(chains, warmup_iter=0):
     chains = np.vstack([chains[:, :n_samples], chains[:, -n_samples:]])
 
     # Compute mean within-chain variance
-    w = _within(chains)
+    w = _within_variance(chains)
 
     # Compute mean between-chain variance
-    b = _between(chains)
+    b = _between_variance(chains)
 
     # Compute Rhat
     rhat = np.sqrt((n_samples - 1.0) / n_samples + b / (w * n_samples))
 
     return rhat
-
-
-def rhat_all_params(chains):
-    """ Deprecated alias of :func:`rhat`. """
-    # Deprecated on 2020-07-01
-    import warnings
-    warnings.warn(
-        'The function `pints.rhat_all_params` is deprecated.'
-        ' Please use `pints.rhat` instead.')
-
-    return rhat(chains)
