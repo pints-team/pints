@@ -121,7 +121,8 @@ def multivariate_rhat(chains, warmup_iter=0):
     Convergence of the marginal posteriors does however not imply convergence
     of the joint posteriors.
 
-    The multivariate :math:`\hat{R}` is estimated by
+    The multivariate :math:`\hat{R}` aims to estimate the convergence of the
+    joint posterior distribution and is defined as
 
     .. math::
         \hat{R} = \sqrt{\frac{\det \widehat{\text{cov}}^+}{\det W}},
@@ -141,10 +142,11 @@ def multivariate_rhat(chains, warmup_iter=0):
         (\bar{\psi} ^{\mu}_j - \bar{\psi}^{\mu})
         (\bar{\psi} ^{\nu}_j - \bar{\psi}^{\nu}),
 
-    where :math:`\psi ^{\mu}_{ij}` is the :math:`i`th sample of the
-    :math:`j`th chain of the :math:`\mu`th dimension in parameter space,
-    and :math:`s^{\mu \nu}_j` is the estimated covariance between parameter
-    :math:`\mu` and :math:`\nu` in the :math:`j`th chain
+    where :math:`\psi ^{\mu}_{ij}` is the :math:`i^{\text{th}}` sample of the
+    :math:`j^{\text{th}}` chain of the :math:`\mu^{\text{th}}` dimension in
+    parameter space, and :math:`s^{\mu \nu}_j` is the estimated covariance
+    between parameter :math:`\mu` and :math:`\nu` in the
+    :math:`j^{\text{th}}` chain
 
     .. math::
         s^{\mu \nu}_j = \frac{1}{n'-1}\sum _{i=1}^{n'}
@@ -156,7 +158,7 @@ def multivariate_rhat(chains, warmup_iter=0):
     chains : np.ndarray of shape (m, n, p)
         A numpy array with :math:`n` samples for each of :math:`m` chains and
         :math:`p` parameters.
-    warm_up : float
+    warmup_iter : float
         First portion of each chain that will not be used for the
         computation of :math:`\hat{R}`.
 
