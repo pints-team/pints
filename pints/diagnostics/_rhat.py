@@ -154,8 +154,8 @@ def rhat(chains, warmup_iter=0):
     warmup_iter = int(warmup_iter)
     if (warmup_iter < 0) or (warmup_iter > n_samples):
         raise ValueError(
-            'The warmup iterations must be positive and smaller than the total '
-            'number of iterations.')
+            'The warmup iterations must be positive and smaller than the '
+            'total number of iterations.')
 
     # Exclude warm-up
     chains = chains[:, warmup_iter:]
