@@ -25,7 +25,7 @@ Contents
 
     boundaries
     core_classes_and_methods
-    diagnostics
+    diagnostics/index
     diagnostic_plots
     error_measures
     function_evaluation
