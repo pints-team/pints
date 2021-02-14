@@ -74,7 +74,7 @@ def _between(chains):
     return b
 
 
-def rhat(chains, warm_up=0.0):
+def rhat(chains, warmup_iter=0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
     marginal posteriors of the parameters according to [1]_.
@@ -149,25 +149,25 @@ def rhat(chains, warm_up=0.0):
             + 'Method computes Rhat for one '
             'or multiple parameters and therefore only accepts 2 or 3 '
             'dimensional arrays.')
-    if warm_up > 1 or warm_up < 0:
-        raise ValueError(
-            '`warm_up` is set to %f. `warm_up` only takes values in [0,1].' %
-            warm_up)
 
-    # Get number of samples
-    n = chains.shape[1]
+    n_samples = chains.shape[1]
+    warmup_iter = int(warmup_iter)
+    if (warmup_iter < 0) or (warmup_iter > n_samples):
+        raise ValueError(
+            'The warmup iterations must be positive and smaller than the total '
+            'number of iterations.')
 
     # Exclude warm-up
-    chains = chains[:, int(n * warm_up):]
-    n = chains.shape[1]
+    chains = chains[:, warmup_iter:]
+    n_samples = chains.shape[1]
 
     # Split chains in half
-    n = n // 2  # new length of chains
-    if n < 1:
+    n_samples = n_samples // 2  # new length of chains
+    if n_samples < 1:
         raise ValueError(
             'Number of samples per chain after warm-up and chain splitting is '
-            '%d. Method needs at least 1 sample per chain.' % n)
-    chains = np.vstack([chains[:, :n], chains[:, -n:]])
+            '%d. Method needs at least 1 sample per chain.' % n_samples)
+    chains = np.vstack([chains[:, :n_samples], chains[:, -n_samples:]])
 
     # Compute mean within-chain variance
     w = _within(chains)
@@ -176,7 +176,7 @@ def rhat(chains, warm_up=0.0):
     b = _between(chains)
 
     # Compute Rhat
-    rhat = np.sqrt((n - 1.0) / n + b / (w * n))
+    rhat = np.sqrt((n_samples - 1.0) / n_samples + b / (w * n_samples))
 
     return rhat
 
