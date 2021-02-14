@@ -8,6 +8,8 @@
 
 import numpy as np
 
+import pints.diagnostics
+
 
 def _get_geyer_truncation(autocorrelation):
     """
@@ -47,7 +49,7 @@ def _get_geyer_truncation(autocorrelation):
     return truncation_index
 
 
-def autocorrelation(samples):
+def autocorrelation(chains):
     r"""
     Calculates the autocorrelation of samples for different lags.
 
@@ -95,32 +97,38 @@ def autocorrelation(samples):
         The estimation of the autocorrelation is only justified if the
         samples are ordered according to their sample iteration.
 
-    :param samples: A numpy array with :math:`n` samples and :math:`p`
+    :param chains: A numpy array with :math:`n` samples and :math:`p`
         parameters. Optionally the autocorrelation may be computed
         simultaneously for :math:`m` chains.
-    :type samples: np.ndarray of shape (n, p) or (m, n, p)
+    :type chains: np.ndarray of shape (n, p) or (m, n, p)
+
+    Returns
+    -------
+    autocorr : np.ndarray of shape (m, n, p)
+        The autocorrelation of :math:`m` chains for each parameter
+        :math:`p` at lag :math:`n`.
     """
     # Make sure samples have the correct dimensions
-    samples = np.asarray(samples)
-    if (samples.dims < 2) or (samples.dims > 3):
+    chains = np.asarray(chains)
+    if (chains.dims < 2) or (chains.dims > 3):
         raise ValueError(
-            'The samples array must have 2 or 3 dimensions.')
+            'The chains array must have 2 or 3 dimensions.')
 
-    # Reshape samples for later convenience
-    if samples.dims == 2:
+    # Reshape chains for later convenience
+    if chains.dims == 2:
         # Add chain dimension
-        samples = samples[np.newaxis, :, :]
+        chains = chains[np.newaxis, :, :]
 
     # Standardise sample (center and normalise by std.)
-    samples = (samples - np.mean(samples, axis=1)) / np.std(samples, axis=1)
+    chains = (chains - np.mean(chains, axis=1)) / np.std(chains, axis=1)
 
     # Create container for autocorrelations
-    n_chains, n_samples, n_parameters = samples.shape
+    n_chains, n_samples, n_parameters = chains.shape
     autocorrelations = np.empty(shape=(n_chains, n_samples, n_parameters))
 
     # Compute autocorrelations for each chain and each parameter
-    samples = samples.swapaxes(samples, axis1=1, axis2=2)
-    for chain_id, chain_samples in enumerate(samples):
+    chains = chains.swapaxes(chains, axis1=1, axis2=2)
+    for chain_id, chain_samples in enumerate(chains):
         for param_id, parameter_samples in enumerate(chain_samples):
             # Compute mean correlation
             # (np.correlate returns cumulative correlation)
@@ -137,41 +145,10 @@ def autocorrelation(samples):
             # Add to container
             autocorrelations[chain_id, :, param_id]
 
-    # Remove padded dimensions
-    if n_chains == 1:
-        autocorrelations = autocorrelations[0]
-
     return autocorrelations
 
 
-def _autocorrelate_negative(autocorrelation):
-    """
-    Returns the index of the first negative entry in ``autocorrelation``, or
-    ``len(autocorrelation)`` if no negative entry is found.
-    """
-    try:
-        return np.where(np.asarray(autocorrelation) < 0)[0][0]
-    except IndexError:
-        return len(autocorrelation)
-
-
-def effective_sample_size_single_parameter(x):
-    """
-    Calculates effective sample size (ESS) for samples of a single parameter.
-
-    Parameters
-    ----------
-    x
-        A sequence (e.g. a list or a 1-dimensional array) of parameter values.
-    """
-    rho = autocorrelation(x)
-    T = _autocorrelate_negative(rho)
-    n = len(x)
-    ess = n / (1 + 2 * np.sum(rho[0:T]))
-    return ess
-
-
-def effective_sample_size(samples, combine_chains=True):
+def effective_sample_size(chains, combine_chains=True):
     r"""
     Estimates the effective samples size (ESS) of MCMC chains.
 
@@ -203,7 +180,7 @@ def effective_sample_size(samples, combine_chains=True):
         N_{\text{eff}} = \frac{N}{1 + 2\sum ^{t}_{n=1}\hat{\rho} _n},
 
     where :math:`t` is the truncation lag. We follow a widely accepted
-    truncation criterion introduced by Geyer.
+    truncation criterion introduced by Geyer (1992).
 
     For :math:`M` chains with :math:`N` samples the total effective
     sample size is similarly estimated by
@@ -242,35 +219,42 @@ def effective_sample_size(samples, combine_chains=True):
     autocorrelation is large :math:`\bar{\rho}_n \approx 1` the overall
     autocorrelation is large irrespective of the convergence.
 
-    :param samples: A numpy array with :math:`n` samples and :math:`p`
-        parameters. Optionally the autocorrelation may be computed
+    :param chains: A numpy array with :math:`n` samples and :math:`p`
+        parameters. Optionally the effective sample size may be computed
         simultaneously for :math:`m` chains.
-    :type samples: np.ndarray of shape (n, p) or (m, n, p)
+    :type chains: np.ndarray of shape (n, p) or (m, n, p)
     :param combine_chains: A boolean that determines whether the effective
-        samples sizes of multiple chains are kept separate or combined a
-        ccording to the above equation. If ``False`` the effective sample
-        sizes for each chain are returned separately as a
-        :class:`numpy.ndarray` of shape (m, p).
+        samples sizes of multiple chains are kept separate or whether a
+        combined estimate is returned according to the above equation.
+        If ``False`` the effective sample sizes for each chain are returned
+        separately as a :class:`numpy.ndarray` of shape (m, p).
     :type combine_chains: bool, optional
-    """
-    # Make sure samples have the correct dimensions
-    samples = np.asarray(samples)
-    if (samples.dims < 2) or (samples.dims > 3):
-        raise ValueError(
-            'The samples array must have 2 or 3 dimensions.')
 
-    # Reshape samples for later convenience
-    if samples.dims == 2:
+    Returns
+    -------
+    ess : float or np.ndarray of shape (p,) or (m, p)
+        :math:`N_{\text{eff}}` of the chains for each parameter. Optionally
+        the effective samples sizes across chains are combined or returned
+        separately.
+    """
+    # Make sure chains have the correct dimensions
+    chains = np.asarray(chains)
+    if (chains.dims < 2) or (chains.dims > 3):
+        raise ValueError(
+            'The chains array must have 2 or 3 dimensions.')
+
+    # Reshape chains for later convenience
+    if chains.dims == 2:
         # Add chain dimension
-        samples = samples[np.newaxis, :, :]
+        chains = chains[np.newaxis, :, :]
 
     # Compute autocorrelation of each chain and reshape for convenience
-    autocorrs = autocorrelation(samples)
+    autocorrs = autocorrelation(chains)
     autocorrs = np.swapaxes(autocorrs, axis1=1, axis2=2)
 
     # Return individual ESS if only one chain has been passed or
     # combine_chains=False
-    n_chains, n_samples, n_parameters = samples.shape
+    n_chains, n_samples, n_parameters = chains.shape
     if (n_chains == 1) or (combine_chains is False):
         # Create container for ESSs
         eff_sample_sizes = np.empty(shape=(n_chains, n_parameters))
@@ -299,15 +283,21 @@ def effective_sample_size(samples, combine_chains=True):
     eff_sample_sizes = np.empty(shape=n_parameters)
 
     # Compute unnormalised weights for autocorrelations
-    within_chain_variances = np.var(samples, axis=1, ddof=1)
+    within_chain_variances = np.var(chains, axis=1, ddof=1)
+
+    # Compute rhat
+    rhats = pints.diagnostics.rhat(chains)
 
     # Compute ESS for each parameter
     for param_id in range(n_parameters):
-        # Compute weighted autocorrelations
+        # Compute weighted average of autocorrelations
         autocorr = np.average(
             autocorrs[:, param_id],
             axis=0,
             weights=within_chain_variances[:, param_id])
+
+        # Compute rho tilde
+        autocorr = 1 - (1 - autocorr) / rhats[param_id]**2
 
         # Compute autocorrelation sum
         trunc_index = _get_geyer_truncation(autocorr)
