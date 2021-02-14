@@ -270,18 +270,30 @@ def effective_sample_size(samples, combine_chains=True):
 
     # Return individual ESS if only one chain has been passed or
     # combine_chains=False
-    n_chains, _, n_parameters = samples.shape
+    n_chains, n_samples, n_parameters = samples.shape
     if (n_chains == 1) or (combine_chains is False):
         # Create container for ESSs
-        eff_samples_sizes = np.empty(shape=(n_chains, n_parameters))
+        eff_sample_sizes = np.empty(shape=(n_chains, n_parameters))
 
         # Compute ESS for each chain
         for chain_id, chain_autorrs in autocorrs:
             # Compute ESS for each parameter
             for param_id, autocorr in chain_autorrs:
-                # Get stable correlation estimates
+                # Compute autocorrelation sum
                 trunc_index = _get_geyer_truncation(autocorr)
-                autocorr = autocorr
+                autocorr = np.sum(autocorr[1:trunc_index])
+
+                # Compute effective samples size
+                ess = n_samples / (1 + 2 * autocorr)
+
+                # Add to conatainer
+                eff_sample_sizes[chain_id, param_id] = ess
+
+        # Remove padded dimensions
+        if n_chains == 1:
+            return eff_sample_sizes[0]
+
+        return eff_sample_sizes
 
 
     # n_chain, n_draw = ary.shape
