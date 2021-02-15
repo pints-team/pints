@@ -39,8 +39,8 @@ def _within_variance(chains):
         s_j^2=\frac{1}{n-1}\sum _{i=1}^n(\theta _{ij} - \bar{\theta} _j)^2.
 
     Here, :math:`\theta _{ij}` is the :math:`j`th sample of the :math:`i`th
-    chain and :math:`\bar{\theta _j}=\sum _{i=1}^{n}\theta _{ij}/n` is the within
-    chain mean of the parameter :math:`\theta`.
+    chain and :math:`\bar{\theta _j}=\sum _{i=1}^{n}\theta _{ij}/n` is the
+    within chain mean of the parameter :math:`\theta`.
 
     Parameters
     ----------
@@ -86,8 +86,8 @@ def _between_variance(chains):
         B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\theta} _j - \bar{\theta})^2,
 
     where :math:`\theta _{ij}` is the :math:`j`th sample of the :math:`i`th
-    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the within
-    chain mean of the parameter :math:`\theta`, and
+    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the
+    within chain mean of the parameter :math:`\theta`, and
     :math:`\bar{\theta } = \sum _{j=1}^{m}\bar{\theta} _{j}/m` is the between
     chain mean of the within chain means.
 
@@ -254,8 +254,8 @@ def rhat(chains, warmup_iter=0):
         B = \frac{n'}{m'-1}\sum _{j=1}^{m'}(\bar{\theta} _j - \bar{\theta})^2.
 
     Here, :math:`\theta _{ij}` is the jth sample of the ith
-    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the within
-    chain mean of the parameter :math:`\theta` and
+    chain, :math:`\bar{\theta _j}=\sum _{i=1}^{n'}\theta _{ij}/n'` is the
+    within chain mean of the parameter :math:`\theta` and
     :math:`\bar{\theta } = \sum _{j=1}^{m'}\bar{\theta} _{j}/m'` is the between
     chain mean of the within chain means.
 
@@ -271,7 +271,7 @@ def rhat(chains, warmup_iter=0):
         Optionally the :math:`\hat{R}` for :math:`p` parameters can be computed
         by passing a numpy array with :math:`m` chains of length :math:`n`
         for :math:`p` parameters.
-    warm_up : float
+    warmup_iter : float
         First portion of each chain that will not be used for the
         computation of :math:`\hat{R}`.
 

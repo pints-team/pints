@@ -68,8 +68,8 @@ def autocorrelation(chains):
     invariant under the lag :math:`n`. If there is no correlation
     between :math:`\theta` and :math:`\theta _n` for :math:`n\neq 0`, i.e.
     if :math:`\theta` and :math:`\theta _n` are i.i.d. distributed,
-    :math:`\rho _n` is zero for all lags greater :math:`n\neq 0`. For
-    :math:`n=0` the correlation is one.
+    :math:`\rho _n` is zero for all lags :math:`n\neq 0`. For
+    :math:`n=0` the correlation is always one.
 
     In practice we will approximate the above expression by the finite
     sample size analogon
@@ -80,7 +80,7 @@ def autocorrelation(chains):
 
     where :math:`N` is the total number of samples in the chain and
     :math:`\theta _i` is the sample at iteration :math:`i`. Here,
-    :math:`\hat{\mu }` and :math:`\hat{\sigma } ^2` are the estimates
+    :math:`\hat{\mu }` and :math:`\hat{\sigma } ^2` are the estimators
     of the chain mean and variance
 
     .. math::
@@ -190,8 +190,8 @@ def effective_sample_size(chains, combine_chains=True):
     .. math::
         N_{\text{eff}} = \frac{NM}{1 + 2\sum ^{t}_{n=1}\tilde{\rho} _n},
 
-    where :math:`\tilde{\rho} _n` is a autocorrelation measure that
-    incorporates the autocorrelations within the individual chains, the
+    where :math:`\tilde{\rho} _n` is an autocorrelation measure which is
+    baed on the autocorrelations from the individual chains, the
     explored parameter range of the individual chains and the overall
     convergence
 
@@ -199,7 +199,7 @@ def effective_sample_size(chains, combine_chains=True):
         \tilde{\rho} _n =
         1 - \frac{1 - \bar{\rho}_n}{\hat{R}^2}.
 
-    Here :math:`\bar{\rho}_n` is the mean of the autocorrelations weighted
+    Here, :math:`\bar{\rho}_n` is the mean of the autocorrelations weighted
     by the normalised within chain variances
 
     .. math::
@@ -210,6 +210,10 @@ def effective_sample_size(chains, combine_chains=True):
     :math:`m` at lag :math:`n`. :math:`W` is the mean within chain variance
     estimator and :math:`\hat{R}` is the MCMC chain convergence metric,
     see :func:`rhat`. Note that :math:`\bar{\rho} _0=1`.
+    :math:`\bar{\rho} _0` weighs correlations in chains that explore more
+    parameter space higher than ones that appear to have gotten stuck in
+    some region of parameter space. If all chains explore the parameter space
+    equally, the weighted mean reduced to the average.
 
     Intuitivley, :math:`\tilde{\rho}` tries to incorporate the mixing /
     convergence of the chains by comparing the normalised mean
