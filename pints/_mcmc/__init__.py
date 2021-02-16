@@ -126,7 +126,7 @@ class SingleChainMCMC(MCMCSampler):
         ``None``.
 
         For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
+        :meth:`MCMCSampler.needs_sensitivities`), ``fx`` should be a tuple
         ``(log_pdf, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
         """
@@ -233,7 +233,7 @@ class MultiChainMCMC(MCMCSampler):
         iteration).
 
         For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
+        :meth:`MCMCSampler.needs_sensitivities`), ``fxs`` should be a tuple
         ``(log_pdfs, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
         """
