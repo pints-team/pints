@@ -5,7 +5,7 @@ on:
     branches:
       - master
   pull_request:
-    types: [ready_for_review]
+    if: github.event.pull_request.draft == false
     branches:
       - '**'
 
