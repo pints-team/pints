@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+#
+# Tests the Boundaries classes.
+#
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
+#
+
+from __future__ import division
+
 import numpy as np
 
 import pints
