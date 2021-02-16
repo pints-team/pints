@@ -727,23 +727,11 @@ class MCMCController(object):
             n_samples = [0] * self._n_chains
 
         # initialisation
-        if self._x0_isfunction:
-            if self._single_chain:
-                initialised_finite, init = self._sample_x0(active, evaluator)
-            else:
-                chain_r = list(range(self._n_chains))
-                initialised_finite, init = self._sample_x0(chain_r, evaluator)
-            if not initialised_finite:
-                raise ValueError('Initialisation failed since logPDF ' +
-                                 'not finite at initial points after ' +
-                                 str(self._max_initialisation_tries) +
-                                 ' attempts.')
-
-            if self._single_chain:
-                self._samplers = [self._method(a, self._sigma0) for a in init]
-            else:
-                nch = self._n_chains
-                self._samplers = [self._method(nch, init, self._sigma0)]
+        self._initialise_samplers(self._init_fn, self._single_chain,
+                                  self._n_chains, evaluator,
+                                  self._max_initialisation_tries,
+                                  self._sigma0, self._transform,
+                                  self._needs_sensitivities)
 
         # Start sampling
         timer = pints.Timer()
