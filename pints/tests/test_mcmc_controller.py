@@ -231,6 +231,43 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         self.assertIs(chains, mcmc.chains())
 
+    def test_hyperparameters_constant(self):
+        # Test that sampler hyperparameter remain same before and after run
+
+        # single chain method
+        n_chains = 1
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=pints.HamiltonianMCMC)
+        step_size = 0.77
+        for sampler in mcmc.samplers():
+            sampler.set_leapfrog_step_size(step_size)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        for sampler in mcmc.samplers():
+            self.assertEqual(sampler.leapfrog_step_size()[0], step_size)
+
+        # test multiple chain method
+        # Set up problem for 10 chains
+        x0 = np.array(self.real_parameters)
+        xs = []
+        for i in range(10):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(x0 * f)
+        n_chains = len(xs)
+
+        meth = pints.DifferentialEvolutionMCMC
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=meth)
+        switch_rate = 4
+        mcmc.samplers()[0].set_gamma_switch_rate(switch_rate)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        self.assertEqual(mcmc.samplers()[0].gamma_switch_rate(), switch_rate)
+
     def test_multi(self):
         # Test with a multi-chain method
 
