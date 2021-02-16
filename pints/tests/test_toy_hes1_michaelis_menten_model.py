@@ -35,14 +35,14 @@ class TestHes1Model(unittest.TestCase):
         self.assertTrue(np.all(suggested_values > 0))
 
         # Test setting and getting init cond.
-        self.assertFalse(np.all(model.initial_conditions() == 10))
-        model.set_initial_conditions(10)
-        self.assertTrue(np.all(model.initial_conditions() == 10))
+        self.assertFalse(np.all(model.m0() == 10))
+        model.set_m0(10)
+        self.assertTrue(np.all(model.m0() == 10))
 
         # Test setting and getting implicit param.
-        self.assertFalse(np.all(model.implicit_parameters() == [10, 10, 10]))
-        model.set_implicit_parameters([10, 10, 10])
-        self.assertTrue(np.all(model.implicit_parameters() == [10, 10, 10]))
+        self.assertFalse(np.all(model.fixed_parameters() == [10, 10, 10]))
+        model.set_fixed_parameters([10, 10, 10])
+        self.assertTrue(np.all(model.fixed_parameters() == [10, 10, 10]))
 
         # Initial conditions cannot be negative
         model = pints.toy.Hes1Model(0)
@@ -60,10 +60,10 @@ class TestHes1Model(unittest.TestCase):
         times = np.linspace(0, 10, 101)
         parameters = [3.8, 0.035, 0.15, 7.5]
         iparameters = [4.5, 4.0, 0.04]
-        y0 = 7
-        model = pints.toy.Hes1Model(y0=y0, implicit_parameters=iparameters)
+        m0 = 7
+        model = pints.toy.Hes1Model(m0=m0, fixed_parameters=iparameters)
         values = model.simulate(parameters, times)
-        self.assertEqual(values[0], y0)
+        self.assertEqual(values[0], m0)
         self.assertAlmostEqual(values[1], 7.011333, places=6)
         self.assertAlmostEqual(values[100], 5.420750, places=6)
 
@@ -71,8 +71,8 @@ class TestHes1Model(unittest.TestCase):
         # value based tests of jacobian and dfdp
         parameters = [3.8, 0.035, 0.15, 7.5]
         iparameters = [4.5, 4.0, 0.04]
-        y0 = 7
-        model = pints.toy.Hes1Model(y0=y0, implicit_parameters=iparameters)
+        m0 = 7
+        model = pints.toy.Hes1Model(m0=m0, fixed_parameters=iparameters)
         times = model.suggested_times()
         state = [4.0, 3.0, 3.5]
         jacobian = model.jacobian(state, 0.0, parameters)

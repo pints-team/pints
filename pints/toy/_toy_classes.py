@@ -100,6 +100,10 @@ class ToyODEModel(ToyModel):
         """
         raise NotImplementedError
 
+    def initial_conditions(self):
+        """ Returns the initial conditions of the model. """
+        return self._y0
+
     def jacobian(self, y, t, p):
         """
         Returns the Jacobian (the derivative of the RHS ODE with respect to the
@@ -122,9 +126,8 @@ class ToyODEModel(ToyModel):
 
     def n_states(self):
         """
-        Returns number of states in underlying ODE.
-        Note:will not be same as ``n_outputs()`` for models where only a subset
-        of states are observed.
+        Returns number of states in underlying ODE. Note: will not be same as
+        ``n_outputs()`` for models where only a subset of states are observed.
         """
         return self.n_outputs()
 
@@ -181,6 +184,10 @@ class ToyODEModel(ToyModel):
             np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
             np.transpose(self._dfdp(y, t, p)))
         return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
+
+    def set_initial_conditions(self, y0):
+        """ Sets the initial conditions of the model. """
+        self._y0 = y0
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """

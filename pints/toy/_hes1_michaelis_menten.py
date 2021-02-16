@@ -35,10 +35,10 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
 
     Parameters
     ----------
-    y0 : float
-        The initial condition of the observable. Requires ``y0 >= 0``.
-    implicit_parameters
-        The implicit parameter of the model that is not inferred, given as a
+    m0 : float
+        The initial condition of the observable ``m``. Requires ``m0 >= 0``.
+    fixed_parameters
+        The fixed parameters of the model which are not inferred, given as a
         vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
 
     References
@@ -48,15 +48,15 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
            communications, 2, p.489.
            https://doi.org/10.1038/ncomms1496
     """
-    def __init__(self, y0=None, implicit_parameters=None):
-        if implicit_parameters is None:
-            self.set_implicit_parameters([5., 3., 0.03])
+    def __init__(self, m0=None, fixed_parameters=None):
+        if fixed_parameters is None:
+            self.set_fixed_parameters([5., 3., 0.03])
         else:
-            self.set_implicit_parameters(implicit_parameters)
-        if y0 is None:
-            self.set_initial_conditions(2)
+            self.set_fixed_parameters(fixed_parameters)
+        if m0 is None:
+            self.set_m0(2)
         else:
-            self.set_initial_conditions(y0)
+            self.set_m0(m0)
 
     def _dfdp(self, state, time, parameters):
         """ See :meth:`pints.ToyModel.jacobian()`. """
@@ -83,15 +83,16 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         ret[2, 3] = 0
         return ret
 
-    def initial_conditions(self):
+    def m0(self):
         """
-        Returns m(0).
+        Returns the initial conditions of the ``m`` variable.
         """
         return self._y0[0]
 
-    def implicit_parameters(self):
+    def fixed_parameters(self):
         """
-        Returns the implicit parameters of this model.
+        Returns the fixed parameters of the model which are not inferred, given
+        as a vector ``[p1_0, p2_0, k_deg]``.
         """
         return [self._p0[0], self._p0[1], self._kdeg]
 
@@ -103,7 +104,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         p2_over_p0 = p2 / P0
         p2_over_p0_h = p2_over_p0**h
         one_plus_p2_expression_sq = (1 + p2_over_p0_h)**2
-        ret = np.empty((self.n_states(), self.n_states()))
+        ret = np.zeros((self.n_states(), self.n_states()))
         ret[0, 0] = -k_deg
         ret[0, 1] = 0
         ret[0, 2] = -h * p2_over_p0**(h - 1) / (P0 * one_plus_p2_expression_sq)
@@ -116,7 +117,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def n_states(self):
-        """ See :meth:`pints.ForwardModel.n_states()`. """
+        """ See :meth:`pints.ToyODEModel.n_states()`. """
         return 3
 
     def n_outputs(self):
@@ -139,15 +140,16 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
             - self._kdeg * p2 + k1 * p1])
         return output
 
-    def set_initial_conditions(self, y0):
+    def set_m0(self, m0):
         """
-        Changes the initial conditions for this model.
+        Sets the initial conditions of the ``m`` variable.
         """
-        if y0 < 0:
+        if m0 < 0:
             raise ValueError('Initial condition cannot be negative.')
-        self._y0 = [y0, self._p0[0], self._p0[1]]
+        y0 = [m0, self._p0[0], self._p0[1]]
+        super(Hes1Model, self).set_initial_conditions(y0)
 
-    def set_implicit_parameters(self, k):
+    def set_fixed_parameters(self, k):
         """
         Changes the implicit parameters for this model.
         """
