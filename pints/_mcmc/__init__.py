@@ -326,7 +326,6 @@ class MCMCController(object):
 
         # Get functions which can generate initial position or set initial
         # position points if numerical values given
-        self._x0_isfunction = False
         if x0 is None:
             # use prior if one's available
             if isinstance(log_pdf, pints.LogPosterior):
@@ -337,8 +336,6 @@ class MCMCController(object):
                                            [2] * self._n_parameters)
         if isinstance(x0, pints.LogPrior):
             init = x0.sample(chains)
-            self._init_fn = x0
-            self._x0_isfunction = True
         else:
             if len(x0) != chains:
                 raise ValueError(
@@ -349,6 +346,7 @@ class MCMCController(object):
                     'All initial positions must have the same dimension as the'
                     ' given LogPDF.')
             init = x0
+        self._init_fn = x0
 
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
