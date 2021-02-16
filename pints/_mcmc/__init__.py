@@ -114,6 +114,24 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
+    def replace(self, current, current_log_pdf, proposed=None):
+        """
+        Replaces the internal current position, current LogPDF, and proposed
+        point by the user-specified values.
+
+        This method can only be used once the initial position and LogPDF have
+        been set (so after at least 1 round of ask-and-tell).
+
+        This is an optional method, and some samplers may not support it.
+        """
+        raise NotImplementedError
+
+    def set_x0(self, x0):
+        """
+        Sets initial position of the sampler.
+        """
+        self._x0 = pints.vector(x0)
+
     def tell(self, fx):
         """
         Performs an iteration of the MCMC algorithm, using the logpdf
@@ -129,18 +147,6 @@ class SingleChainMCMC(MCMCSampler):
         :meth:`MCMCSampler.needs_sensitivities`), ``fx`` should be a tuple
         ``(log_pdf, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
-        """
-        raise NotImplementedError
-
-    def replace(self, current, current_log_pdf, proposed=None):
-        """
-        Replaces the internal current position, current LogPDF, and proposed
-        point by the user-specified values.
-
-        This method can only be used once the initial position and LogPDF have
-        been set (so after at least 1 round of ask-and-tell).
-
-        This is an optional method, and some samplers may not support it.
         """
         raise NotImplementedError
 
@@ -221,6 +227,18 @@ class MultiChainMCMC(MCMCSampler):
         recent points returned by :meth:`tell()`).
         """
         raise NotImplementedError
+
+    def set_x0(self, x0):
+        """
+        Sets initial position of the sampler.
+        """
+        # Check initial position(s)
+        if len(x0) != self._chains:
+            raise ValueError(
+                'Number of initial positions must be equal to number of'
+                ' chains.')
+        self._x0 = np.array([pints.vector(x) for x in x0])
+        self._x0.setflags(write=False)
 
     def tell(self, fxs):
         """
@@ -402,15 +420,21 @@ class MCMCController(object):
         self._single_chain = issubclass(method, pints.SingleChainMCMC)
 
         # Create sampler(s)
+        dummy_val = np.repeat(-99, self._n_parameters)
         if self._single_chain:
             # Using n individual samplers (Note that it is possible to have
             # _single_chain=True and _n_samplers=1)
+            # Note, this is a dummy value of x0 which is updated during run
             self._n_samplers = self._n_chains
-            self._samplers = [method(x, sigma0) for x in init]
+            self._samplers = [
+                method(dummy_val, sigma0)
+                for x in init]
         else:
             # Using a single sampler that samples multiple chains
             self._n_samplers = 1
-            self._samplers = [method(self._n_chains, init, sigma0)]
+            # Note, this is a dummy value of x0 which is updated during run
+            dummy_val_mult = [dummy_val for chain in range(self._n_chains)]
+            self._samplers = [method(self._n_chains, dummy_val_mult, sigma0)]
 
         # Check if sensitivities are required
         self._needs_sensitivities = self._samplers[0].needs_sensitivities()
@@ -520,13 +544,14 @@ class MCMCController(object):
                                  ' attempts.')
         else:
             init = init_fn
+            if transform is not None:
+                init = [transform.to_search(x) for x in init]
 
         if self._single_chain:
             for i in range(len(self._samplers)):
-                self._samplers[i].set_initial(init[i], sigma0)
+                self._samplers[i].set_x0(init[i])
         else:
-            nch = self._n_chains
-            self._samplers = [self._method.set_initial(nch, init, sigma0)]
+            self.samplers()[0].set_x0(init)
 
     def log_pdfs(self):
         """
@@ -965,37 +990,6 @@ class MCMCController(object):
         a list containing a single :class:`MultiChainMCMC` instance.
         """
         return self._samplers
-
-    def _sample_x0(self, active, evaluator):
-        """
-        Samples an initial starting point for the chains using the supplied
-        `init` function.
-        """
-        initialised_finite = False
-        init_fn = self._init_fn
-        current_active = list(active)
-        n_tries = 0
-        x0 = []
-        transform = self._transform
-        while not initialised_finite and (n_tries <
-                                          self._max_initialisation_tries):
-            xs = init_fn.sample(len(current_active))
-            if transform is not None:
-                xs = [transform.to_search(x) for x in xs]
-            fxs = evaluator.evaluate(xs)
-            xs_iterator = iter(xs)
-            fxs_iterator = iter(fxs)
-            for i in list(current_active):
-                x = next(xs_iterator)
-                fx = next(fxs_iterator)
-                if self._needs_sensitivities:
-                    fx = fx[0]
-                if np.isfinite(fx):
-                    x0.append(x)
-            if len(x0) == len(active):
-                initialised_finite = True
-            n_tries += 1
-        return initialised_finite, x0
 
     def set_chain_filename(self, chain_file):
         """

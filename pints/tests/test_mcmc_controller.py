@@ -1619,14 +1619,15 @@ class MultiListSampler(pints.MultiChainMCMC):
     """
 
     def set_chains(self, chains):
-        self._chains = [list(x) for x in chains]
+        self._chains_vals = [list(x) for x in chains]
         self._i = 0
-        self._n = len(self._chains[0])
+        self._n = len(self._chains_vals[0])
+        self._chains = len(self._chains_vals)
 
     def ask(self):
-        x = [chain[self._i] for chain in self._chains]
+        x = [chain[self._i] for chain in self._chains_vals]
         if x[0] is None:
-            x = [chain[0] for chain in self._chains]
+            x = [chain[0] for chain in self._chains_vals]
         return x
 
     def name(self):
@@ -1635,7 +1636,7 @@ class MultiListSampler(pints.MultiChainMCMC):
     def tell(self, fx):
         x = None
         if self._i < self._n:
-            x = [chain[self._i] for chain in self._chains]
+            x = [chain[self._i] for chain in self._chains_vals]
             if x[0] is None:
                 x = None
             self._i += 1
