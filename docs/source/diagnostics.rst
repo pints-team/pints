@@ -1,6 +1,6 @@
-****************
-Diagnosting MCMC
-****************
+***********************
+Diagnosing MCMC results
+***********************
 
 .. currentmodule:: pints
 
