@@ -6,8 +6,11 @@
 # copyright notice and full license details.
 #
 
+from ._autocorrelation import (  # noqa
+    autocorrelation
+)
+
 from ._ess import (  # noqa
-    autocorrelation,
     effective_sample_size
 )
 
