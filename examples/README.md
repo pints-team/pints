@@ -134,10 +134,7 @@ relevant code.
 
 
 ## Interfaces
-### To probabilistic programming languages
 - [Stan](./interfaces/stan.ipynb)
-
-### To statistical model packages
 - [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
 - [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
 

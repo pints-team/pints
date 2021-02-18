@@ -11,6 +11,7 @@ import numpy as np
 from collections import Counter
 import pystan
 import pints
+import warnings
 
 
 class StanLogPDF(pints.LogPDF):
@@ -73,6 +74,8 @@ class StanLogPDF(pints.LogPDF):
             return self._log_prob(vals, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError):
+            warnings.warn("RuntimeError or ValueError encountered when " +
+                          "calling `pints.LogPDF`.")
             return -np.inf
 
     def _dict_update(self, x):
@@ -104,6 +107,8 @@ class StanLogPDF(pints.LogPDF):
             dp = self._grad_log_prob(vals, adjust_transform=True)
             return val, dp.reshape(-1)
         except (RuntimeError, ValueError):
+            warnings.warn("RuntimeError or ValueError encountered when " +
+                          "calling `evaluateS1` in `pints.LogPDF`.")
             return -np.inf, np.ones(self._n_parameters).reshape(-1)
 
     def _initialise(self, stanfit):
