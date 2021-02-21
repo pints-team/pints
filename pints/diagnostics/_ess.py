@@ -27,6 +27,10 @@ def _get_geyer_truncation(autocorrelation):
     if sum of lag n and n+1 is negative, truncate the autocorrelation
     sequence at n-1.
     """
+    # Assume trivial case first (all correlations are positive)
+    if np.alltrue(autocorrelation >= 0):
+        return len(autocorrelation)
+
     # Split sequence into even and odd
     even = autocorrelation[::2]
     odd = autocorrelation[1::2]
@@ -41,7 +45,8 @@ def _get_geyer_truncation(autocorrelation):
     mask = even_and_odd_sum < 0
     index = np.argmax(mask)
     if np.alltrue(~mask):
-        index = max_index
+        # Truncation does not trigger
+        return len(autocorrelation)
 
     # Get truncation index for original sequence
     truncation_index = 2 * index - 1
@@ -195,11 +200,17 @@ def effective_sample_size(chains, combine_chains=True):
 
     # Compute ESS for each parameter
     for param_id in range(n_parameters):
+        # Make sure that if the weights sum to zero (no variance in
+        # the chains) average is not weighted
+        weights = within_chain_variances[:, param_id]
+        if np.sum(weights) == 0:
+            weights = None
+
         # Compute weighted average of autocorrelations
         autocorr = np.average(
             autocorrs[:, param_id],
             axis=0,
-            weights=within_chain_variances[:, param_id])
+            weights=weights)
 
         # Compute rho tilde
         autocorr = 1 - (1 - autocorr) / rhats[param_id]**2

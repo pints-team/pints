@@ -65,22 +65,22 @@ class TestDiagnostics(unittest.TestCase):
         self.assertAlmostEqual(autocorr[3], 4 / ((n_samples - 1) * var))
         self.assertAlmostEqual(autocorr[4], -4 / ((n_samples - 1) * var))
 
+    def test_effective_sample_size(self):
+        # ESS is hard to test because we don't know which ESS vale should be
+        # returned. So we checked that arviz.ess returns the same value for
+        # combined.
 
-    # def test_effective_sample_size(self):
-    #     # Tests ess for a matrix of parameters
+        # Test case I:
+        chains = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])[
+            np.newaxis, :, np.newaxis]
 
-    #     # matrix with two columns of samples
-    #     x = np.transpose(np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
-    #                                [1.0, 2.0, 3.0, 4.0, 5.0]]))
-    #     y = pints._diagnostics.effective_sample_size(x)
-    #     self.assertAlmostEqual(y[0], 1.439232, 6)
-    #     self.assertAlmostEqual(y[1], 1.315789, 6)
+        # Test case I.1: Combined ESS
+        ess = pints.diagnostics.effective_sample_size(
+            chains, combine_chains=True)
 
-    #     # Bad calls
-    #     self.assertRaisesRegex(
-    #         ValueError, '2d array', pints.effective_sample_size, x[0])
-    #     self.assertRaisesRegex(
-    #         ValueError, 'At least two', pints.effective_sample_size, x[:1])
+        print(ess)
+        self.assertEqual(ess.shape, (1,))
+        self.assertTrue(np.alltrue(ess == 2.7938343))
 
     # def test_rhat(self):
     #     # Tests that rhat works
@@ -91,30 +91,30 @@ class TestDiagnostics(unittest.TestCase):
     #     self.assertAlmostEqual(
     #         pints._diagnostics.rhat(chains), 2.3303847470550716, 6)
 
-    #     # Test Rhat computation for two parameters, chains.shape=(3, 4, 2)
-    #     chains = np.array([
-    #         [
-    #             [-1.10580535, 2.26589882],
-    #             [0.35604827, 1.03523364],
-    #             [-1.62581126, 0.47308597],
-    #             [1.03999619, 0.58203464]
-    #         ],
-    #         [
-    #             [-1.04755457, -2.28410098],
-    #             [0.17577692, -0.79433186],
-    #             [-0.07979098, -1.87816551],
-    #             [-1.39836319, 0.95119085]
-    #         ],
-    #         [
-    #             [-1.1182588, -0.34647435],
-    #             [1.36928142, -1.4079284],
-    #             [0.92272047, -1.49997615],
-    #             [0.89531238, 0.63207977]
-    #         ]])
+        # # Test Rhat computation for two parameters, chains.shape=(3, 4, 2)
+        # chains = np.array([
+        #     [
+        #         [-1.10580535, 2.26589882],
+        #         [0.35604827, 1.03523364],
+        #         [-1.62581126, 0.47308597],
+        #         [1.03999619, 0.58203464]
+        #     ],
+        #     [
+        #         [-1.04755457, -2.28410098],
+        #         [0.17577692, -0.79433186],
+        #         [-0.07979098, -1.87816551],
+        #         [-1.39836319, 0.95119085]
+        #     ],
+        #     [
+        #         [-1.1182588, -0.34647435],
+        #         [1.36928142, -1.4079284],
+        #         [0.92272047, -1.49997615],
+        #         [0.89531238, 0.63207977]
+        #     ]])
 
-    #     y = pints._diagnostics.rhat(chains)
-    #     d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
-    #     self.assertLess(np.linalg.norm(d), 0.01)
+        # y = pints._diagnostics.rhat(chains)
+        # d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
+        # self.assertLess(np.linalg.norm(d), 0.01)
 
     # def test_bad_rhat_inputs(self):
     #     # Tests whether exceptions are thrown should the input to rhat not be
