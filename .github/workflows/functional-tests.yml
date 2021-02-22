@@ -53,7 +53,7 @@ jobs:
           git config user.name "github-workflow"
           git config user.email "github-workflow"
           git diff
-          git add -all
+          git add --all
           git commit -m "Run of functional testing" || echo "No changes to commit"
           git push
         working-directory: 'functional-testing-2'
