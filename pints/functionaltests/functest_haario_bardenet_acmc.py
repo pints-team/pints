@@ -82,3 +82,10 @@ class TestHaarioBardenetACMCOn2dimGaussianDistribution(object):
         results['mean-ess'] = self.estimate_mean_ess()
 
         return results
+
+    @staticmethod
+    def get_name():
+        """
+        Returns the name of this class.
+        """
+        return 'TestHaarioBardenetACMCOn2dimGaussianDistribution'
