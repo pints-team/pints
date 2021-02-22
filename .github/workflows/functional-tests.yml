@@ -52,7 +52,6 @@ jobs:
         run: |
           git config user.name "github-workflow"
           git config user.email "github-workflow"
-          git diff
           git add --all
           git commit -m "Run of functional testing" || echo "No changes to commit"
           git push
