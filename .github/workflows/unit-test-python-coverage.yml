@@ -5,6 +5,7 @@ on:
     branches:
       - master
   pull_request:
+    if: github.event.pull_request.draft == false
     branches:
       - '**'
 
