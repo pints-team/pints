@@ -56,3 +56,4 @@ jobs:
           git commit -m "Run of functional testing" || echo "No changes to commit"
           git push
         working-directory: 'functional-testing-2'
+
