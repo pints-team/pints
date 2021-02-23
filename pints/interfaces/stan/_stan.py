@@ -73,9 +73,9 @@ class StanLogPDF(pints.LogPDF):
         try:
             return self._log_prob(vals, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError) as e:
             warnings.warn("RuntimeError or ValueError encountered when " +
-                          "calling `pints.LogPDF`.")
+                          "calling `pints.LogPDF`: " + str(e))
             return -np.inf
 
     def _dict_update(self, x):
@@ -106,9 +106,9 @@ class StanLogPDF(pints.LogPDF):
             val = self._log_prob(vals, adjust_transform=True)
             dp = self._grad_log_prob(vals, adjust_transform=True)
             return val, dp.reshape(-1)
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError) as e:
             warnings.warn("RuntimeError or ValueError encountered when " +
-                          "calling `evaluateS1` in `pints.LogPDF`.")
+                          "calling `pints.LogPDF`: " + str(e))
             return -np.inf, np.ones(self._n_parameters).reshape(-1)
 
     def _initialise(self, stanfit):

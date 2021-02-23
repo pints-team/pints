@@ -18,7 +18,7 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 try:
-    import pints.interfaces
+    from pints.interfaces.stan import StanLogPDF
     have_stan = True
 except ImportError:
     have_stan = False
@@ -97,7 +97,7 @@ class TestStanLogPDF(unittest.TestCase):
 
     def test_calling(self):
         # tests instantiation
-        stanmodel = pints.interfaces.StanLogPDF(stan_code=self.code)
+        stanmodel = StanLogPDF(stan_code=self.code)
 
         # tests mistakenly calling model before data supplied
         x = [1, 2]
@@ -133,8 +133,8 @@ class TestStanLogPDF(unittest.TestCase):
 
         # check constrained model
         stanmodel.update_data(stan_data=self.data)
-        stanmodel1 = pints.interfaces.StanLogPDF(stan_code=self.code1,
-                                                 stan_data=self.data)
+        stanmodel1 = StanLogPDF(stan_code=self.code1,
+                                stan_data=self.data)
         # note the below contains the Jacobian transform -log(2)
         # so subtract this to make it equal to above
         y = [1, np.log(2)]
@@ -146,8 +146,7 @@ class TestStanLogPDF(unittest.TestCase):
 
     def test_vector_parameters_model(self):
         # tests interface with stan models with vectorised parameters
-        stanmodel = pints.interfaces.StanLogPDF(stan_code=self.code2,
-                                                stan_data=self.data2)
+        stanmodel = StanLogPDF(stan_code=self.code2, stan_data=self.data2)
         stanmodel(np.random.uniform(size=10))
 
 
