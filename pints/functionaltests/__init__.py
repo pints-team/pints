@@ -5,4 +5,3 @@
 #
 
 from .functest_haario_bardenet_acmc import TestHaarioBardenetACMCOn2dimGaussianDistribution
-
