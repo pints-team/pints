@@ -23,7 +23,7 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     Parameters
     ----------
     dimension : int
-        Dimensions of Gaussian distribution.
+        Dimensions of multivariate Gaussian distribution (which must exceed 1).
     rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
@@ -31,8 +31,8 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)
-        if self._n_parameters < 1:
-            raise ValueError('Dimension must be 1 or greater.')
+        if self._n_parameters <= 1:
+            raise ValueError('Dimensions must exceed 1.')
         rho = float(rho)
         # bounds must satisfy:
         # https://stats.stackexchange.com/questions/72790/
@@ -140,4 +140,3 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         magnitude = 3 * np.sqrt(self.n_parameters())
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
         return np.transpose(bounds).tolist()
-

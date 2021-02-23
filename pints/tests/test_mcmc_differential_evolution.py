@@ -150,31 +150,31 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 5)
 
         mcmc.set_hyper_parameters([0.5, 0.6, 20, 0, 0])
-        self.assertEqual(mcmc._gamma, 0.5)
-        self.assertEqual(mcmc._b, 0.6)
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
-        self.assertTrue(not mcmc._gaussian_error)
-        self.assertTrue(not mcmc._relative_scaling)
+        self.assertEqual(mcmc.gamma(), 0.5)
+        self.assertEqual(mcmc.scale_coefficient(), 0.6)
+        self.assertEqual(mcmc.gamma_switch_rate(), 20)
+        self.assertTrue(not mcmc.gaussian_error())
+        self.assertTrue(not mcmc.relative_scaling())
 
         mcmc.set_gamma(0.5)
-        self.assertEqual(mcmc._gamma, 0.5)
+        self.assertEqual(mcmc.gamma(), 0.5)
         self.assertRaisesRegex(ValueError,
                                'non-negative', mcmc.set_gamma, -1)
 
         mcmc.set_scale_coefficient(1)
-        self.assertTrue(not mcmc._relative_scaling)
+        self.assertTrue(not mcmc.relative_scaling())
         self.assertRaisesRegex(ValueError,
                                'non-negative', mcmc.set_scale_coefficient, -1)
 
         mcmc.set_gamma_switch_rate(11)
-        self.assertEqual(mcmc._gamma_switch_rate, 11)
+        self.assertEqual(mcmc.gamma_switch_rate(), 11)
         self.assertRaisesRegex(
             ValueError, 'integer', mcmc.set_gamma_switch_rate, 11.5)
         self.assertRaisesRegex(
             ValueError, 'exceed 1', mcmc.set_gamma_switch_rate, 0)
 
         mcmc.set_gaussian_error(False)
-        self.assertTrue(not mcmc._gaussian_error)
+        self.assertTrue(not mcmc.gaussian_error())
 
         mcmc.set_relative_scaling(0)
         self.assertTrue(np.array_equal(mcmc._b_star,
@@ -185,7 +185,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
         # test implicit conversion to int
         mcmc.set_hyper_parameters([0.5, 0.6, 20.2, 0, 0])
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
+        self.assertEqual(mcmc.gamma_switch_rate(), 20)
         self.assertRaisesRegex(
             ValueError, 'convertable to an integer',
             mcmc.set_hyper_parameters, (0.5, 0.6, 'sdf', 0, 0))

@@ -13,7 +13,7 @@ import pints.toy
 from pints.toy import StochasticDegradationModel
 
 
-class TestStochasticDegradation(unittest.TestCase):
+class TestStochasticDegradationModel(unittest.TestCase):
     """
     Tests if the stochastic degradation (toy) model works.
     """

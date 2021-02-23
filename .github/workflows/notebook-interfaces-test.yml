@@ -1,18 +1,14 @@
-name: Coverage
+name: Notebooks (interfaces)
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    if: github.event.pull_request.draft == false
-    branches:
-      - '**'
+  schedule:
+    # 4am daily
+    - cron:  '0 4 * * *'
 
 jobs:
 
   build-and-test:
-    name: Coverage
+    name: interfaces
     runs-on: ubuntu-latest
 
     steps:
@@ -29,15 +25,9 @@ jobs:
           python --version
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install .
-          python -m pip install coverage codecov
+          python -m pip install .[dev]
 
-      - name: run coverage
+      - name: run jupyter notebooks
         run: |
-          coverage run run-tests.py --unit
-
-      - name: codecov
-        if: success()
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          codecov
+          python -m pip install statsmodels
+          python run-tests.py --interfaces

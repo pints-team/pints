@@ -5,13 +5,14 @@ on:
     branches:
       - master
   pull_request:
+    if: github.event.pull_request.draft == false
     branches:
       - '**'
 
 jobs:
 
   build-and-test:
-    name: doctest
+    name: Docs
     runs-on: ubuntu-latest
 
     steps:

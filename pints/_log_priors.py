@@ -457,6 +457,9 @@ class GaussianLogPrior(pints.LogPrior):
     def __init__(self, mean, sd):
         # Parse input arguments
         self._mean = float(mean)
+
+        if sd <= 0:
+            raise ValueError('sd parameter must be positive')
         self._sd = float(sd)
 
         # Cache constants

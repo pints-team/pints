@@ -131,6 +131,8 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
 
         # Test with fixed number of worker processes
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
         sampler.set_parallel(4)
         sampler.set_log_to_screen(False)
         self.assertEqual(sampler.parallel(), 4)
@@ -248,6 +250,8 @@ class TestNestedController(unittest.TestCase):
         logLikelihood1 = sampler.log_likelihood_vector()
         self.assertEqual(len(logLikelihood1), 400 + 100)
         self.assertTrue(ess1 > 0)
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
         iter = 2000
         sampler.set_iterations(iter)
         sampler.set_n_posterior_samples(100)
@@ -277,6 +281,8 @@ class TestNestedController(unittest.TestCase):
             self.assertTrue(elem <= 1)
 
         # Acive points
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
         sampler.set_iterations(100)
         sampler.set_log_to_screen(False)
         sampler.set_parallel(2)
@@ -323,6 +329,19 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
         m_inactive = sampler.inactive_points()
         self.assertTrue(m_inactive.shape[0] < 200)
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
+        sampler.set_n_posterior_samples(2)
+        sampler.set_iterations(10)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+        with self.assertRaisesRegex(
+                RuntimeError, 'Controller is valid for single use only'):
+            sampler.run()
 
 
 if __name__ == '__main__':

@@ -231,6 +231,43 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         self.assertIs(chains, mcmc.chains())
 
+    def test_hyperparameters_constant(self):
+        # Test that sampler hyperparameter remain same before and after run
+
+        # single chain method
+        n_chains = 1
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=pints.HamiltonianMCMC)
+        step_size = 0.77
+        for sampler in mcmc.samplers():
+            sampler.set_leapfrog_step_size(step_size)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        for sampler in mcmc.samplers():
+            self.assertEqual(sampler.leapfrog_step_size()[0], step_size)
+
+        # test multiple chain method
+        # Set up problem for 10 chains
+        x0 = np.array(self.real_parameters)
+        xs = []
+        for i in range(10):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(x0 * f)
+        n_chains = len(xs)
+
+        meth = pints.DifferentialEvolutionMCMC
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=meth)
+        switch_rate = 4
+        mcmc.samplers()[0].set_gamma_switch_rate(switch_rate)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        self.assertEqual(mcmc.samplers()[0].gamma_switch_rate(), switch_rate)
+
     def test_multi(self):
         # Test with a multi-chain method
 
@@ -379,6 +416,11 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test with fixed number of worker processes
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(niterations)
+        mcmc.set_log_to_screen(debug)
         mcmc.set_parallel(5)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
@@ -653,6 +695,22 @@ class TestMCMCController(unittest.TestCase):
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        # Test simple run
+        n_chains = 1
+        n_iterations = 10
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        with self.assertRaisesRegex(
+                RuntimeError, 'Controller is valid for single use only'):
+            mcmc.run()
 
     def test_post_run_statistics(self):
         # Test method to obtain post-run statistics
