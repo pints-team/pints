@@ -228,10 +228,10 @@ class MultiChainMCMC(MCMCSampler):
         by :meth:`pints.LogPdf.evaluateS1()`.
 
         After a successful call, :meth:`tell()` returns a tuple
-        ``(xs, fxs, accepted)``, where ``x`` contains the current position of the
-        chain, ``fx`` contains the corresponding evaluation, and ``accepted``
-        is an array of booleans indicating whether the last evaluated sample
-        was added to the chain.
+        ``(xs, fxs, accepted)``, where ``x`` contains the current position of
+        the chain, ``fx`` contains the corresponding evaluation, and
+        ``accepted`` is an array of booleans indicating whether the last
+        evaluated sample was added to the chain.
 
         Some methods may require multiple ask-tell calls per iteration. These
         methods can return ``None`` to indicate an iteration is still in
