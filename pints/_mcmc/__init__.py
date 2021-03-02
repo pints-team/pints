@@ -109,26 +109,24 @@ class SingleChainMCMC(MCMCSampler):
 
     def tell(self, fx):
         """
-        Performs an iteration of the MCMC algorithm, using the logpdf
-        evaluation ``fx`` of the point previously specified by ``ask``.
-
-        Returns either the next sample in the chain, or ``None`` to indicate
-        that no new sample should be added to the chain (this is used to
-        implement methods that require multiple evaluations per iteration).
-
-        Returns a tuple ``(x, fx, accepted)`` or ``None`` (see below), where
-        ``x`` contains the current position of the chain, ``fx`` contains the
-        corresponding log likelihood, and ``accepted`` is a boolean indicating
-        whether an acceptance step was performed.
-
-        Some methods may require multiple ask-tell calls per iteration. These
-        methods can return ``None`` to indicate an iteration is still in
-        progress.
+        Performs an iteration of the MCMC algorithm, using the
+        :class:`pints.LogPDF` evaluation ``fx`` of the point ``x`` specified by
+        ``ask``.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
         ``(log_pdf, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
+
+        After a successful call, :meth:`tell()` returns a tuple
+        ``(x, fx, accepted)``, where ``x`` contains the current position of the
+        chain, ``fx`` contains the corresponding evaluation, and ``accepted``
+        is a boolean indicating whether the last evaluated sample was added to
+        the chain.
+
+        Some methods may require multiple ask-tell calls per iteration. These
+        methods can return ``None`` to indicate an iteration is still in
+        progress.
         """
         raise NotImplementedError
 
@@ -220,22 +218,24 @@ class MultiChainMCMC(MCMCSampler):
 
     def tell(self, fxs):
         """
-        Performs an iteration of the MCMC algorithm, using the evaluations
-        ``fxs`` of the points previously specified by ``ask``.
+        Performs an iteration of the MCMC algorithm, using the
+        :class:`pints.LogPDF` evaluations ``fxs`` of the points ``xs``
+        specified by ``ask``.
 
-        Returns a tuple ``(x, fx, accepted)`` or ``None`` (see below), where
-        ``x`` contains the current positions of the chains, ``fx`` contains the
-        corresponding log likelihoods, and ``accepted`` is an array of booleans
-        indicating whether an acceptance step was performed.
+        For methods that require sensitivities (see
+        :meth:`MCMCSamper.needs_sensitivities`), each entry in ``fxs`` should
+        be a tuple ``(log_pdf, sensitivities)``, containing the values returned
+        by :meth:`pints.LogPdf.evaluateS1()`.
+
+        After a successful call, :meth:`tell()` returns a tuple
+        ``(xs, fxs, accepted)``, where ``x`` contains the current position of the
+        chain, ``fx`` contains the corresponding evaluation, and ``accepted``
+        is an array of booleans indicating whether the last evaluated sample
+        was added to the chain.
 
         Some methods may require multiple ask-tell calls per iteration. These
         methods can return ``None`` to indicate an iteration is still in
         progress.
-
-        For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
-        ``(log_pdfs, sensitivities)``, containing the values returned by
-        :meth:`pints.LogPdf.evaluateS1()`.
         """
         raise NotImplementedError
 
