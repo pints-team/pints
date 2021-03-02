@@ -5,7 +5,8 @@ on:
     branches:
       - master
   pull_request:
-    if: github.event.pull_request.draft == false
+    # Run workflow when PR is changed, or when changed from draft to ready
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - '**'
 
@@ -14,6 +15,9 @@ jobs:
   build-and-test:
     name: Coverage
     runs-on: ubuntu-latest
+
+    # Skip job if it's a draft PR
+    if: github.event.pull_request.draft == false
 
     steps:
       - uses: actions/checkout@v1
@@ -28,7 +32,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
+          python -m pip install .[stan]
           python -m pip install coverage codecov
 
       - name: run coverage
