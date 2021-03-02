@@ -109,7 +109,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
                 else:
                     error = np.random.uniform(-self._b_star, self._b_star,
                                               self._mu.shape)
-                r1, r2 = self._r_draw(j, self._chains)
+                r1, r2 = self._r_draw(j, self._n_chains)
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
