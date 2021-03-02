@@ -84,7 +84,6 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         self._running = False
         self._ready_for_tell = False
         self._current = None
-        self._current_log_pdf = None
         self._current_log_y = None
         self._proposed = None
 
@@ -215,12 +214,11 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
             # Set current sample, log pdf of current sample and initialise
             # proposed sample for next iteration
             self._current = np.array(self._x0, copy=True)
-            self._current_log_pdf = fx
             self._proposed = np.array(self._current, copy=True)
 
             # Sample height of the slice log_y for next iteration
             e = np.random.exponential(1)
-            self._current_log_y = self._current_log_pdf - e
+            self._current_log_y = fx - e
 
             # Return first point in chain, which is x0
             # Note: `grad` is not stored in this iteration, so can return
@@ -230,7 +228,6 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         if fx >= self._current_log_y:
             # The accepted sample becomes the new current sample
             self._current = np.copy(self._proposed)
-            self._current_log_pdf = fx
 
             # Sample new log_y used to define the next slice
             e = np.random.exponential(1)

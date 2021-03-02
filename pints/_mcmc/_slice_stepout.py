@@ -380,11 +380,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Find candidate point by flipping from the current point to
             # the opposide side
-            self._proposed[self._active_param_index] = (self._l_hat +
-                                                        self._r_hat -
-                                                        self._current
-                                                        [self.
-                                                         _active_param_index])
+            self._proposed[self._active_param_index] = (
+                self._l_hat + self._r_hat 
+                - self._current[self._active_param_index])
             self._ready_for_tell = True
             return np.array(self._proposed, copy=True)
 
@@ -392,8 +390,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Sample new trial point by sampling uniformly from the
             # interval ``I=(l,r)``
             u = np.random.uniform()
-            self._proposed[self._active_param_index] = self._l + u * (self._r -
-                                                                      self._l)
+            self._proposed[self._active_param_index] = \
+                self._l + u * (self._r - self._l)
 
             # Send trial point for checks
             self._ready_for_tell = True
