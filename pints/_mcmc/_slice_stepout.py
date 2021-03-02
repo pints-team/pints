@@ -140,6 +140,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
         self._current = None
         self._current_log_pdf = None
+        self._temporary_log_pdf = None
         self._current_log_y = None
         self._proposed = None
         self._overrelaxed_step = False
@@ -514,6 +515,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # proposed sample for next iteration
             self._current = np.copy(self._x0)
             self._current_log_pdf = fx
+            self._temporary_log_pdf = fx
             self._proposed = np.copy(self._current)
 
             # Sample height of the slice log_y for next iteration
@@ -608,8 +610,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._current[self._active_param_index])
 
                 # And update fx to the corresponding log pdf (needed below!)
-                assert(np.all(self._proposed == self._current))
-                fx = self._current_log_pdf
+                fx = self._temporary_log_pdf
 
             # Reset flags for next interval expansion
             self._first_expansion = True
@@ -629,6 +630,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 # The log_pdf of the accepted sample is used to construct the
                 # new slice
                 self._current_log_pdf = fx
+                self._temporary_log_pdf = fx
 
                 # Sample new log_y used to define the next slice
                 e = np.random.exponential(1)
@@ -640,6 +642,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 return np.copy(self._current), self._current_log_pdf, True
 
             else:
+                self._temporary_log_pdf = fx
                 self._active_param_index += 1
                 return None
 
@@ -663,6 +666,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     # The log_pdf of the accepted sample is used to construct
                     # the new slice
                     self._current_log_pdf = fx
+                    self._temporary_log_pdf = fx
 
                     # Sample new log_y used to define the next slice
                     e = np.random.exponential(1)
@@ -677,6 +681,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     return np.copy(self._current), self._current_log_pdf, True
 
                 else:
+                    self._temporary_log_pdf = fx
                     self._active_param_index += 1
                     return None
 
