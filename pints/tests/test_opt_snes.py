@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the SNES optimiser.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -72,7 +71,7 @@ class TestSNES(unittest.TestCase):
     def test_bounded_and_sigma(self):
         # Runs an optimisation without boundaries and sigma.
         r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method)
+        opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)

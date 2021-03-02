@@ -1,20 +1,18 @@
 #
 # HES1 Michaelis-Menten model of regulatory dynamics.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import print_function
 import numpy as np
 import pints
 import scipy
+from . import ToyODEModel
 
-from . import ToyModel
 
-
-class Hes1Model(pints.ForwardModel, ToyModel):
+class Hes1Model(ToyODEModel, pints.ForwardModelS1):
     """
     HES1 Michaelis-Menten model of regulatory dynamics [1]_.
 
@@ -35,30 +33,92 @@ class Hes1Model(pints.ForwardModel, ToyModel):
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
+    Parameters
+    ----------
+    m0 : float
+        The initial condition of the observable ``m``. Requires ``m0 >= 0``.
+    fixed_parameters
+        The fixed parameters of the model which are not inferred, given as a
+        vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
+
     References
     ----------
     .. [1] Silk, D., el al. 2011. Designing attractive models via automated
            identification of chaotic and oscillatory dynamical regimes. Nature
            communications, 2, p.489.
            https://doi.org/10.1038/ncomms1496
-
-    Parameters
-    ----------
-    y0 : float
-        The initial condition of the observable. Requires ``y0 >= 0``.
-    implicit_parameters
-        The implicit parameter of the model that is not inferred, given as a
-        vector ``[p1_0, p2_0, k_deg]`` with ``p1_0, p2_0, k_deg >= 0``.
     """
-    def __init__(self, y0=None, implicit_parameters=None):
-        if y0 is None:
-            self.set_initial_conditions(2)
+    def __init__(self, m0=None, fixed_parameters=None):
+        if fixed_parameters is None:
+            self.set_fixed_parameters([5., 3., 0.03])
         else:
-            self.set_initial_conditions(y0)
-        if implicit_parameters is None:
-            self.set_implicit_parameters([5., 3., 0.03])
+            self.set_fixed_parameters(fixed_parameters)
+        if m0 is None:
+            self.set_m0(2)
         else:
-            self.set_implicit_parameters(implicit_parameters)
+            self.set_m0(m0)
+
+    def _dfdp(self, state, time, parameters):
+        """ See :meth:`pints.ToyModel.jacobian()`. """
+        m, p1, p2 = state
+        P0, v, k1, h = parameters
+        p2_over_p0 = p2 / P0
+        p2_over_p0_h = p2_over_p0**h
+        one_plus_p2_expression_sq = (1 + p2_over_p0_h)**2
+        ret = np.empty((self.n_states(), self.n_parameters()))
+        ret[0, 0] = h * p2 * p2_over_p0**(h - 1) / (
+            P0**2 * one_plus_p2_expression_sq)
+        ret[0, 1] = 0
+        ret[0, 2] = 0
+        ret[0, 3] = - (p2_over_p0_h * np.log(p2_over_p0)) / (
+            one_plus_p2_expression_sq
+        )
+        ret[1, 0] = 0
+        ret[1, 1] = m
+        ret[1, 2] = -p1
+        ret[1, 3] = 0
+        ret[2, 0] = 0
+        ret[2, 1] = 0
+        ret[2, 2] = p1
+        ret[2, 3] = 0
+        return ret
+
+    def m0(self):
+        """
+        Returns the initial conditions of the ``m`` variable.
+        """
+        return self._y0[0]
+
+    def fixed_parameters(self):
+        """
+        Returns the fixed parameters of the model which are not inferred, given
+        as a vector ``[p1_0, p2_0, k_deg]``.
+        """
+        return [self._p0[0], self._p0[1], self._kdeg]
+
+    def jacobian(self, state, time, parameters):
+        """ See :meth:`pints.ToyModel.jacobian()`. """
+        m, p1, p2 = state
+        P0, v, k1, h = parameters
+        k_deg = self._kdeg
+        p2_over_p0 = p2 / P0
+        p2_over_p0_h = p2_over_p0**h
+        one_plus_p2_expression_sq = (1 + p2_over_p0_h)**2
+        ret = np.zeros((self.n_states(), self.n_states()))
+        ret[0, 0] = -k_deg
+        ret[0, 1] = 0
+        ret[0, 2] = -h * p2_over_p0**(h - 1) / (P0 * one_plus_p2_expression_sq)
+        ret[1, 0] = v
+        ret[1, 1] = -k1 - k_deg
+        ret[1, 2] = 0
+        ret[2, 0] = 0
+        ret[2, 1] = k1
+        ret[2, 2] = -k_deg
+        return ret
+
+    def n_states(self):
+        """ See :meth:`pints.ToyODEModel.n_states()`. """
+        return 3
 
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
@@ -80,15 +140,16 @@ class Hes1Model(pints.ForwardModel, ToyModel):
             - self._kdeg * p2 + k1 * p1])
         return output
 
-    def set_initial_conditions(self, y0):
+    def set_m0(self, m0):
         """
-        Changes the initial conditions for this model.
+        Sets the initial conditions of the ``m`` variable.
         """
-        if y0 < 0:
+        if m0 < 0:
             raise ValueError('Initial condition cannot be negative.')
-        self._y0 = y0
+        y0 = [m0, self._p0[0], self._p0[1]]
+        super(Hes1Model, self).set_initial_conditions(y0)
 
-    def set_implicit_parameters(self, k):
+    def set_fixed_parameters(self, k):
         """
         Changes the implicit parameters for this model.
         """
@@ -98,33 +159,12 @@ class Hes1Model(pints.ForwardModel, ToyModel):
         self._p0 = [a, b]
         self._kdeg = c
 
-    def initial_conditions(self):
-        """
-        Returns the initial conditions of this model.
-        """
-        return self._y0
-
-    def implicit_parameters(self):
-        """
-        Returns the implicit parameters of this model.
-        """
-        return [self._p0[0], self._p0[1], self._kdeg]
-
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        y0 = [self._y0, self._p0[0], self._p0[1]]
-        solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,))
-        # Only return the observable
-        return solved_states[:, 0]
-
     def simulate_all_states(self, parameters, times):
         """
         Returns all state variables that ``simulate()`` does not return.
         """
-        y0 = [self._y0, self._p0[0], self._p0[1]]
         solved_states = scipy.integrate.odeint(
-            self._rhs, y0, times, args=(parameters,))
+            self._rhs, self._y0, times, args=(parameters,))
         # Return all states
         return solved_states
 
@@ -142,4 +182,3 @@ class Hes1Model(pints.ForwardModel, ToyModel):
         :meth:`suggested_times()`.
         """
         return np.array([2, 1.20, 5.90, 4.58, 2.64, 5.38, 6.42, 5.60, 4.48])
-

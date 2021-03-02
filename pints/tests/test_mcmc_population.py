@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the population MCMC routine.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -14,8 +13,6 @@ import pints
 import pints.toy as toy
 
 from shared import StreamCapture
-
-debug = False
 
 
 class TestPopulationMCMC(unittest.TestCase):
@@ -116,9 +113,8 @@ class TestPopulationMCMC(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.tell, 1)
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
+
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.PopulationMCMC)
@@ -133,8 +129,4 @@ class TestPopulationMCMC(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

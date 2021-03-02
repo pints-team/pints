@@ -2,10 +2,9 @@
 #
 # Tests the basic methods of the differential evolution MCMC method.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 import unittest
 import numpy as np
@@ -141,9 +140,8 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
             mcmc.tell([self.log_posterior(x) for x in mcmc.ask()])
 
     def test_set_hyper_parameters(self):
-        """
-        Tests the hyper-parameter interface for this sampler.
-        """
+        # Tests the hyper-parameter interface for this sampler.
+
         n = 3
         x0 = [self.real_parameters] * n
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
@@ -151,31 +149,31 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 5)
 
         mcmc.set_hyper_parameters([0.5, 0.6, 20, 0, 0])
-        self.assertEqual(mcmc._gamma, 0.5)
-        self.assertEqual(mcmc._b, 0.6)
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
-        self.assertTrue(not mcmc._gaussian_error)
-        self.assertTrue(not mcmc._relative_scaling)
+        self.assertEqual(mcmc.gamma(), 0.5)
+        self.assertEqual(mcmc.scale_coefficient(), 0.6)
+        self.assertEqual(mcmc.gamma_switch_rate(), 20)
+        self.assertTrue(not mcmc.gaussian_error())
+        self.assertTrue(not mcmc.relative_scaling())
 
         mcmc.set_gamma(0.5)
-        self.assertEqual(mcmc._gamma, 0.5)
+        self.assertEqual(mcmc.gamma(), 0.5)
         self.assertRaisesRegex(ValueError,
                                'non-negative', mcmc.set_gamma, -1)
 
         mcmc.set_scale_coefficient(1)
-        self.assertTrue(not mcmc._relative_scaling)
+        self.assertTrue(not mcmc.relative_scaling())
         self.assertRaisesRegex(ValueError,
                                'non-negative', mcmc.set_scale_coefficient, -1)
 
         mcmc.set_gamma_switch_rate(11)
-        self.assertEqual(mcmc._gamma_switch_rate, 11)
+        self.assertEqual(mcmc.gamma_switch_rate(), 11)
         self.assertRaisesRegex(
             ValueError, 'integer', mcmc.set_gamma_switch_rate, 11.5)
         self.assertRaisesRegex(
             ValueError, 'exceed 1', mcmc.set_gamma_switch_rate, 0)
 
         mcmc.set_gaussian_error(False)
-        self.assertTrue(not mcmc._gaussian_error)
+        self.assertTrue(not mcmc.gaussian_error())
 
         mcmc.set_relative_scaling(0)
         self.assertTrue(np.array_equal(mcmc._b_star,
@@ -186,15 +184,13 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
 
         # test implicit conversion to int
         mcmc.set_hyper_parameters([0.5, 0.6, 20.2, 0, 0])
-        self.assertEqual(mcmc._gamma_switch_rate, 20)
+        self.assertEqual(mcmc.gamma_switch_rate(), 20)
         self.assertRaisesRegex(
             ValueError, 'convertable to an integer',
             mcmc.set_hyper_parameters, (0.5, 0.6, 'sdf', 0, 0))
 
     def test_logging(self):
-        """
-        Test logging includes name and custom fields.
-        """
+        # Test logging includes name and custom fields.
         x = [self.real_parameters] * 3
         mcmc = pints.MCMCController(
             self.log_posterior, 3, x, method=pints.DifferentialEvolutionMCMC)

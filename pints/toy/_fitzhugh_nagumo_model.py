@@ -1,22 +1,20 @@
 #
 # Fitzhugh-Nagumo toy model.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2019, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
+
 import pints
-from scipy.integrate import odeint
-
-from . import ToyModel
+from . import ToyODEModel
 
 
-class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
+class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
     r"""
     Fitzhugh-Nagumo model of the action potential [1]_.
 
@@ -54,7 +52,7 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
             \end{matrix}\right]
         \end{align}
 
-    Extends :class:`pints.ForwardModel`, `pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, `pints.toy.ToyODEModel`.
 
     Parameters
     ----------
@@ -80,6 +78,30 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
             if len(self._y0) != 2:
                 raise ValueError('Initial value must have size 2.')
 
+    def _dfdp(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel._dfdp()`. """
+        V, R = y
+        a, b, c = [float(param) for param in p]
+        ret = np.empty((2, 3))
+        ret[0, 0] = 0
+        ret[0, 1] = 0
+        ret[0, 2] = R - V**3 / 3 + V
+        ret[1, 0] = 1 / c
+        ret[1, 1] = -R / c
+        ret[1, 2] = (R * b + V - a) / c**2
+        return ret
+
+    def jacobian(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel.jacobian()`. """
+        V, R = y
+        a, b, c = [float(param) for param in p]
+        ret = np.empty((2, 2))
+        ret[0, 0] = c * (1 - V**2)
+        ret[0, 1] = c
+        ret[1, 0] = -1 / c
+        ret[1, 1] = -b / c
+        return ret
+
     def n_outputs(self):
         """ See :meth:`pints.ForwardModel.n_outputs()`. """
         return 2
@@ -88,86 +110,13 @@ class FitzhughNagumoModel(pints.ForwardModelS1, ToyModel):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """
         return 3
 
-    def simulate(self, parameters, times):
-        """ See :meth:`pints.ForwardModel.simulate()`. """
-        return self._simulate(parameters, times, False)
-
-    def simulateS1(self, parameters, times):
-        """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
-        return self._simulate(parameters, times, True)
-
-    def _simulate(self, parameters, times, sensitivities):
-        """
-        Private helper function that either simulates the model with
-        sensitivities (`sensitivities == true`) or without
-        (`sensitivities == false`)
-
-        Parameters
-        ----------
-        parameters
-            The three phenomenological parameters: ``a`` , ``b``, ``c``.
-        times
-            The times at which to calculate the model output / sensitivities
-        sensitivities
-            If set to `true` the function returns the model outputs and
-            sensitivities `(values,sensitivities)`. If set to `false` the
-            function only returns the model outputs `values`. See
-            :meth:`pints.ForwardModel.simulate()` and
-            :meth:`pints.ForwardModel.simulate_with_sensitivities()` for
-            details.
-        """
-
-        a, b, c = [float(x) for x in parameters]
-
-        times = np.asarray(times)
-        if np.any(times < 0):
-            raise ValueError('Negative times are not allowed.')
-
-        def r(y, t, p):
-            V, R = y
-            dV_dt = (V - V**3 / 3 + R) * c
-            dR_dt = (V - a + b * R) / -c
-            return dV_dt, dR_dt
-
-        if sensitivities:
-            def jac(y):
-                V, R = y
-                ret = np.empty((2, 2))
-                ret[0, 0] = c * (1 - V**2)
-                ret[0, 1] = c
-                ret[1, 0] = -1 / c
-                ret[1, 1] = -b / c
-                return ret
-
-            def dfdp(y):
-                V, R = y
-                ret = np.empty((2, 3))
-                ret[0, 0] = 0
-                ret[0, 1] = 0
-                ret[0, 2] = R - V**3 / 3 + V
-                ret[1, 0] = 1 / c
-                ret[1, 1] = -R / c
-                ret[1, 2] = (R * b + V - a) / c**2
-                return ret
-
-            def rhs(y_and_dydp, t, p):
-                y = y_and_dydp[0:2]
-                dydp = y_and_dydp[2:].reshape((2, 3))
-
-                dydt = r(y, t, p)
-                d_dydp_dt = np.matmul(jac(y), dydp) + dfdp(y)
-
-                return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
-
-            y0 = np.zeros(8)
-            y0[0:2] = self._y0
-            result = odeint(rhs, y0, times, (parameters,))
-            values = result[:, 0:2]
-            dvalues_dp = result[:, 2:].reshape((len(times), 2, 3))
-            return values, dvalues_dp
-        else:
-            values = odeint(r, self._y0, times, (parameters,))
-            return values
+    def _rhs(self, y, t, p):
+        """ See :meth:`pints.ToyODEModel._rhs()`. """
+        V, R = y
+        a, b, c = [float(x) for x in p]
+        dV_dt = (V - V**3 / 3 + R) * c
+        dR_dt = (V - a + b * R) / -c
+        return dV_dt, dR_dt
 
     def suggested_parameters(self):
         """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """

@@ -1,10 +1,9 @@
 #
 # Parameter-space boundaries object
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
@@ -40,7 +39,7 @@ class Boundaries(object):
         Returns ``n`` random samples from within the boundaries, for example to
         use as starting points for an optimisation.
 
-        The returned value is a numpy array with shape ``(n, d)`` where ``n``
+        The returned value is a NumPy array with shape ``(n, d)`` where ``n``
         is the requested number of samples, and ``d`` is the dimension of the
         parameter space these boundaries are defined on.
 
