@@ -102,7 +102,8 @@ class TestNestedController(unittest.TestCase):
 
         # test that ellipsoidal sampling used by default
         sampler = pints.NestedController(self.log_likelihood, self.log_prior)
-        self.assertEqual(sampler._sampler.name(), 'Nested ellipsoidal sampler')
+        self.assertEqual(sampler.sampler().name(),
+                         'Nested ellipsoidal sampler')
         self.assertRaisesRegex(
             ValueError,
             'Given method must extend pints.NestedSampler.',
