@@ -210,7 +210,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         sampling regime).
         """
         i = self._accept_count
-        if (i + 1) % self._n_rejection_samples == 0:
+        if (i + 1) > self._n_rejection_samples:
             self._rejection_phase = False
             # determine bounding ellipsoid
             self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(
@@ -236,8 +236,8 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 )
                 self._enlargement_factor = 1 + f
             # propose by sampling within ellipsoid
-            self._proposed = self._ellipsoid_sample(
-                self._enlargement_factor, self._ellipsoid._A, self._ellipsoid._c, n_points)
+            self._proposed = self._ellipsoid.sample(
+                n_points, self._enlargement_factor)
         return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):
@@ -293,65 +293,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         enlargement_factor = np.max(dist)
         A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
         return A, c
-
-    def _ellipsoid_sample(self, enlargement_factor, A, centroid, n_points):
-        """
-        Draws from the enlarged bounding ellipsoid.
-        """
-        if n_points > 1:
-            return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A),
-                centroid, n_points)
-        else:
-            return self._draw_from_ellipsoid(
-                np.linalg.inv((1 / enlargement_factor) * A), centroid, 1)[0]
-
-    def _draw_from_ellipsoid(self, covmat, cent, npts):
-        """
-        Draw ``npts`` random uniform points from within an ellipsoid with a
-        covariance matrix covmat and a centroid cent, as per:
-        http://www.astro.gla.ac.uk/~matthew/blog/?p=368
-        """
-        try:
-            ndims = covmat.shape[0]
-        except IndexError:  # pragma: no cover
-            ndims = 1
-
-        # calculate eigen_values (e) and eigen_vectors (v)
-        eigen_values, eigen_vectors = np.linalg.eig(covmat)
-        idx = (-eigen_values).argsort()[::-1][:ndims]
-        e = eigen_values[idx]
-        v = eigen_vectors[:, idx]
-        e = np.diag(e)
-
-        # generate radii of hyperspheres
-        rs = np.random.uniform(0, 1, npts)
-
-        # generate points
-        pt = np.random.normal(0, 1, [npts, ndims])
-
-        # get scalings for each point onto the surface of a unit hypersphere
-        fac = np.sum(pt**2, axis=1)
-
-        # calculate scaling for each point to be within the unit hypersphere
-        # with radii rs
-        fac = (rs**(1 / ndims)) / np.sqrt(fac)
-        pnts = np.zeros((npts, ndims))
-
-        # scale points to the ellipsoid using the eigen_values and rotate with
-        # the eigen_vectors and add centroid
-        d = np.sqrt(np.diag(e))
-        d.shape = (ndims, 1)
-
-        for i in range(0, npts):
-            # scale points to a uniform distribution within unit hypersphere
-            pnts[i, :] = fac[i] * pt[i, :]
-            pnts[i, :] = np.dot(
-                np.multiply(pnts[i, :], np.transpose(d)),
-                np.transpose(v)
-            ) + cent
-
-        return pnts
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """

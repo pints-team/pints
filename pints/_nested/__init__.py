@@ -809,7 +809,6 @@ class NestedController(object):
                                             self._sampler._n_active_points)),
                                      self._sampler._ellipsoid_count)
 
-
                 # Choose next logging point
                 if self._i_message > self._message_warm_up:
                     self._next_message = self._message_interval * (
@@ -880,7 +879,7 @@ class Ellipsoid():
         A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
         return cls(A, c)
 
-    def uniform_sample(self, npts, enlargement_factor=1):
+    def sample(self, npts, enlargement_factor=1):
         """
         Draws ``npts`` random uniform points from within the ellipsoid.
 
@@ -927,7 +926,7 @@ class Ellipsoid():
                 np.transpose(v)
             ) + cent
 
-        if pnts > 1:
+        if npts > 1:
             return pnts
         else:
             return pnts[0]
