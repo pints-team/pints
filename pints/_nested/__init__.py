@@ -795,12 +795,20 @@ class NestedController(object):
             self._i_message += 1
             if self._i_message >= self._next_message:
                 # Log state
-                self._logger.log(self._i_message, self._sampler._n_evals,
-                                 self._timer.time(), self._diff,
-                                 float(self._sampler._accept_count /
-                                       (self._sampler._n_evals -
-                                        self._sampler._n_active_points)),
-                                 self._sampler._ellipsoid_count)
+                if not self._sampler._multiple_ellipsoids:
+                    self._logger.log(self._i_message, self._sampler._n_evals,
+                                     self._timer.time(), self._diff,
+                                     float(self._sampler._accept_count /
+                                           (self._sampler._n_evals -
+                                            self._sampler._n_active_points)))
+                else:
+                    self._logger.log(self._i_message, self._sampler._n_evals,
+                                     self._timer.time(), self._diff,
+                                     float(self._sampler._accept_count /
+                                           (self._sampler._n_evals -
+                                            self._sampler._n_active_points)),
+                                     self._sampler._ellipsoid_count)
+
 
                 # Choose next logging point
                 if self._i_message > self._message_warm_up:
