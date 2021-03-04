@@ -10,6 +10,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+from pints._nested.__init__ import Ellipsoid
 
 
 class NestedEllipsoidSampler(pints.NestedSampler):
@@ -139,6 +140,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         self._alpha = 0.2
         self._A = None
         self._centroid = None
+        self._ellipsoid = None
 
     def set_dynamic_enlargement_factor(self, dynamic_enlargement_factor):
         """
@@ -211,7 +213,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         if (i + 1) % self._n_rejection_samples == 0:
             self._rejection_phase = False
             # determine bounding ellipsoid
-            self._A, self._centroid = self._minimum_volume_ellipsoid(
+            self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(
                 self._m_active[:, :self._n_parameters]
             )
 
@@ -224,7 +226,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
             # update bounding ellipsoid if sufficient samples taken
             if ((i + 1 - self._n_rejection_samples)
                     % self._ellipsoid_update_gap == 0):
-                self._A, self._centroid = self._minimum_volume_ellipsoid(
+                self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(
                     self._m_active[:, :self._n_parameters])
             # From Feroz-Hobson (2008) below eq. (14)
             if self._dynamic_enlargement_factor:
@@ -235,7 +237,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
                 self._enlargement_factor = 1 + f
             # propose by sampling within ellipsoid
             self._proposed = self._ellipsoid_sample(
-                self._enlargement_factor, self._A, self._centroid, n_points)
+                self._enlargement_factor, self._ellipsoid._A, self._ellipsoid._c, n_points)
         return self._proposed
 
     def set_enlargement_factor(self, enlargement_factor=1.1):

@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import scipy.special
 
 try:
     from scipy.special import logsumexp
@@ -805,3 +806,133 @@ class NestedController(object):
                 if self._i_message > self._message_warm_up:
                     self._next_message = self._message_interval * (
                         1 + self._i_message // self._message_interval)
+
+
+class Ellipsoid():
+    """
+    A class to represent N dimensional ellipsoids, which are needed by both
+    ellipsoidal nested sampling and MultiNest.
+
+    In "center form" the equation of an ellipsoid is given by:
+
+    ``(x-c).T * A * (x-c) = 1``
+
+    where ``A`` is a NxN dimensional positive definite symmetric matrix and
+    ``c`` is a N dimensional vector indicating the center of the ellipsoid.
+
+    Parameters
+    ----------
+    A : NxN dimensional positive definite symmetric matrix
+        represents the orientation and size of ellipsoid
+    c : N dimensional vector
+        center of ellipsoid
+    """
+    def __init__(self, A, c):
+
+        c_len = len(c)
+        if c_len < 1:
+            raise ValueError('c must be at least one dimensional.')
+        self._c = c
+        self._n_parameters = c_len
+
+        if A.shape != (self._n_parameters, self._n_parameters):
+            raise ValueError(
+                'Sigma must have same dimension as mean, or be a square ' +
+                'matrix with the same dimension as the center.')
+
+        # check whether covariance matrix is positive definite
+        if not np.all(np.linalg.eigvals(A) > 0):
+            raise ValueError('Covariance matrix must be positive ' +
+                             'definite.')
+        # check if matrix is symmetric
+        if not np.allclose(A, A.T, atol=1e-8):
+            raise ValueError('Covariance matrix must be symmetric.')
+
+        self._A = A
+
+        # calculate useful quantities
+        self._A_inv = np.linalg.inv(A)
+        # don't calculate volume unless needed
+        self._volume = None
+
+    @classmethod
+    def minimum_volume_ellipsoid(cls, points, tol=0.0):
+        """
+        Creates an approximate minimum bounding ellipsoid in "center form":
+        ``(x-c).T * A * (x-c) = 1``.
+        """
+        cov = np.cov(np.transpose(points))
+        cov_inv = np.linalg.inv(cov)
+        c = np.mean(points, axis=0)
+        dist = np.zeros(len(points))
+        for i in range(len(points)):
+            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
+                                points[i] - c)
+        enlargement_factor = np.max(dist)
+        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
+        return cls(A, c)
+
+    def uniform_sample(self, npts, enlargement_factor=1):
+        """
+        Draws ``npts`` random uniform points from within the ellipsoid.
+
+        Most of this functionality has been borrowed from:
+        http://www.astro.gla.ac.uk/~matthew/blog/?p=368
+        """
+        ndims = self._n_parameters
+        covmat = self._A_inv * enlargement_factor
+        cent = self._c
+
+        # calculate eigen_values (e) and eigen_vectors (v)
+        eigen_values, eigen_vectors = np.linalg.eig(covmat)
+        idx = (-eigen_values).argsort()[::-1][:ndims]
+        e = eigen_values[idx]
+        v = eigen_vectors[:, idx]
+        e = np.diag(e)
+
+        # generate radii of hyperspheres
+        rs = np.random.uniform(0, 1, npts)
+
+        # generate points
+        pt = np.random.normal(0, 1, [npts, ndims])
+
+        # get scalings for each point onto the surface of a unit
+        # hypersphere
+        fac = np.sum(pt**2, axis=1)
+
+        # calculate scaling for each point to be within the unit
+        # hypersphere with radii rs
+        fac = (rs**(1 / ndims)) / np.sqrt(fac)
+        pnts = np.zeros((npts, ndims))
+
+        # scale points to the ellipsoid using the eigen_values and rotate
+        # with the eigen_vectors and add centroid
+        d = np.sqrt(np.diag(e))
+        d.shape = (ndims, 1)
+
+        for i in range(0, npts):
+            # scale points to a uniform distribution within unit
+            # hypersphere
+            pnts[i, :] = fac[i] * pt[i, :]
+            pnts[i, :] = np.dot(
+                np.multiply(pnts[i, :], np.transpose(d)),
+                np.transpose(v)
+            ) + cent
+
+        if pnts > 1:
+            return pnts
+        else:
+            return pnts[0]
+
+    def volume(self):
+        """ Calculates volume of ellipsoid. """
+        if self._volume is None:
+            d = self._n_parameters
+            r = np.sqrt(1 / np.linalg.eigvals(self._A))
+            vol = (
+                (np.pi**(d / 2.0) / scipy.special.gamma((d / 2.0) + 1.0))
+                * np.prod(r)
+            )
+            # cache volume calculation to avoid recomputation
+            self._volume = vol
+        return self._volume
