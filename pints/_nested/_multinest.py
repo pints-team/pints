@@ -41,9 +41,8 @@ class MultinestSampler(pints.NestedSampler):
         L_min = min(L)
         indexmin = min_index(L)
 
-    Run rejection sampling for ``n_rejection_samples`` to generate
-    an initial sample, along with updated values of ``L_min`` and
-    ``indexmin``.
+    Run rejection sampling for ``n_rejection_samples`` to generate an initial
+    sample, along with updated values of ``L_min`` and ``indexmin``.
 
     Transform all active points into the unit cube via the cumulative
     distribution function of the priors:
@@ -85,8 +84,8 @@ class MultinestSampler(pints.NestedSampler):
             endif
 
     To find the minimum bounding ellipsoid, we use the following procedure
-    that returns the positive definite matrix C with centre mu that define the
-    ellipsoid by :math:`(x - mu)^t C (x - mu) = 1`::
+    that returns the positive definite matrix `C` with centre `mu` that defines
+    the ellipsoid by :math:`(x - mu)^t C (x - mu) = 1`::
 
         cov = covariance(transpose(active_points))
         cov_inv = inv(cov)
@@ -159,10 +158,10 @@ class MultinestSampler(pints.NestedSampler):
     References
     ----------
     .. [1] "MultiNest: an efficient and robust Bayesian inference tool for
-            cosmology and particle physics."
-            Feroz, F., M. P. Hobson, and M. Bridges.
-            Monthly Notices of the Royal Astronomical Society 398.4 (2009):
-            1601-1614.
+           cosmology and particle physics."
+           Feroz, F., M. P. Hobson, and M. Bridges.
+           Monthly Notices of the Royal Astronomical Society 398.4 (2009):
+           1601-1614.
     .. [2] "Nested Sampling for General Bayesian Computation", John Skilling,
            Bayesian Analysis 1:4 (2006).
            https://doi.org/10.1214/06-BA127
