@@ -168,11 +168,11 @@ class TestNestedEllipsoidSampler(unittest.TestCase):
         # tests dynamic enlargement factor runs
         sampler = pints.NestedController(self.log_likelihood,
                                          self.log_prior)
-        sampler._sampler.set_dynamic_enlargement_factor(1)
+        sampler.sampler().set_dynamic_enlargement_factor(1)
         sampler.set_log_to_screen(False)
-        ef1 = sampler._sampler.enlargement_factor()
+        ef1 = sampler.sampler().enlargement_factor()
         sampler.run()
-        ef2 = sampler._sampler.enlargement_factor()
+        ef2 = sampler.sampler().enlargement_factor()
         self.assertTrue(ef2 < ef1)
 
     def test_sensitivities(self):

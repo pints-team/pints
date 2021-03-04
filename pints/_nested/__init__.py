@@ -677,6 +677,10 @@ class NestedController(object):
 
         return self._m_posterior_samples
 
+    def sampler(self):
+        """ Returns sampler used by the controller. """
+        return self._sampler
+
     def sample_from_posterior(self, posterior_samples):
         """
         Draws posterior samples based on nested sampling run using importance
