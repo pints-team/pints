@@ -71,8 +71,9 @@ class LogPrior(LogPDF):
         Converts samples ``u`` uniformly drawn from the unit cube into those
         drawn from the prior space, typically by transforming using
         :meth:`LogPrior.icdf()`.
-        ``u`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``u`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         return self.icdf(u)
 
@@ -80,8 +81,9 @@ class LogPrior(LogPDF):
         """
         Converts samples from the prior ``x`` to be drawn uniformly from the
         unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
-        ``x`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``x`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         return self.cdf(x)
 
