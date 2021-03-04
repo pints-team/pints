@@ -210,7 +210,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         sampling regime).
         """
         i = self._accept_count
-        if (i + 1) > self._n_rejection_samples:
+        if self._rejection_phase and (i + 1) > self._n_rejection_samples:
             self._rejection_phase = False
             # determine bounding ellipsoid
             self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(

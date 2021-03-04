@@ -836,11 +836,8 @@ class Ellipsoid():
     """
     def __init__(self, A, c):
 
-        c_len = len(c)
-        if c_len < 1:
-            raise ValueError('c must be at least one dimensional.')
         self._c = c
-        self._n_parameters = c_len
+        self._n_parameters = len(c)
 
         if A.shape != (self._n_parameters, self._n_parameters):
             raise ValueError(
@@ -932,13 +929,16 @@ class Ellipsoid():
             return pnts[0]
 
     def volume(self):
-        """ Calculates volume of ellipsoid. """
+        """
+        Calculates volume of ellipsoid.
+        See: https://math.stackexchange.com/questions/2751632/solve-for-volume-of-ellipsoid-mathbb-x-mathbf-mut-sigma-1-mathbb-x
+        """
         if self._volume is None:
             d = self._n_parameters
-            r = np.sqrt(1 / np.linalg.eigvals(self._A))
+            r = np.linalg.det(self._A_inv)
             vol = (
                 (np.pi**(d / 2.0) / scipy.special.gamma((d / 2.0) + 1.0))
-                * np.prod(r)
+                * np.sqrt(r)
             )
             # cache volume calculation to avoid recomputation
             self._volume = vol
