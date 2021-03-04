@@ -8,7 +8,6 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
-from collections import Counter
 import pystan
 import pints
 import warnings
@@ -17,14 +16,11 @@ import warnings
 class StanLogPDF(pints.LogPDF):
     def __init__(self, stan_code, stan_data=None):
         """
-        Creates a `pints.LogPDF` object from Stan code and data, which can
-        then be used in sampling, optimisation etc. Note, that this command
-        uses Pystan to interface with Stan which then goes on to compile the
-        underlying Stan model (see [1]_), so can take some time (typically
-        minutes or so) to execute.
+        Creates a :class:`pints.LogPDF` object from Stan code and data, which
+        can then be used in sampling, optimisation etc.
 
-        If `pickle_filename` is provided, the object is pickled and can be
-        used to reload it later without recompiling the Stan model.
+        This class uses Pystan to interface with Stan, which compiles the Stan
+        model code (see [1]_). This can take some time (typically minutes).
 
         Note that the interface assumes that the parameters are on the
         unconstrained scale (according to Stan's "constraint transforms" [1]_).
@@ -32,7 +28,11 @@ class StanLogPDF(pints.LogPDF):
         zero, sampling happens on the log-transformed space. The interface
         takes care of Jacobian transformations, so a user only needs to
         transform the variable back to the constrained space (in the example,
-        using a `exp` transform) to obtain appropriate samples.
+        using a ``exp`` transform) to obtain appropriate samples.
+
+        Parameters are ordered as in the stan model. Vector and matrix
+        parameters are "flattened" into a sequence by Stan, use
+        :meth:`StanLogPDF.names()` to see the result.
 
         Extends :class:`pints.LogPDF`.
 
@@ -42,7 +42,7 @@ class StanLogPDF(pints.LogPDF):
             Stan code describing the model.
         stan_data
             Data in Python dictionary format as required by PyStan. Defaults to
-            None in which case `update_data` must be called to create a valid
+            None in which case ``update_data`` must be called to create a valid
             Stan model fit object before calling.
 
         References
@@ -50,107 +50,51 @@ class StanLogPDF(pints.LogPDF):
         .. [1] "Stan: a probabilistic programming language".
                B Carpenter et al., (2017), Journal of Statistical Software
         """
+        self._fit = None
+        self._log_prob = None
+        self._grad_log_prob = None
+        self._n_parameters = None
+        self._names = None
 
         # compile stan
-        sm = pystan.StanModel(model_code=stan_code)
-        self._compiled_stan = sm
+        self._compiled_stan = pystan.StanModel(model_code=stan_code)
 
         # only create stanfit if data supplied
-        if stan_data is None:
-            stanfit = None
-        else:
-            stanfit = sm.sampling(data=stan_data, iter=1, chains=1,
-                                  verbose=False, refresh=0,
-                                  control={'adapt_engaged': False})
-        self._initialise(stanfit)
+        if stan_data is not None:
+            self.update_data(stan_data)
 
     def __call__(self, x):
         if self._fit is None:
             raise RuntimeError(
-                "No data supplied to create Stan model fit object. " +
-                "Run `update_data` first.")
-        vals = self._prepare_values(x)
+                'No data supplied to create Stan model fit object. '
+                'Run `update_data` first.')
+        vals = x
         try:
             return self._log_prob(vals, adjust_transform=True)
         # if Pints proposes a value outside of Stan's parameter bounds
         except (RuntimeError, ValueError) as e:
-            warnings.warn("RuntimeError or ValueError encountered when " +
-                          "calling `pints.LogPDF`: " + str(e))
+            warnings.warn('RuntimeError or ValueError encountered when '
+                          'calling `pints.LogPDF`: ' + str(e))
             return -np.inf
-
-    def _dict_update(self, x):
-        """ Updates dictionary object with parameter values. """
-        names = self._names
-        k = 0
-        for i, name in enumerate(names):
-            count = self._counter[i]
-            if count == 1:
-                self._dict[name] = x[k]
-                k += 1
-            else:
-                vals = []
-                for j in range(count):
-                    vals.append(x[k])
-                    k += 1
-                self._dict[name] = vals
-        return self._dict
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         if self._fit is None:
             raise RuntimeError(
-                "No data supplied to create Stan model fit object. " +
-                "Run `update_data` first.")
-        vals = self._prepare_values(x)
+                'No data supplied to create Stan model fit object. '
+                'Run `update_data` first.')
         try:
-            val = self._log_prob(vals, adjust_transform=True)
-            dp = self._grad_log_prob(vals, adjust_transform=True)
+            val = self._log_prob(x, adjust_transform=True)
+            dp = self._grad_log_prob(x, adjust_transform=True)
             return val, dp.reshape(-1)
         except (RuntimeError, ValueError) as e:
-            warnings.warn("RuntimeError or ValueError encountered when " +
-                          "calling `pints.LogPDF`: " + str(e))
-            return -np.inf, np.ones(self._n_parameters).reshape(-1)
-
-    def _initialise(self, stanfit):
-        """ Initialises internal variables. """
-        if stanfit is None:
-            self._fit = None
-            self._log_prob = None
-            self._grad_log_prob = None
-            self._n_parameters = None
-            self._names = None
-            self._index = None
-            self._long_names = None
-            self._counter = None
-            self._dict = None
-        else:
-            self._fit = stanfit
-            self._log_prob = stanfit.log_prob
-            self._grad_log_prob = stanfit.grad_log_prob
-            names = stanfit.unconstrained_param_names()
-            self._n_parameters = len(names)
-            self._names, self._index = self._initialise_dict_index(names)
-            self._long_names = names
-            self._counter = Counter(self._index)
-            self._dict = {self._names[i]: [] for i in range(len(self._names))}
-
-    def _initialise_dict_index(self, names):
-        """ Initialises dictionary and index of names. """
-        names_short = []
-        for name in names:
-            num = name.find(".")
-            if num < 0:
-                names_short.append(name)
-            else:
-                names_short.append(name[:num])
-        names_long = list(names_short)
-        names_short = list(dict.fromkeys(names_short))
-        index = [names_short.index(name) for name in names_long]
-        return names_short, index
+            warnings.warn('RuntimeError or ValueError encountered when '
+                          'calling `pints.LogPDF`: ' + str(e))
+            return -np.inf, np.ones(self._n_parameters)
 
     def names(self):
         """ Returns names of Stan parameters. """
-        return self._long_names
+        return self._names
 
     def n_parameters(self):
         """ See `pints.LogPDF.n_parameters`. """
@@ -165,20 +109,16 @@ class StanLogPDF(pints.LogPDF):
         stan_data
             Data in Python dictionary format as required by PyStan.
         """
-        stanfit = self._compiled_stan.sampling(
-            data=stan_data, iter=1, chains=1,
-            verbose=False, refresh=0,
+        self._fit = self._compiled_stan.sampling(
+            data=stan_data,
+            iter=1,
+            chains=1,
+            verbose=False,
+            refresh=0,
             control={'adapt_engaged': False})
-        self._initialise(stanfit)
 
-    def _prepare_values(self, x):
-        """ Flattens lists from PyStan's dictionary. """
-        dict = self._dict_update(x)
-        vals = dict.values()
-        b = []
-        for ele in vals:
-            if not isinstance(ele, list):
-                ele = [ele]
-            b.append(ele)
-        vals = [item for sublist in b for item in sublist]
-        return vals
+        self._log_prob = self._fit.log_prob
+        self._grad_log_prob = self._fit.grad_log_prob
+        self._names = self._fit.unconstrained_param_names()
+        self._n_parameters = len(self._names)
+
