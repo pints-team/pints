@@ -859,6 +859,14 @@ class Ellipsoid():
         # don't calculate volume unless needed
         self._volume = None
 
+    @staticmethod
+    def mahalanobis_distance(point, A, c):
+        """
+        Finds Mahalanobis distance between a point and the centroid of
+        of an ellipsoid.
+        """
+        return np.matmul(np.matmul(point - c, A), point - c)
+
     @classmethod
     def minimum_volume_ellipsoid(cls, points, tol=0.0):
         """

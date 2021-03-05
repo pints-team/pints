@@ -386,6 +386,55 @@ class TestEllipsoid(unittest.TestCase):
         ellipsoid = Ellipsoid(A, [1, 2, 3])
         self.assertAlmostEqual(ellipsoid.volume(), 1.828137922259353)
 
+    def test_mahalanobis_distance(self):
+        # tests that distance utility works
+        pass
+
+    def test_sample(self):
+        # tests uniform sampling within ellipsoid
+
+        # default ellipsoid sampling
+        ellipsoid = Ellipsoid(self.A, self.c)
+        n = 1000
+        draws = ellipsoid.sample(n)
+        for draw in draws:
+            self.assertTrue(len(draw) == len(self.c))
+            dist = Ellipsoid.mahalanobis_distance(draw, self.A, self.c)
+            self.assertTrue(dist <= 1)
+
+        A = np.array([[1, 0.5, 0.0], [0.5, 2, 0.0], [0.0, 0.0, 3.0]])
+        c = [1, 2, 3]
+        ellipsoid = Ellipsoid(A, c)
+        draws = ellipsoid.sample(n)
+        for draw in draws:
+            self.assertTrue(len(draw) == len(c))
+            dist = Ellipsoid.mahalanobis_distance(draw, A, c)
+            self.assertTrue(dist <= 1)
+
+        # expanded ellipsoid sampling
+        n = 10000
+        ef = 2
+        draws = ellipsoid.sample(n, enlargement_factor = ef)
+        dists = np.zeros(n)
+        for k, draw in enumerate(draws):
+            self.assertTrue(len(draw) == len(c))
+            dist = Ellipsoid.mahalanobis_distance(draw, A, c)
+            dists[k] = dist
+            self.assertTrue(dist <= ef)
+        self.assertTrue(max(dists) > 1)
+        ef1 = 4
+        draws = ellipsoid.sample(n, enlargement_factor = ef1)
+        dists1 = np.zeros(n)
+        for k, draw in enumerate(draws):
+            self.assertTrue(len(draw) == len(c))
+            dist = Ellipsoid.mahalanobis_distance(draw, A, c)
+            dists1[k] = dist
+            self.assertTrue(dist <= ef1)
+        self.assertTrue(max(dists1) > max(dists))
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
