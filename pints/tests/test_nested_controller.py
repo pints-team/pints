@@ -351,7 +351,7 @@ class TestEllipsoid(unittest.TestCase):
     def setUpClass(cls):
         """ Prepare for the test. """
         cls.A = np.array([[1, 0.5], [0.5, 2]])
-        cls.c = [3, 4]
+        cls.c = np.array([3, 4])
 
     def test_constructors(self):
         # tests instantiation and errors
@@ -382,7 +382,13 @@ class TestEllipsoid(unittest.TestCase):
 
     def test_mahalanobis_distance(self):
         # tests that distance utility works
-        pass
+        A = np.array([[1, 0], [0, 1]])
+        c = np.array([0, 0])
+        ellipsoid = Ellipsoid(A, c)
+        self.assertEqual(Ellipsoid.mahalanobis_distance([1, 0], A, c), 1)
+        self.assertEqual(Ellipsoid.mahalanobis_distance([0, 1], A, c), 1)
+        point = [1 / np.sqrt(2), 1 / np.sqrt(2)]
+        self.assertAlmostEqual(Ellipsoid.mahalanobis_distance(point, A, c), 1)
 
     def test_sample(self):
         # tests uniform sampling within ellipsoid
@@ -456,6 +462,7 @@ class TestEllipsoid(unittest.TestCase):
             dists[k] = dist
         self.assertTrue(max(dists) <= 1.1)
         self.assertTrue(max(dists) > 0.9)
+
 
 
 

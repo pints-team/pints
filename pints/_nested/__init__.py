@@ -874,8 +874,7 @@ class Ellipsoid():
         c = np.mean(points, axis=0)
         dist = np.zeros(len(points))
         for i in range(len(points)):
-            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
-                                points[i] - c)
+            dist[i] = Ellipsoid.mahalanobis_distance(points[i], cov_inv, c)
         enlargement_factor = np.max(dist)
         A = (1.0 / enlargement_factor) * cov_inv
         return cls(A, c)
