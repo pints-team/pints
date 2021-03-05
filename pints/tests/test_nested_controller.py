@@ -371,6 +371,16 @@ class TestEllipsoid(unittest.TestCase):
         c = [1, 2]
         self.assertRaises(ValueError, Ellipsoid, A, c)
 
+    def test_enlarge_ellipsoid(self):
+        # tests that ellipsoid is properly enlarged
+
+        ellipsoid = Ellipsoid(self.A, self.c)
+        vol1 = ellipsoid.volume()
+        ef = 2
+        ellipsoid.enlarge(ef)
+        vol2 = ellipsoid.volume()
+        self.assertEqual(vol1 * ef, vol2)
+
     def test_volume(self):
         # tests volume calculation
         ellipsoid = Ellipsoid(self.A, self.c)

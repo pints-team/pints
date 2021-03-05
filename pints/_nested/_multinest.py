@@ -351,6 +351,14 @@ class MultinestSampler(pints.NestedSampler):
         """
         return self._enlargement_factor
 
+    def min_f_s(self):
+        """
+        Minimises F_s as in Algorithm 1 in [1]_ returning an object of class
+        EllipsoidSet.
+        """
+        
+
+
     def _f_s_minimisation(self, iteration, u):
         """
         Runs ``F(S)`` minimisation and returns minimum bounding ellipsoid
