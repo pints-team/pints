@@ -54,14 +54,21 @@ class TestMultiNestSampler(unittest.TestCase):
             problem, cls.noise)
 
     def test_getters_and_setters(self):
-        # Tests various get() and set() methods.
+        # tests various get() and set() methods.
+        controller = pints.NestedController(self.log_likelihood, self.log_prior,
+                                            method=pints.MultinestSampler)
+        self.assertEqual(controller.sampler().f_s_threshold(), 1.1)
+        controller.sampler().set_f_s_threshold(4)
+        self.assertEqual(controller.sampler().f_s_threshold(), 4)
+        self.assertRaises(ValueError, controller.sampler().set_f_s_threshold, 0.5)
+
+    def test_runs(self):
+        # tests that sampler runs
         sampler = pints.NestedController(self.log_likelihood, self.log_prior,
                                          method=pints.MultinestSampler)
-        self.assertEqual(sampler.f_s_threshold(), 1.1)
-        sampler.set_f_s_threshold(4)
-        self.assertEqual(sampler.f_s_threshold(), 4)
-        self.assertRaises(ValueError, sampler.set_f_s_threshold, 0.5)
-
+        sampler.set_iterations(100)
+        sampler.set_log_to_screen(False)
+        sampler.run()
 
 
 if __name__ == '__main__':

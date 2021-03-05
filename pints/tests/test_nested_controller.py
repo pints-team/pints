@@ -463,8 +463,13 @@ class TestEllipsoid(unittest.TestCase):
         self.assertTrue(max(dists) <= 1.1)
         self.assertTrue(max(dists) > 0.9)
 
-
-
+    def test_within_ellipsoid(self):
+        # tests within_ellipsoid function
+        A = np.array([[1, 0], [0, 1]])
+        c = np.array([0, 0])
+        ellipsoid = Ellipsoid(A, c)
+        self.assertTrue(ellipsoid.within_ellipsoid(np.array([1, 0])))
+        self.assertFalse(ellipsoid.within_ellipsoid(np.array([1.01, 0])))
 
 
 if __name__ == '__main__':

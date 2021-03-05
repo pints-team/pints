@@ -13,6 +13,7 @@ import pints
 import numpy as np
 import scipy.special
 import scipy.cluster.vq
+from pints._nested.__init__ import Ellipsoid
 
 
 class MultinestSampler(pints.NestedSampler):

@@ -950,3 +950,9 @@ class Ellipsoid():
     def weight_matrix(self):
         """ Returns weight matrix. """
         return self._A
+
+    def within_ellipsoid(self, point):
+        """ Determines if point is within ellipsoid. """
+        return Ellipsoid.mahalanobis_distance(point,
+                                              self.weight_matrix(),
+                                              self.centroid()) <= 1
