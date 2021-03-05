@@ -844,20 +844,16 @@ class Ellipsoid():
                 'Sigma must have same dimension as mean, or be a square ' +
                 'matrix with the same dimension as the center.')
 
-        # check whether covariance matrix is positive definite
-        if not np.all(np.linalg.eigvals(A) > 0):
-            raise ValueError('Covariance matrix must be positive ' +
-                             'definite.')
-        # check if matrix is symmetric
-        if not np.allclose(A, A.T, atol=1e-8):
-            raise ValueError('Covariance matrix must be symmetric.')
-
         self._A = A
 
         # calculate useful quantities
         self._A_inv = np.linalg.inv(A)
         # don't calculate volume unless needed
         self._volume = None
+
+    def centroid(self):
+        """ Returns centroid of ellispoid. """
+        return self._c
 
     @staticmethod
     def mahalanobis_distance(point, A, c):
@@ -868,7 +864,7 @@ class Ellipsoid():
         return np.matmul(np.matmul(point - c, A), point - c)
 
     @classmethod
-    def minimum_volume_ellipsoid(cls, points, tol=0.0):
+    def minimum_volume_ellipsoid(cls, points):
         """
         Creates an approximate minimum bounding ellipsoid in "center form":
         ``(x-c).T * A * (x-c) = 1``.
@@ -881,7 +877,7 @@ class Ellipsoid():
             dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
                                 points[i] - c)
         enlargement_factor = np.max(dist)
-        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
+        A = (1.0 / enlargement_factor) * cov_inv
         return cls(A, c)
 
     def sample(self, npts, enlargement_factor=1):
@@ -951,3 +947,7 @@ class Ellipsoid():
             # cache volume calculation to avoid recomputation
             self._volume = vol
         return self._volume
+
+    def weight_matrix(self):
+        """ Returns weight matrix. """
+        return self._A

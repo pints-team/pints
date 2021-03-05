@@ -357,17 +357,11 @@ class TestEllipsoid(unittest.TestCase):
         # tests instantiation and errors
 
         # basic construction
-        Ellipsoid(self.A, self.c)
+        ellipsoid = Ellipsoid(self.A, self.c)
+        self.assertTrue(np.array_equal(self.A, ellipsoid.weight_matrix()))
+        self.assertTrue(np.array_equal(self.c, ellipsoid.centroid()))
 
         # errors
-        # non-symmetric
-        A = np.array([[1, -0.5], [0.5, 2]])
-        self.assertRaises(ValueError, Ellipsoid, A, self.c)
-
-        # non-pos-def
-        A = np.array([[1, 1], [1, 1]])
-        self.assertRaises(ValueError, Ellipsoid, A, self.c)
-
         # different length vec
         A = np.array([[1, 0.5], [0.5, 2]])
         c = [1, 2, 3]
@@ -432,6 +426,36 @@ class TestEllipsoid(unittest.TestCase):
             self.assertTrue(dist <= ef1)
         self.assertTrue(max(dists1) > max(dists))
 
+    def test_minimum_volume_ellipsoid(self):
+        # tests bounding ellipsoid creation
+
+        n = 10000
+        # 2D example
+        gaussian = pints.toy.GaussianLogPDF()
+        draws = gaussian.sample(n)
+        ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
+        dists = np.zeros(n)
+        for k, draw in enumerate(draws):
+            dist = Ellipsoid.mahalanobis_distance(draw,
+                                                  ellipsoid.weight_matrix(),
+                                                  ellipsoid.centroid())
+            dists[k] = dist
+        self.assertTrue(max(dists) <= 1.1)
+        self.assertTrue(max(dists) > 0.9)
+
+        # 3D
+        sigma = np.array([[1, 0.5, 0.0], [0.5, 2, 0.0], [0.0, 0.0, 3.0]])
+        gaussian = pints.toy.GaussianLogPDF(mean = [1, 2, 3], sigma = sigma)
+        draws = gaussian.sample(n)
+        ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
+        dists = np.zeros(n)
+        for k, draw in enumerate(draws):
+            dist = Ellipsoid.mahalanobis_distance(draw,
+                                                  ellipsoid.weight_matrix(),
+                                                  ellipsoid.centroid())
+            dists[k] = dist
+        self.assertTrue(max(dists) <= 1.1)
+        self.assertTrue(max(dists) > 0.9)
 
 
 
