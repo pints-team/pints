@@ -705,17 +705,17 @@ class MultinestSampler(pints.NestedSampler):
             # calculate volume of space
             self._V_s = self.vs(iteration)
             # calculate bounding ellipsoid
-            ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
-            V_E = ellipsoid.volume()
+            self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
+            V_E = self._ellipsoid.volume()
 
             # step 2 in Algorithm 1
-            self.compare_enlarge(ellipsoid, self._V_s)
+            self.compare_enlarge(self._ellipsoid, self._V_s)
 
             # step 3 in Algorithm 1
-            ~, assignments = scipy.cluster.vq.kmeans2(
+            _, assignments = scipy.cluster.vq.kmeans2(
                         points, 2, minit="points")
             while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-                ~, assignments = (
+                _, assignments = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
@@ -729,8 +729,6 @@ class MultinestSampler(pints.NestedSampler):
             if (V_E_1 + V_E_2 < 1) or (V_E > 2 * V_S):
                 self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
                 self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
-            else:
-                return ellipsoid
 
         def compare_enlarge(self, ellipsoid, V_S):
             """
@@ -741,12 +739,24 @@ class MultinestSampler(pints.NestedSampler):
             if r > 1:
                 ellipsoid.enlarge(r)
 
+        def ellipsoid(self):
+            """ Returns bounding ellipsoid of tree. """
+            return self._ellipsoid
+
         def h_k(self, point, ellipsoid, V_S_k):
             """ Calculates h_k as in eq. (23) in [1]_."""
             d = Ellipsoid.mahalanobis_distance(point,
                                                ellipsoid.weight_matrix(),
                                                ellipsoid.centroid())
             return ellipsoid.volume() * d / V_S_k
+
+        def leaf_ellipsoids(self):
+            """ Returns leaf ellipsoids of tree. """
+            if self._left is None and self._right is None:
+                return [self.ellipsoid()]
+            else:
+                return (self._left.leaf_ellipsoids() +
+                        self._right.leaf_ellipsoids())
 
         def split_ellipsoids(self, points, assignments, recursion_count):
             """
@@ -756,7 +766,7 @@ class MultinestSampler(pints.NestedSampler):
             # step 4 in Algorithm 1
             ellipsoids = []
             for i in range(2):
-                points_temp = np.array(points)[np.where(assignments == i)])
+                points_temp = np.array(points)[np.where(assignments == i)]
                 ellipsoids.append(
                     Ellipsoid.minimum_volume_ellipsoid(points_temp))
 
