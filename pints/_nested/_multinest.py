@@ -742,15 +742,27 @@ class MultinestSampler(pints.NestedSampler):
             if r > 1:
                 ellipsoid.enlarge(r)
 
+        def h_k(self, point, mean_k, A_k, V_E_k, V_S_k):
+            """ Calculates h_k as in eq. (23) in [1]_."""
+            d = self._mahalanobis_distance(point, mean_k, A_k)
+            return V_E_k * d / V_S_k
+
         def split_ellipsoids(self, points, centers, assignments):
             """
             Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
             partitioned into two ellipsoids to minimise a measure `h_k`.
             """
+            # step 4 in Algorithm 1
             points_1 = np.array(points)[np.where(assignments == 0)]
             points_2 = np.array(points)[np.where(assignments == 1)]
             ellipsoid_1 = Ellipsoid.minimum_volume_ellipsoid(points_1)
             ellipsoid_2 = Ellipsoid.minimum_volume_ellipsoid(points_2)
+
+            # step 5 in Algorithm 1
+            V_S_k_1 = self.vsk(ellipsoid_1)
+            V_S_k_2 = self.vsk(ellipsoid_1)
+            self.compare_enlarge(ellipsoid_1)
+            self.compare_enlarge(ellipsoid_2)
 
         def vs(self, iteration, n):
             """ Calculates volume of a total space. """
@@ -758,4 +770,4 @@ class MultinestSampler(pints.NestedSampler):
 
         def vsk(self, ellipsoid):
             """ Calculates subvolume of ellipsoid. """
-            return ellipsoid
+            return ellipsoid.n_points() * self._V_s / self._n_points
