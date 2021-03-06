@@ -983,33 +983,3 @@ class Ellipsoid():
         return Ellipsoid.mahalanobis_distance(point,
                                               self.weight_matrix(),
                                               self.centroid()) <= 1
-
-# class EllipsoidSet(object):
-#     """ """
-#     def __init__(self, ellipsoid_list, points, assignments, iteration):
-#         self._ellipsoids = ellipsoid_list
-#         self._n_ellipsoids = len(ellipsoid_list)
-#         self._points = points
-#         self._n = len(points)
-#         if len(assignments) != self._n:
-#             raise ValueError("Number of assignments must match number of " +
-#                              "points.")
-#         if max(assignments) >= self._n_ellipsoids:
-#             raise ValueError("Max cluster number must equal number of " +
-#                               "ellipsoids".)
-#         self._assignments == assignments
-#
-#         # calculate volumes of spaces
-#         self.update_vs(iteration, self._n)
-#         self.update_vsk()
-#
-#     def update_vs(self, iteration, n):
-#         """ Updates volume of a total space. """
-#         self._Vs = np.exp(-i / n)
-#
-#     def update_vsk(self):
-#         """ Updates volume of space for each subcluster. """
-#         Vs = self._Vs
-#         n = self._n
-#         self._Vsk = [Vs * np.sum(assignments == i)) / n
-#                      for i in range(self._n_ellipsoids))]
