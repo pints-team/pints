@@ -787,12 +787,13 @@ class MultinestSampler(pints.NestedSampler):
                         assignments_new[i] = j
                         h_k_max = h_k
 
-            # stops algorithmic oscillation (not in original algorithm)
-            if sum(assignments_new == 0) < 3 or sum(assignments_new == 1) < 3:
-                return ellipsoids
-            if recursion_count > 10:
-                return ellipsoids
-            if np.array_equal(assignments, assignments_new):
+            # first two conditions stop algorithmic oscillation and are not in
+            # original algorithm)
+            if (
+              (sum(assignments_new == 0) < 3
+              or sum(assignments_new == 1) < 3)
+              or recursion_count > 10
+              or np.array_equal(assignments, assignments_new)):
                 return ellipsoids
             else:
                 return self.split_ellipsoids(points,
