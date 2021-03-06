@@ -850,6 +850,13 @@ class Ellipsoid():
         # don't calculate volume unless needed
         self._volume = None
 
+        # don't cache points unless constructed using minimum_volume_ellipsoid
+        self._points = None
+
+    def add_points(self, points):
+        """ Adds points contained within bounding ellispoid. """
+        self._points = points
+
     def centroid(self):
         """ Returns centroid of ellispoid. """
         return self._c
@@ -882,7 +889,13 @@ class Ellipsoid():
             dist[i] = Ellipsoid.mahalanobis_distance(points[i], cov_inv, c)
         enlargement_factor = np.max(dist)
         A = (1.0 / enlargement_factor) * cov_inv
-        return cls(A, c)
+        obj = cls(A, c)
+        obj.add_points(points)
+        return obj
+
+    def points(self):
+        """ Returns points within bounding ellipsoid. """
+        return self._points
 
     def sample(self, npts, enlargement_factor=1):
         """
@@ -962,32 +975,32 @@ class Ellipsoid():
                                               self.weight_matrix(),
                                               self.centroid()) <= 1
 
-class EllipsoidSet(object):
-    """ """
-    def __init__(self, ellipsoid_list, points, assignments, iteration):
-        self._ellipsoids = ellipsoid_list
-        self._n_ellipsoids = len(ellipsoid_list)
-        self._points = points
-        self._n = len(points)
-        if len(assignments) != self._n:
-            raise ValueError("Number of assignments must match number of " +
-                             "points.")
-        if max(assignments) >= self._n_ellipsoids:
-            raise ValueError("Max cluster number must equal number of " +
-                              "ellipsoids".)
-        self._assignments == assignments
-
-        # calculate volumes of spaces
-        self.update_vs(iteration, self._n)
-        self.update_vsk()
-
-    def update_vs(self, iteration, n):
-        """ Updates volume of a total space. """
-        self._Vs = np.exp(-i / n)
-
-    def update_vsk(self):
-        """ Updates volume of space for each subcluster. """
-        Vs = self._Vs
-        n = self._n
-        self._Vsk = [Vs * np.sum(assignments == i)) / n
-                     for i in range(self._n_ellipsoids))]
+# class EllipsoidSet(object):
+#     """ """
+#     def __init__(self, ellipsoid_list, points, assignments, iteration):
+#         self._ellipsoids = ellipsoid_list
+#         self._n_ellipsoids = len(ellipsoid_list)
+#         self._points = points
+#         self._n = len(points)
+#         if len(assignments) != self._n:
+#             raise ValueError("Number of assignments must match number of " +
+#                              "points.")
+#         if max(assignments) >= self._n_ellipsoids:
+#             raise ValueError("Max cluster number must equal number of " +
+#                               "ellipsoids".)
+#         self._assignments == assignments
+#
+#         # calculate volumes of spaces
+#         self.update_vs(iteration, self._n)
+#         self.update_vsk()
+#
+#     def update_vs(self, iteration, n):
+#         """ Updates volume of a total space. """
+#         self._Vs = np.exp(-i / n)
+#
+#     def update_vsk(self):
+#         """ Updates volume of space for each subcluster. """
+#         Vs = self._Vs
+#         n = self._n
+#         self._Vsk = [Vs * np.sum(assignments == i)) / n
+#                      for i in range(self._n_ellipsoids))]

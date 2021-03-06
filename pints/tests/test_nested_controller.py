@@ -450,6 +450,10 @@ class TestEllipsoid(unittest.TestCase):
         gaussian = pints.toy.GaussianLogPDF()
         draws = gaussian.sample(n)
         ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
+
+        # checks that points are held by bounding ellipsoid
+        self.assertTrue(np.array_equal(draws, ellipsoid.points()))
+
         dists = np.zeros(n)
         for k, draw in enumerate(draws):
             dist = Ellipsoid.mahalanobis_distance(draw,
@@ -464,6 +468,7 @@ class TestEllipsoid(unittest.TestCase):
         gaussian = pints.toy.GaussianLogPDF(mean = [1, 2, 3], sigma = sigma)
         draws = gaussian.sample(n)
         ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
+        self.assertTrue(np.array_equal(draws, ellipsoid.points()))
         dists = np.zeros(n)
         for k, draw in enumerate(draws):
             dist = Ellipsoid.mahalanobis_distance(draw,

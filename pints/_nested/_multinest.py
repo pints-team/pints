@@ -356,7 +356,7 @@ class MultinestSampler(pints.NestedSampler):
         Minimises F_s as in Algorithm 1 in [1]_ returning an object of class
         EllipsoidSet.
         """
-        
+
 
 
     def _f_s_minimisation(self, iteration, u):
@@ -685,3 +685,52 @@ class MultinestSampler(pints.NestedSampler):
     def _V_S_k_calculator(self, n_k, N, V_S):
         """ Calculates prior volume remaining for set k."""
         return n_k * V_S / N
+
+
+    class EllipsoidTree():
+        """
+        Binary tree with ellipsoids as leaf nodes which is used to minimise
+        F_s as in Algorithm 1 in [1]_.
+        """
+        def __init__(self, points, iteration):
+            n = len(points)
+            if n < 1:
+                raise ValueError(
+                    "More than one point is needed in a EllipsoidTree.")
+            self._n = n
+            self._points = points
+            self._iteration = iteration
+
+            # step 1 in Algorithm 1
+            # calculate volume of space
+            self._Vs = self.vs(iteration)
+            # calculate bounding ellipsoid
+            ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
+            V_E = ellipsoid.volume()
+
+            # step 2 in Algorithm 1
+            r = V_S / V_E
+            if r > 1:
+                ellipsoid.enlarge(r)
+
+            # step 3 in Algorithm 1
+            centers, assignments = scipy.cluster.vq.kmeans2(
+                        points, 2, minit="points")
+            while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
+                centers, assignments = (
+                    scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+
+            # steps 4-13 in Algorithm 1
+            ellipsoid_1, ellipsoid_2
+
+        def split_ellipsoids(self, points, assignments):
+            """
+            Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
+            partitioned into two ellipsoids to minimise a measure `h_k`.
+            """
+
+
+
+        def vs(self, iteration, n):
+            """ Calculates volume of a total space. """
+            Vs = np.exp(-i / n)
