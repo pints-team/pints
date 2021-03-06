@@ -712,17 +712,16 @@ class MultinestSampler(pints.NestedSampler):
             self.compare_enlarge(ellipsoid, self._V_s)
 
             # step 3 in Algorithm 1
-            centers, assignments = scipy.cluster.vq.kmeans2(
+            ~, assignments = scipy.cluster.vq.kmeans2(
                         points, 2, minit="points")
             while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-                centers, assignments = (
+                ~, assignments = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
             ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
-                                                             centers,
-                                                             assignments)
-
+                                                             assignments,
+                                                             0)
             # steps 14+ in Algorithm 1
             V_E_1 = ellipsoid_1.volume()
             V_E_2 = ellipsoid_2.volume()
@@ -742,27 +741,53 @@ class MultinestSampler(pints.NestedSampler):
             if r > 1:
                 ellipsoid.enlarge(r)
 
-        def h_k(self, point, mean_k, A_k, V_E_k, V_S_k):
+        def h_k(self, point, ellipsoid, V_S_k):
             """ Calculates h_k as in eq. (23) in [1]_."""
-            d = self._mahalanobis_distance(point, mean_k, A_k)
-            return V_E_k * d / V_S_k
+            d = Ellipsoid.mahalanobis_distance(point,
+                                               ellipsoid.weight_matrix(),
+                                               ellipsoid.centroid())
+            return ellipsoid.volume() * d / V_S_k
 
-        def split_ellipsoids(self, points, centers, assignments):
+        def split_ellipsoids(self, points, assignments, recursion_count):
             """
             Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
             partitioned into two ellipsoids to minimise a measure `h_k`.
             """
             # step 4 in Algorithm 1
-            points_1 = np.array(points)[np.where(assignments == 0)]
-            points_2 = np.array(points)[np.where(assignments == 1)]
-            ellipsoid_1 = Ellipsoid.minimum_volume_ellipsoid(points_1)
-            ellipsoid_2 = Ellipsoid.minimum_volume_ellipsoid(points_2)
+            ellipsoids = []
+            for i in range(2):
+                points_temp = np.array(points)[np.where(assignments == i)])
+                ellipsoids.append(
+                    Ellipsoid.minimum_volume_ellipsoid(points_temp))
 
             # step 5 in Algorithm 1
-            V_S_k_1 = self.vsk(ellipsoid_1)
-            V_S_k_2 = self.vsk(ellipsoid_1)
-            self.compare_enlarge(ellipsoid_1)
-            self.compare_enlarge(ellipsoid_2)
+            V_S_ks = [self.vsk(el) for el in ellipsoids]
+            for i in range(2):
+                self.compare_enlarge(ellipsoid[i], V_S_ks[i])
+
+            # step 6 in Algorithm 1
+            n = self._n_points
+            assignments_new = np.zeros(n, dtype=np.uint8)
+            for i in range(n):
+                h_k_max = float('inf')
+                for j in range(0, 2):
+                    h_k = self.h_k_calculator(points[i],
+                                              ellipsoids[j], V_S_ks[j])
+                    if h_k < h_k_max:
+                        assignments_new[i] = j
+                        h_k_max = h_k
+
+            # stops algorithmic oscillation (not in original algorithm)
+            if sum(assignments_new == 0) < 3 or sum(assignments_new == 1) < 3:
+                return ellipsoids
+            if recursion_count > 10:
+                return ellipsoids
+            if np.array_equal(assignments, assignments_new):
+                return ellipsoids
+            else:
+                return self.split_ellipsoids(points,
+                                             assignments_new,
+                                             recursion_count + 1)
 
         def vs(self, iteration, n):
             """ Calculates volume of a total space. """
