@@ -852,10 +852,12 @@ class Ellipsoid():
 
         # don't cache points unless constructed using minimum_volume_ellipsoid
         self._points = None
+        self._n_points = 0
 
     def add_points(self, points):
         """ Adds points contained within bounding ellispoid. """
         self._points = points
+        self._n_points = len(points)
 
     def centroid(self):
         """ Returns centroid of ellispoid. """
@@ -892,6 +894,10 @@ class Ellipsoid():
         obj = cls(A, c)
         obj.add_points(points)
         return obj
+
+    def n_points(self):
+        """ Returns number of points within bounding ellipsoid. """
+        return self._n_points
 
     def points(self):
         """ Returns points within bounding ellipsoid. """

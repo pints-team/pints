@@ -360,6 +360,8 @@ class TestEllipsoid(unittest.TestCase):
         ellipsoid = Ellipsoid(self.A, self.c)
         self.assertTrue(np.array_equal(self.A, ellipsoid.weight_matrix()))
         self.assertTrue(np.array_equal(self.c, ellipsoid.centroid()))
+        self.assertTrue(ellipsoid.points() is None)
+        self.assertEqual(0, ellipsoid.n_points())
 
         # errors
         # different length vec
@@ -453,6 +455,7 @@ class TestEllipsoid(unittest.TestCase):
 
         # checks that points are held by bounding ellipsoid
         self.assertTrue(np.array_equal(draws, ellipsoid.points()))
+        self.assertEqual(n, ellipsoid.n_points())
 
         dists = np.zeros(n)
         for k, draw in enumerate(draws):
@@ -469,6 +472,7 @@ class TestEllipsoid(unittest.TestCase):
         draws = gaussian.sample(n)
         ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
         self.assertTrue(np.array_equal(draws, ellipsoid.points()))
+        self.assertEqual(n, ellipsoid.n_points())
         dists = np.zeros(n)
         for k, draw in enumerate(draws):
             dist = Ellipsoid.mahalanobis_distance(draw,

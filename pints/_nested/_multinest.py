@@ -693,25 +693,23 @@ class MultinestSampler(pints.NestedSampler):
         F_s as in Algorithm 1 in [1]_.
         """
         def __init__(self, points, iteration):
-            n = len(points)
-            if n < 1:
+            n_points = len(points)
+            if n_points < 1:
                 raise ValueError(
                     "More than one point is needed in a EllipsoidTree.")
-            self._n = n
+            self._n = n_points
             self._points = points
             self._iteration = iteration
 
             # step 1 in Algorithm 1
             # calculate volume of space
-            self._Vs = self.vs(iteration)
+            self._V_s = self.vs(iteration)
             # calculate bounding ellipsoid
             ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
             V_E = ellipsoid.volume()
 
             # step 2 in Algorithm 1
-            r = V_S / V_E
-            if r > 1:
-                ellipsoid.enlarge(r)
+            self.compare_enlarge(ellipsoid, self._V_s)
 
             # step 3 in Algorithm 1
             centers, assignments = scipy.cluster.vq.kmeans2(
@@ -721,16 +719,43 @@ class MultinestSampler(pints.NestedSampler):
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
-            ellipsoid_1, ellipsoid_2
+            ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
+                                                             centers,
+                                                             assignments)
 
-        def split_ellipsoids(self, points, assignments):
+            # steps 14+ in Algorithm 1
+            V_E_1 = ellipsoid_1.volume()
+            V_E_2 = ellipsoid_2.volume()
+
+            if (V_E_1 + V_E_2 < 1) or (V_E > 2 * V_S):
+                self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
+                self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+            else:
+                return ellipsoid
+
+        def compare_enlarge(self, ellipsoid, V_S):
+            """
+            Compares the volume of an ellipsoid to V_S and, if it is smaller,
+            enlarges it so that it has the same volume.
+            """
+            r = V_S / ellipsoid.volume()
+            if r > 1:
+                ellipsoid.enlarge(r)
+
+        def split_ellipsoids(self, points, centers, assignments):
             """
             Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
             partitioned into two ellipsoids to minimise a measure `h_k`.
             """
-
-
+            points_1 = np.array(points)[np.where(assignments == 0)]
+            points_2 = np.array(points)[np.where(assignments == 1)]
+            ellipsoid_1 = Ellipsoid.minimum_volume_ellipsoid(points_1)
+            ellipsoid_2 = Ellipsoid.minimum_volume_ellipsoid(points_2)
 
         def vs(self, iteration, n):
             """ Calculates volume of a total space. """
-            Vs = np.exp(-i / n)
+            return np.exp(-i / n)
+
+        def vsk(self, ellipsoid):
+            """ Calculates subvolume of ellipsoid. """
+            return ellipsoid
