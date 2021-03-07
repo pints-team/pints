@@ -412,7 +412,6 @@ class TestEllipsoid(unittest.TestCase):
         # tests that distance utility works
         A = np.array([[1, 0], [0, 1]])
         c = np.array([0, 0])
-        ellipsoid = Ellipsoid(A, c)
         self.assertEqual(Ellipsoid.mahalanobis_distance([1, 0], A, c), 1)
         self.assertEqual(Ellipsoid.mahalanobis_distance([0, 1], A, c), 1)
         point = [1 / np.sqrt(2), 1 / np.sqrt(2)]
@@ -442,7 +441,7 @@ class TestEllipsoid(unittest.TestCase):
         # expanded ellipsoid sampling
         n = 10000
         ef = 2
-        draws = ellipsoid.sample(n, enlargement_factor = ef)
+        draws = ellipsoid.sample(n, enlargement_factor=ef)
         dists = np.zeros(n)
         for k, draw in enumerate(draws):
             self.assertTrue(len(draw) == len(c))
@@ -451,7 +450,7 @@ class TestEllipsoid(unittest.TestCase):
             self.assertTrue(dist <= ef)
         self.assertTrue(max(dists) > 1)
         ef1 = 4
-        draws = ellipsoid.sample(n, enlargement_factor = ef1)
+        draws = ellipsoid.sample(n, enlargement_factor=ef1)
         dists1 = np.zeros(n)
         for k, draw in enumerate(draws):
             self.assertTrue(len(draw) == len(c))
@@ -484,7 +483,7 @@ class TestEllipsoid(unittest.TestCase):
 
         # 3D
         sigma = np.array([[1, 0.5, 0.0], [0.5, 2, 0.0], [0.0, 0.0, 3.0]])
-        gaussian = pints.toy.GaussianLogPDF(mean = [1, 2, 3], sigma = sigma)
+        gaussian = pints.toy.GaussianLogPDF(mean=[1, 2, 3], sigma=sigma)
         draws = gaussian.sample(n)
         ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
         self.assertTrue(np.array_equal(draws, ellipsoid.points()))
