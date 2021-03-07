@@ -11,6 +11,8 @@ import numpy as np
 
 import pints
 import pints.toy
+from pints._nested._multinest import EllipsoidTree
+from pints._nested.__init__ import Ellipsoid
 
 # Unit testing in Python 2 and 3
 try:
@@ -81,12 +83,38 @@ class TestEllipsoidTree(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # prepare for tests
+        n = 1000
+        gaussian = pints.MultivariateGaussianLogPrior([0, 0], [[1, 0], [0, 1]])
+        draws = gaussian.sample(n)
+        cls.draws = [gaussian.convert_to_unit_cube(x) for x in draws]
+
+    def test_construction_errors(self):
+        # tests errors upon construction
+
+        self.assertRaises(ValueError, EllipsoidTree, [], 1)
+        self.assertRaises(ValueError, EllipsoidTree, self.draws, -1)
+
+    def test_getters(self):
+        # tests get()
+
+        tree = EllipsoidTree(self.draws, 100)
+
+        # leaf nodes
+        self.assertTrue(tree.n_leaf_ellipsoids() >= 1)
+        leaves = tree.leaf_ellipsoids()
+        self.assertEqual(tree.n_leaf_ellipsoids(), len(leaves))
+        [self.assertTrue(isinstance(x, Ellipsoid)) for x in leaves]
+
+        # bounding ellipsoid
+        ellipsoid = tree.ellipsoid()
+        self.assertTrue(isinstance(ellipsoid, Ellipsoid))
+
+    def test_calculations(self):
+        # tests the calculations done
         pass
 
-    def test_construction(self):
-        # tests that an ellipsoid tree can be constructed
-        log_prior = pints.toy.GaussianLogPDF()
-        draws = log
+
+
 
 
 if __name__ == '__main__':

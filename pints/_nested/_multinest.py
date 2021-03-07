@@ -695,8 +695,12 @@ class EllipsoidTree():
         if n_points < 1:
             raise ValueError(
                 "More than one point is needed in a EllipsoidTree.")
-        self._n = n_points
+        self._n_points = n_points
         self._points = points
+        if iteration < 1:
+            raise ValueError(
+                "iteration must be at least 1."
+            )
         self._iteration = iteration
 
         # step 1 in Algorithm 1
@@ -704,6 +708,11 @@ class EllipsoidTree():
         self._V_S = self.vs(iteration)
         # calculate bounding ellipsoid
         self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
+
+        # not in algorithm but safeguard against small ellipsoids
+        if n_points < 10:
+            return [self._ellipsoid]
+
         V_E = self._ellipsoid.volume()
 
         # step 2 in Algorithm 1
@@ -724,7 +733,9 @@ class EllipsoidTree():
         V_E_1 = ellipsoid_1.volume()
         V_E_2 = ellipsoid_2.volume()
 
-        if (V_E_1 + V_E_2 < 1) or (V_E > 2 * self._V_S):
+        self._left = None
+        self._right = None
+        if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
             self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
             self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
 
@@ -756,6 +767,14 @@ class EllipsoidTree():
             return (self._left.leaf_ellipsoids() +
                     self._right.leaf_ellipsoids())
 
+    def n_leaf_ellipsoids(self):
+        """ Counts the leaf ellipsoids. """
+        if self._left is None and self._right is None:
+            return 1
+        else:
+            return (self._left.n_leaf_ellipsoids() +
+                    self._right.n_leaf_ellipsoids())
+
     def split_ellipsoids(self, points, assignments, recursion_count):
         """
         Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
@@ -779,8 +798,7 @@ class EllipsoidTree():
         for i in range(n):
             h_k_max = float('inf')
             for j in range(0, 2):
-                h_k = self.h_k_calculator(points[i],
-                                          ellipsoids[j], V_S_ks[j])
+                h_k = self.h_k(points[i], ellipsoids[j], V_S_ks[j])
                 if h_k < h_k_max:
                     assignments_new[i] = j
                     h_k_max = h_k
@@ -797,9 +815,9 @@ class EllipsoidTree():
                                          assignments_new,
                                          recursion_count + 1)
 
-    def vs(self, iteration, n):
-        """ Calculates volume of a total space. """
-        return np.exp(-iteration / n)
+    def vs(self, iteration):
+        """ Calculates volume of total space. """
+        return np.exp(-iteration / self._n_points)
 
     def vsk(self, ellipsoid):
         """ Calculates subvolume of ellipsoid. """
