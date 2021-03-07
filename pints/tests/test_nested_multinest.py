@@ -55,12 +55,14 @@ class TestMultiNestSampler(unittest.TestCase):
 
     def test_getters_and_setters(self):
         # tests various get() and set() methods.
-        controller = pints.NestedController(self.log_likelihood, self.log_prior,
+        controller = pints.NestedController(self.log_likelihood,
+                                            self.log_prior,
                                             method=pints.MultinestSampler)
         self.assertEqual(controller.sampler().f_s_threshold(), 1.1)
         controller.sampler().set_f_s_threshold(4)
         self.assertEqual(controller.sampler().f_s_threshold(), 4)
-        self.assertRaises(ValueError, controller.sampler().set_f_s_threshold, 0.5)
+        self.assertRaises(ValueError, controller.sampler().set_f_s_threshold,
+                          0.5)
 
     def test_runs(self):
         # tests that sampler runs

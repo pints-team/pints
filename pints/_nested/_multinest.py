@@ -357,8 +357,6 @@ class MultinestSampler(pints.NestedSampler):
         EllipsoidSet.
         """
 
-
-
     def _f_s_minimisation(self, iteration, u):
         """
         Runs ``F(S)`` minimisation and returns minimum bounding ellipsoid
@@ -687,123 +685,122 @@ class MultinestSampler(pints.NestedSampler):
         return n_k * V_S / N
 
 
-    class EllipsoidTree():
+class EllipsoidTree():
+    """
+    Binary tree with ellipsoids as leaf nodes which is used to minimise
+    F_s as in Algorithm 1 in [1]_.
+    """
+    def __init__(self, points, iteration):
+        n_points = len(points)
+        if n_points < 1:
+            raise ValueError(
+                "More than one point is needed in a EllipsoidTree.")
+        self._n = n_points
+        self._points = points
+        self._iteration = iteration
+
+        # step 1 in Algorithm 1
+        # calculate volume of space
+        self._V_S = self.vs(iteration)
+        # calculate bounding ellipsoid
+        self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
+        V_E = self._ellipsoid.volume()
+
+        # step 2 in Algorithm 1
+        self.compare_enlarge(self._ellipsoid, self._V_S)
+
+        # step 3 in Algorithm 1
+        _, assignments = scipy.cluster.vq.kmeans2(
+            points, 2, minit="points")
+        while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
+            _, assignments = (
+                scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+
+        # steps 4-13 in Algorithm 1
+        ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
+                                                         assignments,
+                                                         0)
+        # steps 14+ in Algorithm 1
+        V_E_1 = ellipsoid_1.volume()
+        V_E_2 = ellipsoid_2.volume()
+
+        if (V_E_1 + V_E_2 < 1) or (V_E > 2 * self._V_S):
+            self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
+            self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+
+    def compare_enlarge(self, ellipsoid, V_S):
         """
-        Binary tree with ellipsoids as leaf nodes which is used to minimise
-        F_s as in Algorithm 1 in [1]_.
+        Compares the volume of an ellipsoid to V_S and, if it is smaller,
+        enlarges it so that it has the same volume.
         """
-        def __init__(self, points, iteration):
-            n_points = len(points)
-            if n_points < 1:
-                raise ValueError(
-                    "More than one point is needed in a EllipsoidTree.")
-            self._n = n_points
-            self._points = points
-            self._iteration = iteration
+        r = V_S / ellipsoid.volume()
+        if r > 1:
+            ellipsoid.enlarge(r)
 
-            # step 1 in Algorithm 1
-            # calculate volume of space
-            self._V_s = self.vs(iteration)
-            # calculate bounding ellipsoid
-            self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
-            V_E = self._ellipsoid.volume()
+    def ellipsoid(self):
+        """ Returns bounding ellipsoid of tree. """
+        return self._ellipsoid
 
-            # step 2 in Algorithm 1
-            self.compare_enlarge(self._ellipsoid, self._V_s)
+    def h_k(self, point, ellipsoid, V_S_k):
+        """ Calculates h_k as in eq. (23) in [1]_."""
+        d = Ellipsoid.mahalanobis_distance(point,
+                                           ellipsoid.weight_matrix(),
+                                           ellipsoid.centroid())
+        return ellipsoid.volume() * d / V_S_k
 
-            # step 3 in Algorithm 1
-            _, assignments = scipy.cluster.vq.kmeans2(
-                        points, 2, minit="points")
-            while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-                _, assignments = (
-                    scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+    def leaf_ellipsoids(self):
+        """ Returns leaf ellipsoids of tree. """
+        if self._left is None and self._right is None:
+            return [self.ellipsoid()]
+        else:
+            return (self._left.leaf_ellipsoids() +
+                    self._right.leaf_ellipsoids())
 
-            # steps 4-13 in Algorithm 1
-            ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
-                                                             assignments,
-                                                             0)
-            # steps 14+ in Algorithm 1
-            V_E_1 = ellipsoid_1.volume()
-            V_E_2 = ellipsoid_2.volume()
+    def split_ellipsoids(self, points, assignments, recursion_count):
+        """
+        Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
+        partitioned into two ellipsoids to minimise a measure `h_k`.
+        """
+        # step 4 in Algorithm 1
+        ellipsoids = []
+        for i in range(2):
+            points_temp = np.array(points)[np.where(assignments == i)]
+            ellipsoids.append(
+                Ellipsoid.minimum_volume_ellipsoid(points_temp))
 
-            if (V_E_1 + V_E_2 < 1) or (V_E > 2 * V_S):
-                self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
-                self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+        # step 5 in Algorithm 1
+        V_S_ks = [self.vsk(el) for el in ellipsoids]
+        for i in range(2):
+            self.compare_enlarge(ellipsoids[i], V_S_ks[i])
 
-        def compare_enlarge(self, ellipsoid, V_S):
-            """
-            Compares the volume of an ellipsoid to V_S and, if it is smaller,
-            enlarges it so that it has the same volume.
-            """
-            r = V_S / ellipsoid.volume()
-            if r > 1:
-                ellipsoid.enlarge(r)
+        # step 6 in Algorithm 1
+        n = self._n_points
+        assignments_new = np.zeros(n, dtype=np.uint8)
+        for i in range(n):
+            h_k_max = float('inf')
+            for j in range(0, 2):
+                h_k = self.h_k_calculator(points[i],
+                                          ellipsoids[j], V_S_ks[j])
+                if h_k < h_k_max:
+                    assignments_new[i] = j
+                    h_k_max = h_k
 
-        def ellipsoid(self):
-            """ Returns bounding ellipsoid of tree. """
-            return self._ellipsoid
+        # first two conditions stop algorithmic oscillation and are not in
+        # original algorithm)
+        if (
+            (sum(assignments_new == 0) < 3 or sum(assignments_new == 1) < 3)
+            or recursion_count > 10
+            or np.array_equal(assignments, assignments_new)): # noqa
+            return ellipsoids
+        else:
+            return self.split_ellipsoids(points,
+                                         assignments_new,
+                                         recursion_count + 1)
 
-        def h_k(self, point, ellipsoid, V_S_k):
-            """ Calculates h_k as in eq. (23) in [1]_."""
-            d = Ellipsoid.mahalanobis_distance(point,
-                                               ellipsoid.weight_matrix(),
-                                               ellipsoid.centroid())
-            return ellipsoid.volume() * d / V_S_k
+    def vs(self, iteration, n):
+        """ Calculates volume of a total space. """
+        return np.exp(-iteration / n)
 
-        def leaf_ellipsoids(self):
-            """ Returns leaf ellipsoids of tree. """
-            if self._left is None and self._right is None:
-                return [self.ellipsoid()]
-            else:
-                return (self._left.leaf_ellipsoids() +
-                        self._right.leaf_ellipsoids())
-
-        def split_ellipsoids(self, points, assignments, recursion_count):
-            """
-            Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
-            partitioned into two ellipsoids to minimise a measure `h_k`.
-            """
-            # step 4 in Algorithm 1
-            ellipsoids = []
-            for i in range(2):
-                points_temp = np.array(points)[np.where(assignments == i)]
-                ellipsoids.append(
-                    Ellipsoid.minimum_volume_ellipsoid(points_temp))
-
-            # step 5 in Algorithm 1
-            V_S_ks = [self.vsk(el) for el in ellipsoids]
-            for i in range(2):
-                self.compare_enlarge(ellipsoid[i], V_S_ks[i])
-
-            # step 6 in Algorithm 1
-            n = self._n_points
-            assignments_new = np.zeros(n, dtype=np.uint8)
-            for i in range(n):
-                h_k_max = float('inf')
-                for j in range(0, 2):
-                    h_k = self.h_k_calculator(points[i],
-                                              ellipsoids[j], V_S_ks[j])
-                    if h_k < h_k_max:
-                        assignments_new[i] = j
-                        h_k_max = h_k
-
-            # first two conditions stop algorithmic oscillation and are not in
-            # original algorithm)
-            if (
-              (sum(assignments_new == 0) < 3
-              or sum(assignments_new == 1) < 3)
-              or recursion_count > 10
-              or np.array_equal(assignments, assignments_new)):
-                return ellipsoids
-            else:
-                return self.split_ellipsoids(points,
-                                             assignments_new,
-                                             recursion_count + 1)
-
-        def vs(self, iteration, n):
-            """ Calculates volume of a total space. """
-            return np.exp(-i / n)
-
-        def vsk(self, ellipsoid):
-            """ Calculates subvolume of ellipsoid. """
-            return ellipsoid.n_points() * self._V_s / self._n_points
+    def vsk(self, ellipsoid):
+        """ Calculates subvolume of ellipsoid. """
+        return ellipsoid.n_points() * self._V_S / self._n_points

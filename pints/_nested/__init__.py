@@ -961,7 +961,7 @@ class Ellipsoid():
     def volume(self):
         """
         Calculates volume of ellipsoid.
-        See: https://math.stackexchange.com/questions/2751632/solve-for-volume-of-ellipsoid-mathbb-x-mathbf-mut-sigma-1-mathbb-x
+        See: https://math.stackexchange.com/questions/2751632/solve-for-volume-of-ellipsoid-mathbb-x-mathbf-mut-sigma-1-mathbb-x # noqa
         """
         if self._volume is None:
             d = self._n_parameters
