@@ -695,49 +695,51 @@ class EllipsoidTree():
         if n_points < 1:
             raise ValueError(
                 "More than one point is needed in a EllipsoidTree.")
+        for point in points:
+            if min(point) < 0 or max(point) > 1:
+                raise ValueError(
+                    "Points must be in unit cube.")
         self._n_points = n_points
         self._points = points
         if iteration < 1:
             raise ValueError(
-                "iteration must be at least 1."
+                "iteration must be >=1."
             )
         self._iteration = iteration
+        self._left = None
+        self._right = None
 
         # step 1 in Algorithm 1
         # calculate volume of space
-        self._V_S = self.vs(iteration)
+        self._V_S = self.vs()
         # calculate bounding ellipsoid
         self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
 
         # not in algorithm but safeguard against small ellipsoids
-        if n_points < 10:
-            return [self._ellipsoid]
+        if n_points > 10:
+            V_E = self._ellipsoid.volume()
 
-        V_E = self._ellipsoid.volume()
+            # step 2 in Algorithm 1
+            self.compare_enlarge(self._ellipsoid, self._V_S)
 
-        # step 2 in Algorithm 1
-        self.compare_enlarge(self._ellipsoid, self._V_S)
+            # step 3 in Algorithm 1
+            _, assignments = scipy.cluster.vq.kmeans2(
+                points, 2, minit="points")
+            while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
+                _, assignments = (
+                    scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
-        # step 3 in Algorithm 1
-        _, assignments = scipy.cluster.vq.kmeans2(
-            points, 2, minit="points")
-        while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-            _, assignments = (
-                scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+            # steps 4-13 in Algorithm 1
+            ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
+                                                             assignments,
+                                                             0)
+            # steps 14+ in Algorithm 1
+            V_E_1 = ellipsoid_1.volume()
+            V_E_2 = ellipsoid_2.volume()
 
-        # steps 4-13 in Algorithm 1
-        ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
-                                                         assignments,
-                                                         0)
-        # steps 14+ in Algorithm 1
-        V_E_1 = ellipsoid_1.volume()
-        V_E_2 = ellipsoid_2.volume()
-
-        self._left = None
-        self._right = None
-        if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
-            self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
-            self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+            if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
+                self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
+                self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
 
     def compare_enlarge(self, ellipsoid, V_S):
         """
@@ -815,10 +817,14 @@ class EllipsoidTree():
                                          assignments_new,
                                          recursion_count + 1)
 
-    def vs(self, iteration):
+    def vs(self):
         """ Calculates volume of total space. """
-        return np.exp(-iteration / self._n_points)
+        return np.exp(-self._iteration / self._n_points)
 
     def vsk(self, ellipsoid):
         """ Calculates subvolume of ellipsoid. """
+        n_points = ellipsoid.n_points()
+        if n_points > self._n_points:
+            raise ValueError(
+                "Number of points in ellipsoid be not exceed that in tree.")
         return ellipsoid.n_points() * self._V_S / self._n_points
