@@ -725,9 +725,9 @@ class EllipsoidTree():
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
-            while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-                _, assignments = (
-                    scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+            # while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
+            #     _, assignments = (
+            #         scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
             ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
