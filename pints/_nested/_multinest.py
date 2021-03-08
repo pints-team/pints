@@ -750,6 +750,17 @@ class EllipsoidTree():
         if r > 1:
             ellipsoid.enlarge(r)
 
+    def count_within_leaf_ellispoids(self, point):
+        """
+        Determines number of ellipsoids a point is contained within.
+        """
+        leaves = self.leaf_ellipsoids()
+        count = 0
+        for leaf in leaves:
+            if leaf.within_ellipsoid(point):
+                count += 1
+        return count
+
     def ellipsoid(self):
         """ Returns bounding ellipsoid of tree. """
         return self._ellipsoid
@@ -776,6 +787,38 @@ class EllipsoidTree():
         else:
             return (self._left.n_leaf_ellipsoids() +
                     self._right.n_leaf_ellipsoids())
+
+    def sample_leaf_ellipsoids(self, ndraws):
+        """
+        Draws uniform samples from within leaf ellipsoids accounting for their
+        overlap.
+        """
+
+        # calculate relative volumes of ellipsoids
+        leaves = self.leaf_ellipsoids()
+        volumes = [ell.volume() for ell in leaves]
+        volume_tot = sum(volumes)
+        volumes_rel = [vol / volume_tot for vol in volumes]
+
+        # propose ellipsoid in proportion to its volume
+        draws = []
+        naccepted = 0
+        while naccepted < ndraws:
+            k = np.random.choice(len(volumes), p=volumes_rel)
+            ellipsoid = leaves[k]
+            test_point = ellipsoid.sample(1)
+            n_e = self.count_within_leaf_ellispoids(test_point)
+            if n_e == 1:
+                naccepted += 1
+                draws.append(test_point)
+            elif n_e > 1:
+                paccept = 1.0 / n_e
+                if paccept > np.random.uniform():
+                    naccepted += 1
+                    draws.append(test_point)
+            elif n_e < 1:
+                raise RuntimeError("Point not in any ellipse.")
+        return draws
 
     def split_ellipsoids(self, points, assignments, recursion_count):
         """
