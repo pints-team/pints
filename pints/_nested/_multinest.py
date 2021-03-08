@@ -716,12 +716,12 @@ class EllipsoidTree():
         self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
 
         # not in algorithm but safeguard against small ellipsoids
+        V_E = self._ellipsoid.volume()
+
+        # step 2 in Algorithm 1
+        self.compare_enlarge(self._ellipsoid, self._V_S)
+
         if n_points > 10:
-            V_E = self._ellipsoid.volume()
-
-            # step 2 in Algorithm 1
-            self.compare_enlarge(self._ellipsoid, self._V_S)
-
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
