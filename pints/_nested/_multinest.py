@@ -211,32 +211,26 @@ class MultinestSampler(pints.NestedSampler):
             samples = self._m_active[:, :self._n_parameters]
             self._m_active_transformed = ([self._convert_to_unit_cube(x)
                                            for x in samples])
-            (self._A_l, self._c_l, self._F_S, self._assignments, self._V_E_l,
-             self._V_S_l) = (
-                self._f_s_minimisation(i, self._m_active_transformed)
-            )
+            self._ellipsoid_tree = EllipsoidTree(self._m_active_transformed, i)
         if self._rejection_phase:
             if n_points > 1:
                 self._proposed = self._log_prior.sample(n_points)
             else:
                 self._proposed = self._log_prior.sample(n_points)[0]
+            self._ellipsoid_count = 0
         else:
-            self._A_l, self._F_S = self._update_ellipsoid_volumes(i)
+            self._ellipsoid_tree.update_leaf_ellipsoids(i)
             if self._F_S > self._f_s_threshold:
                 samples = self._m_active[:, :self._n_parameters]
                 self._m_active_transformed = ([self._convert_to_unit_cube(x)
                                                for x in samples])
-                (self._A_l, self._c_l, self._F_S, self._assignments,
-                 self._V_E_l, self._V_S_l) = (
-                    self._f_s_minimisation(i, self._m_active_transformed)
-                )
-            u = self._sample_overlapping_ellipsoids(n_points, self._A_l,
-                                                    self._c_l, self._V_E_l)
+                self._ellipsoid_tree = EllipsoidTree(self._m_active_transformed, i)
+            u = self._ellipsoid_tree.sample_leaf_ellipsoids(n_points)
             if n_points > 1:
                 self._proposed = [self._convert_from_unit_cube(x) for x in u]
             else:
                 self._proposed = self._convert_from_unit_cube(u[0])
-        self._ellipsoid_count = len(self._A_l)
+            self._ellipsoid_count = self._ellipsoid_tree.n_leaf_ellipsoids()
         return self._proposed
 
     def _comparison_enlargement(self, V_S, V_E, A):
@@ -721,13 +715,10 @@ class EllipsoidTree():
         # step 2 in Algorithm 1
         self.compare_enlarge(self._ellipsoid, self._V_S)
 
-        if n_points > 10:
+        if n_points > 20:
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
-            # while sum(assignments == 0) < 3 or sum(assignments == 1) < 3:
-            #     _, assignments = (
-            #         scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
             ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
@@ -859,6 +850,14 @@ class EllipsoidTree():
             return self.split_ellipsoids(points,
                                          assignments_new,
                                          recursion_count + 1)
+
+    def update_leaf_ellipsoids(self, iteration):
+        """
+        Updates ellipsoids according to p.1605 (bottom-right) in [1]_ according
+        to iteration.
+        """
+        leaves = self.leaf_ellipsoids()
+        [self.compare_enlarge(ell, self.vsk(ell)) for ell in leaves]
 
     def vs(self):
         """ Calculates volume of total space. """
