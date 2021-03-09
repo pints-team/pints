@@ -695,6 +695,9 @@ class EllipsoidTree():
                 raise ValueError(
                     "Points must be in unit cube.")
         self._n_points = n_points
+        self._dimensions = len(points[0])
+        self._max_recursion = 50
+        self._min_points_to_split = 50
         self._points = points
         if iteration < 1:
             raise ValueError(
@@ -720,12 +723,12 @@ class EllipsoidTree():
         self.compare_enlarge(self._ellipsoid, self._V_S)
 
         # not in algorithm but safeguard against small ellipsoids
-        if n_points > 50:
+        if n_points > self._min_points_to_split:
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
             # ensures against small clusters
-            while sum(assignments == 0) < 5 or sum(assignments == 1) < 5:
+            while sum(assignments == 0) < (self._dimensions + 3) or sum(assignments == 1) < (self._dimensions + 3):
                 centers, assignment = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
@@ -858,7 +861,7 @@ class EllipsoidTree():
         assignments_new = np.zeros(n, dtype=np.uint8)
         for i in range(n):
             h_k_max = float('inf')
-            for j in range(0, 2):
+            for j in range(2):
                 h_k = self.h_k(points[i], ellipsoids[j], V_S_ks[j])
                 if h_k < h_k_max:
                     assignments_new[i] = j
@@ -868,7 +871,7 @@ class EllipsoidTree():
         # original algorithm)
         if (
             (sum(assignments_new == 0) < 3 or sum(assignments_new == 1) < 3)
-            or recursion_count > 10
+            or recursion_count > self._max_recursion
             or np.array_equal(assignments, assignments_new)): # noqa
             return ellipsoids
         else:
