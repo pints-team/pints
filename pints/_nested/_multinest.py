@@ -220,7 +220,7 @@ class MultinestSampler(pints.NestedSampler):
             self._ellipsoid_count = 0
         else:
             self._ellipsoid_tree.update_leaf_ellipsoids(i)
-            if self._F_S > self._f_s_threshold:
+            if self._ellipsoid_tree.f_s() > self._f_s_threshold:
                 samples = self._m_active[:, :self._n_parameters]
                 self._m_active_transformed = ([self._convert_to_unit_cube(x)
                                                for x in samples])
@@ -411,8 +411,9 @@ class MultinestSampler(pints.NestedSampler):
                 if len(u_new) < 50:
                     A_l_running.append(A)
                     c_l_running.append(c)
-                    return A_l_running, c_l_running
-                A_l_running, c_l_running = (
+                    # return A_l_running, c_l_running
+                else:
+                    A_l_running, c_l_running = (
                     self._f_s_minimisation_lines_2_onwards(
                         u_new, V_E_k_l[i], V_S_k_l[i], A_new_l[i], c_k_l[i],
                         A_l_running, c_l_running))
@@ -684,7 +685,7 @@ class EllipsoidTree():
     Binary tree with ellipsoids as leaf nodes which is used to minimise
     F_s as in Algorithm 1 in [1]_.
     """
-    def __init__(self, points, iteration):
+    def __init__(self, points, iteration, depth=0):
         n_points = len(points)
         if n_points < 1:
             raise ValueError(
@@ -702,6 +703,7 @@ class EllipsoidTree():
         self._iteration = iteration
         self._left = None
         self._right = None
+        self._depth = depth
 
         # step 1 in Algorithm 1
         # calculate volume of space
@@ -709,16 +711,23 @@ class EllipsoidTree():
         # calculate bounding ellipsoid
         self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
 
-        # not in algorithm but safeguard against small ellipsoids
         V_E = self._ellipsoid.volume()
+        self._V_E = V_E
+        self._V_E_1 = None
+        self._V_E_2 = None
 
         # step 2 in Algorithm 1
         self.compare_enlarge(self._ellipsoid, self._V_S)
 
-        if n_points > 20:
+        # not in algorithm but safeguard against small ellipsoids
+        if n_points > 50:
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
+            # ensures against small clusters
+            while sum(assignments == 0) < 5 or sum(assignments == 1) < 5:
+                centers, assignment = (
+                    scipy.cluster.vq.kmeans2(points, 2, minit="points"))
 
             # steps 4-13 in Algorithm 1
             ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
@@ -727,10 +736,12 @@ class EllipsoidTree():
             # steps 14+ in Algorithm 1
             V_E_1 = ellipsoid_1.volume()
             V_E_2 = ellipsoid_2.volume()
+            self._V_E_1 = V_E_1
+            self._V_E_2 = V_E_2
 
             if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
-                self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
-                self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+                self._left = EllipsoidTree(ellipsoid_1.points(), iteration, depth + 1)
+                self._right = EllipsoidTree(ellipsoid_2.points(), iteration, depth + 1)
 
     def compare_enlarge(self, ellipsoid, V_S):
         """
@@ -741,7 +752,7 @@ class EllipsoidTree():
         if r > 1:
             ellipsoid.enlarge(r)
 
-    def count_within_leaf_ellispoids(self, point):
+    def count_within_leaf_ellipsoids(self, point):
         """
         Determines number of ellipsoids a point is contained within.
         """
@@ -755,6 +766,12 @@ class EllipsoidTree():
     def ellipsoid(self):
         """ Returns bounding ellipsoid of tree. """
         return self._ellipsoid
+
+    def f_s(self):
+        """
+        Returns F_s representing ratio of ellipsoid volume to total volume.
+        """
+        return self.leaf_ellipsoids_volume() / self._V_S
 
     def h_k(self, point, ellipsoid, V_S_k):
         """ Calculates h_k as in eq. (23) in [1]_."""
@@ -770,6 +787,14 @@ class EllipsoidTree():
         else:
             return (self._left.leaf_ellipsoids() +
                     self._right.leaf_ellipsoids())
+
+    def leaf_ellipsoids_volume(self):
+        """ Returns volume of leaf ellipsoids. """
+        if self._left is None and self._right is None:
+            return self.ellipsoid().volume()
+        else:
+            return (self._left.leaf_ellipsoids_volume() +
+                    self._right.leaf_ellipsoids_volume())
 
     def n_leaf_ellipsoids(self):
         """ Counts the leaf ellipsoids. """
@@ -798,7 +823,7 @@ class EllipsoidTree():
             k = np.random.choice(len(volumes), p=volumes_rel)
             ellipsoid = leaves[k]
             test_point = ellipsoid.sample(1)
-            n_e = self.count_within_leaf_ellispoids(test_point)
+            n_e = self.count_within_leaf_ellipsoids(test_point)
             if n_e == 1:
                 naccepted += 1
                 draws.append(test_point)
