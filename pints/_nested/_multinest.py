@@ -27,7 +27,10 @@ class MultinestSampler(pints.NestedSampler):
     are drawn from within the bounds of the ellipsoids (accounting for any
     overlap between them). By sampling in the space of surviving particles,
     the efficiency of this algorithm aims to improve upon simple rejection
-    sampling. This algorithm has the following steps:
+    sampling. In this version of the method, we assume a constant number of
+    active points.
+
+    This algorithm has the following steps:
 
     Initialise::
 
@@ -167,8 +170,8 @@ class MultinestSampler(pints.NestedSampler):
     def ask(self, n_points):
         """
         If in initial phase, then uses rejection sampling. Afterwards,
-        points are drawn from within an ellipsoid (needs to be in uniform
-        sampling regime).
+        points are drawn from uniformly from within the ellipsoid set
+        produced by ellipsoid tree.
         """
         i = self._accept_count
         if self._rejection_phase:
@@ -193,7 +196,6 @@ class MultinestSampler(pints.NestedSampler):
             if ((i + 1 - self._n_rejection_samples)
                     % self._ellipsoid_update_gap == 0):
                 if self._ellipsoid_tree.f_s() > self._f_s_threshold:
-                    print("EllipsoidTree updated!")
                     samples = self._m_active[:, :self._n_parameters]
                     m_active_transformed = ([self._convert_to_unit_cube(x)
                                              for x in samples])
@@ -208,7 +210,7 @@ class MultinestSampler(pints.NestedSampler):
         return self._proposed
 
     def ellipsoid_tree(self):
-        """ Returns final ellipsoid tree based on last iteration. """
+        """ Returns ellipsoid tree based on final iteration. """
         return self._ellipsoid_tree
 
     def ellipsoid_update_gap(self):
@@ -226,7 +228,10 @@ class MultinestSampler(pints.NestedSampler):
         return self._enlargement_factor
 
     def f_s_threshold(self):
-        """ Returns threshold for ``F_S``."""
+        """
+        Returns threshold for ``F_S`` above which the ellipsoid tree is
+        refitted.
+        """
         return self._f_s_threshold
 
     def in_initial_phase(self):
@@ -235,11 +240,11 @@ class MultinestSampler(pints.NestedSampler):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 3
+        return 4
 
     def n_rejection_samples(self):
         """
-        Returns the number of rejection sample used in the algorithm (see
+        Returns the number of rejection samples used in the algorithm (see
         :meth:`set_n_rejection_samples()`).
         """
         return self._n_rejection_samples
@@ -254,8 +259,7 @@ class MultinestSampler(pints.NestedSampler):
 
     def set_ellipsoid_update_gap(self, ellipsoid_update_gap=100):
         """
-        Sets the frequency with which the minimum volume ellipsoid is
-        re-estimated as part of the nested rejection sampling algorithm.
+        Sets the minimum frequency with which the ellipsoid tree is refitted.
 
         A higher rate of this parameter means each sample will be more
         efficiently produced, yet the cost of re-computing the ellipsoid
@@ -268,9 +272,9 @@ class MultinestSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
-    def set_enlargement_factor(self, enlargement_factor=1.1):
+    def set_enlargement_factor(self, enlargement_factor=1):
         """
-        Sets the factor (>1) by which to increase the minimal volume
+        Sets the factor (>=1) by which to increase the minimal volume
         ellipsoidal in rejection sampling.
 
         A higher value means it is less likely that areas of high probability
@@ -283,7 +287,8 @@ class MultinestSampler(pints.NestedSampler):
 
     def set_f_s_threshold(self, h=1.1):
         """
-        Sets threshold for ``F_S`` when minimum bounding ellipsoids are refit.
+        Sets threshold for ``F_S`` when ellipsoid trees are refit. The default
+        value is 1.1.
         """
         if h <= 1:
             raise ValueError('F_S threshold factor must exceed 1.')
@@ -307,8 +312,8 @@ class MultinestSampler(pints.NestedSampler):
 
     def set_n_rejection_samples(self, rejection_samples=200):
         """
-        Sets the number of rejection samples to take, which will be assigned
-        weights and ultimately produce a set of posterior samples.
+        Sets the number of rejection samples to take before proceeding to the
+        ellipsoid tree sampling phase.
         """
         if rejection_samples < 0:
             raise ValueError('Must have non-negative rejection samples.')
@@ -317,14 +322,14 @@ class MultinestSampler(pints.NestedSampler):
 
 class EllipsoidTree():
     """
-    Binary tree with ellipsoids as leaf nodes which is used to minimise
-    F_s as in Algorithm 1 in [1]_.
+    Builds a binary tree with ellipsoids as leaf nodes which is used to
+    minimise ``F_S`` as in Algorithm 1 in [1]_.
     """
     def __init__(self, points, iteration, enlargement_factor=1):
         n_points = len(points)
         if n_points < 1:
             raise ValueError(
-                "More than one point is needed in a EllipsoidTree.")
+                "More than one point is needed in an EllipsoidTree.")
         for point in points:
             if min(point) < 0 or max(point) > 1:
                 raise ValueError(
@@ -336,7 +341,7 @@ class EllipsoidTree():
         self._points = points
         if iteration < 1:
             raise ValueError(
-                "iteration must be >=1."
+                "iteration must be >= 1."
             )
         self._iteration = iteration
         self._left = None
@@ -387,7 +392,7 @@ class EllipsoidTree():
 
     def count_within_leaf_ellipsoids(self, point):
         """
-        Determines number of ellipsoids a point is contained within.
+        Determines the number of ellipsoids a point is contained within.
         """
         leaves = self.leaf_ellipsoids()
         count = 0
@@ -402,12 +407,13 @@ class EllipsoidTree():
 
     def f_s(self):
         """
-        Returns F_s representing ratio of ellipsoid volume to total volume.
+        Returns ``F_S`` representing ratio of ellipsoid volume to total prior
+        volume.
         """
         return self.leaf_ellipsoids_volume() / self._V_S
 
     def h_k(self, point, ellipsoid, V_S_k):
-        """ Calculates h_k as in eq. (23) in [1]_."""
+        """ Calculates ``h_k`` as in eq. (23) in [1]_."""
         d = Ellipsoid.mahalanobis_distance(point,
                                            ellipsoid.weight_matrix(),
                                            ellipsoid.centroid())
@@ -442,7 +448,6 @@ class EllipsoidTree():
         Draws uniform samples from within leaf ellipsoids accounting for their
         overlap.
         """
-
         # calculate relative volumes of ellipsoids
         leaves = self.leaf_ellipsoids()
         volumes = [ell.volume() for ell in leaves]
@@ -472,7 +477,7 @@ class EllipsoidTree():
     def split_ellipsoids(self, points, assignments, recursion_count):
         """
         Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
-        partitioned into two ellipsoids to minimise a measure `h_k`.
+        partitioned into two ellipsoids to minimise a measure ``h_k``.
         """
         # step 4 in Algorithm 1
         ellipsoids = []
@@ -511,8 +516,8 @@ class EllipsoidTree():
 
     def update_leaf_ellipsoids(self, iteration):
         """
-        Updates ellipsoids according to p.1605 (bottom-right) in [1]_ according
-        to iteration.
+        Updates ellipsoids according to p.1605 (bottom-right text) in [1]_
+        according to iteration.
         """
         leaves = self.leaf_ellipsoids()
         [self.compare_enlarge(ell, self.vsk(ell)) for ell in leaves]
@@ -526,5 +531,5 @@ class EllipsoidTree():
         n_points = ellipsoid.n_points()
         if n_points > self._n_points:
             raise ValueError(
-                "Number of points in ellipsoid be not exceed that in tree.")
+                "Number of points in ellipsoid may not exceed that in tree.")
         return ellipsoid.n_points() * self._V_S / self._n_points
