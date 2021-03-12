@@ -336,7 +336,7 @@ class EllipsoidTree():
                     "Points must be in unit cube.")
         self._n_points = n_points
         self._dimensions = len(points[0])
-        self._max_recursion = 50
+        self._max_tries = 50
         self._min_points_to_split = 50
         self._points = points
         if iteration < 1:
@@ -350,6 +350,7 @@ class EllipsoidTree():
         # step 1 in Algorithm 1
         # calculate volume of space
         self._V_S = self.vs() * enlargement_factor
+        self._enlargement_factor = enlargement_factor
         # calculate bounding ellipsoid
         self._ellipsoid = Ellipsoid.minimum_volume_ellipsoid(points)
 
@@ -363,23 +364,27 @@ class EllipsoidTree():
             # step 3 in Algorithm 1
             _, assignments = scipy.cluster.vq.kmeans2(
                 points, 2, minit="points")
+            ntries = 0
             # ensures against small clusters
-            while (sum(assignments == 0) < (self._dimensions + 10) or
-                   sum(assignments == 1) < (self._dimensions + 10)):
+            while (ntries < self._max_tries and (sum(assignments == 0) < (self._dimensions + 5) or
+                   sum(assignments == 1) < (self._dimensions + 5))):
                 centers, assignment = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+                ntries += 1
 
             # steps 4-13 in Algorithm 1
-            ellipsoid_1, ellipsoid_2 = self.split_ellipsoids(points,
-                                                             assignments,
-                                                             0)
-            # steps 14+ in Algorithm 1
-            V_E_1 = ellipsoid_1.volume()
-            V_E_2 = ellipsoid_2.volume()
+            ellipsoid_1, ellipsoid_2, success = self.split_ellipsoids(
+                points, assignments)
+            if success:
+                # steps 14+ in Algorithm 1
+                V_E_1 = ellipsoid_1.volume()
+                V_E_2 = ellipsoid_2.volume()
 
-            if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
-                self._left = EllipsoidTree(ellipsoid_1.points(), iteration)
-                self._right = EllipsoidTree(ellipsoid_2.points(), iteration)
+                if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
+                    self._left = EllipsoidTree(ellipsoid_1.points(),
+                                               iteration)
+                    self._right = EllipsoidTree(ellipsoid_2.points(),
+                                                iteration)
 
     def compare_enlarge(self, ellipsoid, V_S):
         """
@@ -474,7 +479,7 @@ class EllipsoidTree():
                 raise RuntimeError("Point not in any ellipse.")
         return draws
 
-    def split_ellipsoids(self, points, assignments, recursion_count):
+    def split_ellipsoids(self, points, assignments):
         """
         Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
         partitioned into two ellipsoids to minimise a measure ``h_k``.
@@ -502,23 +507,23 @@ class EllipsoidTree():
                     assignments_new[i] = j
                     h_k_max = h_k
 
-        # first two conditions stop algorithmic oscillation and are not in
-        # original algorithm)
-        if (
-            (sum(assignments_new == 0) < 5 or sum(assignments_new == 1) < 5)
-            or recursion_count > self._max_recursion
-            or np.array_equal(assignments, assignments_new)): # noqa
-            return ellipsoids
+        # from https://github.com/farhanferoz/MultiNest/blob/master/MatlabMultiNest/NSMain/optimal_ellipsoids.m
+        threshold = self._dimensions + 1
+        n1 = sum(assignments_new == 0)
+        n2 = sum(assignments_new == 1)
+        if n1 < threshold or n2 < threshold:
+            success = False
         else:
-            return self.split_ellipsoids(points,
-                                         assignments_new,
-                                         recursion_count + 1)
+            success = True
+        return ellipsoids[0], ellipsoids[1], success
 
     def update_leaf_ellipsoids(self, iteration):
         """
         Updates ellipsoids according to p.1605 (bottom-right text) in [1]_
         according to iteration.
         """
+        self._iteration = iteration
+        self._V_S = self.vs() * self._enlargement_factor
         leaves = self.leaf_ellipsoids()
         [self.compare_enlarge(ell, self.vsk(ell)) for ell in leaves]
 
