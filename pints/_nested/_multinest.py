@@ -14,6 +14,7 @@ import numpy as np
 import scipy.special
 import scipy.cluster.vq
 from pints._nested.__init__ import Ellipsoid
+import warnings
 
 
 class MultinestSampler(pints.NestedSampler):
@@ -56,13 +57,16 @@ class MultinestSampler(pints.NestedSampler):
         u_i = \int_{-\infty}^{\theta_i} \pi(\theta') d\theta'
 
     Fit transformed active points using minimum volume bounding ellipsoids
-    (that potentially overlap) as described by Algorithm 1 in [1]_. Explicitly
+    (that potentially overlap) based on Algorithm 1 in [1]_. Explicitly
     this algorithm seeks to minimise a quantity ``F(S)>=1`` representing the
     ratio of the total volume overlapping ellipsoids to the volume of prior
     space remaining.
 
     We accomplish ``F_S`` minimisation by constructing a binary tree with
-    ellipsoids (E above) as its leaves. The pseudocode for this is::
+    ellipsoids (E above) as its leaves. The algorithm we follow has some
+    differences versus that reported in [1]_ based on our experimentation
+    during development (and a Matlab version of the algorithm here:
+    https://github.com/farhanferoz/MultiNest), and the pseudocode for this is::
 
         EllipsoidTree(t, u, ef):
             calculate bounding ellipsoid E and its volume V(E)
@@ -71,21 +75,29 @@ class MultinestSampler(pints.NestedSampler):
             enlarge E so that V(E) = max(V(E), V(S))
             if n_active_points > min_points:
                 using k-means algorithm partition active points into subsets
-                    u_1 and u_1
+                    u_1 and u_1 of size n_1 and n_2
                 num_tries = 0
-                (A) find E_1 and E_2 (bounding ellipsoids of each point set)
-                    and their volumes V(E_1) and V(E_2)
-                enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
-                    where V(S_k) = n_k V(S) / n_active_points
-                for j in 1:n_active_points
-                    assign u^{j} to S_k such that
-                    h_k(u^{j}) = min(h_1(u^{j}), h_2(u^{j}))
-                endfor
-                if num_tries < max_recursion and either if insufficient points
-                    reassigned or clusters are too small go back to (A)
-                if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
-                    left_branch = EllipsoidTree(t, u_1, ef)
-                    right_branch = EllipsoidTree(t, u_2, ef)
+                while num_tries < max_tries and n_1 and n_2 are too small
+                    using k-means algorithm partition active points into
+                        subsets u_1 and u_1 of size n_1 and n_2
+                    num_tries += 1
+                if n_1 and n_2 are large enough:
+                    recursion = 0
+                    (A) find E_1 and E_2 (bounding ellipsoids of each point
+                        set) and their volumes V(E_1) and V(E_2)
+                    enlarge E_k (k=1,2) so that V(E_k) = max(V(E_k), V(S_k)),
+                        where V(S_k) = n_k V(S) / n_active_points
+                    for j in 1:n_active_points
+                        assign u^{j} to S_k such that
+                        h_k(u^{j}) = min(h_1(u^{j}), h_2(u^{j}))
+                    endfor
+                    recursion += 1
+                    if recursion < max_recursion and clusters are too small:
+                       go back to (A)
+                    if clusters large enough:
+                        if V(E_1) + V(E_2) < V(E) or V(E) > 2 V(S):
+                            left_branch = EllipsoidTree(t, u_1, ef)
+                            right_branch = EllipsoidTree(t, u_2, ef)
 
             left_branch = Null
             right_branch = Null
@@ -272,7 +284,7 @@ class MultinestSampler(pints.NestedSampler):
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
 
-    def set_enlargement_factor(self, enlargement_factor=1):
+    def set_enlargement_factor(self, enlargement_factor=1.1):
         """
         Sets the factor (>=1) by which to increase the minimal volume
         ellipsoidal in rejection sampling.
@@ -337,6 +349,7 @@ class EllipsoidTree():
         self._n_points = n_points
         self._dimensions = len(points[0])
         self._max_tries = 50
+        self._max_recursion = 50
         self._min_points_to_split = 50
         self._points = points
         if iteration < 1:
@@ -366,25 +379,29 @@ class EllipsoidTree():
                 points, 2, minit="points")
             ntries = 0
             # ensures against small clusters
-            while (ntries < self._max_tries and (sum(assignments == 0) < (self._dimensions + 5) or
-                   sum(assignments == 1) < (self._dimensions + 5))):
+            threshold = self._dimensions + 5
+            too_small = (sum(assignments == 0) < threshold or
+                         sum(assignments == 1) < threshold)
+            while (ntries < self._max_tries and too_small):
                 centers, assignment = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
+                too_small = (sum(assignments == 0) < threshold or
+                             sum(assignments == 1) < threshold)
                 ntries += 1
-
             # steps 4-13 in Algorithm 1
-            ellipsoid_1, ellipsoid_2, success = self.split_ellipsoids(
-                points, assignments)
-            if success:
-                # steps 14+ in Algorithm 1
-                V_E_1 = ellipsoid_1.volume()
-                V_E_2 = ellipsoid_2.volume()
+            if not too_small:
+                ellipsoid_1, ellipsoid_2, success = self.split_ellipsoids(
+                    points, assignments, 0)
+                if success:
+                    # steps 14+ in Algorithm 1
+                    V_E_1 = ellipsoid_1.volume()
+                    V_E_2 = ellipsoid_2.volume()
 
-                if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
-                    self._left = EllipsoidTree(ellipsoid_1.points(),
-                                               iteration)
-                    self._right = EllipsoidTree(ellipsoid_2.points(),
-                                                iteration)
+                    if (V_E_1 + V_E_2 < V_E) or (V_E > 2 * self._V_S):
+                        self._left = EllipsoidTree(ellipsoid_1.points(),
+                                                   iteration)
+                        self._right = EllipsoidTree(ellipsoid_2.points(),
+                                                    iteration)
 
     def compare_enlarge(self, ellipsoid, V_S):
         """
@@ -479,7 +496,7 @@ class EllipsoidTree():
                 raise RuntimeError("Point not in any ellipse.")
         return draws
 
-    def split_ellipsoids(self, points, assignments):
+    def split_ellipsoids(self, points, assignments, recursion):
         """
         Performs steps 4-13 in Algorithm 1 in [1]_, where the points are
         partitioned into two ellipsoids to minimise a measure ``h_k``.
@@ -488,8 +505,13 @@ class EllipsoidTree():
         ellipsoids = []
         for i in range(2):
             points_temp = np.array(points)[np.where(assignments == i)]
-            ellipsoids.append(
-                Ellipsoid.minimum_volume_ellipsoid(points_temp))
+            try:
+                el = Ellipsoid.minimum_volume_ellipsoid(points_temp)
+                ellipsoids.append(el)
+            except np.linalg.LinAlgError as e:
+                warnings.warn('LinAlgError encountered when contructing ' +
+                              'minimum volume ellipse: ' + str(e))
+                return -1, -1, False
 
         # step 5 in Algorithm 1
         V_S_ks = [self.vsk(el) for el in ellipsoids]
@@ -507,12 +529,15 @@ class EllipsoidTree():
                     assignments_new[i] = j
                     h_k_max = h_k
 
-        # from https://github.com/farhanferoz/MultiNest/blob/master/MatlabMultiNest/NSMain/optimal_ellipsoids.m
+        # from https://github.com/farhanferoz/MultiNest/blob/master/MatlabMultiNest/NSMain/optimal_ellipsoids.m # noqa
         threshold = self._dimensions + 1
         n1 = sum(assignments_new == 0)
         n2 = sum(assignments_new == 1)
-        if n1 < threshold or n2 < threshold:
+        if recursion > self._max_recursion:
             success = False
+        elif n1 < threshold or n2 < threshold:
+            ellipsoids[0], ellipsoids[1], success = self.split_ellipsoids(
+                points, assignments, recursion + 1)
         else:
             success = True
         return ellipsoids[0], ellipsoids[1], success
