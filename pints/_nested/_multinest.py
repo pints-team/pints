@@ -178,6 +178,7 @@ class MultinestSampler(pints.NestedSampler):
 
         self._convert_to_unit_cube = log_prior.convert_to_unit_cube
         self._convert_from_unit_cube = log_prior.convert_from_unit_cube
+        self._ellipsoid_tree = None
 
     def ask(self, n_points):
         """

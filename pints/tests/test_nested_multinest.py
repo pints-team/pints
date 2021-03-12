@@ -21,58 +21,63 @@ except AttributeError:
     unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
-# class TestMultiNestSampler(unittest.TestCase):
-#     """
-#     Unit (not functional!) tests for :class:`MultinestSampler`.
-#     """
-#
-#     @classmethod
-#     def setUpClass(cls):
-#         """ Prepare for the test. """
-#         # Create toy model
-#         model = pints.toy.LogisticModel()
-#         cls.real_parameters = [0.015, 500]
-#         times = np.linspace(0, 1000, 1000)
-#         values = model.simulate(cls.real_parameters, times)
-#
-#         # Add noise
-#         np.random.seed(1)
-#         cls.noise = 10
-#         values += np.random.normal(0, cls.noise, values.shape)
-#         cls.real_parameters.append(cls.noise)
-#
-#         # Create an object with links to the model and time series
-#         problem = pints.SingleOutputProblem(model, times, values)
-#
-#         # Create a uniform prior over both the parameters and the new noise
-#         # variable
-#         cls.log_prior = pints.UniformLogPrior(
-#             [0.01, 400],
-#             [0.02, 600]
-#         )
-#
-#         # Create a log-likelihood
-#         cls.log_likelihood = pints.GaussianKnownSigmaLogLikelihood(
-#             problem, cls.noise)
-#
-#     def test_getters_and_setters(self):
-#         # tests various get() and set() methods.
-#         controller = pints.NestedController(self.log_likelihood,
-#                                             self.log_prior,
-#                                             method=pints.MultinestSampler)
-#         self.assertEqual(controller.sampler().f_s_threshold(), 1.1)
-#         controller.sampler().set_f_s_threshold(4)
-#         self.assertEqual(controller.sampler().f_s_threshold(), 4)
-#         self.assertRaises(ValueError, controller.sampler().set_f_s_threshold,
-#                           0.5)
-#
-#     def test_runs(self):
-#         # tests that sampler runs
-#         sampler = pints.NestedController(self.log_likelihood, self.log_prior,
-#                                          method=pints.MultinestSampler)
-#         sampler.set_iterations(100)
-#         sampler.set_log_to_screen(False)
-#         sampler.run()
+class TestMultiNestSampler(unittest.TestCase):
+    """
+    Unit (not functional!) tests for :class:`MultinestSampler`.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """ Prepare for the test. """
+        # Create toy model
+        model = pints.toy.LogisticModel()
+        cls.real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(cls.real_parameters, times)
+
+        # Add noise
+        np.random.seed(1)
+        cls.noise = 10
+        values += np.random.normal(0, cls.noise, values.shape)
+        cls.real_parameters.append(cls.noise)
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(model, times, values)
+
+        # Create a uniform prior over both the parameters and the new noise
+        # variable
+        cls.log_prior = pints.UniformLogPrior(
+            [0.01, 400],
+            [0.02, 600]
+        )
+
+        # Create a log-likelihood
+        cls.log_likelihood = pints.GaussianKnownSigmaLogLikelihood(
+            problem, cls.noise)
+
+    def test_getters_and_setters(self):
+        # tests various get() and set() methods.
+        controller = pints.NestedController(self.log_likelihood,
+                                            self.log_prior,
+                                            method=pints.MultinestSampler)
+        self.assertEqual(controller.sampler().f_s_threshold(), 1.1)
+        controller.sampler().set_f_s_threshold(4)
+        self.assertEqual(controller.sampler().f_s_threshold(), 4)
+        self.assertRaises(ValueError, controller.sampler().set_f_s_threshold,
+                          0.5)
+
+    def test_runs(self):
+        # tests that sampler runs
+        controller = pints.NestedController(self.log_likelihood,
+                                            self.log_prior,
+                                            method=pints.MultinestSampler)
+        controller.set_iterations(450)
+        controller.set_log_to_screen(False)
+        controller.run()
+
+        # test getting ellipsoid tree post-run
+        et = controller.sampler().ellipsoid_tree()
+        self.assertTrue(et.n_leaf_ellipsoids() >= 1)
 
 
 class TestEllipsoidTree(unittest.TestCase):
@@ -121,13 +126,27 @@ class TestEllipsoidTree(unittest.TestCase):
 
         # leaf nodes
         self.assertTrue(tree.n_leaf_ellipsoids() >= 1)
-        leaves = tree.leaf_ellipsoids()
+        leaves = np.copy(tree.leaf_ellipsoids())
         self.assertEqual(tree.n_leaf_ellipsoids(), len(leaves))
         [self.assertTrue(isinstance(x, Ellipsoid)) for x in leaves]
 
         # bounding ellipsoid
         ellipsoid = tree.ellipsoid()
         self.assertTrue(isinstance(ellipsoid, Ellipsoid))
+
+        # Check a given draw is within bounding ellipsoids
+        self.assertTrue(tree.count_within_leaf_ellipsoids(
+            self.draws[0]) >= 1)
+        self.assertTrue(tree.count_within_leaf_ellipsoids(
+            [-100, -100]) == 0)
+
+        # check f_s
+        self.assertTrue(tree.f_s() >= 1)
+
+        # updating triggers changes?
+        f_s_old = np.copy(tree.f_s())
+        tree.update_leaf_ellipsoids(1)
+        self.assertFalse(tree.f_s() == f_s_old)
 
     def test_calculations(self):
         # tests the calculations done
@@ -152,7 +171,38 @@ class TestEllipsoidTree(unittest.TestCase):
         ellipsoid = Ellipsoid.minimum_volume_ellipsoid(draws)
         self.assertRaises(ValueError, ellipsoidTree.vsk, ellipsoid)
 
+        # hk
+        ellipsoid = ellipsoidTree.ellipsoid()
+        d = Ellipsoid.mahalanobis_distance(self.draws[0],
+                                           ellipsoid.weight_matrix(),
+                                           ellipsoid.centroid())
+        V_S_k = 1
+        self.assertEqual(ellipsoid.volume() * d / V_S_k,
+                         ellipsoidTree.h_k(self.draws[0], ellipsoid, V_S_k))
 
+    def test_sampling(self):
+        # tests sampling from leaf ellipsoids
+
+        # check all samples in leaf ellipsoids
+        tree = EllipsoidTree(self.draws, 100)
+        samples = tree.sample_leaf_ellipsoids(100)
+        for sample in samples:
+            self.assertTrue(tree.count_within_leaf_ellipsoids(
+                sample) >= 1)
+
+    def test_splitting(self):
+        # tests splitting and enlarging ellipsoids
+
+        # singular matrix error?
+        tree = EllipsoidTree(self.draws, 100)
+        points = np.array([[0, 0], [0.5, 0.5], [1, 1]])
+        assignments = np.array([0, 0, 0])
+        _, _, bool = tree.split_ellipsoids(points, assignments, 0)
+        self.assertFalse(bool)
+
+        # enlarging
+        ellipsoid = tree.ellipsoid()
+        tree.compare_enlarge(ellipsoid, 20)
 
 
 if __name__ == '__main__':
