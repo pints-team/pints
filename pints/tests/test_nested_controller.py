@@ -195,6 +195,27 @@ class TestNestedController(unittest.TestCase):
         for line in lines[5:]:
             self.assertTrue(pattern.match(line))
 
+    def test_logging_multiple_ellipsoid(self):
+        # Tests logging to screen and file.
+
+        # Log to screen
+        with StreamCapture() as c:
+            sampler = pints.NestedController(
+                self.log_likelihood, self.log_prior,
+                method=pints.MultinestSampler)
+            sampler.set_n_posterior_samples(2)
+            sampler.set_iterations(20)
+            sampler.set_log_to_screen(True)
+            sampler.set_log_to_file(False)
+            samples, margin = sampler.run()
+        lines = c.text().splitlines()
+        self.assertEqual(lines[0], 'Running MultiNest sampler')
+        self.assertEqual(lines[1], 'Number of active points: 400')
+        self.assertEqual(lines[2], 'Total number of iterations: 20')
+        self.assertEqual(lines[3], 'Total number of posterior samples: 2')
+        self.assertEqual(lines[4], ('Iter. Eval. Time m:s Delta_log(z) ' +
+                                    'Acceptance rate Ellipsoid count'))
+
     def test_settings_check(self):
         # Tests the settings check at the start of a run.
         sampler = pints.NestedController(
