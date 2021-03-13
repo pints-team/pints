@@ -383,7 +383,7 @@ class EllipsoidTree():
             threshold = self._dimensions + 5
             too_small = (sum(assignments == 0) < threshold or
                          sum(assignments == 1) < threshold)
-            while (ntries < self._max_tries and too_small):
+            while (ntries < self._max_tries and too_small):  # pragma: no cover
                 centers, assignment = (
                     scipy.cluster.vq.kmeans2(points, 2, minit="points"))
                 too_small = (sum(assignments == 0) < threshold or
@@ -493,7 +493,7 @@ class EllipsoidTree():
                 if paccept > np.random.uniform():
                     naccepted += 1
                     draws.append(test_point)
-            elif n_e < 1:
+            elif n_e < 1:  # pragma: no cover
                 raise RuntimeError("Point not in any ellipse.")
         return draws
 
@@ -534,9 +534,9 @@ class EllipsoidTree():
         threshold = self._dimensions + 1
         n1 = sum(assignments_new == 0)
         n2 = sum(assignments_new == 1)
-        if recursion > self._max_recursion:
+        if recursion > self._max_recursion:  # pragma: no cover
             success = False
-        elif n1 < threshold or n2 < threshold:
+        elif n1 < threshold or n2 < threshold:  # pragma: no cover
             ellipsoids[0], ellipsoids[1], success = self.split_ellipsoids(
                 points, assignments, recursion + 1)
         else:

@@ -65,6 +65,29 @@ class TestMultiNestSampler(unittest.TestCase):
         self.assertEqual(controller.sampler().f_s_threshold(), 4)
         self.assertRaises(ValueError, controller.sampler().set_f_s_threshold,
                           0.5)
+        controller.sampler().set_ellipsoid_update_gap(43)
+        self.assertEqual(controller.sampler().ellipsoid_update_gap(), 43)
+        controller.sampler().set_enlargement_factor(4)
+        self.assertEqual(controller.sampler().enlargement_factor(), 4)
+        self.assertTrue(controller.sampler().in_initial_phase())
+        self.assertEqual(controller.sampler().n_hyper_parameters(), 4)
+        controller.sampler().set_n_rejection_samples(12)
+        self.assertEqual(controller.sampler().n_rejection_samples(), 12)
+        self.assertEqual(controller.sampler().name(),
+                         "MultiNest sampler")
+        self.assertTrue(controller.sampler().needs_initial_phase())
+        controller.sampler().set_hyper_parameters([100, 100, 2, 30])
+
+        # test errors
+        self.assertRaises(ValueError,
+                          controller.sampler().set_ellipsoid_update_gap,
+                          0)
+        self.assertRaises(ValueError,
+                          controller.sampler().set_enlargement_factor,
+                          0.5)
+        self.assertRaises(ValueError,
+                          controller.sampler().set_n_rejection_samples,
+                          -1)
 
     def test_runs(self):
         # tests that sampler runs
@@ -78,6 +101,27 @@ class TestMultiNestSampler(unittest.TestCase):
         # test getting ellipsoid tree post-run
         et = controller.sampler().ellipsoid_tree()
         self.assertTrue(et.n_leaf_ellipsoids() >= 1)
+
+    def test_multiple(self):
+        # tests that ask /tell work with multiple points
+
+        # test multiple points being asked and tell'd
+        sampler = pints.MultinestSampler(self.log_prior)
+        pts = sampler.ask(50)
+        self.assertEqual(len(pts), 50)
+        fx = [self.log_likelihood(pt) for pt in pts]
+        proposed = sampler.tell(fx)
+        self.assertTrue(len(proposed) > 1)
+
+        # test with a longer run so that post-rejection sampling multiple
+        # point evaluation gets triggered
+        controller = pints.NestedController(self.log_likelihood,
+                                            self.log_prior,
+                                            method=pints.MultinestSampler)
+        controller.set_iterations(450)
+        controller.set_log_to_screen(False)
+        controller.set_parallel(True)
+        controller.run()
 
 
 class TestEllipsoidTree(unittest.TestCase):
@@ -203,6 +247,29 @@ class TestEllipsoidTree(unittest.TestCase):
         # enlarging
         ellipsoid = tree.ellipsoid()
         tree.compare_enlarge(ellipsoid, 20)
+
+    def test_multiple_nodes(self):
+        # test that tree does actually split when supplied with multiple modes
+        # and that functions still run ok with multiple leaves
+
+        # need multiple replicates to ensure at least one splits
+        n = 400
+        nreps = 10
+        log_pdf = pints.toy.AnnulusLogPDF()
+        gaussian = pints.MultivariateGaussianLogPrior([0, 0],
+                                                      [[100, 0], [0, 100]])
+        n_leaves = []
+        for rep in range(nreps):
+            draws = log_pdf.sample(n)
+            draws = [gaussian.convert_to_unit_cube(x) for x in draws]
+            draws = np.vstack(draws)
+            ellipsoid_tree = EllipsoidTree(draws, 600)
+            n_leaf = ellipsoid_tree.n_leaf_ellipsoids()
+            n_leaves.append(n_leaf)
+            self.assertEqual(n_leaf, len(ellipsoid_tree.leaf_ellipsoids()))
+            self.assertTrue(ellipsoid_tree.leaf_ellipsoids_volume() > 0)
+            ellipsoid_tree.sample_leaf_ellipsoids(1000)
+        self.assertTrue(sum(np.array(n_leaves) > 1) > 1)
 
 
 if __name__ == '__main__':
