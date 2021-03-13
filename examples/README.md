@@ -75,9 +75,9 @@ relevant code.
 - [Slice Sampling: Rank Shrinking MCMC](./sampling/slice-rank-shrinking-mcmc.ipynb)
 
 ### Nested sampling
-- [Ellipsoidal nested sampling](./sampling-nested-ellipsoidal-sampling.ipynb)
-- [Multinest sampling](./sampling-nested-multinest.ipynb)
-- [Rejection nested sampling](./sampling-nested-rejection-sampling.ipynb)
+- [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
+- [Multinest sampling](./sampling/nested-multinest.ipynb)
+- [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
