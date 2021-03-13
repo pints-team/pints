@@ -679,7 +679,7 @@ class NestedController(object):
         return self._m_posterior_samples
 
     def sampler(self):
-        """ Returns sampler used by the controller. """
+        """ Returns the underlying :class:`NestedSampler` object. """
         return self._sampler
 
     def sample_from_posterior(self, posterior_samples):
