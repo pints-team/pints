@@ -138,9 +138,11 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         # Dynamically vary the enlargement factor
         self._dynamic_enlargement_factor = False
         self._alpha = 0.2
-        self._A = None
-        self._centroid = None
         self._ellipsoid = None
+
+    def ellipsoid(self):
+        """ Returns ellipsoid used in sampling. """
+        return self._ellipsoid
 
     def set_dynamic_enlargement_factor(self, dynamic_enlargement_factor):
         """
@@ -277,22 +279,6 @@ class NestedEllipsoidSampler(pints.NestedSampler):
         if ellipsoid_update_gap <= 1:
             raise ValueError('Ellipsoid update gap must exceed 1.')
         self._ellipsoid_update_gap = ellipsoid_update_gap
-
-    def _minimum_volume_ellipsoid(self, points, tol=0.0):
-        """
-        Finds an approximate minimum bounding ellipse in "center form":
-        ``(x-c).T * A * (x-c) = 1``.
-        """
-        cov = np.cov(np.transpose(points))
-        cov_inv = np.linalg.inv(cov)
-        c = np.mean(points, axis=0)
-        dist = np.zeros(len(points))
-        for i in range(len(points)):
-            dist[i] = np.matmul(np.matmul(points[i] - c, cov_inv),
-                                points[i] - c)
-        enlargement_factor = np.max(dist)
-        A = (1 - tol) * (1.0 / enlargement_factor) * cov_inv
-        return A, c
 
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
