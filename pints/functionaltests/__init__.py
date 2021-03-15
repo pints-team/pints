@@ -4,4 +4,4 @@
 # copyright notice and full license details.
 #
 
-from .functest_haario_bardenet_acmc import TestHaarioBardenetACMCOn2dimGaussianDistribution
+from .haario_bardenet_acmc import test_haario_bardenet_acmc_on_two_dim_gaussian
