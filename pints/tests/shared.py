@@ -26,7 +26,7 @@ class StreamCapture(object):
     """
     A context manager that redirects and captures the output stdout, stderr,
     or both.
-    
+
     Warning: This class is not thread-safe (or multiprocessing-safe).
     """
     def __init__(self, stdout=True, stderr=False):
@@ -148,7 +148,7 @@ class SubCapture(object):
 
     The argument ``dump_on_error`` can be set to ``True`` to print all output
     if an error occurs while the context manager is active.
-    
+
     Warning: This class is not thread-safe (or multiprocessing-safe).
     """
     def __init__(self, dump_on_error=False):
