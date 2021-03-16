@@ -689,7 +689,7 @@ class MCMCController(object):
                     reply = self._samplers[i].tell(next(fxs_iterator))
 
                     if reply is not None:
-                        # Unpack
+                        # Unpack reply into position, evaluation, and status
                         y, fy, accepted = reply
 
                         # Inverse transform to model space if transform is
@@ -748,7 +748,7 @@ class MCMCController(object):
                 intermediate_step = reply is None
 
                 if not intermediate_step:
-                    # Unpack
+                    # Unpack reply into positions, evaluations, and status
                     ys, fys, accepted = reply
 
                     # Inverse transform to model space if transform is provided

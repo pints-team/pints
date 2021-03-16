@@ -114,6 +114,9 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._running = True
+
+            # Store x0 as proposal, and set as read-only, so it can be passed
+            # to user if it gets accepted.
             self._proposed = self._x0
             self._proposed.setflags(write=False)
 
@@ -122,7 +125,8 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             # Let subclass generate proposal
             self._proposed = self._generate_proposal()
 
-            # Set as read-only
+            # Set proposed as read-only, so it can be passed to user if it gets
+            # accepted.
             self._proposed.setflags(write=False)
 
         # Return proposed point
