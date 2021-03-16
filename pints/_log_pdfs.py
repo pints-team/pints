@@ -61,8 +61,9 @@ class LogPrior(LogPDF):
     def cdf(self, x):
         """
         Returns the cumulative density function at point(s) ``x``.
-        ``x`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``x`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         raise NotImplementedError
 
@@ -71,8 +72,9 @@ class LogPrior(LogPDF):
         Converts samples ``u`` uniformly drawn from the unit cube into those
         drawn from the prior space, typically by transforming using
         :meth:`LogPrior.icdf()`.
-        ``u`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``u`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         return self.icdf(u)
 
@@ -80,8 +82,9 @@ class LogPrior(LogPDF):
         """
         Converts samples from the prior ``x`` to be drawn uniformly from the
         unit cube, typically by transforming using :meth:`LogPrior.cdf()`.
-        ``x`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``x`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         return self.cdf(x)
 
@@ -89,8 +92,9 @@ class LogPrior(LogPDF):
         """
         Returns the inverse cumulative density function at cumulative
         probability/probabilities ``p``.
-        ``p`` should be an n x d array, where n in the number of input samples
-        and d is the dimension of parameter space.
+
+        ``p`` should be an ``n x d`` array, where ``n`` is the number of input
+        samples and ``d`` is the dimension of the parameter space.
         """
         raise NotImplementedError
 
@@ -108,9 +112,6 @@ class LogPrior(LogPDF):
         The returned value is a NumPy array with shape ``(n, d)`` where ``n``
         is the requested number of samples, and ``d`` is the dimension of the
         prior.
-
-        Note: This method is optional, in the sense that only a subset of
-        inference methods require it.
         """
         raise NotImplementedError
 
