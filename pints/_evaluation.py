@@ -452,7 +452,7 @@ class _Worker(multiprocessing.Process):
 
     def run(self):
         # Worker processes should never write to stdout or stderr.
-        # This can lead to unsafe situations if they have been redicted to
+        # This can lead to unsafe situations if they have been redirected to
         # a GUI task such as writing to the IDE console.
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
