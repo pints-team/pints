@@ -83,14 +83,15 @@ class TestDreamMCMC(unittest.TestCase):
         chains = []
         for i in range(100):
             xs = mcmc.ask()
-            fxs = [self.log_posterior(x) for x in xs]
-            samples = mcmc.tell(fxs)
+            fxs = np.array([self.log_posterior(x) for x in xs])
+            ys, fys, ac = mcmc.tell(fxs)
             if i == 20:
                 mcmc.set_initial_phase(False)
             if i >= 50:
-                chains.append(samples)
-            if np.all(samples == xs):
-                self.assertTrue(np.all(mcmc.current_log_pdfs() == fxs))
+                chains.append(ys)
+            if np.any(ac):
+                self.assertTrue(np.all(xs[ac] == ys[ac]))
+                self.assertTrue(np.all(fys[ac] == fxs[ac]))
 
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
@@ -106,12 +107,12 @@ class TestDreamMCMC(unittest.TestCase):
         chains = []
         for i in range(100):
             xs = mcmc.ask()
-            fxs = [self.log_posterior(x) for x in xs]
-            samples = mcmc.tell(fxs)
+            fxs = np.array([self.log_posterior(x) for x in xs])
+            ys, fys, ac = mcmc.tell(fxs)
             if i == 20:
                 mcmc.set_initial_phase(False)
             if i >= 50:
-                chains.append(samples)
+                chains.append(ys)
         chains = np.array(chains)
         self.assertEqual(chains.shape[0], 50)
         self.assertEqual(chains.shape[1], len(xs))

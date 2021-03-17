@@ -34,14 +34,14 @@ class TestSliceDoubling(unittest.TestCase):
         self.assertRaises(RuntimeError, mcmc.ask)
 
         # Tell
-        fx = log_pdf(x0)
-        x1 = mcmc.tell(fx)
+        fx0 = log_pdf(x0)
+        x1, fx1, ac = mcmc.tell(fx0)
         self.assertTrue(np.all(x0 == x1))
-        self.assertTrue(mcmc.current_log_pdf() == fx)
+        self.assertEqual(fx0, fx1)
 
         # Check that the new slice has been constructed appropriately
         self.assertTrue(
-            mcmc.current_slice_height() < mcmc.current_log_pdf())
+            mcmc.current_slice_height() < fx1)
 
         # Can't tell twice
         self.assertRaises(RuntimeError, mcmc.tell, log_pdf(x0))
@@ -105,9 +105,14 @@ class TestSliceDoubling(unittest.TestCase):
         n = 42
         chain = []
         while len(chain) < n:
-            sample = mcmc.tell(log_pdf(mcmc.ask()))
-            if sample is not None:
-                chain.append(np.copy(sample))
+            x = mcmc.ask()
+            fx = log_pdf(x)
+            reply = mcmc.tell(fx)
+            if reply is not None:
+                y, fy, ac = reply
+                chain.append(y)
+                self.assertTrue(np.all(x == y))
+                self.assertTrue(np.all(fx == fy))
         self.assertEqual(np.shape(chain), (n, 2))
 
 

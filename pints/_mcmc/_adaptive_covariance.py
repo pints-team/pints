@@ -114,22 +114,23 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
         # Initialise on first call
         if not self._running:
             self._running = True
+
+            # Store x0 as proposal, and set as read-only, so it can be passed
+            # to user if it gets accepted.
             self._proposed = self._x0
+            self._proposed.setflags(write=False)
 
         # Propose new point
         if self._proposed is None:
             # Let subclass generate proposal
             self._proposed = self._generate_proposal()
 
-            # Set as read-only
+            # Set proposed as read-only, so it can be passed to user if it gets
+            # accepted.
             self._proposed.setflags(write=False)
 
         # Return proposed point
         return self._proposed
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
 
     def eta(self):
         """
@@ -173,15 +174,21 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             raise RuntimeError(
                 'Replace can only be used when already running.')
 
-        # Check values
+        # Check position
         current = pints.vector(current)
         if len(current) != self._n_parameters:
             raise ValueError('Point `current` has the wrong dimensions.')
+        current.setflags(write=False)
+
+        # Check log pdf
         current_log_pdf = float(current_log_pdf)
+
+        # Check proposal
         if proposed is not None:
             proposed = pints.vector(proposed)
             if len(proposed) != self._n_parameters:
                 raise ValueError('Point `proposed` has the wrong dimensions.')
+            proposed.setflags(write=False)
 
         # Store
         self._current = current
@@ -254,7 +261,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._proposed = None
 
             # Return first point for chain
-            return self._current
+            return self._current, self._current_log_pdf, True
 
         # Calculate log of the ratio of proposed and current log pdf
         # Can be used in adaptation, regardless of acceptance
@@ -295,5 +302,5 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
             self._adapt_internal(accepted, log_ratio)
 
         # Return current sample
-        return self._current
+        return self._current, self._current_log_pdf, accepted
 

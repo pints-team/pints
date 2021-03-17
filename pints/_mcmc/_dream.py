@@ -70,7 +70,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         super(DreamMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
-        if self._chains < 3:
+        if self._n_chains < 3:
             raise ValueError('Need at least 3 chains.')
 
         # Set initial state
@@ -96,7 +96,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
         # Determines maximum delta to choose in sums
         self._delta_max = None
-        self.set_delta_max(min(3, self._chains - 2))
+        self.set_delta_max(min(3, self._n_chains - 2))
 
         # Initial phase
         self._initial_phase = True
@@ -122,7 +122,7 @@ class DreamMCMC(pints.MultiChainMCMC):
 
             self._proposed = np.array(self._current, copy=True)
 
-            for j in range(self._chains):
+            for j in range(self._n_chains):
 
                 # Select initial proposal for chain j
                 delta = int(np.random.choice(self._delta_max, 1)[0] + 1)
@@ -165,10 +165,6 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
-    def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
-        return self._current_log_pdfs
-
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -193,7 +189,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         self._delta = np.zeros(self._nCR)
 
         # Create empty array of m indices
-        self._m = [0] * self._chains
+        self._m = [0] * self._n_chains
 
         # Iteration tracking for running variance
         # See: https://www.johndcook.com/blog/standard_deviation/
@@ -251,19 +247,20 @@ class DreamMCMC(pints.MultiChainMCMC):
             self._current = self._proposed
             self._current_log_pdfs = np.copy(proposed_log_pdfs)
             self._current_log_pdfs.setflags(write=False)
+            accepted = np.array([True] * self._n_chains)
 
             # Clear proposal
             self._proposed = None
 
             # Return first samples for chains
-            return self._current
+            return self._current, self._current_log_pdfs, accepted
 
         # Perform iteration
         next = np.copy(self._current)
         next_log_pdfs = np.copy(self._current_log_pdfs)
 
         # Sample uniform numbers
-        u = np.log(np.random.uniform(size=self._chains))
+        u = np.log(np.random.uniform(size=self._n_chains))
 
         # Get chains to be updated
         i = u < (proposed_log_pdfs - self._current_log_pdfs)
@@ -289,12 +286,12 @@ class DreamMCMC(pints.MultiChainMCMC):
 
                 # Update CR distribution
                 delta = (next - self._current)**2
-                for j in range(self._chains):
+                for j in range(self._n_chains):
                     for d in range(0, self._n_parameters):
                         self._delta[self._m[j]] += (
                             delta[j][d] / max(self._variance[j][d], 1e-11))
 
-                self._p = self._iterations * self._chains * self._delta
+                self._p = self._iterations * self._n_chains * self._delta
                 d1 = self._L * np.sum(self._delta)
                 d1[d1 == 0] += 1e-11
                 self._p /= d1
@@ -307,14 +304,14 @@ class DreamMCMC(pints.MultiChainMCMC):
         # Update (part 2)
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current.setflags(write=False)
         self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
 
         # Return samples to add to chains
-        self._current.setflags(write=False)
-        return self._current
+        return self._current, self._current_log_pdfs, i
 
     def b(self):
         """
@@ -354,9 +351,9 @@ class DreamMCMC(pints.MultiChainMCMC):
         """
         Select 2 random chains, not including chain i.
         """
-        r1, r2 = np.random.choice(self._chains, 2, replace=False)
+        r1, r2 = np.random.choice(self._n_chains, 2, replace=False)
         while(r1 == i or r2 == i or r1 == r2):
-            r1, r2 = np.random.choice(self._chains, 2, replace=False)
+            r1, r2 = np.random.choice(self._n_chains, 2, replace=False)
         return r1, r2
 
     def n_hyper_parameters(self):
@@ -419,7 +416,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         ``[1, nchains - 2]``.
         """
         delta_max = int(delta_max)
-        if delta_max > (self._chains - 2):
+        if delta_max > (self._n_chains - 2):
             raise ValueError(
                 'delta_max must be less than or equal to the number of chains '
                 'minus 2.')

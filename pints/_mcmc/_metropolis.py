@@ -74,10 +74,6 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def _initialise(self):
         """
         Initialises the routine before the first iteration.
@@ -89,6 +85,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         self._current = None
         self._current_log_pdf = None
         self._proposed = self._x0
+        self._proposed.setflags(write=False)
 
         # Acceptance rate monitoring
         self._iterations = 0
@@ -108,6 +105,35 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Metropolis random walk MCMC'
+
+    def replace(self, current=None, current_log_pdf=None, proposed=None):
+        """ See :meth:`pints.SingleChainMCMC.replace()`. """
+
+        # At least one round of ask-and-tell must have been run
+        if (not self._running) or self._current_log_pdf is None:
+            raise RuntimeError(
+                'Replace can only be used when already running.')
+
+        # Check position
+        current = pints.vector(current)
+        if not len(current) == self._n_parameters:
+            raise ValueError('Point `current` has the wrong dimensions.')
+        current.setflags(write=False)
+
+        # Check log pdf
+        current_log_pdf = float(current_log_pdf)
+
+        # Check proposal
+        if proposed is not None:
+            proposed = pints.vector(proposed)
+            if not len(proposed) == self._n_parameters:
+                raise ValueError('Point `proposed` has the wrong dimensions.')
+            proposed.setflags(write=False)
+
+        # Store
+        self._current = current
+        self._current_log_pdf = current_log_pdf
+        self._proposed = proposed
 
     def tell(self, fx):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -135,7 +161,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
             self._proposed = None
 
             # Return first point for chain
-            return self._current
+            return self._current, self._current_log_pdf, True
 
         # Check if the proposed point can be accepted
         accepted = 0
@@ -157,27 +183,5 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         self._iterations += 1
 
         # Return new point for chain
-        return self._current
+        return self._current, self._current_log_pdf, accepted > 0
 
-    def replace(self, current=None, current_log_pdf=None, proposed=None):
-        """ See :meth:`pints.SingleChainMCMC.replace()`. """
-
-        # At least one round of ask-and-tell must have been run
-        if (not self._running) or self._current_log_pdf is None:
-            raise RuntimeError(
-                'Replace can only be used when already running.')
-
-        # Check values
-        current = pints.vector(current)
-        if not len(current) == self._n_parameters:
-            raise ValueError('Point `current` has the wrong dimensions.')
-        current_log_pdf = float(current_log_pdf)
-        if proposed is not None:
-            proposed = pints.vector(proposed)
-            if not len(proposed) == self._n_parameters:
-                raise ValueError('Point `proposed` has the wrong dimensions.')
-
-        # Store
-        self._current = current
-        self._current_log_pdf = current_log_pdf
-        self._proposed = proposed

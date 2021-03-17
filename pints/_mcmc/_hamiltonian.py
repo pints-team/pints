@@ -144,10 +144,6 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._position, copy=True)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return -self._current_energy
-
     def divergent_iterations(self):
         """
         Returns the iteration number of any divergent iterations
@@ -305,11 +301,16 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             # Increase iteration count
             self._mcmc_iteration += 1
 
-            # Mark current as read-only, so it can be safely returned
+            # Mark current as read-only, so it can be safely returned.
+            # Gradient won't be returned (only -gradient, so no need.
             self._current.setflags(write=False)
 
             # Return first point in chain
-            return self._current
+            return (
+                self._current,
+                (-self._current_energy, -self._current_gradient),
+                False
+            )
 
         # Set gradient of current leapfrog position
         self._gradient = gradient
@@ -355,8 +356,13 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
                 self._mcmc_acceptance = (
                     (self._mcmc_iteration * self._mcmc_acceptance + accept) /
                     (self._mcmc_iteration + 1))
-                self._current.setflags(write=False)
-                return self._current
+
+                # Return current state
+                return (
+                    self._current,
+                    (-self._current_energy, -self._current_gradient),
+                    False
+                )
 
             # Accept/reject
             else:
@@ -367,7 +373,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
                     self._current_energy = energy
                     self._current_gradient = gradient
 
-                    # Mark current as read-only, so it can be safely returned
+                    # Mark current as read-only, so it can be safely returned.
+                    # Gradient won't be returned (only -gradient, so no need.
                     self._current.setflags(write=False)
 
         # Reset leapfrog mechanism
@@ -383,4 +390,8 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
             (self._mcmc_iteration + 1))
 
         # Return current position as next sample in the chain
-        return self._current
+        return (
+            self._current,
+            (-self._current_energy, -self._current_gradient),
+            accept > 0
+        )

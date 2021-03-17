@@ -249,7 +249,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
             self._proposed = None
 
             # Return first point for chain
-            return self._current
+            return self._current, self._current_log_pdf, True
 
         # Check if the proposed point can be accepted
         accepted = 0
@@ -280,7 +280,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._adapt_sigma()
         self._log_lambda += (self._gamma *
                              (accepted - self._target_acceptance))
-        return self._current
+        return self._current, self._current_log_pdf, accepted != 0
 
     def upper_scale(self):
         """
