@@ -348,7 +348,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             self._mcmc_iteration += 1
 
             # Mark current as read-only, so it can be safely returned.
-            # Gradient won't be returned (only -gradient, so no need.
+            # Gradient won't be returned (only -gradient, so no need to copy).
             self._current.setflags(write=False)
 
             # Return first point in chain
@@ -419,7 +419,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                     self._current_gradient = gradient
 
                     # Mark current as read-only, so it can be safely returned.
-                    # Gradient won't be returned (only -gradient, so no need.
+                    # Gradient won't be returned (only -gradient, so no need
+                    # to copy).
                     self._current.setflags(write=False)
 
         # Reset leapfrog mechanism

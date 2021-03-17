@@ -43,6 +43,7 @@ class TestMALAMCMC(unittest.TestCase):
                 y, fy, ac = reply
                 if i >= 50:
                     chain.append(y)
+                self.assertTrue(isinstance(ac, bool))
                 if ac:
                     self.assertTrue(np.all(x == y))
                     self.assertEqual(fx, fy[0])

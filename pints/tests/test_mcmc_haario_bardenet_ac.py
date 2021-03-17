@@ -82,6 +82,7 @@ class TestHaarioBardenetACMC(unittest.TestCase):
             if i >= 50:
                 chain.append(x)
             rate.append(mcmc.acceptance_rate())
+            self.assertTrue(isinstance(ac, bool))
             if ac:
                 self.assertTrue(np.all(x == y))
                 self.assertEqual(fx, fy)
@@ -134,6 +135,7 @@ class TestHaarioBardenetACMC(unittest.TestCase):
             if i >= 50:
                 chain.append(x)
             rate.append(mcmc.acceptance_rate())
+            self.assertTrue(isinstance(ac, bool))
             if ac:
                 self.assertTrue(np.all(x == y))
                 self.assertEqual(fx, fy)
