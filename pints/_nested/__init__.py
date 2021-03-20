@@ -854,13 +854,13 @@ class Ellipsoid():
         self._points = None
         self._n_points = 0
 
-    def add_points(self, points):
-        """ Adds points contained within bounding ellispoid. """
+    def set_points(self, points):
+        """ Sets points contained within bounding ellipsoid. """
         self._points = points
         self._n_points = len(points)
 
     def centroid(self):
-        """ Returns centroid of ellispoid. """
+        """ Returns centroid of ellipsoid. """
         return self._c
 
     def enlarge(self, enlargement_factor):
@@ -892,7 +892,7 @@ class Ellipsoid():
         enlargement_factor = np.max(dist)
         A = (1.0 / enlargement_factor) * cov_inv
         obj = cls(A, c)
-        obj.add_points(points)
+        obj.set_points(points)
         return obj
 
     def n_points(self):
