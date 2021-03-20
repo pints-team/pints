@@ -394,22 +394,6 @@ class TestEllipsoid(unittest.TestCase):
         c = [1, 2]
         self.assertRaises(ValueError, Ellipsoid, A, c)
 
-    def test_add(self):
-        # tests that __add__ makes list of objects
-
-        A_1 = self.A
-        c_1 = self.c
-        ellipsoid_1 = Ellipsoid(A_1, c_1)
-        A_2 = np.array([[1, 0], [0, 1]])
-        c_2 = np.array([0, 0])
-        ellipsoid_2 = Ellipsoid(A_2, c_2)
-        ellipsoids = ellipsoid_1 + ellipsoid_2
-        As = [A_1, A_2]
-        cs = [c_1, c_2]
-        for k, ell in enumerate(ellipsoids):
-            self.assertTrue(np.array_equal(ell.centroid(), cs[k]))
-            self.assertTrue(np.array_equal(ell.weight_matrix(), As[k]))
-
     def test_enlarge_ellipsoid(self):
         # tests that ellipsoid is properly enlarged
 

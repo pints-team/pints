@@ -854,9 +854,6 @@ class Ellipsoid():
         self._points = None
         self._n_points = 0
 
-    def __add__(self, other):
-        return [self, other]
-
     def add_points(self, points):
         """ Adds points contained within bounding ellispoid. """
         self._points = points
