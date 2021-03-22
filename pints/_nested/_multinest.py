@@ -16,7 +16,7 @@ from pints._nested.__init__ import Ellipsoid
 import warnings
 
 
-class MultinestSampler(pints.NestedSampler):
+class MultiNestSampler(pints.NestedSampler):
     r"""
     Creates a MultiNest nested sampler that estimates the marginal likelihood
     and generates samples from the posterior.
@@ -154,7 +154,7 @@ class MultinestSampler(pints.NestedSampler):
     """
 
     def __init__(self, log_prior):
-        super(MultinestSampler, self).__init__(log_prior)
+        super(MultiNestSampler, self).__init__(log_prior)
 
         # Enlargement factor for ellipsoid
         self.set_enlargement_factor()

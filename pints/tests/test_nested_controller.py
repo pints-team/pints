@@ -202,7 +202,7 @@ class TestNestedController(unittest.TestCase):
         with StreamCapture() as c:
             sampler = pints.NestedController(
                 self.log_likelihood, self.log_prior,
-                method=pints.MultinestSampler)
+                method=pints.MultiNestSampler)
             sampler.set_n_posterior_samples(2)
             sampler.set_iterations(20)
             sampler.set_log_to_screen(True)

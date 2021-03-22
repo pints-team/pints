@@ -1,7 +1,7 @@
 *****************
-Multinest sampler
+MultiNest sampler
 *****************
 
 .. currentmodule:: pints
 
-.. autoclass:: MultinestSampler
+.. autoclass:: MultiNestSampler

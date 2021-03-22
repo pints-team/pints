@@ -24,7 +24,7 @@ except AttributeError:
 
 class TestMultiNestSampler(unittest.TestCase):
     """
-    Unit (not functional!) tests for :class:`MultinestSampler`.
+    Unit (not functional!) tests for :class:`MultiNestSampler`.
     """
 
     @classmethod
@@ -60,7 +60,7 @@ class TestMultiNestSampler(unittest.TestCase):
         # tests various get() and set() methods.
         controller = pints.NestedController(self.log_likelihood,
                                             self.log_prior,
-                                            method=pints.MultinestSampler)
+                                            method=pints.MultiNestSampler)
         self.assertEqual(controller.sampler().f_s_threshold(), 1.1)
         controller.sampler().set_f_s_threshold(4)
         self.assertEqual(controller.sampler().f_s_threshold(), 4)
@@ -94,7 +94,7 @@ class TestMultiNestSampler(unittest.TestCase):
         # tests that sampler runs
         controller = pints.NestedController(self.log_likelihood,
                                             self.log_prior,
-                                            method=pints.MultinestSampler)
+                                            method=pints.MultiNestSampler)
         controller.set_iterations(450)
         controller.set_log_to_screen(False)
         controller.run()
@@ -107,7 +107,7 @@ class TestMultiNestSampler(unittest.TestCase):
         # tests that ask /tell work with multiple points
 
         # test multiple points being asked and tell'd
-        sampler = pints.MultinestSampler(self.log_prior)
+        sampler = pints.MultiNestSampler(self.log_prior)
         pts = sampler.ask(50)
         self.assertEqual(len(pts), 50)
         fx = [self.log_likelihood(pt) for pt in pts]
@@ -118,7 +118,7 @@ class TestMultiNestSampler(unittest.TestCase):
         # point evaluation gets triggered
         controller = pints.NestedController(self.log_likelihood,
                                             self.log_prior,
-                                            method=pints.MultinestSampler)
+                                            method=pints.MultiNestSampler)
         controller.set_iterations(450)
         controller.set_log_to_screen(False)
         controller.set_parallel(True)
