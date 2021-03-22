@@ -9,13 +9,28 @@ from __future__ import division
 
 import pints
 
-from ._problems import RunMcmcMethodOnTwoDimGaussian
+from ._problems import (RunMcmcMethodOnTwoDimGaussian,
+                        RunMcmcMethodOnBanana)
 
 
 def test_haario_bardenet_acmc_on_two_dim_gaussian():
     problem = RunMcmcMethodOnTwoDimGaussian(
         method=pints.HaarioBardenetACMC,
-        n_chains=3,
+        n_chains=4,
+        n_iterations=4000,
+        n_warmup=1000
+    )
+
+    return {
+        'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def test_haario_bardenet_acmc_on_banana():
+    problem = RunMcmcMethodOnBanana(
+        method=pints.HaarioBardenetACMC,
+        n_chains=4,
         n_iterations=4000,
         n_warmup=1000
     )
