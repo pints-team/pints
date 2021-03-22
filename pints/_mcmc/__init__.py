@@ -1111,6 +1111,10 @@ def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
     finite values for each of ``chains`` have been generated or the number of
     attempts exceeds ``num_tries``.
 
+    If log_pdf is of :class:`LogPosterior`, then the
+    `log_pdf.log_prior().sample` method is used for initialisation, although
+    this is overwritten by
+
     Parameters
     ----------
     log_pdf : pints.LogPDF
@@ -1130,25 +1134,30 @@ def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
     n_workers : int
         Number of workers on which to run parallel evaluation.
     """
-    if not callable(random_sampler):
+    if random_sampler is not None and not callable(random_sampler):
+        raise ValueError("random_sampler must be a callable function.")
+
+    if random_sampler is None:
         if isinstance(log_pdf, pints.LogPosterior):
-            random_sampler = log_pdf.log_prior()
+            random_sampler = log_pdf.log_prior().sample
         else:
-            raise ValueError("random_sampler must be a function.")
+            raise ValueError("If log_pdf not of class pints.LogPosterior " +
+                             "then random_sampler must be supplied.")
+
     if chains < 1:
         raise ValueError("chains must be 1 or more.")
 
     if parallel:
-        n_workers = min(n_workers, chains)
+        n_workers = min(pints.ParallelEvaluator.cpu_count(), chains)
         evaluator = pints.ParallelEvaluator(log_pdf, n_workers=n_workers)
     else:
         evaluator = pints.SequentialEvaluator(log_pdf)
 
-    max_n_tries *= chains
+    max_n_tries_chains = max_n_tries * chains
     initialised_finite = False
     x0 = []
     n_tries = 0
-    while not initialised_finite and n_tries < max_n_tries:
+    while not initialised_finite and n_tries < max_n_tries_chains:
         xs = random_sampler(chains)
         fxs = evaluator.evaluate(xs)
         xs_iterator = iter(xs)
@@ -1158,11 +1167,11 @@ def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
             fx = next(fxs_iterator)
             if np.isfinite(fx):
                 x0.append(x)
-            if len(x0) == len(chains):
+            if len(x0) == chains:
                 initialised_finite = True
             n_tries += 1
     if not initialised_finite:
-        raise ValueError(
+        raise RuntimeError(
             'Initialisation failed since log_pdf not finite at initial ' +
             'points after ' + str(max_n_tries) + ' attempts.')
     return x0
