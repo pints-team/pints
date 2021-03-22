@@ -1102,3 +1102,67 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
     """
     return MCMCController(    # pragma: no cover
         log_pdf, chains, x0, sigma0, method=method).run()
+
+
+def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
+                      parallel=False, n_workers=None):
+    """
+    Draws parameter values from a given sampling distribution until either
+    finite values for each of ``chains`` have been generated or the number of
+    attempts exceeds ``num_tries``.
+
+    Parameters
+    ----------
+    log_pdf : pints.LogPDF
+        A :class:`LogPDF` function that evaluates points in the parameter
+        space.
+    chains : int
+        The number of initial values to generate.
+    random_sampler : stochastic function
+        A function that when called returns draws from a probability
+        distribution of same dimensionality as `log_pdf`. The only argument
+        to this function should be an integer specifying the number of draws.
+    max_n_tries : int
+        Number of attempts to find a finite initial value for each of
+        ``chains``.
+    parallel : Boolean
+        Whether to evaluate log_pdf in parallel (defaults to False).
+    n_workers : int
+        Number of workers on which to run parallel evaluation.
+    """
+    if not callable(random_sampler):
+        if isinstance(log_pdf, pints.LogPosterior):
+            random_sampler = log_pdf.log_prior()
+        else:
+            raise ValueError("random_sampler must be a function.")
+    if chains < 1:
+        raise ValueError("chains must be 1 or more.")
+
+    if parallel:
+        n_workers = min(n_workers, chains)
+        evaluator = pints.ParallelEvaluator(log_pdf, n_workers=n_workers)
+    else:
+        evaluator = pints.SequentialEvaluator(log_pdf)
+
+    max_n_tries *= chains
+    initialised_finite = False
+    x0 = []
+    n_tries = 0
+    while not initialised_finite and n_tries < max_n_tries:
+        xs = random_sampler(chains)
+        fxs = evaluator.evaluate(xs)
+        xs_iterator = iter(xs)
+        fxs_iterator = iter(fxs)
+        for i in range(chains):
+            x = next(xs_iterator)
+            fx = next(fxs_iterator)
+            if np.isfinite(fx):
+                x0.append(x)
+            if len(x0) == len(chains):
+                initialised_finite = True
+            n_tries += 1
+    if not initialised_finite:
+        raise ValueError(
+            'Initialisation failed since log_pdf not finite at initial ' +
+            'points after ' + str(max_n_tries) + ' attempts.')
+    return x0
