@@ -1113,7 +1113,7 @@ def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
 
     If log_pdf is of :class:`LogPosterior`, then the
     `log_pdf.log_prior().sample` method is used for initialisation, although
-    this is overwritten by
+    this is overruled by `random_sampler` if it is supplied.
 
     Parameters
     ----------
