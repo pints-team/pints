@@ -13,11 +13,13 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnBanana)
 
 
-def test_emcee_hammer_on_two_dim_gaussian():
+def test_emcee_hammer_on_two_dim_gaussian(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 10000
     problem = RunMcmcMethodOnTwoDimGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=4,
-        n_iterations=100000,
+        n_iterations=n_iterations,
         n_warmup=1000
     )
 
@@ -27,11 +29,13 @@ def test_emcee_hammer_on_two_dim_gaussian():
     }
 
 
-def test_emcee_hammer_on_banana():
+def test_emcee_hammer_on_banana(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 10000
     problem = RunMcmcMethodOnBanana(
         method=pints.EmceeHammerMCMC,
         n_chains=4,
-        n_iterations=10000,
+        n_iterations=n_iterations,
         n_warmup=2000
     )
 

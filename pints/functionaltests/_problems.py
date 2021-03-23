@@ -25,14 +25,9 @@ class RunMcmcMethodOnProblem(object):
 
     def estimate_kld(self):
         """
-        Estimates and returns the Kullback-Leibler divergence between the
-        approximate posterior and the true posterior assuming that the
-        approximated posterior has Gaussian shape.
+        Estimates the Kullback-Leibler divergence.
         """
-        # Pool samples from chains
-        chains_x = self.chains[:, :, 0].flatten()
-        chains_y = self.chains[:, :, 1].flatten()
-        chains = np.vstack([chains_x, chains_y]).T
+        chains = np.vstack(self.chains)
 
         return self.log_pdf.kl_divergence(chains)
 
@@ -74,9 +69,8 @@ class RunMcmcMethodOnTwoDimGaussian(RunMcmcMethodOnProblem):
 
 class RunMcmcMethodOnBanana(RunMcmcMethodOnProblem):
     """
-    Tests a given MCMC method on `pints.TwistedGaussianLogPDF`.
+    Tests a given MCMC method on `pints.toy.TwistedGaussianLogPDF`.
     """
-
     def __init__(self, method, n_chains, n_iterations, n_warmup,
                  method_hyper_parameters=None):
         log_pdf = pints.toy.TwistedGaussianLogPDF(dimension=2, b=0.1)
@@ -86,6 +80,22 @@ class RunMcmcMethodOnBanana(RunMcmcMethodOnProblem):
                                                        [[10, 0], [0, 10]])
         x0 = log_prior.sample(n_chains)
         sigma0 = np.diag(np.array([1, 3]))
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
+class RunMcmcMethodOnSimpleEggBox(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `pints.toy.SimpleEggBoxLogPDF`.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        sigma = 2
+        r = 4
+        log_pdf = pints.toy.SimpleEggBoxLogPDF(sigma, r)
+        x0 = np.random.uniform(-15, 15, size=(n_chains, 2))
+        sigma0 = None
 
         super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
                          n_warmup, method_hyper_parameters)

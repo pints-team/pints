@@ -13,11 +13,13 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnBanana)
 
 
-def test_differential_evolution_on_two_dim_gaussian():
+def test_differential_evolution_on_two_dim_gaussian(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 10000
     problem = RunMcmcMethodOnTwoDimGaussian(
         method=pints.DifferentialEvolutionMCMC,
         n_chains=10,
-        n_iterations=10000,
+        n_iterations=n_iterations,
         n_warmup=1000
     )
 
@@ -27,11 +29,13 @@ def test_differential_evolution_on_two_dim_gaussian():
     }
 
 
-def test_differential_evolution_on_banana():
+def test_differential_evolution_on_banana(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 5000
     problem = RunMcmcMethodOnBanana(
         method=pints.DifferentialEvolutionMCMC,
         n_chains=20,
-        n_iterations=5000,
+        n_iterations=n_iterations,
         n_warmup=1000
     )
 

@@ -13,11 +13,13 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnBanana)
 
 
-def test_haario_bardenet_acmc_on_two_dim_gaussian():
+def test_haario_bardenet_acmc_on_two_dim_gaussian(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 4000
     problem = RunMcmcMethodOnTwoDimGaussian(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
-        n_iterations=4000,
+        n_iterations=n_iterations,
         n_warmup=1000
     )
 
@@ -27,11 +29,13 @@ def test_haario_bardenet_acmc_on_two_dim_gaussian():
     }
 
 
-def test_haario_bardenet_acmc_on_banana():
+def test_haario_bardenet_acmc_on_banana(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 4000
     problem = RunMcmcMethodOnBanana(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
-        n_iterations=4000,
+        n_iterations=n_iterations,
         n_warmup=1000
     )
 
