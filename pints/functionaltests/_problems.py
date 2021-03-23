@@ -11,9 +11,17 @@ import pints.toy
 
 class RunMcmcMethodOnProblem(object):
 
-    def __init__(self, log_pdf, chains):
+    def __init__(self, log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                 n_warmup, method_hyper_parameters):
         self.log_pdf = log_pdf
-        self.chains = chains
+
+        controller = pints.MCMCController(
+            log_pdf, n_chains, x0, sigma0=sigma0, method=method)
+        controller.set_max_iterations(n_iterations)
+        controller.set_log_to_screen(False)
+        set_hyperparameters_for_any_mcmc_class(controller, method,
+                                               method_hyper_parameters)
+        self.chains = run_and_throw_away_warmup(controller, n_warmup)
 
     def estimate_kld(self):
         """
@@ -57,19 +65,11 @@ class RunMcmcMethodOnTwoDimGaussian(RunMcmcMethodOnProblem):
         log_prior = pints.ComposedLogPrior(
             pints.GaussianLogPrior(mean=0, sd=100),
             pints.GaussianLogPrior(mean=0, sd=100))
-        initial_parameters = log_prior.sample(n=n_chains)
+        x0 = log_prior.sample(n=n_chains)
+        sigma0 = None
 
-        # Set up sampler
-        controller = pints.MCMCController(
-            log_pdf, n_chains, initial_parameters, method=method)
-        controller.set_max_iterations(n_iterations)
-        controller.set_log_to_screen(False)
-        set_hyperparameters_for_any_mcmc_class(controller, method,
-                                               method_hyper_parameters)
-
-        chains = run_and_throw_away_warmup(controller, n_warmup)
-
-        super().__init__(log_pdf, chains)
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
 
 
 class RunMcmcMethodOnBanana(RunMcmcMethodOnProblem):
@@ -87,17 +87,8 @@ class RunMcmcMethodOnBanana(RunMcmcMethodOnProblem):
         x0 = log_prior.sample(n_chains)
         sigma0 = np.diag(np.array([1, 3]))
 
-        # Set up sampler
-        controller = pints.MCMCController(
-            log_pdf, n_chains, x0, sigma0=sigma0, method=method)
-        controller.set_max_iterations(n_iterations)
-        controller.set_log_to_screen(False)
-        set_hyperparameters_for_any_mcmc_class(controller, method,
-                                               method_hyper_parameters)
-
-        chains = run_and_throw_away_warmup(controller, n_warmup)
-
-        super().__init__(log_pdf, chains)
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
 
 
 def set_hyperparameters_for_any_mcmc_class(controller, method,
