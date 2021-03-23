@@ -82,15 +82,13 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             self._remaining = np.delete(self._remaining, 0)
 
             # Pick j from the complementary ensemble
-            j = np.random.randint(self._n_chains - 1)
-            if j >= self._k:
-                j += 1
+            compl_indices = list(set(range(self._n_chains)) -
+                                 set([self._k]))
+            j = np.random.choice(compl_indices)
             x_j = self._current[j]
             x_k = self._current[self._k]
 
-            # sample Z from g[z] = (1/sqrt(Z)), if Z in [1/a, a], 0 otherwise
-            r = np.random.rand()
-            self._z = ((1 + r * (self._a - 1))**2) / self._a
+            self._z = self._sample_z(self._a)
             self._proposed = x_j + self._z * (x_k - x_j)
 
             # Ensure proposed is array containing a single sample
@@ -100,6 +98,14 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
         # Return proposed points
         return self._proposed
+
+    def _sample_z(self, a):
+        """
+        Samples ``z~g(z)`` where ``g(z)`` is proportional to ``1 / sqrt(z)``
+        if ``z`` is in ``[1 / a, a]``; otherwise 0.
+        """
+        r = np.random.rand()
+        return ((1 + r * (a - 1))**2) / a
 
     def _initialise(self):
         """
@@ -160,7 +166,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         accepted = np.array([False] * self._n_chains)
         r_log = np.log(np.random.rand())
         q = (
-            (self._n_chains - 1) * np.log(self._z)
+            (self._n_parameters - 1) * np.log(self._z)
             + proposed_log_pdf[0] - self._current_log_pdfs[self._k])
         if q >= r_log:
             next = np.copy(self._current)
@@ -192,8 +198,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         chains.
         """
         scale = float(scale)
-        if scale <= 0:
-            raise ValueError('The scale parameter must be positive.')
+        if scale <= 1:
+            raise ValueError('The scale parameter must exceed 1.')
         self._a = scale
 
     def n_hyper_parameters(self):
