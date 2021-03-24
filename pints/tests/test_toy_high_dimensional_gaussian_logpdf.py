@@ -113,8 +113,9 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         x = [1, 1]
         L, dL = f.evaluateS1(x)
         self.assertEqual(L, f(x))
-        self.assertTrue(np.array_equal(dL, [-0.8619288125423018,
-                                            -0.19526214587563495]))
+        exact = [-0.8619288125423018, -0.19526214587563495]
+        for i in range(len(exact)):
+            self.assertAlmostEqual(dL[i], exact[i])
 
 
 if __name__ == '__main__':
