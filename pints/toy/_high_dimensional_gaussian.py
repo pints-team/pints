@@ -16,9 +16,11 @@ from . import ToyLogPDF
 class HighDimensionalGaussianLogPDF(ToyLogPDF):
     """
     High-dimensional zero-mean multivariate Gaussian log pdf, with off-diagonal
-    correlations. Specifically, the covariance matrix Sigma is constructed so
-    that diagonal elements are integers: Sigma_i,i = i and off-diagonal
-    elements are Sigma_i,j = rho * sqrt(i) * sqrt(j).
+    correlations.
+
+    Specifically, the covariance matrix Sigma is constructed so that diagonal
+    elements are integers: Sigma_i,i = i and off-diagonal elements are
+    Sigma_i,j = rho * sqrt(i) * sqrt(j).
 
     Extends :class:`pints.toy.ToyLogPDF`.
 
