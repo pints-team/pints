@@ -101,6 +101,21 @@ class RunMcmcMethodOnSimpleEggBox(RunMcmcMethodOnProblem):
                          n_warmup, method_hyper_parameters)
 
 
+#TODO add evaluateS1 to high dim Gaussian
+class RunMcmcMethodOnHighDimensionalGaussian(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `pints.toy.HighDimensionalGaussianLogPDF`.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        log_pdf = pints.toy.HighDimensionalGaussianLogPDF()
+        x0 = np.random.uniform(-25, 25, size=(n_chains, 20))
+        sigma0 = None
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
 def set_hyperparameters_for_any_mcmc_class(controller, method,
                                            method_hyper_parameters):
     """ Sets hyperparameters for any MCMC class. """
