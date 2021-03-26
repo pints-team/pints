@@ -92,7 +92,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
     # Guess appropriate alpha (0.05 worked for 1000 plots)
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
-    if alpha > 1:
+    if alpha > 1:  # pragma: no cover
         alpha = 1
 
     # Plot prediction
