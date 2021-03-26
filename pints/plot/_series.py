@@ -39,7 +39,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         if true values of parameters are known, they can be passed in for
         plotting.
     thinning
-        An integer greater than zero. If specified, only every
+        An integer exceeding zero. If specified, only every
         n-th sample (with ``n = thinning``) in the samples will be used. If
         left at the default value ``None``, a value will be chosen so that
         200 to 400 predictions are shown.
