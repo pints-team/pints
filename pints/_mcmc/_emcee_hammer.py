@@ -25,15 +25,16 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
     - Set ``Y = X_j(t) + z[X_k(t) - X_j(t)]``.
 
-    - Set ``q = z^{N - 1} p(Y) / p(X_k(t))``.
+    - Set ``q = z^{d - 1} p(Y) / p(X_k(t))``.
 
     - Sample ``r ~ U(0, 1)``.
 
     - If ``r <= q``, set ``X_k(t + 1)`` equal to ``Y``, if not use ``X_k(t)``.
 
-    Here, ``N`` is the number of chains (or walkers), and ``g(z)`` is
-    proportional to ``1 / sqrt(z)`` if ``z`` is in  ``[1 / a, a]`` or to 0,
-    otherwise (where ``a`` is a parameter with default value ``2``).
+    Here, ``N`` is the number of chains (or walkers), ``d`` is the
+    dimensionality of the space, and ``g(z)`` is proportional to
+    ``1 / sqrt(z)`` if ``z`` is in  ``[1 / a, a]`` or to 0, otherwise (where
+    ``a`` is a parameter with default value ``2``).
 
     References
     ----------
@@ -81,10 +82,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             self._k = self._remaining[0]
             self._remaining = np.delete(self._remaining, 0)
 
-            # Pick j from the complementary ensemble
-            compl_indices = list(set(range(self._n_chains)) -
-                                 set([self._k]))
-            j = np.random.choice(compl_indices)
+            j = self._random_select_other_index(self._k)
             x_j = self._current[j]
             x_k = self._current[self._k]
 
@@ -99,10 +97,22 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
+    def _random_select_other_index(self, current_index):
+        """
+        Selects an index uniformly at random from all chains excluding the
+        index of the current chain.
+        """
+        all_chains = list(range(self._n_chains))
+        free_chains = all_chains.copy()
+        free_chains.remove(current_index)
+        other_index = np.random.choice(free_chains)
+        return other_index
+
     def _sample_z(self, a):
         """
         Samples ``z~g(z)`` where ``g(z)`` is proportional to ``1 / sqrt(z)``
-        if ``z`` is in ``[1 / a, a]``; otherwise 0.
+        if ``z`` is in ``[1 / a, a]``; otherwise 0. It does this by using
+        inverse transform sampling.
         """
         r = np.random.rand()
         return ((1 + r * (a - 1))**2) / a
@@ -162,13 +172,12 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
 
         # Perform iteration, updating the selected chain
         # Note that proposed/proposed_log_pdf are length 1 here
-        #TODO Switch to algorithm 3, doing 2 sets of chains per iteration
         accepted = np.array([False] * self._n_chains)
         r_log = np.log(np.random.rand())
-        q = (
+        log_q = (
             (self._n_parameters - 1) * np.log(self._z)
             + proposed_log_pdf[0] - self._current_log_pdfs[self._k])
-        if q >= r_log:
+        if log_q >= r_log:
             next = np.copy(self._current)
             next_log_pdfs = np.copy(self._current_log_pdfs)
             next[self._k] = self._proposed
