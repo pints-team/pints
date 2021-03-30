@@ -336,6 +336,9 @@ class ProblemLogLikelihood(LogPDF):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
 
+    def evaluate_pointwise_loglikelihoods(self, x):
+        raise NotImplementedError
+
 
 class LogPosterior(LogPDF):
     """
