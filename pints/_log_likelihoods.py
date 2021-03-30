@@ -236,10 +236,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
         m = self._no
 
         # problem parameters
@@ -369,18 +366,15 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
 
         return log_likelihood
 
-    def evaluate_pointwise_loglikelihoods(self, parameters):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
-        noise_parameters = np.asarray(parameters[-self._np:])
+    def evaluate_pointwise_loglikelihoods(self, x):
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        noise_parameters = np.asarray(x[-self._np:])
         sigma_base = noise_parameters[:self._no]
         eta = noise_parameters[self._no:2 * self._no]
         sigma_rel = noise_parameters[2 * self._no:]
 
         # Evaluate function and compute intermediate values
-        function_values = self._problem.evaluate(parameters[:-self._np])
+        function_values = self._problem.evaluate(x[:-self._np])
         error = self._values - function_values
         sigma_tot = sigma_base + sigma_rel * function_values**eta
 
@@ -692,10 +686,7 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
 
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
         error = self._values - self._problem.evaluate(x)
         return self._offset_no_sum + self._multip * error**2
 
@@ -786,10 +777,7 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
         sigma = np.asarray(x[-self._no:])
 
         # Compute intermediate values
@@ -936,10 +924,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         return log_likelihood
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
         noise_parameters = np.asarray(x[-self._np:])
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
@@ -1068,10 +1053,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         )
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """
-        Returns a matrix of size nt x no containing the loglikelihood of each observation and at
-        each time point for the given parameters
-        """
+        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
         m = 2 * self._no
 
         # problem parameters
