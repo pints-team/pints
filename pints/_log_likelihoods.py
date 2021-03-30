@@ -93,6 +93,7 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(autocorr_error**2, axis=0) / (2 * sigma**2))
 
+
 class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming ARMA(1,1) errors.
@@ -236,7 +237,9 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         )
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         m = self._no
 
         # problem parameters
@@ -248,7 +251,6 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate
         return - np.log(np.pi) - np.log(sigma) - np.log(1 + (error / sigma)**2)
-
 
 
 class ConstantAndMultiplicativeGaussianLogLikelihood(
@@ -367,7 +369,9 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         return log_likelihood
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         noise_parameters = np.asarray(x[-self._np:])
         sigma_base = noise_parameters[:self._no]
         eta = noise_parameters[self._no:2 * self._no]
@@ -378,8 +382,10 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         error = self._values - function_values
         sigma_tot = sigma_base + sigma_rel * function_values**eta
 
-        # Compute the pointwise log-likelihoods for each timepoint and observation
-        pointwise = -0.5 * np.log(2 * np.pi) - np.log(sigma_tot) - 0.5 * error**2/sigma_tot**2
+        # Compute the pointwise log-likelihoods for each observation
+        pointwise = (- 0.5 * np.log(2 * np.pi)
+                     - np.log(sigma_tot)
+                     - 0.5 * error**2 / sigma_tot**2)
 
         return pointwise
 
@@ -684,9 +690,10 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
         error = self._values - self._problem.evaluate(x)
         return np.sum(self._offset + self._multip * np.sum(error**2, axis=0))
 
-
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         error = self._values - self._problem.evaluate(x)
         return self._offset_no_sum + self._multip * error**2
 
@@ -777,14 +784,18 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         sigma = np.asarray(x[-self._no:])
 
         # Compute intermediate values
         error = self._values - self._problem.evaluate(x[:-self._no])
 
-        # Compute the pointwise log-likelihoods for each timepoint and observation
-        pointwise = -0.5 * np.log(2 * np.pi) - np.log(sigma) - error**2/ (2 * sigma**2)
+        # Compute the pointwise log-likelihoods for each observation
+        pointwise = (-0.5 * np.log(2 * np.pi)
+                     - np.log(sigma)
+                     - error**2 / (2 * sigma**2))
 
         return pointwise
 
@@ -924,7 +935,9 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         return log_likelihood
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         noise_parameters = np.asarray(x[-self._np:])
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
@@ -934,8 +947,10 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         error = self._values - function_values
         sigma_tot = function_values**eta * sigma
 
-        # Compute the pointwise log-likelihoods for each timepoint and observation
-        pointwise = -0.5 * np.log(2 * np.pi) - np.log(sigma_tot) - error**2/ (2 * sigma_tot**2)
+        # Compute the pointwise log-likelihoods for each observation
+        pointwise = (-0.5 * np.log(2 * np.pi)
+                     - np.log(sigma_tot)
+                     - error**2 / (2 * sigma_tot**2))
         return pointwise
 
 
@@ -1053,7 +1068,9 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         )
 
     def evaluate_pointwise_loglikelihoods(self, x):
-        """ See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`. """
+        """
+        See :meth:`ProblemLogLikelihood.evaluate_pointwise_loglikelihoods()`.
+        """
         m = 2 * self._no
 
         # problem parameters
