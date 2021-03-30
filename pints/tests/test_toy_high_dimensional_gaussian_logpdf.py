@@ -106,6 +106,17 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11)
 
+    def test_sensitivities(self):
+        # tests that sensitivities are correct
+
+        f = pints.toy.HighDimensionalGaussianLogPDF(2)
+        x = [1, 1]
+        L, dL = f.evaluateS1(x)
+        self.assertEqual(L, f(x))
+        exact = [-0.8619288125423018, -0.19526214587563495]
+        for i in range(len(exact)):
+            self.assertAlmostEqual(dL[i], exact[i])
+
 
 if __name__ == '__main__':
     unittest.main()
