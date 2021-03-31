@@ -286,19 +286,19 @@ class TestCauchyLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CauchyLogLikelihood(problem)
+        likelihood = pints.CauchyLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -309,19 +309,19 @@ class TestCauchyLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CauchyLogLikelihood(problem)
+        likelihood = pints.CauchyLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -332,19 +332,19 @@ class TestCauchyLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.CauchyLogLikelihood(problem)
+        likelihood = pints.CauchyLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -352,20 +352,19 @@ class TestCauchyLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.CauchyLogLikelihood(problem)
+        likelihood = pints.CauchyLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [
-            0, 0, 0, 0, 13, 8, 13.5, 10.5]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 0, 0, 0, 13, 8, 13.5, 10.5]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
 
 class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
@@ -547,20 +546,20 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
+        likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
             problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 0.5, 1.1, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 0.5, 1.1, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -571,20 +570,20 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
+        likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
             problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 0.5, 1.1, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 0.5, 1.1, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -595,20 +594,20 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
+        likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
             problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 0.5, 1.1, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 0.5, 1.1, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -616,21 +615,21 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
+        likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
             problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [
+        parameters = [
             2.0, 2.0, 2.0, 0.5, 0.5, 0.5, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -1192,19 +1191,19 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+        likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [-1]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [-1]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1215,19 +1214,19 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+        likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [-1]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [-1]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1238,19 +1237,19 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+        likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [-1]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [-1]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1258,19 +1257,19 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+        likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 0, 0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 0, 0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -1525,19 +1524,19 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianLogLikelihood(problem)
+        likelihood = pints.GaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2, self.sigma]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2, self.sigma]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1548,19 +1547,19 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianLogLikelihood(problem)
+        likelihood = pints.GaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2, self.sigma]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2, self.sigma]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1571,19 +1570,19 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianLogLikelihood(problem)
+        likelihood = pints.GaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2, self.sigma]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2, self.sigma]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1591,19 +1590,19 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.GaussianLogLikelihood(problem)
+        likelihood = pints.GaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 0, 0, 0.1, 0.1, 0.1]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 0, 0, 0.1, 0.1, 0.1]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -1879,6 +1878,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
 
         # Check that likelihood returns expected value
         self.assertEqual(score, -46.324126706784014)
+
     def test_evaluate_pointwise_loglikelihoods_list(self):
         # Convert data to list
         values = self.data_single.tolist()
@@ -1888,19 +1888,19 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+        likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 2.0, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 2.0, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1911,19 +1911,19 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+        likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 2.0, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 2.0, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1934,19 +1934,19 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+        likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 2.0, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 2.0, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1954,20 +1954,19 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
+        likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
-
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
 
 class TestScaledLogLikelihood(unittest.TestCase):
@@ -2344,19 +2343,19 @@ class TestStudentTLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.StudentTLogLikelihood(problem)
+        likelihood = pints.StudentTLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 3, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 3, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -2367,19 +2366,19 @@ class TestStudentTLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.StudentTLogLikelihood(problem)
+        likelihood = pints.StudentTLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 3, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 3, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -2390,19 +2389,19 @@ class TestStudentTLogLikelihood(unittest.TestCase):
             self.model_single, self.times, values)
 
         # Create log_likelihood
-        log_likelihood = pints.StudentTLogLikelihood(problem)
+        likelihood = pints.StudentTLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 3, 10]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 3, 10]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, (self.n_times,))
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, (self.n_times,))
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
     def test_evaluate_pointwise_loglikelihoods_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -2410,19 +2409,19 @@ class TestStudentTLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood
-        log_likelihood = pints.StudentTLogLikelihood(problem)
+        likelihood = pints.StudentTLogLikelihood(problem)
 
         # Evaluate likelihood for test parameters
-        test_parameters = [0, 0, 0, 0, 2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]
-        pointwise_loglikelihoods = log_likelihood.evaluate_pointwise_loglikelihoods(test_parameters)
+        parameters = [0, 0, 0, 0, 2, 13, 1, 8, 2.5, 13.5, 3.4, 10.5]
+        pointwise = likelihood.evaluate_pointwise_loglikelihoods(parameters)
 
-        # Check that the shape of the loglikelihoods match the shape of the data
-        self.assertEqual(pointwise_loglikelihoods.shape, self.data_multi.shape)
+        # Check that the loglikelihoods match the shape of the data
+        self.assertEqual(pointwise.shape, self.data_multi.shape)
 
         # Check that the sum of the pointwise loglikelihoods agrees with call
-        # There are floating point deviations because the summation occurs at different points
-        # in __call__()
-        self.assertAlmostEqual(np.sum(pointwise_loglikelihoods), log_likelihood(test_parameters))
+        # There are floating point deviations because the summation occurs at
+        # different points in __call__()
+        self.assertAlmostEqual(np.sum(pointwise), likelihood(parameters))
 
 
 if __name__ == '__main__':
