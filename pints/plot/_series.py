@@ -39,7 +39,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
         if true values of parameters are known, they can be passed in for
         plotting.
     thinning
-        An integer greater than zero. If specified, only every
+        An integer exceeding zero. If specified, only every
         n-th sample (with ``n = thinning``) in the samples will be used. If
         left at the default value ``None``, a value will be chosen so that
         200 to 400 predictions are shown.
@@ -92,6 +92,8 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
     # Guess appropriate alpha (0.05 worked for 1000 plots)
     alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
+    if alpha > 1:  # pragma: no cover
+        alpha = 1
 
     # Plot prediction
     fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3),
@@ -148,4 +150,3 @@ def series(samples, problem, ref_parameters=None, thinning=None):
 
     plt.tight_layout()
     return fig, axes
-
