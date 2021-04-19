@@ -1897,10 +1897,10 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
 
         # check parallel initialisation works
         xs = pints.sample_initial_points(self.log_posterior, nchains,
-                                     parallel=True)
+                                         parallel=True)
         self.assertEqual(len(xs), nchains)
         xs = pints.sample_initial_points(self.log_posterior, nchains,
-                                     parallel=True, n_workers=2)
+                                         parallel=True, n_workers=2)
         self.assertEqual(len(xs), nchains)
 
     def test_errors(self):
@@ -1933,7 +1933,7 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
             [0.02, 600, noise * 100]
         )
         xs1 = pints.sample_initial_points(self.log_posterior, nchains,
-                                      log_prior1.sample)
+                                          log_prior1.sample)
         self.assertTrue(sum(np.vstack(xs).mean(axis=0) <=
                             np.vstack(xs1).mean(axis=0)) == 3)
         [self.assertTrue(np.isfinite(self.log_posterior(x))) for x in xs]
