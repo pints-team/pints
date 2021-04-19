@@ -14,15 +14,14 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnHighDimensionalGaussian)
 
 
-def test_hamiltonian_on_two_dim_gaussian(n_iterations=None):
+def test_nuts_on_two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 1000
     problem = RunMcmcMethodOnTwoDimGaussian(
-        method=pints.HamiltonianMCMC,
+        method=pints.NoUTurnMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=200,
-        method_hyper_parameters=[20, 1]
+        n_warmup=200
     )
 
     return {
@@ -31,15 +30,14 @@ def test_hamiltonian_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_hamiltonian_on_banana(n_iterations=None):
+def test_nuts_on_banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
     problem = RunMcmcMethodOnBanana(
-        method=pints.HamiltonianMCMC,
+        method=pints.NoUTurnMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=1000,
-        method_hyper_parameters=[20, 2]
+        n_warmup=500
     )
 
     return {
@@ -48,15 +46,14 @@ def test_hamiltonian_on_banana(n_iterations=None):
     }
 
 
-def test_hamiltonian_on_high_dim_gaussian(n_iterations=None):
+def test_nuts_on_high_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnHighDimensionalGaussian(
-        method=pints.HamiltonianMCMC,
+        method=pints.NoUTurnMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=1000,
-        method_hyper_parameters=[20, 1]
+        n_warmup=1000
     )
 
     return {
