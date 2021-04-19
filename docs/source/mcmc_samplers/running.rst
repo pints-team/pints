@@ -6,7 +6,7 @@ Running an MCMC routine
 
 .. autofunction:: mcmc_sample
 
-.. autofunction:: initialise_finite
+.. autofunction:: sample_initial_points
 
 .. autoclass:: MCMCController
 

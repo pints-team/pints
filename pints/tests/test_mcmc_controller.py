@@ -1848,7 +1848,7 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
 
 class TestMCMCInitialisationMethod(unittest.TestCase):
     """
-    Tests `initialise_finite` method for generating random initial starting
+    Tests `sample_initial_points` method for generating random initial starting
     locations.
     """
     @classmethod
@@ -1886,20 +1886,20 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         # tests that log_prior can be used for initial sampling
 
         nchains = 1
-        xs = pints.initialise_finite(self.log_posterior, nchains)
+        xs = pints.sample_initial_points(self.log_posterior, nchains)
         self.assertEqual(len(xs), nchains)
         [self.assertTrue(np.isfinite(self.log_posterior(x))) for x in xs]
 
         nchains = 4
-        xs = pints.initialise_finite(self.log_posterior, nchains)
+        xs = pints.sample_initial_points(self.log_posterior, nchains)
         self.assertEqual(len(xs), nchains)
         [self.assertTrue(np.isfinite(self.log_posterior(x))) for x in xs]
 
         # check parallel initialisation works
-        xs = pints.initialise_finite(self.log_posterior, nchains,
+        xs = pints.sample_initial_points(self.log_posterior, nchains,
                                      parallel=True)
         self.assertEqual(len(xs), nchains)
-        xs = pints.initialise_finite(self.log_posterior, nchains,
+        xs = pints.sample_initial_points(self.log_posterior, nchains,
                                      parallel=True, n_workers=2)
         self.assertEqual(len(xs), nchains)
 
@@ -1908,17 +1908,17 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
 
         # pass a non-callable object as random_sampler
         nchains = 4
-        self.assertRaises(ValueError, pints.initialise_finite,
+        self.assertRaises(ValueError, pints.sample_initial_points,
                           self.log_posterior, nchains,
                           [0.015, 500, 10] * nchains)
 
         # try non log-posterior without passing random_sampler
         log_pdf = pints.toy.GaussianLogPDF()
-        self.assertRaises(ValueError, pints.initialise_finite,
+        self.assertRaises(ValueError, pints.sample_initial_points,
                           log_pdf, nchains)
 
         # n_chains < 1?
-        self.assertRaises(ValueError, pints.initialise_finite,
+        self.assertRaises(ValueError, pints.sample_initial_points,
                           self.log_posterior, 0.5)
 
     def test_bespoke_initialisation(self):
@@ -1927,12 +1927,12 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         # test that different initialisation produces different starting dist
         nchains = 4
         noise = 10
-        xs = pints.initialise_finite(self.log_posterior, nchains)
+        xs = pints.sample_initial_points(self.log_posterior, nchains)
         log_prior1 = pints.UniformLogPrior(
             [0.0199, 599.99, noise * 99.99],
             [0.02, 600, noise * 100]
         )
-        xs1 = pints.initialise_finite(self.log_posterior, nchains,
+        xs1 = pints.sample_initial_points(self.log_posterior, nchains,
                                       log_prior1.sample)
         self.assertTrue(sum(np.vstack(xs).mean(axis=0) <=
                             np.vstack(xs1).mean(axis=0)) == 3)
@@ -1942,7 +1942,7 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         log_pdf = pints.toy.GaussianLogPDF()
         log_pdf1 = pints.toy.GaussianLogPDF(mean=[1, 1], sigma=[2, 2])
         init_sampler = log_pdf1.sample
-        xs = pints.initialise_finite(log_pdf, nchains, init_sampler)
+        xs = pints.sample_initial_points(log_pdf, nchains, init_sampler)
         [self.assertTrue(np.isfinite(log_pdf(x))) for x in xs]
 
     def test_initialisation_fails(self):
@@ -1957,7 +1957,7 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
                                            cov=np.diag([10, 10000, noise]),
                                            size=nchains)
 
-        self.assertRaises(RuntimeError, pints.initialise_finite,
+        self.assertRaises(RuntimeError, pints.sample_initial_points,
                           self.log_posterior, nchains, init_sampler, 2)
 
 
