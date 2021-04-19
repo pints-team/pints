@@ -36,7 +36,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .[pystan]
+          python -m pip install .[stan]
 
       - name: run unit tests
         run: |
