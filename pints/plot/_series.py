@@ -91,9 +91,7 @@ def series(samples, problem, ref_parameters=None, thinning=None):
     mean_values = np.mean(predicted_values, axis=0)
 
     # Guess appropriate alpha (0.05 worked for 1000 plots)
-    alpha = max(0.05 * (1000 / (n_sample / thinning)), 0.5)
-    if alpha > 1:  # pragma: no cover
-        alpha = 1
+    alpha = min(1, max(0.05 * (1000 / (n_sample / thinning)), 0.5))
 
     # Plot prediction
     fig, axes = plt.subplots(n_outputs, 1, figsize=(8, np.sqrt(n_outputs) * 3),
