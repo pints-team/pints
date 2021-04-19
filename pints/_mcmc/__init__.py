@@ -1104,33 +1104,35 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         log_pdf, chains, x0, sigma0, method=method).run()
 
 
-def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
-                      parallel=False, n_workers=None):
+def sample_initial_points(log_pdf, n_points, random_sampler=None,
+                          max_tries=None, parallel=False, n_workers=None):
     """
     Draws parameter values from a given sampling distribution until either
-    finite values for each of ``chains`` have been generated or the number of
-    attempts exceeds ``num_tries``.
+    finite values for each of ``n_points`` have been generated or the total
+    number of attempts exceeds ``max_tries``.
 
-    If log_pdf is of :class:`LogPosterior`, then the
-    `log_pdf.log_prior().sample` method is used for initialisation, although
-    this is overruled by `random_sampler` if it is supplied.
+    If ``log_pdf`` is of :class:`LogPosterior`, then the
+    ``log_pdf.log_prior().sample`` method is used for initialisation, although
+    this is overruled by ``random_sampler`` if it is supplied.
 
     Parameters
     ----------
     log_pdf : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
-        space.
-    chains : int
+        space. It is optional that ``log_pdf`` is a of type
+        :class:`LogPosterior`.
+    n_points : int
         The number of initial values to generate.
     random_sampler : stochastic function
         A function that when called returns draws from a probability
-        distribution of same dimensionality as `log_pdf`. The only argument
-        to this function should be an integer specifying the number of draws.
-    max_n_tries : int
-        Number of attempts to find a finite initial value for each of
-        ``chains``.
+        distribution of the same dimensionality as ``log_pdf``. The only
+        argument to this function should be an integer specifying the number of
+        draws.
+    max_tries : int
+        Number of attempts to find a finite initial value across all
+        ``n_points``. By default this is 50 x n_points.
     parallel : Boolean
-        Whether to evaluate log_pdf in parallel (defaults to False).
+        Whether to evaluate ``log_pdf`` in parallel (defaults to False).
     n_workers : int
         Number of workers on which to run parallel evaluation.
     """
@@ -1144,34 +1146,36 @@ def initialise_finite(log_pdf, chains, random_sampler=None, max_n_tries=50,
             raise ValueError("If log_pdf not of class pints.LogPosterior " +
                              "then random_sampler must be supplied.")
 
-    if chains < 1:
-        raise ValueError("chains must be 1 or more.")
+    if n_points < 1:
+        raise ValueError("Number of initial points must be 1 or more.")
+
+    if max_tries is None:
+        max_tries = 50 * n_points
 
     if parallel:
-        n_workers = min(pints.ParallelEvaluator.cpu_count(), chains)
+        n_workers = min(pints.ParallelEvaluator.cpu_count(), n_points)
         evaluator = pints.ParallelEvaluator(log_pdf, n_workers=n_workers)
     else:
         evaluator = pints.SequentialEvaluator(log_pdf)
 
-    max_n_tries_chains = max_n_tries * chains
     initialised_finite = False
     x0 = []
     n_tries = 0
-    while not initialised_finite and n_tries < max_n_tries_chains:
-        xs = random_sampler(chains)
+    while not initialised_finite and n_tries < max_tries:
+        xs = random_sampler(n_points)
         fxs = evaluator.evaluate(xs)
         xs_iterator = iter(xs)
         fxs_iterator = iter(fxs)
-        for i in range(chains):
+        for i in range(n_points):
             x = next(xs_iterator)
             fx = next(fxs_iterator)
             if np.isfinite(fx):
                 x0.append(x)
-            if len(x0) == chains:
+            if len(x0) == n_points:
                 initialised_finite = True
             n_tries += 1
     if not initialised_finite:
         raise RuntimeError(
             'Initialisation failed since log_pdf not finite at initial ' +
-            'points after ' + str(max_n_tries) + ' attempts.')
+            'points after ' + str(max_tries) + ' attempts.')
     return x0
