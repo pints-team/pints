@@ -102,8 +102,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         Selects an index uniformly at random from all chains excluding the
         index of the current chain.
         """
-        all_chains = list(range(self._n_chains))
-        free_chains = all_chains.copy()
+        free_chains = list(range(self._n_chains))
         free_chains.remove(current_index)
         other_index = np.random.choice(free_chains)
         return other_index
