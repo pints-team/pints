@@ -73,6 +73,7 @@ class NealsFunnelLogPDF(ToyLogPDF):
         dnu = np.sum(dnu_first) - nu / 9.0
         dL = [-var * cons for var in x_temp]
         dL.append(dnu)
+        dL = np.array(dL)
         return L, dL
 
     def kl_divergence(self, samples):

@@ -375,10 +375,6 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._proposed, copy=True)
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def current_slice_height(self):
         """
         Returns current height value used to define the current slice.
@@ -478,7 +474,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
             self._first_expansion = True
 
             # Return first point in chain, which is x0
-            return np.array(self._current, copy=True)
+            return np.copy(self._current), self._current_log_pdf, True
 
         # While we expand the interval ``I=(l,r)``, we return None
         if not self._interval_found:
@@ -563,7 +559,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
                 self._current_log_y = self._current_log_pdf - self._e
 
                 # Return the accepted sample
-                return np.array(self._proposed, copy=True)
+                return np.copy(self._current), self._current_log_pdf, True
 
             else:
                 self._active_param_index += 1

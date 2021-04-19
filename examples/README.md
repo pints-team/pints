@@ -132,9 +132,12 @@ relevant code.
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
+
 ## Interfaces
+- [Stan](./interfaces/stan.ipynb)
 - [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
 - [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
+
 
 ## Miscellaneous
 - [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)

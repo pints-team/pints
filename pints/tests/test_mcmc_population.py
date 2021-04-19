@@ -75,15 +75,14 @@ class TestPopulationMCMC(unittest.TestCase):
         for i in range(100):
             x = mcmc.ask()
             fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
+            y, fy, ac = mcmc.tell(fx)
             if i == 20:
                 self.assertTrue(mcmc.in_initial_phase())
                 mcmc.set_initial_phase(False)
                 self.assertFalse(mcmc.in_initial_phase())
             if i >= 50:
-                chain.append(sample)
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+                chain.append(y)
+            self.assertEqual(fy, self.log_posterior(y))
 
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)

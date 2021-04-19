@@ -46,23 +46,25 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         super(EmceeHammerMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
-        if self._chains < 3:
+        if self._n_chains < 3:
             raise ValueError('Need at least 3 chains.')
 
         # Set initial state
         self._running = False
 
-        # Current samples and proposed log_pdfs
+        # Current samples and log_pdfs
         self._current = None
         self._current_log_pdfs = None
 
-        # Single proposed point!
+        # Proposal:
+        #  - n_chains points on the initial step
+        #  - only a single point after
         #TODO: Update this class to algorithm 3
         self._proposed = None
 
         # Scale parameter (see docstring above)
         self._a = None
-        self.set_scale(2.0)
+        self.set_scale(2)
 
     def ask(self):
         """ See :meth:`pints.MultiChainMCMC.ask()`. """
@@ -74,14 +76,13 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
 
             # Cycle through chains
-            #TODO Do this without lists TODO
             if len(self._remaining) == 0:
-                self._remaining = np.arange(self._chains)
+                self._remaining = np.arange(self._n_chains)
             self._k = self._remaining[0]
             self._remaining = np.delete(self._remaining, 0)
 
             # Pick j from the complementary ensemble
-            j = np.random.randint(self._chains - 1)
+            j = np.random.randint(self._n_chains - 1)
             if j >= self._k:
                 j += 1
             x_j = self._current[j]
@@ -92,19 +93,13 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             self._z = ((1 + r * (self._a - 1))**2) / self._a
             self._proposed = x_j + self._z * (x_k - x_j)
 
-            # Ensure proposed is array of samples (with length 1)
+            # Ensure proposed is array containing a single sample
             #TODO Switch to algorithm 3
             self._proposed = np.array([self._proposed])
-
-        # Set as read only
-        self._proposed.setflags(write=False)
+            self._proposed.setflags(write=False)
 
         # Return proposed points
         return self._proposed
-
-    def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
-        return self._current_log_pdfs
 
     def _initialise(self):
         """
@@ -114,12 +109,14 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             raise RuntimeError('Already initialised.')
 
         # Propose x0 as first points
+        # Note proposal is multiple points this time!
         self._current = None
         self._current_log_pdfs = None
         self._proposed = self._x0
+        self._proposed.setflags(write=False)
 
-        # a range
-        self._remaining = np.arange(self._chains)
+        # Number of chains left to update in this cycle
+        self._remaining = np.arange(self._n_chains)
 
         # Update sampler state
         self._running = True
@@ -134,18 +131,19 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
-        # Ensure proposed_log_pdf is a numpy array
+        # Ensure fx is a numpy array
         proposed_log_pdf = np.array(fx, copy=True)
 
         # First points?
         if self._current is None:
+            # Note that proposed and proposed_log_pdf are for all chains on
+            # this iteration
             if not np.all(np.isfinite(proposed_log_pdf)):
                 raise ValueError(
                     'Initial points for MCMC must have finite logpdf.')
 
             # Accept
-            # NOTE: FIRST STEP PROPOSED IS MULTIPLE POINTS
-            self._current = self._proposed
+            self._current = self._proposed  # already read-only
             self._current_log_pdfs = proposed_log_pdf
             self._current_log_pdfs.setflags(write=False)
 
@@ -153,31 +151,33 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             self._proposed = None
 
             # Return first samples for chains
-            return self._current
+            accepted = np.array([True] * self._n_chains)
+            return self._current, self._current_log_pdfs, accepted
 
-        # Perform iteration
-        next = np.array(self._current, copy=True)
-        next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
-
-        # Update the selected chain
+        # Perform iteration, updating the selected chain
+        # Note that proposed/proposed_log_pdf are length 1 here
         #TODO Switch to algorithm 3, doing 2 sets of chains per iteration
+        accepted = np.array([False] * self._n_chains)
         r_log = np.log(np.random.rand())
         q = (
-            (self._chains - 1) * np.log(self._z)
-            + proposed_log_pdf - self._current_log_pdfs[self._k])
+            (self._n_chains - 1) * np.log(self._z)
+            + proposed_log_pdf[0] - self._current_log_pdfs[self._k])
         if q >= r_log:
-            next[self._k] = self._proposed[0]
+            next = np.copy(self._current)
+            next_log_pdfs = np.copy(self._current_log_pdfs)
+            next[self._k] = self._proposed
             next_log_pdfs[self._k] = proposed_log_pdf
+            self._current.setflags(write=False)
+            self._current_log_pdfs.setflags(write=False)
             self._current = next
             self._current_log_pdfs = next_log_pdfs
-            self._current_log_pdfs.setflags(write=False)
+            accepted[self._k] = True
 
         # Clear proposal
         self._proposed = None
 
         # Return samples to add to chains
-        self._current.setflags(write=False)
-        return self._current
+        return self._current, self._current_log_pdfs, accepted
 
     def scale(self):
         """
