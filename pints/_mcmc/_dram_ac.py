@@ -9,7 +9,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import scipy.stats as stats
 
 
 class DramACMC(pints.AdaptiveCovarianceMC):
@@ -63,14 +62,12 @@ class DramACMC(pints.AdaptiveCovarianceMC):
     def __init__(self, x0, sigma0=None):
         super(DramACMC, self).__init__(x0, sigma0)
 
-        self._adapt_kernel = True
-        self._before_kernels_set = True
         self._log_lambda = 0
         self._n_kernels = 2
         self._proposal_count = 0
         self._sigma_base = np.copy(self._sigma)
         self._Y_log_pdf = np.zeros(self._n_kernels)
-        self.set_sigma_scale(1, 0.01)  # scale used in [1]_ for experiments
+        self.set_sigma_scale([1, 0.01])  # scale used in [1]_ for experiments
 
     def _adapt_sigma(self):
         """
@@ -82,20 +79,6 @@ class DramACMC(pints.AdaptiveCovarianceMC):
                             self._gamma * np.dot(dsigm, dsigm.T))
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
-
-    def _r_log(self):
-        """
-        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
-        """
-        if self._proposal_count == 0:
-            r_log = self._alpha_1_log(
-                self._current_log_pdf, self._Y_log_pdf[0])
-        else:
-            r_log = self._alpha_2_log(
-                self._current_log_pdf, self._Y_log_pdf[0],
-                self._Y_log_pdf[1]
-            )
-        return r_log
 
     def _alpha_1_log(self, fx, fy1):
         """
@@ -130,6 +113,20 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 2
 
+    def _r_log(self):
+        """
+        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
+        """
+        if self._proposal_count == 0:
+            r_log = self._alpha_1_log(
+                self._current_log_pdf, self._Y_log_pdf[0])
+        else:
+            r_log = self._alpha_2_log(
+                self._current_log_pdf, self._Y_log_pdf[0],
+                self._Y_log_pdf[1]
+            )
+        return r_log
+
     def set_hyper_parameters(self, x):
         """
         The hyper-parameter vector is ``[eta, sigma_scale]``.
@@ -139,12 +136,14 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self.set_eta(x[0])
         self.set_sigma_scale(x[1])
 
-    def set_sigma_scale(self, first, second):
+    def set_sigma_scale(self, scales):
         """
         Set the scale of the mulipliers for the two proposal kernel
-        covariance matrices.
+        covariance matrices. Must be of the form ``[scale_1, scale_2]``.
         """
-        self._sigma_scale = [first, second]
+        if len(scales) != 2:
+            raise ValueError("Scales must be of length 2.")
+        self._sigma_scale = [scales[0], scales[1]]
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
 
@@ -164,6 +163,9 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         if self._proposed is None:
             raise RuntimeError('Tell called before proposal was set.')
 
+        if self._proposal_count == 0:
+            self._iterations += 1
+
         # Ensure fx is a float
         fx = float(fx)
         self._Y_log_pdf[self._proposal_count] = fx
@@ -174,46 +176,40 @@ class DramACMC(pints.AdaptiveCovarianceMC):
                 raise ValueError(
                     'Initial point for MCMC must have finite logpdf.')
 
-            # Accept
             self._current = self._proposed
             self._current_log_pdf = fx
-
-            # Increase iteration count
-            self._iterations += 1
-
-            # Clear proposal
             self._proposed = None
 
             # Return first point for chain
             return self._current, self._current_log_pdf, True
 
         # Check if the proposed point can be accepted
-        accepted = 0
-
+        accept = 0
         if np.isfinite(fx):
             r_log = self._r_log()
             u = np.log(np.random.uniform(0, 1))
             if u < r_log:
-                accepted = 1
+                accept = 1
+                self._acceptance_count += 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
                 self._proposal_count = 0
                 self._Y_log_pdf = np.zeros(self._n_kernels)
-
         self._proposed = None
 
-        if accepted == 0:
+        if accept == 0:
             if self._proposal_count < (self._n_kernels - 1):
                 self._proposal_count += 1
                 return None
             else:
                 self._proposal_count = 0
-        self._gamma = (self._adaptations**-self._eta)
-        self._adaptations += 1
 
         # Update mu, covariance matrix and log lambda
+        self._acceptance_rate = self._acceptance_count / self._iterations
+        self._gamma = self._adaptations**-self._eta
+        self._adaptations += 1
         self._adapt_mu()
         self._adapt_sigma()
         self._log_lambda += (self._gamma *
-                             (accepted - self._target_acceptance))
-        return self._current, self._current_log_pdf, accepted != 0
+                             (accept - self._target_acceptance))
+        return self._current, self._current_log_pdf, accept != 0
