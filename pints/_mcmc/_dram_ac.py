@@ -143,6 +143,9 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         """
         if len(scales) != 2:
             raise ValueError("Scales must be of length 2.")
+        for scale in scales:
+            if scale <= 0:
+                raise ValueError("Scales must be positive.")
         self._sigma_scale = [scales[0], scales[1]]
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
