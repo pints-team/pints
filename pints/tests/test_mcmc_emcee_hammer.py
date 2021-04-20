@@ -140,9 +140,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         self.assertEqual(mcmc.scale(), scale)
 
         self.assertRaisesRegex(
-            ValueError, 'positive', mcmc.set_hyper_parameters, [-1])
-        self.assertRaisesRegex(
-            ValueError, 'positive', mcmc.set_hyper_parameters, [0])
+            ValueError, 'exceed', mcmc.set_hyper_parameters, [1])
 
     def test_logging(self):
         # Test logging includes name and custom fields.
