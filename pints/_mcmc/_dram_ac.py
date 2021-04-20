@@ -69,11 +69,9 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._n_kernels = 2
         self._proposal_count = 0
         self._sigma_base = np.copy(self._sigma)
-        self._upper_scale = 1000
         self._Y = [None] * self._n_kernels
         self._Y_log_pdf = np.zeros(self._n_kernels)
-        self._sigma_scale = None
-        self.set_sigma_scale()
+        self.set_sigma_scale(1, 0.01)  # scale used in [1]_ for experiments
 
     def _adapt_sigma(self):
         """
@@ -86,50 +84,21 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
 
-    def _calculate_alpha_log(self, n, Y, log_Y):
+    def _r_log(self):
         """
-        Calculates alpha expression necessary in eq. 3 of Haario et al. for
-        determining accept/reject
+        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
         """
-        alpha_log = log_Y[n + 1] - log_Y[0]
-        if n == 0:
-            return min(0, alpha_log)
-        Y_rev = Y[::-1]
-        log_Y_rev = log_Y[::-1]
-        for i in range(n):
-            alpha_log += (
-                stats.multivariate_normal.logpdf(
-                    x=Y[n - i - 1],
-                    mean=Y[n + 1],
-                    cov=self._sigma[n],
-                    allow_singular=True) -
-                stats.multivariate_normal.logpdf(
-                    x=Y[i],
-                    mean=self._current,
-                    cov=self._sigma[0],
-                    allow_singular=True) +
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, Y_rev[0:(i + 2)], log_Y_rev[0:(i + 2)]))) -
-                np.log(1 - np.exp(self._calculate_alpha_log(
-                    i, Y[0:(i + 2)], log_Y[0:(i + 2)])))
+        if self._proposal_count == 0:
+            r_log = self._alpha_1_log(
+                self._current, self._Y[0],
+                self._current_log_pdf, self._Y_log_pdf[0])
+        else:
+            r_log = self._alpha_2_log(
+                self._current, self._Y[0], self._Y[1],
+                self._current_log_pdf, self._Y_log_pdf[0],
+                self._Y_log_pdf[1]
             )
-        return min(0, alpha_log)
-
-    def _calculate_r_log(self, fx):
-        """
-        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
-        """
-        c = self._proposal_count
-        temp_Y = np.concatenate([[self._current], self._Y[0:(c + 1)]])
-        temp_log_Y = np.concatenate(
-            [[self._current_log_pdf], self._Y_log_pdf[0:(c + 1)]])
-        self._r_log = self._calculate_alpha_log(c, temp_Y, temp_log_Y)
-
-    def _calculate_r_log1(self, fx):
-        """
-        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
-        """
-        pass
+        return r_log
 
     def _alpha_1_log(self, x, y1, fx, fy1):
         """
@@ -180,35 +149,19 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[eta, upper_scale]``.
+        The hyper-parameter vector is ``[eta, sigma_scale]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_eta(x[0])
-        self.set_upper_scale(x[1])
+        self.set_sigma_scale(x[1])
 
-    def set_upper_scale(self, upper_scale):
+    def set_sigma_scale(self, first, second):
         """
-        Set the upper scale of initial covariance matrix multipliers for each
-        of the kernels: ``[0,...,upper]`` where the gradations are uniform on
-        the log10 scale meaning the proposal covariance matrices are:
-        ``[10^upper,..., 1] * sigma``.
+        Set the scale of the mulipliers for the two proposal kernel
+        covariance matrices.
         """
-        if upper_scale < 0:
-            raise ValueError('Upper scale must be positive.')
-        self._upper_scale = upper_scale
-
-    def set_sigma_scale(self):
-        """
-        Set the scale of initial covariance matrix multipliers for each of the
-        kernels: ``[0, upper]`` where the gradations are uniform on the
-        log10 scale meaning the proposal covariance matrices are:
-        ``[10^upper,..., 1] * sigma``.
-        """
-        a_min = np.log10(1)
-        a_max = np.log10(self._upper_scale)
-        self._sigma_scale = 10**np.linspace(a_min, a_max, self._n_kernels)
-        self._sigma_scale = self._sigma_scale[::-1]
+        self._sigma_scale = [first, second]
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]
 
@@ -255,9 +208,9 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         accepted = 0
 
         if np.isfinite(fx):
-            self._calculate_r_log(fx)
+            r_log = self._r_log()
             u = np.log(np.random.uniform(0, 1))
-            if u < self._r_log:
+            if u < r_log:
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
@@ -281,10 +234,3 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._log_lambda += (self._gamma *
                              (accepted - self._target_acceptance))
         return self._current, self._current_log_pdf, accepted != 0
-
-    def upper_scale(self):
-        """
-        Returns upper scale limit (see
-        :meth:`pints.DramACMC.set_upper_scale()`).
-        """
-        return self._upper_scale
