@@ -69,7 +69,6 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._n_kernels = 2
         self._proposal_count = 0
         self._sigma_base = np.copy(self._sigma)
-        self._Y = [None] * self._n_kernels
         self._Y_log_pdf = np.zeros(self._n_kernels)
         self.set_sigma_scale(1, 0.01)  # scale used in [1]_ for experiments
 
@@ -90,53 +89,37 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         """
         if self._proposal_count == 0:
             r_log = self._alpha_1_log(
-                self._current, self._Y[0],
                 self._current_log_pdf, self._Y_log_pdf[0])
         else:
             r_log = self._alpha_2_log(
-                self._current, self._Y[0], self._Y[1],
                 self._current_log_pdf, self._Y_log_pdf[0],
                 self._Y_log_pdf[1]
             )
         return r_log
 
-    def _alpha_1_log(self, x, y1, fx, fy1):
+    def _alpha_1_log(self, fx, fy1):
         """
         Calculates probability of acceptance in stage 1 of DRAM (eq. 1 in
         [1]_).
         """
-        alpha_log = (
-            fy1 - fx + self._q_i_log(y1, x, 1) - self._q_i_log(x, y1, 1))
+        alpha_log = fy1 - fx
         return min(0, alpha_log)
 
-    def _alpha_2_log(self, x, y1, y2, fx, fy1, fy2):
+    def _alpha_2_log(self, fx, fy1, fy2):
         """
         Calculates probability of acceptance in stage 1 of DRAM (eq. 2 in
         [1]_).
         """
         alpha_log = (fy2 - fx +
-                     self._q_i_log(y2, y1, 1) - self._q_i_log(x, y1, 1) +
-                     self._q_i_log(y2, x, 2) - self._q_i_log(x, y2, 2) +
-                     (1 - self._alpha_1_log(y2, y1, fy2, fy1)) -
-                     (1 - self._alpha_1_log(x, y1, fx, fy1)))
+                     np.log1p(np.exp(self._alpha_1_log(fy2, fy1))) -
+                     np.log1p(np.exp(self._alpha_1_log(fx, fy1))))
         return min(0, alpha_log)
-
-    def _q_i_log(self, x, y, i):
-        """
-        Calculates log proposal density for ith stage proposal
-        (where i = 1, 2) when proposing from x -> y.
-        """
-        return stats.multivariate_normal.logpdf(y,
-                                                mean=x,
-                                                cov=self._sigma[i - 1],
-                                                allow_singular=True)
 
     def _generate_proposal(self):
         """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
         proposed = np.random.multivariate_normal(
             self._current, np.exp(self._log_lambda) *
             self._sigma[self._proposal_count])
-        self._Y[self._proposal_count] = proposed
         return proposed
 
     def name(self):
@@ -214,13 +197,13 @@ class DramACMC(pints.AdaptiveCovarianceMC):
                 accepted = 1
                 self._current = self._proposed
                 self._current_log_pdf = fx
+                self._proposal_count = 0
+                self._Y_log_pdf = np.zeros(self._n_kernels)
 
         self._proposed = None
 
         if accepted == 0:
-            # rejected proposal
-            if self._n_kernels > 1 and (
-               self._proposal_count < (self._n_kernels - 1)):
+            if self._proposal_count < (self._n_kernels - 1):
                 self._proposal_count += 1
                 return None
             else:
