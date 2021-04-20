@@ -45,6 +45,12 @@ class RunMcmcMethodOnProblem(object):
 
         return np.mean(ess)
 
+    def estimate_distance(self):
+        """
+        Estimates a measure of distance for the `pints.AnnulusLogPDF` class.
+        """
+        return self.log_pdf.distance(np.vstack(self.chains))
+
 
 class RunMcmcMethodOnTwoDimGaussian(RunMcmcMethodOnProblem):
     """
@@ -126,6 +132,20 @@ class RunMcmcMethodOnCorrelatedGaussian(RunMcmcMethodOnProblem):
         log_pdf = pints.toy.HighDimensionalGaussianLogPDF(
             dimension=6, rho=0.8)
         x0 = np.random.uniform(-4, 4, size=(n_chains, 6))
+        sigma0 = None
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
+class RunMcmcMethodOnAnnulus(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `pints.AnnulusLogPDF`.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        log_pdf = pints.toy.AnnulusLogPDF()
+        x0 = log_pdf.sample(n_chains)
         sigma0 = None
 
         super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,

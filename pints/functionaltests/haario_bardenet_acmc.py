@@ -11,7 +11,8 @@ import pints
 
 from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnCorrelatedGaussian)
+                        RunMcmcMethodOnCorrelatedGaussian,
+                        RunMcmcMethodOnAnnulus)
 
 
 def test_haario_bardenet_acmc_on_two_dim_gaussian(n_iterations=None):
@@ -58,5 +59,21 @@ def test_haario_bardenet_acmc_on_correlated_gaussian(n_iterations=None):
 
     return {
         'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def test_haario_bardenet_acmc_on_annulus(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 4000
+    problem = RunMcmcMethodOnAnnulus(
+        method=pints.HaarioBardenetACMC,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=2000
+    )
+
+    return {
+        'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
     }
