@@ -30,7 +30,7 @@ def test_dram_acmc_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_haario_acmc_on_banana(n_iterations=None):
+def test_dram_acmc_on_banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnBanana(

@@ -125,7 +125,7 @@ class RunMcmcMethodOnCorrelatedGaussian(RunMcmcMethodOnProblem):
                  method_hyper_parameters=None):
         log_pdf = pints.toy.HighDimensionalGaussianLogPDF(
             dimension=6, rho=0.8)
-        x0 = np.random.uniform(-25, 25, size=(n_chains, 6))
+        x0 = np.random.uniform(-2, 2, size=(n_chains, 6))
         sigma0 = None
 
         super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
