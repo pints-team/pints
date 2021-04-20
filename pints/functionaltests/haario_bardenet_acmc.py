@@ -46,7 +46,7 @@ def test_haario_bardenet_acmc_on_banana(n_iterations=None):
     }
 
 
-def test_haario_bardenet_on_correlated_gaussian(n_iterations=None):
+def test_haario_bardenet_acmc_on_correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
     problem = RunMcmcMethodOnCorrelatedGaussian(
