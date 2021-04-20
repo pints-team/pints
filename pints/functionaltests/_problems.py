@@ -116,6 +116,22 @@ class RunMcmcMethodOnHighDimensionalGaussian(RunMcmcMethodOnProblem):
                          n_warmup, method_hyper_parameters)
 
 
+class RunMcmcMethodOnCorrelatedGaussian(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `pints.toy.HighDimensionalGaussianLogPDF`
+    but using a 6-dimensional problem with higher correlation.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        log_pdf = pints.toy.HighDimensionalGaussianLogPDF(
+            dimension=6, rho=0.8)
+        x0 = np.random.uniform(-25, 25, size=(n_chains, 6))
+        sigma0 = None
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
 def set_hyperparameters_for_any_mcmc_class(controller, method,
                                            method_hyper_parameters):
     """ Sets hyperparameters for any MCMC class. """
