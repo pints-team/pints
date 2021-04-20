@@ -40,27 +40,6 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         else:
             return theta_0
 
-    Our implementation also allows more than 2 proposal kernels to be used.
-    This means that ``k`` accept-reject steps are taken. In each step (``i``),
-    the probability that a proposal ``theta_i`` is accepted is::
-
-        alpha_i(theta_0, theta_1, ..., theta_i) = min(1, p(theta_i|X) /
-                                                  p(theta_0|X) * n_i / d_i)
-
-    where::
-
-        n_i = (1 - alpha_1(theta_i, theta_i-1)) *
-              (1 - alpha_2(theta_i, theta_i-1, theta_i-2)) *
-               ...
-              (1 - alpha_i-1(theta_i, theta_i-1, ..., theta_0))
-        d_i = (1 - alpha_1(theta_0, theta_1)) *
-              (1 - alpha_2(theta_0, theta_1, theta_2)) *
-              ...
-              (1 - alpha_i-1(theta_0, theta_1, ..., theta_i-1))
-
-    If ``k`` proposals have been rejected, the initial point ``theta_0`` is
-    returned.
-
     At the end of each iterations, a 'base' proposal kernel is adapted::
 
         mu = (1 - gamma) mu + gamma theta
@@ -69,8 +48,8 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     where ``gamma = adaptations^-eta``, ``theta`` is the current state of
     the Markov chain and ``accepted`` is a binary indicator for whether any of
-    the series of proposals were accepted. The kernels for the all proposals
-    are then adapted as ``[scale_1, scale_2, ..., scale_k] * sigma``, where the
+    the series of proposals were accepted. The kernels for the 2 proposals
+    are then adapted as ``[scale_1, scale_2] * sigma``, where the
     scale factors are set using ``set_sigma_scale``.
 
     *Extends:* :class:`GlobalAdaptiveCovarianceMC`
@@ -93,11 +72,13 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         self._upper_scale = 1000
         self._Y = [None] * self._n_kernels
         self._Y_log_pdf = np.zeros(self._n_kernels)
+        self._sigma_scale = None
+        self.set_sigma_scale()
 
     def _adapt_sigma(self):
         """
-        Updates the covariance matrices of the various kernels being used
-        according to adaptive Metropolis routine.
+        Updates the covariance matrices of the 2 kernels being used according
+        to adaptive Metropolis routine.
         """
         dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
         self._sigma_base = ((1 - self._gamma) * self._sigma_base +
@@ -144,14 +125,45 @@ class DramACMC(pints.AdaptiveCovarianceMC):
             [[self._current_log_pdf], self._Y_log_pdf[0:(c + 1)]])
         self._r_log = self._calculate_alpha_log(c, temp_Y, temp_log_Y)
 
+    def _calculate_r_log1(self, fx):
+        """
+        Calculates value of logged acceptance ratio (eq. 3 in [1]_).
+        """
+        pass
+
+    def _alpha_1_log(self, x, y1, fx, fy1):
+        """
+        Calculates probability of acceptance in stage 1 of DRAM (eq. 1 in
+        [1]_).
+        """
+        alpha_log = (
+            fy1 - fx + self._q_i_log(y1, x, 1) - self._q_i_log(x, y1, 1))
+        return min(0, alpha_log)
+
+    def _alpha_2_log(self, x, y1, y2, fx, fy1, fy2):
+        """
+        Calculates probability of acceptance in stage 1 of DRAM (eq. 2 in
+        [1]_).
+        """
+        alpha_log = (fy2 - fx +
+                     self._q_i_log(y2, y1, 1) - self._q_i_log(x, y1, 1) +
+                     self._q_i_log(y2, x, 2) - self._q_i_log(x, y2, 2) +
+                     (1 - self._alpha_1_log(y2, y1, fy2, fy1)) -
+                     (1 - self._alpha_1_log(x, y1, fx, fy1)))
+        return min(0, alpha_log)
+
+    def _q_i_log(self, x, y, i):
+        """
+        Calculates log proposal density for ith stage proposal
+        (where i = 1, 2) when proposing from x -> y.
+        """
+        return stats.multivariate_normal.logpdf(y,
+                                                mean=x,
+                                                cov=self._sigma[i - 1],
+                                                allow_singular=True)
+
     def _generate_proposal(self):
         """ See :meth:`AdaptiveCovarianceMC._generate_proposal()`. """
-        if self._before_kernels_set:
-            self.set_sigma_scale()
-            self._Y = [None] * self._n_kernels
-            self._Y_log_pdf = np.zeros(self._n_kernels)
-            self._before_kernels_set = False
-
         proposed = np.random.multivariate_normal(
             self._current, np.exp(self._log_lambda) *
             self._sigma[self._proposal_count])
@@ -162,30 +174,18 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Delayed Rejection Adaptive Metropolis (Dram) MCMC'
 
-    def n_kernels(self):
-        """ Returns number of proposal kernels. """
-        return self._n_kernels
-
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 3
+        return 2
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[eta, n_kernels, upper_scale]``.
+        The hyper-parameter vector is ``[eta, upper_scale]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_eta(x[0])
-        self.set_n_kernels(x[1])
-        self.set_upper_scale(x[2])
-
-    def set_n_kernels(self, n_kernels):
-        """ Sets number of proposal kernels. """
-        if n_kernels < 1:
-            raise ValueError('Number of proposal kernels must be equal to ' +
-                             'or greater than 1.')
-        self._n_kernels = int(n_kernels)
+        self.set_upper_scale(x[1])
 
     def set_upper_scale(self, upper_scale):
         """
@@ -201,7 +201,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
     def set_sigma_scale(self):
         """
         Set the scale of initial covariance matrix multipliers for each of the
-        kernels: ``[0,...,upper]`` where the gradations are uniform on the
+        kernels: ``[0, upper]`` where the gradations are uniform on the
         log10 scale meaning the proposal covariance matrices are:
         ``[10^upper,..., 1] * sigma``.
         """
