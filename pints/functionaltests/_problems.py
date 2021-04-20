@@ -58,8 +58,8 @@ class RunMcmcMethodOnTwoDimGaussian(RunMcmcMethodOnProblem):
 
         # Get initial parameters
         log_prior = pints.ComposedLogPrior(
-            pints.GaussianLogPrior(mean=0, sd=100),
-            pints.GaussianLogPrior(mean=0, sd=100))
+            pints.GaussianLogPrior(mean=0, sd=10),
+            pints.GaussianLogPrior(mean=0, sd=10))
         x0 = log_prior.sample(n=n_chains)
         sigma0 = None
 
@@ -109,7 +109,7 @@ class RunMcmcMethodOnHighDimensionalGaussian(RunMcmcMethodOnProblem):
     def __init__(self, method, n_chains, n_iterations, n_warmup,
                  method_hyper_parameters=None):
         log_pdf = pints.toy.HighDimensionalGaussianLogPDF()
-        x0 = np.random.uniform(-25, 25, size=(n_chains, 20))
+        x0 = np.random.uniform(-4, 4, size=(n_chains, 20))
         sigma0 = None
 
         super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
@@ -125,7 +125,7 @@ class RunMcmcMethodOnCorrelatedGaussian(RunMcmcMethodOnProblem):
                  method_hyper_parameters=None):
         log_pdf = pints.toy.HighDimensionalGaussianLogPDF(
             dimension=6, rho=0.8)
-        x0 = np.random.uniform(-25, 25, size=(n_chains, 6))
+        x0 = np.random.uniform(-4, 4, size=(n_chains, 6))
         sigma0 = None
 
         super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
