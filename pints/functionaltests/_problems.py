@@ -29,7 +29,7 @@ class RunMcmcMethodOnProblem(object):
         """
         chains = np.vstack(self.chains)
 
-        return self.log_pdf.kl_divergence(chains)
+        return np.mean(self.log_pdf.kl_divergence(chains))
 
     def estimate_mean_ess(self):
         """
@@ -145,6 +145,40 @@ class RunMcmcMethodOnAnnulus(RunMcmcMethodOnProblem):
     def __init__(self, method, n_chains, n_iterations, n_warmup,
                  method_hyper_parameters=None):
         log_pdf = pints.toy.AnnulusLogPDF()
+        x0 = log_pdf.sample(n_chains)
+        sigma0 = None
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
+class RunMcmcMethodOnMultimodalGaussian(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `MultimodalGaussianLogPDF`.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        covariances = [[[1, 0], [0, 1]],
+                       [[2, 0.8], [0.8, 3]],
+                       [[1, -0.5], [-0.5, 1]]]
+        log_pdf = pints.toy.MultimodalGaussianLogPDF(modes=[[0, 0],
+                                                            [5, 10],
+                                                            [10, 0]],
+                                                     covariances=covariances)
+        x0 = log_pdf.sample(n_chains)
+        sigma0 = None
+
+        super().__init__(log_pdf, x0, sigma0, method, n_chains, n_iterations,
+                         n_warmup, method_hyper_parameters)
+
+
+class RunMcmcMethodOnCone(RunMcmcMethodOnProblem):
+    """
+    Tests a given MCMC method on `MultimodalGaussianLogPDF`.
+    """
+    def __init__(self, method, n_chains, n_iterations, n_warmup,
+                 method_hyper_parameters=None):
+        log_pdf = pints.toy.ConeLogPDF(dimensions=2, beta=0.6)
         x0 = log_pdf.sample(n_chains)
         sigma0 = None
 

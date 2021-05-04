@@ -12,7 +12,9 @@ import pints
 from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnBanana,
                         RunMcmcMethodOnCorrelatedGaussian,
-                        RunMcmcMethodOnAnnulus)
+                        RunMcmcMethodOnAnnulus,
+                        RunMcmcMethodOnMultimodalGaussian,
+                        RunMcmcMethodOnCone)
 
 
 def test_emcee_hammer_on_two_dim_gaussian(n_iterations=None):
@@ -71,6 +73,38 @@ def test_emcee_hammer_on_annulus(n_iterations=None):
         n_chains=10,
         n_iterations=n_iterations,
         n_warmup=2000
+    )
+
+    return {
+        'distance': problem.estimate_distance(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def test_emcee_hammer_on_multimodal_gaussian(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 10000
+    problem = RunMcmcMethodOnMultimodalGaussian(
+        method=pints.EmceeHammerMCMC,
+        n_chains=10,
+        n_iterations=n_iterations,
+        n_warmup=1000
+    )
+
+    return {
+        'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def test_emcee_hammer_on_cone(n_iterations=None):
+    if n_iterations is None:
+        n_iterations = 10000
+    problem = RunMcmcMethodOnCone(
+        method=pints.EmceeHammerMCMC,
+        n_chains=10,
+        n_iterations=n_iterations,
+        n_warmup=1000
     )
 
     return {
