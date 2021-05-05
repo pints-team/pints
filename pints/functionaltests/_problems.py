@@ -107,7 +107,6 @@ class RunMcmcMethodOnSimpleEggBox(RunMcmcMethodOnProblem):
                          n_warmup, method_hyper_parameters)
 
 
-#TODO add evaluateS1 to high dim Gaussian
 class RunMcmcMethodOnHighDimensionalGaussian(RunMcmcMethodOnProblem):
     """
     Tests a given MCMC method on `pints.toy.HighDimensionalGaussianLogPDF`.
