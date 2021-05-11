@@ -37,7 +37,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
            Nikolaus Hanse, arxiv
            https://arxiv.org/abs/1604.00772
 
-    .. [2] Hansen, Mueller, Koumoutsakos (2006) "Reducing the time complexity
+    .. [2] Hansen, Mueller, Koumoutsakos (2003) "Reducing the time complexity
            of the derandomized evolution strategy with covariance matrix
            adaptation (CMA-ES)". Evolutionary Computation
            https://doi.org/10.1162/106365603321828970
