@@ -352,15 +352,16 @@ def run_notebook_tests():
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = [
         'examples/optimisation/maximum-likelihood.ipynb',
-        # Books in interfaces require extra dependences
-        'examples/interfaces/stan.ipynb',
-        'examples/interfaces/statsmodels-arima.ipynb',
-        'examples/interfaces/statsmodels-state-space.ipynb',
     ]
-
     for ignored_book in ignore_list:
         if not os.path.isfile(ignored_book):
             raise Exception('Ignored notebook not found: ' + ignored_book)
+
+    # Books in interfaces require extra dependences, so are ignored by
+    # default
+    ignore_list.extend(list_notebooks('examples/interfaces', True))
+
+    print(ignore_list)
 
     # Scan and run
     print('Testing notebooks')
@@ -380,7 +381,6 @@ def run_notebook_interfaces_tests():
 
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = []
-
     for ignored_book in ignore_list:
         if not os.path.isfile(ignored_book):
             raise Exception('Ignored notebook not found: ' + ignored_book)
