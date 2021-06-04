@@ -361,8 +361,6 @@ def run_notebook_tests():
     # default
     ignore_list.extend(list_notebooks('examples/interfaces', True))
 
-    print(ignore_list)
-
     # Scan and run
     print('Testing notebooks')
     ok = True
