@@ -353,6 +353,7 @@ def run_notebook_tests():
     ignore_list = [
         'examples/optimisation/maximum-likelihood.ipynb',
         # Books in interfaces require extra dependences
+        'examples/interfaces/stan.ipynb',
         'examples/interfaces/statsmodels-arima.ipynb',
         'examples/interfaces/statsmodels-state-space.ipynb',
     ]
