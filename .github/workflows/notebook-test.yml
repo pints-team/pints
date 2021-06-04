@@ -2,8 +2,8 @@ name: Notebooks
 
 on:
   schedule:
-    # 4am daily
-    - cron:  '0 4 * * *'
+    # 4am on monday (minute, hour, day, month, day-of-the-week)
+    - cron:  '0 4 * * 1'
 
 jobs:
 
