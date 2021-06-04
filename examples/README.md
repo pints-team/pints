@@ -94,7 +94,7 @@ relevant code.
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
-- [Constant and multiplicative Gaussian error](./stats/constant_and_multiplicative_gaussian_error.ipynb)
+- [Constant and multiplicative Gaussian error](./stats/constant-and-multiplicative-gaussian-error.ipynb)
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
@@ -132,13 +132,11 @@ relevant code.
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
-
 ## Interfaces
+- [Automatic differentiation using autograd](./interfaces/automatic-differentiation-using-autograd.ipynb)
 - [Stan](./interfaces/stan.ipynb)
 - [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
 - [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
 
-
 ## Miscellaneous
-- [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)

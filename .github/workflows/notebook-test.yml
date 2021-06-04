@@ -2,8 +2,8 @@ name: Notebooks
 
 on:
   schedule:
-    # 4am daily
-    - cron:  '0 4 * * *'
+    # 4am on monday (minute, hour, day, month, day-of-the-week)
+    - cron:  '0 4 * * 1'
 
 jobs:
 
@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: x64
 
       - name: install pints
