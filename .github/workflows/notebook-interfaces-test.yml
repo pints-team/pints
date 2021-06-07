@@ -24,10 +24,10 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .[stan]
-          python -m pip install .[dev]
+          python -m pip install .[dev,stan]
+          python -m pip install autograd
+          python -m pip install statsmodels
 
       - name: run jupyter notebooks
         run: |
-          python -m pip install statsmodels
           python run-tests.py --interfaces
