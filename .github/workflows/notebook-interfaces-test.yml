@@ -20,7 +20,11 @@ jobs:
           python-version: 3.9
           architecture: x64
 
-      - name: install pints
+      # We use e.g. install pints[stan] to install dependencies for interfaces
+      # that have some code in pints/interfaces. Dependencies that are not used
+      # by any code in the `pints` module are installed with pip (e.g.
+      # `pip install autograd`).
+      - name: install pints, interfaces, extra dependencies
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
