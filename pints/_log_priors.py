@@ -499,7 +499,7 @@ class HalfCauchyLogPrior(pints.LogPrior):
     r"""
     Defines a 1-d half-Cauchy (log) prior with a given ``location`` and
     ``scale``. This is a Cauchy distribution that has been truncated to lie in
-    between :math:`[0,\infty]`, with pdf
+    between :math:`(0,\infty)`, with pdf
 
     .. math::
         f(x|\text{location},\text{scale})=\begin{cases}\frac{1}{\pi\;

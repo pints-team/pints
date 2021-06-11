@@ -26,7 +26,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
 
         \dot{z} = k_3 y - m_3 z
 
-    Parameters are :math`[k_2, k_3, m_1, m_2, m_3]`. The initial conditions
+    Parameters are :math:`[k_2, k_3, m_1, m_2, m_3]`. The initial conditions
     are hard-coded at ``[0.0054, 0.053, 1.93]``.
 
     Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyODEModel`.
