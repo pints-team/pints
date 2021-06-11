@@ -82,6 +82,9 @@ class EightSchoolsLogPDF(ToyLogPDF):
             raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
+        if tau < 0:  # to handle proposals without having to change log-priors
+            return -np.inf
+
         thetas = x[2:]
 
         log_prob = self._mu_log_pdf([mu])
@@ -112,6 +115,9 @@ class EightSchoolsLogPDF(ToyLogPDF):
             raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
+        if tau < 0:  # to handle proposals without having to change log-priors
+            return -np.inf, np.full([1, 10], -np.inf)
+
         thetas = x[2:]
         log_prob1, dL1 = self._mu_log_pdf.evaluateS1([mu])
         log_prob2, dL2 = self._tau_log_pdf.evaluateS1([tau])
