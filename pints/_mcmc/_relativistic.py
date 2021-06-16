@@ -136,9 +136,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         # First iteration of a run of leapfrog iterations
         if self._frog_iteration == 0:
 
-            # Sample random momentum for current point using identity cov
-            self._current_momentum = np.random.multivariate_normal(
-                np.zeros(self._n_parameters), np.eye(self._n_parameters))
+            # Sample random momentum for current point
+            self._current_momentum = self._sample_momentum()
 
             # First leapfrog position is the current sample in the chain
             self._position = np.array(self._current, copy=True)
@@ -220,6 +219,26 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     def needs_sensitivities(self):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
+
+    def _sample_momentum(self):
+        """Draw a value of momentum from its hyperbolic distribution.
+        """
+        # Sample a direction for the momentum vector, which is uniform
+        dir = np.random.randn(self._n_parameters)
+        dir /= np.linalg.norm(dir)
+
+        # Sample a magnitude for momentum
+        def logpdf(u):
+            # The log pdf of ||p||
+            return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
+                + np.log(u ** (self._n_parameters - 1))
+
+        # Sample from logpdf using adaptive rejection sampling
+        import arspy.ars
+        samples = arspy.ars.adaptive_rejection_sampling(
+            logpdf, 0.1, 10, (0, float('inf')), 1)
+
+        return samples[0] * dir
 
     def scaled_epsilon(self):
         """
