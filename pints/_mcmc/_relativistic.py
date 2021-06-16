@@ -115,6 +115,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         if not self._running:
             self._running = True
             self._mc2 = self._mass * self._c**2
+            self._m2c2 = self._mass**2 * self._c**2
 
         # Notes:
         #  Ask is responsible for updating the position, which is the point
@@ -149,7 +150,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
         # Perform a leapfrog step for the position
         squared = np.sum(np.array(self._momentum)**2)
-        relativistic_mass = self._mass * np.sqrt(squared / self._mc2 + 1)
+        relativistic_mass = self._mass * np.sqrt(squared / self._m2c2 + 1)
         self._position += (
             self._scaled_epsilon * self._momentum / relativistic_mass)
 
@@ -202,7 +203,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         Kinetic energy of relativistic particle, which is defined in [1]_.
         """
         squared = np.sum(np.array(momentum)**2)
-        return self._mc2 * (squared / self._mc2 + 1)**0.5
+        return self._mc2 * (squared / self._m2c2 + 1)**0.5
 
     def mass(self):
         """ Returns ``mass`` which is the rest mass of particle. """
