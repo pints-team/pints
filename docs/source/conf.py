@@ -40,17 +40,10 @@ extensions = [
 ]
 
 # Autodoc defaults
-if int(sphinx.__version__.split('.')[1]) < 8:
-    autodoc_default_flags = [
-        'members',
-        'inherited-members',
-        # 'show-inheritance',
-    ]
-else:
-    autodoc_default_options = {
-        'members': None,
-        'inherited-members': None,
-    }
+autodoc_default_options = {
+    'members': None,
+    'inherited-members': None,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -66,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Pints'
-copyright = u'2019, Pints Authors'
+copyright = u'2021, Pints Authors'
 author = u'Pints Authors'
 
 # The version info for the project you're documenting, acts as replacement for
