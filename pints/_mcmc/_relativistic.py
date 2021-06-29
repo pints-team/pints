@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
+import scipy.integrate
 
 
 class RelativisticMCMC(pints.SingleChainMCMC):
@@ -116,6 +117,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             self._running = True
             self._mc2 = self._mass * self._c**2
             self._m2c2 = self._mass**2 * self._c**2
+            self._calculate_momentum_distribution()
 
         # Notes:
         #  Ask is responsible for updating the position, which is the point
@@ -220,6 +222,35 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 
+    def _momentum_logpdf(self, u):
+        """The logpdf of the magnitude of momentum
+
+        The distribution of momentum vector, a vector of length
+        """
+        return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
+            + np.log(u ** (self._n_parameters - 1))
+
+    def _calculate_momentum_distribution(self):
+        """Generate a sampler for momentum.
+        """
+        # Evaluate the logpdf on a grid
+        integration_grid = np.linspace(1e-6, 100, 100000)
+        logpdf_values = self._momentum_logpdf(integration_grid)
+
+        # Take a cumulative sum of values to approximate integral
+        cpdf = np.logaddexp.accumulate(logpdf_values)
+        cpdf = np.exp(cpdf - cpdf[-1])
+
+        # import matplotlib.pyplot as plt
+        # plt.plot(cpdf)
+        # plt.show()
+
+        # Do a reverse interpolation to approximate inverse cdf
+        inv_cdf = scipy.interpolate.interp1d(cpdf, integration_grid)
+
+        # Save the inverse cdf so that it can be used for sampling
+        self._inv_cdf = inv_cdf
+
     def _sample_momentum(self):
         """Draw a value of momentum from its hyperbolic distribution.
         """
@@ -227,18 +258,11 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         dir = np.random.randn(self._n_parameters)
         dir /= np.linalg.norm(dir)
 
-        # Sample a magnitude for momentum
-        def logpdf(u):
-            # The log pdf of ||p||
-            return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
-                + np.log(u ** (self._n_parameters - 1))
+        # Sample a magnitude for the momentum vector
+        u = np.random.random()
+        p = self._inv_cdf(u)
 
-        # Sample from logpdf using adaptive rejection sampling
-        import arspy.ars
-        samples = arspy.ars.adaptive_rejection_sampling(
-            logpdf, 0.1, 10, (0, float('inf')), 1)
-
-        return samples[0] * dir
+        return p * dir
 
     def scaled_epsilon(self):
         """
