@@ -7,6 +7,7 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
+import warnings
 import pints
 import numpy as np
 import scipy.integrate
@@ -233,20 +234,43 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     def _calculate_momentum_distribution(self):
         """Generate a sampler for momentum.
         """
-        # Evaluate the logpdf on a grid
-        integration_grid = np.linspace(1e-6, 100, 100000)
-        logpdf_values = self._momentum_logpdf(integration_grid)
+        num_adaptations = 0
 
-        # Take a cumulative sum of values to approximate integral
-        cpdf = np.logaddexp.accumulate(logpdf_values)
-        cpdf = np.exp(cpdf - cpdf[-1])
+        # Set initial values for the integration grid
+        max_value = 30
+        spacing = 1e-4
 
-        # import matplotlib.pyplot as plt
-        # plt.plot(cpdf)
-        # plt.show()
+        while True:
+            # Evaluate the logpdf on a grid
+            integration_grid = np.arange(1e-6, max_value, spacing)
+            logpdf_values = self._momentum_logpdf(integration_grid)
+
+            cdf = np.logaddexp.accumulate(
+                np.logaddexp(logpdf_values[1:], logpdf_values[:-1]))
+            cdf = np.exp(cdf - cdf[-1])
+
+            # Adapt integration grid if the result is inaccurate
+            if max(np.diff(cdf)) > 1e-4:
+                # cdf is changing too much, so a finer grid is required
+                spacing /= 2
+                num_adaptations += 1
+
+            elif cdf[-1] - cdf[-2] > 1e-8:
+                # cdf is still increasing at the end
+                max_value *= 2
+                num_adaptations += 1
+
+            else:
+                break
+
+            if num_adaptations > 10:
+                warnings.warn('Failed to approximate momentum distribution '
+                              'for given mass and speed of light. Samples of '
+                              'momentum may be inaccurate.')
+                break
 
         # Do a reverse interpolation to approximate inverse cdf
-        inv_cdf = scipy.interpolate.interp1d(cpdf, integration_grid)
+        inv_cdf = scipy.interpolate.interp1d([0] + list(cdf), integration_grid)
 
         # Save the inverse cdf so that it can be used for sampling
         self._inv_cdf = inv_cdf
