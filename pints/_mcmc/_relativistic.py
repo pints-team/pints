@@ -33,7 +33,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     .. math::
         H(q,p) &=       U(q)       +        KE(p)\\
                &= -\text{log}(p(q|X)p(q)) +
-                    mc^2 (\Sigma_{i=1}^{d} p_i^2 / (mc^2) + 1)^{0.5}
+                    mc^2 (\Sigma_{i=1}^{d} p_i^2 / (m^2 c^2) + 1)^{0.5}
 
     where ``d`` is the dimensionality of model, ``m`` is the scalar 'mass'
     given to each particle (chosen to be 1 as default) and ``c`` is the
@@ -53,7 +53,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     where relativistic mass (a scalar) is,
 
     .. math::
-        M(p) = m (\Sigma_{i=1}^{d} p_i^2 / (mc^2) + 1)^{0.5}
+        M(p) = m (\Sigma_{i=1}^{d} p_i^2 / (m^2 c^2) + 1)^{0.5}
 
     In particular, the algorithm we implement follows eqs. in section 2.1 of
     [1]_.
@@ -258,10 +258,10 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """Calculate an approximation to the CDF of momentum magnitude.
 
         The purpose of this method is to calculate self._inv_cdf, a function
-        for a numerical approximation to the inverse cumulative distribution
+        giving a numerical approximation to the inverse cumulative distribution
         function of the magnitude of the momentum vector. This function can be
-        used to perform inverse transform sampling to generate momentum
-        vectors.
+        used to perform inverse transform sampling to generate samples of the
+        momentum.
 
         This method should be called before any sampling is performed. As
         implemented, it is called upon the first call to self.ask.
