@@ -161,99 +161,6 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = True
         return np.array(self._position, copy=True)
 
-    def divergent_iterations(self):
-        """
-        Returns the iteration number of any divergent iterations
-        """
-        return self._divergent
-
-    def epsilon(self):
-        """
-        Returns epsilon used in leapfrog algorithm
-        """
-        return self._epsilon
-
-    def hamiltonian_threshold(self):
-        """
-        Returns threshold difference in Hamiltonian value from one iteration to
-        next which determines whether an iteration is divergent.
-        """
-        return self._hamiltonian_threshold
-
-    def leapfrog_steps(self):
-        """
-        Returns the number of leapfrog steps to carry out for each iteration.
-        """
-        return self._n_frog_iterations
-
-    def leapfrog_step_size(self):
-        """
-        Returns the step size for the leapfrog algorithm.
-        """
-        return self._step_size
-
-    def _log_init(self, logger):
-        """ See :meth:`Loggable._log_init()`. """
-        logger.add_float('Accept.')
-
-    def _log_write(self, logger):
-        """ See :meth:`Loggable._log_write()`. """
-        logger.log(self._mcmc_acceptance)
-
-    def _kinetic_energy(self, momentum):
-        """
-        Kinetic energy of relativistic particle, which is defined in [1]_.
-        """
-        squared = np.sum(np.array(momentum)**2)
-        return self._mc2 * (squared / self._m2c2 + 1)**0.5
-
-    def mass(self):
-        """ Returns ``mass`` which is the rest mass of particle. """
-        return self._mass
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 4
-
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Relativistic MCMC'
-
-    def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
-        return True
-
-    def _momentum_logpdf(self, u):
-        r"""Evalute the unnormalized logpdf of the magnitude of momentum.
-
-        The probability density of the momentum vector :math:`p` is stated in
-        [1]_ as :math:`f(p) \propto e^{-K(p)}`, where
-
-        .. math::
-            K(p) = m c^2 \left( \frac{p^T p}{m^2 c^2} + 1 \right)^{1/2}
-
-        Note that this is the distribution for the vector
-        :math:`p = (p_1, p_2, \dots, p_n)`, where n is the dimension of the
-        parameter space. However, this distribution has no dependence on the
-        direction of the vector p. Thus, the distribution for the magnitude
-        (:math:`||p||`) of the momentum vector can be obtained directly, but we
-        must include the Jacobian term for the transformation to hyperspherical
-        coordinates, such that
-
-        .. math::
-            f(||p||) \propto e^{-K(p)} ||p||^{n-1}
-
-        The logarithm of this unnormalized density is returned by this method.
-
-        Parameters
-        ----------
-        u : float
-            Where to evaluate the unnormalized log pdf of the magnitude of
-            momentum.
-        """
-        return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
-            + np.log(u ** (self._n_parameters - 1))
-
     def _calculate_momentum_distribution(self):
         """Calculate an approximation to the CDF of momentum magnitude.
 
@@ -313,6 +220,99 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
         # Save the inverse cdf so that it can be used for sampling
         self._inv_cdf = inv_cdf
+
+    def divergent_iterations(self):
+        """
+        Returns the iteration number of any divergent iterations
+        """
+        return self._divergent
+
+    def epsilon(self):
+        """
+        Returns epsilon used in leapfrog algorithm
+        """
+        return self._epsilon
+
+    def hamiltonian_threshold(self):
+        """
+        Returns threshold difference in Hamiltonian value from one iteration to
+        next which determines whether an iteration is divergent.
+        """
+        return self._hamiltonian_threshold
+
+    def leapfrog_steps(self):
+        """
+        Returns the number of leapfrog steps to carry out for each iteration.
+        """
+        return self._n_frog_iterations
+
+    def leapfrog_step_size(self):
+        """
+        Returns the step size for the leapfrog algorithm.
+        """
+        return self._step_size
+
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('Accept.')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        logger.log(self._mcmc_acceptance)
+
+    def _kinetic_energy(self, momentum):
+        """
+        Kinetic energy of relativistic particle, which is defined in [1]_.
+        """
+        squared = np.sum(np.array(momentum)**2)
+        return self._mc2 * (squared / self._m2c2 + 1)**0.5
+
+    def mass(self):
+        """ Returns ``mass`` which is the rest mass of particle. """
+        return self._mass
+
+    def _momentum_logpdf(self, u):
+        r"""Evalute the unnormalized logpdf of the magnitude of momentum.
+
+        The probability density of the momentum vector :math:`p` is stated in
+        [1]_ as :math:`f(p) \propto e^{-K(p)}`, where
+
+        .. math::
+            K(p) = m c^2 \left( \frac{p^T p}{m^2 c^2} + 1 \right)^{1/2}
+
+        Note that this is the distribution for the vector
+        :math:`p = (p_1, p_2, \dots, p_n)`, where n is the dimension of the
+        parameter space. However, this distribution has no dependence on the
+        direction of the vector p. Thus, the distribution for the magnitude
+        (:math:`||p||`) of the momentum vector can be obtained directly, but we
+        must include the Jacobian term for the transformation to hyperspherical
+        coordinates, such that
+
+        .. math::
+            f(||p||) \propto e^{-K(p)} ||p||^{n-1}
+
+        The logarithm of this unnormalized density is returned by this method.
+
+        Parameters
+        ----------
+        u : float
+            Where to evaluate the unnormalized log pdf of the magnitude of
+            momentum.
+        """
+        return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
+            + np.log(u ** (self._n_parameters - 1))
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 4
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Relativistic MCMC'
+
+    def needs_sensitivities(self):
+        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        return True
 
     def _sample_momentum(self):
         """Draw a value of momentum from its hyperbolic distribution.
