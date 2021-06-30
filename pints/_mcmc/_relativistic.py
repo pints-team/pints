@@ -191,7 +191,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             cdf = np.logaddexp.accumulate(
                 np.logaddexp(logpdf_values[1:], logpdf_values[:-1]))
 
-            # Normalize the CDF (momentum logpdf is unnormalized)
+            # Normalize the CDF
             cdf = np.exp(cdf - cdf[-1])
 
             # Adapt the integration grid if the result is inaccurate
@@ -208,7 +208,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             else:
                 break
 
-            if num_adaptations > 10:
+            if num_adaptations > 6:
                 warnings.warn('Failed to approximate momentum distribution '
                               'for given mass and speed of light. Samples of '
                               'momentum may be inaccurate.')
