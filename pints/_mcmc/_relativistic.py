@@ -315,7 +315,13 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         return True
 
     def _sample_momentum(self):
-        """Draw a value of momentum from its hyperbolic distribution.
+        """Draw a sample of the momentum vector.
+
+        This method first samples a random direction for the momentum. Then, it
+        samples the magnitude of momentum using inverse transform sampling. It
+        assumes that the inverse cumulative distribution function for the
+        magnitude of momentum has already been calculated by the
+        self._calculate_momentum_distribution() method.
         """
         # Sample a direction for the momentum vector, which is uniform
         dir = np.random.randn(self._n_parameters)
