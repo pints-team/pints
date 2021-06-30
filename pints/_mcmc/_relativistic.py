@@ -224,7 +224,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         return True
 
     def _momentum_logpdf(self, u):
-        """Evalute the unnormalized logpdf of the magnitude of momentum.
+        r"""Evalute the unnormalized logpdf of the magnitude of momentum.
 
         The probability density of the momentum vector :math:`p` is stated in
         [1]_ as :math:`f(p) \propto e^{-K(p)}`, where
@@ -235,10 +235,10 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         Note that this is the distribution for the vector
         :math:`p = (p_1, p_2, \dots, p_n)`, where n is the dimension of the
         parameter space. However, this distribution has no dependence on the
-        direction of the vector p. Thus, the distribution for the magnitude of
-        the momentum vector, :math:`||p||` can be obtained directly, but we
+        direction of the vector p. Thus, the distribution for the magnitude
+        (:math:`||p||`) of the momentum vector can be obtained directly, but we
         must include the Jacobian term for the transformation to hyperspherical
-        coordinates,
+        coordinates, such that
 
         .. math::
             f(||p||) \propto e^{-K(p)} ||p||^{n-1}
@@ -308,7 +308,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                 break
 
         # Do a reverse interpolation to approximate inverse cdf
-        inv_cdf = scipy.interpolate.interp1d([0] + list(cdf), integration_grid)
+        inv_cdf = scipy.interpolate.interp1d(
+            [0.0] + list(cdf), integration_grid)
 
         # Save the inverse cdf so that it can be used for sampling
         self._inv_cdf = inv_cdf
