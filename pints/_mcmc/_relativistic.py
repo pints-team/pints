@@ -232,12 +232,24 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             + np.log(u ** (self._n_parameters - 1))
 
     def _calculate_momentum_distribution(self):
-        """Generate a sampler for momentum.
+        """Calculate an approximation to the CDF of momentum magnitude.
+
+        The purpose of this method is to calculate self._inv_cdf, a function
+        for a numerical approximation to the inverse cumulative distribution
+        function of the magnitude of the momentum vector. This function can be
+        used to perform inverse transform sampling to generate momentum
+        vectors.
+
+        This method should be called before any sampling is performed. As
+        implemented, it is called upon the first call to self.ask.
+
+        Numerical integration of the momentum density is performed using the
+        trapezoidal rule.
         """
         num_adaptations = 0
 
         # Set initial values for the integration grid
-        max_value = 30
+        max_value = 10
         spacing = 1e-4
 
         while True:
@@ -245,11 +257,14 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             integration_grid = np.arange(1e-6, max_value, spacing)
             logpdf_values = self._momentum_logpdf(integration_grid)
 
+            # Integrate using the trapezoidal rule
             cdf = np.logaddexp.accumulate(
                 np.logaddexp(logpdf_values[1:], logpdf_values[:-1]))
+
+            # Normalize the CDF (momentum logpdf is unnormalized)
             cdf = np.exp(cdf - cdf[-1])
 
-            # Adapt integration grid if the result is inaccurate
+            # Adapt the integration grid if the result is inaccurate
             if max(np.diff(cdf)) > 1e-4:
                 # cdf is changing too much, so a finer grid is required
                 spacing /= 2
