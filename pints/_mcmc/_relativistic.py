@@ -182,7 +182,9 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         max_value = 10
         spacing = 1e-4
 
-        while True:
+        integration_accepted = False
+
+        while not integration_accepted:
             # Evaluate the logpdf on a grid
             integration_grid = np.arange(1e-6, max_value, spacing)
             logpdf_values = self._momentum_logpdf(integration_grid)
@@ -206,13 +208,13 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                 num_adaptations += 1
 
             else:
-                break
+                integration_accepted = True
 
             if num_adaptations > 6:
                 warnings.warn('Failed to approximate momentum distribution '
                               'for given mass and speed of light. Samples of '
                               'momentum may be inaccurate.')
-                break
+                integration_accepted = True
 
         # Do a reverse interpolation to approximate inverse cdf
         inv_cdf = scipy.interpolate.interp1d(
