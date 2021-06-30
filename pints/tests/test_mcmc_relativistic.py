@@ -205,10 +205,10 @@ class TestRelativisticMCMC(unittest.TestCase):
 
         mag = 1.7
         f1 = model._momentum_logpdf(mag)
-        f2 = -m * c**2 * \
-            np.sqrt(mag ** 2 / (m**2 * c**2) + 1) + np.log(mag ** (n - 1))
+        f2 = np.exp(-m * c**2 * np.sqrt(mag ** 2 / (m**2 * c**2) + 1)) \
+            * mag ** (n - 1)
 
-        self.assertAlmostEqual(f1, f2)
+        self.assertAlmostEqual(f1, np.log(f2))
 
     def test_calculate_momentum_distribution(self):
         # Test calculation of inv cdf of momentum magnitude
@@ -250,6 +250,30 @@ class TestRelativisticMCMC(unittest.TestCase):
         # Test sampler of momentum
         x0 = np.array([2, 2, 2, 2, 2])
         model = pints.RelativisticMCMC(x0)
+        model.ask()
+        p = model._sample_momentum()
+        self.assertEqual(len(p), len(x0))
+
+        # Test sampler with a small value of m, triggering a refinement of the
+        # integration grid
+        m = 0.01
+        c = 10.0
+        n = len(x0)
+        model = pints.RelativisticMCMC(x0)
+        model.set_mass(m)
+        model.set_speed_of_light(c)
+        model.ask()
+        p = model._sample_momentum()
+        self.assertEqual(len(p), len(x0))
+
+        # Test sampler with unpleasant values of m and c that will trigger the
+        # sampler warning
+        m = 1e-10
+        c = 1e-10
+        n = len(x0)
+        model = pints.RelativisticMCMC(x0)
+        model.set_mass(m)
+        model.set_speed_of_light(c)
         model.ask()
         p = model._sample_momentum()
         self.assertEqual(len(p), len(x0))
