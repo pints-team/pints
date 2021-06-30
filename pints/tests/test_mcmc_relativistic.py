@@ -258,7 +258,6 @@ class TestRelativisticMCMC(unittest.TestCase):
         # integration grid
         m = 0.01
         c = 10.0
-        n = len(x0)
         model = pints.RelativisticMCMC(x0)
         model.set_mass(m)
         model.set_speed_of_light(c)
@@ -270,7 +269,6 @@ class TestRelativisticMCMC(unittest.TestCase):
         # sampler warning
         m = 1e-10
         c = 1e-10
-        n = len(x0)
         model = pints.RelativisticMCMC(x0)
         model.set_mass(m)
         model.set_speed_of_light(c)
