@@ -10,7 +10,7 @@ from __future__ import print_function, unicode_literals
 import warnings
 import pints
 import numpy as np
-import scipy.integrate
+import scipy.interpolate
 
 
 class RelativisticMCMC(pints.SingleChainMCMC):
@@ -224,9 +224,32 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         return True
 
     def _momentum_logpdf(self, u):
-        """The logpdf of the magnitude of momentum
+        """Evalute the unnormalized logpdf of the magnitude of momentum.
 
-        The distribution of momentum vector, a vector of length
+        The probability density of the momentum vector :math:`p` is stated in
+        [1]_ as :math:`f(p) \propto e^{-K(p)}`, where
+
+        .. math::
+            K(p) = m c^2 \left( \frac{p^T p}{m^2 c^2} + 1 \right)^{1/2}
+
+        Note that this is the distribution for the vector
+        :math:`p = (p_1, p_2, \dots, p_n)`, where n is the dimension of the
+        parameter space. However, this distribution has no dependence on the
+        direction of the vector p. Thus, the distribution for the magnitude of
+        the momentum vector, :math:`||p||` can be obtained directly, but we
+        must include the Jacobian term for the transformation to hyperspherical
+        coordinates,
+
+        .. math::
+            f(||p||) \propto e^{-K(p)} ||p||^{n-1}
+
+        The logarithm of this unnormalized density is returned by this method.
+
+        Parameters
+        ----------
+        u : float
+            Where to evaluate the unnormalized log pdf of the magnitude of
+            momentum.
         """
         return -self._mc2 * np.sqrt(u ** 2 / self._m2c2 + 1) \
             + np.log(u ** (self._n_parameters - 1))
