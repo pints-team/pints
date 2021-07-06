@@ -45,7 +45,7 @@ class TestAR1LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -19.706737485492436)
+        self.assertAlmostEqual(score, -19.706737485492436)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -63,7 +63,7 @@ class TestAR1LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -19.706737485492436)
+        self.assertAlmostEqual(score, -19.706737485492436)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -81,7 +81,7 @@ class TestAR1LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -19.706737485492436)
+        self.assertAlmostEqual(score, -19.706737485492436)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -97,7 +97,7 @@ class TestAR1LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -179.22342804581092)
+        self.assertAlmostEqual(score, -179.22342804581092)
 
 
 class TestARMA11LogLikelihood(unittest.TestCase):
@@ -134,7 +134,7 @@ class TestARMA11LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -171.53031588534171)
+        self.assertAlmostEqual(score, -171.53031588534171)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -152,7 +152,7 @@ class TestARMA11LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -171.53031588534171)
+        self.assertAlmostEqual(score, -171.53031588534171)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -170,7 +170,7 @@ class TestARMA11LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -171.53031588534171)
+        self.assertAlmostEqual(score, -171.53031588534171)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -187,7 +187,7 @@ class TestARMA11LogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -214.17034137601107)
+        self.assertAlmostEqual(score, -214.17034137601107)
 
 
 class TestCauchyLogLikelihood(unittest.TestCase):
@@ -223,7 +223,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -12.339498654173603)
+        self.assertAlmostEqual(score, -12.339498654173603)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -241,7 +241,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -12.339498654173603)
+        self.assertAlmostEqual(score, -12.339498654173603)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -259,7 +259,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -12.339498654173603)
+        self.assertAlmostEqual(score, -12.339498654173603)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -275,7 +275,7 @@ class TestCauchyLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -49.51182454195375)
+        self.assertAlmostEqual(score, -49.51182454195375)
 
 
 class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
@@ -946,7 +946,7 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -7.3420590096957925)
+        self.assertAlmostEqual(score, -7.3420590096957925)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -964,7 +964,7 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -7.3420590096957925)
+        self.assertAlmostEqual(score, -7.3420590096957925)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -982,7 +982,7 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -7.3420590096957925)
+        self.assertAlmostEqual(score, -7.3420590096957925)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -997,7 +997,7 @@ class TestGaussianKnownSigmaLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -196.9122623984561)
+        self.assertAlmostEqual(score, -196.9122623984561)
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -1169,7 +1169,7 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             log_likelihood_known(test_parameters[:-1]))
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -421.8952711914118)
+        self.assertAlmostEqual(score, -421.8952711914118)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1194,7 +1194,7 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             log_likelihood_known(test_parameters[:-1]))
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -421.8952711914118)
+        self.assertAlmostEqual(score, -421.8952711914118)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1219,7 +1219,7 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             log_likelihood_known(test_parameters[:-1]))
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -421.8952711914118)
+        self.assertAlmostEqual(score, -421.8952711914118)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1241,7 +1241,7 @@ class TestGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -50.75425117450455)
+        self.assertAlmostEqual(score, -50.75425117450455)
 
     def test_evaluateS1_list(self):
         # Convert data to list
@@ -1436,7 +1436,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Check that likelihoods agree for eta=0
-        self.assertEqual(
+        self.assertAlmostEqual(
             log_likelihood([2.0, 0.0, 1.0]),
             gaussian_log_likelihood([2.0, 1.0]))
 
@@ -1445,7 +1445,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -9.224056577298253)
+        self.assertAlmostEqual(score, -9.224056577298253)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1460,7 +1460,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Check that likelihoods agree for eta=0
-        self.assertEqual(
+        self.assertAlmostEqual(
             log_likelihood([2.0, 0.0, 1.0]),
             gaussian_log_likelihood([2.0, 1.0]))
 
@@ -1469,7 +1469,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -9.224056577298253)
+        self.assertAlmostEqual(score, -9.224056577298253)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1484,7 +1484,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
 
         # Check that likelihoods agree for eta=0
-        self.assertEqual(
+        self.assertAlmostEqual(
             log_likelihood([2.0, 0.0, 1.0]),
             gaussian_log_likelihood([2.0, 1.0]))
 
@@ -1493,7 +1493,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -9.224056577298253)
+        self.assertAlmostEqual(score, -9.224056577298253)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1507,7 +1507,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         # Check that likelihoods agree for eta=0
         gaussian_test_parameters = [2.0, 2.0, 2.0, 1.0, 1.0, 1.0]
         test_parameters = [2.0, 2.0, 2.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]
-        self.assertEqual(
+        self.assertAlmostEqual(
             log_likelihood(test_parameters),
             gaussian_log_likelihood(gaussian_test_parameters))
 
@@ -1516,7 +1516,7 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that likelihood returns expected value
-        self.assertEqual(score, -46.324126706784014)
+        self.assertAlmostEqual(score, -46.324126706784014)
 
 
 class TestScaledLogLikelihood(unittest.TestCase):
@@ -1831,7 +1831,7 @@ class TestStudentTLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that scaled likelihood returns expected value
-        self.assertEqual(score, -11.74010919785115)
+        self.assertAlmostEqual(score, -11.74010919785115)
 
     def test_call_one_dim_array(self):
         # Convert data to array of shape (n_times,)
@@ -1849,7 +1849,7 @@ class TestStudentTLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that scaled likelihood returns expected value
-        self.assertEqual(score, -11.74010919785115)
+        self.assertAlmostEqual(score, -11.74010919785115)
 
     def test_call_two_dim_array_single(self):
         # Convert data to array of shape (n_times, 1)
@@ -1867,7 +1867,7 @@ class TestStudentTLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that scaled likelihood returns expected value
-        self.assertEqual(score, -11.74010919785115)
+        self.assertAlmostEqual(score, -11.74010919785115)
 
     def test_call_two_dim_array_multi(self):
         # Create an object with links to the model and time series
@@ -1882,7 +1882,7 @@ class TestStudentTLogLikelihood(unittest.TestCase):
         score = log_likelihood(test_parameters)
 
         # Check that scaled likelihood returns expected value
-        self.assertEqual(score, -47.83720347766944)
+        self.assertAlmostEqual(score, -47.83720347766944)
 
 
 if __name__ == '__main__':
