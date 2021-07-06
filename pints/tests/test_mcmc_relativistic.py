@@ -231,7 +231,7 @@ class TestRelativisticMCMC(unittest.TestCase):
 
         # Integrate to get cumulative distribution function
         integration_grid = np.arange(1e-6, 10, 1e-5)
-        cdf = scipy.integrate.cumulative_trapezoid(
+        cdf = scipy.integrate.cumtrapz(
             1 / c * pdf(integration_grid), x=integration_grid)
 
         # Interpolate to get approximate inverse
