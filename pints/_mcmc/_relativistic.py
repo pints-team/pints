@@ -10,7 +10,7 @@ from __future__ import print_function, unicode_literals
 import warnings
 import pints
 import numpy as np
-import scipy.interpolate
+from scipy.interpolate import interp1d
 
 
 class RelativisticMCMC(pints.SingleChainMCMC):
@@ -217,8 +217,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                 integration_accepted = True
 
         # Do a reverse interpolation to approximate inverse cdf
-        inv_cdf = scipy.interpolate.interp1d(
-            [0.0] + list(cdf), integration_grid)
+        inv_cdf = interp1d([0.0] + list(cdf), integration_grid)
 
         # Save the inverse cdf so that it can be used for sampling
         self._inv_cdf = inv_cdf

@@ -8,7 +8,8 @@
 #
 import unittest
 import numpy as np
-import scipy.integrate
+from scipy.integrate import cumtrapz, quad
+from scipy.interpolate import interp1d
 import pints
 import pints.toy
 
@@ -227,16 +228,14 @@ class TestRelativisticMCMC(unittest.TestCase):
         def pdf(u):
             return np.exp(model._momentum_logpdf(u))
 
-        c = scipy.integrate.quad(pdf, 0, 100)[0]
+        c = quad(pdf, 0, 100)[0]
 
         # Integrate to get cumulative distribution function
         integration_grid = np.arange(1e-6, 10, 1e-5)
-        cdf = scipy.integrate.cumtrapz(
-            1 / c * pdf(integration_grid), x=integration_grid)
+        cdf = cumtrapz(1 / c * pdf(integration_grid), x=integration_grid)
 
         # Interpolate to get approximate inverse
-        inv_cdf = scipy.interpolate.interp1d(
-            [0.0] + list(cdf), integration_grid)
+        inv_cdf = interp1d([0.0] + list(cdf), integration_grid)
 
         # Compare outputs of inverse CDF at selected points
         model_inv_cdf = model._inv_cdf
