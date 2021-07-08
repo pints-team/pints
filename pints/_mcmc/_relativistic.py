@@ -179,7 +179,11 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         num_adaptations = 0
 
         # Set initial values for the integration grid
-        max_value = 10
+        # The grid goes from 0 to a rough initial guess, which must be at least
+        # 10 and not more than 100
+        max_value = self._mass + self._n_parameters
+        max_value = max(10, max_value)
+        max_value = min(100, max_value)
         spacing = 1e-4
 
         integration_accepted = False
@@ -210,7 +214,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             else:
                 integration_accepted = True
 
-            if num_adaptations > 6:
+            if num_adaptations > 10:
                 warnings.warn('Failed to approximate momentum distribution '
                               'for given mass and speed of light. Samples of '
                               'momentum may be inaccurate.')
@@ -322,7 +326,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         samples the magnitude of momentum using inverse transform sampling. It
         assumes that the inverse cumulative distribution function for the
         magnitude of momentum has already been calculated by the
-        self._calculate_momentum_distribution() method.
+        :meth:`_calculate_momentum_distribution` method.
         """
         # Sample a direction for the momentum vector, which is uniform
         dir = np.random.randn(self._n_parameters)
