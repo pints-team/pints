@@ -194,6 +194,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             logpdf_values = self._momentum_logpdf(integration_grid)
 
             # Integrate using the trapezoidal rule
+            # Note that the step size (and any other constants) can be ignored
+            # here, as the CDF will be normalized after this calculation
             cdf = np.logaddexp.accumulate(
                 np.logaddexp(logpdf_values[1:], logpdf_values[:-1]))
 
