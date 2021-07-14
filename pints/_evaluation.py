@@ -470,11 +470,10 @@ class _Worker(multiprocessing.Process):
         self._tasks = tasks
         self._results = results
         self._max_tasks = max_tasks
+        self._max_threads = \
+            None if max_threads is None else max(0, int(max_threads))
         self._errors = errors
         self._error = error
-
-        # Use ``None`` to indicate current behaviour (no change)
-        self._threads = None if n_numpy_threads < 1 else int(n_numpy_threads)
 
     def run(self):
         # Worker processes should never write to stdout or stderr.
@@ -483,7 +482,7 @@ class _Worker(multiprocessing.Process):
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
         try:
-            with threadpoolctl.threadpool_limits(self._n_numpy_threads):
+            with threadpoolctl.threadpool_limits(self._max_threads):
                 for k in range(self._max_tasks):
                     i, x = self._tasks.get()
                     f = self._function(x, *self._args)
