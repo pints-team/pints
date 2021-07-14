@@ -11,14 +11,15 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import gc
+import multiprocessing
 import os
 import sys
 import time
+import threadpoolctl
 import traceback
-import multiprocessing
+
 try:
-    # Python 3
-    import queue
+    import queue        # Python 3
 except ImportError:
     import Queue as queue
 
@@ -162,6 +163,15 @@ multiprocessing.html#all-platforms>`_ for details).
         saved by refreshing the worker processes after every
         ``max_tasks_per_worker`` evaluations. This number can be tweaked for
         best performance on a given task / system.
+    n_numpy_threads
+        Numpy and other scientific libraries may make use of threading in C or
+        C++ based BLAS libraries, which can interfere with PINTS
+        multiprocessing and cause slower execution. To prevent this, the number
+        of threads to use will be limited to 1 by default, using the
+        ``threadpoolctl`` module. To use the current numpy default instead, set
+        ``n_numpy_threads`` to ``None``, to use the BLAS/OpenMP etc. defaults,
+        set ``n_numpy_threads`` to ``0``, or to use a specific number of
+        threads pass in any integer greater than 1.
     args
         An optional sequence of extra arguments to ``f``. If ``args`` is
         specified, ``f`` will be called as ``f(x, *args)``.
@@ -170,6 +180,7 @@ multiprocessing.html#all-platforms>`_ for details).
             self, function,
             n_workers=None,
             max_tasks_per_worker=500,
+            n_numpy_threads=1,
             args=None):
         super(ParallelEvaluator, self).__init__(function, args)
 
@@ -192,6 +203,9 @@ multiprocessing.html#all-platforms>`_ for details).
             raise ValueError(
                 'Maximum tasks per worker should be at least 1 (but probably'
                 ' much greater).')
+
+        # Maximum number of numpy threads to use. See the _Worker class.
+        self._n_numpy_threads = n_numpy_threads
 
         # Queue with tasks
         self._tasks = multiprocessing.Queue()
@@ -248,6 +262,7 @@ multiprocessing.html#all-platforms>`_ for details).
                 self._tasks,
                 self._results,
                 self._max_tasks,
+                self._n_numpy_threads,
                 self._errors,
                 self._error,
             )
@@ -433,6 +448,12 @@ class _Worker(multiprocessing.Process):
         refinement method!) and ``r`` is the result at ``p``.
     max_tasks : int
         The maximum number of tasks to perform before dying.
+    max_threads : int
+        The number of numpy BLAS (or other threadpoolctl controlled) threads to
+        allow. Use ``None`` to leave current settings unchanged, use ``0`` to
+        let the C-library's use their own defaults, use ``1`` to disable this
+        type of threading (recommended), or use any larger integer to set a
+        specific number.
     errors
         A queue to store exceptions on
     error
@@ -440,7 +461,8 @@ class _Worker(multiprocessing.Process):
         error.
     """
     def __init__(
-            self, function, args, tasks, results, max_tasks, errors, error):
+            self, function, args, tasks, results, max_tasks, max_threads,
+            errors, error):
         super(_Worker, self).__init__()
         self.daemon = True
         self._function = function
@@ -451,6 +473,9 @@ class _Worker(multiprocessing.Process):
         self._errors = errors
         self._error = error
 
+        # Use ``None`` to indicate current behaviour (no change)
+        self._threads = None if n_numpy_threads < 1 else int(n_numpy_threads)
+
     def run(self):
         # Worker processes should never write to stdout or stderr.
         # This can lead to unsafe situations if they have been redirected to
@@ -458,14 +483,15 @@ class _Worker(multiprocessing.Process):
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
         try:
-            for k in range(self._max_tasks):
-                i, x = self._tasks.get()
-                f = self._function(x, *self._args)
-                self._results.put((i, f))
+            with threadpoolctl.threadpool_limits(self._n_numpy_threads):
+                for k in range(self._max_tasks):
+                    i, x = self._tasks.get()
+                    f = self._function(x, *self._args)
+                    self._results.put((i, f))
 
-                # Check for errors in other workers
-                if self._error.is_set():
-                    return
+                    # Check for errors in other workers
+                    if self._error.is_set():
+                        return
 
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))

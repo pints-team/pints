@@ -62,6 +62,7 @@ setup(
         # outside of plot() methods.
         'matplotlib>=1.5',
         'tabulate',
+        'threadpoolctl',
     ],
     extras_require={
         'docs': [
