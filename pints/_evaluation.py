@@ -281,7 +281,10 @@ multiprocessing.html#all-platforms>`_ for details).
         #     sequences within each task will be reproducible. Note that we
         #     cannot achieve this by seeding the worker processes once, as the
         #     allocation of tasks to workers is not deterministic.
-        seeds = np.random.randint(0, 2**32, len(positions))
+        # The upper bound is chosen to get a wide range and still work on all
+        # systems. Windows, in particular, seems to insist on a 32 bit int even
+        # in Python 3.9.
+        seeds = np.random.randint(0, 2**16, len(positions))
 
         # Start
         try:

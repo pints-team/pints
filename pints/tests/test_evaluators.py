@@ -234,7 +234,7 @@ def system_exit_on_four(x):
 
 
 def random_int(x):
-    return np.random.randint(2**32)
+    return np.random.randint(2**16)
 
 
 if __name__ == '__main__':
