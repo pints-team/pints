@@ -15,13 +15,38 @@ import multiprocessing
 import os
 import sys
 import time
-import threadpoolctl
 import traceback
 
 try:
     import queue        # Python 3
 except ImportError:
     import Queue as queue
+
+try:
+    from threadpoolctl import threadpool_limits
+except ImportError:
+    # Python 2: Add messier replacement that changes os.environ (but only
+    # within each subprocess)
+    class threadpool_limits:
+        _vars = [
+            'OMP_NUM_THREADS',
+            'OPENBLAS_NUM_THREADS',
+            'MKL_NUM_THREADS',
+            'VECLIB_MAXIMUM_THREADS',
+            'NUMEXPR_NUM_THREADS',
+        ]
+
+        def __init__(self, limits=None):
+            self._limit = None if limits is None else str(max(0, int(limits)))
+
+        def __enter__(self):
+            if self._limit is not None:
+                for var in threadpool_limits._vars:
+                    os.environ[var] = self._limit
+            return self
+
+        def __exit__(self, type, value, traceback):
+            pass
 
 
 def evaluate(f, x, parallel=False, args=None):
@@ -482,7 +507,7 @@ class _Worker(multiprocessing.Process):
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
         try:
-            with threadpoolctl.threadpool_limits(self._max_threads):
+            with threadpool_limits(self._max_threads):
                 for k in range(self._max_tasks):
                     i, x = self._tasks.get()
                     f = self._function(x, *self._args)
