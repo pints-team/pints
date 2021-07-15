@@ -113,10 +113,13 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((0, 1))
         tasks.put((1, 2))
         tasks.put((2, 3))
+
         max_tasks = 3
+        max_threads = 1
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -135,7 +138,8 @@ class TestEvaluators(unittest.TestCase):
         error.set()
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -151,7 +155,8 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((2, 3))
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
