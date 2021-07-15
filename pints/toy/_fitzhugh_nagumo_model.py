@@ -63,7 +63,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
     References
     ----------
     .. [1] A kinetic model of the conductance changes in nerve membrane
-           Fitzhugh (1961) Journal of Cellular and Comparative Physiology.
+           Fitzhugh (1965) Journal of Cellular and Comparative Physiology.
            https://doi.org/10.1002/jcp.1030660518
     """
 
