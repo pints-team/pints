@@ -9,7 +9,6 @@
 import numpy as np
 import pints
 import unittest
-import time
 
 
 # Consistent unit testing in Python 2 and 3
@@ -112,34 +111,34 @@ class TestEvaluators(unittest.TestCase):
         n = 20
         e = pints.ParallelEvaluator(
             random_int, n_workers=n, max_tasks_per_worker=1)
-        x = np.array(e.evaluate([0]*n))
+        x = np.array(e.evaluate([0] * n))
         self.assertFalse(np.all(x == x[0]))
 
         # Without max-tasks-per-worker, we still expect most workers to do 1
         # task, and some to do 2, maybe even three.
         e = pints.ParallelEvaluator(random_int, n_workers=n)
-        x = set(e.evaluate([0]*n))
+        x = set(e.evaluate([0] * n))
         self.assertTrue(len(x) > n // 2)
 
         # Getting the same numbers twice should be very unlikely
-        x = np.array(e.evaluate([0]*n))
-        y = np.array(e.evaluate([0]*n))
+        x = np.array(e.evaluate([0] * n))
+        y = np.array(e.evaluate([0] * n))
         #self.assertFalse(np.all(x) == np.all(y))
         self.assertTrue(len(set(x) | set(y)) > n // 2)
 
         # But with seeding we expect the same result twice
         np.random.seed(123)
-        x = np.array(e.evaluate([0]*n))
+        x = np.array(e.evaluate([0] * n))
         np.random.seed(123)
-        y = np.array(e.evaluate([0]*n))
+        y = np.array(e.evaluate([0] * n))
         self.assertTrue(np.all(x) == np.all(y))
 
         # Even with many more tasks than workers
         e = pints.ParallelEvaluator(random_int, n_workers=3)
         np.random.seed(123)
-        x = np.array(e.evaluate([0]*100))
+        x = np.array(e.evaluate([0] * 100))
         np.random.seed(123)
-        y = np.array(e.evaluate([0]*100))
+        y = np.array(e.evaluate([0] * 100))
 
     def test_worker(self):
         # Manual test of worker, since cover doesn't pick up on its run method.

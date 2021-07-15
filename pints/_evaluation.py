@@ -16,11 +16,14 @@ import sys
 import time
 import traceback
 import multiprocessing
+
 try:
     # Python 3
     import queue
 except ImportError:
     import Queue as queue
+
+import numpy as np
 
 
 def evaluate(f, x, parallel=False, args=None):
@@ -194,6 +197,7 @@ multiprocessing.html#all-platforms>`_ for details).
                 ' much greater).')
 
         # Queue with tasks
+        # Each task is stored as a tuple (id, seed, argument)
         self._tasks = multiprocessing.Queue()
 
         # Queue with results
@@ -262,18 +266,29 @@ multiprocessing.html#all-platforms>`_ for details).
         # For some reason these lines block when running on windows
         # if not (self._tasks.empty() and self._results.empty()):
         #    raise Exception('Unhandled tasks/results left in queues.')
+
         # Clean up any dead workers
         self._clean()
 
         # Ensure worker pool is populated
         self._populate()
 
+        # Generate seeds for numpy random number generators.
+        # This ensures that:
+        #  1. Each process has a randomly selected random number generator
+        #     state, instead of inheriting the state from the calling process.
+        #  2. If the calling process has a seeded number generator, the random
+        #     sequences within each task will be reproducible. Note that we
+        #     cannot achieve this by seeding the worker processes once, as the
+        #     allocation of tasks to workers is not deterministic.
+        seeds = np.random.randint(0, 2**32, len(positions))
+
         # Start
         try:
 
             # Enqueue all tasks (non-blocking)
             for k, x in enumerate(positions):
-                self._tasks.put((k, x))
+                self._tasks.put((k, seeds[k], x))
 
             # Collect results (blocking)
             n = len(positions)
@@ -424,8 +439,8 @@ class _Worker(multiprocessing.Process):
         objective function.
     tasks
         The queue to read tasks from. Tasks are stored as tuples
-        ``(i, p)`` where ``i`` is a task id and ``p`` is the
-        position to evaluate.
+        ``(i, s, x)`` where ``i`` is a task id, ``s`` is a seed for numpy's
+        random number generator, and ``x`` is the argument to evaluate.
     results
         The queue to store results in. Results are stored as
         tuples ``(i, p, r)`` where ``i`` is the task id, ``p`` is
@@ -459,7 +474,8 @@ class _Worker(multiprocessing.Process):
         sys.stderr = open(os.devnull, 'w')
         try:
             for k in range(self._max_tasks):
-                i, x = self._tasks.get()
+                i, seed, x = self._tasks.get()
+                np.random.seed(seed)
                 f = self._function(x, *self._args)
                 self._results.put((i, f))
 
