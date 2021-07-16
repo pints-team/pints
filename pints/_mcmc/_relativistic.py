@@ -7,7 +7,6 @@
 #
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
-import warnings
 import pints
 import numpy as np
 from scipy.interpolate import interp1d
@@ -177,8 +176,6 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         Numerical integration of the momentum density is performed using the
         trapezoidal rule.
         """
-        num_adaptations = 0
-
         # Calculate the value of p (momentum) corresponding to the maximum of
         # the pdf
         def logpdf_deriv(p):
@@ -198,7 +195,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
         while not integration_accepted:
             # Evaluate the logpdf on a grid
-            integration_grid = np.arange(0.5*spacing, max_value, spacing)
+            integration_grid = np.arange(0.5 * spacing, max_value, spacing)
             logpdf_values = self._momentum_logpdf(integration_grid)
 
             # Integrate using the trapezoidal rule
