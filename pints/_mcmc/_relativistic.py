@@ -179,7 +179,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """
         num_adaptations = 0
 
-        # Calculate the value of p corresponding to the maximum of the pdf
+        # Calculate the value of p (momentum) corresponding to the maximum of
+        # the pdf
         def logpdf_deriv(p):
             # logpdf_deriv(p) = 0 is the simplified form of d/dp(logpdf(p)) = 0
             d = np.sqrt(self._mass * (self._n_parameters - 1)) \
@@ -187,25 +188,17 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                 - p
             return d
 
-        p_max = root(logpdf_deriv, self._mass).x
+        p_max = root(logpdf_deriv, self._mass).x[0]
 
-        # The initial integration grid goes from 0 to twice p_max, with 10000
+        # The initial integration grid goes from 0 to twice p_max, with 1000
         # grid points
-
-        # import matplotlib.pyplot as plt
-        # xplot = np.linspace(0, 2*p_max, 100)
-        # plt.plot(xplot, self._momentum_logpdf(xplot))
-        # plt.axvline(p_max)
-        # plt.show()
-
         max_value = 2 * p_max
-        spacing = max_value / 10000
-
+        spacing = max_value / 1000
         integration_accepted = False
 
         while not integration_accepted:
             # Evaluate the logpdf on a grid
-            integration_grid = np.arange(1e-6, max_value, spacing)
+            integration_grid = np.arange(0.5*spacing, max_value, spacing)
             logpdf_values = self._momentum_logpdf(integration_grid)
 
             # Integrate using the trapezoidal rule
@@ -218,23 +211,16 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             cdf = np.exp(cdf - cdf[-1])
 
             # Adapt the integration grid if the result is inaccurate
-            if max(np.diff(cdf)) > 1e-4:
-                # cdf is changing too much, so a finer grid is required
-                spacing /= 2
-                num_adaptations += 1
-
-            elif cdf[-1] - cdf[-2] > 1e-8:
+            if np.diff(cdf)[-1] > 0.001 * max(np.diff(cdf)):
                 # cdf is still increasing at the end
                 max_value *= 2
-                num_adaptations += 1
+                spacing *= 2
+
+            elif max(np.diff(cdf)) > 1e-3:
+                # cdf is changing too much, so a finer grid is required
+                spacing /= 2
 
             else:
-                integration_accepted = True
-
-            if num_adaptations > 10:
-                warnings.warn('Failed to approximate momentum distribution '
-                              'for given mass and speed of light. Samples of '
-                              'momentum may be inaccurate.')
                 integration_accepted = True
 
         # Do a reverse interpolation to approximate inverse cdf
