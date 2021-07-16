@@ -164,7 +164,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     def _calculate_momentum_distribution(self):
         """Calculate an approximation to the CDF of momentum magnitude.
 
-        The purpose of this method is to calculate self._inv_cdf, a function
+        The purpose of this method is to calculate :member:_inv_cdf, a function
         giving a numerical approximation to the inverse cumulative distribution
         function of the magnitude of the momentum vector. This function can be
         used to perform inverse transform sampling to generate samples of the
