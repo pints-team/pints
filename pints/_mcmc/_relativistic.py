@@ -11,6 +11,7 @@ import warnings
 import pints
 import numpy as np
 from scipy.interpolate import interp1d
+from scipy.optimize import root
 
 
 class RelativisticMCMC(pints.SingleChainMCMC):
@@ -178,13 +179,27 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """
         num_adaptations = 0
 
-        # Set initial values for the integration grid
-        # The grid goes from 0 to a rough initial guess, which must be at least
-        # 10 and not more than 100
-        max_value = self._mass + self._n_parameters
-        max_value = max(10, max_value)
-        max_value = min(100, max_value)
-        spacing = 1e-4
+        # Calculate the value of p corresponding to the maximum of the pdf
+        def logpdf_deriv(p):
+            # logpdf_deriv(p) = 0 is the simplified form of d/dp(logpdf(p)) = 0
+            d = np.sqrt(self._mass * (self._n_parameters - 1)) \
+                * (p**2 + self._m2c2) ** 0.25 / np.sqrt(self._c * self._mass) \
+                - p
+            return d
+
+        p_max = root(logpdf_deriv, self._mass).x
+
+        # The initial integration grid goes from 0 to twice p_max, with 10000
+        # grid points
+
+        # import matplotlib.pyplot as plt
+        # xplot = np.linspace(0, 2*p_max, 100)
+        # plt.plot(xplot, self._momentum_logpdf(xplot))
+        # plt.axvline(p_max)
+        # plt.show()
+
+        max_value = 2 * p_max
+        spacing = max_value / 10000
 
         integration_accepted = False
 
