@@ -195,7 +195,8 @@ class RelativisticMCMC(pints.SingleChainMCMC):
 
         while not integration_accepted:
             # Evaluate the logpdf on a grid
-            integration_grid = np.arange(0.5 * spacing, max_value, spacing)
+            integration_grid = np.arange(
+                min(1e-6, 0.5 * spacing), max_value, spacing)
             logpdf_values = self._momentum_logpdf(integration_grid)
 
             # Integrate using the trapezoidal rule

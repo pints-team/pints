@@ -232,6 +232,12 @@ class TestRelativisticMCMC(unittest.TestCase):
 
         # Integrate to get cumulative distribution function
         integration_grid = np.arange(1e-6, 10, 1e-5)
+
+        # For many values of m and c, the pdf would underflow when evaluated
+        # without taking log, which is why the class uses the logpdf. However,
+        # in this test, the values of m and c are nice enough that this
+        # function can be used for the comparison, and we check that the
+        # results are the same.
         cdf = cumtrapz(1 / c * pdf(integration_grid), x=integration_grid)
 
         # Interpolate to get approximate inverse
@@ -244,6 +250,26 @@ class TestRelativisticMCMC(unittest.TestCase):
         for test_point in test_points:
             self.assertAlmostEqual(
                 inv_cdf(test_point), model_inv_cdf(test_point), places=5)
+
+        # Do another test for harder values of m and c, where the logpdf
+        # (rather than just pdf) must be used
+        model = pints.RelativisticMCMC(x0)
+        m = 10
+        c = 10
+        model.set_mass(m)
+        model.set_speed_of_light(c)
+        model.ask()
+
+        # Check outputs of inverse CDF at selected points
+        model_inv_cdf = model._inv_cdf
+        test_points = [0.0, 0.1, 0.5, 0.75, 0.9]
+
+        for i, test_point in enumerate(test_points):
+            self.assertGreaterEqual(inv_cdf(test_point), 0.0)
+            if i > 1:
+                # Check that the inv_cdf is increasing
+                self.assertGreater(
+                    inv_cdf(test_point), inv_cdf(test_points[i-1]))
 
     def test_sample_momentum(self):
         # Test sampler of momentum
