@@ -269,7 +269,7 @@ class TestRelativisticMCMC(unittest.TestCase):
             if i > 1:
                 # Check that the inv_cdf is increasing
                 self.assertGreater(
-                    inv_cdf(test_point), inv_cdf(test_points[i-1]))
+                    inv_cdf(test_point), inv_cdf(test_points[i - 1]))
 
     def test_sample_momentum(self):
         # Test sampler of momentum
