@@ -11,7 +11,6 @@ import pints
 import unittest
 
 
-
 class TestEvaluators(unittest.TestCase):
     """
     Tests the evaluator classes and methods.
