@@ -48,7 +48,8 @@ def evaluate(f, x, parallel=False, args=None):
 
     """
     if parallel is True:
-        evaluator = ParallelEvaluator(f, args=args)
+        n_workers = max(min(ParallelEvaluator.cpu_count(), len(x)), 1)
+        evaluator = ParallelEvaluator(f, n_workers=n_workers, args=args)
     elif parallel >= 1:
         evaluator = ParallelEvaluator(f, n_workers=int(parallel), args=args)
     else:
