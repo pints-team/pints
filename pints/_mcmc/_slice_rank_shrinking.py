@@ -145,11 +145,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
 
         # Send trial point for checks
         self._ready_for_tell = True
-        return np.array(self._proposed, copy=True)
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return np.copy(self._current_log_pdf)
+        return np.copy(self._proposed)
 
     def current_slice_height(self):
         """
@@ -219,19 +215,19 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
             # proposed sample for next iteration
             self._current = np.array(self._x0, copy=True)
             self._proposed = np.array(self._current, copy=True)
-            self._current_log_pdf = fx
 
             # Sample height of the slice log_y for next iteration
             e = np.random.exponential(1)
-            self._current_log_y = self._current_log_pdf - e
+            self._current_log_y = fx - e
 
             # Return first point in chain, which is x0
-            return np.array(self._current, copy=True)
+            # Note: `grad` is not stored in this iteration, so can return
+            return np.copy(self._current), (fx, grad), True
 
         # Acceptance check
         if fx >= self._current_log_y:
             # The accepted sample becomes the new current sample
-            self._current = np.array(self._proposed, copy=True)
+            self._current = np.copy(self._proposed)
 
             # Sample new log_y used to define the next slice
             e = np.random.exponential(1)
@@ -243,7 +239,8 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
             self._c_bar = 0
 
             # Return accepted sample
-            return np.array(self._proposed, copy=True)
+            # Note: `grad` is not stored in this iteration, so can return
+            return np.copy(self._current), (fx, grad), True
 
         # If proposal is reject, shrink rank of the next proposal distribution
         # by adding new orthonormal column to ``J``. This will represent a new

@@ -21,8 +21,8 @@ class RepressilatorModel(pints.ForwardModel, ToyModel):
     that suppress their own creation [1]_, [2]_.
 
     The formulation used here is taken from [3]_ and analysed in [4]_. It has
-    three protein states (pi), each encoded by mRNA (mi). Once expressed, they
-    suppress each other:
+    three protein states (:math:`p_i`), each encoded by mRNA (:math:`m_i`).
+    Once expressed, they suppress each other:
 
     .. math::
         \\dot{m_0} = -m_0 + \\frac{\\alpha}{1 + p_2^n} + \\alpha_0
@@ -121,4 +121,3 @@ class RepressilatorModel(pints.ForwardModel, ToyModel):
         return np.linspace(0, 40, 400)
         # Figure 42 in book:
         #return np.linspace(0, 300, 600)
-

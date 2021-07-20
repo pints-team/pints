@@ -49,11 +49,11 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
-        if self._chains < 3:
+        if self._n_chains < 3:
             raise ValueError('Need at least 3 chains.')
 
         # Warn user against using too few chains
-        if self._chains < 1.5 * self._n_parameters:
+        if self._n_chains < 1.5 * self._n_parameters:
             warnings.warn('This method should be run with n_chains >= '
                           '1.5 * n_parameters')
 
@@ -103,13 +103,13 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             self._iter_count += 1
 
             self._proposed = np.zeros(self._current.shape)
-            for j in range(self._chains):
+            for j in range(self._n_chains):
                 if self._gaussian_error:
                     error = np.random.normal(0, self._b_star, self._mu.shape)
                 else:
                     error = np.random.uniform(-self._b_star, self._b_star,
                                               self._mu.shape)
-                r1, r2 = r_draw(j, self._chains)
+                r1, r2 = self._r_draw(j, self._n_chains)
                 self._proposed[j] = (
                     self._current[j]
                     + self._gamma * (self._current[r1] - self._current[r2])
@@ -125,19 +125,25 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Return proposed points
         return self._proposed
 
-    def current_log_pdfs(self):
-        """ See :meth:`MultiChainMCMC.current_log_pdfs()`. """
-        return self._current_log_pdfs
+    def gamma(self):
+        """
+        Returns the coefficient ``gamma`` used in updating the position of each
+        chain.
+        """
+        return self._gamma
 
-    def set_gaussian_error(self, gaussian_error):
+    def gamma_switch_rate(self):
         """
-        If ``True`` sets the error process to be a gaussian error,
-        ``N(0, b*)``; if ``False``, it uses a uniform error ``U(-b*, b*)``;
-        where ``b* = b`` if absolute scaling used and ``b* = mu * b`` if
-        relative scaling is used instead.
+        Returns the number of steps between iterations where gamma is set to 1
+        (then reset immediately afterwards).
         """
-        gaussian_error = bool(gaussian_error)
-        self._gaussian_error = gaussian_error
+        return self._gamma_switch_rate
+
+    def gaussian_error(self):
+        """
+        Returns whether a Gaussian versus uniform error process is used.
+        """
+        return self._gaussian_error
 
     def _initialise(self):
         """
@@ -150,6 +156,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         self._current = None
         self._current_log_pdfs = None
         self._proposed = self._x0
+        self._proposed.setflags(write=False)
 
         # Set mu
         # TODO: Should this be a user setting?
@@ -167,10 +174,52 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         # Update sampler state
         self._running = True
 
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 5
+
+    def name(self):
+        """ See :meth:`pints.MCMCSampler.name()`. """
+        return 'Differential Evolution MCMC'
+
+    def _r_draw(self, i, num_chains):
+        """
+        Chooses two chain indexes uniformly at random such that they are
+        not the same nor do they equal `i`.
+        """
+        indexes = list(range(num_chains))
+        indexes.pop(i)
+        r1, r2 = np.random.choice(indexes, 2, replace=False)
+        return r1, r2
+
+    def relative_scaling(self):
+        """
+        Returns whether an error process whose standard deviation scales
+        relatively is used (False indicates absolute scale).
+        """
+        return self._relative_scaling
+
+    def scale_coefficient(self):
+        """
+        Sets the scale coefficient ``b`` of the error process used in updating
+        the position of each chain.
+        """
+        return self._b
+
+    def set_gamma(self, gamma):
+        """
+        Sets the coefficient ``gamma`` used in updating the position of each
+        chain.
+        """
+        gamma = float(gamma)
+        if gamma < 0:
+            raise ValueError('Gamma must be non-negative.')
+        self._gamma = gamma
+
     def set_gamma_switch_rate(self, gamma_switch_rate):
         """
         Sets the number of steps between iterations where gamma is set to 1
-        (then reset immediately afterwards)
+        (then reset immediately afterwards).
         """
         if gamma_switch_rate < 1:
             raise ValueError('The interval number of steps between ' +
@@ -179,6 +228,35 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             raise ValueError('The interval number of steps between ' +
                              ' gamma=1 iterations must be an integer.')
         self._gamma_switch_rate = gamma_switch_rate
+
+    def set_gaussian_error(self, gaussian_error):
+        """
+        If ``True`` sets the error process to be a gaussian error,
+        ``N(0, b*)``; if ``False``, it uses a uniform error ``U(-b*, b*)``;
+        where ``b* = b`` if absolute scaling used and ``b* = mu * b`` if
+        relative scaling is used instead.
+        """
+        gaussian_error = bool(gaussian_error)
+        self._gaussian_error = gaussian_error
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[gamma, gaussian_scale_coefficient,
+        gamma_switch_rate, gaussian_error, relative_scaling]``.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        self.set_gamma(x[0])
+        self.set_scale_coefficient(x[1])
+        try:
+            int_x2 = int(x[2])
+        except (ValueError, TypeError):
+            raise ValueError('The interval number of steps between ' +
+                             'gamma=1 iterations must be convertable ' +
+                             'to an integer.')
+        self.set_gamma_switch_rate(int_x2)
+        self.set_gaussian_error(x[3])
+        self.set_relative_scaling(x[4])
 
     def set_relative_scaling(self, relative_scaling):
         """
@@ -193,9 +271,15 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         else:
             self._b_star = np.repeat(self._b, self._n_parameters)
 
-    def name(self):
-        """ See :meth:`pints.MCMCSampler.name()`. """
-        return 'Differential Evolution MCMC'
+    def set_scale_coefficient(self, b):
+        """
+        Sets the scale coefficient ``b`` of the error process used in updating
+        the position of each chain.
+        """
+        b = float(b)
+        if b < 0:
+            raise ValueError('Scale coefficient must be non-negative.')
+        self._b = b
 
     def tell(self, proposed_log_pdfs):
         """ See :meth:`pints.MultiChainMCMC.tell()`. """
@@ -221,14 +305,15 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
             self._proposed = None
 
             # Return first samples for chains
-            return self._current
+            accepted = np.array([True] * self._n_chains)
+            return self._current, self._current_log_pdfs, accepted
 
         # Perform iteration
         next = np.array(self._current, copy=True)
         next_log_pdfs = np.array(self._current_log_pdfs, copy=True)
 
         # Sample uniform numbers
-        u = np.log(np.random.uniform(size=self._chains))
+        u = np.log(np.random.uniform(size=self._n_chains))
 
         # Get chains to be updated
         i = u < (proposed_log_pdfs - self._current_log_pdfs)
@@ -238,62 +323,11 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         next_log_pdfs[i] = proposed_log_pdfs[i]
         self._current = next
         self._current_log_pdfs = next_log_pdfs
+        self._current.setflags(write=False)
         self._current_log_pdfs.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
 
         # Return samples to add to chains
-        self._current.setflags(write=False)
-        return self._current
-
-    def set_scale_coefficient(self, b):
-        """
-        Sets the scale coefficient ``b`` of the error process used in updating
-        the position of each chain.
-        """
-        b = float(b)
-        if b < 0:
-            raise ValueError('Scale coefficient must be non-negative.')
-        self._b = b
-
-    def set_gamma(self, gamma):
-        """
-        Sets the coefficient ``gamma`` used in updating the position of each
-        chain.
-        """
-        gamma = float(gamma)
-        if gamma < 0:
-            raise ValueError('Gamma must be non-negative.')
-        self._gamma = gamma
-
-    def n_hyper_parameters(self):
-        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 5
-
-    def set_hyper_parameters(self, x):
-        """
-        The hyper-parameter vector is ``[gamma, gaussian_scale_coefficient,
-        gamma_switch_rate, gaussian_error, relative_scaling]``.
-
-        See :meth:`TunableMethod.set_hyper_parameters()`.
-        """
-        self.set_gamma(x[0])
-        self.set_scale_coefficient(x[1])
-        try:
-            int_x2 = int(x[2])
-        except (ValueError, TypeError):
-            raise ValueError('The interval number of steps between ' +
-                             'gamma=1 iterations must be convertable ' +
-                             'to an integer.')
-        self.set_gamma_switch_rate(int_x2)
-        self.set_gaussian_error(x[3])
-        self.set_relative_scaling(x[4])
-
-
-def r_draw(i, num_chains):
-    # TODO: Needs a docstring!
-    r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    while(r1 == i or r2 == i or r1 == r2):
-        r1, r2 = np.random.choice(num_chains, 2, replace=False)
-    return r1, r2
+        return self._current, self._current_log_pdfs, i

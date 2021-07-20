@@ -18,19 +18,18 @@ def autocorrelation(x):
     return result[int(result.size / 2):]
 
 
-def autocorrelate_negative(autocorrelation):
+def _autocorrelate_negative(autocorrelation):
     """
-    Finds last positive autocorrelation, T.
+    Returns the index of the first negative entry in ``autocorrelation``, or
+    ``len(autocorrelation)`` if no negative entry is found.
     """
-    T = 1
-    for a in autocorrelation:
-        if a < 0:
-            return T - 1
-        T += 1
-    return T
+    try:
+        return np.where(np.asarray(autocorrelation) < 0)[0][0]
+    except IndexError:
+        return len(autocorrelation)
 
 
-def ess_single_param(x):
+def effective_sample_size_single_parameter(x):
     """
     Calculates effective sample size (ESS) for samples of a single parameter.
 
@@ -40,7 +39,7 @@ def ess_single_param(x):
         A sequence (e.g. a list or a 1-dimensional array) of parameter values.
     """
     rho = autocorrelation(x)
-    T = autocorrelate_negative(rho)
+    T = _autocorrelate_negative(rho)
     n = len(x)
     ess = n / (1 + 2 * np.sum(rho[0:T]))
     return ess
@@ -62,7 +61,8 @@ def effective_sample_size(samples):
     if n_samples < 2:
         raise ValueError('At least two samples must be given.')
 
-    return [ess_single_param(samples[:, i]) for i in range(0, n_params)]
+    return [effective_sample_size_single_parameter(samples[:, i])
+            for i in range(0, n_params)]
 
 
 def _within(chains):
@@ -246,4 +246,3 @@ def rhat_all_params(chains):
         ' Please use `pints.rhat` instead.')
 
     return rhat(chains)
-

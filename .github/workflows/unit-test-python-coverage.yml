@@ -5,6 +5,8 @@ on:
     branches:
       - master
   pull_request:
+    # Run workflow when PR is changed, or when changed from draft to ready
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - '**'
 
@@ -13,6 +15,9 @@ jobs:
   build-and-test:
     name: Python unit tests
     runs-on: ubuntu-latest
+
+    # Skip job if it's a draft PR
+    if: github.event.pull_request.draft == false
 
     strategy:
       matrix:
@@ -31,7 +36,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
+          python -m pip install .[stan]
 
       - name: run unit tests
         run: |

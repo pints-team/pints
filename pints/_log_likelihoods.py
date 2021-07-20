@@ -512,10 +512,10 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
     lower
-        The lower limit on the uniform prior om `sigma`. Must be
+        The lower limit on the uniform prior on `sigma`. Must be
         non-negative.
     upper
-        The upper limit on the uniform prior om `sigma`.
+        The upper limit on the uniform prior on `sigma`.
     """
 
     def __init__(self, problem, lower, upper):
@@ -928,7 +928,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     noise at each time point, and adds two parameters: one representing the
     degrees of freedom (``nu``), the other representing the scale (``sigma``).
 
-    For a noise characterised by ``nu'' and ``sigma``, the log likelihood is of
+    For a noise characterised by ``nu`` and ``sigma``, the log likelihood is of
     the form:
 
     .. math::
@@ -1001,4 +1001,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-

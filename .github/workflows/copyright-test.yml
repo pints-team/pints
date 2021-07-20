@@ -5,6 +5,8 @@ on:
     branches:
       - master
   pull_request:
+    # Run workflow when PR is changed, or when changed from draft to ready
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - '**'
 
@@ -14,13 +16,16 @@ jobs:
     name: Copyright
     runs-on: ubuntu-latest
 
+    # Skip job if it's a draft PR
+    if: github.event.pull_request.draft == false
+
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: x64
 
       - name: install pints

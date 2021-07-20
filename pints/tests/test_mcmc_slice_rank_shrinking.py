@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 #
 # Tests the basic methods of the Covariance-Adaptive Slice Sampling:
 # Rank Shrinking.
@@ -17,8 +17,7 @@ import pints.toy
 
 class TestSliceRankShrinking(unittest.TestCase):
     """
-    Tests the basic methods of the Slice Sampling Rank Shrinking
-    routine.
+    Tests the basic methods of the Slice Sampling Rank Shrinking routine.
     """
     def test_first_run(self):
         # Tests the very first run of the sampler.
@@ -39,30 +38,28 @@ class TestSliceRankShrinking(unittest.TestCase):
         self.assertTrue(np.all(x == x0))
 
         # Calculate log pdf for x0
-        fx, grad = log_pdf.evaluateS1(x0)
+        fx0, grad0 = log_pdf.evaluateS1(x0)
 
         # Test first iteration of tell(). The first point in the chain
         # should be x0
-        sample = mcmc.tell((fx, grad))
-        self.assertTrue(np.all(sample == x0))
+        x1, (fx1, grad1), ac = mcmc.tell((fx0, grad0))
+        self.assertTrue(np.all(x1 == x0))
 
         # We update the _current_log_pdf value used to generate the new slice
-        self.assertEqual(mcmc.current_log_pdf(), fx)
+        self.assertEqual(fx0, fx1)
 
         # Check that the new slice has been constructed appropriately
-        self.assertTrue(
-            mcmc.current_slice_height() < mcmc.current_log_pdf())
+        self.assertTrue(mcmc.current_slice_height() < fx1)
 
         # Tell() should fail when fx is infinite
         mcmc = pints.SliceRankShrinkingMCMC(x0)
         mcmc.ask()
         with self.assertRaises(ValueError):
-            fx = np.inf
-            mcmc.tell((fx, grad))
+            mcmc.tell((np.inf, grad0))
 
         # Tell() should fail when _ready_for_tell is False
         with self.assertRaises(RuntimeError):
-            mcmc.tell((fx, grad))
+            mcmc.tell((fx0, grad0))
 
         # Test sensitivities
         self.assertTrue(mcmc.needs_sensitivities())
@@ -109,9 +106,13 @@ class TestSliceRankShrinking(unittest.TestCase):
         while len(chain) < 100:
             x = mcmc.ask()
             fx, grad = log_pdf.evaluateS1(x)
-            sample = mcmc.tell((fx, grad))
-            if sample is not None:
-                chain.append(np.copy(sample))
+            reply = mcmc.tell((fx, grad))
+            if reply is not None:
+                y, fy, ac = reply
+                chain.append(y)
+                self.assertTrue(np.all(x == y))
+                self.assertEqual(fx, fy[0])
+                self.assertTrue(np.all(grad == fy[1]))
         self.assertEqual(np.shape(chain), (100, 2))
 
 

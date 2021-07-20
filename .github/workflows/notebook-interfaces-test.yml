@@ -2,8 +2,8 @@ name: Notebooks (interfaces)
 
 on:
   schedule:
-    # 4am daily
-    - cron:  '0 4 * * *'
+    # 4am on monday (minute, hour, day, month, day-of-the-week)
+    - cron:  '0 4 * * 1'
 
 jobs:
 
@@ -14,20 +14,24 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: x64
 
-      - name: install pints
+      # We use e.g. install pints[stan] to install dependencies for interfaces
+      # that have some code in pints/interfaces. Dependencies that are not used
+      # by any code in the `pints` module are installed with pip (e.g.
+      # `pip install autograd`).
+      - name: install pints, interfaces, extra dependencies
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
-          python -m pip install .[dev]
+          python -m pip install .[dev,stan]
+          python -m pip install autograd
+          python -m pip install statsmodels
 
       - name: run jupyter notebooks
         run: |
-          python -m pip install statsmodels
           python run-tests.py --interfaces
