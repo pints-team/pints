@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -17,7 +15,7 @@
    height="105mm"
    viewBox="0 0 831.49604 396.85038"
    sodipodi:docname="example.svg"
-   inkscape:version="0.92.4 (unknown)"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
    inkscape:export-filename="/home/michael/docs/pints-docs/jors-paper/fig-source/fitting-time-series.png"
    inkscape:export-xdpi="150.01578"
    inkscape:export-ydpi="150.01578"><metadata
@@ -2163,8 +2161,8 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1600"
-     inkscape:window-height="836"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
      id="namedview1289"
      showgrid="false"
      inkscape:zoom="1.2827659"
@@ -2174,11 +2172,20 @@
      inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="g1295"
-     units="mm" /><g
+     units="mm"
+     inkscape:document-rotation="0"
+     inkscape:snap-page="true" /><g
      id="g1295"
      inkscape:groupmode="layer"
      inkscape:label="ina-fitting"
-     transform="matrix(1.3333333,0,0,-1.3333333,0,396.8504)"><g
+     transform="matrix(1.3333333,0,0,-1.3333333,0,396.8504)"><rect
+   style="color:#000000;overflow:visible;opacity:1;fill:#ffffff;fill-rule:evenodd;stroke-width:1.893;stroke-linejoin:round;stop-color:#000000;fill-opacity:1"
+   id="rect1603"
+   width="623.62207"
+   height="297.63782"
+   x="0"
+   y="-297.63782"
+   transform="scale(1,-1)" /><g
    id="g1409"
    transform="matrix(0.74049796,0,0,0.74049796,-48.275981,-87.287822)"
    style="stroke:#a02c2c;stroke-opacity:1"><g
@@ -2200,7 +2207,7 @@
        id="path1547"
        inkscape:connector-curvature="0" /></g></g><text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="297.06909"
    y="-285.85693"
    id="text906"
@@ -2209,136 +2216,122 @@
      id="tspan904"
      x="297.06909"
      y="-285.85693"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"><tspan
-       style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"><tspan
+       style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
        id="tspan972">import </tspan><tspan
        id="tspan935"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;line-height:125%;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.5890888px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1">pints</tspan></tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;line-height:125%;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:0px;word-spacing:0px;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.589089px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1">pints</tspan></tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-272.91006"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan922" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-260.20578"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan927"><tspan
-   style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
    id="tspan929">class</tspan> <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan998">MyModel</tspan>(pints.ForwardModel):</tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-247.25888"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan1588" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-234.55461"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan908" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-221.85033"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan910" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-209.14606"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan912" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-196.44177"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan926"><tspan
        id="tspan973"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#446ac5;fill-opacity:1;stroke:none;stroke-width:0.78545171px" /></tspan><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#446ac5;fill-opacity:1;stroke:none;stroke-width:0.785452px" /></tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-183.7375"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan976" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-171.03323"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan928" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-158.32895"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan939">times, values = <tspan
-   style="fill:#446ac5;fill-opacity:1;stroke-width:0.78545171px"
+   style="fill:#446ac5;fill-opacity:1;stroke-width:0.785452px"
    id="tspan991">... </tspan><tspan
-   style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#446ac5;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#446ac5;fill-opacity:1;stroke-width:0.785452px"
    id="tspan983"> Load the experimental times and values</tspan></tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-145.49377"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan945" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-132.78951"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan949">problem = pints.SingleOutputProblem(</tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-119.97368"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan993" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-107.2694"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan930" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-94.565125"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan964">error_measure = pints.SumOfSquaresError(problem)</tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-81.749283"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan932" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-69.045006"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan934">initial_point = [<tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1010">1</tspan>, <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1012">2</tspan>, <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1014">3</tspan>]</tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-56.229168"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan959" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-43.524891"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan968">optimisation = pints.OptimisationController(</tspan><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-30.709055"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan936" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-18.00478"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan938" /><tspan
      sodipodi:role="line"
      x="297.06909"
      y="-5.3005028"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan970">parameters, error = optimisation.run()</tspan></text>
 
 
@@ -2352,7 +2345,7 @@
 
 <text
    xml:space="preserve"
-   style="font-size:10.34928799px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:1.02195442px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.3493px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:1.02195px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="14.822148"
    y="-188.40953"
    id="text2672"
@@ -2361,7 +2354,7 @@
      id="tspan2670"
      x="14.822148"
      y="-188.40953"
-     style="font-style:italic;font-size:10.34928799px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.02195442px">experimental data</tspan></text>
+     style="font-style:italic;font-size:10.3493px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.02195px">experimental data</tspan></text>
 
 
 
@@ -2374,7 +2367,7 @@
 
 <text
    xml:space="preserve"
-   style="font-size:10.34928799px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:1.02195442px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.3493px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:1.02195px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="14.930092"
    y="-36.128593"
    id="text2672-8"
@@ -2383,7 +2376,7 @@
      id="tspan2670-9"
      x="14.930092"
      y="-36.128593"
-     style="font-style:italic;font-size:10.34928799px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.02195442px">forward model</tspan></text>
+     style="font-style:italic;font-size:10.3493px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.02195px">forward model</tspan></text>
 
 
 
@@ -2778,7 +2771,7 @@
        width="100%"
        height="100%" /></g></g><text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="318.27777"
    y="-241.02695"
    id="text906-3"
@@ -2786,16 +2779,16 @@
      sodipodi:role="line"
      x="318.27777"
      y="-241.02695"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan970-8"><tspan
-   style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
    id="tspan986-3">def</tspan> <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1000-6">n_parameters</tspan>(self):</tspan></text>
 
 <text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="336.04144"
    y="-228.55417"
    id="text906-9"
@@ -2803,16 +2796,16 @@
      sodipodi:role="line"
      x="336.04144"
      y="-228.55417"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan970-1"><tspan
-   style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1004-6">return</tspan> <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1008-7">3</tspan></tspan></text>
 
 <text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="318.27777"
    y="-208.80949"
    id="text906-3-9"
@@ -2820,15 +2813,15 @@
      sodipodi:role="line"
      x="318.27777"
      y="-208.80949"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan970-8-5"><tspan
-   style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
    id="tspan988-2-5">def</tspan> <tspan
-   style="font-size:10.16342068px;fill:#b942c2;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-size:10.1634px;fill:#b942c2;fill-opacity:1;stroke-width:0.785452px"
    id="tspan1002-0-0">simulate</tspan>(self, parameters, times):</tspan></text>
 <text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="318.27777"
    y="-118.01488"
    id="text906-3-9-8"
@@ -2836,51 +2829,44 @@
      sodipodi:role="line"
      x="318.27777"
      y="-118.01488"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan1824-7-8">MyModel(), times, values)</tspan><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-105.19904"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan930-4-2-5" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-92.494774"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan932-2-2-6" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-79.790497"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan1828-6-1" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-67.08622"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan959-4-1-1" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-54.381939"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan1835-0-5" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-41.677662"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan936-0-6-9" /><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-28.973391"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan1839-1-8">error_measure, initial_point, method=pints.XNES)</tspan><tspan
      sodipodi:role="line"
      x="318.27777"
      y="-16.157551"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
      id="tspan970-8-5-4" /></text>
 <text
    xml:space="preserve"
-   style="font-size:10.16342068px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.78545171px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+   style="font-size:10.1634px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:none;stroke:#000000;stroke-width:0.785452px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
    x="336.04144"
    y="-196.33672"
    id="text906-9-8"
@@ -2888,15 +2874,15 @@
      sodipodi:role="line"
      x="336.04144"
      y="-196.33672"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#446ac5;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#446ac5;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan926-5-4">... <tspan
-   style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#446ac5;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Serif';-inkscape-font-specification:'Liberation Serif, Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#446ac5;fill-opacity:1;stroke-width:0.785452px"
    id="tspan965-3-4">Run a simulation with the given parameters and times</tspan></tspan><tspan
      sodipodi:role="line"
      x="336.04144"
      y="-183.50154"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.16342068px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.78545171px"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.1634px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono';fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.785452px"
      id="tspan970-1-4"><tspan
-   style="font-weight:bold;font-size:10.16342068px;fill:#2a8525;fill-opacity:1;stroke-width:0.78545171px"
+   style="font-weight:bold;font-size:10.1634px;fill:#2a8525;fill-opacity:1;stroke-width:0.785452px"
    id="tspan994-4-4">return</tspan> simulated_values</tspan></text>
 </g></svg>
