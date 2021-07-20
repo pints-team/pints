@@ -36,3 +36,4 @@ from ._simple_egg_box import SimpleEggBoxLogPDF
 from ._sir_model import SIRModel
 from ._twisted_gaussian_banana import TwistedGaussianLogPDF
 from ._stochastic_degradation_model import StochasticDegradationModel
+from ._stochastic_logistic_model import StochasticLogisticModel

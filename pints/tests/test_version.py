@@ -33,3 +33,6 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(pints.version(), pints.__version_int__)
         self.assertEqual(pints.version(True), 'Pints ' + pints.__version__)
 
+
+if __name__ == '__main__':
+    unittest.main()

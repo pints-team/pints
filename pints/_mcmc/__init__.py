@@ -91,7 +91,7 @@ class SingleChainMCMC(MCMCSampler):
             # Use to create diagonal matrix
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
-            self._sigma0 = np.array(sigma0)
+            self._sigma0 = np.array(sigma0, copy=True)
             if np.product(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
@@ -107,35 +107,33 @@ class SingleChainMCMC(MCMCSampler):
         """
         raise NotImplementedError
 
-    def current_log_pdf(self):
-        """
-        Returns the log pdf value of the current point (i.e. of the most
-        recent point returned by :meth:`tell()`).
-        """
-        raise NotImplementedError
-
     def tell(self, fx):
         """
-        Performs an iteration of the MCMC algorithm, using the logpdf
-        evaluation ``fx`` of the point previously specified by ``ask``.
-
-        Returns either the next sample in the chain, or ``None`` to indicate
-        that no new sample should be added to the chain (this is used to
-        implement methods that require multiple evaluations per iteration).
-        Note that, if one chain returns ``None``, all chains should return
-        ``None``.
+        Performs an iteration of the MCMC algorithm, using the
+        :class:`pints.LogPDF` evaluation ``fx`` of the point ``x`` specified by
+        ``ask``.
 
         For methods that require sensitivities (see
         :meth:`MCMCSamper.needs_sensitivities`), ``fx`` should be a tuple
         ``(log_pdf, sensitivities)``, containing the values returned by
         :meth:`pints.LogPdf.evaluateS1()`.
+
+        After a successful call, :meth:`tell()` returns a tuple
+        ``(x, fx, accepted)``, where ``x`` contains the current position of the
+        chain, ``fx`` contains the corresponding evaluation, and ``accepted``
+        is a boolean indicating whether the last evaluated sample was added to
+        the chain.
+
+        Some methods may require multiple ask-tell calls per iteration. These
+        methods can return ``None`` to indicate an iteration is still in
+        progress.
         """
         raise NotImplementedError
 
     def replace(self, current, current_log_pdf, proposed=None):
         """
         Replaces the internal current position, current LogPDF, and proposed
-        point by the user-specified values.
+        point (if any) by the user-specified values.
 
         This method can only be used once the initial position and LogPDF have
         been set (so after at least 1 round of ask-and-tell).
@@ -172,8 +170,8 @@ class MultiChainMCMC(MCMCSampler):
     def __init__(self, chains, x0, sigma0=None):
 
         # Check number of chains
-        self._chains = int(chains)
-        if self._chains < 1:
+        self._n_chains = int(chains)
+        if self._n_chains < 1:
             raise ValueError('Number of chains must be at least 1.')
 
         # Check initial position(s)
@@ -181,15 +179,11 @@ class MultiChainMCMC(MCMCSampler):
             raise ValueError(
                 'Number of initial positions must be equal to number of'
                 ' chains.')
+        self._n_parameters = len(x0[0])
+        if not all([len(x) == self._n_parameters for x in x0[1:]]):
+            raise ValueError('All initial points must have same dimension.')
         self._x0 = np.array([pints.vector(x) for x in x0])
         self._x0.setflags(write=False)
-
-        # Get number of parameters
-        self._n_parameters = len(self._x0[0])
-
-        # Check initial points all have correct dimension
-        if not all([len(x) == self._n_parameters for x in self._x0]):
-            raise ValueError('All initial points must have same dimension.')
 
         # Check initial standard deviation
         if sigma0 is None:
@@ -224,18 +218,24 @@ class MultiChainMCMC(MCMCSampler):
 
     def tell(self, fxs):
         """
-        Performs an iteration of the MCMC algorithm, using the evaluations
-        ``fxs`` of the points previously specified by ``ask``.
-
-        Returns either a list of new samples, or ``None`` to indicate that no
-        new samples should be added to the chains at this iteration (this is
-        used to implement methods that require multiple evaluations per
-        iteration).
+        Performs an iteration of the MCMC algorithm, using the
+        :class:`pints.LogPDF` evaluations ``fxs`` of the points ``xs``
+        specified by ``ask``.
 
         For methods that require sensitivities (see
-        :meth:`MCMCSamper.needs_sensitivities`), ``fxs`` should be a tuple
-        ``(log_pdfs, sensitivities)``, containing the values returned by
-        :meth:`pints.LogPdf.evaluateS1()`.
+        :meth:`MCMCSamper.needs_sensitivities`), each entry in ``fxs`` should
+        be a tuple ``(log_pdf, sensitivities)``, containing the values returned
+        by :meth:`pints.LogPdf.evaluateS1()`.
+
+        After a successful call, :meth:`tell()` returns a tuple
+        ``(xs, fxs, accepted)``, where ``x`` contains the current position of
+        the chain, ``fx`` contains the corresponding evaluation, and
+        ``accepted`` is an array of booleans indicating whether the last
+        evaluated sample was added to the chain.
+
+        Some methods may require multiple ask-tell calls per iteration. These
+        methods can return ``None`` to indicate an iteration is still in
+        progress.
         """
         raise NotImplementedError
 
@@ -288,18 +288,57 @@ class MCMCController(object):
         in ``logpdf`` around the points in ``x0`` (the same ``sigma0`` is used
         for each point in ``x0``).
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
-        of the parameterspace) or as a ``(d, )`` vector, in which case
+        of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
+    transform : pints.Transformation
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
     """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(
+            self, log_pdf, chains, x0, sigma0=None, transform=None,
+            method=None):
 
-        # Store function
+        # Check function
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError('Given function must extend pints.LogPDF')
+
+        # Apply a transformation (if given). From this point onward the MCMC
+        # sampler will see only the transformed search space and will know
+        # nothing about the model parameter space.
+        if transform is not None:
+            # Convert log pdf
+            log_pdf = transform.convert_log_pdf(log_pdf)
+
+            # Convert initial positions
+            x0 = [transform.to_search(x) for x in x0]
+
+            # Convert sigma0, if provided
+            if sigma0 is not None:
+                sigma0 = np.asarray(sigma0)
+                n_parameters = log_pdf.n_parameters()
+                # Make sure sigma0 is a (covariance) matrix
+                if np.product(sigma0.shape) == n_parameters:
+                    # Convert from 1d array
+                    sigma0 = sigma0.reshape((n_parameters,))
+                    sigma0 = np.diag(sigma0)
+                elif sigma0.shape != (n_parameters, n_parameters):
+                    # Check if 2d matrix of correct size
+                    raise ValueError(
+                        'sigma0 must be either a (d, d) matrix or a (d, ) '
+                        'vector, where d is the number of parameters.')
+                sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
+
+        # Store transform for later detransformation: if using a transform, any
+        # parameters logged to the filesystem or printed to screen should be
+        # detransformed first!
+        self._transform = transform
+
+        # Store function
         self._log_pdf = log_pdf
 
         # Get number of parameters
@@ -367,6 +406,7 @@ class MCMCController(object):
         self._evaluations_in_memory = False
         self._samples = None
         self._evaluations = None
+        self._n_evaluations = None
         self._time = None
 
         # Writing chains and evaluations to disk
@@ -377,6 +417,9 @@ class MCMCController(object):
         self._parallel = False
         self._n_workers = 1
         self.set_parallel()
+
+        # :meth:`run` can only be called once
+        self._has_run = False
 
         #
         # Stopping criteria
@@ -444,6 +487,13 @@ class MCMCController(object):
         """
         return self._samplers[0].needs_initial_phase()
 
+    def n_evaluations(self):
+        """
+        Returns the number of evaluations performed during the last run, or
+        ``None`` if the controller hasn't run yet.
+        """
+        return self._n_evaluations
+
     def parallel(self):
         """
         Returns the number of parallel worker processes this routine will be
@@ -460,6 +510,12 @@ class MCMCController(object):
         If storing chains to memory has been disabled with
         :meth:`set_chain_storage`, then ``None`` is returned instead.
         """
+
+        # Can only run once for each controller instance
+        if self._has_run:
+            raise RuntimeError("Controller is valid for single use only")
+        self._has_run = True
+
         # Check stopping criteria
         has_stopping_criterion = False
         has_stopping_criterion |= (self._max_iterations is not None)
@@ -468,7 +524,7 @@ class MCMCController(object):
 
         # Iteration and evaluation counting
         iteration = 0
-        n_evaluations = 0
+        self._n_evaluations = 0
 
         # Choose method to evaluate
         f = self._log_pdf
@@ -569,6 +625,8 @@ class MCMCController(object):
             logger.add_time('Time m:s')
 
         # Pre-allocate arrays for chain storage
+        # Note: we store the inverse transformed (to model space) parameters
+        # only if transform is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -588,11 +646,10 @@ class MCMCController(object):
                 evaluations = np.zeros((self._n_chains, self._max_iterations))
 
         # Some samplers need intermediate steps, where None is returned instead
-        # of a sample. Samplers can run asynchronously, so that one returns
-        # None while another returns a sample.
-        # To deal with this, we maintain a list of 'active' samplers that have
-        # not reach `max_iterations` yet, and store the number of samples we
-        # have in each chain.
+        # of a sample. But samplers can run asynchronously, so that one returns
+        # None while another returns a sample. To deal with this, we maintain a
+        # list of 'active' samplers that have not reached `max_iterations` yet,
+        # and we store the number of samples that we have in each chain.
         if self._single_chain:
             active = list(range(self._n_chains))
             n_samples = [0] * self._n_chains
@@ -620,34 +677,39 @@ class MCMCController(object):
             fxs = evaluator.evaluate(xs)
 
             # Update evaluation count
-            n_evaluations += len(fxs)
+            self._n_evaluations += len(fxs)
 
             # Update chains
             if self._single_chain:
                 # Single chain
 
                 # Check and update the individual chains
-                xs_iterator = iter(xs)
                 fxs_iterator = iter(fxs)
                 for i in list(active):  # new list: active may be modified
-                    x = next(xs_iterator)
-                    fx = next(fxs_iterator)
-                    y = self._samplers[i].tell(fx)
+                    reply = self._samplers[i].tell(next(fxs_iterator))
 
-                    if y is not None:
+                    if reply is not None:
+                        # Unpack reply into position, evaluation, and status
+                        y, fy, accepted = reply
+
+                        # Inverse transform to model space if transform is
+                        # provided
+                        if self._transform:
+                            y_store = self._transform.to_model(y)
+                        else:
+                            y_store = y
+
                         # Store sample in memory
                         if self._chains_in_memory:
-                            samples[i][n_samples[i]] = y
+                            samples[i][n_samples[i]] = y_store
                         else:
-                            samples[i] = y
+                            samples[i] = y_store
 
                         # Update current evaluations
                         if store_evaluations:
-                            # Check if accepted, if so, update log_pdf and
-                            # prior to be logged
-                            accepted = np.all(y == x)
+                            # If accepted, update log_pdf and prior for logging
                             if accepted:
-                                current_logpdf[i] = fx
+                                current_logpdf[i] = fy
                                 if prior is not None:
                                     current_prior[i] = prior(y)
 
@@ -682,15 +744,26 @@ class MCMCController(object):
                 # Multi-chain methods
 
                 # Get all chains samples at once
-                ys = self._samplers[0].tell(fxs)
-                intermediate_step = ys is None
+                reply = self._samplers[0].tell(fxs)
+                intermediate_step = reply is None
 
                 if not intermediate_step:
+                    # Unpack reply into positions, evaluations, and status
+                    ys, fys, accepted = reply
+
+                    # Inverse transform to model space if transform is provided
+                    if self._transform:
+                        ys_store = np.zeros(ys.shape)
+                        for i, y in enumerate(ys):
+                            ys_store[i] = self._transform.to_model(y)
+                    else:
+                        ys_store = ys
+
                     # Store samples in memory
                     if self._chains_in_memory:
-                        samples[:, iteration] = ys
+                        samples[:, iteration] = ys_store
                     else:
-                        samples = ys
+                        samples = ys_store
 
                     # Update current evaluations
                     if store_evaluations:
@@ -698,9 +771,8 @@ class MCMCController(object):
                         for i, y in enumerate(ys):
                             # Check if accepted, if so, update log_pdf and
                             # prior to be logged
-                            accepted = np.all(xs[i] == y)
-                            if accepted:
-                                current_logpdf[i] = fxs[i]
+                            if accepted[i]:
+                                current_logpdf[i] = fys[i]
                                 if prior is not None:
                                     current_prior[i] = prior(ys[i])
 
@@ -744,7 +816,7 @@ class MCMCController(object):
             # Show progress
             if logging and iteration >= next_message:
                 # Log state
-                logger.log(iteration, n_evaluations)
+                logger.log(iteration, self._n_evaluations)
                 for sampler in self._samplers:
                     sampler._log_write(logger)
                 logger.log(timer.time())
@@ -771,20 +843,20 @@ class MCMCController(object):
 
         # Log final state and show halt message
         if logging:
-            logger.log(iteration, n_evaluations)
+            logger.log(iteration, self._n_evaluations)
             for sampler in self._samplers:
                 sampler._log_write(logger)
             logger.log(self._time)
             if self._log_to_screen:
                 print(halt_message)
 
-        # Store generated chains in memory
-        if self._chains_in_memory:
-            self._samples = samples
-
         # Store evaluations in memory
         if self._evaluations_in_memory:
             self._evaluations = evaluations
+
+        if self._chains_in_memory:
+            # Store generated chains in memory
+            self._samples = samples
 
         # Return generated chains
         return samples if self._chains_in_memory else None
@@ -993,13 +1065,12 @@ class MCMCSampling(MCMCController):
 
     def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
         # Deprecated on 2019-02-06
-        import logging
-        logging.basicConfig()
-        log = logging.getLogger(__name__)
-        log.warning(
+        import warnings
+        warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0, method)
+        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
+                                           method=method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
@@ -1030,4 +1101,4 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method).run()
+        log_pdf, chains, x0, sigma0, method=method).run()

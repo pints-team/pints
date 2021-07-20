@@ -75,14 +75,16 @@ class TestRaoBlackwellACMC(unittest.TestCase):
         for i in range(100):
             x = mcmc.ask()
             fx = self.log_posterior(x)
-            sample = mcmc.tell(fx)
+            y, fy, ac = mcmc.tell(fx)
             if i == 20:
                 mcmc.set_initial_phase(False)
             if i >= 50:
-                chain.append(sample)
+                chain.append(y)
             rate.append(mcmc.acceptance_rate())
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+            self.assertTrue(isinstance(ac, bool))
+            if ac:
+                self.assertTrue(np.all(x == y))
+                self.assertEqual(fx, fy)
 
         chain = np.array(chain)
         rate = np.array(rate)

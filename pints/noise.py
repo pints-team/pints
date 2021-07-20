@@ -274,7 +274,7 @@ def multiplicative_gaussian(eta, sigma, f):
         or multi-output noise) or an array_like of floats (for multi-output
         noise only, with one value for each output).
     ``f``
-        A numpy array giving the time-series for the output over time. For
+        A NumPy array giving the time-series for the output over time. For
         multiple outputs, the array should have shape ``(n_outputs, n_times)``.
     """
     import numpy as np

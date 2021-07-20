@@ -57,6 +57,7 @@ class GaussianLogPDF(ToyLogPDF):
 
         # Create scipy distribution
         self._phi = scipy.stats.multivariate_normal(self._mean, self._sigma)
+        self._sigma_inv = np.linalg.inv(self._sigma)
 
     def __call__(self, x):
         return self._phi.logpdf(x)
@@ -72,11 +73,9 @@ class GaussianLogPDF(ToyLogPDF):
     def evaluateS1(self, x):
         """ See :meth:`pints.LogPDF.evaluateS1()`. """
         L = self.__call__(x)
-
-        self._sigma_inv = np.linalg.inv(self._sigma)
         self._x_minus_mu = x - self._mean
 
-        # derivative wrt x
+        # derivative wrt x: see https://stats.stackexchange.com/questions/27436/how-to-take-derivative-of-multivariate-normal-density # noqa
         dL = -np.matmul(self._sigma_inv, self._x_minus_mu)
         return L, dL
 
@@ -129,4 +128,3 @@ class GaussianLogPDF(ToyLogPDF):
         if n < 0:
             raise ValueError('Number of samples cannot be negative.')
         return self._phi.rvs(n)
-

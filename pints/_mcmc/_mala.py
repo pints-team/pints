@@ -148,10 +148,6 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Return proposed point
         return self._proposed
 
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
-
     def epsilon(self):
         """
         Returns ``epsilon`` which is the effective step size used in proposals.
@@ -169,6 +165,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         self._current = None
         self._current_log_pdf = None
         self._proposed = self._x0
+        self._proposed.setflags(write=False)
 
         # Update sampler state
         self._running = True
@@ -248,6 +245,10 @@ class MALAMCMC(pints.SingleChainMCMC):
             self._current_log_pdf = fx
             self._current_gradient = log_gradient
 
+            # Mark current state as read-only for safe returning (proposed is
+            # already set)
+            self._current_gradient.setflags(write=False)
+
             # Increase iteration count
             self._iterations += 1
 
@@ -255,7 +256,11 @@ class MALAMCMC(pints.SingleChainMCMC):
             self._proposed = None
 
             # Return first point for chain
-            return self._current
+            return (
+                self._current,
+                (self._current_log_pdf, self._current_gradient),
+                True
+            )
 
         # Calculate alpha
         proposed_gradient = log_gradient
@@ -276,6 +281,7 @@ class MALAMCMC(pints.SingleChainMCMC):
                 self._current = self._proposed
                 self._current_log_pdf = fx
                 self._current_gradient = log_gradient
+                self._current_gradient.setflags(write=False)
 
         # Clear proposal
         self._proposed = None
@@ -287,5 +293,9 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Increase iteration count
         self._iterations += 1
 
-        # Return new point for chain
-        return self._current
+        # Return next point for chain
+        return (
+            self._current,
+            (self._current_log_pdf, self._current_gradient),
+            accepted > 0
+        )

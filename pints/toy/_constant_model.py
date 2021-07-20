@@ -23,13 +23,13 @@ class ConstantModel(pints.ForwardModelS1):
     .. math::
         f(t) = (p_1, 2 p_2, 3 p_3, ..., n p_n)
 
-    The derivatives with respect to the derivatives are time-invariant, and
+    The derivatives with respect to the parameters are time-invariant, and
     simply equal
 
     .. math::
 
         \frac{\partial{f_i(t)}}{dp_j} =
-            \begin{cases} 1, i = j\\0, i \neq j \end{cases}
+            \begin{cases} i, i = j\\0, i \neq j \end{cases}
 
     Extends :class:`pints.ForwardModelS1`.
 
@@ -107,6 +107,7 @@ class ConstantModel(pints.ForwardModelS1):
             #   [df2/dp1, df2/dp2]]
             # i.e.
             #  [[1, 0],
-            #   [0, 1]]
-            dy = np.tile(np.diag(np.ones(self._n)), (len(times), 1, 1))
+            #   [0, 2]]
+            dy = np.tile(
+                np.diag(np.arange(1, self._n + 1)), (len(times), 1, 1))
         return (y, dy)

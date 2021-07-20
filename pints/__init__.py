@@ -83,6 +83,7 @@ from ._log_pdfs import (
     LogPDF,
     LogPrior,
     LogPosterior,
+    PooledLogPDF,
     ProblemLogLikelihood,
     SumOfIndependentLogPDFs,
 )
@@ -103,6 +104,7 @@ from ._log_priors import (
     MultivariateGaussianLogPrior,
     NormalLogPrior,
     StudentTLogPrior,
+    TruncatedGaussianLogPrior,
     UniformLogPrior,
 )
 
@@ -113,6 +115,7 @@ from ._log_likelihoods import (
     AR1LogLikelihood,
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
+    ConstantAndMultiplicativeGaussianLogLikelihood,
     GaussianIntegratedUniformLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
@@ -207,6 +210,7 @@ from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
 from ._mcmc._dram_ac import DramACMC
 from ._mcmc._dream import DreamMCMC
+from ._mcmc._dual_averaging import DualAveragingAdaption
 from ._mcmc._emcee_hammer import EmceeHammerMCMC
 from ._mcmc._haario_ac import HaarioACMC
 from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
@@ -224,6 +228,12 @@ from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
 
+if sys.hexversion >= 0x03030000:
+    from ._mcmc._nuts import NoUTurnMCMC
+else:   # pragma: no python 3 cover
+    import warnings
+    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
+
 
 #
 # Nested samplers
@@ -232,6 +242,24 @@ from ._nested import NestedSampler
 from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
+
+
+#
+# Transformation
+#
+from ._transformation import (
+    ComposedTransformation,
+    IdentityTransformation,
+    LogitTransformation,
+    LogTransformation,
+    RectangularBoundariesTransformation,
+    ScalingTransformation,
+    Transformation,
+    TransformedBoundaries,
+    TransformedErrorMeasure,
+    TransformedLogPDF,
+    TransformedLogPrior,
+)
 
 
 #

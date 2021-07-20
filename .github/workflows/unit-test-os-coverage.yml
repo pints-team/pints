@@ -5,24 +5,31 @@ on:
     branches:
       - master
   pull_request:
+    # Run workflow when PR is changed, or when changed from draft to ready
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - '**'
 
 jobs:
 
   build-and-test:
+    name: OS unit tests
     runs-on: ${{ matrix.os }}
+
+    # Skip job if it's a draft PR
+    if: github.event.pull_request.draft == false
+
     strategy:
       matrix:
-        os: [ubuntu-16.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: x64
 
       - name: install pints

@@ -17,6 +17,7 @@ interface, that can be used to sample from an unknown
     differential_evolution_mcmc
     dram_ac_mcmc
     dream_mcmc
+    dual_averaging
     emcee_hammer_mcmc
     haario_ac_mcmc
     haario_bardenet_ac_mcmc
@@ -25,6 +26,7 @@ interface, that can be used to sample from an unknown
     metropolis_mcmc
     monomial_gamma_hamiltonian_mcmc
     neal_langevin_mcmc
+    nuts_mcmc
     population_mcmc
     rao_blackwell_ac_mcmc
     relativistic_mcmc
