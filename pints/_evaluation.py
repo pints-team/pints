@@ -8,20 +8,13 @@
 #
 # Some code in this file was adapted from Myokit (see http://myokit.org)
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import gc
 import os
+import multiprocessing
+import queue
 import sys
 import time
 import traceback
-import multiprocessing
-
-try:
-    # Python 3
-    import queue
-except ImportError:
-    import Queue as queue
 
 import numpy as np
 

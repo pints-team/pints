@@ -10,12 +10,6 @@ import pints
 import unittest
 import numpy as np
 
-# Unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestEasyOptimisation(unittest.TestCase):
     """

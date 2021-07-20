@@ -53,7 +53,7 @@ $ pip install --upgrade pip
 $ pip install pints
 ```
 
-Note that you'll need Python 3.5+ (preferred), or failing that, Python 2.7.
+Note that you'll need Python 3.5 or newer.
 
 If you prefer to have the latest cutting-edge version, you can instead install from the repository, by typing
 

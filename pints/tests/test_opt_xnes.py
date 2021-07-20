@@ -14,11 +14,6 @@ import pints.toy
 
 from shared import CircularBoundaries
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 debug = False
 method = pints.XNES
