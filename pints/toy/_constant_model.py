@@ -23,13 +23,13 @@ class ConstantModel(pints.ForwardModelS1):
     .. math::
         f(t) = (p_1, 2 p_2, 3 p_3, ..., n p_n)
 
-    The derivatives with respect to the derivatives are time-invariant, and
+    The derivatives with respect to the parameters are time-invariant, and
     simply equal
 
     .. math::
 
         \frac{\partial{f_i(t)}}{dp_j} =
-            \begin{cases} 1, i = j\\0, i \neq j \end{cases}
+            \begin{cases} i, i = j\\0, i \neq j \end{cases}
 
     Extends :class:`pints.ForwardModelS1`.
 
