@@ -5,9 +5,11 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import numpy as np
 import io
-from scipy import stats
+import numpy as np
+import scipy
+import urllib.request
+
 from . import ToyLogPDF
 
 
@@ -81,7 +83,7 @@ class GermanCreditLogPDF(ToyLogPDF):
         """ Downloads data from [1]. """
         url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
                'statlog/german/german.data-numeric')
-        url = urlopen(url)
+        url = urllib.request.urlopen(url)
         try:
             raw_data = url.read()
         finally:
@@ -95,7 +97,7 @@ class GermanCreditLogPDF(ToyLogPDF):
 
         # get inputs and standardise
         x = a[:, :-1]
-        x = stats.zscore(x)
+        x = scipy.stats.zscore(x)
         x1 = np.zeros((x.shape[0], x.shape[1] + 1))
         x1[:, 0] = np.ones(x.shape[0])
         x1[:, 1:] = x

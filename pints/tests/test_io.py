@@ -79,18 +79,10 @@ class TestIO(unittest.TestCase):
                 ValueError, 'integer greater than zero',
                 pints.io.load_samples, filename, 0)
             filename = d.path('x.csv')
-            try:
-                # Python 3
-                self.assertRaises(
-                    FileNotFoundError, pints.io.load_samples, filename)
-                self.assertRaises(
-                    FileNotFoundError, pints.io.load_samples, filename, 10)
-            except NameError:
-                # Python 2
-                self.assertRaises(
-                    IOError, pints.io.load_samples, filename)
-                self.assertRaises(
-                    IOError, pints.io.load_samples, filename, 10)
+            self.assertRaises(
+                FileNotFoundError, pints.io.load_samples, filename)
+            self.assertRaises(
+                FileNotFoundError, pints.io.load_samples, filename, 10)
 
 
 if __name__ == '__main__':

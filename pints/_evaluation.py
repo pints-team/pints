@@ -10,15 +10,11 @@
 #
 import gc
 import os
+import multiprocessing
+import queue
 import sys
 import time
 import traceback
-import multiprocessing
-try:
-    # Python 3
-    import queue
-except ImportError:
-    import Queue as queue
 
 
 def evaluate(f, x, parallel=False, args=None):

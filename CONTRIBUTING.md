@@ -154,17 +154,6 @@ Guidelines for writing unit tests:
 3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
 4. If you're testing something stochastic, seed the number generator as part of the test, i.e. with `np.random.seed(1)`.
 
-### Running more tests
-
-If you want to check your tests on Python 2 and 3, use
-
-```
-$ python2 run-tests.py --unit
-$ python3 run-tests.py --unit
-```
-
-When you commit anything to PINTS, these checks will also be run automatically (see [infrastructure](#infrastructure)).
-
 ### Testing notebooks
 
 To test all example notebooks, use

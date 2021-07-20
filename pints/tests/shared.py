@@ -5,19 +5,15 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import io
 import os
-import sys
 import shutil
+import sys
 import tempfile
+
 import numpy as np
 
 import pints
-
-# StringIO in Python 3 and 2
-try:
-    from io import StringIO
-except ImportError:
-    from cStringIO import StringIO
 
 
 class StreamCapture(object):
@@ -68,7 +64,7 @@ class StreamCapture(object):
         if self._stdout_enabled:
 
             # Create buffer
-            self._stdout_buffer = StringIO()
+            self._stdout_buffer = io.StringIO()
 
             # Save current stream
             self._stdout_original = sys.stdout
@@ -86,7 +82,7 @@ class StreamCapture(object):
         if self._stderr_enabled:
 
             # Create buffer
-            self._stderr_buffer = StringIO()
+            self._stderr_buffer = io.StringIO()
 
             # Save current stream
             self._stderr_original = sys.stderr
