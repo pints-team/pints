@@ -14,7 +14,7 @@ import pints.toy
 from shared import StreamCapture
 
 
-@unittest.skipIf(sys.hexversion < 0x03030000, 'No NUTS on Python < 3.3')
+#@unittest.skipIf(sys.hexversion < 0x03030000, 'No NUTS on Python < 3.3')
 class TestNutsMCMC(unittest.TestCase):
     """
     Tests the basic methods of the No-U-Turn MCMC sampler.

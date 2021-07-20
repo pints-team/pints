@@ -11,12 +11,6 @@ import pints
 import numpy as np
 import pints._diagnostics
 
-# Unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestDiagnostics(unittest.TestCase):
     """

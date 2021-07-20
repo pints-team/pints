@@ -218,6 +218,7 @@ from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
+from ._mcmc._nuts import NoUTurnMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
 from ._mcmc._relativistic import RelativisticMCMC
@@ -225,6 +226,13 @@ from ._mcmc._slice_doubling import SliceDoublingMCMC
 from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
+
+# We may want to move to the newer asyncio and exclude older Pythons for NUTS?
+#if sys.hexversion >= 0x03030000:
+#    from ._mcmc._nuts import NoUTurnMCMC
+#else:   # pragma: no python 3 cover
+#    import warnings
+#    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 
 
 #

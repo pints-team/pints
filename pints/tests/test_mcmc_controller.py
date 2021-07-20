@@ -6,8 +6,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import os
 import pints
 import pints.io
@@ -16,12 +14,6 @@ import unittest
 import numpy as np
 
 from shared import StreamCapture, TemporaryDirectory
-
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 debug = False

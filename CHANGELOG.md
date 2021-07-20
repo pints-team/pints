@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 - [#1112](https://github.com/pints-team/pints/pull/1112) The new NUTS method is only supported on Python 3.3 and newer; a warning will be emitted when importing PINTS in older versions.
 - [#1112](https://github.com/pints-team/pints/pull/1112) The `pints.Logger` can now deal with `None` being logged in place of a proper value.
 - [#1355](https://github.com/pints-team/pints/pull/1112) When called with `parallel=True` the method `pints.evaluate()` will now limit the number of workers it uses to the number of tasks it needs to process.
-- [#xxxx](https://github.com/pints-team/pints/pull/xxxx) Dropped support for Python 2.7.
+- [#1365](https://github.com/pints-team/pints/pull/1365) Dropped support for Python 2.7. PINTS now requires Python 3.5 or higher.
 ### Deprecated
 - [#1201](https://github.com/pints-team/pints/pull/1201) The method `pints.rhat_all_params` was accidentally removed in 0.3.0, but is now back in deprecated form.
 ### Removed

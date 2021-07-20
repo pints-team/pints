@@ -11,9 +11,6 @@
 # The code to plot voronoi regions was based on an example shown here:
 # http://stackoverflow.com/a/20678647/423420
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import numpy as np
 
 import pints
