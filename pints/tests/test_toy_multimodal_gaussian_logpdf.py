@@ -49,8 +49,8 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             modes=[[1, 1, 1], [10, 10, 10], [20, 20, 20]],
             covariances=[
                 [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-                [[1, 1, 0], [.1, 1, 0], [0, 0, 1]],
-                [[1, 0, 0], [0, 1, 1], [0, 0, 1]],
+                [[1, 0.1, 0], [0.1, 1, 0], [0, 0, 1]],
+                [[1, 0, 0], [0, 1, 0.1], [0, 0.1, 1]],
             ]
         )
         self.assertEqual(f.n_parameters(), 3)
@@ -80,6 +80,14 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.MultimodalGaussianLogPDF, None,
             [[[1, 0], [0]], [[1, 0], [0, 1]]])
+
+        # invalid covariance matrices
+        self.assertRaises(
+            ValueError, pints.toy.MultimodalGaussianLogPDF,
+            [[1, 0], [1, 0]], [[[1, 0], [0, 1]], [[1, 0.1], [0, 1]]])
+        self.assertRaises(
+            ValueError, pints.toy.MultimodalGaussianLogPDF,
+            [[1, 0], [1, 0]], [[[1, 0], [0, 1]], [[1, 1.1], [1.1, 1]]])
 
     def test_sensitivities(self):
         # Tests sensitivities.

@@ -18,7 +18,7 @@ class ErrorMeasure(object):
     means a better fit.
 
     ErrorMeasures are callable objects: If ``e`` is an instance of an
-    ``ErrorMeasure`` class you can calculate the error by calling ``e(p)``
+    :class:`ErrorMeasure` class you can calculate the error by calling ``e(p)``
     where ``p`` is a point in parameter space.
     """
     def __call__(self, x):
@@ -65,10 +65,14 @@ class ProblemErrorMeasure(ErrorMeasure):
 
 
 class MeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates the mean square error: ``f = sum( (x[i] - y[i])**2 ) / n``,
-    where ``n`` is the product of the number of times in the time series and
-    the number of outputs of the problem.
+    r"""
+    Calculates the mean square error:
+
+    .. math::
+        f = \sum _i^n \frac{(y_i - x_i)^2}{n},
+
+    where :math:`y` is the data, :math:`x` the model output and :math:`n` is
+    the total number of data points.
 
     Extends :class:`ProblemErrorMeasure`.
 
@@ -79,7 +83,10 @@ class MeanSquaredError(ProblemErrorMeasure):
         :class:`pints.MultiOutputProblem`.
     weights
         An optional sequence of (float) weights, exactly one per problem
-        output. If no weights are specified all sums will be weighted equally.
+        output. If given, the error in each individual output will be
+        multiplied by the corresponding weight. If no weights are specified all
+        outputs will be weighted equally.
+
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
@@ -110,19 +117,28 @@ class MeanSquaredError(ProblemErrorMeasure):
 
 
 class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates a normalised root mean squared error. This is similar to the
-    (unnormalised) :class:`RootMeanSquaredError`, which is defined as
-    ``f = sqrt( sum( (x[i] - y[i])**2 / n) ) / C``
-    with a normalisation constant ``C`` given by
-    ``C = sqrt( sum((y[i])**2 / n) )``.
+    r"""
+    Calculates a normalised root mean squared error:
+
+    .. math::
+        f = \frac{1}{C}\sqrt{\frac{\sum _i^n (y_i - x_i) ^ 2}{n}},
+
+    where :math:`C` is the normalising constant, :math:`y` is the data,
+    :math:`x` the model output and :math:`n` is the total number of data
+    points. The normalising constant is given by
+
+    .. math::
+        C = \sqrt{\frac{\sum _i^n y_i^2}{n}}.
+
+    This error measure is similar to the (unnormalised)
+    :class:`RootMeanSquaredError`.
 
     Extends :class:`ProblemErrorMeasure`.
 
     Parameters
     ----------
     problem
-        A :class:`pints.SingleOutputProblem`
+        A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
         super(NormalisedRootMeanSquaredError, self).__init__(problem)
@@ -165,8 +181,8 @@ class ProbabilityBasedError(ErrorMeasure):
         """
         See :meth:`ErrorMeasure.evaluateS1()`.
 
-        *This method only works if the underlying :class:`LogPDF`
-        implements the optional method :meth:`LogPDF.evaluateS1()`!*
+        This method only works if the underlying :class:`LogPDF`
+        implements the optional method :meth:`LogPDF.evaluateS1()`!
         """
         y, dy = self._log_pdf.evaluateS1(x)
         return -y, -np.asarray(dy)
@@ -177,16 +193,21 @@ class ProbabilityBasedError(ErrorMeasure):
 
 
 class RootMeanSquaredError(ProblemErrorMeasure):
-    """
-    Calculates a root mean squared error (RMSE):
-    ``f = sqrt( sum( (x[i] - y[i])**2 / n) )``
+    r"""
+    Calculates a normalised root mean squared error:
+
+    .. math::
+        f = \sqrt{\frac{\sum _i^n (y_i - x_i) ^ 2}{n}},
+
+    where :math:`y` is the data, :math:`x` the model output and :math:`n` is
+    the total number of data points.
 
     Extends :class:`ProblemErrorMeasure`.
 
     Parameters
     ----------
     problem
-        A :class:`pints.SingleOutputProblem`
+        A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
         super(RootMeanSquaredError, self).__init__(problem)
@@ -203,9 +224,14 @@ class RootMeanSquaredError(ProblemErrorMeasure):
 
 
 class SumOfErrors(ErrorMeasure):
-    """
+    r"""
     Calculates a sum of :class:`ErrorMeasure` objects, all defined on the same
-    parameter space.
+    parameter space
+
+    .. math::
+        f = \sum _i f_i,
+
+    where :math:`f_i` are the individual error meaures.
 
     Extends :class:`ErrorMeasure`.
 
@@ -215,7 +241,8 @@ class SumOfErrors(ErrorMeasure):
         A sequence of error measures.
     weights
         An optional sequence of (float) weights, exactly one per error measure.
-        If no weights are specified all sums will be weighted equally.
+        If given, each individual error will be multiplied by the corresponding
+        weight. If no weights are given all sums will be weighted equally.
 
     Examples
     --------
@@ -303,8 +330,14 @@ class SumOfErrors(ErrorMeasure):
 
 
 class SumOfSquaresError(ProblemErrorMeasure):
-    """
-    Calculates a sum-of-squares error: ``f = sum( (x[i] - y[i])**2 )``
+    r"""
+     Calculates a sum of squares error:
+
+    .. math::
+        f = \sum _i^n (y_i - x_i) ^ 2,
+
+    where :math:`y` is the data, :math:`x` the model output and :math:`n` is
+    the total number of data points.
 
     Extends :class:`ErrorMeasure`.
 

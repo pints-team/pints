@@ -139,8 +139,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         self._running = False
         self._ready_for_tell = False
         self._current = None
-        self._current_log_pdf = None
         self._current_log_y = None
+
+        self._temporary_log_pdf = None
         self._proposed = None
         self._overrelaxed_step = False
 
@@ -379,11 +380,9 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Find candidate point by flipping from the current point to
             # the opposide side
-            self._proposed[self._active_param_index] = (self._l_hat +
-                                                        self._r_hat -
-                                                        self._current
-                                                        [self.
-                                                         _active_param_index])
+            self._proposed[self._active_param_index] = (
+                self._l_hat + self._r_hat
+                - self._current[self._active_param_index])
             self._ready_for_tell = True
             return np.array(self._proposed, copy=True)
 
@@ -391,8 +390,8 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             # Sample new trial point by sampling uniformly from the
             # interval ``I=(l,r)``
             u = np.random.uniform()
-            self._proposed[self._active_param_index] = self._l + u * (self._r -
-                                                                      self._l)
+            self._proposed[self._active_param_index] = \
+                self._l + u * (self._r - self._l)
 
             # Send trial point for checks
             self._ready_for_tell = True
@@ -404,10 +403,6 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         ``2^(-bisection steps) * width``.
         """
         return self._a
-
-    def current_log_pdf(self):
-        """ See :meth:`SingleChainMCMC.current_log_pdf()`. """
-        return self._current_log_pdf
 
     def current_slice_height(self):
         """
@@ -516,13 +511,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
 
             # Set current sample, log pdf of current sample and initialise
             # proposed sample for next iteration
-            self._current = np.array(self._x0, copy=True)
-            self._current_log_pdf = fx
-            self._proposed = np.array(self._current, copy=True)
+            self._current = np.copy(self._x0)
+            self._temporary_log_pdf = fx
+            self._proposed = np.copy(self._current)
 
             # Sample height of the slice log_y for next iteration
             e = np.random.exponential(1)
-            self._current_log_y = self._current_log_pdf - e
+            self._current_log_y = fx - e
 
             # Set flag to true as we need to initialise the interval expansion
             # for next iteration
@@ -536,7 +531,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._bisection = True
 
             # Return first point in chain, which is x0
-            return np.array(self._current, copy=True)
+            return np.copy(self._current), fx, True
 
         # While we expand the interval ``I=(l,r)``, we return None
         if not self._interval_found:
@@ -606,8 +601,13 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
             if (self._proposed[self._active_param_index] < self._l_bar or
                     self._proposed[self._active_param_index] > self._r_bar or
                     self._current_log_y >= fx):
+
+                # Reset proposal to undo last change
                 self._proposed[self._active_param_index] = (
                     self._current[self._active_param_index])
+
+                # And update fx to the corresponding log pdf (needed below!)
+                fx = self._temporary_log_pdf
 
             # Reset flags for next interval expansion
             self._first_expansion = True
@@ -622,22 +622,23 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                 self._active_param_index = 0
 
                 # The accepted sample becomes the new current sample
-                self._current = np.array(self._proposed, copy=True)
+                self._current = np.copy(self._proposed)
 
                 # The log_pdf of the accepted sample is used to construct the
                 # new slice
-                self._current_log_pdf = fx
+                self._temporary_log_pdf = fx
 
                 # Sample new log_y used to define the next slice
                 e = np.random.exponential(1)
-                self._current_log_y = self._current_log_pdf - e
+                self._current_log_y = fx - e
 
                 # Check whether next mcmc step should be overrelaxed
                 self._overrelaxed_step = (np.random.uniform() <
                                           self._prob_overrelaxed)
-                return np.array(self._proposed, copy=True)
+                return np.copy(self._current), fx, True
 
             else:
+                self._temporary_log_pdf = fx
                 self._active_param_index += 1
                 return None
 
@@ -656,15 +657,15 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     self._active_param_index = 0
 
                     # The accepted sample becomes the new current sample
-                    self._current = np.array(self._proposed, copy=True)
+                    self._current = np.copy(self._proposed)
 
                     # The log_pdf of the accepted sample is used to construct
                     # the new slice
-                    self._current_log_pdf = fx
+                    self._temporary_log_pdf = fx
 
                     # Sample new log_y used to define the next slice
                     e = np.random.exponential(1)
-                    self._current_log_y = self._current_log_pdf - e
+                    self._current_log_y = fx - e
 
                     # Check whether next mcmc step should be overrelaxed
                     self._overrelaxed_step = (np.random.uniform() <
@@ -672,9 +673,10 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
                     if self._overrelaxed_step:
                         self._init_overrelaxation = True
                         self._bisection = True
-                    return np.array(self._proposed, copy=True)
+                    return np.copy(self._current), fx, True
 
                 else:
+                    self._temporary_log_pdf = fx
                     self._active_param_index += 1
                     return None
 

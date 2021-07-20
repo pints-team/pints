@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the basic methods of the nested sampling routines.
+# Tests the nested sampling controller.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -64,9 +64,21 @@ class TestNestedController(unittest.TestCase):
         sampler.set_n_posterior_samples(10)
         sampler.set_iterations(50)
         sampler.set_log_to_screen(False)
+
+        # Time before run is None
+        self.assertIsNone(sampler.time())
+
+        t = pints.Timer()
         samples = sampler.run()
+        t_upper = t.time()
+
         # Check output: Note n returned samples = n posterior samples
         self.assertEqual(samples.shape, (10, 2))
+
+        # Time after run is greater than zero
+        self.assertIsInstance(sampler.time(), float)
+        self.assertGreater(sampler.time(), 0)
+        self.assertGreater(t_upper, sampler.time())
 
     def test_construction_errors(self):
         # Tests if invalid constructor calls are picked up.
@@ -119,9 +131,12 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
 
         # Test with fixed number of worker processes
-        sampler.set_parallel(2)
-        sampler.set_log_to_screen(True)
-        self.assertEqual(sampler.parallel(), 2)
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
+        sampler.set_parallel(4)
+        sampler.set_log_to_screen(False)
+        self.assertEqual(sampler.parallel(), 4)
+        sampler.run()
 
     def test_logging(self):
         # Tests logging to screen and file.
@@ -235,6 +250,8 @@ class TestNestedController(unittest.TestCase):
         logLikelihood1 = sampler.log_likelihood_vector()
         self.assertEqual(len(logLikelihood1), 400 + 100)
         self.assertTrue(ess1 > 0)
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
         iter = 2000
         sampler.set_iterations(iter)
         sampler.set_n_posterior_samples(100)
@@ -264,6 +281,8 @@ class TestNestedController(unittest.TestCase):
             self.assertTrue(elem <= 1)
 
         # Acive points
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
         sampler.set_iterations(100)
         sampler.set_log_to_screen(False)
         sampler.set_parallel(2)
@@ -310,6 +329,19 @@ class TestNestedController(unittest.TestCase):
         sampler.run()
         m_inactive = sampler.inactive_points()
         self.assertTrue(m_inactive.shape[0] < 200)
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        sampler = pints.NestedController(
+            self.log_likelihood, self.log_prior)
+        sampler.set_n_posterior_samples(2)
+        sampler.set_iterations(10)
+        sampler.set_log_to_screen(False)
+        sampler.run()
+        with self.assertRaisesRegex(
+                RuntimeError, 'Controller is valid for single use only'):
+            sampler.run()
 
 
 if __name__ == '__main__':

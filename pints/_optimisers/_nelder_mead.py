@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
+import warnings
 
 
 # Flow
@@ -133,10 +134,7 @@ class NelderMead(pints.Optimiser):
         super(NelderMead, self).__init__(x0, sigma0, boundaries)
 
         if self._boundaries is not None:
-            import logging
-            logging.basicConfig()
-            log = logging.getLogger(__name__)
-            log.warning(
+            warnings.warn(
                 'Nelder-Mead optimisation does not support boundaries.')
 
         # Parameters for reflection, expansion, and contraction

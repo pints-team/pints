@@ -34,6 +34,7 @@ setup(
     # Description
     description='Probabilistic Inference in Noisy Time-Series',
     long_description=readme,
+    long_description_content_type='text/markdown',
 
     # License name
     license='BSD 3-clause license',
@@ -72,5 +73,9 @@ setup(
             'nbconvert',
             'traitlets',
         ],
+        'stan': [
+            'pystan==2.19.1.1',
+        ]
     },
+    python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3,!=3.4',
 )

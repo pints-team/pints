@@ -48,7 +48,7 @@ class ToyModel(object):
     """
     def suggested_parameters(self):
         """
-        Returns an numpy array of the parameter values that are representative
+        Returns an NumPy array of the parameter values that are representative
         of the model.
 
         For example, these parameters might reproduce a particular result that
@@ -58,7 +58,7 @@ class ToyModel(object):
 
     def suggested_times(self):
         """
-        Returns an numpy array of time points that is representative of the
+        Returns an NumPy array of time points that is representative of the
         model
         """
         raise NotImplementedError
@@ -96,9 +96,13 @@ class ToyODEModel(ToyModel):
 
         Returns
         -------
-        A matrix of dimensions ``n_parameters`` by ``n_parameters``.
+        A matrix of dimensions ``n_outputs`` by ``n_parameters``.
         """
         raise NotImplementedError
+
+    def initial_conditions(self):
+        """ Returns the initial conditions of the model. """
+        return self._y0
 
     def jacobian(self, y, t, p):
         """
@@ -119,6 +123,13 @@ class ToyODEModel(ToyModel):
         A matrix of dimensions ``n_outputs`` by ``n_outputs``.
         """
         raise NotImplementedError
+
+    def n_states(self):
+        """
+        Returns number of states in underlying ODE. Note: will not be same as
+        ``n_outputs()`` for models where only a subset of states are observed.
+        """
+        return self.n_outputs()
 
     def _rhs(self, y, t, p):
         """
@@ -159,14 +170,24 @@ class ToyODEModel(ToyModel):
         -------
         A vector of length ``n_outputs + n_parameters``.
         """
-        y = y_and_dydp[0:self.n_outputs()]
-        dydp = y_and_dydp[self.n_outputs():].reshape((self.n_parameters(),
-                                                      self.n_outputs()))
+
+        # separating initial values of model outputs(y) and sensitivities(dydp)
+        y = y_and_dydp[0:self.n_states()]
+        dydp = y_and_dydp[self.n_states():].reshape((self.n_parameters(),
+                                                     self.n_states()))
+
+        # calculating the derivatives w.r.t t of the model outputs
         dydt = self._rhs(y, t, p)
+
+        # calculating sensitivities
         d_dydp_dt = (
             np.matmul(dydp, np.transpose(self.jacobian(y, t, p))) +
             np.transpose(self._dfdp(y, t, p)))
         return np.concatenate((dydt, d_dydp_dt.reshape(-1)))
+
+    def set_initial_conditions(self, y0):
+        """ Sets the initial conditions of the model. """
+        self._y0 = y0
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
@@ -204,7 +225,7 @@ class ToyODEModel(ToyModel):
 
         if sensitivities:
             n_params = self.n_parameters()
-            n_outputs = self.n_outputs()
+            n_outputs = self.n_states()
             y0 = np.zeros(n_params * n_outputs + n_outputs)
             y0[0:n_outputs] = self._y0
             result = scipy.integrate.odeint(
@@ -216,8 +237,10 @@ class ToyODEModel(ToyModel):
         else:
             values = scipy.integrate.odeint(
                 self._rhs, self._y0, times, (parameters,))
-            return values[offset:]
+            return values[offset:, :self.n_outputs()].squeeze()
 
     def simulateS1(self, parameters, times):
         """ See :meth:`pints.ForwardModelS1.simulateS1()`. """
-        return self._simulate(parameters, times, True)
+        values, dvalues_dp = self._simulate(parameters, times, True)
+        n_outputs = self.n_outputs()
+        return values[:, :n_outputs].squeeze(), dvalues_dp[:, :n_outputs, :]

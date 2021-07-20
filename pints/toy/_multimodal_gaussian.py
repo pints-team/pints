@@ -65,19 +65,30 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
 
         # Check covariances
         if covariances is None:
-            self._covs = [np.eye(self._n_parameters)] * len(self._modes)
+            covs = [np.eye(self._n_parameters)] * len(self._modes)
         else:
             if len(covariances) != len(self._modes):
                 raise ValueError(
                     'Number of covariance matrices must equal number of'
                     ' modes.')
-            self._covs = [np.array(cov, copy=True) for cov in covariances]
-            for cov in self._covs:
+            covs = [np.array(cov, copy=True) for cov in covariances]
+            for cov in covs:
                 if cov.shape != (self._n_parameters, self._n_parameters):
                     raise ValueError(
                         'Covariance matrices must have shape (d, d), where d'
                         ' is the dimension of the given modes.')
 
+        # check whether covariance matrices are positive semidefinite
+        for cov in covs:
+            if not np.all(np.linalg.eigvals(cov) >= 0):
+                raise ValueError('Covariance matrix must be positive ' +
+                                 'semidefinite.')
+        # check if covariance matrices are symmetric
+        for cov in covs:
+            if not np.allclose(cov, cov.T, atol=1e-8):
+                raise ValueError('Covariance matrix must be symmetric.')
+
+        self._covs = covs
         # Create scipy 'random variables'
         self._vars = [
             scipy.stats.multivariate_normal(mode, self._covs[i])
@@ -201,4 +212,3 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
         upper = a_max + a_range
         bounds = np.tile([lower, upper], (self._n_parameters, 1))
         return np.transpose(bounds).tolist()
-

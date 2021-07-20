@@ -38,11 +38,16 @@ class TestMALAMCMC(unittest.TestCase):
         for i in range(100):
             x = mcmc.ask()
             fx, gr = log_pdf.evaluateS1(x)
-            sample = mcmc.tell((fx, gr))
-            if i >= 50 and sample is not None:
-                chain.append(sample)
-            if np.all(sample == x):
-                self.assertEqual(mcmc.current_log_pdf(), fx)
+            reply = mcmc.tell((fx, gr))
+            if reply is not None:
+                y, fy, ac = reply
+                if i >= 50:
+                    chain.append(y)
+                self.assertTrue(isinstance(ac, bool))
+                if ac:
+                    self.assertTrue(np.all(x == y))
+                    self.assertEqual(fx, fy[0])
+                    self.assertTrue(np.all(gr == fy[1]))
 
         chain = np.array(chain)
         self.assertEqual(chain.shape[0], 50)
@@ -59,7 +64,7 @@ class TestMALAMCMC(unittest.TestCase):
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = [np.array([2, 2]), np.array([8, 8])]
 
-        mcmc = pints.MCMCSampling(log_pdf, 2, x0, method=pints.MALAMCMC)
+        mcmc = pints.MCMCController(log_pdf, 2, x0, method=pints.MALAMCMC)
         mcmc.set_max_iterations(5)
         with StreamCapture() as c:
             mcmc.run()

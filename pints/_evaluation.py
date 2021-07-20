@@ -48,7 +48,8 @@ def evaluate(f, x, parallel=False, args=None):
 
     """
     if parallel is True:
-        evaluator = ParallelEvaluator(f, args=args)
+        n_workers = max(min(ParallelEvaluator.cpu_count(), len(x)), 1)
+        evaluator = ParallelEvaluator(f, n_workers=n_workers, args=args)
     elif parallel >= 1:
         evaluator = ParallelEvaluator(f, n_workers=int(parallel), args=args)
     else:
@@ -452,7 +453,7 @@ class _Worker(multiprocessing.Process):
 
     def run(self):
         # Worker processes should never write to stdout or stderr.
-        # This can lead to unsafe situations if they have been redicted to
+        # This can lead to unsafe situations if they have been redirected to
         # a GUI task such as writing to the IDE console.
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')

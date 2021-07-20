@@ -15,15 +15,19 @@ from . import ToyLogPDF
 
 class HighDimensionalGaussianLogPDF(ToyLogPDF):
     """
-    High-dimensional multivariate Gaussian log pdf, with off-diagonal
+    High-dimensional zero-mean multivariate Gaussian log pdf, with off-diagonal
     correlations.
+
+    Specifically, the covariance matrix Sigma is constructed so that diagonal
+    elements are integers: Sigma_i,i = i and off-diagonal elements are
+    Sigma_i,j = rho * sqrt(i) * sqrt(j).
 
     Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------
     dimension : int
-        Dimensions of Gaussian distribution.
+        Dimensions of multivariate Gaussian distribution (which must exceed 1).
     rho : float
         The correlation between pairs of parameter dimensions. Note that this
         must be between ```-1 / (dimension - 1) and 1`` so that the
@@ -31,8 +35,8 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
     """
     def __init__(self, dimension=20, rho=0.5):
         self._n_parameters = int(dimension)
-        if self._n_parameters < 1:
-            raise ValueError('Dimension must be 1 or greater.')
+        if self._n_parameters <= 1:
+            raise ValueError('Dimensions must exceed 1.')
         rho = float(rho)
         # bounds must satisfy:
         # https://stats.stackexchange.com/questions/72790/
@@ -45,8 +49,7 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         # Construct mean array
         self._mean = np.zeros(self._n_parameters)
 
-        # Construct covariance matrix where diagonal variances = i
-        # and off-diagonal covariances = rho * sqrt(i) * sqrt(j)
+        # Construct covariance matrix
         cov = np.arange(1, 1 + self._n_parameters).reshape(
             (self._n_parameters, 1))
         cov = cov.repeat(self._n_parameters, axis=1)
@@ -54,6 +57,7 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         cov = self._rho * cov * cov.T
         np.fill_diagonal(cov, 1 + np.arange(self._n_parameters))
         self._cov = cov
+        self._cov_inv = np.linalg.inv(cov)
 
         # Construct scipy 'random variable'
         self._var = scipy.stats.multivariate_normal(self._mean, self._cov)
@@ -69,6 +73,15 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         See :meth:`pints.toy.ToyLogPDF.distance()`.
         """
         return self.kl_divergence(samples)
+
+    def evaluateS1(self, x):
+        """ See :meth:`pints.LogPDF.evaluateS1()`. """
+        L = self.__call__(x)
+        self._x_minus_mu = x - self._mean
+
+        # derivative wrt x: see https://stats.stackexchange.com/questions/27436/how-to-take-derivative-of-multivariate-normal-density # noqa
+        dL = -np.matmul(self._cov_inv, self._x_minus_mu)
+        return L, dL
 
     def kl_divergence(self, samples):
         """
@@ -140,4 +153,3 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         magnitude = 3 * np.sqrt(self.n_parameters())
         bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
         return np.transpose(bounds).tolist()
-

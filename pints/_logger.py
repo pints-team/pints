@@ -351,16 +351,19 @@ class Logger(object):
                 # Write data
                 for row in rows:
                     line = []
-                    i = iter(row)
+                    column = iter(row)
                     for width, dtype, f1, f2 in self._field_formats:
-                        if dtype == _FLOAT:
-                            x = '{:.17e}'.format(next(i))
+                        v = next(column)
+                        if v is None:
+                            x = ''
+                        elif dtype == _FLOAT:
+                            x = '{:.17e}'.format(v)
                         elif dtype == _TIME:
-                            x = str(next(i))
+                            x = str(v)
                         elif dtype == _TEXT:
-                            x = '"' + str(next(i)) + '"'
+                            x = '"' + str(v) + '"'
                         else:
-                            x = str(int(next(i)))
+                            x = str(int(v))
                         line.append(x)
                     f.write(','.join(line) + '\n')
 
@@ -385,19 +388,21 @@ class Logger(object):
             column = iter(row)
             formatted_row = []
             for width, dtype, f1, f2 in self._field_formats:
-                if dtype == _FLOAT:
-                    v = next(column)
+                v = next(column)
+                if v is None:
+                    x = ' ' * width
+                elif dtype == _FLOAT:
                     x = f1.format(v)
                     if len(x) > width:
                         x = f2.format(v)
                     x += ' ' * (width - len(x))
                 elif dtype == _TIME:
-                    x = self._format_time(next(column))
+                    x = self._format_time(v)
                 elif dtype == _TEXT:
-                    x = str(next(column))[:width]
+                    x = str(v)[:width]
                     x += ' ' * (width - len(x))
                 else:
-                    x = f1.format(int(next(column)))
+                    x = f1.format(int(v))
                 formatted_row.append(x)
             formatted_rows.append(formatted_row)
 

@@ -157,6 +157,43 @@ class TestMCMCController(unittest.TestCase):
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0)
 
+        # Test transformation
+        logt = pints.LogTransformation(n_parameters)
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
+                                    transform=logt)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        # Test chains inverse transformed
+        # log-transform of the parameter in [0.01, 0.02] will always be
+        # negative values, so checking it larger than zero make sure it's
+        # transformed back to the model space.
+        self.assertTrue(np.all(chains > 0))
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        sigma0 = [0.005, 100, 0.5 * self.noise]
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                             transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                             transform=logt)
+        sigma0 = [0.005, 100, 0.5 * self.noise, 10]
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
+        sigma0 = np.arange(16).reshape(2, 2, 2, 2)
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            transform=logt)
+
         # Test multi-chain with single-chain mcmc
 
         # 2 chains
@@ -193,6 +230,43 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
         self.assertIs(chains, mcmc.chains())
+
+    def test_hyperparameters_constant(self):
+        # Test that sampler hyperparameter remain same before and after run
+
+        # single chain method
+        n_chains = 1
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=pints.HamiltonianMCMC)
+        step_size = 0.77
+        for sampler in mcmc.samplers():
+            sampler.set_leapfrog_step_size(step_size)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        for sampler in mcmc.samplers():
+            self.assertEqual(sampler.leapfrog_step_size()[0], step_size)
+
+        # test multiple chain method
+        # Set up problem for 10 chains
+        x0 = np.array(self.real_parameters)
+        xs = []
+        for i in range(10):
+            f = 0.9 + 0.2 * np.random.rand()
+            xs.append(x0 * f)
+        n_chains = len(xs)
+
+        meth = pints.DifferentialEvolutionMCMC
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=meth)
+        switch_rate = 4
+        mcmc.samplers()[0].set_gamma_switch_rate(switch_rate)
+        mcmc.set_max_iterations(5)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        self.assertEqual(mcmc.samplers()[0].gamma_switch_rate(), switch_rate)
 
     def test_multi(self):
         # Test with a multi-chain method
@@ -262,6 +336,39 @@ class TestMCMCController(unittest.TestCase):
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             method=meth)
 
+        # Test transformation
+        logt = pints.LogTransformation(n_parameters)
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
+                                    method=meth, transform=logt)
+        self.assertEqual(len(mcmc.samplers()), 1)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        # Test chains inverse transformed
+        # log-transform of the parameter in [0.01, 0.02] will always be
+        # negative values, so checking it larger than zero make sure it's
+        # transformed back to the model space.
+        self.assertTrue(np.all(chains > 0))
+        sigma0 = [0.005, 100, 0.5 * self.noise]
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                             method=meth, transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
+        pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
+                             method=meth, transform=logt)
+        sigma0 = [0.005, 100, 0.5 * self.noise, 10]
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            method=meth, transform=logt)
+        sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
+        self.assertRaises(
+            ValueError,
+            pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
+            method=meth, transform=logt)
+
     def test_stopping(self):
         # Test different stopping criteria.
 
@@ -309,13 +416,18 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], nparameters)
 
         # Test with fixed number of worker processes
-        mcmc.set_parallel(2)
+        mcmc = pints.MCMCController(
+            self.log_posterior, nchains, xs,
+            method=pints.HaarioBardenetACMC)
+        mcmc.set_max_iterations(niterations)
+        mcmc.set_log_to_screen(debug)
+        mcmc.set_parallel(5)
         mcmc.set_log_to_screen(True)
         self.assertIs(mcmc._parallel, True)
-        self.assertEqual(mcmc._n_workers, 2)
+        self.assertEqual(mcmc._n_workers, 5)
         with StreamCapture() as c:
             chains = mcmc.run()
-        self.assertIn('with 2 worker', c.text())
+        self.assertIn('with 5 worker', c.text())
         self.assertEqual(chains.shape[0], nchains)
         self.assertEqual(chains.shape[1], niterations)
         self.assertEqual(chains.shape[2], nparameters)
@@ -439,7 +551,7 @@ class TestMCMCController(unittest.TestCase):
         x2 = np.array(self.real_parameters) * 0.95
         xs = [x0, x1, x2]
         n_chains = len(xs)
-        n_iterations = 10
+        n_iterations = 100
 
         # Single-chain method, using a logposterior
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
@@ -496,7 +608,7 @@ class TestMCMCController(unittest.TestCase):
         x2 = np.array(self.real_parameters) * 0.95
         xs = [x0, x1, x2]
         n_chains = len(xs)
-        n_iterations = 10
+        n_iterations = 100
         meth = pints.DifferentialEvolutionMCMC
 
         # Test with multi-chain method
@@ -538,11 +650,98 @@ class TestMCMCController(unittest.TestCase):
             likelihoods = [self.log_likelihood(x) for x in chain]
             self.assertTrue(np.all(evals[i] == likelihoods))
 
+    def test_log_pdf_storage_in_memory_single_complex(self):
+        # Test storing evaluations in memory, with a single-chain method that
+        # does tricky things, e.g. PopulationMCMC maintains internal chains
+        # that it swaps around, causing a situation where the last evaluated
+        # point on an acceptance step may not be the main chain's point!
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+        n_chains = len(xs)
+        n_iterations = 100
+
+        # Single-chain method, using a logposterior
+        mcmc = pints.MCMCController(
+            self.log_posterior, n_chains, xs, method=pints.PopulationMCMC)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_pdf_storage(True)
+        chains = mcmc.run()
+
+        # Test shape of returned array
+        evals = mcmc.log_pdfs()
+        self.assertEqual(len(evals.shape), 3)
+        self.assertEqual(evals.shape[0], n_chains)
+        self.assertEqual(evals.shape[1], n_iterations)
+        self.assertEqual(evals.shape[2], 3)
+
+        # Test returned values
+        for i, chain in enumerate(chains):
+            posteriors = [self.log_posterior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 0] == posteriors))
+
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 1] == likelihoods))
+
+            priors = [self.log_prior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 2] == priors))
+
     def test_deprecated_alias(self):
 
         mcmc = pints.MCMCSampling(
             self.log_posterior, 1, [self.real_parameters])
         self.assertIsInstance(mcmc, pints.MCMCController)
+
+    def test_exception_on_multi_use(self):
+        # Controller should raise an exception if use multiple times
+
+        # Test simple run
+        n_chains = 1
+        n_iterations = 10
+        x0 = np.array(self.real_parameters) * 1.1
+        xs = [x0]
+        mcmc = pints.MCMCController(self.log_posterior, n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        mcmc.run()
+        with self.assertRaisesRegex(
+                RuntimeError, 'Controller is valid for single use only'):
+            mcmc.run()
+
+    def test_post_run_statistics(self):
+        # Test method to obtain post-run statistics
+
+        # Set up test problem
+        x0 = np.array(self.real_parameters) * 1.05
+        x1 = np.array(self.real_parameters) * 1.15
+        x2 = np.array(self.real_parameters) * 0.95
+        xs = [x0, x1, x2]
+
+        mcmc = pints.MCMCController(self.log_posterior, len(xs), xs)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(10)
+        mcmc.set_log_to_screen(False)
+        mcmc.set_log_to_file(False)
+
+        # Before run, methods return None
+        self.assertIsNone(mcmc.time())
+
+        t = pints.Timer()
+        mcmc.run()
+        t_upper = t.time()
+
+        # Check post-run output
+        self.assertIsInstance(mcmc.time(), float)
+        self.assertGreater(mcmc.time(), 0)
+        self.assertGreater(t_upper, mcmc.time())
+
+        # Tets number of evaluations is a realistic number (should be 30 for
+        # a simple method)
+        self.assertEqual(mcmc.n_evaluations(), 30)
 
 
 class TestMCMCControllerLogging(unittest.TestCase):
@@ -649,6 +848,66 @@ class TestMCMCControllerLogging(unittest.TestCase):
             self.assertNotIn('Writing evaluations to', text)
             self.assertNotIn('evals_0.csv', text)
 
+        # Test transformation
+        logt = pints.LogTransformation(len(self.xs[0]))
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
+                                    transform=logt)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_to_file(False)
+
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                cpath = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
+                epath = d.path('evals.csv')
+                p3 = d.path('evals_0.csv')
+                p4 = d.path('evals_1.csv')
+                p5 = d.path('evals_2.csv')
+
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_log_pdf_filename(None)
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files contain the correct chains
+                import pints.io as io
+                chains2 = np.array(io.load_samples(cpath, self.nchains))
+                self.assertTrue(np.all(chains1 == chains2))
+
+                # Test files contain inverse transformed samples
+                # log-transform of the parameter in [0.01, 0.02] will always
+                # be negative values, so checking it larger than zero make sure
+                # it's transformed back to the model space.
+                self.assertTrue(np.all(chains2 > 0))
+
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
+            self.assertNotIn('Writing evaluations to', text)
+            self.assertNotIn('evals_0.csv', text)
+
     def test_writing_chains_only_no_memory_single(self):
         # Test writing chains - but not evals - to disk, without storing chains
         # in memory, using a single-chain method.
@@ -702,6 +961,71 @@ class TestMCMCControllerLogging(unittest.TestCase):
                 chains2 = np.array(io.load_samples(cpath, self.nchains))
                 self.assertEqual(
                     chains2.shape, (self.nchains, 20, len(self.xs)))
+
+            text = c.text()
+            self.assertIn('Writing chains to', text)
+            self.assertIn('chain_0.csv', text)
+            self.assertNotIn('Writing evaluations to', text)
+            self.assertNotIn('evals_0.csv', text)
+
+        # Test transformation
+        logt = pints.LogTransformation(len(self.xs[0]))
+        mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
+                                    transform=logt)
+        mcmc.set_initial_phase_iterations(5)
+        mcmc.set_max_iterations(20)
+        mcmc.set_log_to_screen(True)
+        mcmc.set_log_to_file(False)
+        mcmc.set_chain_storage(False)
+
+        with StreamCapture() as c:
+            with TemporaryDirectory() as d:
+                cpath = d.path('chain.csv')
+                p0 = d.path('chain_0.csv')
+                p1 = d.path('chain_1.csv')
+                p2 = d.path('chain_2.csv')
+                epath = d.path('evals.csv')
+                p3 = d.path('evals_0.csv')
+                p4 = d.path('evals_1.csv')
+                p5 = d.path('evals_2.csv')
+
+                # Test files aren't created before mcmc runs
+                mcmc.set_chain_filename(cpath)
+                mcmc.set_log_pdf_filename(None)
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertFalse(os.path.exists(p0))
+                self.assertFalse(os.path.exists(p1))
+                self.assertFalse(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test files are created afterwards
+                chains1 = mcmc.run()
+                self.assertFalse(os.path.exists(cpath))
+                self.assertFalse(os.path.exists(epath))
+                self.assertTrue(os.path.exists(p0))
+                self.assertTrue(os.path.exists(p1))
+                self.assertTrue(os.path.exists(p2))
+                self.assertFalse(os.path.exists(p3))
+                self.assertFalse(os.path.exists(p4))
+                self.assertFalse(os.path.exists(p5))
+
+                # Test chains weren't returned in memory
+                self.assertIsNone(chains1)
+
+                # Test disk contains chains
+                import pints.io as io
+                chains2 = np.array(io.load_samples(cpath, self.nchains))
+                self.assertEqual(
+                    chains2.shape, (self.nchains, 20, len(self.xs)))
+
+                # Test files contain inverse transformed samples
+                # log-transform of the parameter in [0.01, 0.02] will always
+                # be negative values, so checking it larger than zero make sure
+                # it's transformed back to the model space.
+                self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()
             self.assertIn('Writing chains to', text)
@@ -1187,7 +1511,7 @@ class SingleListSampler(pints.SingleChainMCMC):
     def tell(self, fx):
         x = self._chain[self._i] if self._i < self._n else None
         self._i += 1
-        return x
+        return None if x is None else (x, fx, True)
 
 
 class MultiListSampler(pints.MultiChainMCMC):
@@ -1221,7 +1545,7 @@ class MultiListSampler(pints.MultiChainMCMC):
             if x[0] is None:
                 x = None
             self._i += 1
-        return x
+        return None if x is None else (x, fx, np.array([True] * self._n))
 
 
 class TestMCMCControllerSingleChainStorage(unittest.TestCase):
