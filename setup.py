@@ -6,9 +6,6 @@
 #  For licensing information, see the LICENSE file distributed with the PINTS
 #  software package.
 #
-import os
-import sys
-
 from setuptools import setup, find_packages
 
 # Load text for description and license
@@ -19,27 +16,13 @@ with open('README.md') as f:
 # Read version number from file
 def load_version():
     try:
+        import os
         root = os.path.abspath(os.path.dirname(__file__))
         with open(os.path.join(root, 'pints', 'version'), 'r') as f:
             version = f.read().strip().split(',')
         return '.'.join([str(int(x)) for x in version])
     except Exception as e:
         raise RuntimeError('Unable to read version number (' + str(e) + ').')
-
-
-# Required packages for basic install
-requirements = [
-    'cma>=2',
-    'numpy>=1.8',
-    'scipy>=0.14',
-    # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
-    # on systems without an attached display, it should never be imported
-    # outside of plot() methods.
-    'matplotlib>=1.5',
-    'tabulate',
-]
-if sys.version_info[0] > 2:
-    requirements.append('threadpoolctl')
 
 
 # Go!
@@ -70,7 +53,17 @@ setup(
     include_package_data=True,
 
     # List of dependencies
-    install_requires=requirements,
+    install_requires=[
+        'cma>=2',
+        'numpy>=1.8',
+        'scipy>=0.14',
+        # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
+        # on systems without an attached display, it should never be imported
+        # outside of plot() methods.
+        'matplotlib>=1.5',
+        'tabulate',
+        'threadpoolctl',
+    ],
     extras_require={
         'docs': [
             'sphinx>=1.5, !=1.7.3',     # For doc generation
