@@ -90,21 +90,9 @@ Class names are CamelCase, and start with an upper case letter, for example `Sup
 
 To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references.
 
-### Python 2 and 3
+### Supported Python versions.
 
-Python is currently in a long, long transition phase from Python 2 to Python 3. PINTS supports both Python 2 (version 2.7 and upwards) and Python 3 (version 3.4 and upwards).
-The easiest way to write code that works on both versions is to write for Python 3, (avoiding the more spectacular new features) and [then test on both versions](#testing).
-
-In addition, most scripts start with these lines:
-
-```
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-```
-
-These [future imports](https://docs.python.org/2/library/__future__.html) are ignored by Python 3, but tell Python 2 to mimmick some of its features. Notably, the ``division`` package changes the result of ``3 / 2`` from ``1`` to ``1.5`` (this means you can write ``1 / x`` instead of ``1.0 / x``).
-
-
+As of July 2021, PINTS no longer supports Python 2.
 
 ## Dependencies and reusing code
 
@@ -165,17 +153,6 @@ Guidelines for writing unit tests:
 2. Unit tests _test the public API_ (i.e. they never access private methods or variables). They test _if_ the code does what it promises to do, not _how_ it does it. For example, after running `my_object.set_x(4)`, you might check if `my_object.x()` returns 4, but you never check if `my_object._x == 4`: how the object stores its data is its own business.
 3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
 4. If you're testing something stochastic, seed the number generator as part of the test, i.e. with `np.random.seed(1)`.
-
-### Running more tests
-
-If you want to check your tests on Python 2 and 3, use
-
-```
-$ python2 run-tests.py --unit
-$ python3 run-tests.py --unit
-```
-
-When you commit anything to PINTS, these checks will also be run automatically (see [infrastructure](#infrastructure)).
 
 ### Testing notebooks
 
@@ -281,7 +258,7 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
             # Differrent weights:
             weights = [
                 1.0,
-                2.7,
+                2.6,
             ]
             e2 = pints.SumOfErrors(errors, weights)
 
@@ -295,7 +272,7 @@ Longer code snippets can be started using this form:
 
         print('Hello world')
 
-    """        
+    """
 
 ### Using Maths in documentation
 

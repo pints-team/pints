@@ -14,11 +14,6 @@ import pints.toy
 
 from shared import SubCapture
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 try:
     from pints.interfaces.stan import StanLogPDF
