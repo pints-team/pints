@@ -1,10 +1,9 @@
 #
 # Pints setuptools script
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from setuptools import setup, find_packages
 
@@ -78,5 +77,5 @@ setup(
             'pystan==2.19.1.1',
         ]
     },
-    python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3,!=3.4',
+    python_requires='>=3.5',
 )

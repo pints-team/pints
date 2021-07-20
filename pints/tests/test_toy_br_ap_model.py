@@ -11,12 +11,6 @@ import numpy as np
 import pints
 import pints.toy
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestActionPotentialModel(unittest.TestCase):
     """

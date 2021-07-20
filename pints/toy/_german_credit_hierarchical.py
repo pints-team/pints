@@ -5,17 +5,12 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-import numpy as np
 import io
-from scipy import stats
-from . import ToyLogPDF
+import numpy as np
+import scipy
+import urllib.request
 
-try:
-    from urllib.request import urlopen
-except ImportError:     # pragma: no python 3 cover
-    from urllib2 import urlopen
+from . import ToyLogPDF
 
 
 class GermanCreditHierarchicalLogPDF(ToyLogPDF):
@@ -108,7 +103,7 @@ class GermanCreditHierarchicalLogPDF(ToyLogPDF):
         """ Downloads data from [1]. """
         url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
                'statlog/german/german.data-numeric')
-        url = urlopen(url)
+        url = urllib.request.urlopen(url)
         try:
             raw_data = url.read()
         finally:
@@ -122,7 +117,7 @@ class GermanCreditHierarchicalLogPDF(ToyLogPDF):
 
         # get inputs and standardise
         x = a[:, :-1]
-        x = stats.zscore(x)
+        x = scipy.stats.zscore(x)
         x1 = np.zeros((x.shape[0], x.shape[1] + 1))
         x1[:, 0] = np.ones(x.shape[0])
         x1[:, 1:] = x

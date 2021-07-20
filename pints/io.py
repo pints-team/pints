@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 
 
 def load_samples(filename, n=None):
@@ -49,10 +47,7 @@ def load_samples(filename, n=None):
     # Check if files exist before loading (saves times)
     for filename in filenames:
         if not os.path.isfile(filename):
-            try:
-                raise FileNotFoundError('File not found: ' + filename)
-            except NameError:   # pragma: no python 3 cover
-                raise IOError('File not found: ' + filename)
+            raise FileNotFoundError('File not found: ' + filename)
 
     # Load and return
     return [load(filename) for filename in filenames]

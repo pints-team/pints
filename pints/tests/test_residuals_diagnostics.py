@@ -16,12 +16,6 @@ import unittest
 # Select matplotlib backend that doesn't require a screen
 matplotlib.use('Agg')
 
-# Unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestResidualsDiagnostics(unittest.TestCase):
     """
@@ -234,7 +228,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(fig.axes), 2)
 
         # Check the message when the thinning is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'Thinning rate must be',
             pints.residuals_diagnostics.plot_residuals_distance,
@@ -265,7 +259,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(fig.axes), 2)
 
         # Check the message when the thinning is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'Thinning rate must be',
             pints.residuals_diagnostics.plot_residuals_binned_autocorrelation,
@@ -276,7 +270,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the number of bins is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'n_bins must be',
             pints.residuals_diagnostics.plot_residuals_binned_autocorrelation,
@@ -286,7 +280,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the number of bins is too big
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'n_bins must not exceed',
             pints.residuals_diagnostics.plot_residuals_binned_autocorrelation,
@@ -317,7 +311,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         self.assertGreaterEqual(len(fig.axes), 2)
 
         # Check the message when the thinning is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'Thinning rate must be',
             pints.residuals_diagnostics.plot_residuals_binned_std,
@@ -328,7 +322,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the number of bins is invalid
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'n_bins must be',
             pints.residuals_diagnostics.plot_residuals_binned_std,
@@ -338,7 +332,7 @@ class TestResidualsDiagnostics(unittest.TestCase):
         )
 
         # Check the message when the number of bins is too big
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             'n_bins must not exceed',
             pints.residuals_diagnostics.plot_residuals_binned_std,
