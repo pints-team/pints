@@ -6,7 +6,6 @@
 #
 import numpy as np
 import unittest
-import sys
 
 import pints
 import pints.toy

@@ -230,7 +230,7 @@ from ._mcmc._summary import MCMCSummary
 # We may want to move to the newer asyncio and exclude older Pythons for NUTS?
 #if sys.hexversion >= 0x03030000:
 #    from ._mcmc._nuts import NoUTurnMCMC
-#else:   # pragma: no python 3 cover
+#else:   # pragma: no cover
 #    import warnings
 #    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 

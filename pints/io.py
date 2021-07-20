@@ -47,10 +47,7 @@ def load_samples(filename, n=None):
     # Check if files exist before loading (saves times)
     for filename in filenames:
         if not os.path.isfile(filename):
-            try:
-                raise FileNotFoundError('File not found: ' + filename)
-            except NameError:   # pragma: no python 3 cover
-                raise IOError('File not found: ' + filename)
+            raise FileNotFoundError('File not found: ' + filename)
 
     # Load and return
     return [load(filename) for filename in filenames]
