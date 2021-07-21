@@ -24,6 +24,13 @@ def evaluate(f, x, parallel=False, args=None):
     Evaluates the function ``f`` on every value present in ``x`` and returns
     a sequence of evaluations ``f(x[i])``.
 
+    It is possible for the evaluation of ``f`` to involve the generation of
+    random numbers (using numpy). In this case, the results from calling
+    ``evaluate`` can be made reproducible by first seeding numpy's generator
+    with a fixed number. However, a call with ``parallel=True`` will use a
+    different (but consistent) sequence of random numbers than a call with
+    ``parallel=False``.
+
     Parameters
     ----------
     f : callable
@@ -41,7 +48,6 @@ def evaluate(f, x, parallel=False, args=None):
     args : sequence
         Optional extra arguments to pass into ``f``.
 
-
     """
     if parallel is True:
         n_workers = max(min(ParallelEvaluator.cpu_count(), len(x)), 1)
@@ -56,10 +62,19 @@ def evaluate(f, x, parallel=False, args=None):
 class Evaluator(object):
     """
     Abstract base class for classes that take a function (or callable object)
-    ``f(x)`` and evaluate it for list of input values ``x``. This interface is
-    shared by a parallel and a sequential implementation, allowing easy
-    switching between parallel or sequential implementations of the same
-    algorithm.
+    ``f(x)`` and evaluate it for list of input values ``x``.
+
+    This interface is shared by a parallel and a sequential implementation,
+    allowing easy switching between parallel or sequential implementations of
+    the same algorithm.
+
+    It is possible for the evaluation of ``f`` to involve the generation of
+    random numbers (using numpy). In this case, the results from calling
+    ``evaluate`` can be made reproducible by first seeding numpy's generator
+    with a fixed number. However, different ``Evaluator`` implementations may
+    use a different random sequence. In other words, each Evaluator can be made
+    to return consistent results, but the results returned by different
+    Evaluators may vary.
 
     Parameters
     ----------
