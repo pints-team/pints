@@ -16,6 +16,7 @@ import sys
 import time
 import traceback
 
+import numpy as np
 import threadpoolctl
 
 
@@ -23,6 +24,13 @@ def evaluate(f, x, parallel=False, args=None):
     """
     Evaluates the function ``f`` on every value present in ``x`` and returns
     a sequence of evaluations ``f(x[i])``.
+
+    It is possible for the evaluation of ``f`` to involve the generation of
+    random numbers (using numpy). In this case, the results from calling
+    ``evaluate`` can be made reproducible by first seeding numpy's generator
+    with a fixed number. However, a call with ``parallel=True`` will use a
+    different (but consistent) sequence of random numbers than a call with
+    ``parallel=False``.
 
     Parameters
     ----------
@@ -41,7 +49,6 @@ def evaluate(f, x, parallel=False, args=None):
     args : sequence
         Optional extra arguments to pass into ``f``.
 
-
     """
     if parallel is True:
         n_workers = max(min(ParallelEvaluator.cpu_count(), len(x)), 1)
@@ -56,10 +63,19 @@ def evaluate(f, x, parallel=False, args=None):
 class Evaluator(object):
     """
     Abstract base class for classes that take a function (or callable object)
-    ``f(x)`` and evaluate it for list of input values ``x``. This interface is
-    shared by a parallel and a sequential implementation, allowing easy
-    switching between parallel or sequential implementations of the same
-    algorithm.
+    ``f(x)`` and evaluate it for list of input values ``x``.
+
+    This interface is shared by a parallel and a sequential implementation,
+    allowing easy switching between parallel or sequential implementations of
+    the same algorithm.
+
+    It is possible for the evaluation of ``f`` to involve the generation of
+    random numbers (using numpy). In this case, the results from calling
+    ``evaluate`` can be made reproducible by first seeding numpy's generator
+    with a fixed number. However, different ``Evaluator`` implementations may
+    use a different random sequence. In other words, each Evaluator can be made
+    to return consistent results, but the results returned by different
+    Evaluators may vary.
 
     Parameters
     ----------
@@ -203,6 +219,7 @@ multiprocessing.html#all-platforms>`_ for details).
         self._n_numpy_threads = n_numpy_threads
 
         # Queue with tasks
+        # Each task is stored as a tuple (id, seed, argument)
         self._tasks = multiprocessing.Queue()
 
         # Queue with results
@@ -272,18 +289,32 @@ multiprocessing.html#all-platforms>`_ for details).
         # For some reason these lines block when running on windows
         # if not (self._tasks.empty() and self._results.empty()):
         #    raise Exception('Unhandled tasks/results left in queues.')
+
         # Clean up any dead workers
         self._clean()
 
         # Ensure worker pool is populated
         self._populate()
 
+        # Generate seeds for numpy random number generators.
+        # This ensures that:
+        #  1. Each process has a randomly selected random number generator
+        #     state, instead of inheriting the state from the calling process.
+        #  2. If the calling process has a seeded number generator, the random
+        #     sequences within each task will be reproducible. Note that we
+        #     cannot achieve this by seeding the worker processes once, as the
+        #     allocation of tasks to workers is not deterministic.
+        # The upper bound is chosen to get a wide range and still work on all
+        # systems. Windows, in particular, seems to insist on a 32 bit int even
+        # in Python 3.9.
+        seeds = np.random.randint(0, 2**16, len(positions))
+
         # Start
         try:
 
             # Enqueue all tasks (non-blocking)
             for k, x in enumerate(positions):
-                self._tasks.put((k, x))
+                self._tasks.put((k, seeds[k], x))
 
             # Collect results (blocking)
             n = len(positions)
@@ -434,8 +465,8 @@ class _Worker(multiprocessing.Process):
         objective function.
     tasks
         The queue to read tasks from. Tasks are stored as tuples
-        ``(i, p)`` where ``i`` is a task id and ``p`` is the
-        position to evaluate.
+        ``(i, s, x)`` where ``i`` is a task id, ``s`` is a seed for numpy's
+        random number generator, and ``x`` is the argument to evaluate.
     results
         The queue to store results in. Results are stored as
         tuples ``(i, p, r)`` where ``i`` is the task id, ``p`` is
@@ -479,7 +510,8 @@ class _Worker(multiprocessing.Process):
         try:
             with threadpoolctl.threadpool_limits(self._max_threads):
                 for k in range(self._max_tasks):
-                    i, x = self._tasks.get()
+                    i, seed, x = self._tasks.get()
+                    np.random.seed(seed)
                     f = self._function(x, *self._args)
                     self._results.put((i, f))
 
