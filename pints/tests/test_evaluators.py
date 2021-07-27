@@ -7,11 +7,11 @@
 # copyright notice and full license details.
 #
 import multiprocessing
+import numpy as np
+import pints
 import unittest
 
-import numpy as np
-
-import pints
+multiprocessing.set_start_method('spawn')
 
 
 class TestEvaluators(unittest.TestCase):
