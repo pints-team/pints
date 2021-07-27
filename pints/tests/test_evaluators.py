@@ -11,7 +11,6 @@ import numpy as np
 import pints
 import unittest
 
-multiprocessing.set_start_method('spawn')
 
 
 class TestEvaluators(unittest.TestCase):
@@ -237,4 +236,5 @@ def random_int(x):
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
     unittest.main()
