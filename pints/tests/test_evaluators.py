@@ -10,6 +10,8 @@ import numpy as np
 import pints
 import unittest
 
+import multiprocessing
+
 
 class TestEvaluators(unittest.TestCase):
     """
