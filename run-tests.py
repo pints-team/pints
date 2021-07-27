@@ -8,12 +8,12 @@
 #
 import argparse
 import datetime
-import multiprocessing
 import os
 import re
 import subprocess
 import sys
 import unittest
+
 
 def run_unit_tests():
     """
@@ -498,6 +498,8 @@ def export_notebook(ipath, opath):
 
 
 if __name__ == '__main__':
+    # Prevent CI from hanging on multiprocessing tests
+    import multiprocessing
     multiprocessing.set_start_method('spawn')
 
     # Set up argument parsing

@@ -12,7 +12,6 @@ import pints
 import unittest
 
 
-
 class TestEvaluators(unittest.TestCase):
     """
     Tests the evaluator classes and methods.
@@ -236,5 +235,6 @@ def random_int(x):
 
 
 if __name__ == '__main__':
+    # Use 'spawn' method of process starting to prevent CI from hanging
     multiprocessing.set_start_method('spawn')
     unittest.main()
