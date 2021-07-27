@@ -6,11 +6,12 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import numpy as np
-import pints
+import multiprocessing
 import unittest
 
-import multiprocessing
+import numpy as np
+
+import pints
 
 
 class TestEvaluators(unittest.TestCase):
@@ -141,7 +142,6 @@ class TestEvaluators(unittest.TestCase):
         from pints._evaluation import _Worker as Worker
 
         # Create queues for worker
-        import multiprocessing
         tasks = multiprocessing.Queue()
         results = multiprocessing.Queue()
         errors = multiprocessing.Queue()
