@@ -6,6 +6,7 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import multiprocessing
 import numpy as np
 import pints
 import unittest
@@ -139,7 +140,6 @@ class TestEvaluators(unittest.TestCase):
         from pints._evaluation import _Worker as Worker
 
         # Create queues for worker
-        import multiprocessing
         tasks = multiprocessing.Queue()
         results = multiprocessing.Queue()
         errors = multiprocessing.Queue()
@@ -235,4 +235,6 @@ def random_int(x):
 
 
 if __name__ == '__main__':
+    # Use 'spawn' method of process starting to prevent CI from hanging
+    multiprocessing.set_start_method('spawn')
     unittest.main()

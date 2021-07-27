@@ -498,6 +498,10 @@ def export_notebook(ipath, opath):
 
 
 if __name__ == '__main__':
+    # Prevent CI from hanging on multiprocessing tests
+    import multiprocessing
+    multiprocessing.set_start_method('spawn')
+
     # Set up argument parsing
     parser = argparse.ArgumentParser(
         description='Run unit tests for Pints.',
