@@ -20,9 +20,9 @@ All notable changes to this project will be documented in this file.
 - [#1250](https://github.com/pints-team/pints/pull/1250) The returned values from `SingleChainMCMC.tell()` and `MultiChainMCMC.tell()` have been extended from current position `x` to `x, fx, accepted`, where `fx` is the current log likelihood and `accepted` is a bool indicating whether tell performed an acceptance step in this call.
 - [#1195](https://github.com/pints-team/pints/pull/1195) The installation instructions have been updated to reflect that PINTS in now pip-installable.
 - [#1191](https://github.com/pints-team/pints/pull/1191) Warnings are now emitted using `warnings.warn` rather than `logging.getLogger(..).warning`. This makes them show up like other warnings, and allows them to be suppressed with [filterwarnings](https://docs.python.org/3/library/warnings.html#warnings.filterwarnings).
-- [#1112](https://github.com/pints-team/pints/pull/1112) The new NUTS method is only supported on Python 3.3 and newer; a warning will be emitted when importing PINTS in older versions.
 - [#1112](https://github.com/pints-team/pints/pull/1112) The `pints.Logger` can now deal with `None` being logged in place of a proper value.
 - [#1355](https://github.com/pints-team/pints/pull/1355) When called with `parallel=True` the method `pints.evaluate()` will now limit the number of workers it uses to the number of tasks it needs to process.
+- [#1357](https://github.com/pints-team/pints/pull/1357) Parallel evaluations using multiprocessing now restrict the number of threads used by Numpy and others to 1 (by default).
 - [#1360](https://github.com/pints-team/pints/pull/1360) The `ParallelEvaluator` will now set a different (pre-determined) random seed for each task, ensuring tasks can use randomness, but results can be reproduced from run to run.
 - [#1365](https://github.com/pints-team/pints/pull/1365) Dropped support for Python 2.7. PINTS now requires Python 3.5 or higher.
 ### Deprecated
