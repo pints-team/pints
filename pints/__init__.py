@@ -13,18 +13,21 @@ This module provides several optimisation and sampling methods that can be
 applied to find the parameters of a model (typically a time series model) that
 are most likely, given an experimental data set.
 """
-
-
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
+import os
 import sys
+
+#
+# Check Python version
+#
+if sys.hexversion < 0x03050000:  # pragma: no cover
+    raise RuntimeError('PINTS requires Python 3.5 or newer.')
+
 
 #
 # Version info
 #
 def _load_version_int():
     try:
-        import os
         root = os.path.abspath(os.path.dirname(__file__))
         with open(os.path.join(root, 'version'), 'r') as f:
             version = f.read().strip().split(',')
@@ -35,10 +38,6 @@ def _load_version_int():
 
 __version_int__ = _load_version_int()
 __version__ = '.'.join([str(x) for x in __version_int__])
-if sys.version_info[0] < 3:     # pragma: no python 3 cover
-    # Before Python3, list comprehension iterators leaked, which would have
-    # created a global ``pints.x`` at this point.
-    del(x)
 
 #
 # Expose pints version
@@ -220,6 +219,7 @@ from ._mcmc._hamiltonian import HamiltonianMCMC
 from ._mcmc._mala import MALAMCMC
 from ._mcmc._metropolis import MetropolisRandomWalkMCMC
 from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
+from ._mcmc._nuts import NoUTurnMCMC
 from ._mcmc._population import PopulationMCMC
 from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
 from ._mcmc._relativistic import RelativisticMCMC
@@ -227,12 +227,6 @@ from ._mcmc._slice_doubling import SliceDoublingMCMC
 from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
 from ._mcmc._slice_stepout import SliceStepoutMCMC
 from ._mcmc._summary import MCMCSummary
-
-if sys.hexversion >= 0x03030000:
-    from ._mcmc._nuts import NoUTurnMCMC
-else:   # pragma: no python 3 cover
-    import warnings
-    warnings.warn('No-U-Turn sampler unsupported for Python version < 3.3')
 
 
 #
@@ -245,7 +239,7 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
-# Transformation
+# Transformations
 #
 from ._transformation import (
     ComposedTransformation,
@@ -270,4 +264,4 @@ from . import noise
 #
 # Remove any imported modules, so we don't expose them as part of pints
 #
-del(sys)
+del(os, sys)

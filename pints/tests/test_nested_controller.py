@@ -15,12 +15,6 @@ import pints.toy
 
 from shared import StreamCapture, TemporaryDirectory
 
-# Unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestNestedController(unittest.TestCase):
     """

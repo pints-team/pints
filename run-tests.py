@@ -2,13 +2,10 @@
 #
 # Runs all unit tests included in Pints.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import argparse
 import datetime
 import os
@@ -450,7 +447,7 @@ def test_notebook(path):
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
         )
         stdout, stderr = p.communicate()
-        # TODO: Use p.communicate(timeout=3600) if Python3 only
+        # TODO: Use p.communicate(timeout=3600)
         if p.returncode != 0:
             # Show failing code, output and errors before returning
             print('ERROR')

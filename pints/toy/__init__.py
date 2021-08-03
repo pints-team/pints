@@ -6,9 +6,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 from ._toy_classes import ToyLogPDF, ToyModel, ToyODEModel
 
 from ._annulus import AnnulusLogPDF

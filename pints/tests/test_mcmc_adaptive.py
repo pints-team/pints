@@ -12,12 +12,6 @@ import unittest
 import numpy as np
 from shared import StreamCapture
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestAdaptiveCovarianceMC(unittest.TestCase):
     """
