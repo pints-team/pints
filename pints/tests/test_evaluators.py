@@ -6,6 +6,7 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import multiprocessing
 import numpy as np
 import pints
 import unittest
@@ -139,7 +140,6 @@ class TestEvaluators(unittest.TestCase):
         from pints._evaluation import _Worker as Worker
 
         # Create queues for worker
-        import multiprocessing
         tasks = multiprocessing.Queue()
         results = multiprocessing.Queue()
         errors = multiprocessing.Queue()
@@ -148,9 +148,11 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((1, 1, 2))
         tasks.put((2, 2, 3))
         max_tasks = 3
+        max_threads = 1
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -169,7 +171,8 @@ class TestEvaluators(unittest.TestCase):
         error.set()
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -185,7 +188,8 @@ class TestEvaluators(unittest.TestCase):
         tasks.put((2, 200, 3))
 
         w = Worker(
-            interrupt_on_30, (), tasks, results, max_tasks, errors, error)
+            interrupt_on_30, (), tasks, results, max_tasks, max_threads,
+            errors, error)
         w.run()
 
         self.assertEqual(results.get(timeout=0.01), (0, 2))
@@ -231,4 +235,6 @@ def random_int(x):
 
 
 if __name__ == '__main__':
+    # Use 'spawn' method of process starting to prevent CI from hanging
+    multiprocessing.set_start_method('spawn')
     unittest.main()
