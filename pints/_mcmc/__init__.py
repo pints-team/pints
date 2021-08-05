@@ -288,7 +288,7 @@ class MCMCController(object):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
-    transform : pints.Transformation
+    transformation : pints.Transformation
         An optional :class:`pints.Transformation` to allow the sampler to work
         in a transformed parameter space. If used, points shown or returned to
         the user will first be detransformed back to the original space.
@@ -298,7 +298,7 @@ class MCMCController(object):
     """
 
     def __init__(
-            self, log_pdf, chains, x0, sigma0=None, transform=None,
+            self, log_pdf, chains, x0, sigma0=None, transformation=None,
             method=None):
 
         # Check function
@@ -308,12 +308,12 @@ class MCMCController(object):
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
         # nothing about the model parameter space.
-        if transform is not None:
+        if transformation is not None:
             # Convert log pdf
-            log_pdf = transform.convert_log_pdf(log_pdf)
+            log_pdf = transformation.convert_log_pdf(log_pdf)
 
             # Convert initial positions
-            x0 = [transform.to_search(x) for x in x0]
+            x0 = [transformation.to_search(x) for x in x0]
 
             # Convert sigma0, if provided
             if sigma0 is not None:
@@ -329,12 +329,12 @@ class MCMCController(object):
                     raise ValueError(
                         'sigma0 must be either a (d, d) matrix or a (d, ) '
                         'vector, where d is the number of parameters.')
-                sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
+                sigma0 = transformation.convert_covariance_matrix(sigma0, x0[0])
 
-        # Store transform for later detransformation: if using a transform, any
-        # parameters logged to the filesystem or printed to screen should be
-        # detransformed first!
-        self._transform = transform
+        # Store transformation for later detransformation: if using a
+        # transformation, any parameters logged to the filesystem or printed to
+        # screen should be detransformed first!
+        self._transform = transformation
 
         # Store function
         self._log_pdf = log_pdf
@@ -624,7 +624,7 @@ class MCMCController(object):
 
         # Pre-allocate arrays for chain storage
         # Note: we store the inverse transformed (to model space) parameters
-        # only if transform is provided.
+        #       only if transformation is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -690,7 +690,7 @@ class MCMCController(object):
                         # Unpack reply into position, evaluation, and status
                         y, fy, accepted = reply
 
-                        # Inverse transform to model space if transform is
+                        # Inverse transform to model space if transformation is
                         # provided
                         if self._transform:
                             y_store = self._transform.to_model(y)
@@ -749,7 +749,8 @@ class MCMCController(object):
                     # Unpack reply into positions, evaluations, and status
                     ys, fys, accepted = reply
 
-                    # Inverse transform to model space if transform is provided
+                    # Inverse transform to model space if transformation is
+                    # provided
                     if self._transform:
                         ys_store = np.zeros(ys.shape)
                         for i, y in enumerate(ys):
