@@ -299,7 +299,7 @@ class OptimisationController(object):
         this information.
     boundaries
         An optional set of boundaries on the parameter space.
-    transform
+    transformation
         An optional :class:`pints.Transformation` to allow the optimiser to
         search in a transformed parameter space. If used, points shown or
         returned to the user will first be detransformed back to the original
@@ -310,8 +310,8 @@ class OptimisationController(object):
     """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, transform=None,
-            method=None):
+            self, function, x0, sigma0=None, boundaries=None,
+            transformation=None, method=None):
 
         # Convert x0 to vector
         # This converts e.g. (1, 7) shapes to (7, ), giving users a bit more
@@ -331,26 +331,26 @@ class OptimisationController(object):
         # Apply a transformation (if given). From this point onward the
         # optimiser will see only the transformed search space and will know
         # nothing about the model parameter space.
-        if transform is not None:
+        if transformation is not None:
             # Convert error measure or log pdf
             if self._minimising:
-                function = transform.convert_error_measure(function)
+                function = transformation.convert_error_measure(function)
             else:
-                function = transform.convert_log_pdf(function)
+                function = transformation.convert_log_pdf(function)
 
             # Convert initial position
-            x0 = transform.to_search(x0)
+            x0 = transformation.to_search(x0)
 
             # Convert sigma0, if provided
             if sigma0 is not None:
-                sigma0 = transform.convert_standard_deviation(sigma0, x0)
+                sigma0 = transformation.convert_standard_deviation(sigma0, x0)
             if boundaries:
-                boundaries = transform.convert_boundaries(boundaries)
+                boundaries = transformation.convert_boundaries(boundaries)
 
-        # Store transform for later detransformation: if using a transform, any
-        # parameters logged to the filesystem or printed to screen should be
-        # detransformed first!
-        self._transform = transform
+        # Store transformation for later detransformation: if using a
+        # transformation, any parameters logged to the filesystem or printed to
+        # screen should be detransformed first!
+        self._transform = transformation
 
         # Store function
         if self._minimising:
@@ -803,20 +803,20 @@ class Optimisation(OptimisationController):
     """ Deprecated alias for :class:`OptimisationController`. """
 
     def __init__(
-            self, function, x0, sigma0=None, boundaries=None, transform=None,
-            method=None):
+            self, function, x0, sigma0=None, boundaries=None,
+            transformation=None, method=None):
         # Deprecated on 2019-02-12
         import warnings
         warnings.warn(
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
-            function, x0, sigma0=None, boundaries=None, transform=None,
+            function, x0, sigma0=None, boundaries=None, transformation=None,
             method=None)
 
 
 def optimise(
-        function, x0, sigma0=None, boundaries=None, transform=None,
+        function, x0, sigma0=None, boundaries=None, transformation=None,
         method=None):
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
@@ -839,7 +839,7 @@ def optimise(
         this information.
     boundaries
         An optional set of boundaries on the parameter space.
-    transform
+    transformation
         An optional :class:`pints.Transformation` to allow the optimiser to
         search in a transformed parameter space. If used, points shown or
         returned to the user will first be detransformed back to the original
@@ -856,7 +856,7 @@ def optimise(
         The corresponding score.
     """
     return OptimisationController(
-        function, x0, sigma0, boundaries, transform, method).run()
+        function, x0, sigma0, boundaries, transformation, method).run()
 
 
 class TriangleWaveTransform(object):
