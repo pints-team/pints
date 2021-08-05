@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 - [#1025](https://github.com/pints-team/pints/pull/1025) Added a stochastic logistic growth problem for use with ABC.
 
 ### Changed
-- [#1375](https://github.com/pints-team/pints/pull/1375) Change all `transform` args to `transformation` for consistency.
+- [#1375](https://github.com/pints-team/pints/pull/1375) Changed all arguments called `transform` to `transformation` for consistency.
 - [#1365](https://github.com/pints-team/pints/pull/1365) Dropped support for Python 2.7. PINTS now requires Python 3.5 or higher.
 - [#1360](https://github.com/pints-team/pints/pull/1360) The `ParallelEvaluator` will now set a different (pre-determined) random seed for each task, ensuring tasks can use randomness, but results can be reproduced from run to run.
 - [#1357](https://github.com/pints-team/pints/pull/1357) Parallel evaluations using multiprocessing now restrict the number of threads used by Numpy and others to 1 (by default).
