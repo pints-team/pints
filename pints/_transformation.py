@@ -294,7 +294,7 @@ class ComposedTransformation(Transformation):
 
     The input parameters of the :class:`ComposedTransformation` have to be
     ordered in the same way as the individual tranforms for the parameter
-    vector. In the above example the transform may be performed by
+    vector. In the above example the transformation may be performed by
     ``t.to_search(p)``, where::
 
         p = [parameter1_transform1,
@@ -317,7 +317,8 @@ class ComposedTransformation(Transformation):
                 raise ValueError('All sub-transforms must extend '
                                  'pints.Transformation.')
             self._n_parameters += transform.n_parameters()
-            # If any transform is not elementwise, then it is not elementwise
+            # If any transformation is not elementwise, then it is not
+            # elementwise
             self._elementwise &= transform.elementwise()
 
         # Store
@@ -742,16 +743,16 @@ class RectangularBoundariesTransformation(Transformation):
         \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
             \text{logit}^{-1}(q) - 1.
 
-    For example, to create a transform with :math:`p_1 \in [0, 4)`,
+    For example, to create a transformation with :math:`p_1 \in [0, 4)`,
     :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
 
-        transform = pints.RectangularBoundariesTransformation([0, 1, 2],
-                                                              [4, 5, 6])
+        transformation = pints.RectangularBoundariesTransformation([0, 1, 2],
+                                                                   [4, 5, 6])
 
     or::
 
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
-        transform = pints.RectangularBoundariesTransformation(boundaries)
+        transformation = pints.RectangularBoundariesTransformation(boundaries)
 
     Extends :class:`Transformation`.
     """
@@ -889,17 +890,17 @@ class TransformedBoundaries(pints.Boundaries):
     ----------
     boundaries
         A :class:`pints.Boundaries`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, boundaries, transform):
+    def __init__(self, boundaries, transformation):
         self._boundaries = boundaries
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._boundaries.n_parameters()
 
         if self._transform.n_parameters() != self._n_parameters:
             raise ValueError('Number of parameters for boundaries and '
-                             'transform must match.')
+                             'transformation must match.')
 
     def check(self, q):
         """ See :meth:`Boundaries.check()`. """
@@ -943,16 +944,16 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     ----------
     error
         A :class:`pints.ErrorMeasure`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, error, transform):
+    def __init__(self, error, transformation):
         self._error = error
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._error.n_parameters()
         if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for error and transform '
-                             'must match.')
+            raise ValueError('Number of parameters for error and '
+                             'transformation must match.')
 
     def __call__(self, q):
         # Get parameters in the model space
@@ -1042,16 +1043,16 @@ class TransformedLogPDF(pints.LogPDF):
     ----------
     log_pdf
         A :class:`pints.LogPDF`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, log_pdf, transform):
+    def __init__(self, log_pdf, transformation):
         self._log_pdf = log_pdf
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._log_pdf.n_parameters()
         if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for log_pdf and transform '
-                             'must match.')
+            raise ValueError('Number of parameters for log_pdf and '
+                             'transformation must match.')
 
     def __call__(self, q):
         # Get parameters in the model space
@@ -1110,11 +1111,11 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
     ----------
     log_prior
         A :class:`pints.LogPrior`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, log_prior, transform):
-        super(TransformedLogPrior, self).__init__(log_prior, transform)
+    def __init__(self, log_prior, transformation):
+        super(TransformedLogPrior, self).__init__(log_prior, transformation)
 
     def sample(self, n):
         """
