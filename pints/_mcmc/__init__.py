@@ -329,7 +329,8 @@ class MCMCController(object):
                     raise ValueError(
                         'sigma0 must be either a (d, d) matrix or a (d, ) '
                         'vector, where d is the number of parameters.')
-                sigma0 = transformation.convert_covariance_matrix(sigma0, x0[0])
+                sigma0 = transformation.convert_covariance_matrix(sigma0,
+                                                                  x0[0])
 
         # Store transformation for later detransformation: if using a
         # transformation, any parameters logged to the filesystem or printed to
