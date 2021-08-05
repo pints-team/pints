@@ -1062,17 +1062,19 @@ class MCMCController(object):
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(self, log_pdf, chains, x0, sigma0=None, transformation=None,
+                 method=None):
         # Deprecated on 2019-02-06
         import warnings
         warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
         super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
-                                           method=method)
+                                           transformation, method=method)
 
 
-def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
+def mcmc_sample(log_pdf, chains, x0, sigma0=None, transformation=None,
+                method=None):
     """
     Sample from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
     (MCMC) method.
@@ -1095,9 +1097,13 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
+    transformation : pints.Transformation
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method=method).run()
+        log_pdf, chains, x0, sigma0, transformation, method=method).run()
