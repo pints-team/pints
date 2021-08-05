@@ -811,8 +811,7 @@ class Optimisation(OptimisationController):
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
         super(Optimisation, self).__init__(
-            function, x0, sigma0=None, boundaries=None, transformation=None,
-            method=None)
+            function, x0, sigma0, boundaries, transformation, method=method)
 
 
 def optimise(
