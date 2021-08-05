@@ -335,7 +335,7 @@ class MCMCController(object):
         # Store transformation for later detransformation: if using a
         # transformation, any parameters logged to the filesystem or printed to
         # screen should be detransformed first!
-        self._transform = transformation
+        self._transformation = transformation
 
         # Store function
         self._log_pdf = log_pdf
@@ -693,8 +693,8 @@ class MCMCController(object):
 
                         # Inverse transform to model space if transformation is
                         # provided
-                        if self._transform:
-                            y_store = self._transform.to_model(y)
+                        if self._transformation:
+                            y_store = self._transformation.to_model(y)
                         else:
                             y_store = y
 
@@ -752,10 +752,10 @@ class MCMCController(object):
 
                     # Inverse transform to model space if transformation is
                     # provided
-                    if self._transform:
+                    if self._transformation:
                         ys_store = np.zeros(ys.shape)
                         for i, y in enumerate(ys):
-                            ys_store[i] = self._transform.to_model(y)
+                            ys_store[i] = self._transformation.to_model(y)
                     else:
                         ys_store = ys
 

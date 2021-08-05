@@ -350,7 +350,7 @@ class OptimisationController(object):
         # Store transformation for later detransformation: if using a
         # transformation, any parameters logged to the filesystem or printed to
         # screen should be detransformed first!
-        self._transform = transformation
+        self._transformation = transformation
 
         # Store function
         if self._minimising:
@@ -636,8 +636,8 @@ class OptimisationController(object):
             print('Current best position:')
 
             # Inverse transform search parameters
-            if self._transform:
-                xbest = self._transform.to_model(self._optimiser.xbest())
+            if self._transformation:
+                xbest = self._transformation.to_model(self._optimiser.xbest())
             else:
                 xbest = self._optimiser.xbest()
 
@@ -662,8 +662,8 @@ class OptimisationController(object):
         self._iterations = iteration
 
         # Inverse transform search parameters
-        if self._transform:
-            xbest = self._transform.to_model(self._optimiser.xbest())
+        if self._transformation:
+            xbest = self._transformation.to_model(self._optimiser.xbest())
         else:
             xbest = self._optimiser.xbest()
 
