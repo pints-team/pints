@@ -1435,6 +1435,10 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         log_like = self.log_likelihood([mu, sigma])
         self.assertAlmostEqual(log_like, -19.37962904497594)
 
+        sigma = -1
+        log_like = self.log_likelihood([mu, sigma])
+        self.assertEqual(log_like, -np.inf)
+
         # two dim output problem
         mu1 = -1.5
         mu2 = 3.4 / 2
@@ -1442,6 +1446,53 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         sigma2 = 1.2
         log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
         self.assertAlmostEqual(log_like, -32.98116144567281)
+
+        sigma1 = -1
+        log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(log_like, -np.inf)
+
+    def test_evaluateS1(self):
+        # tests sensitivity
+
+        # single output problem
+        sigma = 1
+        mu = 3.7
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(len(dL), 2)
+        y_call = self.log_likelihood([mu, sigma])
+        self.assertEqual(y, y_call)
+        correct_vals = [-8.63626423195156, 15.08027828821763]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        sigma = -1
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(y, -np.inf)
+        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
+
+        # two dim output problem
+        mu1 = -1.5
+        mu2 = 3.4 / 2
+        sigma1 = 3
+        sigma2 = 1.2
+        y, dL = self.log_likelihood_multiple.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(len(dL), 4)
+        y_call = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, y_call)
+        # note that 2x needed for second output due to df / dtheta for
+        # constant model
+        correct_vals = [1.3515261964498262, -5.9200876317822955 * 2,
+                        0.05270852873782794, 8.646742377997509]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        sigma2 = -2
+        y, dL = self.log_likelihood_multiple.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, -np.inf)
+        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 4),
+                                       equal_nan=True))
 
 
 class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):

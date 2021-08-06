@@ -839,6 +839,8 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
+        if any(sigma < 0):
+            return -np.inf
         error = np.log(self._values) - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(self._log_values, axis=0)
@@ -857,8 +859,11 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         # Note: Must be (np.log(data) - simulation), sign now matters!
         r = np.log(self._values) - y
 
-        # Calculate log-likelihood
+        # Calculate log-likelihood and when log-prob is infinite, gradients are
+        # not defined
         L = self.__call__(x)
+        if L == -np.inf:
+            return L, np.tile(np.nan, self._n_parameters)
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
