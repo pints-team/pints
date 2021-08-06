@@ -789,7 +789,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         L(\theta, \sigma|\boldsymbol{x})
             = p(\boldsymbol{x} | \theta, \sigma)
             = \prod_{j=1}^{n_t} \frac{1}{x_j\sqrt{2\pi\sigma^2}}\exp\left(
-                -\frac{(\log{x_j} - f_j(\theta))^2}{2\sigma^2}\right)
+                -\frac{(\log{x_j} - \log{f_j(\theta)})^2}{2\sigma^2}\right)
 
     leading to a log-likelihood of:
 
@@ -798,7 +798,8 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
             -\frac{n_t}{2} \log{2\pi}
             -n_t \log{\sigma}
             -\sum_{j=1}^{n_t}\log{x_j}
-            -\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(\log{x_j} - f_j(\theta))^2}
+            -\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(
+            \log{x_j} - \log{f_j(\theta)})^2}
 
     where ``n_t`` is the number of time points in the series, ``x_j`` is the
     sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
@@ -810,8 +811,13 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
             -\frac{n_t n_o}{2}\log{2\pi}
             -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
             -\sum_{i=1}^{n_o}{\sum_{j=1}^{n_t} \log{x_j} + \left[
-            \frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{(\log{x_j} - f_j(\theta))^2}
+            \frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{
+            (\log{x_j} - \log{f_j(\theta)})^2}
              \right]}
+
+    The optional parameter `mean_correction` allows adjusting the mean of
+    the distribution so that its expectation is ``f(\theta)`` opposed to
+    ``f(\theta)`` for the
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -835,13 +841,18 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+        vals = np.asarray(self._values)
+        print(not np.any(vals))
+        if not np.any(vals):
+            raise ValueError('All data points must exceed zero.')
         self._log_values = np.log(self._values)
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
         if any(sigma < 0):
             return -np.inf
-        error = np.log(self._values) - self._problem.evaluate(x[:-self._no])
+        soln = self._problem.evaluate(x[:-self._no])
+        error = np.log(self._values) - np.log(soln)
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(self._log_values, axis=0)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
@@ -857,7 +868,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
 
         # Note: Must be (np.log(data) - simulation), sign now matters!
-        r = np.log(self._values) - y
+        r = np.log(self._values) - np.log(y)
 
         # Calculate log-likelihood and when log-prob is infinite, gradients are
         # not defined
@@ -867,7 +878,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
-            (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
+            (sigma**(-2.0) * np.sum((r.T * dy.T / y.T).T, axis=0).T).T, axis=0)
 
         # Calculate derivative wrt sigma
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)

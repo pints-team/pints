@@ -1426,6 +1426,12 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         cls.log_likelihood_multiple = pints.LogNormalLogLikelihood(
             cls.problem_multiple)
 
+    def test_bad_constructor(self):
+        # tests that bad data types result in error
+        data = [0, 4, 5.5, 7.2]
+        self.assertRaises(ValueError, pints.SingleOutputProblem,
+                          self.model_single, self.times, data)
+
     def test_call(self):
         # test calls of log-likelihood
 
@@ -1433,19 +1439,25 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         sigma = 1
         mu = 3.7
         log_like = self.log_likelihood([mu, sigma])
-        self.assertAlmostEqual(log_like, -19.37962904497594)
+        self.assertAlmostEqual(log_like, -10.164703123713256)
 
         sigma = -1
         log_like = self.log_likelihood([mu, sigma])
         self.assertEqual(log_like, -np.inf)
+        log_like = self.log_likelihood([-1, sigma])
+
+        mu = -1
+        sigma = 1
+        log_like = self.log_likelihood([-1, sigma])
+        self.assertEqual(log_like, -np.inf)
 
         # two dim output problem
-        mu1 = -1.5
+        mu1 = 1.5
         mu2 = 3.4 / 2
         sigma1 = 3
         sigma2 = 1.2
         log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
-        self.assertAlmostEqual(log_like, -32.98116144567281)
+        self.assertAlmostEqual(log_like, -24.906992140695426)
 
         sigma1 = -1
         log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
@@ -1461,7 +1473,7 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         self.assertEqual(len(dL), 2)
         y_call = self.log_likelihood([mu, sigma])
         self.assertEqual(y, y_call)
-        correct_vals = [-8.63626423195156, 15.08027828821763]
+        correct_vals = [0.2514606728237081, -3.3495735543077423]
         for i in range(len(dL)):
             self.assertAlmostEqual(dL[i], correct_vals[i])
 
@@ -1471,7 +1483,7 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
 
         # two dim output problem
-        mu1 = -1.5
+        mu1 = 1.5
         mu2 = 3.4 / 2
         sigma1 = 3
         sigma2 = 1.2
@@ -1482,8 +1494,8 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         self.assertEqual(y, y_call)
         # note that 2x needed for second output due to df / dtheta for
         # constant model
-        correct_vals = [1.3515261964498262, -5.9200876317822955 * 2,
-                        0.05270852873782794, 8.646742377997509]
+        correct_vals = [0.33643521004561316, 0.03675900403289047 * 2,
+                        -1.1262529182124121, -1.8628028462558714]
         for i in range(len(dL)):
             self.assertAlmostEqual(dL[i], correct_vals[i])
 
