@@ -824,7 +824,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(GaussianLogLikelihood, self).__init__(problem)
+        super(LogNormalLogLikelihood, self).__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -835,11 +835,13 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+        self._log_values = np.log(self._values)
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
-        error = self._values - self._problem.evaluate(x[:-self._no])
+        error = np.log(self._values) - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
+                      - np.sum(self._log_values, axis=0)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
 
     def evaluateS1(self, x):

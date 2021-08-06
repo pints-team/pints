@@ -119,6 +119,7 @@ from ._log_likelihoods import (
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
     KnownNoiseLogLikelihood,
+    LogNormalLogLikelihood,
     MultiplicativeGaussianLogLikelihood,
     ScaledLogLikelihood,
     StudentTLogLikelihood,

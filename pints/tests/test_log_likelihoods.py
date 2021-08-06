@@ -1405,6 +1405,45 @@ class TestKnownNoiseLogLikelihood(unittest.TestCase):
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
 
 
+class TestLogNormalLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # sreate test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multiple = pints.toy.ConstantModel(2)
+        cls.times = [1, 2, 3, 4]
+        cls.data_single = [3, 4, 5.5, 7.2]
+        cls.data_multiple = [[3, 1.1],
+                             [4, 3.2],
+                             [5.5, 4.5],
+                             [7.2, 10.1]]
+        cls.problem_single = pints.SingleOutputProblem(
+            cls.model_single, cls.times, cls.data_single)
+        cls.problem_multiple = pints.MultiOutputProblem(
+            cls.model_multiple, cls.times, cls.data_multiple)
+        cls.log_likelihood = pints.LogNormalLogLikelihood(cls.problem_single)
+        cls.log_likelihood_multiple = pints.LogNormalLogLikelihood(
+            cls.problem_multiple)
+
+    def test_call(self):
+        # test calls of log-likelihood
+
+        # single output problem
+        sigma = 1
+        mu = 3.7
+        log_like = self.log_likelihood([mu, sigma])
+        self.assertAlmostEqual(log_like, -19.37962904497594)
+
+        # two dim output problem
+        mu1 = -1.5
+        mu2 = 3.4 / 2
+        sigma1 = 3
+        sigma2 = 1.2
+        log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertAlmostEqual(log_like, -32.98116144567281)
+
+
 class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
 
     @classmethod
