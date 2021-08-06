@@ -85,6 +85,8 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         parameters = x[-m:]
         rho = np.asarray(parameters[0::2])
         sigma = np.asarray(parameters[1::2])
+        if any(sigma <= 0):
+            return -np.inf
         sigma = np.asarray(sigma) * np.sqrt(1 - rho**2)
         error = self._values - self._problem.evaluate(x[:-2 * self._no])
         autocorr_error = error[1:] - rho * error[:-1]
@@ -164,6 +166,8 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         rho = np.asarray(parameters[0::3])
         phi = np.asarray(parameters[1::3])
         sigma = np.asarray(parameters[2::3])
+        if any(sigma <= 0):
+            return -np.inf
         sigma = (
             sigma *
             np.sqrt((1.0 - rho**2) / (1.0 + 2.0 * phi * rho + phi**2))
@@ -220,12 +224,14 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         n = self._n
         m = self._no
 
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+        if any(sigma <= 0):
+            return -np.inf
+
         # problem parameters
         problem_parameters = x[:-m]
         error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
 
         # Calculate
         return np.sum(
@@ -341,6 +347,8 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
 
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * function_values**eta
+        if np.any(np.asarray(sigma_tot) <= 0):
+            return -np.inf
 
         # Compute log-likelihood
         # (inner sums over time points, outer sum over parameters)
@@ -394,6 +402,10 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         where :math:`i` sums over the measurement time points and :math:`j`
         over the outputs of the model.
         """
+        L = self.__call__(parameters)
+        if L == -np.inf:
+            return L, np.tile(np.nan, self._n_parameters)
+
         # Get parameters from input
         # Shape sigma_base, eta, sigma_rel = (n_outputs,)
         noise_parameters = np.asarray(parameters[-self._np:])
@@ -422,9 +434,6 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
 
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * y**eta
-
-        # Compute likelihood
-        L = self.__call__(parameters)
 
         # Compute derivative w.r.t. model parameters
         dtheta = -np.sum(sigma_rel * eta * np.sum(

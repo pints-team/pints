@@ -99,6 +99,16 @@ class TestAR1LogLikelihood(unittest.TestCase):
         # Check that likelihood returns expected value
         self.assertAlmostEqual(score, -179.22342804581092)
 
+    def test_negative_sd(self):
+        # tests that negative sd returns -inf
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log_likelihood
+        log_likelihood = pints.AR1LogLikelihood(problem)
+        self.assertEqual(log_likelihood([1, 0.5, -1]), -np.inf)
+
 
 class TestARMA11LogLikelihood(unittest.TestCase):
 
@@ -189,6 +199,16 @@ class TestARMA11LogLikelihood(unittest.TestCase):
         # Check that likelihood returns expected value
         self.assertAlmostEqual(score, -214.17034137601107)
 
+    def test_negative_sd(self):
+        # tests that negative sd returns -inf
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log_likelihood
+        log_likelihood = pints.ARMA11LogLikelihood(problem)
+        self.assertEqual(log_likelihood([1, 0.5, 0.5, -1]), -np.inf)
+
 
 class TestCauchyLogLikelihood(unittest.TestCase):
 
@@ -276,6 +296,16 @@ class TestCauchyLogLikelihood(unittest.TestCase):
 
         # Check that likelihood returns expected value
         self.assertAlmostEqual(score, -49.51182454195375)
+
+    def test_negative_sd(self):
+        # tests that negative sd returns -inf
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log_likelihood
+        log_likelihood = pints.CauchyLogLikelihood(problem)
+        self.assertEqual(log_likelihood([1, -1]), -np.inf)
 
 
 class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
@@ -753,6 +783,18 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         score_after = log_likelihood(test_parameters + eps / 2)
         self.assertAlmostEqual(
             deriv[11], (score_after - score_before) / eps[11])
+
+    def test_negative_sigma(self):
+        # tests that negative sigma yields -inf
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log_likelihood
+        log_likelihood = pints.ConstantAndMultiplicativeGaussianLogLikelihood(
+            problem)
+
+        self.assertEqual(log_likelihood([1, -100, 1, 1]), -np.inf)
 
 
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
