@@ -842,8 +842,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)
         vals = np.asarray(self._values)
-        print(not np.any(vals))
-        if not np.any(vals):
+        if np.any(vals <= 0):
             raise ValueError('All data points must exceed zero.')
         self._log_values = np.log(self._values)
 
@@ -852,6 +851,8 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         if any(sigma < 0):
             return -np.inf
         soln = self._problem.evaluate(x[:-self._no])
+        if np.any(soln < 0):
+            return -np.inf
         error = np.log(self._values) - np.log(soln)
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(self._log_values, axis=0)
@@ -859,6 +860,12 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        # Calculate log-likelihood and when log-prob is infinite, gradients are
+        # not defined
+        L = self.__call__(x)
+        if L == -np.inf:
+            return L, np.tile(np.nan, self._n_parameters)
+
         sigma = np.asarray(x[-self._no:])
 
         # Evaluate, and get residuals
@@ -869,12 +876,6 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
         # Note: Must be (np.log(data) - simulation), sign now matters!
         r = np.log(self._values) - np.log(y)
-
-        # Calculate log-likelihood and when log-prob is infinite, gradients are
-        # not defined
-        L = self.__call__(x)
-        if L == -np.inf:
-            return L, np.tile(np.nan, self._n_parameters)
 
         # Calculate derivatives in the model parameters
         dL = np.sum(

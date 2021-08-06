@@ -1429,8 +1429,10 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
     def test_bad_constructor(self):
         # tests that bad data types result in error
         data = [0, 4, 5.5, 7.2]
-        self.assertRaises(ValueError, pints.SingleOutputProblem,
-                          self.model_single, self.times, data)
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, data)
+        self.assertRaises(ValueError, pints.LogNormalLogLikelihood,
+                          problem)
 
     def test_call(self):
         # test calls of log-likelihood
@@ -1478,6 +1480,12 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
             self.assertAlmostEqual(dL[i], correct_vals[i])
 
         sigma = -1
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(y, -np.inf)
+        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
+
+        mu = -1
+        sigma = 1
         y, dL = self.log_likelihood.evaluateS1([mu, sigma])
         self.assertEqual(y, -np.inf)
         self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
