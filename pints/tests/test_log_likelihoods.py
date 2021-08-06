@@ -1489,6 +1489,15 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         for i in range(len(dL)):
             self.assertAlmostEqual(dL[i], correct_vals[i])
 
+        # mean-adjustment
+        y, dL = self.log_likelihood_adj.evaluateS1([mu, sigma])
+        self.assertEqual(len(dL), 2)
+        y_call = self.log_likelihood_adj([mu, sigma])
+        self.assertEqual(y, y_call)
+        correct_vals = [0.7920012133642484, -4.349573554307744]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
         sigma = -1
         y, dL = self.log_likelihood.evaluateS1([mu, sigma])
         self.assertEqual(y, -np.inf)
@@ -1514,6 +1523,19 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         # constant model
         correct_vals = [0.33643521004561316, 0.03675900403289047 * 2,
                         -1.1262529182124121, -1.8628028462558714]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        # mean-adjustment
+        y, dL = self.log_likelihood_multiple_adj.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(len(dL), 4)
+        y_call = self.log_likelihood_multiple_adj([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, y_call)
+        # note that 2x needed for second output due to df / dtheta for
+        # constant model
+        correct_vals = [1.6697685433789466, 0.6249942981505375 * 2,
+                        -4.126252918212412, -3.062802846255874]
         for i in range(len(dL)):
             self.assertAlmostEqual(dL[i], correct_vals[i])
 

@@ -886,7 +886,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
         if self._mean_adjust:
             dsigma -= np.sum(
-                (sigma**(-2.0) * np.sum((error.T * sigma).T,
+                (sigma**(-2.0) * np.sum((error * sigma),
                                         axis=0).T).T,
                 axis=0)
 
