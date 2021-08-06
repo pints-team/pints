@@ -854,8 +854,8 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
 
-        # Note: Must be (data - simulation), sign now matters!
-        r = self._values - y
+        # Note: Must be (np.log(data) - simulation), sign now matters!
+        r = np.log(self._values) - y
 
         # Calculate log-likelihood
         L = self.__call__(x)
