@@ -872,7 +872,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
 
-        if any(eta < 0) or any(sigma <= 0):
+        if any(sigma <= 0):
             return -np.inf
 
         # Evaluate function (n_times, n_output)

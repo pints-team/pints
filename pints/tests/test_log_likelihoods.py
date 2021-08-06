@@ -1589,7 +1589,6 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         # Create log_likelihood
         log_likelihood = pints.MultiplicativeGaussianLogLikelihood(problem)
         self.assertEqual(log_likelihood([1, 1, 0]), -np.inf)
-        self.assertEqual(log_likelihood([1, -1, 0.5]), -np.inf)
 
 
 class TestScaledLogLikelihood(unittest.TestCase):
