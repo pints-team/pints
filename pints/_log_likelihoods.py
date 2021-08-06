@@ -783,41 +783,27 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
     time point, and adds a parameter representing the standard deviation
     (sigma) of the noise on the log scale for each output.
 
-    For a noise level of ``sigma``, the likelihood becomes:
+    Specifically, the sampling distribution takes the form:
 
     .. math::
-        L(\theta, \sigma|\boldsymbol{x})
-            = p(\boldsymbol{x} | \theta, \sigma)
-            = \prod_{j=1}^{n_t} \frac{1}{x_j\sqrt{2\pi\sigma^2}}\exp\left(
-                -\frac{(\log{x_j} - \log{f_j(\theta)})^2}{2\sigma^2}\right)
+        y(t) \sim \text{log-Normal}(\log f(\theta, t), \sigma)
 
-    leading to a log-likelihood of:
+    which can alternatively be written:
 
     .. math::
-        \log{L(\theta, \sigma|\boldsymbol{x})} =
-            -\frac{n_t}{2} \log{2\pi}
-            -n_t \log{\sigma}
-            -\sum_{j=1}^{n_t}\log{x_j}
-            -\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(
-            \log{x_j} - \log{f_j(\theta)})^2}
+        \log y(t) \sim \text{Normal}(\log f(\theta, t), \sigma)
 
-    where ``n_t`` is the number of time points in the series, ``x_j`` is the
-    sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
-
-    For a system with ``n_o`` outputs, this becomes
+    Important to note is that:
 
     .. math::
-        \log{L(\theta, \sigma|\boldsymbol{x})} =
-            -\frac{n_t n_o}{2}\log{2\pi}
-            -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
-            -\sum_{i=1}^{n_o}{\sum_{j=1}^{n_t} \log{x_j} + \left[
-            \frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{
-            (\log{x_j} - \log{f_j(\theta)})^2}
-             \right]}
+        \mathbb{E}(y(t)) = f(\theta) \exp(\sigma^2 / 2)
 
-    The optional parameter `mean_correction` allows adjusting the mean of
-    the distribution so that its expectation is ``f(\theta)`` opposed to
-    ``f(\theta)`` for the
+    As such, the optional parameter `mean_adjust` (if true) adjusts the
+    mean of the distribution so that its expectation is ``f(\theta)``. This
+    shifted distribution is of the form:
+
+    .. math::
+        y(t) \sim \text{log-Normal}(\log f(\theta, t) - \sigma^2/2, \sigma)
 
     Extends :class:`ProblemLogLikelihood`.
 
@@ -827,9 +813,12 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
         single-output problem a single parameter is added, for a multi-output
         problem ``n_outputs`` parameters are added.
+    mean_adjust
+        A Boolean. Adjusts the distribution so that its mean corresponds to the
+        function value. By default, this parameter if False.
     """
 
-    def __init__(self, problem):
+    def __init__(self, problem, mean_adjust=False):
         super(LogNormalLogLikelihood, self).__init__(problem)
 
         # Get number of times, number of outputs
@@ -841,19 +830,28 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
 
         # Pre-calculate parts
         self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+
+        # For a log-normal sampling distribution any data points being below
+        # zero would mean that the log-likelihood is always -infinity
         vals = np.asarray(self._values)
         if np.any(vals <= 0):
             raise ValueError('All data points must exceed zero.')
         self._log_values = np.log(self._values)
 
+        self._mean_adjust = mean_adjust
+
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
         if any(sigma < 0):
             return -np.inf
+
         soln = self._problem.evaluate(x[:-self._no])
         if np.any(soln < 0):
             return -np.inf
+
         error = np.log(self._values) - np.log(soln)
+        if self._mean_adjust:
+            error += 0.5 * sigma**2
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(self._log_values, axis=0)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
@@ -875,14 +873,23 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
 
         # Note: Must be (np.log(data) - simulation), sign now matters!
-        r = np.log(self._values) - np.log(y)
+        error = np.log(self._values) - np.log(y)
+        if self._mean_adjust:
+            error += 0.5 * sigma**2
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
-            (sigma**(-2.0) * np.sum((r.T * dy.T / y.T).T, axis=0).T).T, axis=0)
+            (sigma**(-2.0) * np.sum((error.T * dy.T / y.T).T, axis=0).T).T,
+            axis=0)
 
         # Calculate derivative wrt sigma
-        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
+        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
+        if self._mean_adjust:
+            dsigma -= np.sum(
+                (sigma**(-2.0) * np.sum((error.T * sigma).T,
+                                        axis=0).T).T,
+                axis=0)
+
         dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return

@@ -1423,8 +1423,12 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         cls.problem_multiple = pints.MultiOutputProblem(
             cls.model_multiple, cls.times, cls.data_multiple)
         cls.log_likelihood = pints.LogNormalLogLikelihood(cls.problem_single)
+        cls.log_likelihood_adj = pints.LogNormalLogLikelihood(
+            cls.problem_single, mean_adjust=True)
         cls.log_likelihood_multiple = pints.LogNormalLogLikelihood(
             cls.problem_multiple)
+        cls.log_likelihood_multiple_adj = pints.LogNormalLogLikelihood(
+            cls.problem_multiple, mean_adjust=True)
 
     def test_bad_constructor(self):
         # tests that bad data types result in error
@@ -1442,6 +1446,8 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         mu = 3.7
         log_like = self.log_likelihood([mu, sigma])
         self.assertAlmostEqual(log_like, -10.164703123713256)
+        log_like_adj = self.log_likelihood_adj([mu, sigma])
+        self.assertAlmostEqual(log_like_adj, -11.129905368437115)
 
         sigma = -1
         log_like = self.log_likelihood([mu, sigma])
@@ -1460,6 +1466,10 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         sigma2 = 1.2
         log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
         self.assertAlmostEqual(log_like, -24.906992140695426)
+
+        # adjusts mean
+        log_like = self.log_likelihood_multiple_adj([mu1, mu2, sigma1, sigma2])
+        self.assertAlmostEqual(log_like, -32.48791585037583)
 
         sigma1 = -1
         log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
