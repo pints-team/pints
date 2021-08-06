@@ -1501,13 +1501,15 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         sigma = -1
         y, dL = self.log_likelihood.evaluateS1([mu, sigma])
         self.assertEqual(y, -np.inf)
-        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
 
         mu = -1
         sigma = 1
         y, dL = self.log_likelihood.evaluateS1([mu, sigma])
         self.assertEqual(y, -np.inf)
-        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 2), equal_nan=True))
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
 
         # two dim output problem
         mu1 = 1.5
@@ -1543,8 +1545,8 @@ class TestLogNormalLogLikelihood(unittest.TestCase):
         y, dL = self.log_likelihood_multiple.evaluateS1(
             [mu1, mu2, sigma1, sigma2])
         self.assertEqual(y, -np.inf)
-        self.assertTrue(np.array_equal(dL, np.tile(np.nan, 4),
-                                       equal_nan=True))
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
 
 
 class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):

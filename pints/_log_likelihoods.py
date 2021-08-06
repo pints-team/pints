@@ -885,10 +885,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         # Calculate derivative wrt sigma
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
         if self._mean_adjust:
-            dsigma -= np.sum(
-                (sigma**(-2.0) * np.sum((error * sigma),
-                                        axis=0).T).T,
-                axis=0)
+            dsigma -= 1 / sigma * np.sum(error, axis=0)
 
         dL = np.concatenate((dL, np.array(list(dsigma))))
 
