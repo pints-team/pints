@@ -777,6 +777,99 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
         super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
 
 
+class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent log-normal noise at each
+    time point, and adds a parameter representing the standard deviation
+    (sigma) of the noise on the log scale for each output.
+
+    For a noise level of ``sigma``, the likelihood becomes:
+
+    .. math::
+        L(\theta, \sigma|\boldsymbol{x})
+            = p(\boldsymbol{x} | \theta, \sigma)
+            = \prod_{j=1}^{n_t} \frac{1}{x_j\sqrt{2\pi\sigma^2}}\exp\left(
+                -\frac{(\log{x_j} - f_j(\theta))^2}{2\sigma^2}\right)
+
+    leading to a log-likelihood of:
+
+    .. math::
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+            -\frac{n_t}{2} \log{2\pi}
+            -n_t \log{\sigma}
+            -\sum_{j=1}^{n_t}\log{x_j}
+            -\frac{1}{2\sigma^2}\sum_{j=1}^{n_t}{(\log{x_j} - f_j(\theta))^2}
+
+    where ``n_t`` is the number of time points in the series, ``x_j`` is the
+    sampled data at time ``j`` and ``f_j`` is the simulated data at time ``j``.
+
+    For a system with ``n_o`` outputs, this becomes
+
+    .. math::
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+            -\frac{n_t n_o}{2}\log{2\pi}
+            -\sum_{i=1}^{n_o}{ {n_t}\log{\sigma_i} }
+            -\sum_{i=1}^{n_o}{\sum_{j=1}^{n_t} \log{x_j} + \left[
+            \frac{1}{2\sigma_i^2}\sum_{j=1}^{n_t}{(\log{x_j} - f_j(\theta))^2}
+             \right]}
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem a single parameter is added, for a multi-output
+        problem ``n_outputs`` parameters are added.
+    """
+
+    def __init__(self, problem):
+        super(GaussianLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate parts
+        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        sigma = np.asarray(x[-self._no:])
+        error = self._values - self._problem.evaluate(x[:-self._no])
+        return np.sum(- self._logn - self._nt * np.log(sigma)
+                      - np.sum(error**2, axis=0) / (2 * sigma**2))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        sigma = np.asarray(x[-self._no:])
+
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x[:-self._no])
+
+        # Reshape dy, in case we're working with a single-output problem
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
+
+        # Note: Must be (data - simulation), sign now matters!
+        r = self._values - y
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+
+        # Calculate derivatives in the model parameters
+        dL = np.sum(
+            (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
+
+        # Calculate derivative wrt sigma
+        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
+        dL = np.concatenate((dL, np.array(list(dsigma))))
+
+        # Return
+        return L, dL
+
+
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood for a time-series model assuming a
