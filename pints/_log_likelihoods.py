@@ -742,6 +742,8 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
+        if any(sigma <= 0):
+            return -np.inf
         error = self._values - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
@@ -749,6 +751,11 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         sigma = np.asarray(x[-self._no:])
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+        if L == -np.inf:
+            return L, np.tile(np.nan, self._n_parameters)
 
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x[:-self._no])
@@ -758,9 +765,6 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
-
-        # Calculate log-likelihood
-        L = self.__call__(x)
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
@@ -867,6 +871,9 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         noise_parameters = x[-self._np:]
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
+
+        if any(eta < 0) or any(sigma <= 0):
+            return -np.inf
 
         # Evaluate function (n_times, n_output)
         function_values = self._problem.evaluate(x[:-self._np])
@@ -986,6 +993,8 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         parameters = x[-m:]
         nu = np.asarray(parameters[0::2])
         sigma = np.asarray(parameters[1::2])
+        if any(nu <= 0) or any(sigma <= 0):
+            return -np.inf
 
         # Calculate
         return np.sum(
