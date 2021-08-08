@@ -403,7 +403,7 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         over the outputs of the model.
         """
         L = self.__call__(parameters)
-        if L == -np.inf:
+        if np.isneginf(L):
             return L, np.tile(np.nan, self._n_parameters)
 
         # Get parameters from input
@@ -754,7 +754,7 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate log-likelihood
         L = self.__call__(x)
-        if L == -np.inf:
+        if np.isneginf(L):
             return L, np.tile(np.nan, self._n_parameters)
 
         # Evaluate, and get residuals
