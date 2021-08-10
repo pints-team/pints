@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.stats
@@ -47,7 +45,7 @@ class MALAMCMC(pints.SingleChainMCMC):
     after a step,
 
     .. math::
-        \alpha = \frac{\pi(\theta^*)q(\theta_t|\theta^*)}{\pi(\theta^*)
+        \alpha = \frac{\pi(\theta^*)q(\theta_t|\theta^*)}{\pi(\theta_t)
             q(\theta^*|\theta_t)}
 
     where :math:`q(\theta_2|\theta_1) =

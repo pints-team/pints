@@ -6,7 +6,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import print_function, unicode_literals
 import os
 import pints
 import pints.io
@@ -14,12 +13,6 @@ import numpy as np
 import unittest
 
 from shared import TemporaryDirectory
-
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 class TestIO(unittest.TestCase):
@@ -86,18 +79,10 @@ class TestIO(unittest.TestCase):
                 ValueError, 'integer greater than zero',
                 pints.io.load_samples, filename, 0)
             filename = d.path('x.csv')
-            try:
-                # Python 3
-                self.assertRaises(
-                    FileNotFoundError, pints.io.load_samples, filename)
-                self.assertRaises(
-                    FileNotFoundError, pints.io.load_samples, filename, 10)
-            except NameError:
-                # Python 2
-                self.assertRaises(
-                    IOError, pints.io.load_samples, filename)
-                self.assertRaises(
-                    IOError, pints.io.load_samples, filename, 10)
+            self.assertRaises(
+                FileNotFoundError, pints.io.load_samples, filename)
+            self.assertRaises(
+                FileNotFoundError, pints.io.load_samples, filename, 10)
 
 
 if __name__ == '__main__':
