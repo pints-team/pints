@@ -26,7 +26,7 @@ def test_relativistic_on_two_dim_gaussian(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=200,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -43,7 +43,7 @@ def test_relativistic_on_banana(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -60,7 +60,7 @@ def test_relativistic_on_high_dim_gaussian(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -77,7 +77,7 @@ def test_relativistic_on_correlated_gaussian(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -94,7 +94,7 @@ def test_relativistic_on_annulus(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -111,7 +111,7 @@ def test_relativistic_on_multimodal_gaussian(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
@@ -128,7 +128,7 @@ def test_relativistic_on_cone(n_iterations=None):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=500,
-        method_hyper_parameters=[20, 1, 1, 1]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
 
     return {
