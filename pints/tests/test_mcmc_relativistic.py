@@ -297,6 +297,7 @@ class TestRelativisticMCMC(unittest.TestCase):
         model = pints.RelativisticMCMC(x0)
         model.set_mass(m)
         model.set_speed_of_light(c)
+        model._max_integration_size = 100
         model.ask()
         p = model._sample_momentum()
         self.assertEqual(len(p), len(x0))

@@ -5,10 +5,11 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pints
 import numpy as np
+import pints
 from scipy.interpolate import interp1d
 from scipy.optimize import root
+import warnings
 
 
 class RelativisticMCMC(pints.SingleChainMCMC):
@@ -104,6 +105,9 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
         self._hamiltonian_threshold = 10**3
+
+        # Maximum number of points in integration grid for momentum
+        self._max_integration_size = 1e8
 
     def ask(self):
         """ See :meth:`SingleChainMCMC.ask()`. """
@@ -217,6 +221,12 @@ class RelativisticMCMC(pints.SingleChainMCMC):
                 spacing /= 2
 
             else:
+                integration_accepted = True
+
+            if max_value / spacing > self._max_integration_size:
+                warnings.warn('Failed to approximate momentum distribution '
+                              'for given mass and speed of light. Samples of '
+                              'momentum may be inaccurate.')
                 integration_accepted = True
 
         # Do a reverse interpolation to approximate inverse cdf
