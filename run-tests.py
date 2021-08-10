@@ -2,13 +2,10 @@
 #
 # Runs all unit tests included in Pints.
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import argparse
 import datetime
 import os
@@ -352,14 +349,14 @@ def run_notebook_tests():
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = [
         'examples/optimisation/maximum-likelihood.ipynb',
-        # Books in interfaces require extra dependences
-        'examples/interfaces/statsmodels-arima.ipynb',
-        'examples/interfaces/statsmodels-state-space.ipynb',
     ]
-
     for ignored_book in ignore_list:
         if not os.path.isfile(ignored_book):
             raise Exception('Ignored notebook not found: ' + ignored_book)
+
+    # Books in interfaces require extra dependences, so are ignored by
+    # default
+    ignore_list.extend(list_notebooks('examples/interfaces', True))
 
     # Scan and run
     print('Testing notebooks')
@@ -379,7 +376,6 @@ def run_notebook_interfaces_tests():
 
     # Ignore books with deliberate errors, but check they still exist
     ignore_list = []
-
     for ignored_book in ignore_list:
         if not os.path.isfile(ignored_book):
             raise Exception('Ignored notebook not found: ' + ignored_book)
@@ -451,7 +447,7 @@ def test_notebook(path):
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
         )
         stdout, stderr = p.communicate()
-        # TODO: Use p.communicate(timeout=3600) if Python3 only
+        # TODO: Use p.communicate(timeout=3600)
         if p.returncode != 0:
             # Show failing code, output and errors before returning
             print('ERROR')
@@ -502,6 +498,10 @@ def export_notebook(ipath, opath):
 
 
 if __name__ == '__main__':
+    # Prevent CI from hanging on multiprocessing tests
+    import multiprocessing
+    multiprocessing.set_start_method('spawn')
+
     # Set up argument parsing
     parser = argparse.ArgumentParser(
         description='Run unit tests for Pints.',

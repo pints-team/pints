@@ -1,6 +1,6 @@
 [run]
 source = pints
-omit = 
+omit =
     pints/tests/*
     pints/functionaltests/*
 
@@ -8,7 +8,6 @@ omit =
 exclude_lines =
     pragma: no cover
     pragma: no linux cover
-    pragma: no python 3 cover
     def __repr__
     raise AssertionError
     raise NotImplementedError

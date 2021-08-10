@@ -23,9 +23,8 @@ relevant code.
 
 ## Digging deeper
 - [Full control with the ask-and-tell interface](./optimisation/ask-and-tell.ipynb)
-- [Optimisation in a transformed parameter space - using a Transform object](./optimisation/transformed-parameters.ipynb)
-- [Optimisation in a transformed parameter space - writing a model wrapper](./optimisation/transformed-parameters-model-wrapper.ipynb)
-- [Sampling in a transformed parameter space - using a Transform object](./sampling/transformed-parameters.ipynb)
+- [Optimisation in a transformed parameter space](./optimisation/transformed-parameters.ipynb)
+- [Sampling in a transformed parameter space](./sampling/transformed-parameters.ipynb)
 - [Sampling in a transformed parameter space - with or without Jacobian adjustment](./sampling/transformation-with-and-without-jacobian.ipynb)
 
 
@@ -94,7 +93,7 @@ relevant code.
 ## Statistical modelling
 - [Autoregressive moving average errors](./stats/autoregressive-moving-average-errors.ipynb)
 - [Cauchy sampling error](./stats/cauchy-sampling-error.ipynb)
-- [Constant and multiplicative Gaussian error](./stats/constant_and_multiplicative_gaussian_error.ipynb)
+- [Constant and multiplicative Gaussian error](./stats/constant-and-multiplicative-gaussian-error.ipynb)
 - [Integrated noise model](./stats/integrated-gaussian-log-likelihood.ipynb)
 - [Log priors](./stats/log-priors.ipynb)
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
@@ -132,13 +131,11 @@ relevant code.
 - [Simple Egg Box](./toy/distribution-simple-egg-box.ipynb)
 - [Twisted Gaussian Banana](./toy/distribution-twisted-gaussian.ipynb)
 
-
 ## Interfaces
+- [Automatic differentiation using autograd](./interfaces/automatic-differentiation-using-autograd.ipynb)
 - [Stan](./interfaces/stan.ipynb)
 - [Statsmodels ARIMA](./interfaces/statsmodels-arima.ipynb)
 - [Statsmodels state space](.interfaces/statsmodels-state-space.ipynb)
 
-
 ## Miscellaneous
-- [Automatic differentiation using autograd](./toy/automatic-differentiation-using-autograd.ipynb)
 - [The example shown on the landing page](./sampling/readme-example.ipynb)

@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 from scipy.special import logit, expit
@@ -279,51 +277,54 @@ class Transformation(object):
 class ComposedTransformation(Transformation):
     r"""
     N-dimensional :class:`Transformation` composed of one or more other
-    :math:`N_i`-dimensional ``Transformations``, such that
-    :math:`\sum _i N_i = N`. The evaluation and transformation of the composed
-    transformations assume the input transformations are all independent from
-    each other.
+    :math:`N_i`-dimensional sub-transformations, so that
+    :math:`\sum _i N_i = N`.
 
-    For example, a composed transform::
+    The dimensionality of the individual transformations does not have to be
+    the same, i.e. :math:`N_i\neq N_j` is allowed.
 
-        t = pints.ComposedTransformation(transform1, transform2, transform3)
+    For example, a composed transformation::
 
-    where ``transform1``, ``transform2``, and ``transform3`` each have
-    dimension 1, 2 and 1, will have dimension 4.
+        t = pints.ComposedTransformation(
+            transformation_1, transformation_2, transformation_3)
 
-    The dimensionality of the individual priors does not have to be the same,
-    i.e. :math:`N_i\neq N_j` is allowed.
+    where ``transformation_1``, ``transformation_2``, and ``transformation_3``
+    have dimension 1, 2 and 1 respectively, will have dimension N=4.
 
-    The input parameters of the :class:`ComposedTransformation` have to be
-    ordered in the same way as the individual tranforms for the parameter
-    vector. In the above example the transform may be performed by
-    ``t.to_search(p)``, where::
+    The evaluation and transformation of the composed transformations assume
+    that the input transformations are all independent from each other.
 
-        p = [parameter1_transform1,
-             parameter1_transform2,
-             parameter2_transform2,
-             parameter1_transform3]
+    The input parameters of the :class:`ComposedTransformation` are ordered in
+    the same way as the individual tranforms for the parameter vector. In the
+    above example the transformation may be performed by ``t.to_search(p)``,
+    where::
+
+        p = [parameter_1_for_transformation_1,
+             parameter_1_for_transformation_2,
+             parameter_2_for_transformation_2,
+             parameter_1_for_transformation_3]
 
     Extends :class:`Transformation`.
     """
-    def __init__(self, *transforms):
-        # Check if sub-transforms given
-        if len(transforms) < 1:
-            raise ValueError('Must have at least one sub-transform.')
+    def __init__(self, *transformations):
+        # Check if sub-transformations given
+        if len(transformations) < 1:
+            raise ValueError('Must have at least one sub-transformation.')
 
-        # Check if proper transform, count dimension
+        # Check if proper Transformation, count dimension
         self._n_parameters = 0
         self._elementwise = True
-        for transform in transforms:
-            if not isinstance(transform, pints.Transformation):
-                raise ValueError('All sub-transforms must extend '
-                                 'pints.Transformation.')
-            self._n_parameters += transform.n_parameters()
-            # If any transform is not elementwise, then it is not elementwise
-            self._elementwise &= transform.elementwise()
+        for transformation in transformations:
+            if not isinstance(transformation, pints.Transformation):
+                raise ValueError('All entries in `transformations` must extend'
+                                 ' pints.Transformation.')
+            self._n_parameters += transformation.n_parameters()
+            # If any transformation is not elementwise, then it is not
+            # elementwise
+            self._elementwise &= transformation.elementwise()
 
         # Store
-        self._transforms = transforms
+        self._transformations = transformations
 
         # Use elementwise or not
         if self._elementwise:
@@ -349,10 +350,10 @@ class ComposedTransformation(Transformation):
         matrix_shape = (self.n_parameters(), self.n_parameters())
         lo = hi = 0
         output_S1 = np.zeros((self.n_parameters(),) + matrix_shape)
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            _, jac_S1 = transform.jacobian_S1(q[lo:hi])
+            hi += transformation.n_parameters()
+            _, jac_S1 = transformation.jacobian_S1(q[lo:hi])
             for i, jac_S1_i in enumerate(jac_S1):
                 # Due to the composed transformation are independent, we can
                 # pack the derivative of the Jacobian matrices J_i with zeros:
@@ -379,10 +380,10 @@ class ComposedTransformation(Transformation):
         q = pints.vector(q)
         output = np.zeros(q.shape)
         lo = hi = 0
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            output[lo:hi] = np.asarray(transform.to_model(q[lo:hi]))
+            hi += transformation.n_parameters()
+            output[lo:hi] = np.asarray(transformation.to_model(q[lo:hi]))
         return output
 
     def to_search(self, p):
@@ -390,10 +391,10 @@ class ComposedTransformation(Transformation):
         p = pints.vector(p)
         output = np.zeros(p.shape)
         lo = hi = 0
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            output[lo:hi] = np.asarray(transform.to_search(p[lo:hi]))
+            hi += transformation.n_parameters()
+            output[lo:hi] = np.asarray(transformation.to_search(p[lo:hi]))
         return output
 
     def n_parameters(self):
@@ -407,10 +408,10 @@ class ComposedTransformation(Transformation):
         q = pints.vector(q)
         diag = np.zeros(q.shape)
         lo = hi = 0
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            diag[lo:hi] = np.diagonal(transform.jacobian(q[lo:hi]))
+            hi += transformation.n_parameters()
+            diag[lo:hi] = np.diagonal(transformation.jacobian(q[lo:hi]))
         output = np.diag(diag)
         return output
 
@@ -422,10 +423,10 @@ class ComposedTransformation(Transformation):
         q = pints.vector(q)
         output = 0
         lo = hi = 0
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            output += transform.log_jacobian_det(q[lo:hi])
+            hi += transformation.n_parameters()
+            output += transformation.log_jacobian_det(q[lo:hi])
         return output
 
     def _elementwise_log_jacobian_det_S1(self, q):
@@ -437,10 +438,10 @@ class ComposedTransformation(Transformation):
         output = 0
         output_S1 = np.zeros(q.shape)
         lo = hi = 0
-        for transform in self._transforms:
+        for transformation in self._transformations:
             lo = hi
-            hi += transform.n_parameters()
-            j, j_S1 = transform.log_jacobian_det_S1(q[lo:hi])
+            hi += transformation.n_parameters()
+            j, j_S1 = transformation.log_jacobian_det_S1(q[lo:hi])
             output += j
             output_S1[lo:hi] = np.asarray(j_S1)
         return output, output_S1
@@ -450,12 +451,12 @@ class ComposedTransformation(Transformation):
         General implementation of :meth:`Transformation.jacobian()`.
         """
         q = pints.vector(q)
-        lo, hi = 0, self._transforms[0].n_parameters()
-        output = self._transforms[0].jacobian(q[lo:hi])
-        for transform in self._transforms[1:]:
+        lo, hi = 0, self._transformations[0].n_parameters()
+        output = self._transformations[0].jacobian(q[lo:hi])
+        for transformation in self._transformations[1:]:
             lo = hi
-            hi += transform.n_parameters()
-            jaco = transform.jacobian(q[lo:hi])
+            hi += transformation.n_parameters()
+            jaco = transformation.jacobian(q[lo:hi])
             # Due to the composed transformation are independent, we can stack
             # the Jacobian matrices J_i and J_{i+1} as
             #
@@ -744,16 +745,16 @@ class RectangularBoundariesTransformation(Transformation):
         \frac{d}{dq} \log(|J(q)|) = 2 \times \exp(-q) \times
             \text{logit}^{-1}(q) - 1.
 
-    For example, to create a transform with :math:`p_1 \in [0, 4)`,
+    For example, to create a transformation with :math:`p_1 \in [0, 4)`,
     :math:`p_2 \in [1, 5)`, and :math:`p_3 \in [2, 6)` use either::
 
-        transform = pints.RectangularBoundariesTransformation([0, 1, 2],
-                                                              [4, 5, 6])
+        transformation = pints.RectangularBoundariesTransformation([0, 1, 2],
+                                                                   [4, 5, 6])
 
     or::
 
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
-        transform = pints.RectangularBoundariesTransformation(boundaries)
+        transformation = pints.RectangularBoundariesTransformation(boundaries)
 
     Extends :class:`Transformation`.
     """
@@ -891,17 +892,17 @@ class TransformedBoundaries(pints.Boundaries):
     ----------
     boundaries
         A :class:`pints.Boundaries`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, boundaries, transform):
+    def __init__(self, boundaries, transformation):
         self._boundaries = boundaries
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._boundaries.n_parameters()
 
         if self._transform.n_parameters() != self._n_parameters:
             raise ValueError('Number of parameters for boundaries and '
-                             'transform must match.')
+                             'transformation must match.')
 
     def check(self, q):
         """ See :meth:`Boundaries.check()`. """
@@ -945,16 +946,16 @@ class TransformedErrorMeasure(pints.ErrorMeasure):
     ----------
     error
         A :class:`pints.ErrorMeasure`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, error, transform):
+    def __init__(self, error, transformation):
         self._error = error
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._error.n_parameters()
         if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for error and transform '
-                             'must match.')
+            raise ValueError('Number of parameters for error and '
+                             'transformation must match.')
 
     def __call__(self, q):
         # Get parameters in the model space
@@ -1044,16 +1045,16 @@ class TransformedLogPDF(pints.LogPDF):
     ----------
     log_pdf
         A :class:`pints.LogPDF`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, log_pdf, transform):
+    def __init__(self, log_pdf, transformation):
         self._log_pdf = log_pdf
-        self._transform = transform
+        self._transform = transformation
         self._n_parameters = self._log_pdf.n_parameters()
         if self._transform.n_parameters() != self._n_parameters:
-            raise ValueError('Number of parameters for log_pdf and transform '
-                             'must match.')
+            raise ValueError('Number of parameters for log_pdf and '
+                             'transformation must match.')
 
     def __call__(self, q):
         # Get parameters in the model space
@@ -1112,11 +1113,11 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
     ----------
     log_prior
         A :class:`pints.LogPrior`.
-    transform
+    transformation
         A :class:`pints.Transformation`.
     """
-    def __init__(self, log_prior, transform):
-        super(TransformedLogPrior, self).__init__(log_prior, transform)
+    def __init__(self, log_prior, transformation):
+        super(TransformedLogPrior, self).__init__(log_prior, transformation)
 
     def sample(self, n):
         """

@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
@@ -23,13 +21,13 @@ class ConstantModel(pints.ForwardModelS1):
     .. math::
         f(t) = (p_1, 2 p_2, 3 p_3, ..., n p_n)
 
-    The derivatives with respect to the derivatives are time-invariant, and
+    The derivatives with respect to the parameters are time-invariant, and
     simply equal
 
     .. math::
 
         \frac{\partial{f_i(t)}}{dp_j} =
-            \begin{cases} 1, i = j\\0, i \neq j \end{cases}
+            \begin{cases} i, i = j\\0, i \neq j \end{cases}
 
     Extends :class:`pints.ForwardModelS1`.
 

@@ -73,6 +73,16 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, f.evaluateS1, [1, 2, 3])
         self.assertRaises(ValueError, f.evaluateS1, np.ones(11))
 
+    def test_negative_sd(self):
+        # Tests that sd < 0 returns -log infinity
+        f = pints.toy.EightSchoolsLogPDF()
+        x = np.ones(10)
+        x[1] = -1
+        self.assertEqual(f(x), -np.inf)
+        logp, grad = f.evaluateS1(x)
+        self.assertEqual(logp, -np.inf)
+        self.assertTrue(np.array_equal(grad, np.full([1, 10], -np.inf)))
+
     def test_bounds(self):
         """ Tests suggested_bounds() """
         f = pints.toy.EightSchoolsLogPDF()

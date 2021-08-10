@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 import scipy.special
@@ -87,6 +85,8 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
         parameters = x[-m:]
         rho = np.asarray(parameters[0::2])
         sigma = np.asarray(parameters[1::2])
+        if any(sigma <= 0):
+            return -np.inf
         sigma = np.asarray(sigma) * np.sqrt(1 - rho**2)
         error = self._values - self._problem.evaluate(x[:-2 * self._no])
         autocorr_error = error[1:] - rho * error[:-1]
@@ -166,6 +166,8 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
         rho = np.asarray(parameters[0::3])
         phi = np.asarray(parameters[1::3])
         sigma = np.asarray(parameters[2::3])
+        if any(sigma <= 0):
+            return -np.inf
         sigma = (
             sigma *
             np.sqrt((1.0 - rho**2) / (1.0 + 2.0 * phi * rho + phi**2))
@@ -222,12 +224,14 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
         n = self._n
         m = self._no
 
+        # Distribution parameters
+        sigma = np.asarray(x[-m:])
+        if any(sigma <= 0):
+            return -np.inf
+
         # problem parameters
         problem_parameters = x[:-m]
         error = self._values - self._problem.evaluate(problem_parameters)
-
-        # Distribution parameters
-        sigma = np.asarray(x[-m:])
 
         # Calculate
         return np.sum(
@@ -343,6 +347,8 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
 
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * function_values**eta
+        if np.any(np.asarray(sigma_tot) <= 0):
+            return -np.inf
 
         # Compute log-likelihood
         # (inner sums over time points, outer sum over parameters)
@@ -396,6 +402,10 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         where :math:`i` sums over the measurement time points and :math:`j`
         over the outputs of the model.
         """
+        L = self.__call__(parameters)
+        if np.isneginf(L):
+            return L, np.tile(np.nan, self._n_parameters)
+
         # Get parameters from input
         # Shape sigma_base, eta, sigma_rel = (n_outputs,)
         noise_parameters = np.asarray(parameters[-self._np:])
@@ -424,9 +434,6 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
 
         # Compute total standard deviation
         sigma_tot = sigma_base + sigma_rel * y**eta
-
-        # Compute likelihood
-        L = self.__call__(parameters)
 
         # Compute derivative w.r.t. model parameters
         dtheta = -np.sum(sigma_rel * eta * np.sum(
@@ -512,10 +519,10 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     problem
         A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
     lower
-        The lower limit on the uniform prior om `sigma`. Must be
+        The lower limit on the uniform prior on `sigma`. Must be
         non-negative.
     upper
-        The upper limit on the uniform prior om `sigma`.
+        The upper limit on the uniform prior on `sigma`.
     """
 
     def __init__(self, problem, lower, upper):
@@ -735,6 +742,8 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     def __call__(self, x):
         sigma = np.asarray(x[-self._no:])
+        if any(sigma <= 0):
+            return -np.inf
         error = self._values - self._problem.evaluate(x[:-self._no])
         return np.sum(- self._logn - self._nt * np.log(sigma)
                       - np.sum(error**2, axis=0) / (2 * sigma**2))
@@ -742,6 +751,11 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
         sigma = np.asarray(x[-self._no:])
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+        if np.isneginf(L):
+            return L, np.tile(np.nan, self._n_parameters)
 
         # Evaluate, and get residuals
         y, dy = self._problem.evaluateS1(x[:-self._no])
@@ -751,9 +765,6 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
-
-        # Calculate log-likelihood
-        L = self.__call__(x)
 
         # Calculate derivatives in the model parameters
         dL = np.sum(
@@ -861,6 +872,9 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         eta = np.asarray(noise_parameters[0::2])
         sigma = np.asarray(noise_parameters[1::2])
 
+        if any(sigma <= 0):
+            return -np.inf
+
         # Evaluate function (n_times, n_output)
         function_values = self._problem.evaluate(x[:-self._np])
 
@@ -928,7 +942,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     noise at each time point, and adds two parameters: one representing the
     degrees of freedom (``nu``), the other representing the scale (``sigma``).
 
-    For a noise characterised by ``nu'' and ``sigma``, the log likelihood is of
+    For a noise characterised by ``nu`` and ``sigma``, the log likelihood is of
     the form:
 
     .. math::
@@ -979,6 +993,8 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
         parameters = x[-m:]
         nu = np.asarray(parameters[0::2])
         sigma = np.asarray(parameters[1::2])
+        if any(nu <= 0) or any(sigma <= 0):
+            return -np.inf
 
         # Calculate
         return np.sum(
@@ -1001,4 +1017,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
-

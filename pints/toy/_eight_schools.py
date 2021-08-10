@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import numpy as np
 import pints
 
@@ -18,7 +16,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
     The classic Eight Schools example that is discussed in [1]_.
 
     The aim of this model (implemented as a :class:`pints.ToyLogPDF`) is to
-    determine the effects of coaching on SATS scores in 8 schools (each school
+    determine the effects of coaching on SAT scores in 8 schools (each school
     being denoted by subscript j in the following equations). It it used
     by statisticians to illustrate how hierarchical models can quite easily
     become unidentified, making inference hard.
@@ -82,6 +80,9 @@ class EightSchoolsLogPDF(ToyLogPDF):
             raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
+        if tau < 0:  # to handle proposals without having to change log-priors
+            return -np.inf
+
         thetas = x[2:]
 
         log_prob = self._mu_log_pdf([mu])
@@ -112,6 +113,9 @@ class EightSchoolsLogPDF(ToyLogPDF):
             raise ValueError('Input parameters must be of length 10.')
         mu = x[0]
         tau = x[1]
+        if tau < 0:  # to handle proposals without having to change log-priors
+            return -np.inf, np.full([1, 10], -np.inf)
+
         thetas = x[2:]
         log_prob1, dL1 = self._mu_log_pdf.evaluateS1([mu])
         log_prob2, dL2 = self._tau_log_pdf.evaluateS1([tau])
