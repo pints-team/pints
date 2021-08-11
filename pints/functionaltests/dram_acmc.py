@@ -10,7 +10,7 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=8000):
     """
     Tests :class:`pints.DramACMC`
     on a two-dimensional Gaussian distribution with true solution
@@ -19,14 +19,15 @@ def two_dim_gaussian(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
+    n_warmup = 2000
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
 
-    if n_iterations is None:
-        n_iterations = 8000
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.DramACMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=2000
+        n_warmup=n_warmup,
     )
 
     return {
@@ -35,7 +36,7 @@ def two_dim_gaussian(n_iterations=None):
     }
 
 
-def banana(n_iterations=None):
+def banana(n_iterations=4000):
     """
     Tests :class:`pints.DramACMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
@@ -43,13 +44,16 @@ def banana(n_iterations=None):
 
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
-    """    if n_iterations is None:
-        n_iterations = 4000
+    """
+    n_warmup = 1000
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
     problem = ft.RunMcmcMethodOnBanana(
         method=pints.DramACMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=1000
+        n_warmup=n_warmup,
     )
 
     return {
@@ -58,7 +62,7 @@ def banana(n_iterations=None):
     }
 
 
-def correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=8000):
     """
     Tests :class:`pints.DramACMC`
     on a six-dimensional highly correlated Gaussian distribution with true
@@ -68,13 +72,15 @@ def correlated_gaussian(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    if n_iterations is None:
-        n_iterations = 8000
+    n_warmup = 4000
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.DramACMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=4000
+        n_warmup=n_warmup,
     )
 
     return {

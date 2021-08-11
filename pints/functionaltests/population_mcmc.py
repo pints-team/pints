@@ -10,7 +10,7 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=20000):
     """
     Tests :class:`pints.PopulationMCMC`
     on a two-dimensional Gaussian distribution with true solution
@@ -19,9 +19,6 @@ def two_dim_gaussian(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    if n_iterations is None:
-        n_iterations = 20000
-
     n_warmup = 500
     if n_warmup > n_iterations // 2:
         n_warmup = n_iterations // 10
@@ -39,7 +36,7 @@ def two_dim_gaussian(n_iterations=None):
     }
 
 
-def banana(n_iterations=None):
+def banana(n_iterations=20000):
     """
     Tests :class:`pints.PopulationMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
@@ -48,10 +45,6 @@ def banana(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
-
-    if n_iterations is None:
-        n_iterations = 20000
-
     n_warmup = 5000  # Needs a lot of warm-up on banana!
     if n_warmup > n_iterations // 2:
         n_warmup = n_iterations // 10
@@ -69,7 +62,7 @@ def banana(n_iterations=None):
     }
 
 
-def multimodal_gaussian(n_iterations=None, n_temperatures=None):
+def multimodal_gaussian(n_iterations=20000, n_temperatures=None):
     """
     Tests :class:`pints.PopulationMCMC`
     on a two-dimensional multi-modal Gaussian distribution with modes at
@@ -79,9 +72,6 @@ def multimodal_gaussian(n_iterations=None, n_temperatures=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    if n_iterations is None:
-        n_iterations = 20000
-
     n_warmup = 500
     if n_warmup > n_iterations // 2:
         n_warmup = n_iterations // 10

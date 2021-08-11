@@ -8,7 +8,7 @@
 
 # Import all problem classes straight into this module, so that they can be
 # addressed as e.g. pints.functionaltests.RunMcmcMethodOnAnnulus.
-from ._problems import (
+from ._problems import (    # noqa
     RunMcmcMethodOnAnnulus,
     RunMcmcMethodOnBanana,
     RunMcmcMethodOnCone,
@@ -21,7 +21,7 @@ from ._problems import (
 # Import all test modules (not methods!) directly into this method, so that
 # they can be addressed as e.g.
 # pints.functionaltests.dram_acmc.two_dim_gaussian().
-from . import (
+from . import (     # noqa
     differential_evolution_mcmc,
     dram_acmc,
     dream_mcmc,

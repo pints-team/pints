@@ -10,7 +10,7 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=1000):
     """
     Tests :class:`pints.HamiltonianMCMC`
     on a two-dimensional Gaussian distribution with true solution
@@ -19,13 +19,15 @@ def two_dim_gaussian(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    if n_iterations is None:
-        n_iterations = 1000
+    n_warmup = 200
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=200,
+        n_warmup=n_warmup,
         method_hyper_parameters=[20, 1]
     )
 
@@ -35,7 +37,7 @@ def two_dim_gaussian(n_iterations=None):
     }
 
 
-def banana(n_iterations=None):
+def banana(n_iterations=2000):
     """
     Tests :class:`pints.HamiltonianMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
@@ -44,13 +46,15 @@ def banana(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
-    if n_iterations is None:
-        n_iterations = 2000
+    n_warmup = 1000
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
     problem = ft.RunMcmcMethodOnBanana(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=1000,
+        n_warmup=n_warmup,
         method_hyper_parameters=[20, 2]
     )
 
@@ -60,7 +64,7 @@ def banana(n_iterations=None):
     }
 
 
-def high_dim_gaussian(n_iterations=None):
+def high_dim_gaussian(n_iterations=4000):
     """
      Tests :class:`pints.HamiltonianMCMC`
     on a 20-dimensional Gaussian distribution centered at the origin, and
@@ -69,13 +73,15 @@ def high_dim_gaussian(n_iterations=None):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    if n_iterations is None:
-        n_iterations = 4000
+    n_warmup = 1000
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
     problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=1000,
+        n_warmup=n_warmup,
         method_hyper_parameters=[20, 1]
     )
 
