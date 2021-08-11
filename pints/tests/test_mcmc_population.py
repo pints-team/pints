@@ -128,8 +128,8 @@ class TestPopulationMCMC(unittest.TestCase):
 
     def test_hyperparameters(self):
 
-        # Create mcmc
         mcmc = pints.PopulationMCMC(self.real_parameters)
+        self.assertEqual(mcmc.n_hyper_parameters(), 1)
 
         # Test setting with an int
         mcmc.set_temperature_schedule(7)
