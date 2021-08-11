@@ -15,7 +15,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnAnnulus)
 
 
-def test_haario_bardenet_acmc_on_two_dim_gaussian(n_iterations=None):
+def on_two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -31,7 +31,7 @@ def test_haario_bardenet_acmc_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_haario_bardenet_acmc_on_banana(n_iterations=None):
+def on_banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnBanana(
@@ -47,7 +47,7 @@ def test_haario_bardenet_acmc_on_banana(n_iterations=None):
     }
 
 
-def test_haario_bardenet_acmc_on_correlated_gaussian(n_iterations=None):
+def on_correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
     problem = RunMcmcMethodOnCorrelatedGaussian(
@@ -63,7 +63,7 @@ def test_haario_bardenet_acmc_on_correlated_gaussian(n_iterations=None):
     }
 
 
-def test_haario_bardenet_acmc_on_annulus(n_iterations=None):
+def on_annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnAnnulus(

@@ -14,7 +14,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnCorrelatedGaussian)
 
 
-def test_metropolis_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -30,7 +30,7 @@ def test_metropolis_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_metropolis_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnBanana(
@@ -46,7 +46,7 @@ def test_metropolis_on_banana(n_iterations=None):
     }
 
 
-def test_metropolis_on_correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
     problem = RunMcmcMethodOnCorrelatedGaussian(

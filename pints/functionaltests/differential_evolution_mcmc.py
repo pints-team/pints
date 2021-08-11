@@ -15,7 +15,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnAnnulus)
 
 
-def test_differential_evolution_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -31,7 +31,7 @@ def test_differential_evolution_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_differential_evolution_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnBanana(
@@ -47,7 +47,7 @@ def test_differential_evolution_on_banana(n_iterations=None):
     }
 
 
-def test_differential_evolution_on_correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnCorrelatedGaussian(
@@ -63,7 +63,7 @@ def test_differential_evolution_on_correlated_gaussian(n_iterations=None):
     }
 
 
-def test_differential_evolution_on_annulus(n_iterations=None):
+def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnAnnulus(

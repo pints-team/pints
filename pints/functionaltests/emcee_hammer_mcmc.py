@@ -17,7 +17,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnCone)
 
 
-def test_emcee_hammer_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -33,7 +33,7 @@ def test_emcee_hammer_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_emcee_hammer_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnBanana(
@@ -49,7 +49,7 @@ def test_emcee_hammer_on_banana(n_iterations=None):
     }
 
 
-def test_emcee_hammer_on_correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
     problem = RunMcmcMethodOnCorrelatedGaussian(
@@ -65,7 +65,7 @@ def test_emcee_hammer_on_correlated_gaussian(n_iterations=None):
     }
 
 
-def test_emcee_hammer_on_annulus(n_iterations=None):
+def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnAnnulus(
@@ -81,7 +81,7 @@ def test_emcee_hammer_on_annulus(n_iterations=None):
     }
 
 
-def test_emcee_hammer_on_multimodal_gaussian(n_iterations=None):
+def multimodal_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnMultimodalGaussian(
@@ -97,7 +97,7 @@ def test_emcee_hammer_on_multimodal_gaussian(n_iterations=None):
     }
 
 
-def test_emcee_hammer_on_cone(n_iterations=None):
+def cone(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnCone(

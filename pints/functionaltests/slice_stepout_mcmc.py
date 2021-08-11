@@ -18,7 +18,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnCone)
 
 
-def test_slice_stepout_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -33,7 +33,7 @@ def test_slice_stepout_on_two_dim_gaussian(n_iterations=None):
         'mean-ess': problem.estimate_mean_ess()
     }
 
-def test_slice_stepout_on_correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnCorrelatedGaussian(
@@ -49,7 +49,7 @@ def test_slice_stepout_on_correlated_gaussian(n_iterations=None):
     }
 
 
-def test_slice_stepout_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnBanana(
@@ -65,7 +65,7 @@ def test_slice_stepout_on_banana(n_iterations=None):
     }
 
 
-def test_slice_stepout_on_high_dim_gaussian(n_iterations=None):
+def high_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnHighDimensionalGaussian(
@@ -81,7 +81,7 @@ def test_slice_stepout_on_high_dim_gaussian(n_iterations=None):
     }
 
 
-def test_slice_stepout_on_annulus(n_iterations=None):
+def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
     problem = RunMcmcMethodOnAnnulus(
@@ -97,7 +97,7 @@ def test_slice_stepout_on_annulus(n_iterations=None):
     }
 
 
-def test_slice_stepout_on_multimodal_gaussian(n_iterations=None):
+def multimodal_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnMultimodalGaussian(
@@ -113,7 +113,7 @@ def test_slice_stepout_on_multimodal_gaussian(n_iterations=None):
     }
 
 
-def test_slice_stepout_on_cone(n_iterations=None):
+def cone(n_iterations=None):
     if n_iterations is None:
         n_iterations = 5000
     problem = RunMcmcMethodOnCone(

@@ -16,7 +16,7 @@ from ._problems import (
 )
 
 
-def test_population_mcmc_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     """
     Tests :class:`pints.PopulationMCMC` on a two-dimensional Gaussian with
     means 0 and 0, and returns a dict with entries "kld" and "mean-ess".
@@ -43,7 +43,7 @@ def test_population_mcmc_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_population_mcmc_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     """
     Tests :class:`pints.PopulationMCMC` on a 2-d twisted Gaussian "banana"
     problem with true solution ``(0, 0)``, and returns a dict with entries
@@ -69,7 +69,7 @@ def test_population_mcmc_on_banana(n_iterations=None):
     }
 
 
-def test_population_mcmc_on_multimodal_gaussian(
+def multimodal_gaussian(
         n_iterations=None, n_temperatures=None):
     """
     Tests :class:`pints.PopulationMCMC` on a multi-modal Gaussian distribution

@@ -14,7 +14,7 @@ from ._problems import (RunMcmcMethodOnTwoDimGaussian,
                         RunMcmcMethodOnHighDimensionalGaussian)
 
 
-def test_nuts_on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 1000
     problem = RunMcmcMethodOnTwoDimGaussian(
@@ -30,7 +30,7 @@ def test_nuts_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_nuts_on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
     problem = RunMcmcMethodOnBanana(
@@ -46,7 +46,7 @@ def test_nuts_on_banana(n_iterations=None):
     }
 
 
-def test_nuts_on_high_dim_gaussian(n_iterations=None):
+def high_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
     problem = RunMcmcMethodOnHighDimensionalGaussian(
