@@ -12,10 +12,12 @@ import pints.functionaltests as ft
 
 def two_dim_gaussian(n_iterations=None):
     """
-    Tests :class:`pints.PopulationMCMC` on a two-dimensional Gaussian with
-    means 0 and 0, and returns a dict with entries "kld" and "mean-ess".
+    Tests :class:`pints.PopulationMCMC`
+    on a two-dimensional Gaussian distribution with true solution
+    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
-    See :class:`pints
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
     if n_iterations is None:
         n_iterations = 20000
@@ -39,10 +41,14 @@ def two_dim_gaussian(n_iterations=None):
 
 def banana(n_iterations=None):
     """
-    Tests :class:`pints.PopulationMCMC` on a 2-d twisted Gaussian "banana"
-    problem with true solution ``(0, 0)``, and returns a dict with entries
-    "kld" and "mean-ess".
+    Tests :class:`pints.PopulationMCMC`
+    on a two-dimensional "twisted Gaussian" distribution with true solution
+    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
+
     if n_iterations is None:
         n_iterations = 20000
 
@@ -63,12 +69,15 @@ def banana(n_iterations=None):
     }
 
 
-def multimodal_gaussian(
-        n_iterations=None, n_temperatures=None):
+def multimodal_gaussian(n_iterations=None, n_temperatures=None):
     """
-    Tests :class:`pints.PopulationMCMC` on a multi-modal Gaussian distribution
-    with modes at ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict
-    with entries "kld" and "mean-ess".
+    Tests :class:`pints.PopulationMCMC`
+    on a two-dimensional multi-modal Gaussian distribution with modes at
+    ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict with entries
+    "kld" and "mean-ess".
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
     """
     if n_iterations is None:
         n_iterations = 20000
