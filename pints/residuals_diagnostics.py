@@ -162,7 +162,7 @@ def _plot_residuals_binned(parameters,
     calculate : function
         What value to calculate within each bin. This function should take as
         input a numpy array of residuals within a bin and return a scalar value
-        which will be added to the plot. Default: ``np.std``
+        which will be added to the plot.
     label : str
         A label to put on the y axis of the plot, describing what function of
         the binned residuals is being plotted.
@@ -175,9 +175,6 @@ def _plot_residuals_binned(parameters,
     """
     import numpy as np
     import matplotlib.pyplot as plt
-
-    if calculate is None:
-        calculate = np.std
 
     times = problem.times()
 
