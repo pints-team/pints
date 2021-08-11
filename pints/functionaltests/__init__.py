@@ -37,3 +37,6 @@ from . import (     # noqa
     slice_stepout_mcmc,
 )
 
+
+# Test discovery methods
+from ._discovery import tests

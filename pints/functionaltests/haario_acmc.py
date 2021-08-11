@@ -87,3 +87,12 @@ def correlated_gaussian(n_iterations=8000):
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
+
+
+_method = pints.HaarioACMC
+_functional_tests = [
+    banana,
+    correlated_gaussian,
+    two_dim_gaussian,
+]
+

@@ -93,3 +93,10 @@ def multimodal_gaussian(n_iterations=20000, n_temperatures=None):
         'mean-ess': problem.estimate_mean_ess()
     }
 
+
+_method = pints.PopulationMCMC
+_functional_tests = [
+    banana,
+    multimodal_gaussian,
+    two_dim_gaussian,
+]

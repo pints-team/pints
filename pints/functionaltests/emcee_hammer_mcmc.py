@@ -166,3 +166,14 @@ def cone(n_iterations=10000):
         'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
     }
+
+
+_method = pints.EmceeHammerMCMC
+_functional_tests = [
+    annulus,
+    banana,
+    cone,
+    correlated_gaussian,
+    multimodal_gaussian,
+    two_dim_gaussian,
+]

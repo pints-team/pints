@@ -86,3 +86,11 @@ def high_dim_gaussian(n_iterations=4000):
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
+
+
+_method = pints.NoUTurnMCMC
+_functional_tests = [
+    banana,
+    high_dim_gaussian,
+    two_dim_gaussian,
+]

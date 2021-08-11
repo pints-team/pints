@@ -113,3 +113,12 @@ def annulus(n_iterations=10000):
         'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
     }
+
+
+_method = pints.DifferentialEvolutionMCMC
+_functional_tests = [
+    annulus,
+    banana,
+    correlated_gaussian,
+    two_dim_gaussian,
+]
