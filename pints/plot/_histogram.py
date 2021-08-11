@@ -55,6 +55,8 @@ def histogram(
     # arguments
     bins = 40
     alpha = 0.5
+
+    samples = np.asarray(samples)
     n_list = len(samples)
     _, n_param = samples[0].shape
 
