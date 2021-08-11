@@ -8,17 +8,13 @@
 from __future__ import division
 
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnCorrelatedGaussian,
-                        RunMcmcMethodOnAnnulus)
+import pints.functionaltests as ft
 
 
-def on_two_dim_gaussian(n_iterations=None):
+def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -31,10 +27,10 @@ def on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def on_banana(n_iterations=None):
+def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -47,10 +43,10 @@ def on_banana(n_iterations=None):
     }
 
 
-def on_correlated_gaussian(n_iterations=None):
+def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
-    problem = RunMcmcMethodOnCorrelatedGaussian(
+    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -63,10 +59,10 @@ def on_correlated_gaussian(n_iterations=None):
     }
 
 
-def on_annulus(n_iterations=None):
+def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnAnnulus(
+    problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.HaarioBardenetACMC,
         n_chains=4,
         n_iterations=n_iterations,

@@ -8,19 +8,13 @@
 from __future__ import division
 
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnCorrelatedGaussian,
-                        RunMcmcMethodOnAnnulus,
-                        RunMcmcMethodOnMultimodalGaussian,
-                        RunMcmcMethodOnCone)
+import pints.functionaltests as ft
 
 
 def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,
@@ -36,7 +30,7 @@ def two_dim_gaussian(n_iterations=None):
 def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,
@@ -52,7 +46,7 @@ def banana(n_iterations=None):
 def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
-    problem = RunMcmcMethodOnCorrelatedGaussian(
+    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,
@@ -68,7 +62,7 @@ def correlated_gaussian(n_iterations=None):
 def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnAnnulus(
+    problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,
@@ -84,7 +78,7 @@ def annulus(n_iterations=None):
 def multimodal_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
-    problem = RunMcmcMethodOnMultimodalGaussian(
+    problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,
@@ -100,7 +94,7 @@ def multimodal_gaussian(n_iterations=None):
 def cone(n_iterations=None):
     if n_iterations is None:
         n_iterations = 10000
-    problem = RunMcmcMethodOnCone(
+    problem = ft.RunMcmcMethodOnCone(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
         n_iterations=n_iterations,

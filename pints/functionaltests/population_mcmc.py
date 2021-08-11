@@ -7,13 +7,7 @@
 # copyright notice and full license details.
 #
 import pints
-
-from ._problems import (
-    RunMcmcMethodOnBanana,
-    RunMcmcMethodOnMultimodalGaussian,
-    RunMcmcMethodOnSimpleEggBox,
-    RunMcmcMethodOnTwoDimGaussian,
-)
+import pints.functionaltests as ft
 
 
 def two_dim_gaussian(n_iterations=None):
@@ -30,7 +24,7 @@ def two_dim_gaussian(n_iterations=None):
     if n_warmup > n_iterations // 2:
         n_warmup = n_iterations // 10
 
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.PopulationMCMC,
         n_chains=1,
         n_iterations=n_iterations,
@@ -56,7 +50,7 @@ def banana(n_iterations=None):
     if n_warmup > n_iterations // 2:
         n_warmup = n_iterations // 10
 
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.PopulationMCMC,
         n_chains=1,
         n_iterations=n_iterations,
@@ -87,7 +81,7 @@ def multimodal_gaussian(
     if n_temperatures is not None:
         method_hyper_parameters = [n_temperatures]
 
-    problem = RunMcmcMethodOnMultimodalGaussian(
+    problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.PopulationMCMC,
         n_chains=1,
         n_iterations=n_iterations,

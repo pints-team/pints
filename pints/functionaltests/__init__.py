@@ -1,13 +1,39 @@
 #
+# "Functional test" module for PINTS.
+#
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 
-from .differential_evolution import test_differential_evolution_on_banana
-from .differential_evolution import test_differential_evolution_on_two_dim_gaussian
+# Import all problem classes straight into this module, so that they can be
+# addressed as e.g. pints.functionaltests.RunMcmcMethodOnAnnulus.
+from ._problems import (
+    RunMcmcMethodOnAnnulus,
+    RunMcmcMethodOnBanana,
+    RunMcmcMethodOnCone,
+    RunMcmcMethodOnCorrelatedGaussian,
+    RunMcmcMethodOnHighDimensionalGaussian,
+    RunMcmcMethodOnMultimodalGaussian,
+    RunMcmcMethodOnTwoDimGaussian,
+)
 
-from .haario_bardenet_acmc import test_haario_bardenet_acmc_on_annulus
-from .haario_bardenet_acmc import test_haario_bardenet_acmc_on_banana
-from .haario_bardenet_acmc import test_haario_bardenet_acmc_on_correlated_gaussian
-from .haario_bardenet_acmc import test_haario_bardenet_acmc_on_two_dim_gaussian
+# Import all test modules (not methods!) directly into this method, so that
+# they can be addressed as e.g.
+# pints.functionaltests.dram_acmc.two_dim_gaussian().
+from . import (
+    differential_evolution_mcmc,
+    dram_acmc,
+    dream_mcmc,
+    emcee_hammer_mcmc,
+    haario_acmc,
+    haario_bardenet_acmc,
+    hamiltonian_mcmc,
+    metropolis_random_walk_mcmc,
+    monomial_gamma_hamiltonian_mcmc,
+    no_u_turn_mcmc,
+    population_mcmc,
+    relativistic_mcmc,
+    slice_stepout_mcmc,
+)
+

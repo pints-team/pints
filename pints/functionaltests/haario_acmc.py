@@ -8,16 +8,13 @@
 from __future__ import division
 
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnCorrelatedGaussian)
+import pints.functionaltests as ft
 
 
 def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.HaarioACMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -33,7 +30,7 @@ def two_dim_gaussian(n_iterations=None):
 def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.HaarioACMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -49,7 +46,7 @@ def banana(n_iterations=None):
 def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 8000
-    problem = RunMcmcMethodOnCorrelatedGaussian(
+    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.HaarioACMC,
         n_chains=4,
         n_iterations=n_iterations,

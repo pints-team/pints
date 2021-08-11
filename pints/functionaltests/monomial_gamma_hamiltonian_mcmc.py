@@ -8,20 +8,13 @@
 from __future__ import division
 
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnHighDimensionalGaussian,
-                        RunMcmcMethodOnCorrelatedGaussian,
-                        RunMcmcMethodOnAnnulus,
-                        RunMcmcMethodOnMultimodalGaussian,
-                        RunMcmcMethodOnCone)
+import pints.functionaltests as ft
 
 
 def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 1000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -38,7 +31,7 @@ def two_dim_gaussian(n_iterations=None):
 def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -55,7 +48,7 @@ def banana(n_iterations=None):
 def high_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnHighDimensionalGaussian(
+    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -72,7 +65,7 @@ def high_dim_gaussian(n_iterations=None):
 def correlated_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnCorrelatedGaussian(
+    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -89,7 +82,7 @@ def correlated_gaussian(n_iterations=None):
 def annulus(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnAnnulus(
+    problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -106,7 +99,7 @@ def annulus(n_iterations=None):
 def multimodal_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnMultimodalGaussian(
+    problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -123,7 +116,7 @@ def multimodal_gaussian(n_iterations=None):
 def cone(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnCone(
+    problem = ft.RunMcmcMethodOnCone(
         method=pints.MonomialGammaHamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,

@@ -8,16 +8,13 @@
 from __future__ import division
 
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnHighDimensionalGaussian)
+import pints.functionaltests as ft
 
 
 def two_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 1000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -34,7 +31,7 @@ def two_dim_gaussian(n_iterations=None):
 def banana(n_iterations=None):
     if n_iterations is None:
         n_iterations = 2000
-    problem = RunMcmcMethodOnBanana(
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
@@ -51,7 +48,7 @@ def banana(n_iterations=None):
 def high_dim_gaussian(n_iterations=None):
     if n_iterations is None:
         n_iterations = 4000
-    problem = RunMcmcMethodOnHighDimensionalGaussian(
+    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=pints.HamiltonianMCMC,
         n_chains=4,
         n_iterations=n_iterations,
