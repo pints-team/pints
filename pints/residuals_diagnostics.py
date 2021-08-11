@@ -5,9 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import math
-import numpy as np
-import scipy.special
 
 
 def plot_residuals_binned_autocorrelation(parameters,
@@ -120,6 +117,7 @@ def plot_residuals_binned_std(parameters,
         Optional int value (greater than zero) giving the number of bins into
         which to divide the time series. By default, it is fixed to 25.
     """
+    import numpy as np
     return _plot_residuals_binned(parameters,
                                   problem,
                                   thinning=thinning,
@@ -132,7 +130,7 @@ def _plot_residuals_binned(parameters,
                            problem,
                            thinning=None,
                            n_bins=25,
-                           calculate=np.std,
+                           calculate=None,
                            label='Standard deviation',
                            ylim=None,
                            draw_horizontal=False):
@@ -164,7 +162,7 @@ def _plot_residuals_binned(parameters,
     calculate : function
         What value to calculate within each bin. This function should take as
         input a numpy array of residuals within a bin and return a scalar value
-        which will be added to the plot.
+        which will be added to the plot. Default: ``np.std``
     label : str
         A label to put on the y axis of the plot, describing what function of
         the binned residuals is being plotted.
@@ -175,7 +173,11 @@ def _plot_residuals_binned(parameters,
         may be desired when zero is an important reference point for the value
         being calculated in each bin.
     """
+    import numpy as np
     import matplotlib.pyplot as plt
+
+    if calculate is None:
+        calculate = np.std
 
     times = problem.times()
 
@@ -278,6 +280,7 @@ def plot_residuals_distance(parameters, problem, thinning=None):
         (default), some thinning will be applied so that about 200 samples will
         be used.
     """
+    import numpy as np
     import matplotlib.pyplot as plt
 
     times = problem.times()
@@ -383,6 +386,8 @@ def plot_residuals_autocorrelation(parameters,
     .. [1] Brockwell, P. J., & Davis, R. A. (1991). Time series: Theory and
            methods (2nd ed.). New York: Springer.
     """
+    import numpy as np
+    import scipy.special
     import matplotlib.pyplot as plt
 
     # Get the number of problem outputs
@@ -408,7 +413,7 @@ def plot_residuals_autocorrelation(parameters,
             raise ValueError('significance level must fall between 0 and '
                              '1')
         threshold = scipy.special.ndtri(1 - significance_level / 2)
-        threshold /= math.sqrt(residuals.shape[2])
+        threshold /= np.sqrt(residuals.shape[2])
 
     # Set up one axes for each output
     fig, axes = plt.subplots(n_outputs,
@@ -508,6 +513,7 @@ def plot_residuals_vs_output(parameters, problem, thinning=None):
         ``None`` (default), some thinning will be applied so that about 200
         samples will be used.
     """
+    import numpy as np
     import matplotlib.pyplot as plt
 
     # Make sure that the parameters argument has the correct shape
@@ -583,6 +589,8 @@ def acorr(x, max_lag):
     max_lag
         An int specifying the highest lag to consider.
     """
+    import numpy as np
+
     c = np.correlate(x, x, mode='full')
 
     # Normalise
@@ -621,6 +629,8 @@ def calculate_residuals(parameters, problem, thinning=None):
         ``None`` (default), some thinning will be applied so that about 200
         samples will be used.
     """
+    import numpy as np
+
     # Make sure that the parameters argument has the correct shape
     try:
         n_samples, n_params = parameters.shape
