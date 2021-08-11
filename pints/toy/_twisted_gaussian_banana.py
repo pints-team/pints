@@ -19,7 +19,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         p(x_1, x_2, x_3, ..., x_n) \\propto
             \\pi(\\phi(x_1, x_2, x_2, ..., x_n))
 
-    where pi is the multivariate normal density with covariance matrix
+    where pi is the multivariate Gaussian density with covariance matrix
     :math:`\\Sigma=\\text{diag}(100, 1, 1, ..., 1)` and
 
     .. math::
@@ -68,6 +68,16 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
 
+    def detransform(self, samples):
+        """
+        De-transforms the given samples, which should result in a multivariate
+        Gaussian again.
+        """
+        y = np.array(samples, copy=True, dtype='float')
+        y[:, 0] /= np.sqrt(self._V)
+        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+        return y
+
     def distance(self, samples):
         """
         Returns :meth:`approximate Kullback-Leibler divergence<kl_divergence>`
@@ -112,9 +122,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
                 'Given samples must have length ' + str(self._n_parameters))
 
         # Untwist the given samples, making them Gaussian again
-        y = np.array(samples, copy=True, dtype='float')
-        y[:, 0] /= np.sqrt(self._V)
-        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+        y = self.detransform(samples)
 
         # Calculate the Kullback-Leibler divergence between the given samples
         # and the multivariate Gaussian distribution underlying this banana.
