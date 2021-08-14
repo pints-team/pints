@@ -77,6 +77,19 @@ def trace(
         squeeze=False,
     )
 
+    # Find ranges across all samples
+    stacked_chains = np.vstack(samples)
+    for i in range(n_param):
+        if n_percentiles is None:
+            xmin = np.min(samples_j[:, i])
+            xmax = np.max(samples_j[:, i])
+        else:
+            xmin = np.percentile(samples_j[:, i],
+                                 50 - n_percentiles / 2.)
+            xmax = np.percentile(samples_j[:, i],
+                                 50 + n_percentiles / 2.)
+    xbins = np.linspace(xmin, xmax, bins)
+
     # Plot first samples
     for i in range(n_param):
         ymin_all, ymax_all = np.inf, -np.inf
@@ -84,15 +97,6 @@ def trace(
             # Add histogram subplot
             axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
-            if n_percentiles is None:
-                xmin = np.min(samples_j[:, i])
-                xmax = np.max(samples_j[:, i])
-            else:
-                xmin = np.percentile(samples_j[:, i],
-                                     50 - n_percentiles / 2.)
-                xmax = np.percentile(samples_j[:, i],
-                                     50 + n_percentiles / 2.)
-            xbins = np.linspace(xmin, xmax, bins)
             axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
                             label='Samples ' + str(1 + j_list))
 
@@ -126,4 +130,3 @@ def trace(
 
     plt.tight_layout()
     return fig, axes
-
