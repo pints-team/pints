@@ -177,10 +177,10 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
             return multivariate_normal.rvs(mean=[0.015, 500, noise],
                                            cov=np.diag([10, 10000, noise]),
                                            size=nchains)
-
-        self.assertRaises(RuntimeError, pints.sample_initial_points,
-                          self.log_posterior, nchains, init_sampler,
-                          max_tries=2)
+        error_message = "Initialisation failed since function not finite"
+        self.assertRaisesRegex(
+            RuntimeError, error_message, pints.sample_initial_points,
+            self.log_posterior, nchains, init_sampler, max_tries=2)
 
 
 if __name__ == '__main__':
