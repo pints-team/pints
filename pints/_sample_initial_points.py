@@ -14,13 +14,28 @@ def sample_initial_points(function, n_points, random_sampler=None,
                           boundaries=None, max_tries=None, parallel=False,
                           n_workers=None):
     """
-    Draws parameter values from a given sampling distribution until either
-    finite values for each of ``n_points`` have been generated or the total
-    number of attempts exceeds ``max_tries``.
+    Samples ``n_points`` parameter values to use as starting points in a
+    sampling or optimisation routine on the given ``function``.
 
-    If ``log_pdf`` is of :class:`LogPosterior`, then the
-    ``log_pdf.log_prior().sample`` method is used for initialisation, although
-    this is overruled by ``random_sampler`` if it is supplied.
+    How the initial points are determined depends on the arguments supplied. In
+    order of precedence:
+
+    1. If a method ``random_sampler`` is provided then this will be used to
+    draw the random samples.
+
+    2. If no sampler method is given but ``log_pdf`` is a :class:`LogPosterior`
+    then the method ``function.log_prior().sample()`` will be used.
+
+    3. If no sampler method is supplied and ``log_pdf`` is not a
+    :class:`LogPosterior` and if ``boundaries`` are provided then the method
+    ``boundaries.sample()`` be used to draw samples.
+
+    A ``ValueError`` is raised if none of the above options are available.
+
+    Each sample ``x`` is tested to ensure that ``function(x)`` returns a finite
+    result within ``boundaries`` if these are supplied. If not, a new sample
+    will be drawn. This is repeated at most ``max_tries`` times, after which an
+    error is raised.
 
     Parameters
     ----------
@@ -46,19 +61,21 @@ def sample_initial_points(function, n_points, random_sampler=None,
     n_workers : int
         Number of workers on which to run parallel evaluation.
     """
-    if random_sampler is not None and not callable(random_sampler):
-        raise ValueError("random_sampler must be a callable function.")
+    if boundaries is not None:
+        if not isinstance(boundaries, pints.Boundaries):
+            raise ValueError("Boundaries muse be of class pints.Boundaries.")
 
     if random_sampler is None:
         if isinstance(function, pints.LogPosterior):
             random_sampler = function.log_prior().sample
+        elif boundaries is not None:
+            random_sampler = boundaries.sample
         else:
-            raise ValueError("If log_pdf not of class pints.LogPosterior " +
-                             "then random_sampler must be supplied.")
-
-    if boundaries is not None:
-        if not isinstance(boundaries, pints.Boundaries):
-            raise ValueError("Boundaries muse be of class pints.Boundaries.")
+            raise ValueError(
+                "If log_pdf not of class pints.LogPosterior and no " +
+                "boundaries given then random_sampler must be supplied.")
+    elif not callable(random_sampler):
+        raise ValueError("random_sampler must be a callable function.")
 
     if n_points < 1:
         raise ValueError("Number of initial points must be 1 or more.")
@@ -72,29 +89,22 @@ def sample_initial_points(function, n_points, random_sampler=None,
     else:
         evaluator = pints.SequentialEvaluator(function)
 
-    initialised_finite = False
     x0 = []
     n_tries = 0
-    while not initialised_finite and n_tries < max_tries:
-        xs = random_sampler(n_points)
+    while len(x0) < n_points and n_tries < max_tries:
+        xs = random_sampler(n_points - len(x0))
         fxs = evaluator.evaluate(xs)
-        xs_iterator = iter(xs)
-        fxs_iterator = iter(fxs)
-        for i in range(n_points):
-            x = next(xs_iterator)
-            fx = next(fxs_iterator)
+        for i, x in enumerate(xs):
+            fx = fxs[i]
             if np.isfinite(fx):
                 if boundaries is None:
                     x0.append(x)
                 else:
                     if boundaries.check(x0):
                         x0.append(x)
-
-            if len(x0) == n_points:
-                initialised_finite = True
             n_tries += 1
-    if not initialised_finite:
+    if len(x0) < n_points:
         raise RuntimeError(
-            'Initialisation failed since log_pdf not finite at initial ' +
-            'points after ' + str(max_tries) + ' attempts.')
+            'Initialisation failed since function not finite or within + '
+            'bounds at initial points after ' + str(max_tries) + ' attempts.')
     return x0
