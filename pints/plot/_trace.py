@@ -107,8 +107,8 @@ def trace(
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
 
             # Set ylim
-            ymin_all = ymin_all if ymin_all < xmin[i] else xmin[i]
-            ymax_all = ymax_all if ymax_all > xmax[i] else xmax[i]
+            ymin_all = min(ymin_all, xmin[i])
+            ymax_all = max(ymax_all, xmax[i])
         axes[i, 1].set_ylim([ymin_all, ymax_all])
 
         # Add reference parameters if given
