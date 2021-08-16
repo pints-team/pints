@@ -98,7 +98,7 @@ def sample_initial_points(function, n_points, random_sampler=None,
                 if boundaries is None:
                     x0.append(x)
                 else:
-                    if boundaries.check(x0):
+                    if boundaries.check(x):
                         x0.append(x)
         n_tries += 1
 
