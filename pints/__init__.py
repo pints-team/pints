@@ -195,7 +195,6 @@ from ._diagnostics import (
 #  MCMC
 #
 from ._mcmc import (
-    sample_initial_points,
     mcmc_sample,
     MCMCController,
     MCMCSampler,
@@ -237,6 +236,11 @@ from ._nested import NestedController
 from ._nested._rejection import NestedRejectionSampler
 from ._nested._ellipsoid import NestedEllipsoidSampler
 
+
+#
+# Sampling initialising
+#
+from ._sample_initial_points import sample_initial_points
 
 #
 # Transformations
