@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
 - [#1243](https://github.com/pints-team/pints/pull/1243) Added testing for Python 3.9.
 - [#1213](https://github.com/pints-team/pints/pull/1213), [#1216](https://github.com/pints-team/pints/pull/1216) Added the truncated Gaussian distribution as a log prior, `TruncatedGaussianLogPrior`.
 - [#1212](https://github.com/pints-team/pints/pull/1213) Added the `PooledLogPDF` class to allow for pooling parameters across log-pdfs.
