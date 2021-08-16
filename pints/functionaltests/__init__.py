@@ -29,6 +29,7 @@ from . import (     # noqa
     haario_acmc,
     haario_bardenet_acmc,
     hamiltonian_mcmc,
+    mala_mcmc,
     metropolis_random_walk_mcmc,
     monomial_gamma_hamiltonian_mcmc,
     no_u_turn_mcmc,
