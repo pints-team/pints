@@ -62,9 +62,17 @@ def sample_initial_points(function, n_points, random_sampler=None,
     n_workers : int
         Number of workers on which to run parallel evaluation.
     """
+    is_not_logpdf = not isinstance(function, pints.LogPDF)
+    is_not_errormeasure = not isinstance(function, pints.ErrorMeasure)
+    if is_not_logpdf and is_not_errormeasure:
+        raise ValueError(
+            "function must be either pints.LogPDF or pints.ErrorMeasure.")
+
     if boundaries is not None:
         if not isinstance(boundaries, pints.Boundaries):
-            raise ValueError("Boundaries muse be of class pints.Boundaries.")
+            raise ValueError("boundaries muse be of class pints.Boundaries.")
+        elif boundaries.n_parameters() != function.n_parameters():
+            raise ValueError("boundaries must match dimension of function.")
 
     if random_sampler is None:
         if isinstance(function, pints.LogPosterior):

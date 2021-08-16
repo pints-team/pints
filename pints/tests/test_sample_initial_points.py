@@ -38,17 +38,22 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         # Create an object with links to the model and time series
         problem = pints.SingleOutputProblem(model, times, values)
 
+        # Create an error measure
+        cls.score = pints.SumOfSquaresError(problem)
+        cls.boundaries = pints.RectangularBoundaries(
+            [0, 400], [0.05, 600])
+
         # Create a log-likelihood function (adds an extra parameter!)
         log_likelihood = pints.GaussianLogLikelihood(problem)
 
         # Create a uniform prior over both the parameters and the new noise
-        log_prior = pints.UniformLogPrior(
+        cls.log_prior = pints.UniformLogPrior(
             [0.01, 400, noise * 0.1],
             [0.02, 600, noise * 100]
         )
 
         # Create a posterior log-likelihood (log(likelihood * prior))
-        cls.log_posterior = pints.LogPosterior(log_likelihood, log_prior)
+        cls.log_posterior = pints.LogPosterior(log_likelihood, cls.log_prior)
 
     def test_default_initialisation(self):
         # tests that log_prior can be used for initial sampling
@@ -71,23 +76,69 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
                                          parallel=True, n_workers=2)
         self.assertEqual(len(xs), nchains)
 
+    def test_errormeasure_initialisation(self):
+        # tests that initialisation works ok for error measures
+
+        nchains = 4
+        xs = pints.sample_initial_points(self.score, nchains,
+                                         boundaries=self.boundaries)
+        self.assertEqual(len(xs), nchains)
+        # check points within boundaries
+        for x in xs:
+            self.assertTrue(self.boundaries.check(x))
+
     def test_errors(self):
         # tests errors when calling method with wrong inputs
 
+        # test passing a callable but not pints object
+        def f_test(theta):
+            return sum(theta)
+        nchains = 4
+        error_message = (
+            "function must be either pints.LogPDF or pints.ErrorMeasure.")
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            f_test, nchains,
+            self.log_prior)
+
         # pass a non-callable object as random_sampler
         nchains = 4
-        self.assertRaises(ValueError, pints.sample_initial_points,
-                          self.log_posterior, nchains,
-                          [0.015, 500, 10] * nchains)
+        error_message = "random_sampler must be a callable function"
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            self.log_posterior, nchains,
+            [0.015, 500, 10] * nchains)
 
         # try non log-posterior without passing random_sampler
         log_pdf = pints.toy.GaussianLogPDF()
-        self.assertRaises(ValueError, pints.sample_initial_points,
-                          log_pdf, nchains)
+        error_message = (
+            "If function not of class pints.LogPosterior and no " +
+            "boundaries given then random_sampler must be supplied.")
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            log_pdf, nchains)
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            self.score, nchains)
+
+        # boundaries aren't of right type of object
+        boundaries = log_pdf
+        error_message = "boundaries muse be of class pints.Boundaries."
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            log_pdf, nchains, boundaries=boundaries)
+
+        # boundaries aren't correct dimensions for posterior
+        error_message = "boundaries must match dimension of function."
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            self.log_posterior, nchains, boundaries=self.boundaries)
 
         # n_chains < 1?
-        self.assertRaises(ValueError, pints.sample_initial_points,
-                          self.log_posterior, 0.5)
+        error_message = "Number of initial points must be 1 or more."
+        self.assertRaisesRegex(
+            ValueError, error_message, pints.sample_initial_points,
+            self.log_posterior, 0.5)
 
     def test_bespoke_initialisation(self):
         # test using user-specified initialisation function
@@ -104,14 +155,16 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
                                           log_prior1.sample)
         self.assertTrue(sum(np.vstack(xs).mean(axis=0) <=
                             np.vstack(xs1).mean(axis=0)) == 3)
-        [self.assertTrue(np.isfinite(self.log_posterior(x))) for x in xs]
+        for x in xs:
+            self.assertTrue(np.isfinite(self.log_posterior(x)))
 
         # test initialisation for log_pdf (non-log-posterior)
         log_pdf = pints.toy.GaussianLogPDF()
         log_pdf1 = pints.toy.GaussianLogPDF(mean=[1, 1], sigma=[2, 2])
         init_sampler = log_pdf1.sample
         xs = pints.sample_initial_points(log_pdf, nchains, init_sampler)
-        [self.assertTrue(np.isfinite(log_pdf(x))) for x in xs]
+        for x in xs:
+            self.assertTrue(np.isfinite(log_pdf(x)))
 
     def test_initialisation_fails(self):
         # tests that initialisation can fail in specified number of tries
@@ -126,4 +179,9 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
                                            size=nchains)
 
         self.assertRaises(RuntimeError, pints.sample_initial_points,
-                          self.log_posterior, nchains, init_sampler, 2)
+                          self.log_posterior, nchains, init_sampler,
+                          max_tries=2)
+
+
+if __name__ == '__main__':
+    unittest.main()
