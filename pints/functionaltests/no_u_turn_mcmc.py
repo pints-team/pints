@@ -20,12 +20,7 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
-        method=pints.NoUTurnMCMC,
-        n_chains=4,
-        n_iterations=n_iterations,
-        n_warmup=n_warmup,
-    )
-
+        _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -42,12 +37,7 @@ def banana(n_iterations=2000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
-        method=pints.NoUTurnMCMC,
-        n_chains=4,
-        n_iterations=n_iterations,
-        n_warmup=n_warmup,
-    )
-
+        _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -64,12 +54,7 @@ def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
     :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
     problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
-        method=pints.NoUTurnMCMC,
-        n_chains=4,
-        n_iterations=n_iterations,
-        n_warmup=n_warmup,
-    )
-
+        _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()

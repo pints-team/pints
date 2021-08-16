@@ -20,11 +20,7 @@ def two_dim_gaussian(n_iterations=20000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
-        method=pints.PopulationMCMC,
-        n_chains=1,
-        n_iterations=n_iterations,
-        n_warmup=n_warmup
-    )
+        _method, 1, n_iterations, n_warmup)
 
     return {
         'kld': problem.estimate_kld(),
@@ -42,12 +38,7 @@ def banana(n_iterations=20000, n_warmup=5000):
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
-        method=pints.PopulationMCMC,
-        n_chains=1,
-        n_iterations=n_iterations,
-        n_warmup=n_warmup
-    )
-
+        _method, 1, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -70,7 +61,7 @@ def multimodal_gaussian(
         method_hyper_parameters = [n_temperatures]
 
     problem = ft.RunMcmcMethodOnMultimodalGaussian(
-        method=pints.PopulationMCMC,
+        method=_method,
         n_chains=1,
         n_iterations=n_iterations,
         n_warmup=n_warmup,

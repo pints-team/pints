@@ -20,13 +20,12 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -43,13 +42,12 @@ def banana(n_iterations=5000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -66,13 +64,12 @@ def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
     problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -90,13 +87,12 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
     """
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -113,13 +109,12 @@ def annulus(n_iterations=5000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
     """
     problem = ft.RunMcmcMethodOnAnnulus(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
@@ -137,13 +132,12 @@ def multimodal_gaussian(n_iterations=2000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
     """
     problem = ft.RunMcmcMethodOnMultimodalGaussian(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
@@ -160,13 +154,12 @@ def cone(n_iterations=2000, n_warmup=500):
     :class:`pints.functionaltests.RunMcmcMethodOnCone`.
     """
     problem = ft.RunMcmcMethodOnCone(
-        method=pints.RelativisticMCMC,
+        method=_method,
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
         method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
