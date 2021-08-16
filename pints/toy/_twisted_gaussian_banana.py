@@ -68,16 +68,6 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)
 
-    def detransform(self, samples):
-        """
-        De-transforms the given samples, which should result in a multivariate
-        Gaussian again.
-        """
-        y = np.array(samples, copy=True, dtype='float')
-        y[:, 0] /= np.sqrt(self._V)
-        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
-        return y
-
     def distance(self, samples):
         """
         Returns :meth:`approximate Kullback-Leibler divergence<kl_divergence>`
@@ -122,7 +112,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
                 'Given samples must have length ' + str(self._n_parameters))
 
         # Untwist the given samples, making them Gaussian again
-        y = self.detransform(samples)
+        y = self.untwist(samples)
 
         # Calculate the Kullback-Leibler divergence between the given samples
         # and the multivariate Gaussian distribution underlying this banana.
@@ -168,3 +158,15 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         # based on independent sampling think the following hard bounds are ok
         bounds = [[-50, 50], [-100, 100]]
         return np.transpose(bounds).tolist()
+
+    def untwist(self, samples):
+        """
+        De-transforms (or "untwists") a list of ``samples`` from the twisted
+        distribution, which should result in a simple multivariate Gaussian
+        again.
+        """
+        y = np.array(samples, copy=True, dtype='float')
+        y[:, 0] /= np.sqrt(self._V)
+        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+        return y
+
