@@ -10,7 +10,7 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=5000):
+def two_dim_gaussian(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a two-dimensional Gaussian distribution with true solution
@@ -19,10 +19,6 @@ def two_dim_gaussian(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -36,7 +32,7 @@ def two_dim_gaussian(n_iterations=5000):
     }
 
 
-def correlated_gaussian(n_iterations=5000):
+def correlated_gaussian(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a six-dimensional highly correlated Gaussian distribution with true
@@ -46,10 +42,6 @@ def correlated_gaussian(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -63,7 +55,7 @@ def correlated_gaussian(n_iterations=5000):
     }
 
 
-def banana(n_iterations=5000):
+def banana(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
@@ -72,10 +64,6 @@ def banana(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnBanana(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -89,7 +77,7 @@ def banana(n_iterations=5000):
     }
 
 
-def high_dim_gaussian(n_iterations=5000):
+def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     """
      Tests :class:`pints.SliceStepoutMCMC`
     on a 20-dimensional Gaussian distribution centered at the origin, and
@@ -98,10 +86,6 @@ def high_dim_gaussian(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -115,7 +99,7 @@ def high_dim_gaussian(n_iterations=5000):
     }
 
 
-def annulus(n_iterations=10000):
+def annulus(n_iterations=10000, n_warmup=2000):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a two-dimensional annulus distribution with radius 10, and returns a
@@ -124,10 +108,6 @@ def annulus(n_iterations=10000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
     """
-    n_warmup = 2000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -141,7 +121,7 @@ def annulus(n_iterations=10000):
     }
 
 
-def multimodal_gaussian(n_iterations=5000):
+def multimodal_gaussian(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a two-dimensional multi-modal Gaussian distribution with modes at
@@ -151,10 +131,6 @@ def multimodal_gaussian(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.SliceStepoutMCMC,
         n_chains=4,
@@ -168,7 +144,7 @@ def multimodal_gaussian(n_iterations=5000):
     }
 
 
-def cone(n_iterations=5000):
+def cone(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
     on a two-dimensional cone distribution centered at ``[0, 0]``, and returns
@@ -177,10 +153,6 @@ def cone(n_iterations=5000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnCone`.
     """
-    n_warmup = 500
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnCone(
         method=pints.SliceStepoutMCMC,
         n_chains=4,

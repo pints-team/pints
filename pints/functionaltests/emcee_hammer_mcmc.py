@@ -10,7 +10,7 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=10000):
+def two_dim_gaussian(n_iterations=10000, n_warmup=1000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a two-dimensional Gaussian distribution with true solution
@@ -19,10 +19,6 @@ def two_dim_gaussian(n_iterations=10000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    n_warmup = 1000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
@@ -36,7 +32,7 @@ def two_dim_gaussian(n_iterations=10000):
     }
 
 
-def banana(n_iterations=10000):
+def banana(n_iterations=10000, n_warmup=2000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
@@ -45,10 +41,6 @@ def banana(n_iterations=10000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
-    n_warmup = 2000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnBanana(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
@@ -62,7 +54,7 @@ def banana(n_iterations=10000):
     }
 
 
-def correlated_gaussian(n_iterations=8000):
+def correlated_gaussian(n_iterations=8000, n_warmup=4000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a six-dimensional highly correlated Gaussian distribution with true
@@ -72,10 +64,6 @@ def correlated_gaussian(n_iterations=8000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    n_warmup = 4000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
@@ -89,7 +77,7 @@ def correlated_gaussian(n_iterations=8000):
     }
 
 
-def annulus(n_iterations=4000):
+def annulus(n_iterations=4000, n_warmup=2000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a two-dimensional annulus distribution with radius 10, and returns a
@@ -98,10 +86,6 @@ def annulus(n_iterations=4000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
     """
-    n_warmup = 2000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
@@ -115,7 +99,7 @@ def annulus(n_iterations=4000):
     }
 
 
-def multimodal_gaussian(n_iterations=10000):
+def multimodal_gaussian(n_iterations=10000, n_warmup=1000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a two-dimensional multi-modal Gaussian distribution with modes at
@@ -125,10 +109,6 @@ def multimodal_gaussian(n_iterations=10000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    n_warmup = 1000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
@@ -142,7 +122,7 @@ def multimodal_gaussian(n_iterations=10000):
     }
 
 
-def cone(n_iterations=10000):
+def cone(n_iterations=10000, n_warmup=1000):
     """
     Tests :class:`pints.EmceeHammerMCMC`
     on a two-dimensional cone distribution centered at ``[0, 0]``, and returns
@@ -151,10 +131,6 @@ def cone(n_iterations=10000):
     For details of the solved problem, see
     :class:`pints.functionaltests.RunMcmcMethodOnCone`.
     """
-    n_warmup = 1000
-    if n_warmup > n_iterations // 2:
-        n_warmup = n_iterations // 10
-
     problem = ft.RunMcmcMethodOnCone(
         method=pints.EmceeHammerMCMC,
         n_chains=10,
