@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
 #
+# Functional tests for MALA MCMC
+#
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-
-from __future__ import division
-
 import pints
-
-from ._problems import (RunMcmcMethodOnTwoDimGaussian,
-                        RunMcmcMethodOnBanana,
-                        RunMcmcMethodOnHighDimensionalGaussian,
-                        RunMcmcMethodOnCorrelatedGaussian,
-                        RunMcmcMethodOnAnnulus,
-                        RunMcmcMethodOnMultimodalGaussian,
-                        RunMcmcMethodOnCone)
+import pints.functionaltests as ft
 
 
-def test_mala_mcmc_on_two_dim_gaussian(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 1000
-    problem = RunMcmcMethodOnTwoDimGaussian(
+def two_dim_gaussian(n_iterations=1000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a two-dimensional Gaussian distribution with true solution
+    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
+    """
+    n_warmup = 200
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=200,
+        n_warmup=n_warmup,
         method_hyper_parameters=[[1.0, 1.0]]
     )
 
@@ -35,14 +37,24 @@ def test_mala_mcmc_on_two_dim_gaussian(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_banana(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnBanana(
+def banana(n_iterations=2000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a two-dimensional "twisted Gaussian" distribution with true solution
+    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnBanana(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
+        n_warmup=n_warmup,
         method_hyper_parameters=[[0.8] * 2]
     )
 
@@ -52,14 +64,24 @@ def test_mala_mcmc_on_banana(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_high_dim_gaussian(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnHighDimensionalGaussian(
+def high_dim_gaussian(n_iterations=2000):
+    """
+     Tests :class:`pints.MALAMCMC`
+    on a 20-dimensional Gaussian distribution centered at the origin, and
+    returns a dictionary with entries ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
+        n_warmup=n_warmup,
         method_hyper_parameters=[[1.2] * 20]
     )
 
@@ -69,14 +91,25 @@ def test_mala_mcmc_on_high_dim_gaussian(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_correlated_gaussian(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnCorrelatedGaussian(
+def correlated_gaussian(n_iterations=2000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a six-dimensional highly correlated Gaussian distribution with true
+    solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
+    ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
+        n_warmup=n_warmup,
         method_hyper_parameters=[[1.0] * 6]
     )
 
@@ -86,15 +119,25 @@ def test_mala_mcmc_on_correlated_gaussian(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_annulus(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnAnnulus(
+def annulus(n_iterations=2000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a two-dimensional annulus distribution with radius 10, and returns a
+    dictionary with entries ``distance`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnAnnulus(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
-        method_hyper_parameters=[[1.2] * 2]
+        n_warmup=n_warmup,
+        method_hyper_parameters=[[1.2] * 2],
     )
 
     return {
@@ -103,14 +146,25 @@ def test_mala_mcmc_on_annulus(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_multimodal_gaussian(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnMultimodalGaussian(
+def multimodal_gaussian(n_iterations=2000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a two-dimensional multi-modal Gaussian distribution with modes at
+    ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict with entries
+    "kld" and "mean-ess".
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
+        n_warmup=n_warmup,
         method_hyper_parameters=[[2.0] * 2]
     )
 
@@ -120,18 +174,40 @@ def test_mala_mcmc_on_multimodal_gaussian(n_iterations=None):
     }
 
 
-def test_mala_mcmc_on_cone(n_iterations=None):
-    if n_iterations is None:
-        n_iterations = 2000
-    problem = RunMcmcMethodOnCone(
+def cone(n_iterations=2000):
+    """
+    Tests :class:`pints.MALAMCMC`
+    on a two-dimensional cone distribution centered at ``[0, 0]``, and returns
+    a dict with entries "distance" and "mean-ess".
+
+    For details of the solved problem, see
+    :class:`pints.functionaltests.RunMcmcMethodOnCone`.
+    """
+    n_warmup = 500
+    if n_warmup > n_iterations // 2:
+        n_warmup = n_iterations // 10
+
+    problem = ft.RunMcmcMethodOnCone(
         method=pints.MALAMCMC,
         n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=500,
-        method_hyper_parameters=[[1.0, 1.0]]
+        n_warmup=n_warmup,
+        method_hyper_parameters=[[1.0, 1.0]],
     )
 
     return {
         'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
     }
+
+
+_method = pints.MALAMCMC
+_functional_tests = [
+    annulus,
+    banana,
+    cone,
+    correlated_gaussian,
+    high_dim_gaussian,
+    multimodal_gaussian,
+    two_dim_gaussian,
+]
