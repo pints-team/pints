@@ -11,7 +11,8 @@ import numpy as np
 
 
 def sample_initial_points(function, n_points, random_sampler=None,
-                          max_tries=None, parallel=False, n_workers=None):
+                          boundaries=None, max_tries=None, parallel=False,
+                          n_workers=None):
     """
     Draws parameter values from a given sampling distribution until either
     finite values for each of ``n_points`` have been generated or the total
@@ -23,21 +24,24 @@ def sample_initial_points(function, n_points, random_sampler=None,
 
     Parameters
     ----------
-    log_pdf : pints.LogPDF
-        A :class:`LogPDF` function that evaluates points in the parameter
-        space. It is optional that ``log_pdf`` is a of type
-        :class:`LogPosterior`.
+    function :
+        An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
+        evaluates points in the parameter space. If the latter, it is optional
+        that ``log_pdf`` be of type :class:`LogPosterior`.
     n_points : int
         The number of initial values to generate.
-    random_sampler : stochastic function
+    random_sampler :
         A function that when called returns draws from a probability
         distribution of the same dimensionality as ``log_pdf``. The only
         argument to this function should be an integer specifying the number of
         draws.
+    boundaries :
+        An optional set of boundaries on the parameter space of class
+        :class:`pints.Boundaries`.
     max_tries : int
         Number of attempts to find a finite initial value across all
         ``n_points``. By default this is 50 x n_points.
-    parallel : Boolean
+    parallel : bool
         Whether to evaluate ``log_pdf`` in parallel (defaults to False).
     n_workers : int
         Number of workers on which to run parallel evaluation.
@@ -46,11 +50,15 @@ def sample_initial_points(function, n_points, random_sampler=None,
         raise ValueError("random_sampler must be a callable function.")
 
     if random_sampler is None:
-        if isinstance(log_pdf, pints.LogPosterior):
-            random_sampler = log_pdf.log_prior().sample
+        if isinstance(function, pints.LogPosterior):
+            random_sampler = function.log_prior().sample
         else:
             raise ValueError("If log_pdf not of class pints.LogPosterior " +
                              "then random_sampler must be supplied.")
+
+    if boundaries is not None:
+        if not isinstance(boundaries, pints.Boundaries):
+            raise ValueError("Boundaries muse be of class pints.Boundaries.")
 
     if n_points < 1:
         raise ValueError("Number of initial points must be 1 or more.")
@@ -60,9 +68,9 @@ def sample_initial_points(function, n_points, random_sampler=None,
 
     if parallel:
         n_workers = min(pints.ParallelEvaluator.cpu_count(), n_points)
-        evaluator = pints.ParallelEvaluator(log_pdf, n_workers=n_workers)
+        evaluator = pints.ParallelEvaluator(function, n_workers=n_workers)
     else:
-        evaluator = pints.SequentialEvaluator(log_pdf)
+        evaluator = pints.SequentialEvaluator(function)
 
     initialised_finite = False
     x0 = []
@@ -76,7 +84,12 @@ def sample_initial_points(function, n_points, random_sampler=None,
             x = next(xs_iterator)
             fx = next(fxs_iterator)
             if np.isfinite(fx):
-                x0.append(x)
+                if boundaries is None:
+                    x0.append(x)
+                else:
+                    if boundaries.check(x0):
+                        x0.append(x)
+
             if len(x0) == n_points:
                 initialised_finite = True
             n_tries += 1
