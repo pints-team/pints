@@ -112,6 +112,6 @@ def sample_initial_points(function, n_points, random_sampler=None,
 
     if len(x0) < n_points:
         raise RuntimeError(
-            'Initialisation failed since function not finite or within + '
+            'Initialisation failed since function not finite or within ' +
             'bounds at initial points after ' + str(max_tries) + ' attempts.')
     return x0
