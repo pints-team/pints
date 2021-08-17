@@ -126,6 +126,28 @@ class TestPopulationMCMC(unittest.TestCase):
         self.assertIn(' j    ', text)
         self.assertIn(' Ex. ', text)
 
+    def test_hyperparameters(self):
+
+        mcmc = pints.PopulationMCMC(self.real_parameters)
+        self.assertEqual(mcmc.n_hyper_parameters(), 1)
+
+        # Test setting with an int
+        mcmc.set_temperature_schedule(7)
+        x = mcmc.temperature_schedule()
+        self.assertEqual(len(x), 7)
+        mcmc.set_temperature_schedule(8)
+        self.assertEqual(len(mcmc.temperature_schedule()), 8)
+        mcmc.set_hyper_parameters([7])
+        y = mcmc.temperature_schedule()
+        self.assertEqual(len(y), 7)
+        self.assertTrue(np.all(x == y))
+
+        # Test setting with a list
+        mcmc.set_temperature_schedule(x)
+        self.assertRaisesRegex(
+            ValueError, 'First hyper-parameter',
+            mcmc.set_hyper_parameters, [x])
+
 
 if __name__ == '__main__':
     unittest.main()

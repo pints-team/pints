@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
 - [#1243](https://github.com/pints-team/pints/pull/1243) Added testing for Python 3.9.
 - [#1213](https://github.com/pints-team/pints/pull/1213), [#1216](https://github.com/pints-team/pints/pull/1216) Added the truncated Gaussian distribution as a log prior, `TruncatedGaussianLogPrior`.
 - [#1212](https://github.com/pints-team/pints/pull/1213) Added the `PooledLogPDF` class to allow for pooling parameters across log-pdfs.
@@ -35,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - [#1250](https://github.com/pints-team/pints/pull/1250) The methods `SingleChainMCMC.current_log_pdf()` and `MultiChainMCMC.current_log_pdf()` have been removed.
 
 ### Fixed
+- [#1350](https://github.com/pints-team/pints/pull/1350) Fixed bugs in the Relativistic MCMC sampler.
 - [#1264](https://github.com/pints-team/pints/pull/1264) Fixed a bug relating to how NUTS handles nans when values outside the range of the priors are proposed.
 - [#1257](https://github.com/pints-team/pints/pull/1257) Fixed a bug in `GaussianLogPrior`, which meant the distribution could be instantiated with a non-positive standard deviation.
 - [#1246](https://github.com/pints-team/pints/pull/1246) Fixed a long-standing bug in `PopulationMCMC`, which caused it to sample incorrectly.

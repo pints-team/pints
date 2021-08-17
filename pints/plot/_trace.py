@@ -77,6 +77,20 @@ def trace(
         squeeze=False,
     )
 
+    # Find ranges across all samples
+    stacked_chains = np.vstack(samples)
+    if n_percentiles is None:
+        xmin = np.min(stacked_chains, axis=0)
+        xmax = np.max(stacked_chains, axis=0)
+    else:
+        xmin = np.percentile(stacked_chains,
+                             50 - n_percentiles / 2.,
+                             axis=0)
+        xmax = np.percentile(stacked_chains,
+                             50 + n_percentiles / 2.,
+                             axis=0)
+    xbins = np.linspace(xmin, xmax, bins)
+
     # Plot first samples
     for i in range(n_param):
         ymin_all, ymax_all = np.inf, -np.inf
@@ -84,16 +98,7 @@ def trace(
             # Add histogram subplot
             axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
-            if n_percentiles is None:
-                xmin = np.min(samples_j[:, i])
-                xmax = np.max(samples_j[:, i])
-            else:
-                xmin = np.percentile(samples_j[:, i],
-                                     50 - n_percentiles / 2.)
-                xmax = np.percentile(samples_j[:, i],
-                                     50 + n_percentiles / 2.)
-            xbins = np.linspace(xmin, xmax, bins)
-            axes[i, 0].hist(samples_j[:, i], bins=xbins, alpha=alpha,
+            axes[i, 0].hist(samples_j[:, i], bins=xbins[:, i], alpha=alpha,
                             label='Samples ' + str(1 + j_list))
 
             # Add trace subplot
@@ -102,8 +107,8 @@ def trace(
             axes[i, 1].plot(samples_j[:, i], alpha=alpha)
 
             # Set ylim
-            ymin_all = ymin_all if ymin_all < xmin else xmin
-            ymax_all = ymax_all if ymax_all > xmax else xmax
+            ymin_all = min(ymin_all, xmin[i])
+            ymax_all = max(ymax_all, xmax[i])
         axes[i, 1].set_ylim([ymin_all, ymax_all])
 
         # Add reference parameters if given
@@ -126,4 +131,3 @@ def trace(
 
     plt.tight_layout()
     return fig, axes
-
