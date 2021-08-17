@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #
-# Functional tests for DifferentialEvolutionMCMC
+# Change point tests for DifferentialEvolutionMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 import pints
-import pints.functionaltests as ft
+import pints.cptests as ft
 
 
 def two_dim_gaussian(n_iterations=10000, n_warmup=1000):
@@ -17,7 +17,7 @@ def two_dim_gaussian(n_iterations=10000, n_warmup=1000):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         _method, 10, n_iterations, n_warmup)
@@ -34,7 +34,7 @@ def banana(n_iterations=5000, n_warmup=1000):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
+    :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
         _method, 20, n_iterations, n_warmup)
@@ -52,7 +52,7 @@ def correlated_gaussian(n_iterations=10000, n_warmup=1000):
     ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         _method, 20, n_iterations, n_warmup)
@@ -69,7 +69,7 @@ def annulus(n_iterations=10000, n_warmup=1000):
     dictionary with entries ``distance`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
+    :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
     problem = ft.RunMcmcMethodOnAnnulus(
         _method, 10, n_iterations, n_warmup)
@@ -80,7 +80,7 @@ def annulus(n_iterations=10000, n_warmup=1000):
 
 
 _method = pints.DifferentialEvolutionMCMC
-_functional_tests = [
+_change_point_tests = [
     annulus,
     banana,
     correlated_gaussian,

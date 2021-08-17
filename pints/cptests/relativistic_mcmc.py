@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #
-# Functional tests for RelativisticMCMC
+# Change point tests for RelativisticMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 import pints
-import pints.functionaltests as ft
+import pints.cptests as ft
 
 
 def two_dim_gaussian(n_iterations=1000, n_warmup=200):
@@ -17,7 +17,7 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         method=_method,
@@ -39,7 +39,7 @@ def banana(n_iterations=5000, n_warmup=500):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
+    :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
         method=_method,
@@ -61,7 +61,7 @@ def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
     problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
         method=_method,
@@ -84,7 +84,7 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
     problem = ft.RunMcmcMethodOnCorrelatedGaussian(
         method=_method,
@@ -106,7 +106,7 @@ def annulus(n_iterations=5000, n_warmup=500):
     dictionary with entries ``distance`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
+    :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
     problem = ft.RunMcmcMethodOnAnnulus(
         method=_method,
@@ -129,7 +129,7 @@ def multimodal_gaussian(n_iterations=2000, n_warmup=500):
     "kld" and "mean-ess".
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
     """
     problem = ft.RunMcmcMethodOnMultimodalGaussian(
         method=_method,
@@ -151,7 +151,7 @@ def cone(n_iterations=2000, n_warmup=500):
     a dict with entries "distance" and "mean-ess".
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCone`.
+    :class:`pints.cptests.RunMcmcMethodOnCone`.
     """
     problem = ft.RunMcmcMethodOnCone(
         method=_method,
@@ -167,7 +167,7 @@ def cone(n_iterations=2000, n_warmup=500):
 
 
 _method = pints.RelativisticMCMC
-_functional_tests = [
+_change_point_tests = [
     annulus,
     banana,
     cone,

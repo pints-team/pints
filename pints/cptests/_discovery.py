@@ -1,5 +1,5 @@
 #
-# Functional test discovery methods for PINTS.
+# Change point test discovery methods for PINTS.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -7,12 +7,12 @@
 #
 import inspect
 
-import pints.functionaltests as ft
+import pints.cptests as ft
 
 
 def tests(method=None):
     """
-    Returns a list of all functional tests, each represented as a tuple
+    Returns a list of all change point tests, each represented as a tuple
     ``(method, test)`` where ``method`` is the PINTS class being tested and
     ``test`` is a callable that returns the test results.
 
@@ -28,7 +28,7 @@ def tests(method=None):
     for module in modules:
         try:
             m_method = module._method
-            m_tests = module._functional_tests
+            m_tests = module._change_point_tests
         except AttributeError:
             continue
 

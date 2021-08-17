@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #
-# Functional tests for Population MCMC.
+# Change point tests for Population MCMC.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 import pints
-import pints.functionaltests as ft
+import pints.cptests as ft
 
 
 def two_dim_gaussian(n_iterations=20000, n_warmup=500):
@@ -17,7 +17,7 @@ def two_dim_gaussian(n_iterations=20000, n_warmup=500):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
         _method, 1, n_iterations, n_warmup)
@@ -35,7 +35,7 @@ def banana(n_iterations=20000, n_warmup=5000):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
+    :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
         _method, 1, n_iterations, n_warmup)
@@ -54,7 +54,7 @@ def multimodal_gaussian(
     "kld" and "mean-ess".
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
     """
     method_hyper_parameters = None
     if n_temperatures is not None:
@@ -75,7 +75,7 @@ def multimodal_gaussian(
 
 
 _method = pints.PopulationMCMC
-_functional_tests = [
+_change_point_tests = [
     banana,
     multimodal_gaussian,
     two_dim_gaussian,

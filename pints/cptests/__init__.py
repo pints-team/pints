@@ -1,5 +1,5 @@
 #
-# "Functional test" module for PINTS.
+# Change point tests for PINTS.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -7,7 +7,7 @@
 #
 
 # Import all problem classes straight into this module, so that they can be
-# addressed as e.g. pints.functionaltests.RunMcmcMethodOnAnnulus.
+# addressed as e.g. pints.cptests.RunMcmcMethodOnAnnulus.
 from ._problems import (    # noqa
     RunMcmcMethodOnAnnulus,
     RunMcmcMethodOnBanana,
@@ -20,7 +20,7 @@ from ._problems import (    # noqa
 
 # Import all test modules (not methods!) directly into this method, so that
 # they can be addressed as e.g.
-# pints.functionaltests.dram_acmc.two_dim_gaussian().
+# pints.cptests.dram_acmc.two_dim_gaussian().
 from . import (     # noqa
     differential_evolution_mcmc,
     dram_acmc,
