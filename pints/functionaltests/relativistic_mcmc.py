@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Functional tests for MALA MCMC
+# Functional tests for RelativisticMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -12,7 +12,7 @@ import pints.functionaltests as ft
 
 def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a two-dimensional Gaussian distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -24,7 +24,7 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[1.0, 1.0]]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -32,9 +32,9 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     }
 
 
-def banana(n_iterations=2000, n_warmup=500):
+def banana(n_iterations=5000, n_warmup=500):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -46,7 +46,7 @@ def banana(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[0.8] * 2]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -54,9 +54,9 @@ def banana(n_iterations=2000, n_warmup=500):
     }
 
 
-def high_dim_gaussian(n_iterations=2000, n_warmup=500):
+def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     """
-     Tests :class:`pints.MALAMCMC`
+     Tests :class:`pints.RelativisticMCMC`
     on a 20-dimensional Gaussian distribution centered at the origin, and
     returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -68,18 +68,17 @@ def high_dim_gaussian(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[1.2] * 20]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
-
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
 
 
-def correlated_gaussian(n_iterations=2000, n_warmup=500):
+def correlated_gaussian(n_iterations=5000, n_warmup=500):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a six-dimensional highly correlated Gaussian distribution with true
     solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
     ``kld`` and ``mean-ess``.
@@ -92,7 +91,7 @@ def correlated_gaussian(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[1.0] * 6]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -100,9 +99,9 @@ def correlated_gaussian(n_iterations=2000, n_warmup=500):
     }
 
 
-def annulus(n_iterations=2000, n_warmup=500):
+def annulus(n_iterations=5000, n_warmup=500):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a two-dimensional annulus distribution with radius 10, and returns a
     dictionary with entries ``distance`` and ``mean-ess``.
 
@@ -114,7 +113,7 @@ def annulus(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[1.2] * 2],
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'distance': problem.estimate_distance(),
@@ -124,7 +123,7 @@ def annulus(n_iterations=2000, n_warmup=500):
 
 def multimodal_gaussian(n_iterations=2000, n_warmup=500):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a two-dimensional multi-modal Gaussian distribution with modes at
     ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict with entries
     "kld" and "mean-ess".
@@ -137,7 +136,7 @@ def multimodal_gaussian(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[2.0] * 2]
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -147,7 +146,7 @@ def multimodal_gaussian(n_iterations=2000, n_warmup=500):
 
 def cone(n_iterations=2000, n_warmup=500):
     """
-    Tests :class:`pints.MALAMCMC`
+    Tests :class:`pints.RelativisticMCMC`
     on a two-dimensional cone distribution centered at ``[0, 0]``, and returns
     a dict with entries "distance" and "mean-ess".
 
@@ -159,7 +158,7 @@ def cone(n_iterations=2000, n_warmup=500):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[[1.0, 1.0]],
+        method_hyper_parameters=[20, 1, 0.1, 10]
     )
     return {
         'distance': problem.estimate_distance(),
@@ -167,7 +166,7 @@ def cone(n_iterations=2000, n_warmup=500):
     }
 
 
-_method = pints.MALAMCMC
+_method = pints.RelativisticMCMC
 _functional_tests = [
     annulus,
     banana,

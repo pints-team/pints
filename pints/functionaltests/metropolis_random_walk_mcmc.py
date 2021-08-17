@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Functional tests for HaarioACMC
+# Functional tests for MetropolisRandomWalkMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -12,7 +12,7 @@ import pints.functionaltests as ft
 
 def two_dim_gaussian(n_iterations=4000, n_warmup=1000):
     """
-    Tests :class:`pints.HaarioACMC`
+    Tests :class:`pints.MetropolisRandomWalkMCMC`
     on a two-dimensional Gaussian distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -29,7 +29,7 @@ def two_dim_gaussian(n_iterations=4000, n_warmup=1000):
 
 def banana(n_iterations=4000, n_warmup=1000):
     """
-    Tests :class:`pints.HaarioACMC`
+    Tests :class:`pints.MetropolisRandomWalkMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -46,7 +46,7 @@ def banana(n_iterations=4000, n_warmup=1000):
 
 def correlated_gaussian(n_iterations=8000, n_warmup=4000):
     """
-    Tests :class:`pints.HaarioACMC`
+    Tests :class:`pints.MetropolisRandomWalkMCMC`
     on a six-dimensional highly correlated Gaussian distribution with true
     solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
     ``kld`` and ``mean-ess``.
@@ -62,10 +62,9 @@ def correlated_gaussian(n_iterations=8000, n_warmup=4000):
     }
 
 
-_method = pints.HaarioACMC
+_method = pints.MetropolisRandomWalkMCMC
 _functional_tests = [
     banana,
     correlated_gaussian,
     two_dim_gaussian,
 ]
-

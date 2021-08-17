@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Functional tests for HaarioACMC
+# Functional tests for HamiltonianMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -10,9 +10,9 @@ import pints
 import pints.functionaltests as ft
 
 
-def two_dim_gaussian(n_iterations=4000, n_warmup=1000):
+def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     """
-    Tests :class:`pints.HaarioACMC`
+    Tests :class:`pints.HamiltonianMCMC`
     on a two-dimensional Gaussian distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -20,16 +20,21 @@ def two_dim_gaussian(n_iterations=4000, n_warmup=1000):
     :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
     """
     problem = ft.RunMcmcMethodOnTwoDimGaussian(
-        _method, 4, n_iterations, n_warmup)
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 1]
+    )
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
 
 
-def banana(n_iterations=4000, n_warmup=1000):
+def banana(n_iterations=2000, n_warmup=1000):
     """
-    Tests :class:`pints.HaarioACMC`
+    Tests :class:`pints.HamiltonianMCMC`
     on a two-dimensional "twisted Gaussian" distribution with true solution
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
@@ -37,35 +42,43 @@ def banana(n_iterations=4000, n_warmup=1000):
     :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
     """
     problem = ft.RunMcmcMethodOnBanana(
-        _method, 4, n_iterations, n_warmup)
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 2]
+    )
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
 
 
-def correlated_gaussian(n_iterations=8000, n_warmup=4000):
+def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
     """
-    Tests :class:`pints.HaarioACMC`
-    on a six-dimensional highly correlated Gaussian distribution with true
-    solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
-    ``kld`` and ``mean-ess``.
+     Tests :class:`pints.HamiltonianMCMC`
+    on a 20-dimensional Gaussian distribution centered at the origin, and
+    returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
+    :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
-        _method, 4, n_iterations, n_warmup)
+    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 1]
+    )
     return {
         'kld': problem.estimate_kld(),
         'mean-ess': problem.estimate_mean_ess()
     }
 
 
-_method = pints.HaarioACMC
+_method = pints.HamiltonianMCMC
 _functional_tests = [
     banana,
-    correlated_gaussian,
+    high_dim_gaussian,
     two_dim_gaussian,
 ]
-
