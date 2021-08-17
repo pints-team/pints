@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
-- [#1322](https://github.com/pints-team/pints/pull/1322) Added a method `sample_initial_points` that draws samples from a stochastic function, which is useful for generating start-points for sampling and optimisation algorithms.
+- [#1322](https://github.com/pints-team/pints/pull/1322) Added a method `sample_initial_points` that allows users to generate random initial points with finite metrics (either log-probabilities or error measures) and, if specified, ensures that the points are within the boundaries. The randomness in the initial points can be determined by a user-supplied stochastic function. When a stochastic function is not supplied, if the metric is a log-posterior, the prior will automatically be sampled from; finally, if a stochastic function is not supplied and if the metric is not a log-posterior, if boundaries are supplied, then initial points will automatically be generated from within these.
 - [#1243](https://github.com/pints-team/pints/pull/1243) Added testing for Python 3.9.
 - [#1213](https://github.com/pints-team/pints/pull/1213), [#1216](https://github.com/pints-team/pints/pull/1216) Added the truncated Gaussian distribution as a log prior, `TruncatedGaussianLogPrior`.
 - [#1212](https://github.com/pints-team/pints/pull/1213) Added the `PooledLogPDF` class to allow for pooling parameters across log-pdfs.
