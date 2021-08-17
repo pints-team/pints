@@ -62,16 +62,20 @@ def sample_initial_points(function, n_points, random_sampler=None,
     """
     is_not_logpdf = not isinstance(function, pints.LogPDF)
     is_not_errormeasure = not isinstance(function, pints.ErrorMeasure)
+
+    # Check function
     if is_not_logpdf and is_not_errormeasure:
         raise ValueError(
             'function must be either pints.LogPDF or pints.ErrorMeasure.')
 
+    # Check boundaries
     if boundaries is not None:
         if not isinstance(boundaries, pints.Boundaries):
             raise ValueError('boundaries must be a pints.Boundaries object.')
         elif boundaries.n_parameters() != function.n_parameters():
             raise ValueError('boundaries must match dimension of function.')
 
+    # Check or set random sampler
     if random_sampler is None:
         if isinstance(function, pints.LogPosterior):
             random_sampler = function.log_prior().sample
@@ -85,15 +89,18 @@ def sample_initial_points(function, n_points, random_sampler=None,
         raise ValueError(
             'random_sampler must be a callable function, if supplied.')
 
+    # Check number of initial points
     if n_points < 1:
         raise ValueError('Number of initial points must be 1 or more.')
 
+    # Set up parallelisation
     if parallel:
         n_workers = min(pints.ParallelEvaluator.cpu_count(), n_points)
         evaluator = pints.ParallelEvaluator(function, n_workers=n_workers)
     else:
         evaluator = pints.SequentialEvaluator(function)
 
+    # Go!
     x0 = []
     n_tries = 0
     while len(x0) < n_points and n_tries < max_tries:
@@ -102,11 +109,8 @@ def sample_initial_points(function, n_points, random_sampler=None,
         for i, x in enumerate(xs):
             fx = fxs[i]
             if np.isfinite(fx):
-                if boundaries is None:
+                if boundaries is None or boundaries.check(x):
                     x0.append(x)
-                else:
-                    if boundaries.check(x):
-                        x0.append(x)
         n_tries += 1
 
     if len(x0) < n_points:
