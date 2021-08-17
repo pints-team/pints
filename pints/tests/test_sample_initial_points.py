@@ -94,51 +94,44 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         def f_test(theta):
             return sum(theta)
         nchains = 4
-        error_message = (
-            "function must be either pints.LogPDF or pints.ErrorMeasure.")
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
-            f_test, nchains,
-            self.log_prior)
+            ValueError, 'either pints.LogPDF or pints.ErrorMeasure.',
+            pints.sample_initial_points, f_test, nchains, self.log_prior)
 
         # pass a non-callable object as random_sampler
         nchains = 4
-        error_message = "random_sampler must be a callable function"
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
+            ValueError, 'random_sampler must be a callable function',
+            pints.sample_initial_points,
             self.log_posterior, nchains,
             [0.015, 500, 10] * nchains)
 
         # try non log-posterior without passing random_sampler
         log_pdf = pints.toy.GaussianLogPDF()
-        error_message = (
-            "If function not of class pints.LogPosterior and no " +
-            "boundaries given then random_sampler must be supplied.")
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
-            log_pdf, nchains)
+            ValueError, 'random_sampler must be supplied',
+            pints.sample_initial_points, log_pdf, nchains)
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
-            self.score, nchains)
+            ValueError, 'random_sampler must be supplied',
+            pints.sample_initial_points, self.score, nchains)
 
         # boundaries aren't of right type of object
         boundaries = log_pdf
-        error_message = "boundaries muse be of class pints.Boundaries."
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
+            ValueError, 'must be a pints.Boundaries',
+            pints.sample_initial_points,
             log_pdf, nchains, boundaries=boundaries)
 
         # boundaries aren't correct dimensions for posterior
-        error_message = "boundaries must match dimension of function."
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
+            ValueError, 'boundaries must match dimension',
+            pints.sample_initial_points,
             self.log_posterior, nchains, boundaries=self.boundaries)
 
         # n_chains < 1?
-        error_message = "Number of initial points must be 1 or more."
         self.assertRaisesRegex(
-            ValueError, error_message, pints.sample_initial_points,
-            self.log_posterior, 0.5)
+            ValueError, 'points must be 1 or more',
+            pints.sample_initial_points, self.log_posterior, 0.5)
 
     def test_bespoke_initialisation(self):
         # test using user-specified initialisation function
@@ -177,9 +170,10 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
             return multivariate_normal.rvs(mean=[0.015, 500, noise],
                                            cov=np.diag([10, 10000, noise]),
                                            size=nchains)
-        error_message = "Initialisation failed since function not finite"
+
         self.assertRaisesRegex(
-            RuntimeError, error_message, pints.sample_initial_points,
+            RuntimeError, 'Initialisation failed since function not finite',
+            pints.sample_initial_points,
             self.log_posterior, nchains, init_sampler, max_tries=2)
 
 

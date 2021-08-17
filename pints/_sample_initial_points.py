@@ -39,7 +39,7 @@ def sample_initial_points(function, n_points, random_sampler=None,
     Parameters
     ----------
     function :
-        An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
+        A :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
         evaluates points in the parameter space. If the latter, it is optional
         that ``function`` be of type :class:`LogPosterior`.
     n_points : int
@@ -64,13 +64,13 @@ def sample_initial_points(function, n_points, random_sampler=None,
     is_not_errormeasure = not isinstance(function, pints.ErrorMeasure)
     if is_not_logpdf and is_not_errormeasure:
         raise ValueError(
-            "function must be either pints.LogPDF or pints.ErrorMeasure.")
+            'function must be either pints.LogPDF or pints.ErrorMeasure.')
 
     if boundaries is not None:
         if not isinstance(boundaries, pints.Boundaries):
-            raise ValueError("boundaries muse be of class pints.Boundaries.")
+            raise ValueError('boundaries must be a pints.Boundaries object.')
         elif boundaries.n_parameters() != function.n_parameters():
-            raise ValueError("boundaries must match dimension of function.")
+            raise ValueError('boundaries must match dimension of function.')
 
     if random_sampler is None:
         if isinstance(function, pints.LogPosterior):
@@ -79,13 +79,14 @@ def sample_initial_points(function, n_points, random_sampler=None,
             random_sampler = boundaries.sample
         else:
             raise ValueError(
-                "If function not of class pints.LogPosterior and no " +
-                "boundaries given then random_sampler must be supplied.")
+                'If function is not a pints.LogPosterior and no boundaries'
+                ' are given then a random_sampler must be supplied.')
     elif not callable(random_sampler):
-        raise ValueError("random_sampler must be a callable function.")
+        raise ValueError(
+            'random_sampler must be a callable function, if supplied.')
 
     if n_points < 1:
-        raise ValueError("Number of initial points must be 1 or more.")
+        raise ValueError('Number of initial points must be 1 or more.')
 
     if parallel:
         n_workers = min(pints.ParallelEvaluator.cpu_count(), n_points)
