@@ -21,15 +21,13 @@ def sample_initial_points(function, n_points, random_sampler=None,
     order of precedence:
 
     1. If a method ``random_sampler`` is provided then this will be used to
-    draw the random samples.
-
+       draw the random samples.
     2. If no sampler method is given but ``function`` is a
-    :class:`LogPosterior` then the method ``function.log_prior().sample()``
-    will be used.
-
+       :class:`LogPosterior` then the method ``function.log_prior().sample()``
+       will be used.
     3. If no sampler method is supplied and ``function`` is not a
-    :class:`LogPosterior` and if ``boundaries`` are provided then the method
-    ``boundaries.sample()`` will be used to draw samples.
+       :class:`LogPosterior` and if ``boundaries`` are provided then the method
+       ``boundaries.sample()`` will be used to draw samples.
 
     A ``ValueError`` is raised if none of the above options are available.
 
