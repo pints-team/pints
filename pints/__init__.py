@@ -238,6 +238,11 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
+# Sampling initialising
+#
+from ._sample_initial_points import sample_initial_points
+
+#
 # Transformations
 #
 from ._transformation import (
