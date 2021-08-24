@@ -40,4 +40,4 @@ from . import (     # noqa
 
 
 # Test discovery methods
-from ._discovery import tests
+from ._discovery import tests   # noqa
