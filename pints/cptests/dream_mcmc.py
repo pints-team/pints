@@ -7,7 +7,7 @@
 # copyright notice and full license details.
 #
 import pints
-import pints.cptests as ft
+import pints.cptests as cpt
 
 
 def two_dim_gaussian(n_iterations=10000, n_warmup=1000):
@@ -19,7 +19,7 @@ def two_dim_gaussian(n_iterations=10000, n_warmup=1000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    problem = ft.RunMcmcMethodOnTwoDimGaussian(
+    problem = cpt.RunMcmcMethodOnTwoDimGaussian(
         _method, 10, n_iterations, n_warmup)
 
     return {
@@ -37,7 +37,7 @@ def banana(n_iterations=5000, n_warmup=1000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
-    problem = ft.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnBanana(
         _method, 20, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -55,7 +55,7 @@ def correlated_gaussian(n_iterations=10000, n_warmup=1000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
         _method, 20, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -72,7 +72,7 @@ def annulus(n_iterations=10000, n_warmup=1000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
-    problem = ft.RunMcmcMethodOnAnnulus(
+    problem = cpt.RunMcmcMethodOnAnnulus(
         _method, 10, n_iterations, n_warmup)
     return {
         'distance': problem.estimate_distance(),

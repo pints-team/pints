@@ -7,7 +7,7 @@
 #
 import inspect
 
-import pints.cptests as ft
+import pints.cptests as cpt
 
 
 def tests(method=None):
@@ -20,7 +20,7 @@ def tests(method=None):
     are returned.
     """
     # Get all modules imported into this module
-    modules = [getattr(ft, x) for x in dir(ft) if not x.startswith('_')]
+    modules = [getattr(cpt, x) for x in dir(cpt) if not x.startswith('_')]
     modules = [x for x in modules if inspect.ismodule(x)]
 
     # Look for (explicitly defined) tests

@@ -7,7 +7,7 @@
 # copyright notice and full license details.
 #
 import pints
-import pints.cptests as ft
+import pints.cptests as cpt
 
 
 def two_dim_gaussian(n_iterations=20000, n_warmup=500):
@@ -19,7 +19,7 @@ def two_dim_gaussian(n_iterations=20000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    problem = ft.RunMcmcMethodOnTwoDimGaussian(
+    problem = cpt.RunMcmcMethodOnTwoDimGaussian(
         _method, 1, n_iterations, n_warmup)
 
     return {
@@ -37,7 +37,7 @@ def banana(n_iterations=20000, n_warmup=5000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
-    problem = ft.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnBanana(
         _method, 1, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -60,7 +60,7 @@ def multimodal_gaussian(
     if n_temperatures is not None:
         method_hyper_parameters = [n_temperatures]
 
-    problem = ft.RunMcmcMethodOnMultimodalGaussian(
+    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
         method=_method,
         n_chains=1,
         n_iterations=n_iterations,

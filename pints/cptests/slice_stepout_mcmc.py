@@ -7,7 +7,7 @@
 # copyright notice and full license details.
 #
 import pints
-import pints.cptests as ft
+import pints.cptests as cpt
 
 
 def two_dim_gaussian(n_iterations=5000, n_warmup=500):
@@ -19,7 +19,7 @@ def two_dim_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    problem = ft.RunMcmcMethodOnTwoDimGaussian(
+    problem = cpt.RunMcmcMethodOnTwoDimGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -37,7 +37,7 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -54,7 +54,7 @@ def banana(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
-    problem = ft.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnBanana(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -71,7 +71,7 @@ def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
+    problem = cpt.RunMcmcMethodOnHighDimensionalGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -88,7 +88,7 @@ def annulus(n_iterations=10000, n_warmup=2000):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
-    problem = ft.RunMcmcMethodOnAnnulus(
+    problem = cpt.RunMcmcMethodOnAnnulus(
         _method, 4, n_iterations, n_warmup)
     return {
         'distance': problem.estimate_distance(),
@@ -106,7 +106,7 @@ def multimodal_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnMultimodalGaussian(
+    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -123,7 +123,7 @@ def cone(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnCone`.
     """
-    problem = ft.RunMcmcMethodOnCone(
+    problem = cpt.RunMcmcMethodOnCone(
         _method, 4, n_iterations, n_warmup)
     return {
         'distance': problem.estimate_distance(),

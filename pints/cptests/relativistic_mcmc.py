@@ -7,7 +7,7 @@
 # copyright notice and full license details.
 #
 import pints
-import pints.cptests as ft
+import pints.cptests as cpt
 
 
 def two_dim_gaussian(n_iterations=1000, n_warmup=200):
@@ -19,7 +19,7 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    problem = ft.RunMcmcMethodOnTwoDimGaussian(
+    problem = cpt.RunMcmcMethodOnTwoDimGaussian(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -41,7 +41,7 @@ def banana(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
-    problem = ft.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnBanana(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -63,7 +63,7 @@ def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
+    problem = cpt.RunMcmcMethodOnHighDimensionalGaussian(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -86,7 +86,7 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -108,7 +108,7 @@ def annulus(n_iterations=5000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
-    problem = ft.RunMcmcMethodOnAnnulus(
+    problem = cpt.RunMcmcMethodOnAnnulus(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -131,7 +131,7 @@ def multimodal_gaussian(n_iterations=2000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnMultimodalGaussian(
+    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
@@ -153,7 +153,7 @@ def cone(n_iterations=2000, n_warmup=500):
     For details of the solved problem, see
     :class:`pints.cptests.RunMcmcMethodOnCone`.
     """
-    problem = ft.RunMcmcMethodOnCone(
+    problem = cpt.RunMcmcMethodOnCone(
         method=_method,
         n_chains=4,
         n_iterations=n_iterations,
