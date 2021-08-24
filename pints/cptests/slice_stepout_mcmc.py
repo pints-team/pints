@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #
-# Functional tests for SliceStepoutMCMC
+# Change point tests for SliceStepoutMCMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 import pints
-import pints.functionaltests as ft
+import pints.cptests as cpt
 
 
 def two_dim_gaussian(n_iterations=5000, n_warmup=500):
@@ -17,9 +17,9 @@ def two_dim_gaussian(n_iterations=5000, n_warmup=500):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnTwoDimGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnTwoDimGaussian`.
     """
-    problem = ft.RunMcmcMethodOnTwoDimGaussian(
+    problem = cpt.RunMcmcMethodOnTwoDimGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -35,9 +35,9 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCorrelatedGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    problem = ft.RunMcmcMethodOnCorrelatedGaussian(
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -52,9 +52,9 @@ def banana(n_iterations=5000, n_warmup=500):
     ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnBanana`.
+    :class:`pints.cptests.RunMcmcMethodOnBanana`.
     """
-    problem = ft.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnBanana(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -69,9 +69,9 @@ def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     returns a dictionary with entries ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnHighDimensionalGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnHighDimensionalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnHighDimensionalGaussian(
+    problem = cpt.RunMcmcMethodOnHighDimensionalGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -86,9 +86,9 @@ def annulus(n_iterations=10000, n_warmup=2000):
     dictionary with entries ``distance`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnAnnulus`.
+    :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
     """
-    problem = ft.RunMcmcMethodOnAnnulus(
+    problem = cpt.RunMcmcMethodOnAnnulus(
         _method, 4, n_iterations, n_warmup)
     return {
         'distance': problem.estimate_distance(),
@@ -104,9 +104,9 @@ def multimodal_gaussian(n_iterations=5000, n_warmup=500):
     "kld" and "mean-ess".
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnMultimodalGaussian`.
+    :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
     """
-    problem = ft.RunMcmcMethodOnMultimodalGaussian(
+    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -121,9 +121,9 @@ def cone(n_iterations=5000, n_warmup=500):
     a dict with entries "distance" and "mean-ess".
 
     For details of the solved problem, see
-    :class:`pints.functionaltests.RunMcmcMethodOnCone`.
+    :class:`pints.cptests.RunMcmcMethodOnCone`.
     """
-    problem = ft.RunMcmcMethodOnCone(
+    problem = cpt.RunMcmcMethodOnCone(
         _method, 4, n_iterations, n_warmup)
     return {
         'distance': problem.estimate_distance(),
@@ -132,7 +132,7 @@ def cone(n_iterations=5000, n_warmup=500):
 
 
 _method = pints.SliceStepoutMCMC
-_functional_tests = [
+_change_point_tests = [
     annulus,
     banana,
     cone,
