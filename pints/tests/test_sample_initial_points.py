@@ -133,6 +133,21 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
             ValueError, 'points must be 1 or more',
             pints.sample_initial_points, self.log_posterior, 0.5)
 
+        # fails if random sampler does not return list
+        from scipy.stats import multivariate_normal
+        noise = 10
+        nchains = 4
+
+        def init_sampler(n_chains):
+            return multivariate_normal.rvs(mean=[0.015, 500, noise],
+                                           cov=np.diag([10, 10000, noise]),
+                                           size=nchains)
+        error_mes = 'random_sampler must return a list.'
+        self.assertRaisesRegex(
+            ValueError, error_mes,
+            pints.sample_initial_points,
+            self.log_posterior, nchains, init_sampler)
+
     def test_bespoke_initialisation(self):
         # test using user-specified initialisation function
 
@@ -167,9 +182,10 @@ class TestMCMCInitialisationMethod(unittest.TestCase):
         nchains = 4
 
         def init_sampler(n_chains):
-            return multivariate_normal.rvs(mean=[0.015, 500, noise],
-                                           cov=np.diag([10, 10000, noise]),
-                                           size=nchains)
+            draws = [multivariate_normal.rvs(
+                mean=[0.015, 500, noise], cov=np.diag([10, 10000, noise]),
+                size=1) for chain in range(n_chains)]
+            return draws
 
         self.assertRaisesRegex(
             RuntimeError, 'Initialisation failed since function not finite',

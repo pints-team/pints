@@ -45,7 +45,7 @@ def sample_initial_points(function, n_points, random_sampler=None,
     n_points : int
         The number of initial values to generate.
     random_sampler :
-        A function that when called returns draws from a probability
+        A function that when called returns a list of draws from a probability
         distribution of the same dimensionality as ``function``. The only
         argument to this function should be an integer specifying the number of
         draws.
@@ -88,6 +88,11 @@ def sample_initial_points(function, n_points, random_sampler=None,
     elif not callable(random_sampler):
         raise ValueError(
             'random_sampler must be a callable function, if supplied.')
+
+    else:
+        test_draws = random_sampler(1)
+        if not isinstance(test_draws, list):
+            raise ValueError('random_sampler must return a list.')
 
     # Check number of initial points
     if n_points < 1:
