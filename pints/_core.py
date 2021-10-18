@@ -321,6 +321,26 @@ class MultiOutputProblem(object):
         return self._values
 
 
+class ProblemCollection(object):
+    """
+    Represents an inference problem where a model is fit to a multi-valued time
+    series, such as measured from a system with multiple outputs, where the
+    different time series are potentially measured at different time intervals.
+
+    This class is also of use for
+
+    Parameters
+    ----------
+    model
+        A model or model wrapper extending :class:`ForwardModel`.
+    times
+        A sequence of points in time. Must be non-negative and non-decreasing.
+    values
+        A sequence of multi-valued measurements. Must have shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of points in
+        ``times`` and ``n_outputs`` is the number of outputs in the model.
+    """
+
 class TunableMethod(object):
 
     """
