@@ -327,19 +327,44 @@ class ProblemCollection(object):
     series, such as measured from a system with multiple outputs, where the
     different time series are potentially measured at different time intervals.
 
-    This class is also of use for
+    This class is also of use when different outputs are modelled with
+    different likelihoods or score functions.
 
     Parameters
     ----------
     model
         A model or model wrapper extending :class:`ForwardModel`.
-    times
-        A sequence of points in time. Must be non-negative and non-decreasing.
-    values
-        A sequence of multi-valued measurements. Must have shape
-        ``(n_times, n_outputs)``, where ``n_times`` is the number of points in
-        ``times`` and ``n_outputs`` is the number of outputs in the model.
+    args
+        Consecutive times, values lists for each output chunk. For example,
+        times_1, values_1, times_2, values_2: where times_1 = [1.2, 2.5, 3] and
+        values_1 = [2.3, 4.5, 4.5]; times_2 = [4, 5, 6, 7] and
+        values_2 = [[3.4, 1.1, 0.5, 0.6], [1.2, 3.3, 4.5, 5.5]].
     """
+    def __init__(self, model, *args):
+        if len(args) < 2:
+            raise ValueError('Must supply at least one time series.')
+        if len(args) % 2 != 0:
+            raise ValueError(
+                'Must supply times and values for each time series.')
+        self._timeses = []
+        self._valueses = []
+        self._output_indices = []
+
+        k = 0
+        for i in range(len(args) // 2):
+            times = np.array(args[k])
+            times_shape = times.shape
+            if len(times_shape) != 1:
+                raise ValueError('Times must be one-dimensional.')
+            values = np.array(args[k + 1])
+            values_shape = values.shape
+            if values_shape[0] != times_shape[0]:
+                raise ValueError('Outputs must be of same length as times.')
+            self._timeses.append(times)
+            self._valueses.append(values)
+            self._output_indices.extend([i] * values_shape[1])
+        self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
+
 
 class TunableMethod(object):
 
