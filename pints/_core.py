@@ -321,6 +321,132 @@ class MultiOutputProblem(object):
         return self._values
 
 
+class SubProblem(object):
+    """
+    Represents an inference problem for a subset of outputs from a multi-output
+    model. This is likely to be used either when the measurement times across
+    some outputs are irregular or different outputs require different objective
+    functions (i.e. log-likelihoods or score functions).
+
+    Parameters
+    ----------
+    model
+        A model or model wrapper extending :class:`ForwardModel`.
+    times
+        A sequence of points in time. Must be non-negative and non-decreasing.
+    values
+        Can either be a one-dimensional sequence of scalar output values
+        measured at the times in ``times``; or a sequence of multi-valued
+        measurements with shape ``(n_times, n_outputs)``, where ``n_times`` is
+        the number of points in ``times`` and ``n_outputs`` is the number of
+        outputs in the model.
+    """
+    def __init__(self, model, times, values):
+
+        # Check model
+        self._model = model
+
+        # Check times, copy so that they can no longer be changed and set them
+        # to read-only
+        self._times = pints.vector(times)
+        if np.any(self._times < 0):
+            raise ValueError('Times cannot be negative.')
+        if np.any(self._times[:-1] > self._times[1:]):
+            raise ValueError('Times must be non-decreasing.')
+
+        self._n_parameters = int(model.n_parameters())
+        self._n_times = len(self._times)
+
+        values = np.array(values)
+        values_shape = values.shape
+        if len(values_shape) == 1:
+            self._n_outputs = 1
+
+            # Check values, copy so that they can no longer be changed
+            self._values = pints.vector(values)
+
+            # Check times and values array have right shape
+            if len(self._values) != self._n_times:
+                raise ValueError(
+                    'Times and values arrays must have same length.')
+        else:
+            self._n_outputs = values_shape[1]
+            self._values = pints.matrix2d(values)
+
+            # Check for correct shape
+            if self._values.shape != (self._n_times, self._n_outputs):
+                raise ValueError(
+                    'Values array must have shape `(n_times, n_outputs)`.')
+
+    def evaluate(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+
+        The returned data is a NumPy array with shape ``(n_times, n_outputs)``.
+        """
+        y = np.asarray(self._model.simulate(parameters, self._times))
+        return y.reshape(self._n_times, self._n_outputs)
+
+    def evaluateS1(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+
+        The returned data is a tuple of NumPy arrays ``(y, y')``, where ``y``
+        has shape ``(n_times, n_outputs)``, while ``y'`` has shape
+        ``(n_times, n_outputs, n_parameters)``.
+
+        *This method only works for problems whose model implements the
+        :class:`ForwardModelS1` interface.*
+        """
+        y, dy = self._model.simulateS1(parameters, self._times)
+        return (
+            np.asarray(y).reshape(self._n_times, self._n_outputs),
+            np.asarray(dy).reshape(
+                self._n_times, self._n_outputs, self._n_parameters)
+        )
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs for this problem.
+        """
+        return self._n_outputs
+
+    def n_parameters(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._n_parameters
+
+    def n_times(self):
+        """
+        Returns the number of sampling points, i.e. the length of the vectors
+        returned by :meth:`times()` and :meth:`values()`.
+        """
+        return self._n_times
+
+    def times(self):
+        """
+        Returns this problem's times.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._times
+
+    def values(self):
+        """
+        Returns this problem's values.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._values
+
+
 class ProblemCollection(object):
     """
     Represents an inference problem where a model is fit to a multi-valued time
@@ -353,8 +479,8 @@ class ProblemCollection(object):
         self._output_indices = []
 
         k = 0
-        self._num_output_sets = len(args) // 2
-        for i in range(self._num_output_sets):
+        self._n_output_sets = len(args) // 2
+        for i in range(self._n_output_sets):
             times = np.array(args[k])
             times_shape = times.shape
             if len(times_shape) != 1:
@@ -365,23 +491,24 @@ class ProblemCollection(object):
                 raise ValueError('Outputs must be of same length as times.')
             self._timeses.append(times)
             self._valueses.append(values)
-            self._output_indices.extend([i] * values_shape[1])
+            if len(values_shape) > 1:
+                n_outputs = values_shape[1]
+            else:
+                n_outputs = 1
+            self._output_indices.extend([i] * n_outputs)
+            k += 2
         self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
 
     def subproblem(self, index):
         """
         Creates a `pints.Problem` corresponding to a particular output index.
         """
-        if index >= self._num_output_sets:
+        if index >= self._n_output_sets:
             raise ValueError('Index must be less than number of output sets.')
 
-        times = self._times[index]
+        times = self._timeses[index]
         values = self._valueses[index]
-        if len(values.shape) == 1:
-            problem = pints.SingleOutputProblem(self._model, times, values)
-        else:
-            problem = pints.MultiOutputProblem(self._model, times, values)
-        return problem
+        return pints.SubProblem(self._model, times, values)
 
 
 class TunableMethod(object):

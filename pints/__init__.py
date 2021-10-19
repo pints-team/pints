@@ -66,7 +66,12 @@ FLOAT_FORMAT = '{: .17e}'
 #
 from ._core import ForwardModel, ForwardModelS1
 from ._core import TunableMethod
-from ._core import SingleOutputProblem, MultiOutputProblem, ProblemCollection
+from ._core import (
+    SingleOutputProblem,
+    MultiOutputProblem,
+    ProblemCollection,
+    SubProblem,
+)
 
 #
 # Utility classes and methods
