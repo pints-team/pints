@@ -341,6 +341,8 @@ class ProblemCollection(object):
         values_2 = [[3.4, 1.1, 0.5, 0.6], [1.2, 3.3, 4.5, 5.5]].
     """
     def __init__(self, model, *args):
+
+        self._model = model
         if len(args) < 2:
             raise ValueError('Must supply at least one time series.')
         if len(args) % 2 != 0:
@@ -351,7 +353,8 @@ class ProblemCollection(object):
         self._output_indices = []
 
         k = 0
-        for i in range(len(args) // 2):
+        self._num_output_sets = len(args) // 2
+        for i in range(self._num_output_sets):
             times = np.array(args[k])
             times_shape = times.shape
             if len(times_shape) != 1:
@@ -364,6 +367,21 @@ class ProblemCollection(object):
             self._valueses.append(values)
             self._output_indices.extend([i] * values_shape[1])
         self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
+
+    def subproblem(self, index):
+        """
+        Creates a `pints.Problem` corresponding to a particular output index.
+        """
+        if index >= self._num_output_sets:
+            raise ValueError('Index must be less than number of output sets.')
+
+        times = self._times[index]
+        values = self._valueses[index]
+        if len(values.shape) == 1:
+            problem = pints.SingleOutputProblem(self._model, times, values)
+        else:
+            problem = pints.MultiOutputProblem(self._model, times, values)
+        return problem
 
 
 class TunableMethod(object):
