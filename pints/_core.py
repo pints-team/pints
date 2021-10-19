@@ -341,14 +341,19 @@ class SubProblem(object):
         the number of points in ``times`` and ``n_outputs`` is the number of
         outputs in the model.
     """
-    def __init__(self, model, times, values):
+    def __init__(self, collection, index):
 
-        # Check model
+        # Get items from collection
+        model = collection.model()
         self._model = model
+        timeses = collection.timeses()
+        self._times = pints.vector(timeses[index])
+        values = collection.valueses()
+        values = values[index]
 
         # Check times, copy so that they can no longer be changed and set them
         # to read-only
-        self._times = pints.vector(times)
+
         if np.any(self._times < 0):
             raise ValueError('Times cannot be negative.')
         if np.any(self._times[:-1] > self._times[1:]):
@@ -499,16 +504,32 @@ class ProblemCollection(object):
             k += 2
         self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
 
+    def _evaluate(self, parameters, index):
+        pass
+
+    def _evaluateS1(self, parameters, index):
+        pass
+
+    def model(self):
+        """ Returns forward model. """
+        return self._model
+
     def subproblem(self, index):
         """
-        Creates a `pints.Problem` corresponding to a particular output index.
+        Creates a `pints.SubProblem` corresponding to a particular output
+        index.
         """
         if index >= self._n_output_sets:
             raise ValueError('Index must be less than number of output sets.')
+        return pints.SubProblem(self, index)
 
-        times = self._timeses[index]
-        values = self._valueses[index]
-        return pints.SubProblem(self._model, times, values)
+    def timeses(self):
+        """ Returns list of times sequences: one for each output chunk. """
+        return self._timeses
+
+    def valueses(self):
+        """ Returns list of value chunks: one for each output chunk. """
+        return self._valueses
 
 
 class TunableMethod(object):

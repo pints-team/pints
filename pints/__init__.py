@@ -70,7 +70,7 @@ from ._core import (
     SingleOutputProblem,
     MultiOutputProblem,
     ProblemCollection,
-    SubProblem,
+    SubProblem
 )
 
 #
