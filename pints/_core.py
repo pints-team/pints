@@ -344,6 +344,8 @@ class SubProblem(object):
     def __init__(self, collection, index):
 
         # Get items from collection
+        self._collection = collection
+        self._index = index
         model = collection.model()
         self._model = model
         timeses = collection.timeses()
@@ -387,30 +389,15 @@ class SubProblem(object):
         """
         Runs a simulation using the given parameters, returning the simulated
         values.
-
-        The returned data is a NumPy array with shape ``(n_times, n_outputs)``.
         """
-        y = np.asarray(self._model.simulate(parameters, self._times))
-        return y.reshape(self._n_times, self._n_outputs)
+        return self._collection._evaluate(parameters, self._index)
 
     def evaluateS1(self, parameters):
         """
         Runs a simulation using the given parameters, returning the simulated
         values.
-
-        The returned data is a tuple of NumPy arrays ``(y, y')``, where ``y``
-        has shape ``(n_times, n_outputs)``, while ``y'`` has shape
-        ``(n_times, n_outputs, n_parameters)``.
-
-        *This method only works for problems whose model implements the
-        :class:`ForwardModelS1` interface.*
         """
-        y, dy = self._model.simulateS1(parameters, self._times)
-        return (
-            np.asarray(y).reshape(self._n_times, self._n_outputs),
-            np.asarray(dy).reshape(
-                self._n_times, self._n_outputs, self._n_parameters)
-        )
+        return self._collection._evaluateS1(parameters, self._index)
 
     def n_outputs(self):
         """
