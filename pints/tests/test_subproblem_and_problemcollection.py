@@ -102,6 +102,16 @@ class TestProblemCollection(unittest.TestCase):
             pints.ProblemCollection, self.model, [1, 2, 3, 4, 5],
             self.outputs_12)
 
+        # selected index exceeding number of output chunks?
+        collection = pints.ProblemCollection(
+            self.model, self.times_12, self.outputs_12, self.times_3,
+            self.outputs_3)
+
+        self.assertRaisesRegex(
+            ValueError, 'Index must be less than number of output sets.',
+            collection.subproblem, 2
+        )
+
 
 class TestSubProblem(unittest.TestCase):
     """
