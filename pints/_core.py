@@ -545,7 +545,6 @@ class ProblemCollection(object):
             y = np.asarray(self._model.simulate(parameters, self._times_all))
             self._cached_output = y
             self._cached_parameters = parameters
-
         return self._output_sorter(self._cached_output, index)
 
     def _evaluateS1(self, parameters, index):
