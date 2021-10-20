@@ -321,119 +321,6 @@ class MultiOutputProblem(object):
         return self._values
 
 
-class SubProblem(object):
-    """
-    Represents an inference problem for a subset of outputs from a multi-output
-    model. This is likely to be used either when the measurement times across
-    outputs are differ or when different outputs require different objective
-    functions (i.e. log-likelihoods or score functions).
-
-    Parameters
-    ----------
-    collection
-        An object of :class:`ProblemCollection`.
-    index
-        An integer index corresponding to the particular output chunk in the
-        collection.
-    """
-    def __init__(self, collection, index):
-
-        # Get items from collection
-        self._collection = collection
-        self._index = index
-        model = collection.model()
-        self._model = model
-        timeses = collection.timeses()
-        self._times = pints.vector(timeses[index])
-        values = collection.valueses()
-        values = values[index]
-
-        # Check times, copy so that they can no longer be changed and set them
-        # to read-only
-
-        if np.any(self._times < 0):
-            raise ValueError('Times cannot be negative.')
-        if np.any(self._times[:-1] > self._times[1:]):
-            raise ValueError('Times must be non-decreasing.')
-
-        self._n_parameters = int(model.n_parameters())
-        self._n_times = len(self._times)
-
-        values = np.array(values)
-        values_shape = values.shape
-        if len(values_shape) == 1:
-            self._n_outputs = 1
-
-            # Check values, copy so that they can no longer be changed
-            self._values = pints.vector(values)
-
-            # Check times and values array have right shape
-            if len(self._values) != self._n_times:
-                raise ValueError(
-                    'Times and values arrays must have same length.')
-        else:
-            self._n_outputs = values_shape[1]
-            self._values = pints.matrix2d(values)
-
-            # Check for correct shape
-            if self._values.shape != (self._n_times, self._n_outputs):
-                raise ValueError(
-                    'Values array must have shape `(n_times, n_outputs)`.')
-
-    def evaluate(self, parameters):
-        """
-        Runs a simulation using the given parameters, returning the simulated
-        values.
-        """
-        return self._collection._evaluate(parameters, self._index)
-
-    def evaluateS1(self, parameters):
-        """
-        Runs a simulation using the given parameters, returning the simulated
-        values.
-        """
-        return self._collection._evaluateS1(parameters, self._index)
-
-    def n_outputs(self):
-        """
-        Returns the number of outputs for this problem.
-        """
-        return self._n_outputs
-
-    def n_parameters(self):
-        """
-        Returns the dimension (the number of parameters) of this problem.
-        """
-        return self._n_parameters
-
-    def n_times(self):
-        """
-        Returns the number of sampling points, i.e. the length of the vectors
-        returned by :meth:`times()` and :meth:`values()`.
-        """
-        return self._n_times
-
-    def times(self):
-        """
-        Returns this problem's times.
-
-        The returned value is a read-only NumPy array of shape
-        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
-        points and ``n_outputs`` is the number of outputs.
-        """
-        return self._times
-
-    def values(self):
-        """
-        Returns this problem's values.
-
-        The returned value is a read-only NumPy array of shape
-        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
-        points and ``n_outputs`` is the number of outputs.
-        """
-        return self._values
-
-
 class ProblemCollection(object):
     """
     Represents an inference problem where a model is fit to a multi-valued time
@@ -574,6 +461,119 @@ class ProblemCollection(object):
     def valueses(self):
         """ Returns list of value chunks: one for each output chunk. """
         return self._valueses
+
+
+class SubProblem(object):
+    """
+    Represents an inference problem for a subset of outputs from a multi-output
+    model. This is likely to be used either when the measurement times across
+    outputs are differ or when different outputs require different objective
+    functions (i.e. log-likelihoods or score functions).
+
+    Parameters
+    ----------
+    collection
+        An object of :class:`ProblemCollection`.
+    index
+        An integer index corresponding to the particular output chunk in the
+        collection.
+    """
+    def __init__(self, collection, index):
+
+        # Get items from collection
+        self._collection = collection
+        self._index = index
+        model = collection.model()
+        self._model = model
+        timeses = collection.timeses()
+        self._times = pints.vector(timeses[index])
+        values = collection.valueses()
+        values = values[index]
+
+        # Check times, copy so that they can no longer be changed and set them
+        # to read-only
+
+        if np.any(self._times < 0):
+            raise ValueError('Times cannot be negative.')
+        if np.any(self._times[:-1] > self._times[1:]):
+            raise ValueError('Times must be non-decreasing.')
+
+        self._n_parameters = int(model.n_parameters())
+        self._n_times = len(self._times)
+
+        values = np.array(values)
+        values_shape = values.shape
+        if len(values_shape) == 1:
+            self._n_outputs = 1
+
+            # Check values, copy so that they can no longer be changed
+            self._values = pints.vector(values)
+
+            # Check times and values array have right shape
+            if len(self._values) != self._n_times:
+                raise ValueError(
+                    'Times and values arrays must have same length.')
+        else:
+            self._n_outputs = values_shape[1]
+            self._values = pints.matrix2d(values)
+
+            # Check for correct shape
+            if self._values.shape != (self._n_times, self._n_outputs):
+                raise ValueError(
+                    'Values array must have shape `(n_times, n_outputs)`.')
+
+    def evaluate(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+        """
+        return self._collection._evaluate(parameters, self._index)
+
+    def evaluateS1(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+        """
+        return self._collection._evaluateS1(parameters, self._index)
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs for this problem.
+        """
+        return self._n_outputs
+
+    def n_parameters(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._n_parameters
+
+    def n_times(self):
+        """
+        Returns the number of sampling points, i.e. the length of the vectors
+        returned by :meth:`times()` and :meth:`values()`.
+        """
+        return self._n_times
+
+    def times(self):
+        """
+        Returns this problem's times.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._times
+
+    def values(self):
+        """
+        Returns this problem's values.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._values
 
 
 class TunableMethod(object):
