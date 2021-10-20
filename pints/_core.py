@@ -325,21 +325,16 @@ class SubProblem(object):
     """
     Represents an inference problem for a subset of outputs from a multi-output
     model. This is likely to be used either when the measurement times across
-    some outputs are irregular or different outputs require different objective
+    outputs are differ or when different outputs require different objective
     functions (i.e. log-likelihoods or score functions).
 
     Parameters
     ----------
-    model
-        A model or model wrapper extending :class:`ForwardModel`.
-    times
-        A sequence of points in time. Must be non-negative and non-decreasing.
-    values
-        Can either be a one-dimensional sequence of scalar output values
-        measured at the times in ``times``; or a sequence of multi-valued
-        measurements with shape ``(n_times, n_outputs)``, where ``n_times`` is
-        the number of points in ``times`` and ``n_outputs`` is the number of
-        outputs in the model.
+    collection
+        An object of :class:`ProblemCollection`.
+    index
+        An integer index corresponding to the particular output chunk in the
+        collection.
     """
     def __init__(self, collection, index):
 
@@ -442,8 +437,9 @@ class SubProblem(object):
 class ProblemCollection(object):
     """
     Represents an inference problem where a model is fit to a multi-valued time
-    series, such as measured from a system with multiple outputs, where the
-    different time series are potentially measured at different time intervals.
+    series, such as when measured from a system with multiple outputs, where
+    the different time series are potentially measured at different time
+    intervals.
 
     This class is also of use when different outputs are modelled with
     different likelihoods or score functions.
@@ -517,8 +513,8 @@ class ProblemCollection(object):
 
     def _output_and_sensitivity_sorter(self, y, dy, index):
         """
-        Returns output(s) corresponding to a given index at times corresponding
-        to that output.
+        Returns output(s) and sensitivities corresponding to a given index at
+        times corresponding to that output.
         """
         # lookup times in times array
         times = self._timeses[index]
