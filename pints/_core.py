@@ -459,7 +459,6 @@ class ProblemCollection(object):
         values_2 = [[3.4, 1.1, 0.5, 0.6], [1.2, 3.3, 4.5, 5.5]].
     """
     def __init__(self, model, *args):
-
         self._model = model
         if len(args) < 2:
             raise ValueError('Must supply at least one time series.')
@@ -490,12 +489,72 @@ class ProblemCollection(object):
             self._output_indices.extend([i] * n_outputs)
             k += 2
         self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
+        self._output_indices = np.array(self._output_indices)
+
+        # vars to handle caching across multiple output chunks
+        self._cached_output = None
+        self._cached_sensitivities = None
+        self._cached_parameters = None
+
+    def _output_sorter(self, y, index):
+        """
+        Returns output(s) corresponding to a given index at times corresponding
+        to that output.
+        """
+        # lookup times in times array
+        times = self._timeses[index]
+        time_indices = [np.where(self._times_all == x)[0][0] for x in times]
+
+        # find relevant output indices
+        output_indices = np.where(self._output_indices == index).tolist()
+
+        y_short = y[time_indices, output_indices]
+        if len(y_short.shape) == 1:
+            y_short = y_short.reshape((len(self._timeses[index]),))
+        return y_short
+
+    def _output_and_sensitivity_sorter(self, y, dy, index):
+        """
+        Returns output(s) corresponding to a given index at times corresponding
+        to that output.
+        """
+        # lookup times in times array
+        times = self._timeses[index]
+        time_indices = [np.where(self._times_all == x)[0][0] for x in times]
+
+        # find relevant output indices
+        output_indices = np.where(self._output_indices == index).tolist()
+
+        y_short = y[time_indices, output_indices]
+        if len(y_short.shape) == 1:
+            y_short = y_short.reshape((len(self._timeses[index]),))
+
+        # sort sensitivities
+        dy_short = dy[time_indices, output_indices, :]
+
+        return y_short, dy_short
 
     def _evaluate(self, parameters, index):
-        pass
+        """ Evaluates model or returns cached result. """
+        parameters = pints.vector(parameters)
+        if not np.array_equal(self._cached_parameters, parameters):
+            y = np.asarray(self._model.simulate(parameters, self._times_all))
+            self._cached_output = y
+            self._cached_parameters = parameters
+
+        return self._output_sorter(self._cached_output, index)
 
     def _evaluateS1(self, parameters, index):
-        pass
+        """ Evaluates model with sensitivities or returns cached result. """
+        parameters = pints.vector(parameters)
+        if not np.array_equal(self._cached_parameters, parameters):
+            y, dy = np.asarray(
+                self._model.simulateS1(parameters, self._times_all))
+            self._cached_output = y
+            self._cached_sensitivities = dy
+            self._cached_parameters = parameters
+        return self._output_and_sensitivity_sorter(
+            self._cached_output, self._cached_sensitivities, index)
 
     def model(self):
         """ Returns forward model. """
