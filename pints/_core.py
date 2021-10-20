@@ -419,6 +419,10 @@ class ProblemCollection(object):
         # sort sensitivities
         dy_short = dy[time_indices, :, :]
         dy_short = dy_short[:, output_indices, :]
+
+        if len(output_indices) == 1:
+            dy_short = dy_short.reshape(
+                len(time_indices), 1, dy_short.shape[2])
         return y_short, dy_short
 
     def _evaluate(self, parameters, index):
@@ -433,7 +437,10 @@ class ProblemCollection(object):
     def _evaluateS1(self, parameters, index):
         """ Evaluates model with sensitivities or returns cached result. """
         parameters = pints.vector(parameters)
-        if not np.array_equal(self._cached_parameters, parameters):
+
+        # extra or here catches if evaluate has been called before evaluateS1
+        if (not np.array_equal(self._cached_parameters, parameters) or
+                self._cached_sensitivities is None):
             y, dy = self._model.simulateS1(parameters, self._times_all)
             self._cached_output = y
             self._cached_sensitivities = dy
@@ -490,37 +497,23 @@ class SubProblem(object):
         values = collection.valueses()
         values = values[index]
 
-        # Check times, copy so that they can no longer be changed and set them
-        # to read-only
-
-        if np.any(self._times < 0):
-            raise ValueError('Times cannot be negative.')
-        if np.any(self._times[:-1] > self._times[1:]):
-            raise ValueError('Times must be non-decreasing.')
-
         self._n_parameters = int(model.n_parameters())
         self._n_times = len(self._times)
 
         values = np.array(values)
         values_shape = values.shape
+
+        # here don't check array sizes as this will be done in the
+        # problemcollection.subproblem method
         if len(values_shape) == 1:
             self._n_outputs = 1
 
-            # Check values, copy so that they can no longer be changed
+            # copy so that they can no longer be changed
             self._values = pints.vector(values)
 
-            # Check times and values array have right shape
-            if len(self._values) != self._n_times:
-                raise ValueError(
-                    'Times and values arrays must have same length.')
         else:
             self._n_outputs = values_shape[1]
             self._values = pints.matrix2d(values)
-
-            # Check for correct shape
-            if self._values.shape != (self._n_times, self._n_outputs):
-                raise ValueError(
-                    'Values array must have shape `(n_times, n_outputs)`.')
 
     def evaluate(self, parameters):
         """
