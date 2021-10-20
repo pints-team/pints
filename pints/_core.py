@@ -506,10 +506,12 @@ class ProblemCollection(object):
         time_indices = [np.where(self._times_all == x)[0][0] for x in times]
 
         # find relevant output indices
-        output_indices = np.where(self._output_indices == index).tolist()
+        output_indices = np.where(self._output_indices == index)[0]
 
-        y_short = y[time_indices, output_indices]
-        if len(y_short.shape) == 1:
+        # pick rows then columns
+        y_short = y[time_indices, :]
+        y_short = y_short[:, output_indices]
+        if y_short.shape[1] == 1:
             y_short = y_short.reshape((len(self._timeses[index]),))
         return y_short
 
@@ -523,15 +525,17 @@ class ProblemCollection(object):
         time_indices = [np.where(self._times_all == x)[0][0] for x in times]
 
         # find relevant output indices
-        output_indices = np.where(self._output_indices == index).tolist()
+        output_indices = np.where(self._output_indices == index)[0]
 
-        y_short = y[time_indices, output_indices]
-        if len(y_short.shape) == 1:
+        # pick rows then columns
+        y_short = y[time_indices, :]
+        y_short = y_short[:, output_indices]
+        if y_short.shape[1] == 1:
             y_short = y_short.reshape((len(self._timeses[index]),))
 
         # sort sensitivities
-        dy_short = dy[time_indices, output_indices, :]
-
+        dy_short = dy[time_indices, :, :]
+        dy_short = dy_short[:, output_indices, :]
         return y_short, dy_short
 
     def _evaluate(self, parameters, index):
@@ -548,8 +552,7 @@ class ProblemCollection(object):
         """ Evaluates model with sensitivities or returns cached result. """
         parameters = pints.vector(parameters)
         if not np.array_equal(self._cached_parameters, parameters):
-            y, dy = np.asarray(
-                self._model.simulateS1(parameters, self._times_all))
+            y, dy = self._model.simulateS1(parameters, self._times_all)
             self._cached_output = y
             self._cached_sensitivities = dy
             self._cached_parameters = parameters
