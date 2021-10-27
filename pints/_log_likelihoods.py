@@ -872,7 +872,8 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
 
-        # Note: Must be (np.log(data) - simulation), sign now matters!
+        # Note: Must be (np.log(data) - simulation), sign matters now since it
+        # must match that of the partial derivative below
         error = np.log(self._values) - np.log(y)
         if self._mean_adjust:
             error += 0.5 * sigma**2
