@@ -23,6 +23,7 @@ Contents
 
 .. toctree::
 
+    abc_samplers/index
     boundaries
     core_classes_and_methods
     diagnostics
