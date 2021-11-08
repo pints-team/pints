@@ -10,7 +10,6 @@ from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
-import pints
 
 class ABCSampler(pints.Loggable, pints.TunableMethod):
     """
@@ -42,26 +41,25 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
         raise NotImplementedError
 
 
-
 class ABCController(object):
     """
     Samples from a :class:`pints.LogPrior`.
-    
+
     Properties related to the number of iterations, parallelisation,
     threshold, and number of parameters to sample can be set directly on the
     ``ABCController`` object, e.g.::
-    
+
         abc.set_max_iterations(1000)
-    
+
     Finally, to run an ABC routine, call::
-    
+
         posterior_estimate = abc.run()
-    
+
     Constructor arguments:
     ``error_measure``
     An error measure to evaluate on a problem, given a forward model,
     simulated and observed data, and times
-    
+
     ``log_prior``
     A :class:`LogPrior` function from which parameter values are sampled
 
@@ -116,13 +114,12 @@ class ABCController(object):
         self.set_log_interval()
         self._acceptance_rate = 0
 
-
     def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
 
         Arguments:
-        
+
         ``interval``
             A log message will be shown every ``iters`` iterations.
         ``warm_up``
@@ -187,8 +184,6 @@ class ABCController(object):
         """
         if self._max_iterations is None:
             raise ValueError("At least one stopping criterion must be set.")
-
-        has_stopping_criterion = self._max_iterations
 
         # Iteration and evaluation counting
         iteration = 0
@@ -257,10 +252,10 @@ class ABCController(object):
             accepted_count += len(accepted_vals)
             for val in accepted_vals:
                 samples.append(val)
-            
+
             iteration += 1
-            
-             # Log progress
+
+            # Log progress
             if logging and iteration >= next_message:
                 # Log state
                 logger.log(iteration, evaluations, (
@@ -274,7 +269,7 @@ class ABCController(object):
                 else:
                     next_message = self._message_interval * (
                         1 + iteration // self._message_interval)
-            
+
             if iteration >= self._max_iterations:
                 running = False
                 halt_message = ('Halting: Maximum number of iterations ('
@@ -317,7 +312,8 @@ class ABCController(object):
         if iterations is not None:
             iterations = int(iterations)
             if iterations < 0:
-                raise ValueError('Maximum number of iterations cannot be negative.')
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
 
     def set_nr_samples(self, nr_samples=500):

@@ -74,13 +74,17 @@ class TestABCController(unittest.TestCase):
         abc.set_max_iterations(maxi)
         self.assertEqual(maxi, abc.max_iterations())
         self.assertRaisesRegex(
-            ValueError, 'Maximum number of iterations cannot be negative.', abc.set_max_iterations, -1)
+            ValueError,
+            'Maximum number of iterations cannot be negative.',
+            abc.set_max_iterations, -1)
 
         # # Test without stopping criteria
         abc.set_max_iterations(None)
         self.assertIsNone(abc.max_iterations())
         self.assertRaisesRegex(
-            ValueError, 'At least one stopping criterion must be set.', abc.run)
+            ValueError,
+            'At least one stopping criterion must be set.',
+            abc.run)
 
     def test_parallel(self):
         """ Test running ABC with parallisation. """
@@ -98,69 +102,69 @@ class TestABCController(unittest.TestCase):
         abc.set_parallel(2)
         self.assertEqual(abc.parallel(), 2)
 
-    # def test_logging(self):
-    #     # tests logging to screen
-    #     # No output
-    #     with StreamCapture() as capture:
-    #         abc = pints.ABCController(
-    #             self.error_measure, self.log_prior, method=pints.RejectionABC)
-    #         abc.set_max_iterations(10)
-    #         abc.set_log_to_screen(False)
-    #         abc.set_log_to_file(False)
-    #         abc.run()
-    #     self.assertEqual(capture.text(), '')
+    def test_logging(self):
+        # tests logging to screen
+        # No output
+        with StreamCapture() as capture:
+            abc = pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(False)
+            abc.run()
+        self.assertEqual(capture.text(), '')
 
-    #     # With output to screen
-    #     np.random.seed(1)
-    #     with StreamCapture() as capture:
-    #         pints.ABCController(
-    #             self.error_measure, self.log_prior, method=pints.RejectionABC)
-    #         abc.set_max_iterations(10)
-    #         abc.set_log_to_screen(True)
-    #         abc.set_log_to_file(False)
-    #         abc.run()
-    #     lines = capture.text().splitlines()
-    #     self.assertTrue(len(lines) > 0)
+        # With output to screen
+        np.random.seed(1)
+        with StreamCapture() as capture:
+            pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(True)
+            abc.set_log_to_file(False)
+            abc.run()
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) > 0)
 
-    #     # With output to screen
-    #     np.random.seed(1)
-    #     with StreamCapture() as capture:
-    #         pints.ABCController(
-    #             self.error_measure, self.log_prior, method=pints.RejectionABC)
-    #         abc.set_max_iterations(10)
-    #         abc.set_log_to_screen(False)
-    #         abc.set_log_to_file(True)
-    #         abc.run()
-    #     lines = capture.text().splitlines()
-    #     self.assertTrue(len(lines) == 0)
+        # With output to screen
+        np.random.seed(1)
+        with StreamCapture() as capture:
+            pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(True)
+            abc.run()
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) == 0)
 
-    #     # Invalid log interval
-    #     self.assertRaises(ValueError, abc.set_log_interval, 0)
+        # Invalid log interval
+        self.assertRaises(ValueError, abc.set_log_interval, 0)
 
-    #     abc = pints.ABCController(
-    #         self.error_measure, self.log_prior, method=pints.RejectionABC)
-    #     abc.set_log_to_file("temp_file")
-    #     self.assertEqual(abc.log_filename(), "temp_file")
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_log_to_file("temp_file")
+        self.assertEqual(abc.log_filename(), "temp_file")
 
-    #     # tests logging to screen with parallel
-    #     with StreamCapture() as capture:
-    #         abc = pints.ABCController(
-    #             self.error_measure, self.log_prior, method=pints.RejectionABC)
-    #         abc.set_parallel(2)
-    #         abc.set_max_iterations(10)
-    #         abc.set_log_to_screen(False)
-    #         abc.set_log_to_file(False)
-    #         abc.run()
-    #     self.assertEqual(capture.text(), '')
+        # tests logging to screen with parallel
+        with StreamCapture() as capture:
+            abc = pints.ABCController(
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_parallel(2)
+            abc.set_max_iterations(10)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(False)
+            abc.run()
+        self.assertEqual(capture.text(), '')
 
     def test_controller_extra(self):
         # tests various controller aspects
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           self.error_measure)
-        # self.assertRaisesRegex(
-        #     ValueError, 'Given method must extend pints.ABCSampler',
-        #     pints.ABCController, self.error_measure,
-        #     self.log_prior, pints.MCMCSampler)
+        self.assertRaisesRegex(
+            ValueError, 'Given method must extend ABCSampler.',
+            pints.ABCController, self.error_measure,
+            self.log_prior, pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           pints.MCMCSampler)
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
