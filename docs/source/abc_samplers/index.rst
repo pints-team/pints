@@ -4,4 +4,5 @@ ABC samplers
 
 .. toctree::
 
-    base_class
+    base_classes
+    rejection_abc
