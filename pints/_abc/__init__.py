@@ -128,6 +128,7 @@ class ABCController(object):
         ``warm_up``
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
+
         """
         iters = int(iters)
         if iters < 1:
@@ -313,7 +314,7 @@ class ABCController(object):
         This criterion is enabled by default. To disable it, use
         `set_max_iterations(None)`.
         """
-        if iterations is None:
+        if iterations is not None:
             iterations = int(iterations)
             if iterations < 0:
                 raise ValueError('Maximum number of iterations cannot be negative.')
@@ -337,7 +338,7 @@ class ABCController(object):
         ``False``.
         """
         if parallel is True:
-            self._n_workers = int(parallel)
+            self._n_workers = pints.ParallelEvaluator.cpu_count()
             self._parallel = True
 
         elif parallel >= 1:
