@@ -22,7 +22,6 @@ class RejectionABC(pints.ABCSampler):
         if s(x) < threshold:
             theta* added to list of samples
 
-
     References
     ----------
     .. [1] "Approximate Bayesian Computation (ABC) in practice". Katalin
