@@ -19,8 +19,7 @@ class RejectionABC(pints.ABCSampler):
 
         theta* ~ p(theta), i.e. sample parameters from prior distribution
         x ~ p(x|theta*), i.e. sample data from sampling distribution
-        if s(x) < threshold:
-            theta* added to list of samples
+        if s(x) < threshold, theta* added to list of samples
 
     References
     ----------
