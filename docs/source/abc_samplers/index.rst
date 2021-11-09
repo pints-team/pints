@@ -6,3 +6,4 @@ ABC samplers
 
     base_classes
     rejection_abc
+    abc-smc

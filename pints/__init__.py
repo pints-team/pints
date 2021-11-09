@@ -249,6 +249,7 @@ from ._sample_initial_points import sample_initial_points
 from ._abc import ABCSampler
 from ._abc import ABCController
 from ._abc._abc_rejection import RejectionABC
+from ._abc._abc_smc import ABCSMC
 
 
 #
