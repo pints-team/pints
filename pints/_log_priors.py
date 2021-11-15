@@ -142,11 +142,13 @@ class BinomialLogPrior(pints.LogPrior):
         self._log_opo_prob = np.log(1-self._prob)
 
     def __call__(self, x):
-        if x[0] < 0.0 or x[0] > 1.0 or not float(x[0]).is_integer():
+        if x[0] < 0.0 or x[0] > self._trials or not float(x[0]).is_integer():
             return -np.inf
         else:
-            return scipy.special.comb(self._trials, x[0]) + self._log_opo_prob\
-                 * (self._trials - x[0]) + self._log_prob * x[0]
+            return np.log(
+                scipy.special.comb(self._trials, x[0])) +\
+                self._log_opo_prob * (self._trials - x[0]) +\
+                self._log_prob * x[0]
 
     def cdf(self, x):
         """ See :meth:`LogPrior.cdf()`. """
@@ -161,7 +163,7 @@ class BinomialLogPrior(pints.LogPrior):
         value = self(x)
         _x = x[0]
 
-        if _x < 0.0 or _x > 1.0:
+        if _x < 0.0 or _x > self._trials:
             return value, np.asarray([0.])
         else:
             return value, np.asarray(

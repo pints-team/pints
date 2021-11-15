@@ -138,7 +138,7 @@ class TestPrior(unittest.TestCase):
         for point in points:
             to_test = [point]
             self.assertAlmostEqual(
-                scipy.stats.binom.logpmf(to_test[0], 5, 0.34),
+                scipy.stats.binom.logpmf(to_test[0], 5.0, 0.34),
                 p1(to_test),
                 places=9)
             self.assertAlmostEqual(
@@ -157,11 +157,13 @@ class TestPrior(unittest.TestCase):
 
         for point, deriv in zip(points, p1_derivs):
             calc_val, calc_deriv = p1.evaluateS1([point])
-            self.assertAlmostEqual(calc_deriv[0], deriv)
+            self.assertAlmostEqual(
+                calc_deriv.item(), deriv)
 
         for point, deriv in zip(points, p2_derivs):
             calc_val, calc_deriv = p2.evaluateS1([point])
-            self.assertAlmostEqual(calc_deriv[0], deriv)
+            self.assertAlmostEqual(
+                calc_deriv.item(), deriv)
 
     def test_binomial_prior_sampling(self):
         p1 = pints.BinomialLogPrior(5, 0.34)
