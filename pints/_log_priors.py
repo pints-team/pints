@@ -5,11 +5,13 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pints
+
 import numpy as np
 import scipy
 import scipy.special
 import scipy.stats
+
+import pints
 
 
 class BetaLogPrior(pints.LogPrior):
@@ -93,6 +95,91 @@ class BetaLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return np.random.beta(self._a, self._b, size=(n, 1))
+
+
+class BinomialLogPrior(pints.LogPrior):
+    r"""
+    Defines an binomial (log) prior with given number of trials parameter
+    ``trials`` and trial success probability parameter ``prob`` with
+    pdf
+
+    .. math::
+        f(x|\text{trials}, \text{prob}) = {\text{trials} \choose x}\;
+        \text{prob}^{x}\;(1-\text{prob})^(\text{trials}-x).
+
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
+
+    .. math::
+        \mathrm{E}(X)=\text{trials} \; \text{prob}.
+
+    For example, to create a prior with ``trials=10`` and ``prob=0.5``
+    use::
+
+        p = pints.BinomialLogPrior(10, 0.5)
+
+    Extends :class:`LogPrior`.
+    """
+
+    def __init__(self, trials, prob):
+        # Parse input arguments
+        self._trials = float(trials)
+        self._prob = float(prob)
+
+        # Validate inputs
+        if not self._trials.is_integer():
+            raise TypeError('Count parameter "trials" must be \
+                integer.')
+        if self._trials <= 0:
+            raise ValueError('Count parameter "trials" must be \
+                positive.')
+        if not ((self._prob > 0) and (self._prob < 1)):
+            raise ValueError('Probability parameter "prob" must be \
+                between 0 and 1.')
+
+        # Cache constant
+        self._log_prob = np.log(self._prob)
+        self._log_opo_prob = np.log(1-self._prob)
+
+    def __call__(self, x):
+        if x[0] < 0.0 or x[0] > 1.0 or not float(x[0]).is_integer():
+            return -np.inf
+        else:
+            return scipy.special.comb(self._trials, x[0]) + self._log_opo_prob\
+                 * (self._trials - x[0]) + self._log_prob * x[0]
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.binom.cdf(x, n=self._trials, p=self._prob, loc=0)
+
+    def icdf(self, q):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.binom.ppf(q, n=self._trials, p=self._prob, loc=0)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        _x = x[0]
+
+        if _x < 0.0 or _x > 1.0:
+            return value, np.asarray([0.])
+        else:
+            return value, np.asarray(
+                scipy.special.polygamma(0, self._trials - x[0] + 1) -
+                scipy.special.polygamma(0, x[0] + 1) + self._log_prob -
+                self._log_opo_prob)
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return self._trials * self._prob
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 2
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.binomial(n=self._trials, p=self._prob, size=(n, 1))
 
 
 class CauchyLogPrior(pints.LogPrior):

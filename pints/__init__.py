@@ -92,6 +92,7 @@ from ._log_pdfs import (
 #
 from ._log_priors import (
     BetaLogPrior,
+    BinomialLogPrior,
     CauchyLogPrior,
     ComposedLogPrior,
     ExponentialLogPrior,

@@ -15,6 +15,7 @@ Example::
 Overview:
 
 - :class:`BetaLogPrior`
+- :class:`BinomialLogPrior`
 - :class:`CauchyLogPrior`
 - :class:`ComposedLogPrior`
 - :class:`ExponentialLogPrior`
@@ -31,6 +32,8 @@ Overview:
 
 
 .. autoclass:: BetaLogPrior
+
+.. autoclass:: BinomialLogPrior
 
 .. autoclass:: CauchyLogPrior
 
