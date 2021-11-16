@@ -173,15 +173,14 @@ class TestPrior(unittest.TestCase):
         samples1 = p1.sample(n)
         self.assertEqual(len(samples1), n)
 
-        n = 1000000
+        n = 10000000
         p1 = pints.BinomialLogPrior(50, 0.34)
         samples = p1.sample(n)
-        print(np.mean(samples))
         self.assertTrue(np.abs(np.mean(samples) - 17) < 0.01)
 
-        p1 = pints.BinomialLogPrior(100, 0.56)
+        p1 = pints.BinomialLogPrior(20, 0.56)
         samples = p1.sample(n)
-        self.assertTrue(np.abs(np.mean(samples) - 56) < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 11.2) < 0.01)
 
     def test_cauchy_prior(self):
         # Test two specific function values
@@ -915,20 +914,20 @@ class TestPrior(unittest.TestCase):
         points = [0, 1, 3, 6., 10, 50.]
 
         # Test means
-        self.assertAlmostEqual(p1.mean(), 2.5757575757)
-        self.assertAlmostEqual(p2.mean(), 12.7272727272)
+        self.assertAlmostEqual(p1.mean(), 9.70588235294)
+        self.assertAlmostEqual(p2.mean(), 7.85714285714)
 
         # Test CDFs
-        self.assertAlmostEqual(p1.cdf(2), 0.5552842641984)
-        self.assertAlmostEqual(p1.cdf(13), 0.9998155602046)
-        self.assertAlmostEqual(p2.cdf(5), 0.066104999268668)
-        self.assertAlmostEqual(p2.cdf(30), 0.99602550697655)
+        self.assertAlmostEqual(p1.cdf(2), 0.0492247383616)
+        self.assertAlmostEqual(p1.cdf(13), 0.7865907638488)
+        self.assertAlmostEqual(p2.cdf(5), 0.2869378948333)
+        self.assertAlmostEqual(p2.cdf(30), 0.9999833390404)
 
         # Test inverse-CDFs
-        self.assertAlmostEqual(p1.icdf(0.9), 5)
-        self.assertAlmostEqual(p1.icdf(0.996), 10)
-        self.assertAlmostEqual(p2.icdf(0.5), 12)
-        self.assertAlmostEqual(p2.icdf(0.9), 20)
+        self.assertAlmostEqual(p1.icdf(0.9), 17)
+        self.assertAlmostEqual(p1.icdf(0.996), 29)
+        self.assertAlmostEqual(p2.icdf(0.5), 7)
+        self.assertAlmostEqual(p2.icdf(0.9), 13)
 
         # Test n_parameters
         self.assertEqual(p1.n_parameters(), 2)
@@ -946,13 +945,13 @@ class TestPrior(unittest.TestCase):
                 places=9)
 
         # Test derivatives
-        p1_derivs = [1.620039115923069, 0.420039115923069,
-                     -0.329960884076930, -0.996627550743597,
-                     -1.746627550743597, -2.946627550743597]
+        p1_derivs = [1.667817889371667, 0.867817889371667,
+                     0.344008365562143, 0.063452810006588,
+                     -0.092921371367593, -0.339290388546821]
 
-        p2_derivs = [3.170130310785142, 2.070130310785142,
-                     1.459019199674030, 1.000685866340697,
-                     0.607828723483554, 0.241162056816888]
+        p2_derivs = [2.007987701898423, 1.107987701898423,
+                     0.448896792807514, 0.047248441159163,
+                     -0.202209148894402, -0.656982144114184]
 
         for point, deriv in zip(points, p1_derivs):
             calc_val, calc_deriv = p1.evaluateS1([point])
@@ -976,11 +975,11 @@ class TestPrior(unittest.TestCase):
         p1 = pints.NegBinomialLogPrior(5, 0.34)
         samples = p1.sample(n)
         print(np.mean(samples))
-        self.assertTrue(np.abs(np.mean(samples) - 2.5757575757) < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 9.70588235294) < 0.01)
 
         p1 = pints.NegBinomialLogPrior(10., 0.56)
         samples = p1.sample(n)
-        self.assertTrue(np.abs(np.mean(samples) - 12.7272727272) < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 7.85714285714) < 0.01)
 
     def test_student_t_prior(self):
         # Test two specific function values
