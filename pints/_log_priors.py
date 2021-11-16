@@ -139,7 +139,7 @@ class BinomialLogPrior(pints.LogPrior):
 
         # Cache constant
         self._log_prob = np.log(self._prob)
-        self._log_opo_prob = np.log(1-self._prob)
+        self._log_opo_prob = np.log(1 - self._prob)
 
     def __call__(self, x):
         if x[0] < 0.0 or x[0] > self._trials or not float(x[0]).is_integer():
@@ -1108,7 +1108,7 @@ class NegBinomialLogPrior(pints.LogPrior):
 
         # Cache constant
         self._log_prob = np.log(self._prob)
-        self._log_opo_prob = np.log(1-self._prob)
+        self._log_opo_prob = np.log(1 - self._prob)
 
     def __call__(self, x):
         if x[0] < 0.0 or not float(x[0]).is_integer():
@@ -1140,7 +1140,7 @@ class NegBinomialLogPrior(pints.LogPrior):
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """
-        return self._succs * (1-self._prob) / self._prob
+        return self._succs * (1 - self._prob) / self._prob
 
     def n_parameters(self):
         """ See :meth:`LogPrior.n_parameters()`. """
