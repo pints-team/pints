@@ -173,15 +173,15 @@ class TestPrior(unittest.TestCase):
         samples1 = p1.sample(n)
         self.assertEqual(len(samples1), n)
 
-        n = 10000
-        p1 = pints.BinomialLogPrior(5, 0.34)
+        n = 1000000
+        p1 = pints.BinomialLogPrior(50, 0.34)
         samples = p1.sample(n)
         print(np.mean(samples))
-        self.assertTrue(np.abs(np.mean(samples) - 1.7) < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 17) < 0.01)
 
-        p1 = pints.BinomialLogPrior(10, 0.56)
+        p1 = pints.BinomialLogPrior(100, 0.56)
         samples = p1.sample(n)
-        self.assertTrue(np.abs(np.mean(samples) - 5.6) < 0.01)
+        self.assertTrue(np.abs(np.mean(samples) - 56) < 0.01)
 
     def test_cauchy_prior(self):
         # Test two specific function values
@@ -901,6 +901,86 @@ class TestPrior(unittest.TestCase):
         self.assertTrue(np.all(np.abs(mean - x.mean(axis=0)) < 0.1))
         self.assertTrue(np.all(
             np.abs(np.diag(covariance) - x.std(axis=0)**2) < 0.1))
+
+    def test_neg_binomial_prior(self):
+        # Test input parameters
+        self.assertRaises(TypeError, pints.NegBinomialLogPrior, 3.5, 0.5)
+        self.assertRaises(ValueError, pints.NegBinomialLogPrior, 0, 0.5)
+        self.assertRaises(ValueError, pints.NegBinomialLogPrior, 2, -2)
+        self.assertRaises(ValueError, pints.NegBinomialLogPrior, 2, 2)
+
+        p1 = pints.NegBinomialLogPrior(5, 0.34)
+        p2 = pints.NegBinomialLogPrior(10.0, 0.56)
+
+        points = [0, 1, 3, 6., 10, 50.]
+
+        # Test means
+        self.assertAlmostEqual(p1.mean(), 2.5757575757)
+        self.assertAlmostEqual(p2.mean(), 12.7272727272)
+
+        # Test CDFs
+        self.assertAlmostEqual(p1.cdf(2), 0.5552842641984)
+        self.assertAlmostEqual(p1.cdf(13), 0.9998155602046)
+        self.assertAlmostEqual(p2.cdf(5), 0.066104999268668)
+        self.assertAlmostEqual(p2.cdf(30), 0.99602550697655)
+
+        # Test inverse-CDFs
+        self.assertAlmostEqual(p1.icdf(0.9), 5)
+        self.assertAlmostEqual(p1.icdf(0.996), 10)
+        self.assertAlmostEqual(p2.icdf(0.5), 12)
+        self.assertAlmostEqual(p2.icdf(0.9), 20)
+
+        # Test n_parameters
+        self.assertEqual(p1.n_parameters(), 2)
+
+        # Test specific points
+        for point in points:
+            to_test = [point]
+            self.assertAlmostEqual(
+                scipy.stats.nbinom.logpmf(to_test[0], 5.0, 0.34),
+                p1(to_test),
+                places=9)
+            self.assertAlmostEqual(
+                scipy.stats.nbinom.logpmf(to_test[0], 10.0, 0.56),
+                p2(to_test),
+                places=9)
+
+        # Test derivatives
+        p1_derivs = [1.620039115923069, 0.420039115923069,
+                     -0.329960884076930, -0.996627550743597,
+                     -1.746627550743597, -2.946627550743597]
+
+        p2_derivs = [3.170130310785142, 2.070130310785142,
+                     1.459019199674030, 1.000685866340697,
+                     0.607828723483554, 0.241162056816888]
+
+        for point, deriv in zip(points, p1_derivs):
+            calc_val, calc_deriv = p1.evaluateS1([point])
+            self.assertAlmostEqual(
+                calc_deriv.item(), deriv)
+
+        for point, deriv in zip(points, p2_derivs):
+            calc_val, calc_deriv = p2.evaluateS1([point])
+            self.assertAlmostEqual(
+                calc_deriv.item(), deriv)
+
+    def test_neg_binomial_prior_sampling(self):
+        p1 = pints.NegBinomialLogPrior(5, 0.34)
+        self.assertEqual(len(p1.sample()), 1)
+
+        n = 100
+        samples1 = p1.sample(n)
+        self.assertEqual(len(samples1), n)
+
+        n = 1000000
+        p1 = pints.NegBinomialLogPrior(5, 0.34)
+        samples = p1.sample(n)
+        print(np.mean(samples))
+        self.assertTrue(np.abs(np.mean(samples) - 2.5757575757) < 0.01)
+
+        p1 = pints.NegBinomialLogPrior(10., 0.56)
+        samples = p1.sample(n)
+        self.assertTrue(np.abs(np.mean(samples) - 12.7272727272) < 0.01)
 
     def test_student_t_prior(self):
         # Test two specific function values

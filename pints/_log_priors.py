@@ -99,7 +99,7 @@ class BetaLogPrior(pints.LogPrior):
 
 class BinomialLogPrior(pints.LogPrior):
     r"""
-    Defines an binomial (log) prior with given number of trials parameter
+    Defines a binomial (log) prior with given number of trials parameter
     ``trials`` and trial success probability parameter ``prob`` with
     pdf
 
@@ -167,8 +167,8 @@ class BinomialLogPrior(pints.LogPrior):
             return value, np.asarray([0.])
         else:
             return value, np.asarray(
-                scipy.special.polygamma(0, self._trials - x[0] + 1) -
-                scipy.special.polygamma(0, x[0] + 1) + self._log_prob -
+                scipy.special.polygamma(0, self._trials - _x + 1) -
+                scipy.special.polygamma(0, _x + 1) + self._log_prob -
                 self._log_opo_prob)
 
     def mean(self):
@@ -1064,6 +1064,92 @@ class MultivariateGaussianLogPrior(pints.LogPrior):
         # Note: size=n returns shape (n, d)
         return np.random.multivariate_normal(
             self._mean, self._cov, size=n)
+
+
+class NegBinomialLogPrior(pints.LogPrior):
+    r"""
+    Defines a negative binomial (log) prior with given number of failures
+    parameter ``fails`` and trial success probability parameter ``prob`` with
+    pdf
+
+    .. math::
+        f(x|\text{fails}, \text{prob}) = {\text{fails}+x-1 \choose x}\;
+        \text{prob}^{x}\;(1-\text{prob})^(\text{fails}).
+
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
+
+    .. math::
+        \mathrm{E}(X)=\frac{\text{fails} \; \text{prob}}{1-\text{prob}}.
+
+    For example, to create a prior with ``fails=10`` and ``prob=0.5``
+    use::
+
+        p = pints.NegBinomialLogPrior(10, 0.5)
+
+    Extends :class:`LogPrior`.
+    """
+
+    def __init__(self, fails, prob):
+        # Parse input arguments
+        self._fails = float(fails)
+        self._prob = float(prob)
+
+        # Validate inputs
+        if not self._fails.is_integer():
+            raise TypeError('Count parameter "fails" must be \
+                integer.')
+        if self._fails <= 0:
+            raise ValueError('Count parameter "fails" must be \
+                positive.')
+        if not ((self._prob > 0) and (self._prob < 1)):
+            raise ValueError('Probability parameter "prob" must be \
+                between 0 and 1.')
+
+        # Cache constant
+        self._log_prob = np.log(self._prob)
+        self._log_opo_prob = np.log(1-self._prob)
+
+    def __call__(self, x):
+        if x[0] < 0.0 or not float(x[0]).is_integer():
+            return -np.inf
+        else:
+            return np.log(
+                scipy.special.comb(self._fails + x[0] - 1, x[0]-1)) +\
+                self._log_opo_prob * (self._fails) + self._log_prob * x[0]
+
+    def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
+        return scipy.stats.nbinom.cdf(x, n=self._fails, p=self._prob, loc=0)
+
+    def icdf(self, q):
+        """ See :meth:`LogPrior.icdf()`. """
+        return scipy.stats.nbinom.ppf(q, n=self._fails, p=self._prob, loc=0)
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        value = self(x)
+        _x = x[0]
+
+        if _x < 0.0:
+            return value, np.asarray([0.])
+        else:
+            return value, np.asarray(
+                scipy.special.polygamma(0, self._fails + _x) -
+                scipy.special.polygamma(0, _x + 1) + self._log_prob)
+
+    def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
+        return self._fails * self._prob / (1-self._prob)
+
+    def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
+        return 2
+
+    def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
+        return np.random.negative_binomial(
+            n=self._fails, p=self._prob, size=(n, 1))
 
 
 class NormalLogPrior(GaussianLogPrior):

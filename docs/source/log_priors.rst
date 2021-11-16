@@ -25,6 +25,7 @@ Overview:
 - :class:`InverseGammaLogPrior`
 - :class:`LogNormalLogPrior`
 - :class:`MultivariateGaussianLogPrior`
+- :class:`NegBinomialLogPrior`
 - :class:`NormalLogPrior`
 - :class:`StudentTLogPrior`
 - :class:`TruncatedGaussianLogPrior`
@@ -52,6 +53,8 @@ Overview:
 .. autoclass:: LogNormalLogPrior
 
 .. autoclass:: MultivariateGaussianLogPrior
+
+.. autoclass:: NegBinomialLogPrior
 
 .. autoclass:: NormalLogPrior
 
