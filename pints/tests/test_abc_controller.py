@@ -51,6 +51,20 @@ class TestABCController(unittest.TestCase):
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           log_prior)
 
+    def test_error_measure_instance(self):
+        """ Test that error is thrown when we use an error measure which is not
+        an instance of ``pints.ErrorMeasure``"""
+        # Set a log prior as the error measure to trigger the warning
+        wrong_error_measure = pints.UniformLogPrior(
+            [0.0, 0, 0],
+            [0.2, 100, 1])
+
+        self.assertRaises(
+            ValueError,
+            pints.ABCController,
+            wrong_error_measure,
+            self.log_prior)
+
     def test_stopping(self):
         """ Test different stopping criteria. """
 
