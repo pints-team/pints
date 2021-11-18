@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Tests the basic methods of the ABC Rejection routine.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -11,18 +11,12 @@ import pints.toy as toy
 import unittest
 import numpy as np
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestRejectionABC(unittest.TestCase):
     """
     Tests the basic methods of the ABC Rejection routine.
     """
-# Set up toy model, parameter values, problem, error measure
+    # Set up toy model, parameter values, problem, error measure
     @classmethod
     def setUpClass(cls):
         """ Set up problem for tests. """
@@ -76,9 +70,8 @@ class TestRejectionABC(unittest.TestCase):
         abc.ask(1)
         # test two asks raises error
         self.assertRaises(RuntimeError, abc.ask, 1)
-
-        # test tell with large value
-        self.assertEqual(None, abc.tell(100))
+        # test tell with large values returns empty arrays
+        self.assertTrue(abc.tell(np.array([100])).size == 0)
         # test error raised if tell called before ask
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
