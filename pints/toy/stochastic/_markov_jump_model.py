@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import numpy as np
 from scipy.interpolate import interp1d
 import pints
@@ -19,15 +17,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     r"""
     A general purpose Markov Jump model used for any systems of reactions
     that proceed through jumps. We simulate a population of N different species
-    reacting through M different mechanisms.
-
-    A model has three parameters:
-        - x_0 - an N-vector specifying the initial population of each
-            of the N species
-        - V - an NxM matrix consisting of stochiometric vectors v_i specifying
-            the changes to the state, x,  from reaction i taking place
-        - a - a function from the current state, x, and reaction rates, k,
-            to a vector of the rates of each reaction taking place
+    reacting through M different mechanisms
 
     Simulations are performed using Gillespie's algorithm [1]_, [2]_:
 
@@ -50,16 +40,23 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     .. math::
         x(t + \tau) = x(t) + V[i]
 
-    4. Return to step (1) until no reaction can take place
+    4. Return to step (1) until no reaction can take place or the process
 
-    The model has one parameter, the rate constant :math:`k`.
+    has gone past the maximum time.
 
     Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
 
     Parameters
     ----------
-    initial_molecule_count
-        The initial molecule count :math:`A(0)`.
+    x_0
+        An N-vector specifying the initial population of each
+        of the N species.
+    V
+        An NxM matrix consisting of stochiometric vectors v_i specifying
+        the changes to the state, x,  from reaction i taking place.
+    propensities
+        A function from the current state, x, and reaction rates, k,
+        to a vector of the rates of each reaction taking place.
 
     References
     ----------
@@ -72,11 +69,11 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
            Journal of Computational Physics
            https://doi.org/10.1016/0021-9991(76)90041-3
     """
-    def __init__(self, x0, V, a):
+    def __init__(self, x0, V, propensities):
         super(MarkovJumpModel, self).__init__()
         self._x0 = np.asarray(x0)
         self._V = V
-        self._a = a
+        self._propensities = propensities
         if any(self._x0 < 0):
             raise ValueError('Initial molecule count cannot be negative.')
 
@@ -88,66 +85,34 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         """
         Returns raw times, mol counts when reactions occur
         """
-        # parameters = np.asarray(parameters)
-        # if len(parameters) != self.n_parameters():
-        #     raise ValueError('This model should have only 1 parameter.')
-        # k = parameters[0]
-
-        current_rates = self._a(self._x0, rates)
-        a_0 = sum(current_rates)
+        # Setting the current propensities and summing them up
+        current_propensities = self._propensities(self._x0, rates)
+        prop_sum = sum(current_propensities)
 
         # Initial time and count
         t = 0
         x = np.array(self._x0)
 
-        # Run gillespie SSA, calculating time until next
+        # Run Gillespie SSA, calculating time until next
         # reaction, deciding which reaction, and applying it
         mol_count = [np.array(x)]
         time = [t]
-        while a_0 > 0 and t <= max_time:
+        while prop_sum > 0 and t <= max_time:
             r_1, r_2 = random.random(), random.random()
-            t += -np.log(r_1) / (a_0)
+            t += -np.log(r_1) / (prop_sum)
             s = 0
             r = 0
-            while s <= r_2 * a_0:
-                s += current_rates[r]
+            while s <= r_2 * prop_sum:
+                s += current_propensities[r]
                 r += 1
             r -= 1
             x = np.add(x, self._V[r])
 
-            current_rates = self._a(x, rates)
-            a_0 = sum(current_rates)
+            current_propensities = self._propensities(x, rates)
+            prop_sum = sum(current_propensities)
 
             time.append(t)
             mol_count.append(np.array(x))
-        return time, mol_count
-
-    def simulate_approx(self, rates, max_time, tau):
-        assert tau > 0, "cannot tau-leap with negative tau"
-        current_rates = np.array(self._a(self._x0, rates))
-        # Initial time and count
-        t = 0
-        x = self._x0.copy()
-        N = len(rates)
-        # Run gillespie SSA, calculating time until next
-        # reaction, deciding which reaction, and applying it
-        mol_count = [x.copy()]
-        time = [t]
-        while any(current_rates > 0) and t <= max_time:
-            # Estimate number of each reaction in [t, t+tau)
-            k = [np.random.poisson(current_rates[i] * tau) for i in range(N)]
-
-            # Apply the reactions
-            for r in range(N):
-                x += np.array(self._V[r]) * k[r]
-
-            # Update rates
-            current_rates = np.array(self._a(x, rates))
-
-            # Advance Time
-            t += tau
-            time.append(t)
-            mol_count.append(x.copy())
         return time, mol_count
 
     def interpolate_mol_counts(self, time, mol_count, output_times):
@@ -165,22 +130,14 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         values = interp_func(output_times)
         return values
 
-    def simulate(self, parameters, times, approx_tau=None):
+    def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-        if approx_tau is None:
-            # run Gillespie
-            time, mol_count = self.simulate_raw(parameters, max(times))
-        else:
-            if (not approx_tau) or approx_tau <= 0:
-                ValueError("You must provide a positive value for approx_tau\
-                 to use tau-leaping approximation")
-            # Run Euler tau-leaping
-            time, mol_count = self.simulate_approx(parameters, max(times),
-                                                   approx_tau)
-        # interpolate
+        # Run Gillespie
+        time, mol_count = self.simulate_raw(parameters, max(times))
+        # Interpolate
         values = self.interpolate_mol_counts(np.asarray(time),
                                              np.asarray(mol_count), times)
         return values
