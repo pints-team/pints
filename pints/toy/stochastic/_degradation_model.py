@@ -35,7 +35,3 @@ class DegradationModel(MarkovJumpModel):
         return [
             xs[0] * ks[0],
         ]
-
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 1

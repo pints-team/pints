@@ -42,7 +42,3 @@ class MichaelisMentenModel(MarkovJumpModel):
             xs[2] * ks[1],
             xs[2] * ks[2]
         ]
-
-    def n_parameters(self):
-        """ See :meth:`pints.ForwardModel.n_parameters()`. """
-        return 3
