@@ -85,6 +85,10 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         """
         Returns raw times, mol counts when reactions occur
         """
+        if len(rates) != self.n_parameters():
+            raise ValueError('This model should have only ',
+                             str(self.n_parameters()),
+                             ' parameter(s).')
         # Setting the current propensities and summing them up
         current_propensities = self._propensities(self._x0, rates)
         prop_sum = sum(current_propensities)
@@ -135,6 +139,8 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
+        if np.all(self._x0 == 0):
+            return np.zeros(times.shape)
         # Run Gillespie
         time, mol_count = self.simulate_raw(parameters, max(times))
         # Interpolate
