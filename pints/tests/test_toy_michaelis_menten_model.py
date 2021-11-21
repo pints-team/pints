@@ -8,9 +8,7 @@
 #
 import unittest
 import numpy as np
-import pints
-import pints.toy
-from pints.toy import MichaelisMentenModel
+from pints.toy.stochastic import MichaelisMentenModel
 
 
 class TestMichaelisMentenModel(unittest.TestCase):
@@ -33,7 +31,7 @@ class TestMichaelisMentenModel(unittest.TestCase):
     def test_propensities(self):
         x_0 = [1e4, 2e3, 2e4, 0]
         k = [1e-5, 0.2, 0.2]
-        model = pints.toy.stochastic.MichaelisMentenModel(x_0)
+        model = MichaelisMentenModel(x_0)
         self.assertTrue(
             np.allclose(
                 model._propensities(x_0, k),

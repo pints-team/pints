@@ -118,6 +118,7 @@ relevant code.
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
 - [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
 - [Michaelis Menten model](./toy/model-michaelis-menten.ipynb)
+- [Degradation model](./toy/model-degradation.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
