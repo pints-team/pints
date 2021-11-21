@@ -18,7 +18,7 @@ class TestMichaelisMentenModel(unittest.TestCase):
     def test_n_parameters(self):
         x_0 = [1e4, 2e3, 2e4, 0]
         model = MichaelisMentenModel(x_0)
-        self.assertEqual(model.n_parameters, 3)
+        self.assertEqual(model.n_parameters(), 3)
 
     def test_simulation_length(self):
         x_0 = [1e4, 2e3, 2e4, 0]
