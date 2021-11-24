@@ -7,6 +7,8 @@
 #
 from . import MarkovJumpModel
 
+import numpy as np
+
 
 class DegradationModel(MarkovJumpModel):
     r"""
@@ -35,3 +37,51 @@ class DegradationModel(MarkovJumpModel):
         return [
             xs[0] * ks[0],
         ]
+
+    def mean(self, parameters, times):
+        r"""
+        Returns the deterministic mean of infinitely many stochastic
+        simulations, which follows :math:`A(0) \exp(-kt)`.
+        """
+        parameters = np.asarray(parameters)
+        if len(parameters) != self.n_parameters():
+            raise ValueError('This model should have only 1 parameter.')
+        k = parameters[0]
+
+        if k <= 0:
+            raise ValueError('Rate constant must be positive.')
+
+        times = np.asarray(times)
+        if np.any(times < 0):
+            raise ValueError('Negative times are not allowed.')
+
+        mean = self._x0 * np.exp(-k * times)
+        return mean
+
+    def variance(self, parameters, times):
+        r"""
+        Returns the deterministic variance of infinitely many stochastic
+        simulations, which follows :math:`\exp(-2kt)(-1 + \exp(kt))A(0)`.
+        """
+        parameters = np.asarray(parameters)
+        if len(parameters) != self.n_parameters():
+            raise ValueError('This model should have only 1 parameter.')
+        k = parameters[0]
+
+        if k <= 0:
+            raise ValueError('Rate constant must be positive.')
+
+        times = np.asarray(times)
+        if np.any(times < 0):
+            raise ValueError('Negative times are not allowed.')
+
+        variance = np.exp(-2 * k * times) * (-1 + np.exp(k * times)) * self._x0
+        return variance
+
+    def suggested_parameters(self):
+        """ See :meth:`pints.toy.ToyModel.suggested_parameters()`. """
+        return np.array([0.1])
+
+    def suggested_times(self):
+        """ See "meth:`pints.toy.ToyModel.suggested_times()`."""
+        return np.linspace(0, 100, 101)
