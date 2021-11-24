@@ -2,6 +2,6 @@
 Stochastic degradation model
 ****************************
 
-.. currentmodule:: pints.toy
+.. currentmodule:: pints.toy.stochastic
 
-.. autoclass:: pints.toy.stochastic.DegradationModel
+.. autoclass:: DegradationModel
