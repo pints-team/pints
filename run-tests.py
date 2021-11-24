@@ -218,8 +218,8 @@ def doctest_rst_and_public_interface():
     check_exposed_symbols(pints.noise, [], doc_symbols)
     check_exposed_symbols(pints.plot, [], doc_symbols)
     check_exposed_symbols(pints.residuals_diagnostics, [], doc_symbols)
-    check_exposed_symbols(pints.toy, [], doc_symbols)
-    # check_exposed_symbols(pints.toy.stochastic, [], doc_symbols)
+    check_exposed_symbols(pints.toy, [pints.toy.stochastic], doc_symbols)
+    check_exposed_symbols(pints.toy.stochastic, [], doc_symbols)
 
     print('All classes and methods are documented in an RST file, and all '
           'public interfaces are clean.')
