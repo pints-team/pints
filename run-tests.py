@@ -207,6 +207,7 @@ def doctest_rst_and_public_interface():
         'pints.plot',
         'pints.residuals_diagnostics',
         'pints.toy',
+        'pints.toy.stochastic',
     ]
 
     doc_symbols = get_all_documented_symbols()
