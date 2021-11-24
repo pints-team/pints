@@ -196,6 +196,7 @@ def doctest_rst_and_public_interface():
     import pints.plot
     import pints.residuals_diagnostics
     import pints.toy
+    import pints.toy.stochastic
 
     # If any modules other than these are exposed it may indicate that a module
     # has been inadvertently exposed in a public context, or that a new module
@@ -218,6 +219,7 @@ def doctest_rst_and_public_interface():
     check_exposed_symbols(pints.plot, [], doc_symbols)
     check_exposed_symbols(pints.residuals_diagnostics, [], doc_symbols)
     check_exposed_symbols(pints.toy, [], doc_symbols)
+    check_exposed_symbols(pints.toy.stochastic, [], doc_symbols)
 
     print('All classes and methods are documented in an RST file, and all '
           'public interfaces are clean.')
