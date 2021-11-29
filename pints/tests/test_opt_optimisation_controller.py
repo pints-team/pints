@@ -26,6 +26,34 @@ class TestOptimisationController(unittest.TestCase):
         """ Called before every test """
         np.random.seed(1)
 
+    def test_callback(self):
+        # Tests running with a callback method
+
+        # Define callback that just stores the argument(s) it was called with
+        args = []
+
+        def cb(opt):
+            args.append(opt)
+
+        # Run a quick optimisation
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x0 = np.array([0, 1.01])
+        s = 0.01
+        opt = pints.OptimisationController(r, x0, s, method=method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        opt.set_callback(cb)
+        opt.run()
+
+        # Ensure callback was called at each iteration
+        self.assertEqual(len(args), opt.iterations())
+
+        # Ensure argument was always the optimisation method
+        args = tuple(set(args))
+        self.assertEqual(len(args), 1)
+        self.assertIs(args[0], opt.optimiser())
+
     def test_optimise(self):
         # Tests :meth: `pints.optimise()`.
 
