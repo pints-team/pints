@@ -380,6 +380,9 @@ class OptimisationController(object):
         self._n_workers = 1
         self.set_parallel()
 
+        # User callback
+        self._callback = None
+
         # :meth:`run` can only be called once
         self._has_run = False
 
@@ -452,6 +455,11 @@ class OptimisationController(object):
     def run(self):
         """
         Runs the optimisation, returns a tuple ``(xbest, fbest)``.
+
+        An optional ``callback`` function can be passed in that will be called
+        at the end of every iteration. The callback should take the arguments
+        ``(iteration, optimiser)``, where ``iteration`` is the iteration count
+        (an integer) and ``optimiser`` is the optimiser object.
         """
         # Can only run once for each controller instance
         if self._has_run:
@@ -627,6 +635,9 @@ class OptimisationController(object):
                     running = False
                     halt_message = ('Halting: ' + str(error))
 
+                elif self._callback is not None:
+                    self._callback(iteration - 1, self._optimiser)
+
         except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # Unexpected end!
             # Show last result and exit
@@ -669,6 +680,25 @@ class OptimisationController(object):
 
         # Return best position and score
         return xbest, fbest_user
+
+    def set_callback(self, cb=None):
+        """
+        Allows a "callback" function to be passed in that will be called at the
+        end of every iteration.
+
+        This can be used for e.g. visualising optimiser progress.
+
+        Example::
+
+            def cb(opt):
+                plot(opt.xbest())
+
+            opt.set_callback(cb)
+
+        """
+        if cb is not None and not callable(cb):
+            raise ValueError('The argument cb must be None or a callable.')
+        self._callback = cb
 
     def set_log_interval(self, iters=20, warm_up=3):
         """
