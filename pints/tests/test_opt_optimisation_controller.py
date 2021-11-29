@@ -32,8 +32,8 @@ class TestOptimisationController(unittest.TestCase):
         # Define callback that just stores the argument(s) it was called with
         args = []
 
-        def cb(opt):
-            args.append(opt)
+        def cb(*arg):
+            args.append(arg)
 
         # Set up a controller
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
@@ -56,17 +56,18 @@ class TestOptimisationController(unittest.TestCase):
         # Ensure callback was called at each iteration
         self.assertEqual(len(args), opt.iterations())
 
-        # Ensure argument was always the optimisation method
-        args = tuple(set(args))
-        self.assertEqual(len(args), 1)
-        self.assertIs(args[0], opt.optimiser())
+        # Ensure first argument was iteration count
+        a = np.array([arg[0] for arg in args])
+        self.assertTrue(np.all(a == np.arange(opt.iterations())))
+
+        # Ensure second argument was always the optimisation method
+        b = tuple(set([arg[1] for arg in args]))
+        self.assertEqual(len(b), 1)
+        self.assertIs(b[0], opt.optimiser())
 
         # Check unsetting works
-        args2 = []
-
-        def cb2(opt):
-            args2.append(opt)
-
+        args.clear()
+        self.assertEqual(len(args), 0)
         opt = pints.OptimisationController(r, x0, s, method=method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
@@ -74,7 +75,7 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_callback(cb)
         opt.set_callback(None)
         opt.run()
-        self.assertEqual(len(args2), 0)
+        self.assertEqual(len(args), 0)
 
     def test_optimise(self):
         # Tests :meth: `pints.optimise()`.

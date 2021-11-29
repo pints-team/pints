@@ -457,7 +457,9 @@ class OptimisationController(object):
         Runs the optimisation, returns a tuple ``(xbest, fbest)``.
 
         An optional ``callback`` function can be passed in that will be called
-        every iteration, with the optimiser object as argument.
+        at the end of every iteration. The callback should take the arguments
+        ``(iteration, optimiser)``, where ``iteration`` is the iteration count
+        (an integer) and ``optimiser`` is the optimiser object.
         """
         # Can only run once for each controller instance
         if self._has_run:
@@ -634,7 +636,7 @@ class OptimisationController(object):
                     halt_message = ('Halting: ' + str(error))
 
                 elif self._callback is not None:
-                    self._callback(self._optimiser)
+                    self._callback(iteration - 1, self._optimiser)
 
         except (Exception, SystemExit, KeyboardInterrupt):  # pragma: no cover
             # Unexpected end!
