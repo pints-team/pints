@@ -35,7 +35,7 @@ class TestOptimisationController(unittest.TestCase):
         def cb(opt):
             args.append(opt)
 
-        # Run a quick optimisation
+        # Set up a controller
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x0 = np.array([0, 1.01])
         s = 0.01
@@ -43,6 +43,13 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
+
+        # Pass in an invalid value
+        self.assertRaisesRegex(
+            ValueError, 'None or a callable', opt.set_callback, 3)
+
+        # Now test using it correctly
+        opt.set_callback(None)
         opt.set_callback(cb)
         opt.run()
 
@@ -53,6 +60,21 @@ class TestOptimisationController(unittest.TestCase):
         args = tuple(set(args))
         self.assertEqual(len(args), 1)
         self.assertIs(args[0], opt.optimiser())
+
+        # Check unsetting works
+        args2 = []
+
+        def cb2(opt):
+            args2.append(opt)
+
+        opt = pints.OptimisationController(r, x0, s, method=method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        opt.set_callback(cb)
+        opt.set_callback(None)
+        opt.run()
+        self.assertEqual(len(args2), 0)
 
     def test_optimise(self):
         # Tests :meth: `pints.optimise()`.
