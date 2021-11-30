@@ -47,7 +47,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     where ``gamma = adaptations^-eta``, ``theta`` is the current state of
     the Markov chain and ``accepted`` is a binary indicator for whether any of
-    the series of proposals were accepted. The kernels for the 2 proposals
+    the series of proposals were accepted. The kernels for the two proposals
     are then adapted as ``[scale_1, scale_2] * sigma``, where the
     scale factors are set using ``set_sigma_scale``.
 
