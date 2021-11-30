@@ -76,6 +76,9 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._R = np.identity(self._n_parameters)
         self._S = np.identity(self._n_parameters)
 
+        # Optional transformation to within-the-boundaries
+        self._boundary_transform = None
+
         # Constant used in tell()
         self._e = (
             np.sqrt(2)
@@ -160,7 +163,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # Create boundary transform, or use manual boundary checking
         self._manual_boundaries = False
-        self._boundary_transform = None
         if isinstance(self._boundaries, pints.RectangularBoundaries):
             self._boundary_transform = pints.TriangleWaveTransform(
                 self._boundaries)
