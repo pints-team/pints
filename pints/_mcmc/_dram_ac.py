@@ -71,7 +71,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     def _adapt_sigma(self):
         """
-        Updates the covariance matrices of the 2 kernels being used according
+        Updates the covariance matrices of the two kernels being used according
         to adaptive Metropolis routine.
         """
         dsigm = np.reshape(self._current - self._mu, (self._n_parameters, 1))
