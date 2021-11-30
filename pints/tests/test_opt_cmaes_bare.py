@@ -80,8 +80,10 @@ class TestBareCMAES(unittest.TestCase):
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
-        self.assertEqual(list(opt.xbest()), list(x))
-        self.assertEqual(opt.fbest(), float('inf'))
+        self.assertEqual(list(opt.x_best()), list(x))
+        self.assertEqual(list(opt.x_guessed()), list(x))
+        self.assertEqual(opt.f_best(), float('inf'))
+        self.assertEqual(opt.f_guessed(), float('inf'))
 
         # Tell before ask
         self.assertRaisesRegex(

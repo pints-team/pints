@@ -66,7 +66,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
 
             # Check stopping criteria
             # At this point, custom stopping criteria can be added in
-            if optimiser.fbest() < threshold:
+            if optimiser.f_best() < threshold:
                 running = False
 
             # Check for optimiser issues
@@ -144,10 +144,38 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         raise NotImplementedError
 
     def fbest(self):
+        """Deprecated alias of :meth:`f_best()`."""
+        # Deprecated on 2021-11-29
+        import warnings
+        warnings.warn(
+            'The method `pints.Optimiser.fbest` is deprecated.'
+            ' Please use `pints.Optimiser.f_best` instead.')
+        return self.f_best()
+
+    def f_best(self):
         """
-        Returns the objective function evaluated at the current best position.
+        Returns the best objective function evaluation seen during the current
+        optimisation, such that ``f_best = f(x_best)``.
         """
         raise NotImplementedError
+
+    def f_guessed(self):
+        """
+        Returns the _estimated_ value of the objective function at the
+        optimiser's current guess of the optimum, ``x_guessed``.
+
+        If available, optimisers should return ``f_guessed = f(x_guessed)``
+        where ``x_guessed`` is the value returned by :meth:`x_guessed`.
+        However, if the objective was not evaluated at ``x_guessed``, an
+        approximation may be returned.
+
+        For many optimisers ``x_guessed`` will equal ``x_best``, so that this
+        function is equivalent to :meth:`f_best()`. However, some optimisers
+        (notably :class:`pints.CMAES`) maintain a separate "best guess" value
+        that does not necessarily correspond to any of the points evaluated
+        during the optimisation.
+        """
+        return self.f_best()
 
     def name(self):
         """
@@ -189,10 +217,33 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         raise NotImplementedError
 
     def xbest(self):
+        """Deprecated alias of :meth:`x_best()`."""
+        # Deprecated on 2021-11-29
+        import warnings
+        warnings.warn(
+            'The method `pints.Optimiser.xbest` is deprecated.'
+            ' Please use `pints.Optimiser.x_best` instead.')
+        return self.x_best()
+
+    def x_best(self):
         """
-        Returns the current best position.
+        Returns the best position seen during an optimisation, i.e. the point
+        for which the minimal error or maximum likelihood was observed.
         """
         raise NotImplementedError
+
+    def x_guessed(self):
+        """
+        Returns the optimiser's current best estimate of where the optimum is.
+
+        For many optimisers, this will simply be the point for which the
+        minimal error or maximum likelihood was observed, so that
+        ``x_guessed = x_best``. However, optimisers like :class:`pints.CMAES`
+        and its derivatives, maintain a separate "best guess" value that does
+        not necessarily correspond to any of the points evaluated during the
+        optimisation.
+        """
+        return self.x_best()
 
 
 class PopulationBasedOptimiser(Optimiser):
@@ -369,6 +420,9 @@ class OptimisationController(object):
         # Check if sensitivities are required
         self._needs_sensitivities = self._optimiser.needs_sensitivities()
 
+        # Track optimiser's f_best or f_guessed
+        self._use_f_guessed = True
+
         # Logging
         self._log_to_screen = True
         self._log_filename = None
@@ -395,8 +449,8 @@ class OptimisationController(object):
         self.set_max_iterations()
 
         # Maximum unchanged iterations
-        self._max_unchanged_iterations = None
-        self._min_significant_change = 1
+        self._unchanged_max_iterations = None  # n_iter w/o change until stop
+        self._unchanged_threshold = 1          # smallest significant f change
         self.set_max_unchanged_iterations()
 
         # Threshold value
@@ -432,11 +486,14 @@ class OptimisationController(object):
         """
         Returns a tuple ``(iterations, threshold)`` specifying a maximum
         unchanged iterations stopping criterion, or ``(None, None)`` if no such
-        criterion is set. See :meth:`set_max_unchanged_iterations()`.
+        criterion is set.
+
+        The entries in the tuple correspond directly to the arguments to
+        :meth:`set_max_unchanged_iterations()`.
         """
-        if self._max_unchanged_iterations is None:
+        if self._unchanged_max_iterations is None:
             return (None, None)
-        return (self._max_unchanged_iterations, self._min_significant_change)
+        return (self._unchanged_max_iterations, self._unchanged_threshold)
 
     def optimiser(self):
         """
@@ -454,7 +511,7 @@ class OptimisationController(object):
 
     def run(self):
         """
-        Runs the optimisation, returns a tuple ``(xbest, fbest)``.
+        Runs the optimisation, returns a tuple ``(x_best, f_best)``.
 
         An optional ``callback`` function can be passed in that will be called
         at the end of every iteration. The callback should take the arguments
@@ -469,7 +526,7 @@ class OptimisationController(object):
         # Check stopping criteria
         has_stopping_criterion = False
         has_stopping_criterion |= (self._max_iterations is not None)
-        has_stopping_criterion |= (self._max_unchanged_iterations is not None)
+        has_stopping_criterion |= (self._unchanged_max_iterations is not None)
         has_stopping_criterion |= (self._threshold is not None)
         if not has_stopping_criterion:
             raise ValueError('At least one stopping criterion must be set.')
@@ -501,10 +558,10 @@ class OptimisationController(object):
             evaluator = pints.SequentialEvaluator(f)
 
         # Keep track of best position and score
-        fbest = float('inf')
+        f_best = float('inf')
 
         # Internally we always minimise! Keep a 2nd value to show the user
-        fbest_user = fbest if self._minimising else -fbest
+        f_best_user = f_best if self._minimising else -f_best
 
         # Set up progress reporting
         next_message = 0
@@ -567,19 +624,23 @@ class OptimisationController(object):
                 self._optimiser.tell(fs)
 
                 # Check if new best found
-                fnew = self._optimiser.fbest()
-                if fnew < fbest:
+                if self._use_f_guessed:
+                    f_new = self._optimiser.f_guessed()
+                else:
+                    f_new = self._optimiser.f_best()
+
+                if f_new < f_best:
                     # Check if this counts as a significant change
-                    if np.abs(fnew - fbest) < self._min_significant_change:
+                    if np.abs(f_new - f_best) < self._unchanged_threshold:
                         unchanged_iterations += 1
                     else:
                         unchanged_iterations = 0
 
                     # Update best
-                    fbest = fnew
+                    f_best = f_new
 
-                    # Update user value of fbest
-                    fbest_user = fbest if self._minimising else -fbest
+                    # Update user value of f_best
+                    f_best_user = f_best if self._minimising else -f_best
                 else:
                     unchanged_iterations += 1
 
@@ -589,7 +650,7 @@ class OptimisationController(object):
                 # Show progress
                 if logging and iteration >= next_message:
                     # Log state
-                    logger.log(iteration, evaluations, fbest_user)
+                    logger.log(iteration, evaluations, f_best_user)
                     self._optimiser._log_write(logger)
                     logger.log(timer.time())
 
@@ -615,15 +676,15 @@ class OptimisationController(object):
                                     + str(iteration) + ') reached.')
 
                 # Maximum number of iterations without significant change
-                halt = (self._max_unchanged_iterations is not None and
-                        unchanged_iterations >= self._max_unchanged_iterations)
+                halt = (self._unchanged_max_iterations is not None and
+                        unchanged_iterations >= self._unchanged_max_iterations)
                 if halt:
                     running = False
                     halt_message = ('Halting: No significant change for ' +
                                     str(unchanged_iterations) + ' iterations.')
 
                 # Threshold value
-                if self._threshold is not None and fbest < self._threshold:
+                if self._threshold is not None and f_best < self._threshold:
                     running = False
                     halt_message = ('Halting: Objective function crossed'
                                     ' threshold: ' + str(self._threshold) +
@@ -643,16 +704,17 @@ class OptimisationController(object):
             # Show last result and exit
             print('\n' + '-' * 40)
             print('Unexpected termination.')
-            print('Current best score: ' + str(fbest))
-            print('Current best position:')
+            print('Current score: ' + str(f_best))
+            print('Current position:')
 
-            # Inverse transform search parameters
-            if self._transformation:
-                xbest = self._transformation.to_model(self._optimiser.xbest())
+            # Show best parameters
+            if self._use_f_guessed:
+                x_best = self._optimiser.x_guessed()
             else:
-                xbest = self._optimiser.xbest()
-
-            for p in xbest:
+                x_best = self._optimiser.x_best()
+            if self._transformation is not None:
+                x_best = self._transformation.to_model(x_best)
+            for p in x_best:
                 print(pints.strfloat(p))
             print('-' * 40)
             raise
@@ -662,7 +724,7 @@ class OptimisationController(object):
 
         # Log final values and show halt message
         if logging:
-            logger.log(iteration, evaluations, fbest_user)
+            logger.log(iteration, evaluations, f_best_user)
             self._optimiser._log_write(logger)
             logger.log(self._time)
             if self._log_to_screen:
@@ -672,14 +734,18 @@ class OptimisationController(object):
         self._evaluations = evaluations
         self._iterations = iteration
 
-        # Inverse transform search parameters
-        if self._transformation:
-            xbest = self._transformation.to_model(self._optimiser.xbest())
+        # Get best parameters
+        if self._use_f_guessed:
+            x_best = self._optimiser.x_guessed()
         else:
-            xbest = self._optimiser.xbest()
+            x_best = self._optimiser.x_best()
+
+        # Inverse transform search parameters
+        if self._transformation is not None:
+            x_best = self._transformation.to_model(x_best)
 
         # Return best position and score
-        return xbest, fbest_user
+        return x_best, f_best_user
 
     def set_callback(self, cb=None):
         """
@@ -699,6 +765,17 @@ class OptimisationController(object):
         if cb is not None and not callable(cb):
             raise ValueError('The argument cb must be None or a callable.')
         self._callback = cb
+
+    def set_f_guessed_tracking(self, use_f_guessed=True):
+        """
+        Sets the method used to track the current value of the optimised
+        function to :meth:`pints.Optimiser.f_guessed` (default) or
+        :meth:`pints.Optimiser.f_best`.
+
+        For most optimisers these two values will be the same, but see
+        :meth:`pints.Optimiser.f_guessed` for when they might differ.
+        """
+        self._use_f_guessed = bool(use_f_guessed)
 
     def set_log_interval(self, iters=20, warm_up=3):
         """
@@ -776,8 +853,8 @@ class OptimisationController(object):
         if threshold < 0:
             raise ValueError('Minimum significant change cannot be negative.')
 
-        self._max_unchanged_iterations = iterations
-        self._min_significant_change = threshold
+        self._unchanged_max_iterations = iterations
+        self._unchanged_threshold = threshold
 
     def set_parallel(self, parallel=False):
         """
@@ -879,9 +956,9 @@ def optimise(
 
     Returns
     -------
-    xbest : numpy array
+    x_best : numpy array
         The best parameter set obtained
-    fbest : float
+    f_best : float
         The corresponding score.
     """
     return OptimisationController(
@@ -932,8 +1009,8 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     of ``p`` for which ``sum((y - f(x, *p))**2) / n`` is minimised (where ``n``
     is the number of entries in ``y``).
 
-    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
-    corresponding value ``fbest = f(xbest)``.
+    Returns a tuple ``(x_best, f_best)`` with the best position found, and the
+    corresponding value ``f_best = f(x_best)``.
 
     Parameters
     ----------
@@ -971,9 +1048,9 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
 
     Returns
     -------
-    xbest : numpy array
+    x_best : numpy array
         The best parameter set obtained.
-    fbest : float
+    f_best : float
         The corresponding score.
 
     Example
@@ -1057,8 +1134,8 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     Minimises a callable function ``f``, starting from position ``x0``, using a
     :class:`pints.Optimiser`.
 
-    Returns a tuple ``(xbest, fbest)`` with the best position found, and the
-    corresponding value ``fbest = f(xbest)``.
+    Returns a tuple ``(x_best, f_best)`` with the best position found, and the
+    corresponding value ``f_best = f(x_best)``.
 
     Parameters
     ----------

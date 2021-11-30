@@ -49,14 +49,17 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._ready_for_tell = False
 
         # Best solution found
-        self._xbest = pints.vector(x0)
-        self._fbest = float('inf')
+        self._x_best = pints.vector(x0)
+        self._f_best = float('inf')
 
         # Number of iterations run
         self._iterations = 0
 
         # Mean of the proposal distribution
         self._mu = np.copy(self._x0)
+
+        # Approximate value at self._mu
+        self._f_guessed = float('inf')
 
         # Step size
         self._eta = np.min(self._sigma0)
@@ -135,15 +138,19 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         else:
             return np.copy(self._C)
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        return self._fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._f_best
+
+    def f_guessed(self):
+        """ See :meth:`Optimiser.f_guessed()`. """
+        return self._f_guessed
 
     def mean(self):
         """
         Returns the current mean of the proposal distribution.
         """
-        return np.copy(self._mu)
+        return self.x_guessed()
 
     def _initialise(self):
         """
@@ -279,9 +286,9 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # Order the points from best to worst score
         order = np.argsort(fx)
-        xs = np.array(self._xs[order])
-        zs = np.array(self._zs[order])
-        ys = np.array(self._ys[order])
+        xs = self._xs[order]
+        zs = self._zs[order]
+        ys = self._ys[order]
 
         # Update the mean
         self._mu += self._cm * np.sum(
@@ -353,17 +360,21 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._S = np.sqrt(np.diag(eig[0]))
         self._R = eig[1]
 
-        # Update xbest and fbest
-        # Note: The stored values are based on particles, not on the mean of
-        # all particles! This has the advantage that we don't require an extra
-        # evaluation at mu to get a pair (mu, f(mu)). The downside is that
-        # xbest isn't the very best point. However, xbest and mu seem to
-        # converge quite quickly, so that this difference disappears.
-        if self._fbest > fx[order[0]]:
-            self._fbest = fx[order[0]]
-            self._xbest = xs[0]
+        # Update f_guessed on the assumption that the lowest value in our
+        # sample approximates f(mu)
+        self._f_guessed = fx[order[0]]
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        return self._xbest
+        # Update x_best and f_best
+        if self._f_guessed < self._f_best:
+            self._f_best = self._f_guessed
+            self._x_best = np.array(xs[0], copy=True)
 
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        return self._x_best
+
+    def x_guessed(self):
+        """ See :meth:`Optimiser.x_guessed()`. """
+        if self._boundary_transform is not None:
+            return self._boundary_transform(self._mu)
+        return np.array(self._mu, copy=True)
