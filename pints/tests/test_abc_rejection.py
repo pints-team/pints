@@ -71,7 +71,7 @@ class TestRejectionABC(unittest.TestCase):
         # test two asks raises error
         self.assertRaises(RuntimeError, abc.ask, 1)
         # test tell with large values returns empty arrays
-        self.assertTrue(abc.tell(np.array([100])).size == 0)
+        self.assertTrue(abc.tell(np.array([100])) is None)
         # test error raised if tell called before ask
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 

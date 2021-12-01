@@ -175,8 +175,8 @@ class TestABCController(unittest.TestCase):
         # test setters
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.RejectionABC)
-        abc.set_nr_samples(230)
-        self.assertEqual(abc.nr_samples(), 230)
+        abc.set_n_samples(230)
+        self.assertEqual(abc.n_samples(), 230)
 
         sampler = abc.sampler()
         pt = sampler.ask(1)
@@ -190,7 +190,7 @@ class TestABCController(unittest.TestCase):
                 self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_parallel(4)
             abc.sampler().set_threshold(100)
-            abc.set_nr_samples(1)
+            abc.set_n_samples(1)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
