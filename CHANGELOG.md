@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - [#1413](https://github.com/pints-team/pints/pull/1413) Added classes `pints.ABCController` and `pints.ABCSampler` for the Approximate Bayesian Inference sampling algorithms. Added `pints.RejectionABC` which implements a simple rejection ABC sampling algorithm.
+- [#1409](https://github.com/pints-team/pints/pull/1409) The `OptimisationController` now accepts a callback function that will be called at every iteration; this can be used for easier customisation or visualisation of the optimiser trajectory.
 - [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
 - [#1322](https://github.com/pints-team/pints/pull/1322) Added a method `sample_initial_points` that allows users to generate random points with finite metrics (either log-probabilities or error measures) to use as starting points for sampling or optimisation.
 - [#1243](https://github.com/pints-team/pints/pull/1243) Added testing for Python 3.9.
