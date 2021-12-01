@@ -32,7 +32,7 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the ABC algorithm, using the
         parameters specified by ask.
-        Expects to receive x as a sequence of leangth at least 1.
+        Expects to receive x as a sequence of length at least 1.
         Returns the accepted parameter values.
         """
         raise NotImplementedError
@@ -60,7 +60,7 @@ class ABCController(object):
     Example
     -------
     ::
-
+        abc = pints.ABCController(error_measure, log_prior)
         abc.set_max_iterations(1000)
         posterior_estimate = abc.run()
 
@@ -111,7 +111,7 @@ class ABCController(object):
 
         # Maximum number of target samples to obtain
         # in the estimated posterior
-        self._nr_samples = 500
+        self._n_samples = 500
 
         # The sampler object uses the prior distribution
         self._sampler = method(log_prior)
@@ -171,12 +171,12 @@ class ABCController(object):
         """
         return self._max_iterations
 
-    def nr_samples(self):
+    def n_samples(self):
         """
         Returns the target number of samples to obtain in the estimated
         posterior.
         """
-        return self._nr_samples
+        return self._n_samples
 
     def parallel(self):
         """
@@ -246,9 +246,9 @@ class ABCController(object):
         # are using parallelisation and how many workers
         # are being used.
         if self._parallel:
-            n_requested_samples = 1
-        else:
             n_requested_samples = self._n_workers
+        else:
+            n_requested_samples = 1
 
         samples = []
         # Sample until we find an acceptable sample
@@ -289,8 +289,10 @@ class ABCController(object):
             if iteration >= self._max_iterations:
                 running = False
                 halt_message = ('Halting: Maximum number of iterations ('
-                                + str(iteration) + ') reached.')
-            elif accepted_count >= self._nr_samples:
+                                + str(iteration) + ') reached. Only ('
+                                + str(accepted_count) + ') sample were '
+                                + 'obtained')
+            elif accepted_count >= self._n_samples:
                 running = False
                 halt_message = ('Halting: target number of samples ('
                                 + str(accepted_count) + ') reached.')
@@ -333,11 +335,11 @@ class ABCController(object):
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
 
-    def set_nr_samples(self, nr_samples=500):
+    def set_n_samples(self, n_samples=500):
         """
         Sets a target number of samples
         """
-        self._nr_samples = nr_samples
+        self._n_samples = n_samples
 
     def set_parallel(self, parallel=False):
         """

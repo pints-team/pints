@@ -6,6 +6,7 @@
 # copyright notice and full license details.
 #
 import pints
+import numpy as np
 
 
 class RejectionABC(pints.ABCSampler):
@@ -23,10 +24,12 @@ class RejectionABC(pints.ABCSampler):
         \end{align}
 
     In other words, the first two steps sample parameters
-    from the prior distribution and then sample data from the
-    sampling distribution (assuming the sampled parameters).
-    In the end, if the summary statistics are within the threshold,
-    we add the sampled parameters to the list of samples.
+    from the prior distribution :math:`p(\theta)` and then sample
+    simulated data from the sampling distribution (conditional on
+    the sampled parameter values), :math:`p(x|\theta^*)`.
+    In the end, if the error measure between our simulated data and
+    the original data is within the threshold, we add the sampled
+    parameters to the list of samples.
 
     References
     ----------
@@ -63,12 +66,17 @@ class RejectionABC(pints.ABCSampler):
         self._ready_for_tell = False
 
         fx = pints.vector(fx)
-        return self._xs[fx < self._threshold]
+        accepted = self._xs[fx < self._threshold]
+        if np.sum(accepted) == 0:
+            return None
+        else:
+            return [self._xs.tolist() for c, x in
+                    enumerate(accepted) if x]
 
     def threshold(self):
         """
         Returns threshold error distance that determines if a sample is
-        accepted (is ``error < threshold``).
+        accepted (if ``error < threshold``).
         """
         return self._threshold
 
