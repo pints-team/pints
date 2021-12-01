@@ -86,8 +86,8 @@ class TestXNES(unittest.TestCase):
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
-        x = np.array([1.1, 1.1])
-        opt = method(x)
+        r, x, s, b = self.problem()
+        opt = method(x, boundaries=b)
 
         # Stop called when not running
         self.assertFalse(opt.stop())
@@ -101,6 +101,13 @@ class TestXNES(unittest.TestCase):
         # Tell before ask
         self.assertRaisesRegex(
             Exception, r'ask\(\) not called before tell\(\)', opt.tell, 5)
+
+        # Best position and score called after run
+        opt.tell([r(p) for p in opt.ask()])
+        self.assertNotEqual(list(opt.x_best()), list(x))
+        self.assertNotEqual(list(opt.x_guessed()), list(x))
+        self.assertNotEqual(opt.f_best(), float('inf'))
+        self.assertNotEqual(opt.f_guessed(), float('inf'))
 
     def test_name(self):
         # Test the name() method.

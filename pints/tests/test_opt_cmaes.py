@@ -112,7 +112,7 @@ class TestCMAES(unittest.TestCase):
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
         r, x, s, b = self.problem()
-        opt = method(x)
+        opt = method(x, boundaries=b)
 
         # Stop called when not running
         self.assertFalse(opt.stop())
@@ -122,6 +122,10 @@ class TestCMAES(unittest.TestCase):
         self.assertEqual(list(opt.x_guessed()), list(x))
         self.assertEqual(opt.f_best(), float('inf'))
         self.assertEqual(opt.f_guessed(), float('inf'))
+
+        # Test deprecated xbest and fbest
+        self.assertEqual(list(opt.xbest()), list(x))
+        self.assertEqual(opt.fbest(), float('inf'))
 
         # Tell before ask
         self.assertRaisesRegex(

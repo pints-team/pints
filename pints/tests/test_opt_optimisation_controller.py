@@ -41,8 +41,9 @@ class TestOptimisationController(unittest.TestCase):
         x = [0, 700]
 
         # Check getting and setting tracking method
+        np.random.seed(123)
         opt = pints.OptimisationController(
-            f, x, boundaries=b, method=pints.XNES)
+            f, x, boundaries=b, method=pints.CMAES)
         self.assertFalse(opt.f_guessed_tracking())
         opt.set_f_guessed_tracking(True)
         self.assertTrue(opt.f_guessed_tracking())
@@ -85,6 +86,16 @@ class TestOptimisationController(unittest.TestCase):
         self.assertTrue(np.all(fb == lb))
         self.assertTrue(np.all(fg == lg))
         self.assertFalse(np.all(lb == lg))
+
+        # Run again, but checking on f_guessed
+        np.random.seed(123)
+        opt2 = pints.OptimisationController(
+            f, x, boundaries=b, method=pints.CMAES)
+        opt2.set_log_to_screen(False)
+        opt2.set_f_guessed_tracking(True)
+        x2, f2 = opt2.run()
+        self.assertNotEqual(opt.iterations(), opt2.iterations())
+        self.assertAlmostEqual(f1, f2)
 
     def test_callback(self):
         # Tests running with a callback method
