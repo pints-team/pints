@@ -573,7 +573,6 @@ class OptimisationController(object):
         fb = fg = float('inf')
 
         # Internally we always minimise! Keep a 2nd value to show the user.
-        # These values may be updated at every iteration.
         fb_user, fg_user = (fb, fg) if self._minimising else (-fb, -fg)
 
         # Keep track of the last significant change
