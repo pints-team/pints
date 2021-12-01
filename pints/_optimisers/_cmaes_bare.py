@@ -76,15 +76,15 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._R = np.identity(self._n_parameters)
         self._S = np.identity(self._n_parameters)
 
-        # Optional transformation to within-the-boundaries
-        self._boundary_transform = None
-
         # Constant used in tell()
         self._e = (
             np.sqrt(2)
             * gamma((self._n_parameters + 1) / 2)
             / gamma(self._n_parameters / 2)
         )
+
+        # Optional transformation to within-the-boundaries
+        self._boundary_transform = None
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """

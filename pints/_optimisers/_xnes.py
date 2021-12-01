@@ -47,8 +47,8 @@ class XNES(pints.PopulationBasedOptimiser):
         self._bounded_ids = None  # Indices of those xs
 
         # Normalisation / distribution
-        self._mu = None     # Mean
-        self._A = None      # Covariance
+        self._mu = np.array(self._x0)   # Mean
+        self._A = None                  # Covariance
 
         # Best solution seen
         self._x_best = pints.vector(x0)
@@ -57,6 +57,9 @@ class XNES(pints.PopulationBasedOptimiser):
         # Best guess of the solution is mu
         # We don't have f(mu), so we approximate it by min f(sample)
         self._f_guessed = float('inf')
+
+        # Optional transformation to within-the-boundaries
+        self._boundary_transform = None
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """

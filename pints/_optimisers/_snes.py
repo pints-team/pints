@@ -42,6 +42,9 @@ class SNES(pints.PopulationBasedOptimiser):
         self._running = False
         self._ready_for_tell = False
 
+        # Mean
+        self._mu = np.array(self._x0, copy=True)
+
         # Best solution found
         self._x_best = pints.vector(x0)
         self._f_best = float('inf')
@@ -49,6 +52,9 @@ class SNES(pints.PopulationBasedOptimiser):
         # Best guess of the solution is mu
         # We don't have f(mu), so we approximate it by max f(sample)
         self._f_guessed = float('inf')
+
+        # Optional transformation to within-the-boundaries
+        self._boundary_transform = None
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
