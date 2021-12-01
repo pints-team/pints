@@ -43,7 +43,7 @@ class TestOptimisationController(unittest.TestCase):
         # Check getting and setting tracking method
         np.random.seed(123)
         opt = pints.OptimisationController(
-            f, x, boundaries=b, method=pints.CMAES)
+            f, x, boundaries=b, method=pints.SNES)
         self.assertFalse(opt.f_guessed_tracking())
         opt.set_f_guessed_tracking(True)
         self.assertTrue(opt.f_guessed_tracking())
@@ -90,7 +90,7 @@ class TestOptimisationController(unittest.TestCase):
         # Run again, but checking on f_guessed
         np.random.seed(123)
         opt2 = pints.OptimisationController(
-            f, x, boundaries=b, method=pints.CMAES)
+            f, x, boundaries=b, method=pints.SNES)
         opt2.set_log_to_screen(False)
         opt2.set_f_guessed_tracking(True)
         x2, f2 = opt2.run()
