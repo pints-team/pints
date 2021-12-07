@@ -415,8 +415,6 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(50, 1e-11)
 
-        np.random.seed(123)
-
         # Before run methods return None
         self.assertIsNone(opt.iterations())
         self.assertIsNone(opt.evaluations())
@@ -426,8 +424,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.run()
         t_upper = t.time()
 
-        self.assertEqual(opt.iterations(), 75)
-        self.assertEqual(opt.evaluations(), 450)
+        self.assertEqual(opt.iterations(), 84)
+        self.assertEqual(opt.evaluations(), 495)
 
         # Time after run is greater than zero
         self.assertIsInstance(opt.time(), float)
@@ -446,9 +444,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
-        with self.assertRaisesRegex(RuntimeError,
-                                    "Controller is valid for single use only"):
-            opt.run()
+        self.assertRaisesRegex(
+            RuntimeError, 'Controller is valid for single use only', opt.run)
 
 
 if __name__ == '__main__':
