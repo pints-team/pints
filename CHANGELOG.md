@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.4.0] - 2021-12-07
 
 ### Added
 - [#1409](https://github.com/pints-team/pints/pull/1409) The `OptimisationController` now accepts a callback function that will be called at every iteration; this can be used for easier customisation or visualisation of the optimiser trajectory.
