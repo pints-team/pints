@@ -2,10 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2021-12-07
+## Unreleased
 
 ### Added
 - [#1420](https://github.com/pints-team/pints/pull/1420) The `Optimisation` objects now distinguish between a best-visited point (`x_best`, with score `f_best`) and a best-guessed point (`x_guessed`, with approximate score `f_guessed`). For most optimisers, the two values are equivalent. As before, the `OptimisationController` now tracks `x_best` and `f_best` by default, but this can be modified using the methods `set_f_guessed_tracking` and `f_guessed_tracking`.
+- 
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.4.0] - 2021-12-07
+
+### Added
 - [#1409](https://github.com/pints-team/pints/pull/1409) The `OptimisationController` now accepts a callback function that will be called at every iteration; this can be used for easier customisation or visualisation of the optimiser trajectory.
 - [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
 - [#1322](https://github.com/pints-team/pints/pull/1322) Added a method `sample_initial_points` that allows users to generate random points with finite metrics (either log-probabilities or error measures) to use as starting points for sampling or optimisation.
