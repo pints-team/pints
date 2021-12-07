@@ -233,19 +233,19 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[4],
                          'Iter. Eval. Best      Current   Time m:s')
         self.assertEqual(lines[5][:-3],
-                         '0     6     -4.140462 -4.140462   0:0')
+                         '0     3     -4.140462 -4.140462   0:0')
         self.assertEqual(lines[6][:-3],
-                         '1     12    -4.140462 -4.140473   0:0')
+                         '1     6     -4.140462 -4.140465   0:0')
         self.assertEqual(lines[7][:-3],
-                         '2     18    -4.140462 -4.140462   0:0')
+                         '2     11    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[8][:-3],
-                         '3     24    -4.140462 -4.140466   0:0')
+                         '3     16    -4.140462 -4.140466   0:0')
         self.assertEqual(lines[9][:-3],
-                         '6     42    -4.140462 -4.140462   0:0')
+                         '6     33    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[10][:-3],
-                         '9     60    -4.140462 -4.140462   0:0')
+                         '9     51    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[11][:-3],
-                         '10    60    -4.140462 -4.140462   0:0')
+                         '10    51    -4.140462 -4.140462   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
