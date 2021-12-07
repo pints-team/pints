@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - [#1420](https://github.com/pints-team/pints/pull/1420) The `Optimisation` objects now distinguish between a best-visited point (`x_best`, with score `f_best`) and a best-guessed point (`x_guessed`, with approximate score `f_guessed`). For most optimisers, the two values are equivalent. As before, the `OptimisationController` now tracks `x_best` and `f_best` by default, but this can be modified using the methods `set_f_guessed_tracking` and `f_guessed_tracking`.
+- 
 ### Changed
 ### Deprecated
 ### Removed
