@@ -233,19 +233,19 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[4],
                          'Iter. Eval. Best      Current   Time m:s')
         self.assertEqual(lines[5][:-3],
-                         '0     6     -4.140462 -4.140462   0:0')
+                         '0     3     -4.140462 -4.140462   0:0')
         self.assertEqual(lines[6][:-3],
-                         '1     12    -4.140462 -4.140473   0:0')
+                         '1     6     -4.140462 -4.140465   0:0')
         self.assertEqual(lines[7][:-3],
-                         '2     18    -4.140462 -4.140462   0:0')
+                         '2     11    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[8][:-3],
-                         '3     24    -4.140462 -4.140466   0:0')
+                         '3     16    -4.140462 -4.140466   0:0')
         self.assertEqual(lines[9][:-3],
-                         '6     42    -4.140462 -4.140462   0:0')
+                         '6     33    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[10][:-3],
-                         '9     60    -4.140462 -4.140462   0:0')
+                         '9     51    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[11][:-3],
-                         '10    60    -4.140462 -4.140462   0:0')
+                         '10    51    -4.140462 -4.140462   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
@@ -415,8 +415,6 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(50, 1e-11)
 
-        np.random.seed(123)
-
         # Before run methods return None
         self.assertIsNone(opt.iterations())
         self.assertIsNone(opt.evaluations())
@@ -426,8 +424,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.run()
         t_upper = t.time()
 
-        self.assertEqual(opt.iterations(), 75)
-        self.assertEqual(opt.evaluations(), 450)
+        self.assertEqual(opt.iterations(), 84)
+        self.assertEqual(opt.evaluations(), 495)
 
         # Time after run is greater than zero
         self.assertIsInstance(opt.time(), float)
@@ -446,9 +444,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
-        with self.assertRaisesRegex(RuntimeError,
-                                    "Controller is valid for single use only"):
-            opt.run()
+        self.assertRaisesRegex(
+            RuntimeError, 'Controller is valid for single use only', opt.run)
 
 
 if __name__ == '__main__':

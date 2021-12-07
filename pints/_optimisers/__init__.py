@@ -973,43 +973,6 @@ def optimise(
         function, x0, sigma0, boundaries, transformation, method).run()
 
 
-class TriangleWaveTransform(object):
-    """
-    Transforms from unbounded to (rectangular) bounded parameter space using a
-    periodic triangle-wave transform.
-
-    Note: The transform is applied _inside_ optimisation methods, there is no
-    need to wrap this around your own problem or score function.
-
-    This can be applied as a transformation on ``x`` to implement _rectangular_
-    boundaries in methods with no natural boundary mechanism. It effectively
-    mirrors the search space at every boundary, leading to a continuous (but
-    non-smooth) periodic landscape. While this effectively creates an infinite
-    number of minima/maxima, each one maps to the same point in parameter
-    space.
-
-    It should work well for methods that maintain a single search position or a
-    single search distribution (e.g. :class:`CMAES`, :class:`xNES`,
-    :class:`SNES`), which will end up in one of the many mirror images.
-    However, for methods that use independent search particles (e.g.
-    :class:`PSO`) it could lead to a scattered population, with different
-    particles exploring different mirror images. Other strategies should be
-    used for such problems.
-    """
-
-    def __init__(self, boundaries):
-        self._lower = boundaries.lower()
-        self._upper = boundaries.upper()
-        self._range = self._upper - self._lower
-        self._range2 = 2 * self._range
-
-    def __call__(self, x):
-        y = np.remainder(x - self._lower, self._range2)
-        z = np.remainder(y, self._range)
-        return ((self._lower + z) * (y < self._range)
-                + (self._upper - z) * (y >= self._range))
-
-
 def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
               max_unchanged=200, verbose=False, parallel=False, method=None):
     """

@@ -53,9 +53,6 @@ class SNES(pints.PopulationBasedOptimiser):
         # We don't have f(mu), so we approximate it by max f(sample)
         self._f_guessed = float('inf')
 
-        # Optional transformation to within-the-boundaries
-        self._boundary_transform = None
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -70,12 +67,8 @@ class SNES(pints.PopulationBasedOptimiser):
                             for i in range(self._population_size)])
         self._xs = self._mu + self._sigmas * self._ss
 
-        # Create safe xs to pass to user
-        if self._boundary_transform is not None:
-            # Rectangular boundaries? Then perform boundary transform
-            self._xs = self._boundary_transform(self._xs)
-        if self._manual_boundaries:
-            # Manual boundaries? Then pass only xs that are within bounds
+        # Boundaries? Then only pass user xs that are within bounds
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
@@ -102,15 +95,6 @@ class SNES(pints.PopulationBasedOptimiser):
         Initialises the optimiser for the first iteration.
         """
         assert(not self._running)
-
-        # Create boundary transform, or use manual boundary checking
-        self._manual_boundaries = False
-        self._boundary_transform = None
-        if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._boundary_transform = pints.TriangleWaveTransform(
-                self._boundaries)
-        elif self._boundaries is not None:
-            self._manual_boundaries = True
 
         # Shorthands
         d = self._n_parameters
@@ -154,8 +138,8 @@ class SNES(pints.PopulationBasedOptimiser):
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
 
-        # Manual boundaries? Then reconstruct full fx vector
-        if self._manual_boundaries and len(fx) < self._population_size:
+        # Boundaries? Then reconstruct full fx vector
+        if self._boundaries is not None and len(fx) < self._population_size:
             user_fx = fx
             fx = np.ones((self._population_size, )) * float('inf')
             fx[self._user_ids] = user_fx
@@ -186,7 +170,5 @@ class SNES(pints.PopulationBasedOptimiser):
 
     def x_guessed(self):
         """ See :meth:`Optimiser.x_guessed()`. """
-        if self._boundary_transform is not None:
-            return self._boundary_transform(self._mu)
         return np.array(self._mu, copy=True)
 
