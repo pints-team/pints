@@ -11,7 +11,7 @@ import pints.toy
 import unittest
 import numpy as np
 
-from shared import StreamCapture
+from shared import StreamCapture, TemporaryDirectory
 
 debug = False
 method = pints.XNES
@@ -25,6 +25,77 @@ class TestOptimisationController(unittest.TestCase):
     def setUp(self):
         """ Called before every test """
         np.random.seed(1)
+
+    def test_best_vs_guessed(self):
+        # Tests tracking and logging of best and guessed values
+
+        # Set up a problem
+        model = pints.toy.LogisticModel()
+        real = model.suggested_parameters()
+        times = model.suggested_times()
+        values = model.simulate(real, times)
+        values += np.random.normal(0, 10, values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+        f = pints.SumOfSquaresError(problem)
+        b = pints.RectangularBoundaries([0, 200], [1, 1000])
+        x = [0, 700]
+
+        # Check getting and setting tracking method
+        np.random.seed(123)
+        opt = pints.OptimisationController(
+            f, x, boundaries=b, method=pints.SNES)
+        self.assertFalse(opt.f_guessed_tracking())
+        opt.set_f_guessed_tracking(True)
+        self.assertTrue(opt.f_guessed_tracking())
+        opt.set_f_guessed_tracking(False)
+        self.assertFalse(opt.f_guessed_tracking())
+
+        # Check f_best and f_guessed with callback
+        fb, fg = [], []
+
+        def cb(i, opt):
+            fb.append(opt.f_best())
+            fg.append(opt.f_guessed())
+
+        # Run and check the logged values
+        opt.set_callback(cb)
+        opt.set_log_to_screen(False)
+        opt.set_log_interval(1)
+        with TemporaryDirectory() as d:
+            p = d.path('out.csv')
+            opt.set_log_to_file(p, csv=True)
+            x1, f1 = opt.run()
+            csv = np.genfromtxt(p, delimiter=',', skip_header=1)[:-1]
+            lb = csv[:, 2]
+            lg = csv[:, 3]
+            del(csv)
+
+        fb, fg = np.array(fb), np.array(fg)
+
+        if debug:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.semilogy()
+            plt.plot(fb, label='best, callback')
+            plt.plot(fg, label='guessed, callback')
+            plt.plot(lb, '--', label='best, logged')
+            plt.plot(lg, '--', label='guessed, logged')
+            plt.legend()
+            plt.show()
+
+        self.assertTrue(np.all(fb == lb))
+        self.assertTrue(np.all(fg == lg))
+        self.assertFalse(np.all(lb == lg))
+
+        # Run again, but checking on f_guessed
+        np.random.seed(123)
+        opt2 = pints.OptimisationController(
+            f, x, boundaries=b, method=pints.SNES)
+        opt2.set_log_to_screen(False)
+        opt2.set_f_guessed_tracking(True)
+        x2, f2 = opt2.run()
+        self.assertNotEqual(opt.iterations(), opt2.iterations())
+        self.assertAlmostEqual(f1, f2)
 
     def test_callback(self):
         # Tests running with a callback method
@@ -159,14 +230,22 @@ class TestOptimisationController(unittest.TestCase):
             lines[1], 'Using Exponential Natural Evolution Strategy (xNES)')
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 6')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
-        self.assertEqual(lines[5][:-3], '0     6     -4.140462   0:0')
-        self.assertEqual(lines[6][:-3], '1     12    -4.140462   0:0')
-        self.assertEqual(lines[7][:-3], '2     18    -4.140462   0:0')
-        self.assertEqual(lines[8][:-3], '3     24    -4.140462   0:0')
-        self.assertEqual(lines[9][:-3], '6     42    -4.140462   0:0')
-        self.assertEqual(lines[10][:-3], '9     60    -4.140462   0:0')
-        self.assertEqual(lines[11][:-3], '10    60    -4.140462   0:0')
+        self.assertEqual(lines[4],
+                         'Iter. Eval. Best      Current   Time m:s')
+        self.assertEqual(lines[5][:-3],
+                         '0     6     -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[6][:-3],
+                         '1     12    -4.140462 -4.140473   0:0')
+        self.assertEqual(lines[7][:-3],
+                         '2     18    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[8][:-3],
+                         '3     24    -4.140462 -4.140466   0:0')
+        self.assertEqual(lines[9][:-3],
+                         '6     42    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[10][:-3],
+                         '9     60    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[11][:-3],
+                         '10    60    -4.140462 -4.140462   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
@@ -190,14 +269,22 @@ class TestOptimisationController(unittest.TestCase):
             lines[1], 'Using Seperable Natural Evolution Strategy (SNES)')
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 4')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
-        self.assertEqual(lines[5][:-3], '0     4      6.471867   0:0')
-        self.assertEqual(lines[6][:-3], '1     8      6.471867   0:0')
-        self.assertEqual(lines[7][:-3], '2     12     0.0949     0:0')
-        self.assertEqual(lines[8][:-3], '3     16     0.0949     0:0')
-        self.assertEqual(lines[9][:-3], '4     20     0.0949     0:0')
-        self.assertEqual(lines[10][:-3], '8     36     0.0165     0:0')
-        self.assertEqual(lines[11][:-3], '11    44     0.0165     0:0')
+        self.assertEqual(lines[4],
+                         'Iter. Eval. Best      Current   Time m:s')
+        self.assertEqual(lines[5][:-3],
+                         '0     4      6.471867  6.471867   0:0')
+        self.assertEqual(lines[6][:-3],
+                         '1     8      6.471867  14.54646   0:0')
+        self.assertEqual(lines[7][:-3],
+                         '2     12     0.0949    0.0949     0:0')
+        self.assertEqual(lines[8][:-3],
+                         '3     16     0.0949    0.288      0:0')
+        self.assertEqual(lines[9][:-3],
+                         '4     20     0.0949    0.11       0:0')
+        self.assertEqual(lines[10][:-3],
+                         '8     36     0.0165    5.504433   0:0')
+        self.assertEqual(lines[11][:-3],
+                         '11    44     0.0165    3.601763   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (11) reached.')
 

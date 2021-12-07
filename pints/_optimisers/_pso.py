@@ -95,11 +95,9 @@ class PSO(pints.PopulationBasedOptimiser):
         # the user can store the points without us modifying them).
         return np.copy(self._user_xs)
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        if self._running:
-            return self._fg
-        return float('inf')
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._fg if self._running else float('inf')
 
     def _initialise(self):
         """
@@ -287,8 +285,9 @@ class PSO(pints.PopulationBasedOptimiser):
             self._fg = self._fl[i]
             self._pg = np.array(self._pl[i], copy=True)
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
         if self._running:
             return np.array(self._pg, copy=True)
         return np.array(self._x0, copy=True)
+
