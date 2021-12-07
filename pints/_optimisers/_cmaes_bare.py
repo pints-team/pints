@@ -83,9 +83,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
             / gamma(self._n_parameters / 2)
         )
 
-        # Optional transformation to within-the-boundaries
-        self._boundary_transform = None
-
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
         # Initialise on first call
@@ -106,19 +103,14 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Samples from N(mu, eta**2 * C)
         self._xs = np.array([self._mu + self._eta * y for y in self._ys])
 
-        # Apply boundaries; creating safe points for evaluation
-        # Rectangular boundaries? Then perform boundary transform
-        if self._boundary_transform is not None:
-            self._xs = self._boundary_transform(self._xs)
-
-        # Manual boundaries? Then pass only xs that are within bounds
-        if self._manual_boundaries:
+        # Boundaries? Then only pass user xs that are within bounds
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                warnings.warn('All points requested by CMA-ES are outside the'
-                              ' boundaries.')
+                warnings.warn('All points requested by BareCMAES are outside'
+                              ' the boundaries.')
         else:
             self._user_xs = self._xs
 
@@ -160,14 +152,6 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         Initialises the optimiser for the first iteration.
         """
         assert (not self._running)
-
-        # Create boundary transform, or use manual boundary checking
-        self._manual_boundaries = False
-        if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._boundary_transform = pints.TriangleWaveTransform(
-                self._boundaries)
-        elif self._boundaries is not None:
-            self._manual_boundaries = True
 
         # Parent generation population size
         # The parameter parent_pop_size is the mu in the papers. It represents
@@ -280,8 +264,8 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         npo = self._population_size
         npa = self._parent_pop_size
 
-        # Manual boundaries? Then reconstruct full fx vector
-        if self._manual_boundaries and len(fx) < npo:
+        # Boundaries? Then reconstruct full fx vector
+        if self._boundaries is not None and len(fx) < npo:
             user_fx = fx
             fx = np.ones((npo, )) * float('inf')
             fx[self._user_ids] = user_fx
@@ -377,6 +361,4 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
     def x_guessed(self):
         """ See :meth:`Optimiser.x_guessed()`. """
-        if self._boundary_transform is not None:
-            return self._boundary_transform(self._mu)
         return np.array(self._mu, copy=True)
