@@ -254,8 +254,5 @@ class TestSubProblem(unittest.TestCase):
         self.assertTrue(np.array_equal(dy_0, dy_1))
 
 
-
-
-
 if __name__ == '__main__':
     unittest.main()
