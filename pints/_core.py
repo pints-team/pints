@@ -343,7 +343,6 @@ class ProblemCollection(object):
     """
     def __init__(self, model, *args):
         self._model = model
-        print("pints length = ", len(args))
         if len(args) < 2:
             raise ValueError('Must supply at least one time series.')
         if len(args) % 2 != 0:
