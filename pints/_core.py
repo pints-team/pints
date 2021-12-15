@@ -392,6 +392,8 @@ class ProblemCollection(object):
         output_indices = np.where(self._output_indices == index)[0]
 
         # pick rows then columns
+        if y.ndim == 1:
+            y = np.expand_dims(y, axis=1)
         y_short = y[time_indices, :]
         y_short = y_short[:, output_indices]
         if y_short.shape[1] == 1:
@@ -411,18 +413,24 @@ class ProblemCollection(object):
         output_indices = np.where(self._output_indices == index)[0]
 
         # pick rows then columns
+        if y.ndim == 1:
+            y = np.expand_dims(y, axis=1)
         y_short = y[time_indices, :]
         y_short = y_short[:, output_indices]
         if y_short.shape[1] == 1:
             y_short = y_short.reshape((len(self._timeses[index]),))
 
         # sort sensitivities
-        dy_short = dy[time_indices, :, :]
-        dy_short = dy_short[:, output_indices, :]
-
-        if len(output_indices) == 1:
-            dy_short = dy_short.reshape(
-                len(time_indices), 1, dy_short.shape[2])
+        # if only single problem output
+        if dy.ndim == 2:
+            dy_short = dy[time_indices, :]
+        # multi-output problem
+        else:
+            dy_short = dy[time_indices, :, :]
+            dy_short = dy_short[:, output_indices, :]
+            if len(output_indices) == 1:
+                dy_short = dy_short.reshape(
+                    len(time_indices), 1, dy_short.shape[2])
         return y_short, dy_short
 
     def _evaluate(self, parameters, index):

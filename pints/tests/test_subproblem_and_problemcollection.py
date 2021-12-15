@@ -76,6 +76,35 @@ class TestProblemCollection(unittest.TestCase):
         model = collection.model()
         self.assertTrue(isinstance(model, pints.ForwardModelS1))
 
+    def test_univariate_problem(self):
+        # checks that method works with univariate output problem
+
+        model = pints.toy.LogisticModel()
+        real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(real_parameters, times)
+
+        noise = 10
+        values += np.random.normal(0, noise, values.shape)
+        real_parameters.append(noise)
+        real_parameters = np.array(real_parameters)
+
+        # check times and values returned
+        collection = pints.ProblemCollection(
+            model, times, values)
+        timeses = collection.timeses()
+        self.assertTrue(np.array_equal(timeses[0], times))
+        valueses = collection.valueses()
+        self.assertTrue(np.array_equal(valueses[0], values))
+
+        # check subproblem can be made
+        problem_0 = collection.subproblem(0)
+        self.assertTrue(isinstance(problem_0, pints.SubProblem))
+
+        # check model returned
+        model = collection.model()
+        self.assertTrue(isinstance(model, pints.ForwardModelS1))
+
     def test_problem_collection_errors(self):
         # Tests problem collection errors
 
@@ -198,6 +227,34 @@ class TestSubProblem(unittest.TestCase):
             self.outputs_12, self.problem_0.values()))
         self.assertTrue(np.array_equal(
             self.outputs_3, self.problem_1.values()))
+
+    def test_univariate_problem(self):
+        # Tests that subproblems work with a univariate output problem
+
+        model = pints.toy.LogisticModel()
+        real_parameters = [0.015, 500]
+        times = np.linspace(0, 1000, 1000)
+        values = model.simulate(real_parameters, times)
+
+        # check that same returned from subproblem as when making a
+        # single output problem
+        collection = pints.ProblemCollection(
+            model, times, values)
+        problem = pints.SingleOutputProblem(
+            model, times, values)
+        problem_0 = collection.subproblem(0)
+        sol_0 = problem_0.evaluate(real_parameters)
+        sol_1 = problem.evaluate(real_parameters)
+        self.assertTrue(np.array_equal(sol_0, sol_1))
+
+        # check same true for sensitivities
+        sol_0, dy_0 = problem_0.evaluateS1(real_parameters)
+        sol_1, dy_1 = problem.evaluateS1(real_parameters)
+        self.assertTrue(np.array_equal(sol_0, sol_1))
+        self.assertTrue(np.array_equal(dy_0, dy_1))
+
+
+
 
 
 if __name__ == '__main__':
