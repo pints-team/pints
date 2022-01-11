@@ -7,8 +7,9 @@
 #
 import pints
 import numpy as np
+from scipy.stats import multivariate_normal
 
-# TODO: make this work for high dimensionality
+
 class ABCPMC(pints.ABCSampler):
     r"""
     Implements the population monte carlo ABC as described in [1].
@@ -31,14 +32,12 @@ class ABCPMC(pints.ABCSampler):
            https://doi.org/10.1093/biomet/asp052
     """
     def __init__(self, log_prior):
-
         self._log_prior = log_prior
         self._threshold = 1
         self._xs = None
         self._ready_for_tell = False
         self._weights = np.array([])
         self._eps = 1
-        # TODO: make this a hyperparameter
         self._T = 500
         self._t = 1
         self._i = 0
@@ -54,7 +53,7 @@ class ABCPMC(pints.ABCSampler):
     def emp_var(self):
         """ Computes the weighted empirical variance of self._theta. """
         # Compute weighted mean
-        w_mean = 0.0
+        w_mean = np.zeros(self._dim)
         for i in range(self._N):
             w_mean = w_mean + self._weights[i] * self._theta[i]
         
@@ -71,10 +70,10 @@ class ABCPMC(pints.ABCSampler):
         # Compute the non-corrected variance estimation
         n_V = 0.0
         for i in range(self._N):
-            n_V = n_V + self.weights[i] * ( (self._theta[i] - w_mean) ** 2 )
+            n_V = n_V + self.weights[i] * ( np.dot( (self._theta[i] - w_mean), np.transpose(self._theta[i] - w_mean) ) )
 
         # Add correction term
-        e_var = (w_sum ** 2) / ((w_sum ** 2) - w_sq_sum) * n_V
+        e_var = ( (w_sum ** 2) / ((w_sum ** 2) - w_sq_sum) ) * n_V
 
         return e_var
 
@@ -88,9 +87,10 @@ class ABCPMC(pints.ABCSampler):
         if self._t == 1:
             if self._i == 0:
                 # Initialize variables dependent on N
+                self._dim = self._log_prior.n_parameters()
                 self._N = n_samples
                 self._i = 1
-                self._theta = np.zeros(shape=(1, self._N))
+                self._theta = np.zeros(shape=(self._dim, self._N))
                 self._n_theta = np.zeros(shape=(1, self._N))
                 self._xs = self._log_prior.sample(n_samples)
                 for i in range(n_samples):
@@ -101,14 +101,18 @@ class ABCPMC(pints.ABCSampler):
         else:
             # Sample theta_star
             pt = np.random.uniform()
-            theta_star = 0
+            uninitialized = True
+            theta_star = np.zeros(self._dim)
             partial_sum = 0
             for i in range(self._N):
-                if theta_star == 0 and pt <= partial_sum + self._weights[i]:
+                if uninitialized and pt <= partial_sum + self._weights[i]:
                     theta_star = self._theta[i]
+                    uninitialized = False
+                else:
+                    partial_sum = partial_sum + self._weights[i]
             
             # Generate sample
-            self._n_theta[i] = np.random.normal(theta_star, self._cov)
+            self._n_theta[i] = np.random.multivariate_normal(theta_star, self._cov)
             self._xs = self._n_theta[i]
 
         return self._xs
@@ -120,9 +124,8 @@ class ABCPMC(pints.ABCSampler):
         self._ready_for_tell = False
 
         if self._t == 1:
-            # Received 
             if fx < self._eps:
-                # Write the definite value of theta_i^t
+                # Write the definite value of theta_i^1
                 self._theta[self._i] = self._xs
                 # Increase i or t
                 if self._i == self._N:
@@ -141,10 +144,10 @@ class ABCPMC(pints.ABCSampler):
                 else:
                     # Update weight i
                     norm_term = 0.0
-                    for i in range(self._N):
-                        norm_term = norm_term + self._weights[i] * self.psi((self._n_theta[i] - self._theta[i]) / self._cov) / self._cov
-
-                    self._n_weights[i] = (self._log_prior(self._n_theta[i]) / norm_term)
+                    for j in range(self._N):
+                        norm_term = norm_term + self._weights[self._i] * multivariate_normal(self._n_theta[self._i], self._cov).pdf(self._theta[j])
+                    
+                    self._n_weights[self._i] = (self._log_prior(self._n_theta[self._i]) / norm_term)
                     if self._i == self._N:
                         self._i = 1
                         self._t = self._t + 1
@@ -169,15 +172,6 @@ class ABCPMC(pints.ABCSampler):
 
         # Otherwise try again                
         return None
-
-        """
-        fx = pints.vector(fx)
-        accepted = self._xs[fx < self._threshold]
-        if np.sum(accepted) == 0:
-            return None
-        else:
-            return [self._xs.tolist() for c, x in
-                    enumerate(accepted) if x] """
 
     def threshold(self):
         """
