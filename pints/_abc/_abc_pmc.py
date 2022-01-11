@@ -9,7 +9,8 @@ import pints
 import numpy as np
 from scipy.stats import multivariate_normal
 
-
+# Adapt epsilon to change
+# Make T smaller?
 class ABCPMC(pints.ABCSampler):
     r"""
     Implements the population monte carlo ABC as described in [1].
