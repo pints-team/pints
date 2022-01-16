@@ -47,10 +47,6 @@ class ABCPMC(pints.ABCSampler):
         """ See :meth:`pints.ABCSampler.name()`. """
         return 'Rejection ABC'
     
-    def psi(self, x):
-        """ Evaluates the psi function. """
-        return np.exp(-(x ** 2) / 2) / np.sqrt(2 * np.pi)
-    
     def emp_var(self):
         """ Computes the weighted empirical variance of self._theta. """
         # Compute weighted mean
