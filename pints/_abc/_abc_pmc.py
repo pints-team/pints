@@ -38,8 +38,8 @@ class ABCPMC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
         self._weights = np.array([])
-        self._eps = 1
-        self._T = 500
+        self._eps = 100
+        self._T = 10
         self._t = 1
         self._i = 0
 
@@ -67,9 +67,11 @@ class ABCPMC(pints.ABCSampler):
         # Compute the non-corrected variance estimation
         n_V = 0.0
         for i in range(self._N):
-            n_V = n_V + self.weights[i] * ( np.dot( (self._theta[i] - w_mean), np.transpose(self._theta[i] - w_mean) ) )
+            partial_mat = np.matmul( (self._theta[i] - w_mean), np.transpose(self._theta[i] - w_mean) )
+            n_V = n_V + self._weights[i] * partial_mat
 
         # Add correction term
+        print("w_sum ** 2 = " + str(w_sum ** 2) + " whereas w_sq_sum = " + str(w_sq_sum))
         e_var = ( (w_sum ** 2) / ((w_sum ** 2) - w_sq_sum) ) * n_V
 
         return e_var
@@ -87,11 +89,14 @@ class ABCPMC(pints.ABCSampler):
                 self._dim = self._log_prior.n_parameters()
                 self._N = n_samples
                 self._i = 1
-                self._theta = np.zeros(shape=(self._dim, self._N))
-                self._n_theta = np.zeros(shape=(1, self._N))
-                self._xs = self._log_prior.sample(n_samples)
-                for i in range(n_samples):
-                    self._weights = np.append(self._weights, 1 / n_samples)
+                self._theta = np.zeros((self._N + 1, self._dim))
+                self._n_theta = np.zeros((self._N + 1, self._dim))
+                self._xs = self._log_prior.sample(self._N)
+                self._weights = np.zeros(self._N + 1)
+                self._n_weights = np.zeros(self._N + 1)
+                print("initializing weights to " + str(1.0 / self._N))
+                for i in range(self._N):
+                    self._weights[i] = 1.0 / self._N
 
             # Sample theta_i 
             self._xs = self._log_prior.sample(1)
@@ -109,9 +114,21 @@ class ABCPMC(pints.ABCSampler):
                     partial_sum = partial_sum + self._weights[i]
             
             # Generate sample
-            self._n_theta[i] = np.random.multivariate_normal(theta_star, self._cov)
-            self._xs = self._n_theta[i]
-
+            # PROBLEM: sometimes too many brackets around _xs
+            print("received cov " + str(self._cov) + " with n=" + str(self._N))
+            if self._dim == 1:
+                print("first branch")
+                self._n_theta[i] = [np.random.normal(theta_star, self._cov)]
+            else:
+                print("second branch")
+                self._n_theta[i] = np.random.multivariate_normal(mean=theta_star, cov=self._cov)
+            
+            self._xs = [self._n_theta[i]]
+        # if not isinstance(self._xs, list):
+            # print("if passed")
+            # self._xs = np.array([self._xs])
+        
+        print("sending " + str(self._xs) + " for vibe check")
         return self._xs
 
     def tell(self, fx):
@@ -120,8 +137,11 @@ class ABCPMC(pints.ABCSampler):
             raise RuntimeError('Tell called before ask.')
         self._ready_for_tell = False
 
+        if len(fx) != 1:
+            raise RuntimeError('Expected only 1 error term.')
+
         if self._t == 1:
-            if fx < self._eps:
+            if fx[0] < self._eps:
                 # Write the definite value of theta_i^1
                 self._theta[self._i] = self._xs
                 # Increase i or t
@@ -133,7 +153,7 @@ class ABCPMC(pints.ABCSampler):
                 else:
                     self._i = self._i + 1
         else:
-            if fx < self._eps:
+            if fx[0] < self._eps:
                 self._n_theta[self._i] = self._xs
                 if self._i == self._N and self._t == self._T:
                     # Finished
