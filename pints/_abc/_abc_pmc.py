@@ -34,11 +34,10 @@ class ABCPMC(pints.ABCSampler):
     """
     def __init__(self, log_prior, eps_ratio=0.99):
         self._log_prior = log_prior
-        self._threshold = 1
         self._xs = None
         self._ready_for_tell = False
         self._weights = np.array([])
-        self._eps = 3
+        self._eps = 1
         self._T = 10
         self._t = 1
         self._i = 0
@@ -46,7 +45,7 @@ class ABCPMC(pints.ABCSampler):
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
-        return 'Rejection ABC'
+        return 'PMC  ABC'
     
     def emp_var(self):
         """ Computes the weighted empirical variance of self._theta. """
@@ -72,8 +71,10 @@ class ABCPMC(pints.ABCSampler):
             n_V = n_V + self._weights[i] * partial_mat
 
         # Add correction term
-        print("w_sum ** 2 = " + str(w_sum ** 2) + " whereas w_sq_sum = " + str(w_sq_sum))
-        e_var = ( (w_sum ** 2) / ((w_sum ** 2) - w_sq_sum) ) * n_V
+        if w_sum ** 2 == w_sq_sum:
+            e_var = (w_sum ** 2) / 1e-20 * n_V
+        else:
+            e_var = ( (w_sum ** 2) / ((w_sum ** 2) - w_sq_sum) ) * n_V
 
         return e_var
 
@@ -95,41 +96,38 @@ class ABCPMC(pints.ABCSampler):
                 self._xs = self._log_prior.sample(self._N)
                 self._weights = np.zeros(self._N + 1)
                 self._n_weights = np.zeros(self._N + 1)
-                print("initializing weights to " + str(1.0 / self._N))
                 for i in range(self._N):
                     self._weights[i] = 1.0 / self._N
 
             # Sample theta_i 
             self._xs = self._log_prior.sample(1)
         else:
-            # Sample theta_star
-            pt = np.random.uniform()
-            uninitialized = True
-            theta_star = np.zeros(self._dim)
-            partial_sum = 0
-            for i in range(self._N):
-                if uninitialized and pt <= partial_sum + self._weights[i]:
-                    theta_star = self._theta[i]
-                    uninitialized = False
+            done = False
+            while not done:
+                # Sample theta_star
+                pt = np.random.uniform()
+                uninitialized = True
+                theta_star = np.zeros(self._dim)
+                partial_sum = 0
+                for i in range(self._N):
+                    if uninitialized and pt <= partial_sum + self._weights[i]:
+                        theta_star = self._theta[i]
+                        uninitialized = False
+                    else:
+                        partial_sum = partial_sum + self._weights[i]
+
+                # Generate sample
+                if self._dim == 1:
+                    self._n_theta[i] = [np.random.normal(theta_star, self._cov)]
                 else:
-                    partial_sum = partial_sum + self._weights[i]
+                    self._n_theta[i] = np.random.multivariate_normal(mean=theta_star, cov=self._cov)
+
+                self._xs = [self._n_theta[i]]
+
+                # Assure that the value is within the prior
+                if self._log_prior(self._xs) != np.NINF:
+                    done = True
             
-            # Generate sample
-            # PROBLEM: sometimes too many brackets around _xs
-            print("received cov " + str(self._cov) + " with n=" + str(self._N))
-            if self._dim == 1:
-                print("first branch")
-                self._n_theta[i] = [np.random.normal(theta_star, self._cov)]
-            else:
-                print("second branch")
-                self._n_theta[i] = np.random.multivariate_normal(mean=theta_star, cov=self._cov)
-            
-            self._xs = [self._n_theta[i]]
-        # if not isinstance(self._xs, list):
-            # print("if passed")
-            # self._xs = np.array([self._xs])
-        
-        print("sending " + str(self._xs) + " for vibe check")
         return self._xs
 
     def tell(self, fx):
@@ -164,11 +162,15 @@ class ABCPMC(pints.ABCSampler):
                     norm_term = 0.0
                     for j in range(self._N):
                         norm_term = norm_term + self._weights[self._i] * multivariate_normal(self._n_theta[self._i], self._cov).pdf(self._theta[j])
-                    
+
+                    # Preventing numerical errors
+                    if norm_term == 0.0:
+                        norm_term = 1e-20
+
                     self._n_weights[self._i] = (self._log_prior(self._n_theta[self._i]) / norm_term)
                     if self._i == self._N:
                         # Update epsilon
-                        self._eps = self._eps / self._eps_ratio
+                        self._eps = self._eps * self._eps_ratio
                         self._i = 1
                         self._t = self._t + 1
 
@@ -190,7 +192,6 @@ class ABCPMC(pints.ABCSampler):
                     else:
                         self._i = self._i + 1
 
-        print("finished tell")
         # Otherwise try again                
         return None
 
@@ -209,4 +210,27 @@ class ABCPMC(pints.ABCSampler):
         x = float(threshold)
         if x <= 0:
             raise ValueError('Threshold must be greater than zero.')
-        self._threshold = threshold
+        self._eps = threshold
+    
+    def set_n_generations(self, n_gen):
+        """
+        Sets the number of generations used in PMC, called T in the original
+        paper.
+        """
+        x = int(n_gen)
+        if x <= 0:
+            raise ValueError('Number of generations must be greater than' +
+                             'zero.')
+        self._T = x
+
+    def set_t_ratio(self, t_ratio):
+        """
+        Sets the rate by which the threshold is multiplied after each generation,
+        so that each generation gets a more accurate tighter threshold and more
+        accurate iterations.
+        """
+        x = float(t_ratio)
+        if x < 0.0 or x > 1.0:
+            raise ValueError('Threshold ration must be between 0.0 and 1.0')
+        
+        self._eps_ratio = x
