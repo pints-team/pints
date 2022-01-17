@@ -32,16 +32,17 @@ class ABCPMC(pints.ABCSampler):
            Biometrika, 96(4), 983-990.
            https://doi.org/10.1093/biomet/asp052
     """
-    def __init__(self, log_prior):
+    def __init__(self, log_prior, eps_ratio=0.99):
         self._log_prior = log_prior
         self._threshold = 1
         self._xs = None
         self._ready_for_tell = False
         self._weights = np.array([])
-        self._eps = 100
+        self._eps = 3
         self._T = 10
         self._t = 1
         self._i = 0
+        self._eps_ratio = eps_ratio
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -166,6 +167,8 @@ class ABCPMC(pints.ABCSampler):
                     
                     self._n_weights[self._i] = (self._log_prior(self._n_theta[self._i]) / norm_term)
                     if self._i == self._N:
+                        # Update epsilon
+                        self._eps = self._eps / self._eps_ratio
                         self._i = 1
                         self._t = self._t + 1
 
@@ -187,6 +190,7 @@ class ABCPMC(pints.ABCSampler):
                     else:
                         self._i = self._i + 1
 
+        print("finished tell")
         # Otherwise try again                
         return None
 
