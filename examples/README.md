@@ -103,7 +103,7 @@ relevant code.
 
 ## Toy problems
 
-### Models
+### Deterministic Models
 - [Beeler-Reuter action potential model](./toy/model-beeler-reuter-ap.ipynb)
 - [Constant model](./toy/model-constant.ipynb)
 - [Fitzhugh-Nagumo model](./toy/model-fitzhugh-nagumo.ipynb)
@@ -115,9 +115,11 @@ relevant code.
 - [Repressilator model](./toy/model-repressilator.ipynb)
 - [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy/model-sir.ipynb)
+
+### Stochastic Models
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
 - [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
-- [Michaelis Menten model](./toy/model-stochastic-michaelis-menten.ipynb)
+- [Stochastic Michaelis Menten model](./toy/model-stochastic-michaelis-menten.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)

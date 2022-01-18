@@ -17,7 +17,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     r"""
     A general purpose Markov Jump model used for any systems of reactions
     that proceed through jumps. We simulate a population of N different species
-    reacting through M different mechanisms
+    reacting through M different reaction equations.
 
     Simulations are performed using Gillespie's algorithm [1]_, [2]_:
 
@@ -57,6 +57,8 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     propensities
         A function from the current state, x, and reaction rates, k,
         to a vector of the rates of each reaction taking place.
+    a_0
+        What is this
 
     References
     ----------
