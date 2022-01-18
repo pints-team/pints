@@ -214,11 +214,9 @@ class NelderMead(pints.Optimiser):
         # Extended iteration: ask for expansion or contraction point
         return np.array([self._xp])
 
-    def fbest(self):
-        """ See: :meth:`pints.Optimiser.fbest()`. """
-        if not self._running:
-            return float('inf')
-        return self._fs[0]
+    def f_best(self):
+        """ See: :meth:`pints.Optimiser.f_best()`. """
+        return self._fs[0] if self._running else float('inf')
 
     def name(self):
         """ See: :meth:`pints.Optimiser.name()`. """
@@ -326,9 +324,7 @@ class NelderMead(pints.Optimiser):
         # Option 5: Shrink
         self._shrink = True
 
-    def xbest(self):
-        """ See: :meth:`pints.Optimiser.xbest()`. """
-        if not self._running:
-            return pints.vector(self._x0)
-        return pints.vector(self._xs[0])
+    def x_best(self):
+        """ See: :meth:`pints.Optimiser.x_best()`. """
+        return pints.vector(self._xs[0] if self._running else self._x0)
 

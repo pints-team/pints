@@ -170,7 +170,6 @@ from ._optimisers import (
     optimise,
     Optimiser,
     PopulationBasedOptimiser,
-    TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
 from ._optimisers._cmaes_bare import BareCMAES
