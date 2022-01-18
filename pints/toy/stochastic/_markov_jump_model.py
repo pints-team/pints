@@ -31,9 +31,19 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     .. math::
         \tau = \frac{-\ln(r)}{a_0}
 
+    where a_0 is the sum of the propensities at the current time.
+
     3. Decide which reaction, i, takes place using r_1 * a_0 and iterating
 
-    through propensities
+    through propensities. Since r_1 is a a value between 0 and 1 and a_0 is
+
+    the sum of all propensities, we can find k for which
+
+    s_k / a_0 <= r_2 < s_(k+1) / a_0 where s_j is the sum of the first j
+
+    propensities at time t. We then choose i as the reaction corresponding
+
+    to propensity k.
 
     4. Update the state :math:`x` at time :math:`t + \tau` as:
 
@@ -57,8 +67,6 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
     propensities
         A function from the current state, x, and reaction rates, k,
         to a vector of the rates of each reaction taking place.
-    a_0
-        What is this
 
     References
     ----------
