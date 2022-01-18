@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- [#1417](https://github.com/pints-team/pints/pull/1417) Added a module `toy.stochastic` for stochastic models. In particular, `toy.stochastic.MarkovJumpModel` implements Gillespie's algorithm for easier future implementation of stochastic models.
 - [#1383](https://github.com/pints-team/pints/pull/1383) Added a method `toy.TwistedGaussianDistribution.untwist` that turns samples from this distribution into samples from a multivariate Gaussian.
 - [#1322](https://github.com/pints-team/pints/pull/1322) Added a method `sample_initial_points` that allows users to generate random points with finite metrics (either log-probabilities or error measures) to use as starting points for sampling or optimisation.
 - [#1243](https://github.com/pints-team/pints/pull/1243) Added testing for Python 3.9.
