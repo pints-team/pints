@@ -233,7 +233,6 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     Implicitly build up a subtree of depth ``j`` for the NUTS sampler.
     """
     if j == 0:
-        print('Level 0')
         # Base case - take one leapfrog in the direction v
         if v == -1:
             theta = state.theta_minus
@@ -259,15 +258,10 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
             comparison = hamiltonian_dash - hamiltonian0
         n_dash = comparison
         alpha_dash = min(1.0, np.exp(comparison))
-
         divergent = -comparison > hamiltonian_threshold
         s_dash = int(not divergent)
-
-        print(hamiltonian_threshold)
-        print(s_dash)
-
         n_alpha_dash = 1
-        print('Return level ', 0)
+
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
             alpha_dash, n_alpha_dash, divergent,
@@ -275,7 +269,6 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         )
 
     else:
-        print('Level ', j)
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
             build_tree(state, v, j - 1, adaptor, hamiltonian0,
@@ -285,10 +278,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
             state_double_dash = yield from \
                 build_tree(state_dash, v, j - 1, adaptor, hamiltonian0,
                            hamiltonian_threshold)
-            print('Merge tress at level ', j)
             state_dash.update(state_double_dash, direction=v, root=False)
-
-        print('Return level ', j)
 
         return state_dash
 
@@ -394,20 +384,15 @@ def nuts_sampler(
 
     Arguments
     ---------
-    #TODO:
     x0: ndarray
         starting point
-    delta: float
-        target acceptance probability (Dual Averaging scheme)
-    num_adaption_steps: int
-        number of adaption steps (Dual Averaging scheme)
+    adaptor: list or pints.DualAveragingAdaption
+        list with properties of the averaging algorith [num_adaption_steps,
+        delta, use_dense_mass_matrix] or instance of averaging algorithm.
     hamiltonian_threshold: float
         threshold to test divergent iterations
     max_tree_depth: int
         maximum tree depth
-    use_dense_mass_matrix: bool
-        if False, use a diagonal mass matrix, if True use a fully dense mass
-        matrix
 
     References
     ----------
@@ -636,7 +621,12 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     def load_state(self, file):
         """
-        Loads sampler state from pickle file and returns sampler.
+        Loads sampler state from a .pickle file and returns sampler.
+
+        Arguments
+        ---------
+        file: str
+            Path to file.
         """
         with open(file, "rb") as input_file:
             method = cPickle.load(input_file)
@@ -649,7 +639,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # NOTE: This nuts_sampler still differs from before pickling, because
         # before returning the mcmc proposal the nuts sampler starts the next
         # leapfrog trajectory by sampling a new momentum and using the
-        # current gradient infromation to perform the first leapfrog step. We
+        # current gradient information to perform the first leapfrog step. We
         # can't do this here, because we don't have the gradient information
         # anymore.
         # BUT we can prepare the ask method such that it returns the current
@@ -697,7 +687,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Saves sampler state to pickle file.
 
-        See ``load_state`` for loading sampler state from pickle file.
+        Arguments
+        ---------
+        file: str
+            Path to file.
         """
         # Remove nuts_sampler generator
         nuts = self._nuts

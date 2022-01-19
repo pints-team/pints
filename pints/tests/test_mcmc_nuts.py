@@ -4,8 +4,10 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import numpy as np
+import os
 import unittest
+
+import numpy as np
 
 import pints
 import pints.toy
@@ -189,7 +191,7 @@ class TestNutsMCMC(unittest.TestCase):
             ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
 
     def test_pickle(self):
-        # Test I: make sure pickling state does not alter behaviour sampler
+        # Test I: make sure pickling state does not alter behaviour of sampler
         log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
         x0 = np.array([2, 2])
 
@@ -209,7 +211,7 @@ class TestNutsMCMC(unittest.TestCase):
             reply = log_pdf.evaluateS1(mcmc.ask())
             ref_proposal2 = mcmc.tell(reply)
 
-        # Repeat the same and pickle the sampler in between
+        # Repeat the same and pickle the sampler in between MCMC steps
         mcmc = pints.NoUTurnMCMC(x0)
         np.random.seed(1)
         for _ in range(15):
@@ -259,15 +261,15 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertEqual(adaptor.warmup_steps(), ref_adaptor.warmup_steps())
         self.assertEqual(adaptor._counter, ref_adaptor._counter)
 
-        # Test case III: Does the loaded sampler propose the same steps
-        # when the random seed is controlled?
+        # Test case III: Check that the loaded sampler proposes the same steps
+        # as the original sampler when the random seed is controlled
 
         # Make sure that numpy seed is the same
         mcmc = pints.NoUTurnMCMC(x0)
         np.random.seed(1)
         for _ in range(14):
             reply = log_pdf.evaluateS1(mcmc.ask())
-            temp = mcmc.tell(reply)
+            mcmc.tell(reply)
         np.random.uniform()
 
         # Need one cycle of ask-tell to catch up with state prior to pickling
@@ -285,6 +287,9 @@ class TestNutsMCMC(unittest.TestCase):
 
         self.assertTrue(np.all(proposal1[0] == ref_proposal1[0]))
         self.assertTrue(np.all(proposal2[0] == ref_proposal2[0]))
+
+        # Delete pickled sampler
+        os.remove('temp.pickle')
 
     def test_set_hyper_parameters(self):
         # Tests the parameter interface for this sampler.
