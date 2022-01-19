@@ -9,9 +9,10 @@ If you are new to programming in Python, these can help you get started.
 - [Anaconda](https://docs.anaconda.com/anaconda/install/) - a popular package for scientists, which includes many commonly-used numeric & scientific packages.
 - [Jupyter](https://jupyter.org/install.html) - Jupyter notebooks let you combine written text with Python code - all the examples in this repository are written using Jupyter (but can be viewed without it, just by clicking the links!).
 
-## Python for non-programmers
+## Python for beginners
 
 - [Automate the boring stuff](https://automatetheboringstuff.com/) - a free, online, project-based textbook for beginners.
+- [python-course.eu](https://python-course.eu) - a detailed online course on Python and [NumPy](https://python-course.eu/numerical-programming/)
 - [Python 3 documentation](https://docs.python.org/3/) - official documentation for the latest version of Python.
 
 ## Python for Matlab/Octave users
