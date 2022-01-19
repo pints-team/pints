@@ -157,8 +157,6 @@ class NutsState(object):
 
         # accept a new point based on the weighting of the two trees
         p = min(1, np.exp(other_state.n - self.n))
-
-        print('Draw random number in update')
         if p > 0.0 and np.random.uniform() < p:
             self.theta = other_state.theta
             self.L = other_state.L
@@ -224,9 +222,7 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
         theta_new = theta + epsilon * inv_mass_matrix * r_new
     else:
         theta_new = theta + epsilon * inv_mass_matrix.dot(r_new)
-    print('Perform leapfrog step')
     L_new, grad_L_new = (yield theta_new)
-    print('Conitnue with energy at leapfrog step')
     r_new += 0.5 * epsilon * grad_L_new
     return L_new, grad_L_new, theta_new, r_new
 
@@ -237,7 +233,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     Implicitly build up a subtree of depth ``j`` for the NUTS sampler.
     """
     if j == 0:
-        print('Start of new tree')
+        print('Level 0')
         # Base case - take one leapfrog in the direction v
         if v == -1:
             theta = state.theta_minus
@@ -253,6 +249,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, v * adaptor.get_epsilon(),
                                 adaptor.get_inv_mass_matrix())
+
         hamiltonian_dash = L_dash \
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
 
@@ -266,8 +263,11 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         divergent = -comparison > hamiltonian_threshold
         s_dash = int(not divergent)
 
+        print(hamiltonian_threshold)
+        print(s_dash)
+
         n_alpha_dash = 1
-        print('Return state after start of tree')
+        print('Return level ', 0)
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
             alpha_dash, n_alpha_dash, divergent,
@@ -275,7 +275,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         )
 
     else:
-        print('Enter recursion at: ', j)
+        print('Level ', j)
         # Recursion - implicitly build the left and right subtrees
         state_dash = yield from  \
             build_tree(state, v, j - 1, adaptor, hamiltonian0,
@@ -285,7 +285,10 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
             state_double_dash = yield from \
                 build_tree(state_dash, v, j - 1, adaptor, hamiltonian0,
                            hamiltonian_threshold)
+            print('Merge tress at level ', j)
             state_dash.update(state_double_dash, direction=v, root=False)
+
+        print('Return level ', j)
 
         return state_dash
 
@@ -337,7 +340,6 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     epsilon = 1.0
 
     # randomly sample momentum
-    print('Draw mass matrix in find epsilon')
     if inv_mass_matrix.ndim == 1:
         r = np.random.normal(
             np.zeros(len(theta)),
@@ -439,7 +441,6 @@ def nuts_sampler(
     # provide an infinite generator of mcmc steps....
     while True:
         # randomly sample momentum
-        print('Draw momentum')
         if adaptor.use_dense_mass_matrix():
             r0 = np.random.multivariate_normal(
                 np.zeros(len(theta)), adaptor.get_mass_matrix())
@@ -450,7 +451,6 @@ def nuts_sampler(
         hamiltonian0 = L - kinetic_energy(r0, adaptor.get_inv_mass_matrix())
 
         # create initial integration path state
-        print('Momentum: ', r0)
         state = NutsState(theta=theta, r=r0, L=L, grad_L=grad_L,
                           n=0.0, s=1, alpha=1, n_alpha=1, divergent=False,
                           inv_mass_matrix=adaptor.get_inv_mass_matrix())
@@ -459,22 +459,18 @@ def nuts_sampler(
         # build up an integration path with 2^j points, stopping when we either
         # encounter a U-Turn, or reach a max number of points 2^max_tree_depth
         while j < max_tree_depth and state.s == 1:
-            print('j: ', j)
             # pick a random direction to integrate in
             # (to maintain detailed balance)
             if np.random.randint(0, 2):
                 vj = 1
             else:
                 vj = -1
-            print('Draw direction of trajectory: ', vj)
 
             # recursivly build up tree in that direction
             state_dash = yield from \
                 build_tree(state, vj, j, adaptor,
                            hamiltonian0, hamiltonian_threshold)
-
             state.update(state_dash, direction=vj, root=True)
-            print('State state: ', state.s)
 
             j += 1
 
@@ -487,7 +483,6 @@ def nuts_sampler(
         restart_stepsize_adapt = \
             adaptor.step(state.theta, state.alpha / state.n_alpha)
         if restart_stepsize_adapt:
-            print('This is executed')
             epsilon = yield from \
                 find_reasonable_epsilon(theta, L, grad_L,
                                         adaptor.get_inv_mass_matrix())
@@ -495,7 +490,6 @@ def nuts_sampler(
 
         # signal calling process that mcmc step is complete by passing a tuple
         # (rather than an ndarray)
-        print('Returning tuple')
         yield (theta,
                L,
                grad_L,
@@ -650,7 +644,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         # Recreate NUTS sampler state
         method._nuts = nuts_sampler(
             method._current, method._adaptor, method._sigma0,
-            method._max_tree_depth, method._hamiltonian_threshold)
+            method._hamiltonian_threshold, method._max_tree_depth)
 
         # NOTE: This nuts_sampler still differs from before pickling, because
         # before returning the mcmc proposal the nuts sampler starts the next
@@ -793,7 +787,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # coroutine signals end of current step by sending a tuple of
         # information about the last mcmc step
-        print(type(self._next))
         if isinstance(self._next, tuple):
             # extract next point in chain, its logpdf, the acceptance
             # probability and the number of leapfrog steps taken during

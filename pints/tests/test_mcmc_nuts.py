@@ -198,22 +198,16 @@ class TestNutsMCMC(unittest.TestCase):
         np.random.seed(1)
         # Needs exactly 15 ask-tell cycles for this seed
         for _ in range(15):
-            print('Counting laps: ', _)
             reply = log_pdf.evaluateS1(mcmc.ask())
-            temp = mcmc.tell(reply)
-            print('Proposal: ', temp)
+            mcmc.tell(reply)
 
         np.random.seed(2)
         for _ in range(1):
-            print('1 - Counting loop', _)
             reply = log_pdf.evaluateS1(mcmc.ask())
             ref_proposal1 = mcmc.tell(reply)
-            print('Proposal', ref_proposal1)
         for _ in range(6):
-            print('2 - Counting loop', _)
             reply = log_pdf.evaluateS1(mcmc.ask())
             ref_proposal2 = mcmc.tell(reply)
-            print('Proposal', ref_proposal2)
 
         # Repeat the same and pickle the sampler in between
         mcmc = pints.NoUTurnMCMC(x0)
@@ -272,13 +266,10 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc = pints.NoUTurnMCMC(x0)
         np.random.seed(1)
         for _ in range(14):
-            print('Get seed up to speed')
             reply = log_pdf.evaluateS1(mcmc.ask())
             temp = mcmc.tell(reply)
         np.random.uniform()
 
-        print('')
-        print('Starting to use loaded MCMC')
         # Need one cycle of ask-tell to catch up with state prior to pickling
         reply = log_pdf.evaluateS1(loaded_mcmc.ask())
         loaded_mcmc.tell(reply)
@@ -286,15 +277,11 @@ class TestNutsMCMC(unittest.TestCase):
         # Propose next steps with loaded sampler
         np.random.seed(2)
         for _ in range(1):
-            print('Counting loop', _)
             reply = log_pdf.evaluateS1(loaded_mcmc.ask())
             proposal1 = loaded_mcmc.tell(reply)
-            print('Proposal', proposal1)
-        for _ in range(5):
-            print('Counting loop', _)
+        for _ in range(6):
             reply = log_pdf.evaluateS1(loaded_mcmc.ask())
             proposal2 = loaded_mcmc.tell(reply)
-            print('Proposal', proposal2)
 
         self.assertTrue(np.all(proposal1[0] == ref_proposal1[0]))
         self.assertTrue(np.all(proposal2[0] == ref_proposal2[0]))
