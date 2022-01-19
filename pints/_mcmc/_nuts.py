@@ -288,12 +288,13 @@ def initialise_adaptor(
         theta, L, grad_L, num_adaption_steps, delta, sigma0,
         use_dense_mass_matrix):
     """
-    Returns an instance of the pints.DualAveragingAdaption.
+    Creates a generator that terminates by returning an instance of the
+    pints.DualAveragingAdaption.
 
-    Finding a reasonable step size (epsilon) to initialise the adaptor, we
-    need to perfrom multiple leapfrog steps that require function evaluations
-    from multiple points. The generator requires multiple sends of the log_pdf
-    the gradients to return the final epsilon.
+    Initialisation of the adaptor requires a 'reasonable' epsilon which
+    is in turn also a generator. The find_reasonable_epsilon generator
+    terminates with return of a 'reasonable' epsilon. Intermediate returns
+    are the current position of the leapfrog integrator.
     """
 
     # pick the initial inverse mass matrix as the provided sigma0.
@@ -387,7 +388,7 @@ def nuts_sampler(
     x0: ndarray
         starting point
     adaptor: list or pints.DualAveragingAdaption
-        list with properties of the averaging algorith [num_adaption_steps,
+        list with properties of the averaging algorithm [num_adaption_steps,
         delta, use_dense_mass_matrix] or instance of averaging algorithm.
     hamiltonian_threshold: float
         threshold to test divergent iterations

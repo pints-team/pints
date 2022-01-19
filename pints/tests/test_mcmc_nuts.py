@@ -184,6 +184,9 @@ class TestNutsMCMC(unittest.TestCase):
         # Cannot set number of adpation steps while running
         self.assertRaises(RuntimeError, mcmc.set_number_adaption_steps, 500)
 
+        # Cannot change density of mass matrix while running
+        self.assertRaises(RuntimeError, mcmc.set_use_dense_mass_matrix, True)
+
         # Bad starting point
         mcmc = pints.NoUTurnMCMC(x0)
         mcmc.ask()
@@ -334,6 +337,12 @@ class TestNutsMCMC(unittest.TestCase):
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
         mcmc.set_hyper_parameters([2])
         self.assertEqual(mcmc.number_adaption_steps(), 2)
+
+        # Test when sampler is running
+        mcmc.ask()
+        self.assertEqual(mcmc.delta(), 0.5)
+        self.assertEqual(mcmc.number_adaption_steps(), 2)
+        self.assertTrue(mcmc.use_dense_mass_matrix())
 
     def test_other_setters(self):
         # Tests other setters and getters.
