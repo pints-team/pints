@@ -335,13 +335,18 @@ class TestNutsMCMC(unittest.TestCase):
 
         # hyper param interface
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        mcmc.set_hyper_parameters([2])
-        self.assertEqual(mcmc.number_adaption_steps(), 2)
+        mcmc.set_hyper_parameters([300])
+        self.assertEqual(mcmc.number_adaption_steps(), 300)
 
         # Test when sampler is running
-        mcmc.ask()
+        # (Need a MCMC proposal before adaptor is updated, which needs 10
+        # ask-tell cycles here.)
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
+        for _ in range(10):
+            x = mcmc.ask()
+            mcmc.tell(log_pdf.evaluateS1(x))
         self.assertEqual(mcmc.delta(), 0.5)
-        self.assertEqual(mcmc.number_adaption_steps(), 2)
+        self.assertEqual(mcmc.number_adaption_steps(), 300)
         self.assertTrue(mcmc.use_dense_mass_matrix())
 
     def test_other_setters(self):

@@ -585,7 +585,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         try:
             # When adaptor has not been initialised
             return self._adaptor[1]
-        except IndexError:
+        except TypeError:
             # Adaptor has been initialised
             return self._adaptor.target_accept_prob()
 
@@ -680,7 +680,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         try:
             # When adaptor has not been initialised
             return self._adaptor[0]
-        except IndexError:
+        except TypeError:
             # Adaptor has been initialised
             return self._adaptor.warmup_steps()
 
@@ -833,6 +833,6 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         try:
             # When adaptor has not been initialised
             return self._adaptor[2]
-        except IndexError:
+        except TypeError:
             # Adaptor has been initialised
             return self._adaptor.use_dense_mass_matrix()
