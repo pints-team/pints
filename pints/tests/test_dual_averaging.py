@@ -32,6 +32,27 @@ class TestDualAveraging(unittest.TestCase):
         averager.adapt_epsilon(2.0)
         self.assertEqual(averager._h_bar, 0.0)
 
+    def test_use_dense_mass_matrix(self):
+        num_warmup_steps = 200
+        target_accept_prob = 1.0
+        init_epsilon = 1.0
+        init_inv_mass_matrix = np.array([[1, 0], [0, 1]])
+
+        averager = pints.DualAveragingAdaption(num_warmup_steps,
+                                               target_accept_prob,
+                                               init_epsilon,
+                                               init_inv_mass_matrix)
+
+        self.assertTrue(averager.use_dense_mass_matrix())
+
+        init_inv_mass_matrix = np.array([1, 1])
+        averager = pints.DualAveragingAdaption(num_warmup_steps,
+                                               target_accept_prob,
+                                               init_epsilon,
+                                               init_inv_mass_matrix)
+
+        self.assertFalse(averager.use_dense_mass_matrix())
+
     def test_set_inv_mass(self):
         num_warmup_steps = 200
         target_accept_prob = 1.0
