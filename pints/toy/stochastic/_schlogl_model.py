@@ -39,8 +39,8 @@ class SchloglModel(MarkovJumpModel):
     @staticmethod
     def _propensities(xs, ks):
         return [
-            2 * xs[0] * ks[0],
-            3 * xs[0] * ks[1],
+            xs[0] * (xs[0] - 1) * ks[0],
+            xs[0] * (xs[0] - 1) * (xs[0] - 2) * ks[1],
             ks[2],
             xs[0] * ks[3]
         ]
