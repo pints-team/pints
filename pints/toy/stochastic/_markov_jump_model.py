@@ -152,6 +152,9 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         # Run Gillespie
         time, mol_count = self.simulate_raw(parameters, max(times))
         # Interpolate
+        if len(time) < 2:
+            time = np.append(time, time[0])
+            mol_count = np.append(mol_count, mol_count[0])
         values = self.interpolate_mol_counts(np.asarray(time),
                                              np.asarray(mol_count), times)
         return values
