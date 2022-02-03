@@ -35,7 +35,7 @@ class TestSchloglModel(unittest.TestCase):
         self.assertTrue(
             np.allclose(
                 model._propensities([x_0], k),
-                np.array([7.2, 0.015, 2200.0, 750.0])))
+                np.array([68.4, 1.71, 2200.0, 750.0])))
 
     def test_suggested(self):
         model = SchloglModel(20)
