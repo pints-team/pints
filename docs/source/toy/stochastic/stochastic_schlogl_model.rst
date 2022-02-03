@@ -1,6 +1,6 @@
-**************
-Sclogl's model
-**************
+***************
+Schlogl's model
+***************
 
 .. currentmodule:: pints.toy.stochastic
 
