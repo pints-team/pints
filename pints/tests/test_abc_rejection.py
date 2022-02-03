@@ -8,6 +8,7 @@
 #
 import pints
 import pints.toy as toy
+import pints.toy.stochastic
 import unittest
 import numpy as np
 
@@ -22,7 +23,7 @@ class TestRejectionABC(unittest.TestCase):
         """ Set up problem for tests. """
 
         # Create toy model
-        cls.model = toy.StochasticDegradationModel()
+        cls.model = toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)

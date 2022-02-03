@@ -8,6 +8,7 @@
 #
 import pints
 import pints.toy
+import pints.toy.stochastic
 import unittest
 import numpy as np
 from shared import StreamCapture
@@ -23,7 +24,7 @@ class TestABCController(unittest.TestCase):
         """ Prepare problem for tests. """
 
         # Create toy model
-        cls.model = pints.toy.StochasticDegradationModel()
+        cls.model = pints.toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)
