@@ -87,7 +87,7 @@ class LogisticModel(MarkovJumpModel):
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-        c0 = self._V[0][0]
+        c0 = self._x0
         return (c0 * k) / (c0 + np.exp(-b * times) * (k - c0))
 
     def suggested_parameters(self):
