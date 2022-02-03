@@ -149,8 +149,6 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-        if np.all(self._x0 == 0):
-            return np.zeros(times.shape)
         # Run Gillespie
         time, mol_count = self.simulate_raw(parameters, max(times))
         # Interpolate
