@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests if the production and degradation (toy) model works.
+# Tests if the Schlogl (toy) model works.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -8,37 +8,37 @@
 #
 import unittest
 import numpy as np
-from pints.toy.stochastic import ProductionDegradationModel
+from pints.toy.stochastic import SchloglModel
 
 
-class TestProductionDegradationModel(unittest.TestCase):
+class TestSchloglModel(unittest.TestCase):
     """
     Tests if the degradation (toy) model works.
     """
     def test_n_parameters(self):
         x_0 = 20
-        model = ProductionDegradationModel(x_0)
-        self.assertEqual(model.n_parameters(), 2)
+        model = SchloglModel(x_0)
+        self.assertEqual(model.n_parameters(), 4)
 
     def test_simulation_length(self):
         x_0 = 20
-        model = ProductionDegradationModel(x_0)
+        model = SchloglModel(x_0)
         times = np.linspace(0, 1, 100)
-        k = [0.1, 0.2]
+        k = [0.1, 0.2, 0.3, 0.4]
         values = model.simulate(k, times)
         self.assertEqual(len(values), 100)
 
     def test_propensities(self):
         x_0 = 20
-        k = [0.1, 0.2]
-        model = ProductionDegradationModel(x_0)
+        model = SchloglModel(x_0)
+        k = model.suggested_parameters()
         self.assertTrue(
             np.allclose(
                 model._propensities([x_0], k),
-                np.array([2.0, 0.2])))
+                np.array([7.2, 0.015, 2200.0, 750.0])))
 
     def test_suggested(self):
-        model = ProductionDegradationModel(20)
+        model = SchloglModel(20)
         times = model.suggested_times()
         parameters = model.suggested_parameters()
         self.assertTrue(len(times) == 101)
