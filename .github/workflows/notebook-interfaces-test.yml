@@ -14,10 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Set up Python 3.9
+      - name: Set up latest Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.9
           architecture: x64
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
