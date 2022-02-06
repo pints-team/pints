@@ -69,7 +69,7 @@ class HamiltonianABC(pints.ABCSampler):
            https://doi.org/10.1016/j.tree.2010.04.001
 
     """
-    def __init__(self, log_prior, y, c=0.01, m=5, eps=0.01):
+    def __init__(self, log_prior, c=0.01, m=5, eps=0.01):
         self._m = m
         self._c = c
         self._cnt = 0
