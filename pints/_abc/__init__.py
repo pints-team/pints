@@ -115,7 +115,7 @@ class ABCController(object):
 
         # The sampler object uses the prior distribution
         if method == pints.HamiltonianABC:
-            self._samplesr = method(log_prior, )
+            self._samplesr = method(log_prior)
         self._sampler = method(log_prior)
 
         # Logging
