@@ -74,6 +74,7 @@ class HamiltonianABC(pints.ABCSampler):
         self._c = 0.01
         self._cnt = 0
         self._eps = 0.01
+        self._ready_for_tell = False
         
         # Functions
         self._log_prior = log_prior
