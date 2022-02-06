@@ -69,21 +69,14 @@ class HamiltonianABC(pints.ABCSampler):
            https://doi.org/10.1016/j.tree.2010.04.001
 
     """
-    def __init__(self, m, eps, log_prior, sim_f, c, y):
-        
+    def __init__(self, log_prior, y, c=0.01, m=5, eps=0.01):
         self._m = m
-        self._eps = eps
         self._c = c
         self._cnt = 0
         
         # Functions
         self._log_prior = log_prior
         self._grad_prior = self.grad_pr 
-        self._sim_f = sim_f
-        
-        # Build synthetic likelihood
-        self._synt_l = SyntheticLikelihood(y, eps)
-        
    
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -209,11 +202,24 @@ class HamiltonianABC(pints.ABCSampler):
         Returns threshold error distance that determines if a sample is
         accepted (if ``error < threshold``).
         """
-        return self._threshold
+        return self._eps
+    
+    def set_threshold(self, threshold):
+        """
+        Sets threshold error distance that determines if a sample is accepted
+        (if ``error < threshold``).
+        """
+        x = float(threshold)
+        if x <= 0:
+            raise ValueError('Threshold must be greater than zero.')
+        self._eps = x
+
+        # Build synthetic likelihood
+        self._synt_l = SyntheticLikelihood(y, self._eps)
 
     def set_theta0(self, theta0):
         """
-        Sets the first element in the chain of thetas
+        Sets the first element in the chain of thetas.
         """
         self._theta0 = theta0
         self._dim = len(theta0)
@@ -227,3 +233,9 @@ class HamiltonianABC(pints.ABCSampler):
         
         self._results = np.zeros((self._T, self._dim))
         self._results[0] = self._theta0
+
+    def set_sim_f(self, sim_f):
+        """
+        Set simulating function.
+        """
+        self._sim_f = sim_f
