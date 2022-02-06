@@ -232,7 +232,9 @@ class HamiltonianABC(pints.ABCSampler):
         self._B = (self._eps / 2) * np.eye(self._dim)
         self._grads = []
         
-        self._results = np.zeros((self._T, self._dim))
+        # TODO: find a way to access maximum number of iterations
+        # or maybe delete results entirely?
+        self._results = np.zeros((300, self._dim))
         self._results[0] = self._theta0
 
     def set_sim_f(self, sim_f):
