@@ -14,3 +14,4 @@ given a :class:`LogPrior` and a :class:`ErrorMeasure`.
 
     base_classes
     rejection_abc
+    abc-smc

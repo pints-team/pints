@@ -85,6 +85,8 @@ Sampling
      from and an error measure.
    - :class:`ABCPMC`, requires a :class:`LogPrior` that can be sampled from
      and an error measure.
+   - :class:`ABCSMC`, requires a :class:`LogPrior` that can be sampled from
+     from and an error measure.
 
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 
