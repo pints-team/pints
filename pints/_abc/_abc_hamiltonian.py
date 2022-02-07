@@ -38,7 +38,7 @@ class SyntheticLikelihood:
 
 
 
-# try initially with fdsa
+# TODO: speed up maybe, it is very slow
 class HamiltonianABC(pints.ABCSampler):
     r"""
     Implements the Hamiltonian ABC algorithm as described in [1].
@@ -75,6 +75,9 @@ class HamiltonianABC(pints.ABCSampler):
         self._cnt = 0
         self._eps = 0.01
         self._ready_for_tell = False
+        self._i = 0
+        self._S = 4
+        self._R = 4
         
         # Functions
         self._log_prior = log_prior
@@ -166,28 +169,27 @@ class HamiltonianABC(pints.ABCSampler):
             raise RuntimeError('Ask called before tell.')
         
         if self._i == 0:
-            self._returnable = [self._results[0]]
+            curr_theta = self._theta0
+            self._returnable = [self._theta0]
         else:
+            curr_theta = self._returnable[-1]
             self._returnable = []
-        for t in range(self._i, n_samples):
+        for t in range(self._i + 1, self._i + n_samples + 1):
             # Resample momentum
-            curr_theta = self._results[t-1]
             curr_momentum = np.random.multivariate_normal(np.zeros(self._dim), np.eye(self._dim))
-            for i in range(self._m):
+            for j in range(self._m):
                 next_theta = curr_theta + self._eps * curr_momentum
                 # We need to process the fdsa term to update the matrices
-                spsa_term = self.spsa(next_theta, 0.001, S=4, R=4)
+                spsa_term = self.spsa(next_theta, 0.001, S=self._S, R=self._R)
                 next_momentum = curr_momentum - self._eps * spsa_term \
                                 - self._eps * self._C * curr_momentum \
                                 + np.random.multivariate_normal(np.zeros(self._dim), 2 * self._eps * (self._C - self._B))
                 curr_theta = next_theta
                 curr_momentum = next_momentum
 
-            self._results[t] = curr_theta
             self._returnable.append(curr_theta)
         
-        n_samples += self._returnable
-
+        self._i += n_samples
         self._ready_for_tell = True
         return np.array([])
 
@@ -206,18 +208,21 @@ class HamiltonianABC(pints.ABCSampler):
         """
         return self._eps
     
-    def set_threshold(self, threshold):
+    def set_step_size(self, step_size):
         """
         Sets threshold error distance that determines if a sample is accepted
         (if ``error < threshold``).
         """
-        x = float(threshold)
+        x = float(step_size)
         if x <= 0:
             raise ValueError('Threshold must be greater than zero.')
         self._eps = x
 
-        # Build synthetic likelihood
-        self._synt_l = SyntheticLikelihood(y, self._eps)
+    def set_threshold(self, threshold):
+        """
+        Sets the covariance vector for the synthetic likelihood.
+        """
+        self._synt_l = SyntheticLikelihood(self._y, threshold)
 
     def set_theta0(self, theta0):
         """
@@ -233,13 +238,28 @@ class HamiltonianABC(pints.ABCSampler):
         self._B = (self._eps / 2) * np.eye(self._dim)
         self._grads = []
         
-        # TODO: find a way to access maximum number of iterations
-        # or maybe delete results entirely?
-        self._results = np.zeros((300, self._dim))
-        self._results[0] = self._theta0
 
     def set_sim_f(self, sim_f):
         """
         Set simulating function.
         """
         self._sim_f = sim_f
+
+    def set_y(self, y):
+        """
+        Set the data.
+        """
+        self._y = y
+
+    def set_m(self, m):
+        """
+        Sets the number of steps that are used for reducing
+        correlation.
+        """
+        self._m = m
+
+    def set_S(self, S):
+        self._S = S
+    
+    def set_R(self, R):
+        self._R = R
