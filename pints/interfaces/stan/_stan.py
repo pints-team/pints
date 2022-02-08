@@ -52,28 +52,19 @@ class StanLogPDF(pints.LogPDF):
 
     def __init__(self, stan_code, stan_data):
 
+        # Store data
+        self.update_data(stan_data)
+
         # Build stan model
         posterior = stan.build(stan_code, data=stan_data)
-        fit = posterior.sample(
-            num_samples=1,
-            num_chains=1,
-            #verbose=False,
-            refresh=0,
-            #control={'adapt_engaged': False}
-        )
 
         # Use httpstan to get access to the compiled module
         module = httpstan.models.import_services_extension_module(
             posterior.model_name)
 
-        self._data = stan_data
-
-        print(dir(module))
-
         self._log_prob = module.log_prob
         self._log_prob_grad = module.log_prob_grad
         self._names = module.get_param_names(self._data)
-        print(self._names)
         self._n_parameters = len(self._names)
 
     def __call__(self, x):
@@ -113,5 +104,6 @@ class StanLogPDF(pints.LogPDF):
         stan_data
             Data in Python dictionary format as required by PyStan.
         """
+        # TODO: Clone data so that it can't be changed anymore?
         self._data = stan_data
 
