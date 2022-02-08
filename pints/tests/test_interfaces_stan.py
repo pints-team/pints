@@ -96,21 +96,17 @@ class TestStanLogPDF(unittest.TestCase):
         cls.data2 = model.data()
 
     def test_calling(self):
+
         # tests instantiation
         with SubCapture(dump_on_error=True) as c:
-            stanmodel = StanLogPDF(stan_code=self.code)
+            stanmodel = StanLogPDF(self.code, self.data)
         if debug:
             print('# Test instantiation')
             print(c.text())
 
-        # tests mistakenly calling model before data supplied
+        # test vals and sensitivities
         x = [1, 2]
-        self.assertRaises(RuntimeError, stanmodel, x)
-        self.assertRaises(RuntimeError, stanmodel.evaluateS1, x)
-
-        # test vals and sensitivities: first supply data
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data=self.data)
             # add log(2) since this accounts for constant
             fx = stanmodel(x)
             val, dp = stanmodel.evaluateS1(x)
@@ -177,7 +173,7 @@ class TestStanLogPDF(unittest.TestCase):
     def test_vector_parameters_model(self):
         # tests interface with stan models with vectorised parameters
         with SubCapture(dump_on_error=True) as c:
-            stanmodel = StanLogPDF(stan_code=self.code2, stan_data=self.data2)
+            stanmodel = StanLogPDF(self.code2, self.data2)
             stanmodel(np.random.uniform(size=10))
         if debug:
             print('Test vectorised parameters')
