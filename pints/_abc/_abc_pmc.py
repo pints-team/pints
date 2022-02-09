@@ -164,7 +164,7 @@ class ABCPMC(pints.ABCSampler):
                     # Update weight i
                     norm_term = 0.0
                     for j in range(self._N):
-                        norm_term = norm_term + self._weights[self._i] * \
+                        norm_term = norm_term + self._weights[self._j] * \
                             multivariate_normal(self._n_theta[self._i],
                                                 self._cov).pdf(self._theta[j])
 
