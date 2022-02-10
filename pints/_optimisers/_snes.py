@@ -42,9 +42,16 @@ class SNES(pints.PopulationBasedOptimiser):
         self._running = False
         self._ready_for_tell = False
 
+        # Mean
+        self._mu = np.array(self._x0, copy=True)
+
         # Best solution found
-        self._xbest = pints.vector(x0)
-        self._fbest = float('inf')
+        self._x_best = pints.vector(x0)
+        self._f_best = float('inf')
+
+        # Best guess of the solution is mu
+        # We don't have f(mu), so we approximate it by max f(sample)
+        self._f_guessed = float('inf')
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -60,12 +67,8 @@ class SNES(pints.PopulationBasedOptimiser):
                             for i in range(self._population_size)])
         self._xs = self._mu + self._sigmas * self._ss
 
-        # Create safe xs to pass to user
-        if self._boundary_transform is not None:
-            # Rectangular boundaries? Then perform boundary transform
-            self._xs = self._boundary_transform(self._xs)
-        if self._manual_boundaries:
-            # Manual boundaries? Then pass only xs that are within bounds
+        # Boundaries? Then only pass user xs that are within bounds
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
@@ -79,24 +82,19 @@ class SNES(pints.PopulationBasedOptimiser):
         self._user_xs.setflags(write=False)
         return self._user_xs
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        return self._fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._f_best
+
+    def f_guessed(self):
+        """ See :meth:`Optimiser.f_guessed()`. """
+        return self._f_guessed
 
     def _initialise(self):
         """
         Initialises the optimiser for the first iteration.
         """
         assert(not self._running)
-
-        # Create boundary transform, or use manual boundary checking
-        self._manual_boundaries = False
-        self._boundary_transform = None
-        if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._boundary_transform = pints.TriangleWaveTransform(
-                self._boundaries)
-        elif self._boundaries is not None:
-            self._manual_boundaries = True
 
         # Shorthands
         d = self._n_parameters
@@ -140,8 +138,8 @@ class SNES(pints.PopulationBasedOptimiser):
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
 
-        # Manual boundaries? Then reconstruct full fx vector
-        if self._manual_boundaries and len(fx) < self._population_size:
+        # Boundaries? Then reconstruct full fx vector
+        if self._boundaries is not None and len(fx) < self._population_size:
             user_fx = fx
             fx = np.ones((self._population_size, )) * float('inf')
             fx[self._user_ids] = user_fx
@@ -157,17 +155,20 @@ class SNES(pints.PopulationBasedOptimiser):
         self._sigmas *= np.exp(
             0.5 * self._eta_sigmas * np.dot(self._us, self._ss**2 - 1))
 
-        # Update xbest and fbest
-        # Note: The stored values are based on particles, not on the mean of
-        # all particles! This has the advantage that we don't require an extra
-        # evaluation at mu to get a pair (mu, f(mu)). The downside is that
-        # xbest isn't the very best point. However, xbest and mu seem to
-        # converge quite quickly, so that this difference disappears.
-        if fx[order[0]] < self._fbest:
-            self._xbest = self._xs[order[0]]
-            self._fbest = fx[order[0]]
+        # Update f_guessed on the assumption that the lowest value in our
+        # sample approximates f(mu)
+        self._f_guessed = fx[order[0]]
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        return self._xbest
+        # Update x_best and f_best
+        if self._f_guessed < self._f_best:
+            self._x_best = np.array(self._xs[order[0]], copy=True)
+            self._f_best = fx[order[0]]
+
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        return self._x_best
+
+    def x_guessed(self):
+        """ See :meth:`Optimiser.x_guessed()`. """
+        return np.array(self._mu, copy=True)
 

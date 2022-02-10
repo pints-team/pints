@@ -16,7 +16,6 @@ or the :class:`OptimisationController` class.
     running
     base_classes
     convenience_methods
-    boundary_transformations
     cmaes_bare
     cmaes
     gradient_descent
