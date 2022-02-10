@@ -178,6 +178,7 @@ class TestStanLogPDF(unittest.TestCase):
         if debug:
             print('Test vectorised parameters')
             print(c.text())
+        self.assertEqual(stanmodel.n_parameters(), 10)
 
 
 if __name__ == '__main__':

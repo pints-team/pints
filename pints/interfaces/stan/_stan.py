@@ -65,7 +65,8 @@ class StanLogPDF(pints.LogPDF):
         self._log_prob = module.log_prob
         self._log_prob_grad = module.log_prob_grad
         self._names = module.get_param_names(self._data)
-        self._n_parameters = len(self._names)
+        self.module = module
+        self._n_parameters = self._calc_n_parameters()
 
     def __call__(self, x):
         try:
@@ -87,8 +88,23 @@ class StanLogPDF(pints.LogPDF):
                 'Error encountered when evaluating Stan LogPDF: ' + str(e))
             return -np.inf, np.ones(self._n_parameters)
 
+    def _calc_n_parameters(self):
+        """ Calculates number of model parameters from module and data. """
+        param_dims_list = self.module.get_dims(self._data)
+        n_params = 0
+        for p in param_dims_list:
+            if len(p) == 0:
+                n_params += 1
+            else:
+                n_params += p[0]
+        return n_params
+
     def names(self):
-        """ Returns names of Stan parameters. """
+        """
+        Returns list comprising names of Stan parameters. Note that the length
+        of this list will not generally equal ``n_parameters`` since each
+        name may correspond to a vector.
+        """
         return self._names
 
     def n_parameters(self):
@@ -106,4 +122,3 @@ class StanLogPDF(pints.LogPDF):
         """
         # TODO: Clone data so that it can't be changed anymore?
         self._data = stan_data
-
