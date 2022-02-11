@@ -65,12 +65,14 @@ class ABCPMC(pints.ABCSampler):
 
         # Compute the non-corrected variance estimation
         n_V = 0.0
+        partial_mat = np.zeros((self._dim, self._dim))
         for i in range(self._N):
-            partial_mat = np.matmul((self._theta[i] - w_mean),
-                                    np.transpose(self._theta[i]
-                                    - w_mean))
+            diff = self._theta[i] - w_mean
+            for j in range(self._dim):
+                for k in range(self._dim):
+                    partial_mat[j][k] = diff[j] * diff[k]
             n_V = n_V + self._weights[i] * partial_mat
-
+        
         # Add correction term
         if w_sum ** 2 == w_sq_sum:
             e_var = (w_sum ** 2) / 1e-20 * n_V
@@ -156,7 +158,7 @@ class ABCPMC(pints.ABCSampler):
                     self._i = self._i + 1
         else:
             if fx[0] < self._eps:
-                self._n_theta[self._i] = self._xs
+                self._n_theta[self._i] = self._xs[0]
                 if self._i == self._N and self._t == self._T:
                     # Finished
                     return self._n_theta
