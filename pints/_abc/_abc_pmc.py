@@ -164,7 +164,7 @@ class ABCPMC(pints.ABCSampler):
                     # Update weight i
                     norm_term = 0.0
                     for j in range(self._N):
-                        norm_term = norm_term + self._weights[self._i] * \
+                        norm_term = norm_term + self._weights[j] * \
                             multivariate_normal(self._n_theta[self._i],
                                                 self._cov).pdf(self._theta[j])
 
@@ -172,8 +172,8 @@ class ABCPMC(pints.ABCSampler):
                     if norm_term == 0.0:
                         norm_term = 1e-20
 
-                    self._n_weights[self._i] = (self._log_prior(
-                                                self._n_theta[self._i])
+                    self._n_weights[self._i] = (np.exp(self._log_prior(
+                                                self._n_theta[self._i]))
                                                 / norm_term)
                     if self._i == self._N:
                         # Update epsilon
