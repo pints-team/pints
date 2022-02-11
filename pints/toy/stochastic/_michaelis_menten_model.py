@@ -43,5 +43,5 @@ class MichaelisMentenModel(MarkovJumpModel):
             xs[2] * ks[2]
         ]
     
-    def n_outputs():
+    def n_outputs(self):
         return 4
