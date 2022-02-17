@@ -39,6 +39,7 @@ class SyntheticLikelihood:
 
 
 # TODO: speed up maybe, it is very slow
+# TODO: write up description
 class HamiltonianABC(pints.ABCSampler):
     r"""
     Implements the Hamiltonian ABC algorithm as described in [1].
@@ -78,6 +79,7 @@ class HamiltonianABC(pints.ABCSampler):
         self._i = 0
         self._S = 4
         self._R = 4
+        self._d_theta = 0.001
         
         # Functions
         self._log_prior = log_prior
@@ -91,13 +93,15 @@ class HamiltonianABC(pints.ABCSampler):
         x, dx = self._log_prior.evaluateS1(theta)
         return dx
 
-    def adapt_cov(self):
+    def adapt_cov(self, S, R):
         self._mean = np.zeros(len(self._grads[0]))
         N = len(self._grads)
         
-        for i in range(N):
-            self._mean = (self._mean * i + self._grads[i]) / (i + 1)
         
+        for i in range(N):
+            self._mean += self._grads[i]
+        
+        self._mean /= N
         
         sum_term = np.zeros((self._dim, self._dim))
         
@@ -107,28 +111,27 @@ class HamiltonianABC(pints.ABCSampler):
         if N < 2:
             self._cov_matrix = np.eye(self._dim)
         else:
-            self._cov_matrix = (1 / (N - 1)) * sum_term
+            self._cov_matrix = (S / ( (N - 1) * R )) * sum_term
         
-        # Update B, C
+        # update B, C
         self._B = (self._eps / 2) * self._cov_matrix
         self._C = self._c * np.eye(self._dim) + self._cov_matrix
     
-    def spsa(self, theta, d_theta, S, R):
+    def spsa(self, theta):
         g = np.zeros(len(theta))
         self._grads = None
         
-        for r in range(R):
+        for r in range(self._R):
             # Generate bernoulli distribution vector
             delta = np.zeros(len(theta))
             for i in range(len(theta)):
                 delta[i] = (2 * np.random.binomial(n=1, p=0.5) - 1)
             
-            set_plus = None
-            set_minus = None
+            aux = 0
             
-            for s in range(S):
-                x_plus = self._sim_f(theta + d_theta * delta)
-                x_minus = self._sim_f(theta - d_theta * delta)
+            for s in range(self._S):
+                x_plus = self._sim_f(theta + self._d_theta * delta)
+                x_minus = self._sim_f(theta - self._d_theta * delta)
                 
                 
                 if len(x_plus.shape) == 1:
@@ -136,24 +139,19 @@ class HamiltonianABC(pints.ABCSampler):
                 if len(x_minus.shape) == 1:
                     x_minus = [[x] for x in x_minus]
                 
-                difference = ( ( self._synt_l.pdf([x_plus]) - self._synt_l.pdf([x_minus]) ) / (2 * d_theta) ) * delta
+                # delta ^ -1 = delta
+                difference = ( ( self._synt_l.pdf([x_plus]) - self._synt_l.pdf([x_minus]) ) / (2 * self._d_theta) ) * delta
                 if self._grads is None:
                     self._grads = [difference]
                 else:
                     self._grads.append(difference)
                 
-                if set_plus is None:
-                    set_plus = [x_plus]
-                    set_minus = [x_minus]
-                else:
-                    set_plus.append(x_plus)
-                    set_minus.append(x_minus)
+                aux += difference 
             
-            aux = (self._synt_l.pdf(set_plus) - self._synt_l.pdf(set_minus)) * delta
-            g = g + aux
-            
-        self.adapt_cov()
-        g = g / (2 * d_theta * R)
+            g += aux
+        
+        self.adapt_cov(self._S, self._R)
+        g = g / self._R
         
         grad_val = self.grad_pr(theta)
         if len(grad_val.shape) > 1:
@@ -169,26 +167,44 @@ class HamiltonianABC(pints.ABCSampler):
             raise RuntimeError('Ask called before tell.')
         
         if self._i == 0:
-            curr_theta = self._theta0
+            saved_start = self._theta0
             self._returnable = [self._theta0]
         else:
-            curr_theta = self._returnable[-1]
+            saved_start = self._returnable[-1]
             self._returnable = []
-        for t in range(self._i + 1, self._i + n_samples + 1):
-            # Resample momentum
-            curr_momentum = np.random.multivariate_normal(np.zeros(self._dim), np.eye(self._dim))
-            for j in range(self._m):
-                next_theta = curr_theta + self._eps * curr_momentum
-                # We need to process the fdsa term to update the matrices
-                spsa_term = self.spsa(next_theta, 0.001, S=self._S, R=self._R)
-                next_momentum = curr_momentum - self._eps * spsa_term \
-                                - self._eps * self._C * curr_momentum \
-                                + np.random.multivariate_normal(np.zeros(self._dim), 2 * self._eps * (self._C - self._B))
-                curr_theta = next_theta
-                curr_momentum = next_momentum
 
-            self._returnable.append(curr_theta)
-        
+        for t in range(1, n_samples):
+            done = False
+            
+            while not done:
+                # Resample momentum 
+                curr_momentum = np.random.multivariate_normal(np.zeros(self._dim), np.eye(self._dim))
+                if self._returnable == []:
+                    curr_theta = saved_start
+                else:
+                    curr_theta = self._returnable[-1]
+                i = 0
+                problem = False
+                
+                while not problem and i <= self._m:
+                    next_theta = curr_theta + self._eps * curr_momentum
+
+                    if self._log_prior(next_theta) == np.NINF:
+                        problem = True
+                    else:
+                        spsa_term = self.spsa(next_theta)
+                        next_momentum = curr_momentum - self._eps * spsa_term \
+                                        - self._eps * self._C * curr_momentum \
+                                        + np.random.multivariate_normal(np.zeros(self._dim), 2  * (self._C - self._B) * self._eps)
+                        curr_theta = next_theta
+                        curr_momentum = next_momentum
+                        if self._log_prior(curr_theta) == np.NINF:
+                            problem = True
+                        i = i + 1
+                if not problem:
+                    done = True
+                    self._returnable.append(curr_theta)
+
         self._i += n_samples
         self._ready_for_tell = True
         return np.array([])
@@ -263,3 +279,10 @@ class HamiltonianABC(pints.ABCSampler):
     
     def set_R(self, R):
         self._R = R
+
+    def set_d_theta(self, d_theta):
+        """
+        Deltas used for computing the gradient estimate of
+        the potential energy.
+        """
+        self._d_theta = d_theta
