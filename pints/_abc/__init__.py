@@ -245,9 +245,9 @@ class ABCController(object):
         # from the prior at once. It depends on whether we
         # are using parallelisation and how many workers
         # are being used.
-        if self._parallel:
+        if isinstance(self._sampler, pints.ABCPMC):
             n_requested_samples = self._n_workers
-        elif isinstance(self._sampler, pints.ABCPMC):
+        elif self._parallel:
             # For PMC we need to know the number of
             # requested samples when requesting
             n_requested_samples = self._n_samples
