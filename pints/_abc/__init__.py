@@ -234,13 +234,18 @@ class ABCController(object):
         timer = pints.Timer()
         running = True
 
+        if isinstance(self._sampler, pints.ABCAdaptivePMC):
+            n_requested_samples = self._nr_samples
+        else:
+            n_requested_samples = self._n_workers
+
         samples = []
         # Sample until we find an acceptable sample
         while running:
             accepted_vals = None
             while accepted_vals is None:
                 # Get points from prior
-                xs = self._sampler.ask(self._n_workers)
+                xs = self._sampler.ask(n_requested_samples)
 
                 # Simulate and get error
                 fxs = evaluator.evaluate(xs)
@@ -250,6 +255,8 @@ class ABCController(object):
                 accepted_vals = self._sampler.tell(fxs)
 
             accepted_count += len(accepted_vals)
+            if isinstance(self._sampler, pints.ABCAdaptivePMC):
+                n_requested_samples -= accepted_count
             for val in accepted_vals:
                 samples.append(val)
 
