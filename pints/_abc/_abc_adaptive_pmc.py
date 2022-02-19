@@ -71,16 +71,12 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     theta_s = self._gen_prev_theta()
                     theta = np.random.multivariate_normal(theta_s, self._var)
                     done = self._log_prior(theta) != np.NINF
-                    # if cnt > 20:
-                        # print("in loop, cnt="+str(cnt))
-                        # print("theta_s"+str(theta_s)+", theta="+str(theta)+", var="+str(self._var))
                     cnt += 1
                 if self._xs is None:
                     self._xs = [theta]
                 else:
                     self._xs.append(theta)
         
-        # print("finished ask with xs=" + str(self._xs))
         self._ready_for_tell = True
         return self._xs
 
@@ -90,7 +86,6 @@ class ABCAdaptivePMC(pints.ABCSampler):
         if not self._ready_for_tell:
             raise RuntimeError('tell called before ask.')
         self._ready_for_tell = False
-        # print("started tell")
         if isinstance(fx, list):
             if self._t == 0:
                 self._epsilon = self._calc_Q(fx)
@@ -101,33 +96,22 @@ class ABCAdaptivePMC(pints.ABCSampler):
                             enumerate(accepted) if x]
                 self._fxs = [fx[c].tolist() for c, x in
                             enumerate(accepted) if x]
-                # print("fxs init = " + str(self._fxs))
                 self._weights = [1 / len(self._theta)] * len(self._theta)
 
                 self._var = 2 * self._emp_var()
                 self._t = self._t + 1
-                # print("finished tell")
                 return None
             else:
                 self._n_weights = None
-                print("until " + str(self._nr_samples - self._N_l))
+                s_L = len(self._fxs)
                 for i in range(self._nr_samples - self._N_l):
-                    print("loop i="+str(i))
                     if self._n_weights is None:
                         self._n_weights = [self._compute_weights(i)]
                     else:
                         self._n_weights.append(self._compute_weights(i))
                     self._fxs.append(fx[i])
-                print("finished weights loop")
-                # print("thetas made of "+str(self._theta))
-                # print("and "+str(self._xs))
-                # print("weights made of "+str(self._weights))
-                # print("and "+str(self._n_weights))
-                # print("fxs len="+str(len(self._fxs)))
                 s_accepted = [a <= self._epsilon for a in fx]
                 p_acc = 1 / (self._nr_samples - self._N_l) * sum(s_accepted)
-                # print("finished tell")
-                # print("p_acc=" + str(p_acc) + ", t="+str(self._t))
                 if p_acc <= self._p_acc_min:
                     self._theta.extend(self._xs)
                     return self._theta
@@ -136,26 +120,21 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     self._epsilon = self._calc_Q(self._fxs)
                     print("epsilon="+str(self._epsilon))
                     o_accepted = [a <= self._epsilon for a in self._fxs]
-                    # print("epsilon="+str(self._epsilon))
                     self._theta = [self._theta[c] for c, x in
-                            enumerate(o_accepted) if x and c < self._N_l]
-                    # print("acc theta="+str(self._theta))
+                            enumerate(o_accepted) if x and c < s_L]
                     accepted = [a <= self._epsilon for a in fx]
                     self._fxs = [self._fxs[c] for c, x in
-                            enumerate(o_accepted) if x and c < self._N_l]
+                            enumerate(o_accepted) if x and c < s_L]
                     self._weights = [self._weights[c] for c, x in
-                            enumerate(o_accepted) if x and c < self._N_l]
+                            enumerate(o_accepted) if x and c < s_L]
+                    saved_len = len(self._weights)
                     for c, x in enumerate(accepted):
                         if x:
                             self._theta.append(self._xs[c])
                             self._weights.append(self._n_weights[c])
                             self._fxs.append(fx[c])
-
                     
-                    # print("resulting_errors"+str(self._fxs))
                     self._var = 2 * self._emp_var()
-                    # print("remaining thetas="+str(self._theta))
-                    # print("and their weights="+str(self._weights))
                     self._t = self._t + 1
                     return None
 
@@ -174,22 +153,19 @@ class ABCAdaptivePMC(pints.ABCSampler):
     def _calc_Q(self, errors):
         err_c = errors.copy()
         err_c.sort()
-        # print("errors="+str(err_c))
-        # print("i="+str(self._N_l))
         i = self._N_l
         return err_c[i-1]
 
     def _gen_prev_theta(self):
         all_sum = 0.0
-
-        for i in range(self._N_l):
+        for i in range(len(self._weights)):
             all_sum += self._weights[i]
 
         r = random.uniform(0, all_sum)
         
         i = 0
         sum = 0
-        while i < self._N_l and sum <= r:
+        while i < len(self._weights) and sum <= r:
             sum += self._weights[i]
             i += 1
 
@@ -234,7 +210,6 @@ class ABCAdaptivePMC(pints.ABCSampler):
         
         # Add correction term
         if w_sum ** 2 == w_sq_sum:
-            print("1e-20 hit")
             e_var = (w_sum ** 2) / 1e-20 * n_V
         else:
             e_var = ((w_sum ** 2) / ((w_sum ** 2) - w_sq_sum)) * n_V
