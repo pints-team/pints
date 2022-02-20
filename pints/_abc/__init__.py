@@ -245,15 +245,16 @@ class ABCController(object):
         # from the prior at once. It depends on whether we
         # are using parallelisation and how many workers
         # are being used.
-        if self._parallel:
-            n_requested_samples = self._n_workers
-        elif isinstance(self._sampler, pints.ABCPMC):
+        if isinstance(self._sampler, pints.ABCAdaptivePMC) or \
+            isinstance(self._sampler, pints.ABCPMC):
             # For PMC we need to know the number of
             # requested samples when requesting
             n_requested_samples = self._n_samples
+        elif self._parallel:
+            n_requested_samples = self._n_workers
         else:
             n_requested_samples = 1
-
+        
         samples = []
         # Sample until we find an acceptable sample
         while running:
@@ -270,6 +271,8 @@ class ABCController(object):
                 accepted_vals = self._sampler.tell(fxs)
 
             accepted_count += len(accepted_vals)
+            if isinstance(self._sampler, pints.ABCAdaptivePMC):
+                n_requested_samples -= accepted_count
             for val in accepted_vals:
                 samples.append(val)
 
