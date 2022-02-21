@@ -38,9 +38,9 @@ class StanLogPDF(pints.LogPDF):
 
     Parameters
     ----------
-    stan_code
+    code
         Stan code describing the model.
-    stan_data
+    data
         Data in Python dictionary format as required by PyStan.
 
     References
@@ -50,23 +50,32 @@ class StanLogPDF(pints.LogPDF):
     .. [2] https://github.com/stan-dev/pystan/
     """
 
-    def __init__(self, stan_code, stan_data):
+    def __init__(self, code, data):
 
         # Store data
-        self.update_data(stan_data)
+        self.update_data(data)
 
         # Build stan model
-        posterior = stan.build(stan_code, data=stan_data)
+        posterior = stan.build(code, data=data)
 
         # Use httpstan to get access to the compiled module
         module = httpstan.models.import_services_extension_module(
             posterior.model_name)
 
+        # Get (array) parameter names
+        self._names = []
+        for name, dims in zip(posterior.param_names, posterior.dims):
+            if dims:
+                assert len(dims) == 1
+                self._names.extend(
+                    [name + '_' + str(i) for i in range(dims[0])])
+            else:
+                self._names.append(name)
+        self._n_parameters = len(self._names)
+
+        # Get PDF and PDFS1 methods
         self._log_prob = module.log_prob
         self._log_prob_grad = module.log_prob_grad
-        self._names = module.get_param_names(self._data)
-        self.module = module
-        self._n_parameters = self._calc_n_parameters()
 
     def __call__(self, x):
         try:
@@ -88,17 +97,6 @@ class StanLogPDF(pints.LogPDF):
                 'Error encountered when evaluating Stan LogPDF: ' + str(e))
             return -np.inf, np.ones(self._n_parameters)
 
-    def _calc_n_parameters(self):
-        """ Calculates number of model parameters from module and data. """
-        param_dims_list = self.module.get_dims(self._data)
-        n_params = 0
-        for p in param_dims_list:
-            if len(p) == 0:
-                n_params += 1
-            else:
-                n_params += p[0]
-        return n_params
-
     def names(self):
         """
         Returns list comprising names of Stan parameters. Note that the length
@@ -111,7 +109,7 @@ class StanLogPDF(pints.LogPDF):
         """ See `pints.LogPDF.n_parameters`. """
         return self._n_parameters
 
-    def update_data(self, stan_data):
+    def update_data(self, data):
         """
         Updates data passed to the underlying Stan model.
 
@@ -121,4 +119,4 @@ class StanLogPDF(pints.LogPDF):
             Data in Python dictionary format as required by PyStan.
         """
         # TODO: Clone data so that it can't be changed anymore?
-        self._data = stan_data
+        self._data = data

@@ -34,64 +34,66 @@ class TestStanLogPDF(unittest.TestCase):
 
         # Create toy normal models
         cls.code = '''
-        data {
-            int<lower=0> N;
-            real y[N];
-        }
+            data {
+                int<lower=0> N;
+                real y[N];
+            }
 
-        parameters {
-            real mu;
-            real sigma;
-        }
+            parameters {
+                real mu;
+                real sigma;
+            }
 
-        model {
-            y ~ normal(mu, sigma);
-        }'''
+            model {
+                y ~ normal(mu, sigma);
+            }
+        '''
 
         cls.code1 = '''
-        data {
-            int<lower=0> N;
-            real y[N];
-        }
+            data {
+                int<lower=0> N;
+                real y[N];
+            }
 
-        parameters {
-            real mu;
-            real<lower=0> sigma;
-        }
+            parameters {
+                real mu;
+                real<lower=0> sigma;
+            }
 
-        model {
-            y ~ normal(mu, sigma);
-        }'''
+            model {
+                y ~ normal(mu, sigma);
+            }
+        '''
 
         cls.data = {'N': 1, 'y': [0]}
 
-        # create eight schools model
-        cls.code2 = """
-        data {
-            int<lower=0> J;
-            real y[J];
-            real<lower=0> sigma[J];
-        }
+        # Eight schools model, with 10 (not 3 or 18) parameters
+        cls.code2 = '''
+            data {
+              int<lower=0> J;
+              real y[J];
+              real<lower=0> sigma[J];
+            }
 
-        parameters {
-            real mu;
-            real<lower=0> tau;
-            real theta_tilde[J];
-        }
+            parameters {
+              real mu;
+              real<lower=0> tau;
+              real theta_tilde[J];
+            }
 
-        transformed parameters {
-            real theta[J];
-            for (j in 1:J)
+            transformed parameters {
+              real theta[J];
+              for (j in 1:J)
                 theta[j] = mu + tau * theta_tilde[j];
-        }
+            }
 
-        model {
-            mu ~ normal(0, 5);
-            tau ~ cauchy(0, 5);
-            theta_tilde ~ normal(0, 1);
-            y ~ normal(theta, sigma);
-        }
-        """
+            model {
+              mu ~ normal(0, 5);
+              tau ~ cauchy(0, 5);
+              theta_tilde ~ normal(0, 1);
+              y ~ normal(theta, sigma);
+            }
+        '''
         model = pints.toy.EightSchoolsLogPDF()
         cls.data2 = model.data()
 
@@ -125,7 +127,7 @@ class TestStanLogPDF(unittest.TestCase):
 
         # change data
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data={'N': 2, 'y': [3, 4]})
+            stanmodel.update_data(data={'N': 2, 'y': [3, 4]})
             fx = stanmodel(x)
             val, dp = stanmodel.evaluateS1(x)
         if debug:
@@ -149,8 +151,8 @@ class TestStanLogPDF(unittest.TestCase):
 
         # check constrained model
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data=self.data)
-            stanmodel1 = StanLogPDF(stan_code=self.code1, stan_data=self.data)
+            stanmodel.update_data(data=self.data)
+            stanmodel1 = StanLogPDF(code=self.code1, data=self.data)
         if debug:
             print('# Test with a constrained model')
             print(c.text())
