@@ -119,6 +119,10 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     # reduce xs and fx
                     self._epsilon = self._calc_Q(self._fxs)
                     print("epsilon="+str(self._epsilon))
+                    # print("thetas a="+str(self._theta))
+                    # print("thetas b="+str(self._xs))
+                    # print("fx="+str(self._fxs))
+                    # print("fxs"+str(fx))
                     o_accepted = [a <= self._epsilon for a in self._fxs]
                     self._theta = [self._theta[c] for c, x in
                             enumerate(o_accepted) if x and c < s_L]
@@ -127,13 +131,17 @@ class ABCAdaptivePMC(pints.ABCSampler):
                             enumerate(o_accepted) if x and c < s_L]
                     self._weights = [self._weights[c] for c, x in
                             enumerate(o_accepted) if x and c < s_L]
-                    saved_len = len(self._weights)
+                    # print("before enumerated loop")
+                    # print("thetas bl="+str(self._theta))
+                    # print("fxs bl="+str(self._fxs))
                     for c, x in enumerate(accepted):
                         if x:
                             self._theta.append(self._xs[c])
                             self._weights.append(self._n_weights[c])
                             self._fxs.append(fx[c])
                     
+                    # print("thetas after="+str(self._theta))
+                    # print("fxs after="+str(self._fxs))
                     self._var = 2 * self._emp_var()
                     self._t = self._t + 1
                     return None
@@ -186,33 +194,28 @@ class ABCAdaptivePMC(pints.ABCSampler):
         
         w_mean /= w_sum
 
-        # print("w_mean="+str(w_mean))
+        print("w_mean="+str(w_mean))
         
-        # Compute the sum of the weights
-        w_sum = 0.0
-        for i in range(len(self._theta)):
-            w_sum = w_sum + ws[i]
-
         # Compute sum of the squared weights
         w_sq_sum = 0.0
         for i in range(len(self._theta)):
             w_sq_sum = w_sq_sum + (ws[i] ** 2)
 
         # Compute the non-corrected variance estimation
-        n_V = 0.0
-        partial_mat = np.zeros((self._dim, self._dim))
+        n_V = None
         for i in range(len(self._theta)):
-            diff = ths[i] - w_mean
-            for j in range(self._dim):
-                for k in range(self._dim):
-                    partial_mat[j][k] = diff[j] * diff[k]
-            n_V = n_V + ws[i] * partial_mat
+            diff = np.array([ths[i] - w_mean])
+            partial_mat = diff * np.transpose(diff)
+            if n_V is None:
+                n_V = ws[i] * partial_mat
+            else:
+                n_V = n_V + ws[i] * partial_mat
         
         # Add correction term
         if w_sum ** 2 == w_sq_sum:
-            e_var = (w_sum ** 2) / 1e-20 * n_V
+            e_var = (w_sum) / 1e-20 * n_V
         else:
-            e_var = ((w_sum ** 2) / ((w_sum ** 2) - w_sq_sum)) * n_V
+            e_var = (w_sum/ ((w_sum ** 2) - w_sq_sum)) * n_V
         
         # if(e_var[0][0] > 10):
             # print("e_var ="+str(e_var)+"weights="+str(ws)+", thetas="+str(ths))
