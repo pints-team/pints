@@ -76,9 +76,22 @@ class TestStanLogPDF(unittest.TestCase):
             }
 
             parameters {
+              // Lets get some real mu in here
               real mu;
+              /* And a little bit of tau */
               real<lower=0> tau;
-              real theta_tilde[J];
+              /* Let's annoy /* 
+                 the developers parameters {
+                 real schmu;
+                 } */
+              // We now define the real theta_tilde[J];
+              /* real_theta_tilde[J]; ? Yes!
+                 We certainly define that here. */
+              real theta_tilde[J]; // This is it being defined
+              /* Great job everyone! We defined
+              real_theta_tilde[J];
+              in this parameters{} block.
+              */  
             }
 
             transformed parameters {
@@ -88,8 +101,8 @@ class TestStanLogPDF(unittest.TestCase):
             }
 
             model {
-              mu ~ normal(0, 5);
               tau ~ cauchy(0, 5);
+              mu ~ normal(0, 5);
               theta_tilde ~ normal(0, 1);
               y ~ normal(theta, sigma);
             }

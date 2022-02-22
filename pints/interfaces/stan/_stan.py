@@ -5,6 +5,7 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import re
 import warnings
 
 import httpstan
@@ -19,11 +20,12 @@ class StanLogPDF(pints.LogPDF):
     A :class:`pints.LogPDF` based on Stan code and data, which can be used in
     sampling and optimisation.
 
-    This class uses PyStan to interface with Stan, which compiles the Stan
-    model code (see [1]_). This can take some time (typically minutes).
+    This class interfaces with Stan ([1]_) using PyStan ([2]_) and httpspan
+    ([3]_), which compiles the Stan model code. This can take some time
+    (typically minutes).
 
     Note that the interface assumes that the parameters are on the
-    unconstrained scale (according to Stan's "constraint transforms" [1,2]_).
+    unconstrained scale (according to Stan's "constraint transforms" [1]_).
     So, for example, if a variable is declared to have a lower bound of zero,
     sampling happens on the log-transformed space. The interface takes care of
     Jacobian transformations, so a user only needs to transform the variable
@@ -48,9 +50,14 @@ class StanLogPDF(pints.LogPDF):
     .. [1] "Stan: a probabilistic programming language".
            B Carpenter et al., (2017), Journal of Statistical Software
     .. [2] https://github.com/stan-dev/pystan/
+    .. [3] https://github.com/stan-dev/httpstan
+
     """
 
     def __init__(self, code, data):
+        
+        # Get number of parameters (where vector parameters count as 1)
+        n_params = StanLogPDF._count_parameters(code)
 
         # Store data
         self.update_data(data)
@@ -62,15 +69,19 @@ class StanLogPDF(pints.LogPDF):
         module = httpstan.models.import_services_extension_module(
             posterior.model_name)
 
-        # Get (array) parameter names
+        # Get flattened parameter names
+        names = posterior.param_names[:n_params]
+        dims = posterior.dims[:n_params]        
         self._names = []
-        for name, dims in zip(posterior.param_names, posterior.dims):
+        for name, dims in zip(names, dims):
             if dims:
                 assert len(dims) == 1
                 self._names.extend(
                     [name + '_' + str(i) for i in range(dims[0])])
             else:
                 self._names.append(name)
+        
+        # Get flattened parameter count
         self._n_parameters = len(self._names)
 
         # Get PDF and PDFS1 methods
@@ -85,6 +96,37 @@ class StanLogPDF(pints.LogPDF):
             warnings.warn(
                 'Error encountered when evaluating Stan LogPDF: ' + str(e))
             return -np.inf
+
+    @staticmethod
+    def _count_parameters(code):
+        """
+        Counts the parameters -- not including transformed parameters -- that
+        are declared in a piece of Stan code.
+        
+        Notes:
+        - Supported comments are // and /* */:
+          https://mc-stan.org/docs/2_29/reference-manual/comments.html
+        - The { and } characters appear in statements, but never in
+          declarations:
+          https://mc-stan.org/docs/2_29/reference-manual/variable-declaration.html
+        - Each block in Stan must start with declarations, followed by
+          statements: https://mc-stan.org/docs/2_29/reference-manual/overview-of-stans-program-blocks.html
+        - The parameters block only contains declarations:
+          https://mc-stan.org/docs/2_29/reference-manual/program-block-parameters.html
+        """ # noqa
+        
+        # Strip // and /* */ comments
+        pattern = re.compile(r'//.*?$|/\*.*?\*/', re.DOTALL | re.MULTILINE)
+        code = pattern.sub('', code)
+
+        # Extract parameters block code
+        pattern = re.compile(
+            r'parameters\s+\{([^}]*)\}', re.DOTALL | re.MULTILINE)
+        block = pattern.search(code)
+        code = block.group(1)
+
+        # Count statements
+        return len(code.split(';')) - 1
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
