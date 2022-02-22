@@ -55,7 +55,7 @@ class StanLogPDF(pints.LogPDF):
     """
 
     def __init__(self, code, data):
-        
+
         # Get number of parameters (where vector parameters count as 1)
         n_params = StanLogPDF._count_parameters(code)
 
@@ -71,7 +71,7 @@ class StanLogPDF(pints.LogPDF):
 
         # Get flattened parameter names
         names = posterior.param_names[:n_params]
-        dims = posterior.dims[:n_params]        
+        dims = posterior.dims[:n_params]
         self._names = []
         for name, dims in zip(names, dims):
             if dims:
@@ -80,7 +80,7 @@ class StanLogPDF(pints.LogPDF):
                     [name + '_' + str(i) for i in range(dims[0])])
             else:
                 self._names.append(name)
-        
+
         # Get flattened parameter count
         self._n_parameters = len(self._names)
 
@@ -102,7 +102,7 @@ class StanLogPDF(pints.LogPDF):
         """
         Counts the parameters -- not including transformed parameters -- that
         are declared in a piece of Stan code.
-        
+
         Notes:
         - Supported comments are // and /* */:
           https://mc-stan.org/docs/2_29/reference-manual/comments.html
@@ -114,7 +114,7 @@ class StanLogPDF(pints.LogPDF):
         - The parameters block only contains declarations:
           https://mc-stan.org/docs/2_29/reference-manual/program-block-parameters.html
         """ # noqa
-        
+
         # Strip // and /* */ comments
         pattern = re.compile(r'//.*?$|/\*.*?\*/', re.DOTALL | re.MULTILINE)
         code = pattern.sub('', code)
@@ -133,7 +133,7 @@ class StanLogPDF(pints.LogPDF):
         try:
             val = self._log_prob(self._data, x, adjust_transform=True)
             dp = self._log_prob_grad(self._data, x, adjust_transform=True)
-            return val, dp
+            return val, np.asarray(dp)
         except (RuntimeError, ValueError) as e:
             warnings.warn(
                 'Error encountered when evaluating Stan LogPDF: ' + str(e))

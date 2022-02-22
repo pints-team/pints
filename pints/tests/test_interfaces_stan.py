@@ -80,7 +80,7 @@ class TestStanLogPDF(unittest.TestCase):
               real mu;
               /* And a little bit of tau */
               real<lower=0> tau;
-              /* Let's annoy /* 
+              /* Let's annoy /*
                  the developers parameters {
                  real schmu;
                  } */
@@ -91,7 +91,7 @@ class TestStanLogPDF(unittest.TestCase):
               /* Great job everyone! We defined
               real_theta_tilde[J];
               in this parameters{} block.
-              */  
+              */
             }
 
             transformed parameters {
