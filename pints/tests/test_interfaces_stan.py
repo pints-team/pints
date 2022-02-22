@@ -184,6 +184,7 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(val, fy)
         self.assertEqual(dp[0], -0.25)
         self.assertEqual(dp[1], 0.25)
+        self.assertIsInstance(dp, np.ndarray)
 
     def test_vector_parameters_model(self):
         # tests interface with stan models with vectorised parameters
