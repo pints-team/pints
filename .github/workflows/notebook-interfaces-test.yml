@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
       # that have some code in pints/interfaces. Dependencies that are not used
