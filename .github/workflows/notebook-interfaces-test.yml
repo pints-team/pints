@@ -16,9 +16,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v1
-        with:
-          python-version: python-latest
-          architecture: x64
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
       # that have some code in pints/interfaces. Dependencies that are not used
