@@ -74,7 +74,7 @@ setup(
             'traitlets',
         ],
         'stan': [
-            'pystan==2.19.1.1',
+            'pystan>=3',
         ]
     },
     python_requires='>=3.5',
