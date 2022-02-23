@@ -138,9 +138,9 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(stanmodel.names()[1], 'sigma')
         self.assertEqual(stanmodel.n_parameters(), 2)
 
-        # change data
+        # alternate data
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(data={'N': 2, 'y': [3, 4]})
+            stanmodel = StanLogPDF(self.code, {'N': 2, 'y': [3, 4]})
             fx = stanmodel(x)
             val, dp = stanmodel.evaluateS1(x)
         if debug:
@@ -164,7 +164,7 @@ class TestStanLogPDF(unittest.TestCase):
 
         # check constrained model
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(data=self.data)
+            stanmodel0 = StanLogPDF(self.code, self.data)
             stanmodel1 = StanLogPDF(code=self.code1, data=self.data)
         if debug:
             print('# Test with a constrained model')
@@ -174,7 +174,7 @@ class TestStanLogPDF(unittest.TestCase):
         # so subtract this to make it equal to above
         y = [1, np.log(2)]
         with SubCapture(dump_on_error=True) as c:
-            fx = stanmodel(x)
+            fx = stanmodel0(x)
             fy = stanmodel1(y)
             val, dp = stanmodel1.evaluateS1(y)
         if debug:
@@ -195,6 +195,18 @@ class TestStanLogPDF(unittest.TestCase):
             print('Test vectorised parameters')
             print(c.text())
         self.assertEqual(stanmodel.n_parameters(), 10)
+
+        # Test parameter count is 2 + J
+        j = 3
+        data = {
+            'J': j,
+            'y': self.data2['y'][:j],
+            'sigma': self.data2['sigma'][:j],
+        }
+        with SubCapture(dump_on_error=True) as c:
+            stanmodel = StanLogPDF(self.code2, data)
+            stanmodel(np.random.uniform(size=5))
+        self.assertEqual(stanmodel.n_parameters(), 5)
 
 
 if __name__ == '__main__':

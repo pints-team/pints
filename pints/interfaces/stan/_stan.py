@@ -60,7 +60,8 @@ class StanLogPDF(pints.LogPDF):
         n_params = StanLogPDF._count_parameters(code)
 
         # Store data
-        self.update_data(data)
+        # TODO: Deep clone data so that it can't be changed anymore?
+        self._data = dict(data)
 
         # Build stan model
         posterior = stan.build(code, data=data)
@@ -151,14 +152,3 @@ class StanLogPDF(pints.LogPDF):
         """ See `pints.LogPDF.n_parameters`. """
         return self._n_parameters
 
-    def update_data(self, data):
-        """
-        Updates data passed to the underlying Stan model.
-
-        Parameters
-        ----------
-        stan_data
-            Data in Python dictionary format as required by PyStan.
-        """
-        # TODO: Clone data so that it can't be changed anymore?
-        self._data = data
