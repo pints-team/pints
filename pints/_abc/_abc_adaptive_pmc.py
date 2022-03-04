@@ -9,7 +9,6 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
-import random
 from scipy.stats import multivariate_normal
 
 
@@ -169,7 +168,7 @@ class ABCAdaptivePMC(pints.ABCSampler):
         for i in range(len(self._weights)):
             all_sum += self._weights[i]
 
-        r = random.uniform(0, all_sum)
+        r = np.random.uniform(0, all_sum)
         
         i = 0
         sum = 0
@@ -187,6 +186,11 @@ class ABCAdaptivePMC(pints.ABCSampler):
         # print("ws="+str(ws))
         # Compute weighted mean
         w_sum = sum(ws)
+
+        for i in range(len(self._theta)):
+            ws[i] = ws[i] / w_sum
+        
+        w_sum = 1
 
         w_mean = np.zeros(self._dim)
         for i in range(len(self._theta)):
