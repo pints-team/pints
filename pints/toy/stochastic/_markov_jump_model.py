@@ -111,7 +111,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         mol_count = [np.array(x)]
         time = [t]
         while prop_sum > 0 and t <= max_time:
-            r_1, r_2 = np.random(0, 1), np.random.uniform(0, 1)
+            r_1, r_2 = np.random.uniform(0, 1), np.random.uniform(0, 1)
             t += -np.log(r_1) / (prop_sum)
             s = 0
             r = 0
