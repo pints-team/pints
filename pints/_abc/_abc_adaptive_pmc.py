@@ -223,6 +223,7 @@ class ABCAdaptivePMC(pints.ABCSampler):
         
         # if(e_var[0][0] > 10):
             # print("e_var ="+str(e_var)+"weights="+str(ws)+", thetas="+str(ths))
+        print("resulting var="+str(2 * e_var))
         return e_var
 
     def set_N_l(self, N_l):
