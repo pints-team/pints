@@ -34,83 +34,94 @@ class TestStanLogPDF(unittest.TestCase):
 
         # Create toy normal models
         cls.code = '''
-        data {
-            int<lower=0> N;
-            real y[N];
-        }
+            data {
+                int<lower=0> N;
+                real y[N];
+            }
 
-        parameters {
-            real mu;
-            real sigma;
-        }
+            parameters {
+                real mu;
+                real sigma;
+            }
 
-        model {
-            y ~ normal(mu, sigma);
-        }'''
+            model {
+                y ~ normal(mu, sigma);
+            }
+        '''
 
         cls.code1 = '''
-        data {
-            int<lower=0> N;
-            real y[N];
-        }
+            data {
+                int<lower=0> N;
+                real y[N];
+            }
 
-        parameters {
-            real mu;
-            real<lower=0> sigma;
-        }
+            parameters {
+                real mu;
+                real<lower=0> sigma;
+            }
 
-        model {
-            y ~ normal(mu, sigma);
-        }'''
+            model {
+                y ~ normal(mu, sigma);
+            }
+        '''
 
         cls.data = {'N': 1, 'y': [0]}
 
-        # create eight schools model
-        cls.code2 = """
-        data {
-            int<lower=0> J;
-            real y[J];
-            real<lower=0> sigma[J];
-        }
+        # Eight schools model, with 10 (not 3 or 18) parameters
+        cls.code2 = '''
+            data {
+              int<lower=0> J;
+              real y[J];
+              real<lower=0> sigma[J];
+            }
 
-        parameters {
-            real mu;
-            real<lower=0> tau;
-            real theta_tilde[J];
-        }
+            parameters {
+              // Lets get some real mu in here
+              real mu;
+              /* And a little bit of tau */
+              real<lower=0> tau;
+              /* Let's annoy /*
+                 the developers parameters {
+                 real schmu;
+                 } */
+              // We now define the real theta_tilde[J];
+              /* real_theta_tilde[J]; ? Yes!
+                 We certainly define that here. */
+              real theta_tilde[J]; // This is it being defined
+              /* Great job everyone! We defined
+              real_theta_tilde[J];
+              in this parameters{} block.
+              */
+            }
 
-        transformed parameters {
-            real theta[J];
-            for (j in 1:J)
+            transformed parameters {
+              real theta[J];
+              for (j in 1:J)
                 theta[j] = mu + tau * theta_tilde[j];
-        }
+            }
 
-        model {
-            mu ~ normal(0, 5);
-            tau ~ cauchy(0, 5);
-            theta_tilde ~ normal(0, 1);
-            y ~ normal(theta, sigma);
-        }
-        """
+            model {
+              tau ~ cauchy(0, 5);
+              mu ~ normal(0, 5);
+              theta_tilde ~ normal(0, 1);
+              y ~ normal(theta, sigma);
+            }
+        '''
         model = pints.toy.EightSchoolsLogPDF()
         cls.data2 = model.data()
 
     def test_calling(self):
+
         # tests instantiation
         with SubCapture(dump_on_error=True) as c:
-            stanmodel = StanLogPDF(stan_code=self.code)
+            stanmodel = StanLogPDF(self.code, self.data)
         if debug:
             print('# Test instantiation')
             print(c.text())
 
-        # tests mistakenly calling model before data supplied
+        # test vals and sensitivities
         x = [1, 2]
-        self.assertRaises(RuntimeError, stanmodel, x)
-        self.assertRaises(RuntimeError, stanmodel.evaluateS1, x)
-
-        # test vals and sensitivities: first supply data
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data=self.data)
             # add log(2) since this accounts for constant
             fx = stanmodel(x)
             val, dp = stanmodel.evaluateS1(x)
@@ -127,9 +138,9 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(stanmodel.names()[1], 'sigma')
         self.assertEqual(stanmodel.n_parameters(), 2)
 
-        # change data
+        # alternate data
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data={'N': 2, 'y': [3, 4]})
+            stanmodel = StanLogPDF(self.code, {'N': 2, 'y': [3, 4]})
             fx = stanmodel(x)
             val, dp = stanmodel.evaluateS1(x)
         if debug:
@@ -153,8 +164,8 @@ class TestStanLogPDF(unittest.TestCase):
 
         # check constrained model
         with SubCapture(dump_on_error=True) as c:
-            stanmodel.update_data(stan_data=self.data)
-            stanmodel1 = StanLogPDF(stan_code=self.code1, stan_data=self.data)
+            stanmodel0 = StanLogPDF(self.code, self.data)
+            stanmodel1 = StanLogPDF(code=self.code1, data=self.data)
         if debug:
             print('# Test with a constrained model')
             print(c.text())
@@ -163,7 +174,7 @@ class TestStanLogPDF(unittest.TestCase):
         # so subtract this to make it equal to above
         y = [1, np.log(2)]
         with SubCapture(dump_on_error=True) as c:
-            fx = stanmodel(x)
+            fx = stanmodel0(x)
             fy = stanmodel1(y)
             val, dp = stanmodel1.evaluateS1(y)
         if debug:
@@ -173,15 +184,29 @@ class TestStanLogPDF(unittest.TestCase):
         self.assertEqual(val, fy)
         self.assertEqual(dp[0], -0.25)
         self.assertEqual(dp[1], 0.25)
+        self.assertIsInstance(dp, np.ndarray)
 
     def test_vector_parameters_model(self):
         # tests interface with stan models with vectorised parameters
         with SubCapture(dump_on_error=True) as c:
-            stanmodel = StanLogPDF(stan_code=self.code2, stan_data=self.data2)
+            stanmodel = StanLogPDF(self.code2, self.data2)
             stanmodel(np.random.uniform(size=10))
         if debug:
             print('Test vectorised parameters')
             print(c.text())
+        self.assertEqual(stanmodel.n_parameters(), 10)
+
+        # Test parameter count is 2 + J
+        j = 3
+        data = {
+            'J': j,
+            'y': self.data2['y'][:j],
+            'sigma': self.data2['sigma'][:j],
+        }
+        with SubCapture(dump_on_error=True) as c:
+            stanmodel = StanLogPDF(self.code2, data)
+            stanmodel(np.random.uniform(size=5))
+        self.assertEqual(stanmodel.n_parameters(), 5)
 
 
 if __name__ == '__main__':
