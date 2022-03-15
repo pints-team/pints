@@ -64,7 +64,7 @@ class TestStochasticLogisticModel(unittest.TestCase):
 
         # Test output of Gillespie algorithm
         raw_values = np.concatenate(raw_values)
-        self.assertTrue(np.all(raw_values == np.array(range(1, 51))))
+        self.assertTrue(np.all(raw_values == np.array(range(1, 28))))
 
         # Check simulate function returns expected values
         self.assertTrue(np.all(values[np.where(times < time[1])] == 1))
