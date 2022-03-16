@@ -61,16 +61,13 @@ class TestMarkovJumpModel(unittest.TestCase):
 
     def test_errors(self):
         model = DegradationModel(20)
-        # parameters, times cannot be negative
-        times = np.linspace(0, 100, 101)
-        parameters = [-0.1]
-        self.assertRaises(ValueError, model.simulate, parameters, times)
-
+        # times cannot be negative
         times_2 = np.linspace(-10, 10, 21)
         parameters_2 = [0.1]
         self.assertRaises(ValueError, model.simulate, parameters_2, times_2)
 
         # this model should have 1 parameter
+        times = np.linspace(0, 100, 101)
         parameters_3 = [0.1, 1]
         self.assertRaises(ValueError, model.simulate, parameters_3, times)
 

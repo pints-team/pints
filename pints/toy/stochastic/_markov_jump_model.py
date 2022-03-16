@@ -8,7 +8,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
 import pints
-import random
 
 from .. import ToyModel
 
@@ -112,7 +111,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         mol_count = [np.array(x)]
         time = [t]
         while prop_sum > 0 and t <= max_time:
-            r_1, r_2 = random.random(), random.random()
+            r_1, r_2 = np.random.uniform(0, 1), np.random.uniform(0, 1)
             t += -np.log(r_1) / (prop_sum)
             s = 0
             r = 0
@@ -149,11 +148,12 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         times = np.asarray(times)
         if np.any(times < 0):
             raise ValueError('Negative times are not allowed.')
-        if np.all(self._x0 == 0):
-            return np.zeros(times.shape)
         # Run Gillespie
         time, mol_count = self.simulate_raw(parameters, max(times))
         # Interpolate
+        if len(time) < 2:
+            time = np.append(time, time[0])
+            mol_count = np.append(mol_count, mol_count[0])
         values = self.interpolate_mol_counts(np.asarray(time),
                                              np.asarray(mol_count), times)
         return values

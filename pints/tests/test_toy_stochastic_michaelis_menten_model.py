@@ -37,6 +37,11 @@ class TestMichaelisMentenModel(unittest.TestCase):
                 model._propensities(x_0, k),
                 np.array([200.0, 4000.0, 4000.0])))
 
+    def test_n_outputs(self):
+        x_0 = [1e4, 2e3, 2e4, 0]
+        model = MichaelisMentenModel(x_0)
+        self.assertEqual(model.n_outputs(), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
