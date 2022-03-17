@@ -12,4 +12,7 @@ examples.
 
     markov_jump_model
     stochastic_degradation_model
+    stochastic_logistic_model
     stochastic_michaelis_menten_model
+    stochastic_production_degradation_model
+    stochastic_schlogl_model

@@ -77,9 +77,6 @@ relevant code.
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
-### ABC
-- [Rejection ABC sampling](./sampling/rejection-abc.ipynb)
-
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
@@ -123,6 +120,8 @@ relevant code.
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
 - [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
 - [Stochastic Michaelis Menten model](./toy/model-stochastic-michaelis-menten.ipynb)
+- [Stochastic Production Degradation model](toy/model-stochastic-production-degradation.ipynb)
+- [Stochastic Schlogl model](toy/model-stochastic-schlogl.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)
