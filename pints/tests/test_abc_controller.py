@@ -43,8 +43,8 @@ class TestABCController(unittest.TestCase):
         cls.error_measure = pints.RootMeanSquaredError(cls.problem)
 
     def test_nparameters_error(self):
-        """ Test that error is thrown when parameters from log prior and error
-        measure do not match"""
+        # Test that error is thrown when parameters from log prior and error
+        # measure do not match.
         log_prior = pints.UniformLogPrior(
             [0.0, 0, 0],
             [0.2, 100, 1])
@@ -53,8 +53,8 @@ class TestABCController(unittest.TestCase):
                           log_prior)
 
     def test_error_measure_instance(self):
-        """ Test that error is thrown when we use an error measure which is not
-        an instance of ``pints.ErrorMeasure``"""
+        # Test that error is thrown when we use an error measure which is not
+        # an instance of ``pints.ErrorMeasure``.
         # Set a log prior as the error measure to trigger the warning
         wrong_error_measure = pints.UniformLogPrior(
             [0.0, 0, 0],
@@ -67,7 +67,7 @@ class TestABCController(unittest.TestCase):
             self.log_prior)
 
     def test_stopping(self):
-        """ Test different stopping criteria. """
+        #" Test different stopping criteria.
 
         abc = pints.ABCController(self.error_measure, self.log_prior)
 
@@ -90,7 +90,7 @@ class TestABCController(unittest.TestCase):
             abc.run)
 
     def test_parallel(self):
-        """ Test running ABC with parallisation. """
+        # Test running ABC with parallisation.
 
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.RejectionABC)
@@ -106,7 +106,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(abc.parallel(), 2)
 
     def test_logging(self):
-        # tests logging to screen
+        # Tests logging to screen
+
         # No output
         with StreamCapture() as capture:
             abc = pints.ABCController(
@@ -161,7 +162,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(capture.text(), '')
 
     def test_controller_extra(self):
-        # tests various controller aspects
+        # Tests various controller aspects
+
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           self.error_measure)
         self.assertRaisesRegex(
