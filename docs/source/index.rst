@@ -23,7 +23,6 @@ Contents
 
 .. toctree::
 
-    abc_samplers/index
     boundaries
     core_classes_and_methods
     diagnostics
@@ -79,14 +78,10 @@ Sampling
 
    - SMC
 
-#. :class:`ABC sampling<ABCSampler>`
+#. Likelihood free sampling (Need distance between data and states, e.g. least squares?)
 
-   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
-     from and an error measure.
-   - :class:`ABCPMC`, requires a :class:`LogPrior` that can be sampled from
-     and an error measure.
-   - :class:`ABCSMC`, requires a :class:`LogPrior` that can be sampled from
-     from and an error measure.
+   - ABC-MCMC
+   - ABC-SMC
 
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 

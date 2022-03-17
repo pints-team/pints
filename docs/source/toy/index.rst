@@ -37,5 +37,4 @@ Some toy classes provide extra functionality defined in the
     simple_egg_box_logpdf
     simple_harmonic_oscillator_model
     sir_model
-    stochastic_logistic_model
     twisted_gaussian_logpdf

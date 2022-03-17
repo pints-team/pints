@@ -246,7 +246,7 @@ class ABCController(object):
         # are using parallelisation and how many workers
         # are being used.
         if isinstance(self._sampler, pints.ABCAdaptivePMC) or \
-            isinstance(self._sampler, pints.ABCPMC):
+                isinstance(self._sampler, pints.ABCPMC):
             # For PMC we need to know the number of
             # requested samples when requesting
             n_requested_samples = self._n_samples
@@ -254,7 +254,7 @@ class ABCController(object):
             n_requested_samples = self._n_workers
         else:
             n_requested_samples = 1
-        
+
         samples = []
         # Sample until we find an acceptable sample
         while running:
