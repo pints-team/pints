@@ -257,12 +257,13 @@ class ABCController(object):
 
         samples = []
         # Sample until we find an acceptable sample
+        cnt_sampled = 0
         while running:
             accepted_vals = None
             while accepted_vals is None:
                 # Get points from prior
                 xs = self._sampler.ask(n_requested_samples)
-
+                cnt_sampled += len(xs)
                 # Simulate and get error
                 fxs = evaluator.evaluate(xs)
                 evaluations += self._n_workers
@@ -304,6 +305,8 @@ class ABCController(object):
                 halt_message = ('Halting: target number of samples ('
                                 + str(accepted_count) + ') reached.')
 
+
+        print("cnt_sampled="+str(cnt_sampled))
         # Log final state and show halt message
         if logging:
             logger.log(iteration, evaluations)
