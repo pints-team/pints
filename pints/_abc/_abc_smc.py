@@ -23,12 +23,16 @@ class ABCSMC(pints.ABCSampler):
 
     After we have obtained nr_samples samples, t is advanced, and weights
     are calculated for samples[t-1]. At the last value for threshold,
-    samples are returned whenever they are accepted.
+    samples are returned whenever they are accepted. This algorithm is
+    also referred to as ABC Population Monte Carlo (ABC PMC) [2].
 
     References
     ----------
     .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
             likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
+
+    .. [2] "Beaumont, Mark A., et al. Adaptive approximate Bayesian
+            computation. Biometrika, 96.4: 983-990, 2009."
     """
 
     def __init__(self, log_prior, perturbation_kernel=None):
