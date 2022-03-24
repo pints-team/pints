@@ -28,8 +28,9 @@ class ABCSMC(pints.ABCSampler):
 
     References
     ----------
-    .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
-            likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
+    .. [1] "TONI, Tina, et al. Approximate Bayesian computation scheme 
+            for parameter inference and model selection in dynamical systems.
+            Journal of the Royal Society Interface, 6.31: 187-202, 2009.
 
     .. [2] "Beaumont, Mark A., et al. Adaptive approximate Bayesian
             computation. Biometrika, 96.4: 983-990, 2009."
