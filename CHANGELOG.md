@@ -5,11 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1432](https://github.com/pints-team/pints/pull/1432) Added 2 new stochastic models: production and degradation model, Schlogl's system of chemical reactions. Moved the stochastic logistic model into `pints.stochastic` to take advantage of the `MarkovJumpModel`.
 - [#1420](https://github.com/pints-team/pints/pull/1420) The `Optimiser` class now distinguishes between a best-visited point (`x_best`, with score `f_best`) and a best-guessed point (`x_guessed`, with approximate score `f_guessed`). For most optimisers, the two values are equivalent. The `OptimisationController` still tracks `x_best` and `f_best` by default, but this can be modified using the methods `set_f_guessed_tracking` and `f_guessed_tracking`.
 - [#1417](https://github.com/pints-team/pints/pull/1417) Added a module `toy.stochastic` for stochastic models. In particular, `toy.stochastic.MarkovJumpModel` implements Gillespie's algorithm for easier future implementation of stochastic models.
+- [#1413](https://github.com/pints-team/pints/pull/1413) Added classes `pints.ABCController` and `pints.ABCSampler` for Approximate Bayesian computation (ABC) samplers. Added `pints.RejectionABC` which implements a simple rejection ABC sampling algorithm.
 
 ### Changed
-- [#1433](https://github.com/pints-team/pints/pull/1433) PINTS is no longer tested on Python 3.5.
+- [#1439](https://github.com/pints-team/pints/pull/1439), [#1433](https://github.com/pints-team/pints/pull/1433) PINTS is no longer tested on Python 3.5. Testing for Python 3.10 has been added.
+- [#1435](https://github.com/pints-team/pints/pull/1435) The optional Stan interface now uses (and requires) pystan 3 or newer. The ``update_data`` method has been remove (model compilation is now cached so that there is no performance benefit to using this method).
 - [#1424](https://github.com/pints-team/pints/pull/1424) Fixed a bug in PSO that caused it to use more particles than advertised.
 - [#1424](https://github.com/pints-team/pints/pull/1424) xNES, SNES, PSO, and BareCMAES no longer use a `TriangleWaveTransform` to handle rectangular boundaries (this was found to lead to optimisers diverging in some cases).
 

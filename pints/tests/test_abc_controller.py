@@ -6,22 +6,12 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import pints.toy
+import pints.toy.stochastic
 import unittest
 import numpy as np
 from shared import StreamCapture
-
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
-
-debug = False
 
 
 class TestABCController(unittest.TestCase):
@@ -34,7 +24,7 @@ class TestABCController(unittest.TestCase):
         """ Prepare problem for tests. """
 
         # Create toy model
-        cls.model = pints.toy.StochasticDegradationModel()
+        cls.model = pints.toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)
@@ -53,8 +43,8 @@ class TestABCController(unittest.TestCase):
         cls.error_measure = pints.RootMeanSquaredError(cls.problem)
 
     def test_nparameters_error(self):
-        """ Test that error is thrown when parameters from log prior and error
-        measure do not match"""
+        # Test that error is thrown when parameters from log prior and error
+        # measure do not match.
         log_prior = pints.UniformLogPrior(
             [0.0, 0, 0],
             [0.2, 100, 1])
@@ -62,8 +52,22 @@ class TestABCController(unittest.TestCase):
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           log_prior)
 
+    def test_error_measure_instance(self):
+        # Test that error is thrown when we use an error measure which is not
+        # an instance of ``pints.ErrorMeasure``.
+        # Set a log prior as the error measure to trigger the warning
+        wrong_error_measure = pints.UniformLogPrior(
+            [0.0, 0, 0],
+            [0.2, 100, 1])
+
+        self.assertRaises(
+            ValueError,
+            pints.ABCController,
+            wrong_error_measure,
+            self.log_prior)
+
     def test_stopping(self):
-        """ Test different stopping criteria. """
+        #" Test different stopping criteria.
 
         abc = pints.ABCController(self.error_measure, self.log_prior)
 
@@ -86,7 +90,7 @@ class TestABCController(unittest.TestCase):
             abc.run)
 
     def test_parallel(self):
-        """ Test running ABC with parallisation. """
+        # Test running ABC with parallisation.
 
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.RejectionABC)
@@ -102,7 +106,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(abc.parallel(), 2)
 
     def test_logging(self):
-        # tests logging to screen
+        # Tests logging to screen
+
         # No output
         with StreamCapture() as capture:
             abc = pints.ABCController(
@@ -157,7 +162,8 @@ class TestABCController(unittest.TestCase):
         self.assertEqual(capture.text(), '')
 
     def test_controller_extra(self):
-        # tests various controller aspects
+        # Tests various controller aspects
+
         self.assertRaises(ValueError, pints.ABCController, self.error_measure,
                           self.error_measure)
         self.assertRaisesRegex(
@@ -172,8 +178,8 @@ class TestABCController(unittest.TestCase):
         # test setters
         abc = pints.ABCController(
             self.error_measure, self.log_prior, method=pints.RejectionABC)
-        abc.set_nr_samples(230)
-        self.assertEqual(abc.nr_samples(), 230)
+        abc.set_n_samples(230)
+        self.assertEqual(abc.n_samples(), 230)
 
         sampler = abc.sampler()
         pt = sampler.ask(1)
@@ -187,7 +193,7 @@ class TestABCController(unittest.TestCase):
                 self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_parallel(4)
             abc.sampler().set_threshold(100)
-            abc.set_nr_samples(1)
+            abc.set_n_samples(1)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
@@ -195,8 +201,4 @@ class TestABCController(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    print('Add -v for more debug output')
-    import sys
-    if '-v' in sys.argv:
-        debug = True
     unittest.main()

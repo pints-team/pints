@@ -5,26 +5,36 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
 
 class RejectionABC(pints.ABCSampler):
-    """
+    r"""
     Implements the rejection ABC algorithm as described in [1].
 
     Here is a high-level description of the algorithm:
 
-        theta* ~ p(theta), i.e. sample parameters from prior distribution
-        x ~ p(x|theta*), i.e. sample data from sampling distribution
-        if s(x) < threshold, theta* added to list of samples
+    .. math::
+        \begin{align}
+        \theta^* &\sim p(\theta) \\
+        x &\sim p(x|\theta^*) \\
+        \textrm{if } s(x) < \textrm{threshold}, \textrm{then} \\
+        \theta^* \textrm{ is added to list of samples} \\
+        \end{align}
+
+    In other words, the first two steps sample parameters
+    from the prior distribution :math:`p(\theta)` and then sample
+    simulated data from the sampling distribution (conditional on
+    the sampled parameter values), :math:`p(x|\theta^*)`.
+    In the end, if the error measure between our simulated data and
+    the original data is within the threshold, we add the sampled
+    parameters to the list of samples.
 
     References
     ----------
     .. [1] "Approximate Bayesian Computation (ABC) in practice". Katalin
-           Csillery, Michael G.B.Blum, Oscar E. Gaggiotti, Olivier Francois
+           Csillery, Michael G.B. Blum, Oscar E. Gaggiotti, Olivier Francois
            (2010) Trends in Ecology & Evolution
            https://doi.org/10.1016/j.tree.2010.04.001
 
@@ -54,32 +64,28 @@ class RejectionABC(pints.ABCSampler):
         if not self._ready_for_tell:
             raise RuntimeError('Tell called before ask.')
         self._ready_for_tell = False
-        if isinstance(fx, list):
-            accepted = [a < self._threshold for a in fx]
-            if np.sum(accepted) == 0:
-                return None
-            else:
-                return [self._xs[c].tolist() for c, x in
-                        enumerate(accepted) if x]
+
+        fx = pints.vector(fx)
+        accepted = self._xs[fx < self._threshold]
+        if np.sum(accepted) == 0:
+            return None
         else:
-            if fx < self._threshold:
-                return self._xs
-            else:
-                return None
+            return [self._xs.tolist() for c, x in
+                    enumerate(accepted) if x.all()]
 
     def threshold(self):
         """
         Returns threshold error distance that determines if a sample is
-        accepted (is error < threshold).
+        accepted (if ``error < threshold``).
         """
         return self._threshold
 
     def set_threshold(self, threshold):
         """
         Sets threshold error distance that determines if a sample is accepted
-        (if error < threshold).
+        (if ``error < threshold``).
         """
         x = float(threshold)
         if x <= 0:
-            raise ValueError('Threshold must be positive.')
+            raise ValueError('Threshold must be greater than zero.')
         self._threshold = threshold

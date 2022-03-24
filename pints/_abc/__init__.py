@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
@@ -34,9 +32,8 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
         """
         Performs an iteration of the ABC algorithm, using the
         parameters specified by ask.
-        Returns the accepted parameter values, or ``None`` to indicate
-        that no parameters were accepted (tell allows for multiple evaluations
-        per iteration).
+        Expects to receive x as a sequence of length at least 1.
+        Returns the accepted parameter values.
         """
         raise NotImplementedError
 
@@ -47,25 +44,26 @@ class ABCController(object):
 
     Properties related to the number of iterations, parallelisation,
     threshold, and number of parameters to sample can be set directly on the
-    ``ABCController`` object, e.g.::
+    ``ABCController`` object. Afterwards the ABC routine can be run.
 
+    Parameters
+    ----------
+    error_measure
+        An error measure to evaluate on a problem, given a forward model,
+        simulated and observed data, and times
+    log_prior
+        A :class:`LogPrior` function from which parameter values are sampled
+    method
+        The class of :class:`ABCSampler` to use. If no method is specified,
+        :class:`RejectionABC` is used.
+
+    Example
+    -------
+    ::
+        abc = pints.ABCController(error_measure, log_prior)
         abc.set_max_iterations(1000)
-
-    Finally, to run an ABC routine, call::
-
         posterior_estimate = abc.run()
 
-    Constructor arguments:
-    ``error_measure``
-    An error measure to evaluate on a problem, given a forward model,
-    simulated and observed data, and times
-
-    ``log_prior``
-    A :class:`LogPrior` function from which parameter values are sampled
-
-    ``method``
-    The class of :class:`ABCSampler` to use. If no method is specified,
-    :class:`RejectionABC` is used.
     """
 
     def __init__(self, error_measure, log_prior, method=None):
@@ -76,9 +74,9 @@ class ABCController(object):
         self._log_prior = log_prior
 
         # Check error_measure
-        # if not isinstance(error_measure, pints.ErrorMeasure):
-        # raise ValueError('Given error_measure must extend
-        # pints.ErrorMeasure')
+        if not isinstance(error_measure, pints.ErrorMeasure):
+            raise ValueError('Given error_measure must extend '
+                             'pints.ErrorMeasure')
         self._error_measure = error_measure
 
         # Check if number of parameters from prior matches that of error
@@ -86,7 +84,7 @@ class ABCController(object):
         if self._log_prior.n_parameters() != \
                 self._error_measure.n_parameters():
             raise ValueError('Number of parameters in prior must match number '
-                             'of parameters in model.')
+                             'of parameters in error measure.')
 
         # Get number of parameters
         self._n_parameters = self._log_prior.n_parameters()
@@ -103,29 +101,38 @@ class ABCController(object):
                 raise ValueError('Given method must extend ABCSampler.')
 
         # Initialisation
+
+        # Parallelisation
         self._parallel = False
         self._n_workers = 1
+
+        # Maximum number of iterations as a stopping criterion
         self._max_iterations = 10000
-        self._nr_samples = 500
+
+        # Maximum number of target samples to obtain
+        # in the estimated posterior
+        self._n_samples = 500
+
+        # The sampler object uses the prior distribution
         self._sampler = method(log_prior)
+
+        # Logging
         self._log_to_screen = True
         self._log_filename = None
         self._log_csv = False
         self.set_log_interval()
-        self._acceptance_rate = 0
 
     def set_log_interval(self, iters=20, warm_up=3):
         """
         Changes the frequency with which messages are logged.
 
-        Arguments:
-
-        ``interval``
+        Parameters
+        ----------
+        iters
             A log message will be shown every ``iters`` iterations.
-        ``warm_up``
+        warm_up
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
-
         """
         iters = int(iters)
         if iters < 1:
@@ -164,12 +171,12 @@ class ABCController(object):
         """
         return self._max_iterations
 
-    def nr_samples(self):
+    def n_samples(self):
         """
         Returns the target number of samples to obtain in the estimated
         posterior.
         """
-        return self._nr_samples
+        return self._n_samples
 
     def parallel(self):
         """
@@ -234,13 +241,22 @@ class ABCController(object):
         timer = pints.Timer()
         running = True
 
+        # Specifying the number of samples we want to get
+        # from the prior at once. It depends on whether we
+        # are using parallelisation and how many workers
+        # are being used.
+        if self._parallel:
+            n_requested_samples = self._n_workers
+        else:
+            n_requested_samples = 1
+
         samples = []
         # Sample until we find an acceptable sample
         while running:
             accepted_vals = None
             while accepted_vals is None:
                 # Get points from prior
-                xs = self._sampler.ask(self._n_workers)
+                xs = self._sampler.ask(n_requested_samples)
 
                 # Simulate and get error
                 fxs = evaluator.evaluate(xs)
@@ -273,8 +289,10 @@ class ABCController(object):
             if iteration >= self._max_iterations:
                 running = False
                 halt_message = ('Halting: Maximum number of iterations ('
-                                + str(iteration) + ') reached.')
-            elif accepted_count >= self._nr_samples:
+                                + str(iteration) + ') reached. Only ('
+                                + str(accepted_count) + ') sample were '
+                                + 'obtained')
+            elif accepted_count >= self._n_samples:
                 running = False
                 halt_message = ('Halting: target number of samples ('
                                 + str(accepted_count) + ') reached.')
@@ -291,7 +309,8 @@ class ABCController(object):
 
     def log_filename(self):
         """
-        Returns log filename.
+        Returns the file name in which all the logs related to the
+        ABC routine will be stored.
         """
         return self._log_filename
 
@@ -304,10 +323,10 @@ class ABCController(object):
     def set_max_iterations(self, iterations=10000):
         """
         Adds a stopping criterion, allowing the routine to halt after the
-        given number of `iterations`.
+        given number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
-        `set_max_iterations(None)`.
+        ``set_max_iterations(None)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -316,11 +335,11 @@ class ABCController(object):
                     'Maximum number of iterations cannot be negative.')
         self._max_iterations = iterations
 
-    def set_nr_samples(self, nr_samples=500):
+    def set_n_samples(self, n_samples=500):
         """
         Sets a target number of samples
         """
-        self._nr_samples = nr_samples
+        self._n_samples = n_samples
 
     def set_parallel(self, parallel=False):
         """
