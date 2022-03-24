@@ -10,6 +10,7 @@ import pints
 import pints.toy as toy
 import unittest
 import numpy as np
+import pints.toy.stochastic
 
 # Consistent unit testing in Python 2 and 3
 try:
@@ -27,7 +28,7 @@ class TestABCSMC(unittest.TestCase):
     def setUpClass(cls):
         """ Set up problem for tests. """
         # Create toy model
-        cls.model = toy.StochasticDegradationModel()
+        cls.model = toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)

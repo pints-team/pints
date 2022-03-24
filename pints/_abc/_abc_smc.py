@@ -28,7 +28,7 @@ class ABCSMC(pints.ABCSampler):
 
     References
     ----------
-    .. [1] "TONI, Tina, et al. Approximate Bayesian computation scheme 
+    .. [1] "Toni, Tina, et al. Approximate Bayesian computation scheme
             for parameter inference and model selection in dynamical systems.
             Journal of the Royal Society Interface, 6.31: 187-202, 2009.
 
