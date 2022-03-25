@@ -151,7 +151,7 @@ class TestABCSMC(unittest.TestCase):
             sample = np.array(abc.tell(fx))
             if i == 1:
                 np.testing.assert_almost_equal(sample,
-                                                np.array([[0.13110959]]))
+                                               np.array([[0.13110959]]))
 
 
 if __name__ == '__main__':

@@ -15,6 +15,7 @@ class ABCSMC(pints.ABCSampler):
     """
     ABC-SMC Algorithm  See, for example, [1]_. In each iteration of the
     algorithm, the following steps occur::
+
         theta* ~ p_(t-1)(theta), i.e. sample parameters from previous
             intermediate distribution
         theta** ~ K(theta|theta*), i.e. perturb theta* to obtain to new point
