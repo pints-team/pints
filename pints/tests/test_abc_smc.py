@@ -151,7 +151,10 @@ class TestABCSMC(unittest.TestCase):
             fx = self.error_measure(err)
             sample = np.array(abc.tell(fx))
             if i == 2:
-                self.assertEqual(sample[0][0][0], 0.1199268914341752)
+                if len(sample.shape) == 0:
+                    self.assertEqual(sample, 0.1199268914341752)
+                else:
+                    self.assertEqual(sample[0][0][0], 0.1199268914341752)
 
 
 if __name__ == '__main__':
