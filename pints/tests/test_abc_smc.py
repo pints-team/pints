@@ -78,9 +78,10 @@ class TestABCSMC(unittest.TestCase):
 
     def test_method_list(self):
         # Create abc smc sampler
-        abc = pints.ABCSMC(pints.MultivariateGaussianLogPrior(
-            np.zeros(1),
-            0.001 * np.identity(1)))
+        abc = pints.ABCSMC(self.log_prior,
+                           pints.MultivariateGaussianLogPrior(
+                               np.zeros(1),
+                               0.001 * np.identity(1)))
 
         # Configure
         n_draws = 2
@@ -134,9 +135,9 @@ class TestABCSMC(unittest.TestCase):
         # Configure
         niter = 1
         abc.set_intermediate_size(niter)
-        abc.set_threshold_schedule([6])
+        abc.set_threshold_schedule([6, 5])
 
-        for i in range(2):
+        for i in range(3):
             xs = np.array(abc.ask(1))
             if len(xs.shape) == 1:
                 err = xs
@@ -149,9 +150,8 @@ class TestABCSMC(unittest.TestCase):
 
             fx = self.error_measure(err)
             sample = np.array(abc.tell(fx))
-            if i == 1:
-                np.testing.assert_almost_equal(sample,
-                                               np.array([[0.13110959]]))
+            if i == 2:
+                self.assertEqual(sample[0][0][0], 0.1199268914341752)
 
 
 if __name__ == '__main__':
