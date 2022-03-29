@@ -413,6 +413,49 @@ multiprocessing.html#all-platforms>`_ for details).
         return errors
 
 
+class MultiSequentialEvaluator(Evaluator):
+    """
+    Evaluates a list of functions (or callable objects) for a list of input
+    values of the same length, and returns a list containing the calculated
+    function evaluations.
+
+    Extends :class:`Evaluator`.
+
+    Parameters
+    ----------
+    functions : list of callable
+        The functions to evaluate.
+    args : sequence
+        An optional tuple containing extra arguments to each element in
+        functions, ``f``. If ``args`` is specified, ``f`` will be called as
+        ``f(x, *args)``.
+    """
+    def __init__(self, functions, args=None):
+
+        # Check functions
+        for function in functions:
+            if not callable(function):
+                raise ValueError('The given function must be callable.')
+        self._functions = functions
+
+        # Check args
+        if args is None:
+            self._args = ()
+        else:
+            try:
+                len(args)
+            except TypeError:
+                raise ValueError(
+                    'The argument `args` must be either None or a sequence.')
+            self._args = args
+
+    def _evaluate(self, positions):
+        scores = [0] * len(positions)
+        for k, x in enumerate(positions):
+            scores[k] = self._functions[k](x, *self._args)
+        return scores
+
+
 class SequentialEvaluator(Evaluator):
     """
     Evaluates a function (or callable object) for a list of input values, and
@@ -522,4 +565,3 @@ class _Worker(multiprocessing.Process):
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
-
