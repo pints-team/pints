@@ -431,6 +431,7 @@ class MultiSequentialEvaluator(Evaluator):
         ``f(x, *args)``.
     """
     def __init__(self, functions, args=None):
+        super(MultiSequentialEvaluator, self).__init__(functions[0], args)
 
         # Check functions
         for function in functions:
@@ -438,17 +439,6 @@ class MultiSequentialEvaluator(Evaluator):
                 raise ValueError('The given function must be callable.')
         self._functions = functions
         self._num_functions = len(functions)
-
-        # Check args
-        if args is None:
-            self._args = ()
-        else:
-            try:
-                len(args)
-            except TypeError:
-                raise ValueError(
-                    'The argument `args` must be either None or a sequence.')
-            self._args = args
 
     def _evaluate(self, positions):
         if len(positions) != self._num_functions:
