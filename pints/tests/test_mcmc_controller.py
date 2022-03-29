@@ -11,7 +11,9 @@ import pints
 import pints.io
 import pints.toy
 import unittest
+import unittest.mock
 import numpy as np
+import numpy.testing as npt
 
 from shared import StreamCapture, TemporaryDirectory
 
@@ -445,6 +447,26 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_log_to_screen(False)
         with self.assertRaises(ValueError):
             chains = mcmc.run()
+
+        # Test that both logpdfs are called
+        logpdf1 = unittest.mock.MagicMock(
+            return_value=-1.0, spec=self.log_posterior)
+        logpdf2 = unittest.mock.MagicMock(
+            return_value=-2.0, spec=self.log_posterior)
+        attrs = {'n_parameters.return_value': 3}
+        logpdf1.configure_mock(**attrs)
+        logpdf2.configure_mock(**attrs)
+        mcmc = pints.MCMCController([logpdf1, logpdf2], n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+
+        logpdf1.assert_called()
+        logpdf2.assert_called()
+
+        # Check that they got called with the corresponding x0 at the start
+        npt.assert_allclose(logpdf1.call_args_list[0][0][0], xs[0])
+        npt.assert_allclose(logpdf2.call_args_list[0][0][0], xs[1])
 
     def test_stopping(self):
         # Test different stopping criteria.
