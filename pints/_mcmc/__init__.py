@@ -305,38 +305,38 @@ class MCMCController(object):
 
         if isinstance(log_pdf, pints.LogPDF):
             # Check function
-            self.multi_logpdf = False
+            self._multi_logpdf = False
 
         else:
-            self.multi_logpdf = True
+            self._multi_logpdf = True
             try:
-                log_pdfs_iter = iter(log_pdf)
+                log_pdfs_iter = iter(log_pdf)  # noqa
             except TypeError:
-                raise ValueError('`log_pdf` must either extend pints.LogPDF, ')
+                raise ValueError('`log_pdf` must either extend pints.LogPDF, '
                                  'or be a list of objects which extend '
                                  'pints.LogPDF')
 
             if len(log_pdf) != chains:
-                raise ValueError('`log_pdf` must either extend pints.LogPDF, ')
+                raise ValueError('`log_pdf` must either extend pints.LogPDF, '
                                  'or be a list of objects which extend '
                                  'pints.LogPDF of the same length as `chains`')
 
             first_n_params = log_pdf[0].n_parameters()
             for pdf in log_pdf:
                 # Check function
-                if not isinstance(log_pdf, pints.LogPDF):
+                if not isinstance(pdf, pints.LogPDF):
                     raise ValueError('Elements of `log_pdf` must extend '
                                      'pints.LogPDF')
                 if pdf.n_parameters() != first_n_params:
                     raise ValueError('All log_pdfs must have the same number '
-                                      'of parameters.')
+                                     'of parameters.')
 
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
         # nothing about the model parameter space.
         if transformation is not None:
             # Convert log pdf
-            if self.multi_logpdf:
+            if self._multi_logpdf:
                 log_pdf = [transformation.convert_log_pdf(pdf)
                            for pdf in log_pdf]
             else:
@@ -348,7 +348,7 @@ class MCMCController(object):
             # Convert sigma0, if provided
             if sigma0 is not None:
                 sigma0 = np.asarray(sigma0)
-                if not self.multi_logpdf:
+                if not self._multi_logpdf:
                     n_parameters = log_pdf.n_parameters()
                 else:
                     n_parameters = log_pdf[0].n_parameters()
@@ -374,7 +374,7 @@ class MCMCController(object):
         self._log_pdf = log_pdf
 
         # Get number of parameters
-        if not self.multi_logpdf:
+        if not self._multi_logpdf:
             self._n_parameters = self._log_pdf.n_parameters()
         else:
             self._n_parameters = self._log_pdf[0].n_parameters()
@@ -564,21 +564,21 @@ class MCMCController(object):
         # Choose method to evaluate
         f = self._log_pdf
         if self._needs_sensitivities:
-            if not self.multi_logpdf:
+            if not self._multi_logpdf:
                 f = f.evaluateS1
             else:
                 f = [pdf.evaluateS1 for pdf in f]
 
         # Create evaluator object
         if self._parallel:
-            if not self.multi_logpdf:
+            if not self._multi_logpdf:
                 # Use at most n_workers workers
                 n_workers = min(self._n_workers, self._n_chains)
                 evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
             else:
                 raise ValueError('Cannot run multiple logpdfs in parallel')
         else:
-            if not self.multi_logpdf:
+            if not self._multi_logpdf:
                 evaluator = pints.SequentialEvaluator(f)
             else:
                 evaluator = pints.MultiSequentialEvaluator(f)

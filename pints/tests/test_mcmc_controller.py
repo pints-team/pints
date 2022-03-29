@@ -80,6 +80,17 @@ class TestMCMCController(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
+        # Create another log-likelihood with two noise parameters
+        cls.log_likelihood_2 = pints.AR1LogLikelihood(problem)
+        cls.log_prior_2 = pints.UniformLogPrior(
+            [0.01, 400, 0.0, 0.0],
+            [0.02, 600, 100, 1]
+        )
+
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
+        cls.log_posterior_2 = pints.LogPosterior(
+            cls.log_likelihood_2, cls.log_prior_2)
+
     def test_single(self):
         # Test with a SingleChainMCMC method.
 
@@ -360,6 +371,80 @@ class TestMCMCController(unittest.TestCase):
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             method=meth, transformation=logt)
+
+    def test_multi_logpdf(self):
+        # Test with multiple logpdfs
+
+        # 2 chains
+        x0 = np.array(self.real_parameters) * 1.1
+        x1 = np.array(self.real_parameters) * 1.15
+        xs = [x0, x1]
+
+        # Not iterable
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(1, 3, xs)
+
+        # Wrong number of logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior], 3, xs)
+
+        # List does not contain logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, 'abc'], 2, xs)
+
+        # Pdfs have different numbers of n_parameters
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior_2], 2, xs)
+
+        # Correctly configured inputs
+        n_chains = len(xs)
+        n_parameters = len(x0)
+        n_iterations = 10
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # With sensitivities needed
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01],
+            method=pints.HamiltonianMCMC)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # Parallel (currently raises error)
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_parallel(True)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        with self.assertRaises(ValueError):
+            chains = mcmc.run()
 
     def test_stopping(self):
         # Test different stopping criteria.
