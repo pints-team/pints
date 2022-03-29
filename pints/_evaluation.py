@@ -437,6 +437,7 @@ class MultiSequentialEvaluator(Evaluator):
             if not callable(function):
                 raise ValueError('The given function must be callable.')
         self._functions = functions
+        self._num_functions = len(functions)
 
         # Check args
         if args is None:
@@ -450,6 +451,9 @@ class MultiSequentialEvaluator(Evaluator):
             self._args = args
 
     def _evaluate(self, positions):
+        if len(positions) != self._num_functions:
+            raise ValueError('Number of positions does not equal number of '
+                             'functions.')
         scores = [0] * len(positions)
         for k, x in enumerate(positions):
             scores[k] = self._functions[k](x, *self._args)
