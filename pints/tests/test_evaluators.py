@@ -71,7 +71,7 @@ class TestEvaluators(unittest.TestCase):
 
         # not callable
         with self.assertRaises(ValueError):
-            e = pints.MultiSequentialEvaluator([3, 4])
+            e = pints.MultiSequentialEvaluator([f, 4])
 
         e = pints.MultiSequentialEvaluator([f for _ in range(100)])
         # Argument must be sequence
