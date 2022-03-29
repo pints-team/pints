@@ -304,7 +304,6 @@ class MCMCController(object):
             method=None):
 
         if isinstance(log_pdf, pints.LogPDF):
-            # Check function
             self._multi_logpdf = False
 
         else:
