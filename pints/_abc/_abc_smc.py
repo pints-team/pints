@@ -14,6 +14,7 @@ class ABCSMC(pints.ABCSampler):
     Implements the ABC-SMC algorithm as describd in [1].
 
     In each iteration of the algorithm, the following steps occur:
+
     .. math::
         \begin{align}
         & \theta^* \sim p_{t-1}(\theta) \textrm{, i.e. sample parameters from
