@@ -127,7 +127,7 @@ class TestMCMCController(unittest.TestCase):
         def f(x):
             return x
         self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCController,
+            TypeError, 'extend pints.LogPDF', pints.MCMCController,
             f, n_chains, xs)
 
         # Test x0 and chain argument
@@ -383,7 +383,7 @@ class TestMCMCController(unittest.TestCase):
         xs = [x0, x1]
 
         # Not iterable
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             mcmc = pints.MCMCController(1, 3, xs)
 
         # Wrong number of logpdfs

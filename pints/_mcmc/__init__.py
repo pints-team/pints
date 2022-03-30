@@ -317,8 +317,8 @@ class MCMCController(object):
                         'pints.LogPDF of the same length as `chains`')
             except TypeError:
                 raise TypeError('`log_pdf` must either extend pints.LogPDF, '
-                                 'or be a list of objects which extend '
-                                 'pints.LogPDF')
+                                'or be a list of objects which extend '
+                                'pints.LogPDF')
 
             first_n_params = log_pdf[0].n_parameters()
             for pdf in log_pdf:
