@@ -5,25 +5,29 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
 
 class ABCSMC(pints.ABCSampler):
-    """
-    ABC-SMC Algorithm  See, for example, [1]_. In each iteration of the
-    algorithm, the following steps occur::
+    r"""
+    Implements the ABC-SMC algorithm as describd in [1].
 
-        theta* ~ p_(t-1)(theta), i.e. sample parameters from previous
-            intermediate distribution
-        theta** ~ K(theta|theta*), i.e. perturb theta* to obtain to new point
-        x ~ p(x|theta**), i.e. sample data from sampling distribution
-        if s(x) < threshold_(t), theta* added to list of samples[t]
+    In each iteration of the algorithm, the following steps occur:
+    .. math::
+        \begin{align}
+        & \theta^* \sim p_{t-1}(\theta) \textrm{, i.e. sample parameters from
+        previous intermediate distribution} \\
+        & \theta^{**} \sim K(\theta|\theta^{*}), \textrm{i.e. perturb }
+        \theta^{*} \textrm{ to     obtain to new point } x \sim
+        p(x|\theta^{**})\textrm{, i.e. sample data from sampling
+        distribution} \\
+        & \textrm{if } s(x) < \textrm{threshold}_(t), \theta^* \textrm{
+        added to list of samples[t]}
+        \end{align}
 
     After we have obtained nr_samples samples, t is advanced, and weights
-    are calculated for samples[t-1]. At the last value for threshold,
+    are calculated for samples[t-1]. At the last error threshold,
     samples are returned whenever they are accepted. This algorithm is
     also referred to as ABC Population Monte Carlo (ABC PMC) [2].
 
@@ -32,26 +36,44 @@ class ABCSMC(pints.ABCSampler):
     .. [1] "Toni, Tina, et al. Approximate Bayesian computation scheme
             for parameter inference and model selection in dynamical systems.
             Journal of the Royal Society Interface, 6.31: 187-202, 2009.
+            https://doi.org/10.1098/rsif.2008.0172
+
 
     .. [2] "Beaumont, Mark A., et al. Adaptive approximate Bayesian
             computation. Biometrika, 96.4: 983-990, 2009."
+            https://doi.org/10.48550/arXiv.0805.2256
+
+    Parameters
+    ----------
+    nr_samples
+        The number of samples requested for intermediate distributions.
+    error_schedule
+        The schedule of error threshold distance for all distributions.
     """
 
     def __init__(self, log_prior, perturbation_kernel=None):
-
+        # Log prior
         self._log_prior = log_prior
+
+        # Default value for error threshold schedule
+        self._e_schedule = [1]
+
+        # Default value for current threshold
+        self._threshold = 1
+
+        # Size of intermediate distributions
+        self._nr_samples = 100
+
+        # Set up for first iteration
         self._samples = [[]]
         self._accepted_count = 0
         self._weights = []
-        self._threshold = 1
-        self._e_schedule = [1]
-        self._nr_samples = 100
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
-
         dim = log_prior.n_parameters()
 
+        # Setting the perturbation kernel
         if perturbation_kernel is None:
             self._perturbation_kernel = pints.MultivariateGaussianLogPrior(
                 np.zeros(dim),
@@ -59,8 +81,8 @@ class ABCSMC(pints.ABCSampler):
         elif isinstance(perturbation_kernel, pints.LogPrior):
             self._perturbation_kernel = perturbation_kernel
         else:
-            raise ValueError("Provided perturbation kernel must be an instance\
-                of pints.LogPrior")
+            raise ValueError('Provided perturbation kernel must be an instance'
+                  ' of pints.LogPrior')
 
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
@@ -158,8 +180,8 @@ class ABCSMC(pints.ABCSampler):
     def set_threshold_schedule(self, schedule):
         """
         Sets a schedule for the threshold error distance that determines if a
-        sample is accepted (if error < threshold).
-        Schedule should be a list of epsilon values
+        sample is accepted (if error < threshold). Schedule should be a list
+        of float values.
         """
         e_schedule = np.array(schedule)
         if any(e_schedule <= 0):
@@ -171,6 +193,6 @@ class ABCSMC(pints.ABCSampler):
         """
         Sets the size of the intermediate distributions, after we find n
         acceptable samples then we will progress to the next threshold values
-        in the schedule
+        in the schedule.
         """
         self._nr_samples = n

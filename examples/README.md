@@ -78,8 +78,8 @@ relevant code.
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
 ### ABC
-- [Rejection ABC sampling](./sampling/rejection-abc.ipynb)
 - [ABC-SMC sampling](./sampling/abc-smc.ipynb)
+- [Rejection ABC sampling](./sampling/rejection-abc.ipynb)
 
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)

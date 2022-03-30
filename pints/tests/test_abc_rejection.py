@@ -17,10 +17,12 @@ class TestRejectionABC(unittest.TestCase):
     """
     Tests the basic methods of the ABC Rejection routine.
     """
-    # Set up toy model, parameter values, problem, error measure
     @classmethod
     def setUpClass(cls):
-        """ Set up problem for tests. """
+        """
+        Set up toy model, parameter values, problem,
+        error measure.
+        """
 
         # Create toy model
         cls.model = toy.stochastic.DegradationModel()

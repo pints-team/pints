@@ -81,10 +81,10 @@ Sampling
 
 #. :class:`ABC sampling<ABCSampler>`
 
-   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
-     from and an error measure.
    - :class:`ABCSMC`, requires a :class:`LogPrior` that can be sampled from
-     from and an error measure.
+     from and an :class:`ErrorMeasure`.
+   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
+     from and an :class:`ErrorMeasure`.
 
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 

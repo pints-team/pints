@@ -6,17 +6,14 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+
+import unittest
+
+import numpy as np
+
 import pints
 import pints.toy as toy
-import unittest
-import numpy as np
 import pints.toy.stochastic
-
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 class TestABCSMC(unittest.TestCase):
