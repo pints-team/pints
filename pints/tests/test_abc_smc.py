@@ -134,7 +134,7 @@ class TestABCSMC(unittest.TestCase):
         abc.set_threshold_schedule([6, 5])
 
         np.random.seed(0)
-        for i in range(3):
+        for i in range(4):
             xs = np.array(abc.ask(1))
             if len(xs.shape) == 1:
                 err = xs
