@@ -438,16 +438,14 @@ class MultiSequentialEvaluator(Evaluator):
             if not callable(function):
                 raise ValueError('The given function must be callable.')
         self._functions = functions
-        self._num_functions = len(functions)
+        self._n_functions = len(functions)
 
     def _evaluate(self, positions):
-        if len(positions) != self._num_functions:
+        if len(positions) != self._n_functions:
             raise ValueError('Number of positions does not equal number of '
                              'functions.')
-        scores = [0] * len(positions)
-        for k, x in enumerate(positions):
-            scores[k] = self._functions[k](x, *self._args)
-        return scores
+
+        return [f(x, *self._args) for f, x in zip(self._functions, positions)]
 
 
 class SequentialEvaluator(Evaluator):

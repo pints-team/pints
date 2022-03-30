@@ -276,7 +276,8 @@ class MCMCController(object):
         A :class:`LogPDF` function that evaluates points in the parameter
         space, or a list of :class:`LogPDF` of the same length as `chains`. If
         multiple LogPDFs are provided, each chain will call only its
-        corresponding LogPDF.
+        corresponding LogPDF. Note that if multiple LogPDFs are provided,
+        parallel running is not possible.
     chains : int
         The number of MCMC chains to generate.
     x0
@@ -309,16 +310,15 @@ class MCMCController(object):
         else:
             self._multi_logpdf = True
             try:
-                log_pdfs_iter = iter(log_pdf)  # noqa
+                if len(log_pdf) != chains:
+                    raise ValueError(
+                        '`log_pdf` must either extend pints.LogPDF, '
+                        'or be a list of objects which extend '
+                        'pints.LogPDF of the same length as `chains`')
             except TypeError:
-                raise ValueError('`log_pdf` must either extend pints.LogPDF, '
+                raise TypeError('`log_pdf` must either extend pints.LogPDF, '
                                  'or be a list of objects which extend '
                                  'pints.LogPDF')
-
-            if len(log_pdf) != chains:
-                raise ValueError('`log_pdf` must either extend pints.LogPDF, '
-                                 'or be a list of objects which extend '
-                                 'pints.LogPDF of the same length as `chains`')
 
             first_n_params = log_pdf[0].n_parameters()
             for pdf in log_pdf:
@@ -1085,6 +1085,9 @@ class MCMCController(object):
         than 0.
         Parallelisation can be disabled by setting ``parallel`` to ``0`` or
         ``False``.
+
+        Parallel evaluation is only supported when a single LogPDF has been
+        provided to the MCMC controller.
         """
         if parallel is True:
             self._parallel = True
