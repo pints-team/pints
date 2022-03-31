@@ -11,7 +11,9 @@ import pints
 import pints.io
 import pints.toy
 import unittest
+import unittest.mock
 import numpy as np
+import numpy.testing as npt
 
 from shared import StreamCapture, TemporaryDirectory
 
@@ -80,6 +82,17 @@ class TestMCMCController(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
+        # Create another log-likelihood with two noise parameters
+        cls.log_likelihood_2 = pints.AR1LogLikelihood(problem)
+        cls.log_prior_2 = pints.UniformLogPrior(
+            [0.01, 400, 0.0, 0.0],
+            [0.02, 600, 100, 1]
+        )
+
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
+        cls.log_posterior_2 = pints.LogPosterior(
+            cls.log_likelihood_2, cls.log_prior_2)
+
     def test_single(self):
         # Test with a SingleChainMCMC method.
 
@@ -114,7 +127,7 @@ class TestMCMCController(unittest.TestCase):
         def f(x):
             return x
         self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCController,
+            TypeError, 'extend pints.LogPDF', pints.MCMCController,
             f, n_chains, xs)
 
         # Test x0 and chain argument
@@ -360,6 +373,100 @@ class TestMCMCController(unittest.TestCase):
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
             method=meth, transformation=logt)
+
+    def test_multi_logpdf(self):
+        # Test with multiple logpdfs
+
+        # 2 chains
+        x0 = np.array(self.real_parameters) * 1.1
+        x1 = np.array(self.real_parameters) * 1.15
+        xs = [x0, x1]
+
+        # Not iterable
+        with self.assertRaises(TypeError):
+            mcmc = pints.MCMCController(1, 3, xs)
+
+        # Wrong number of logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior], 3, xs)
+
+        # List does not contain logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, 'abc'], 2, xs)
+
+        # Pdfs have different numbers of n_parameters
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior_2], 2, xs)
+
+        # Correctly configured inputs
+        n_chains = len(xs)
+        n_parameters = len(x0)
+        n_iterations = 10
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # With sensitivities needed
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01],
+            method=pints.HamiltonianMCMC)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # Parallel (currently raises error)
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_parallel(True)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        with self.assertRaises(ValueError):
+            chains = mcmc.run()
+
+        # Test that both logpdfs are called
+        logpdf1 = unittest.mock.MagicMock(
+            return_value=-1.0, spec=self.log_posterior)
+        logpdf2 = unittest.mock.MagicMock(
+            return_value=-2.0, spec=self.log_posterior)
+        attrs = {'n_parameters.return_value': 3}
+        logpdf1.configure_mock(**attrs)
+        logpdf2.configure_mock(**attrs)
+        mcmc = pints.MCMCController([logpdf1, logpdf2], n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+
+        logpdf1.assert_called()
+        logpdf2.assert_called()
+
+        # Check that they got called with the corresponding x0 at the start
+        npt.assert_allclose(logpdf1.call_args_list[0][0][0], xs[0])
+        npt.assert_allclose(logpdf2.call_args_list[0][0][0], xs[1])
 
     def test_stopping(self):
         # Test different stopping criteria.

@@ -156,6 +156,7 @@ from ._evaluation import (
     Evaluator,
     ParallelEvaluator,
     SequentialEvaluator,
+    MultiSequentialEvaluator,
 )
 
 

@@ -24,6 +24,7 @@ Overview:
 - :class:`Evaluator`
 - :class:`ParallelEvaluator`
 - :class:`SequentialEvaluator`
+- :class:`MultiSequentialEvaluator`
 
 
 .. autofunction:: evaluate
@@ -34,3 +35,4 @@ Overview:
 
 .. autoclass:: SequentialEvaluator
 
+.. autoclass:: MultiSequentialEvaluator
