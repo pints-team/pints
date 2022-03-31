@@ -419,6 +419,12 @@ class MultiSequentialEvaluator(Evaluator):
     values of the same length, and returns a list containing the calculated
     function evaluations.
 
+    This evaluator should be used in the case where each position (for example,
+    corresponding to each chain) needs to be evaluated on a separate function.
+    In this way, it differs from :class:`SequentialEvaluator` and
+    :class:`ParallelEvaluator`, which evaluate multiple positions on a single
+    callable function.
+
     Extends :class:`Evaluator`.
 
     Parameters
