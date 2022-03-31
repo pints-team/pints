@@ -436,7 +436,7 @@ class MultiSequentialEvaluator(Evaluator):
         # Check functions
         for function in functions:
             if not callable(function):
-                raise ValueError('The given function must be callable.')
+                raise ValueError('The given functions must be callable.')
         self._functions = functions
         self._n_functions = len(functions)
 
