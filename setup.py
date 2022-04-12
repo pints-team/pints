@@ -45,6 +45,13 @@ setup(
     maintainer_email='pints@maillist.ox.ac.uk',
     url='https://github.com/pints-team/pints',
 
+    # Project URLs
+    project_urls={
+        'Bug Tracker': 'https://github.com/pints-team/pints/issues',
+        'Documentation': 'https://pints.readthedocs.io',
+        'Source Code': 'https://github.com/pints-team/pints',
+    },
+
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
 
