@@ -77,7 +77,7 @@ class ABCSMC(pints.ABCSampler):
         self._e_schedule = error_schedule
 
         # Default value for current threshold
-        self._threshold = 1
+        self._threshold = error_schedule[0]
 
         # Size of intermediate distributions
         self._nr_samples = nr_samples
@@ -89,6 +89,7 @@ class ABCSMC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
         self._t = 0
+        self._to_print = True
 
         # Setting the perturbation kernel
         if perturbation_kernel is None:
@@ -111,6 +112,11 @@ class ABCSMC(pints.ABCSampler):
         if self._ready_for_tell:
             raise RuntimeError('ask called before tell.')
         if self._t == 0:
+            if self._to_print:
+                self._to_print = False
+                print(
+                    "Starting t=" + str(self._t)
+                    + ", with threshold=" + str(self._threshold))
             self._xs = self._log_prior.sample(n_samples)
         else:
             self._xs = [None] * n_samples
@@ -177,8 +183,8 @@ class ABCSMC(pints.ABCSampler):
         self._t += 1
         self._threshold = self._e_schedule[self._t]
         print(
-            "Trying t=" + str(self._t)
-            + ", threshold=" + str(self._threshold))
+            "Starting t=" + str(self._t)
+            + ", with threshold=" + str(self._threshold))
 
     def _calculate_weights(self, new_samples, old_samples, old_weights):
         new_weights = []
