@@ -85,6 +85,10 @@ class TestABCSMC(unittest.TestCase):
         niter = 10
         abc.set_intermediate_size(niter)
         abc.set_threshold_schedule([6, 4, 2])
+        abc.set_perturbation_kernel(
+            pints.MultivariateGaussianLogPrior(
+                np.zeros(1),
+                0.001 * np.identity(1)))
 
         # Perform short run using ask and tell framework
         samples = []
@@ -114,6 +118,8 @@ class TestABCSMC(unittest.TestCase):
         self.assertRaises(RuntimeError, abc.tell, 2.5)
 
         self.assertRaises(ValueError, abc.set_threshold_schedule, [1, -1])
+
+        self.assertRaises(ValueError, abc.set_perturbation_kernel, [1])
 
         self.assertRaises(
             ValueError,
