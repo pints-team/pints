@@ -125,32 +125,6 @@ class TestABCSMC(unittest.TestCase):
         abc = pints.ABCSMC(self.log_prior)
         self.assertEqual(abc.name(), 'ABC-SMC')
 
-    def test_single_el(self):
-        abc = pints.ABCSMC(self.log_prior)
-
-        # Configure
-        niter = 1
-        abc.set_intermediate_size(niter)
-        abc.set_threshold_schedule([6, 5])
-
-        np.random.seed(0)
-        for i in range(4):
-            xs = np.array(abc.ask(1))
-            if len(xs.shape) == 1:
-                err = xs
-            elif len(xs.shape) == 2:
-                err1 = xs[0][0]
-                err = [err1]
-            else:
-                err1 = xs[0][0][0]
-                err = [err1]
-
-            fx = self.error_measure(err)
-            sample = np.array(abc.tell(fx))
-            if i == 2:
-                if len(sample.shape) == 3:
-                    self.assertEqual(len(sample[0][0]), 1)
-
 
 if __name__ == '__main__':
     unittest.main()
