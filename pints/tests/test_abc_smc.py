@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Unit tests for the SMC ABC class.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
