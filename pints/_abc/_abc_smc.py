@@ -75,8 +75,7 @@ class ABCSMC(pints.ABCSampler):
         self._nr_samples = nr_samples
 
         # Set up for first iteration
-        self._prev_samples = []
-        self._curr_samples = []
+        self._samples = [[], []]
         self._accepted_count = 0
         self._weights = []
         self._xs = None
@@ -113,9 +112,9 @@ class ABCSMC(pints.ABCSampler):
                 while (theta_s_s is None or
                        self._log_prior(theta_s_s) == -np.inf):
                     indices = np.random.choice(
-                        range(len(self._prev_samples)),
+                        range(len(self._samples[(self._t - 1) % 2])),
                         p=self._weights[self._t - 1])
-                    theta_s = self._prev_samples[indices]
+                    theta_s = self._samples[(self._t - 1) % 2][indices]
                     # perturb using K_t
                     theta_s_s = np.add(theta_s,
                                        self._perturbation_kernel.sample(1)[0])
@@ -144,7 +143,7 @@ class ABCSMC(pints.ABCSampler):
                         enumerate(accepted) if x]
 
             self._accepted_count += sum(accepted)
-            self._curr_samples.extend(
+            self._samples[self._t % 2].extend(
                 [self._xs[c].tolist() for c, x in enumerate(accepted) if x]
             )
 
@@ -159,13 +158,13 @@ class ABCSMC(pints.ABCSampler):
                 np.full(self._accepted_count, 1 / self._accepted_count))
         else:
             unnorm_weights = self._calculate_weights(
-                self._curr_samples, self._prev_samples, self._weights[t - 1])
+                self._samples[self._t % 2], self._samples[(self._t - 1) % 2],
+                self._weights[t - 1])
             # Normalise weights
             normal = sum(unnorm_weights)
             self._weights.append([w / normal for w in unnorm_weights])
 
-        self._prev_samples = self._curr_samples
-        self._curr_samples = []
+        self._samples[(t + 1) % 2] = []
         self._accepted_count = 0
         self._t += 1
         self._threshold = self._e_schedule[self._t]
