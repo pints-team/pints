@@ -15,11 +15,13 @@ class ABCSMC(pints.ABCSampler):
     algorithm is also referred to as ABC Population Monte Carlo
     (ABC PMC) [2].
 
-    In this algorithm we try to obtain ``nr_samples`` samples at
-    once. In order to transition between each set of ``nr_samples``,
-    we have intermediate distributions :math:`p_t(\theta)` from
-    which we sample the candidates for the new distribution. In
-    particular, :math:`p_0(\theta)` is the prior and for :math:`t>0`
+    In this algorithm there are going to be several rounds of ABC,
+    each with a different proposal distribution. For each round, we
+    try to obtain ``nr_samples`` samples at once. In order to
+    transition between each set of ``nr_samples``, we have intermediate
+    distributions :math:`p_t(\theta)` from which we sample the
+    candidates for the new distribution. In particular,
+    :math:`p_0(\theta)` is the prior and for :math:`t>0`
     :math:`p_t(\theta)` proposes sample :math:`\theta^{t-1}_i` with
     weight :math:`\w^{t-1}_i` (which is computed at the end of the
     iteration). In particular, at each iteration of the algorithm
