@@ -58,15 +58,15 @@ class ABCSMC(pints.ABCSampler):
 
     References
     ----------
-    .. [1] Toni, Welch, Strelkowa, Ipsem, Stumpf. Approximate Bayesian 
+    .. [1] Toni, Welch, Strelkowa, Ipsem, Stumpf. Approximate Bayesian
            computation scheme for parameter inference and model selection in
            dynamical systems. Journal of the Royal Society Interface,
            6.31: 187-202, 2009.
-            https://doi.org/10.1098/rsif.2008.0172
+           https://doi.org/10.1098/rsif.2008.0172
 
     .. [2] Beaumont, Cornuet, Marin, Robert. Adaptive approximate Bayesian
            computation. Biometrika, 96.4: 983-990, 2009.
-            https://doi.org/10.48550/arXiv.0805.2256
+           https://doi.org/10.48550/arXiv.0805.2256
     """
 
     def __init__(self, log_prior, perturbation_kernel=None,
