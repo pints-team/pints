@@ -60,7 +60,7 @@ class TestABCSMC(unittest.TestCase):
 
         # Perform short run using ask and tell framework
         samples = []
-        while len(samples) < niter:
+        while len(samples) < 3 * niter:
             xs = abc.ask(n_draws)
             fxs = [self.error_measure(x) for x in xs]
             sample = abc.tell(fxs)
@@ -71,7 +71,7 @@ class TestABCSMC(unittest.TestCase):
             samples.append(sample)
 
         samples = np.array(samples)
-        self.assertEqual(samples.shape[0], niter)
+        self.assertEqual(samples.shape[0], 3 * niter)
 
     def test_method_list(self):
         # Create abc smc sampler
@@ -92,7 +92,7 @@ class TestABCSMC(unittest.TestCase):
 
         # Perform short run using ask and tell framework
         samples = []
-        while len(samples) < niter:
+        while len(samples) < 3 * niter:
             xs = abc.ask(n_draws)
             fxs = [self.error_measure(x) for x in xs]
             sample = abc.tell(fxs)
@@ -103,7 +103,7 @@ class TestABCSMC(unittest.TestCase):
             samples.append(sample)
 
         samples = np.array(samples)
-        self.assertEqual(samples.shape[0], niter)
+        self.assertEqual(samples.shape[0], 3 * niter)
 
     def test_errors(self):
         # test errors in abc rejection
