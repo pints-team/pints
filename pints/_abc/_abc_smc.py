@@ -155,17 +155,17 @@ class ABCSMC(pints.ABCSampler):
         fx = np.asarray(fx)
         accepted = fx < self._threshold
         if np.any(accepted) > 0:
-            if self._t == len(self._e_schedule) - 1:
-                return [self._xs[c].tolist() for c, x in
-                        enumerate(accepted) if x]
+            if self._t < len(self._e_schedule) - 1:
+                self._accepted_count += sum(accepted)
+                self._samples[self._t % 2].extend(
+                    [self._xs[c].tolist() for c, x in enumerate(accepted) if x]
+                )
 
-            self._accepted_count += sum(accepted)
-            self._samples[self._t % 2].extend(
-                [self._xs[c].tolist() for c, x in enumerate(accepted) if x]
-            )
+                if self._accepted_count >= self._nr_samples:
+                    self._advance_time()
+            return [self._xs[c].tolist() for c, x in
+                    enumerate(accepted) if x]
 
-            if self._accepted_count >= self._nr_samples:
-                self._advance_time()
         return None
 
     def _advance_time(self):
