@@ -237,20 +237,20 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
-# Sampling initialising
-#
-from ._sample_initial_points import sample_initial_points
-
-#
 # ABC
 #
-
 from ._abc import ABCSampler
 from ._abc import ABCController
 from ._abc._abc_rejection import RejectionABC
 from ._abc._abc_pmc import ABCPMC
 from ._abc._abc_smc import ABCSMC
 from ._abc._abc_adaptive_pmc import ABCAdaptivePMC
+
+
+#
+# Sampling initialising
+#
+from ._sample_initial_points import sample_initial_points
 
 
 #

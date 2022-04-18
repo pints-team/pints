@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 #
-# Tests the basic methods of the adaptive covariance MCMC routine.
+# Unit tests for the SMC ABC class.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pints
-import pints.toy as toy
+
 import unittest
+
 import numpy as np
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+import pints
+import pints.toy as toy
+import pints.toy.stochastic
 
 
 class TestABCSMC(unittest.TestCase):
@@ -27,7 +25,7 @@ class TestABCSMC(unittest.TestCase):
     def setUpClass(cls):
         """ Set up problem for tests. """
         # Create toy model
-        cls.model = toy.StochasticDegradationModel()
+        cls.model = toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
         cls.values = cls.model.simulate(cls.real_parameters, cls.times)
@@ -62,7 +60,7 @@ class TestABCSMC(unittest.TestCase):
 
         # Perform short run using ask and tell framework
         samples = []
-        while len(samples) < niter:
+        while len(samples) < 3 * niter:
             xs = abc.ask(n_draws)
             fxs = [self.error_measure(x) for x in xs]
             sample = abc.tell(fxs)
@@ -73,21 +71,28 @@ class TestABCSMC(unittest.TestCase):
             samples.append(sample)
 
         samples = np.array(samples)
-        self.assertEqual(samples.shape[0], niter)
+        self.assertEqual(samples.shape[0], 3 * niter)
 
     def test_method_list(self):
         # Create abc smc sampler
-        abc = pints.ABCSMC(self.log_prior)
+        abc = pints.ABCSMC(self.log_prior,
+                           pints.MultivariateGaussianLogPrior(
+                               np.zeros(1),
+                               0.001 * np.identity(1)))
 
         # Configure
         n_draws = 2
         niter = 10
         abc.set_intermediate_size(niter)
         abc.set_threshold_schedule([6, 4, 2])
+        abc.set_perturbation_kernel(
+            pints.MultivariateGaussianLogPrior(
+                np.zeros(1),
+                0.001 * np.identity(1)))
 
         # Perform short run using ask and tell framework
         samples = []
-        while len(samples) < niter:
+        while len(samples) < 3 * niter:
             xs = abc.ask(n_draws)
             fxs = [self.error_measure(x) for x in xs]
             sample = abc.tell(fxs)
@@ -98,7 +103,7 @@ class TestABCSMC(unittest.TestCase):
             samples.append(sample)
 
         samples = np.array(samples)
-        self.assertEqual(samples.shape[0], niter)
+        self.assertEqual(samples.shape[0], 3 * niter)
 
     def test_errors(self):
         # test errors in abc rejection
@@ -114,11 +119,17 @@ class TestABCSMC(unittest.TestCase):
 
         self.assertRaises(ValueError, abc.set_threshold_schedule, [1, -1])
 
+        self.assertRaises(ValueError, abc.set_perturbation_kernel, [1])
+
         self.assertRaises(
             ValueError,
             pints.ABCSMC,
             self.log_prior,
             np.array([0]))
+
+    def test_name(self):
+        abc = pints.ABCSMC(self.log_prior)
+        self.assertEqual(abc.name(), 'ABC-SMC')
 
 
 if __name__ == '__main__':
