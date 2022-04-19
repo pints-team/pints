@@ -153,7 +153,7 @@ class ABCAdaptivePMC(pints.ABCSampler):
         norm_term = 0.0
         for j in range(self._N_l):
             norm_term += (self._weights[j] / w_sum) * \
-                multivariate_normal(self._xs[i], self._var).pdf(self._theta[j])
+                multivariate_normal(self._xs[i], self._var, allow_singular=True).pdf(self._theta[j])
 
         return np.exp(self._log_prior(self._xs[i])) / norm_term
 
