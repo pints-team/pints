@@ -13,4 +13,5 @@ given a :class:`LogPrior` and a :class:`ErrorMeasure`.
 .. toctree::
 
     base_classes
+    abc_smc
     rejection_abc
