@@ -65,13 +65,13 @@ class RejectionABC(pints.ABCSampler):
             raise RuntimeError('Tell called before ask.')
         self._ready_for_tell = False
 
-        fx = pints.vector(fx)
-        accepted = self._xs[fx < self._threshold]
-        if np.sum(accepted) == 0:
+        fx = np.asarray(fx)
+        accepted = fx < self._threshold
+        if np.any(accepted) == 0:
             return None
         else:
             return [self._xs[c].tolist() for c, x in
-                    enumerate(accepted) if x.all()]
+                    enumerate(accepted) if x]
 
     def threshold(self):
         """
