@@ -65,7 +65,7 @@ class RejectionABC(pints.ABCSampler):
             raise RuntimeError('Tell called before ask.')
         self._ready_for_tell = False
 
-        fx = np.asarray(fx)
+        fx = pints.vector(fx)
         accepted = fx < self._threshold
         if np.any(accepted) == 0:
             return None
