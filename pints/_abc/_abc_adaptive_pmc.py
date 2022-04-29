@@ -115,6 +115,7 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     self._theta.extend(self._xs)
                     return self._theta
                 else:
+                    # print("all fxs = " + str(self._fxs))
                     # reduce xs and fx
                     self._epsilon = self._calc_Q(self._fxs)
                     print("epsilon="+str(self._epsilon))
@@ -122,10 +123,21 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     # print("thetas b="+str(self._xs))
                     # print("fx="+str(self._fxs))
                     # print("fxs"+str(fx))
+                    # print("S_L="+str(s_L))
                     o_accepted = [a <= self._epsilon for a in self._fxs]
+                    # In case there are multiple values with the error
+                    # equal to the error threshold
+                    acc_l = np.sum(o_accepted)
+                    if acc_l > self._N_l:
+                        dif = acc_l - self._N_l
+
+                        for i in range(len(o_accepted)):
+                            if self._fxs[i] == self._epsilon:
+                                if dif > 0:
+                                    o_accepted[i] = False
+                                    dif = dif - 1
                     self._theta = [self._theta[c] for c, x in
                             enumerate(o_accepted) if x and c < s_L]
-                    accepted = [a <= self._epsilon for a in fx]
                     self._fxs = [self._fxs[c] for c, x in
                             enumerate(o_accepted) if x and c < s_L]
                     self._weights = [self._weights[c] for c, x in
@@ -133,11 +145,11 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     # print("before enumerated loop")
                     # print("thetas bl="+str(self._theta))
                     # print("fxs bl="+str(self._fxs))
-                    for c, x in enumerate(accepted):
-                        if x:
-                            self._theta.append(self._xs[c])
-                            self._weights.append(self._n_weights[c])
-                            self._fxs.append(fx[c])
+                    for c, x in enumerate(o_accepted):
+                        if c >= s_L and x:
+                            self._theta.append(self._xs[c - s_L])
+                            self._weights.append(self._n_weights[c - s_L])
+                            self._fxs.append(fx[c - s_L])
                     
                     # print("thetas after="+str(self._theta))
                     # print("fxs after="+str(self._fxs))
@@ -182,8 +194,6 @@ class ABCAdaptivePMC(pints.ABCSampler):
         """ Computes the weighted empirical variance of self._theta. """
         ws = np.array(self._weights)
         ths = np.array(self._theta)
-        # print("ths="+str(ths))
-        # print("ws="+str(ws))
         # Compute weighted mean
         w_sum = sum(ws)
 
