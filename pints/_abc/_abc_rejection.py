@@ -67,7 +67,7 @@ class RejectionABC(pints.ABCSampler):
 
         fx = pints.vector(fx)
         accepted = fx < self._threshold
-        if np.any(accepted) == 0:
+        if not np.any(accepted):
             return None
         else:
             return [self._xs[c].tolist() for c, x in
