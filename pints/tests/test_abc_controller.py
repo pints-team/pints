@@ -105,6 +105,12 @@ class TestABCController(unittest.TestCase):
         abc.set_parallel(2)
         self.assertEqual(abc.parallel(), 2)
 
+        abc.sampler().set_threshold(10)
+        vals = abc.sampler().ask(3)
+        res = abc.sampler().tell([1, 2, 3])
+
+        self.assertCountEqual(vals, res)
+
     def test_logging(self):
         # Tests logging to screen
 
