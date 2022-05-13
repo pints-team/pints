@@ -1,5 +1,5 @@
 #
-# ABC SMC method
+# ABC Adaptive PMC
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -11,26 +11,46 @@ import pints
 import numpy as np
 from scipy.stats import multivariate_normal
 
-
 class ABCAdaptivePMC(pints.ABCSampler):
     """
-    TODO: description
-    ABC-SMC Algorithm  See, for example, [1]_. In each iteration of the
-    algorithm, the following steps occur::
-        theta* ~ p_(t-1)(theta), i.e. sample parameters from previous
-            intermediate distribution
-        theta** ~ K(theta|theta*), i.e. perturb theta* to obtain to new point
-        x ~ p(x|theta**), i.e. sample data from sampling distribution
-        if s(x) < threshold_(t), theta* added to list of samples[t]
+    ABC Adaptive PMC Algorithm  See, for example, [1]_. First iteration 
+    samples ``n_samples`` from the prior, simulates data for each sample,
+    and computes and stores the distance function value :math:`\rho_i` from
+    the original data. For the next generation, only samples with the
+    lowest ``N_l`` distance values. For future generations the following
+    procedure is followed for samples ``N_l`` until ``N``:
 
-    After we have obtained nr_samples samples, t is advanced, and weights
-    are calculated for samples[t-1]. At the last value for threshold,
-    samples are returned whenever they are accepted.
+    .. math::
+        \begin{align}
+        & \theta^* \sim p_{t-1}(\theta) \textrm{, i.e. sample parameters from
+        previous intermediate distribution} \\
+        & \theta_i \sim K(\theta|\theta^{*}), \textrm{i.e. perturb }
+        \theta^{*} \textrm{ to     obtain to new point } x \sim
+        p(x|\theta^{**})\textrm{, i.e. sample data from sampling
+        distribution} \\
+        & \rho_i = \rho(S(x), S(y)) \textrm{ where $y$ is the original data}
+        \end{align}
+    
+    After all :math:`N - N_l` samples are calculated and their distances,
+    we can compute the acceptance rate:
+    
+    ..math::
+        \begin{equation}
+            p_{acc} = \frac{1}{N - N_{\alpha}} \sum_{k=N_{\alpha} + 1}^N
+            \mathbb{1}(\rho_i^{t-1} < \epsilon_{t-1})        
+        \end{equation}
+
+    When the user input ``p_acc_min`` is greater than :math:`p_{acc}`
+    we return th generation. Otherwise, we keep the samples with
+    ``N_l`` smallest :math:`\rho_i` and apply the same procedure
+    until we find a small enough acceptance rate.
 
     References
     ----------
-    .. [1] "Sisson SA, Fan Y and Tanaka MM. Sequential Monte Carlo without
-            likelihoods. Proc Natl Acad Sci USA, 104(6):1760-5, 2007."
+    .. [1] Lenormand, Maxime, Franck Jabot, and Guillaume Deffuant. Adaptive
+           approximate Bayesian computation for complex models. Computational
+           Statistics 28.6 (2013): 2777-2796.
+           https://doi.org/10.1007/s00180-013-0428-3
     """
 
     def __init__(self, log_prior, perturbation_kernel=None):
@@ -47,6 +67,7 @@ class ABCAdaptivePMC(pints.ABCSampler):
         self._t = 0
         self._p_acc_min = 0.5
         self._dim = log_prior.n_parameters()
+        self._cnt = 0
 
         dim = log_prior.n_parameters()
 
@@ -71,11 +92,14 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     theta = np.random.multivariate_normal(theta_s, self._var)
                     done = self._log_prior(theta) != np.NINF
                     cnt += 1
+                    if not done:
+                        self._cnt += 1
                 if self._xs is None:
                     self._xs = [theta]
                 else:
                     self._xs.append(theta)
         
+        print("ask cnt = " + str(self._cnt))
         self._ready_for_tell = True
         return self._xs
 
@@ -115,15 +139,9 @@ class ABCAdaptivePMC(pints.ABCSampler):
                     self._theta.extend(self._xs)
                     return self._theta
                 else:
-                    # print("all fxs = " + str(self._fxs))
                     # reduce xs and fx
                     self._epsilon = self._calc_Q(self._fxs)
                     print("epsilon="+str(self._epsilon))
-                    # print("thetas a="+str(self._theta))
-                    # print("thetas b="+str(self._xs))
-                    # print("fx="+str(self._fxs))
-                    # print("fxs"+str(fx))
-                    # print("S_L="+str(s_L))
                     o_accepted = [a <= self._epsilon for a in self._fxs]
                     # In case there are multiple values with the error
                     # equal to the error threshold
@@ -142,17 +160,12 @@ class ABCAdaptivePMC(pints.ABCSampler):
                             enumerate(o_accepted) if x and c < s_L]
                     self._weights = [self._weights[c] for c, x in
                             enumerate(o_accepted) if x and c < s_L]
-                    # print("before enumerated loop")
-                    # print("thetas bl="+str(self._theta))
-                    # print("fxs bl="+str(self._fxs))
                     for c, x in enumerate(o_accepted):
                         if c >= s_L and x:
                             self._theta.append(self._xs[c - s_L])
                             self._weights.append(self._n_weights[c - s_L])
                             self._fxs.append(fx[c - s_L])
                     
-                    # print("thetas after="+str(self._theta))
-                    # print("fxs after="+str(self._fxs))
                     self._var = 2 * self._emp_var()
                     self._t = self._t + 1
                     return None
