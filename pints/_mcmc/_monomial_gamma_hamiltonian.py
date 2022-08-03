@@ -429,7 +429,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         energy = float(energy)
         gradient = pints.vector(gradient)
-        assert(gradient.shape == (self._n_parameters, ))
+        assert gradient.shape == (self._n_parameters, )
 
         # Energy = -log_pdf, so flip both signs!
         energy = -energy

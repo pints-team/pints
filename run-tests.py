@@ -154,14 +154,14 @@ def doctest_examples_readme():
 
     # Index file is in ./examples/README.md
     index_file = os.path.join('examples', 'README.md')
-    assert(os.path.isfile(index_file))
+    assert os.path.isfile(index_file)
 
     with open(index_file, 'r') as f:
         index_contents = f.read()
 
     # Get a list of all notebooks in the examples directory
     notebooks = [x[9:] for x in list_notebooks('examples')]
-    assert(len(notebooks) > 10)
+    assert len(notebooks) > 10
 
     # Find which are not indexed
     not_indexed = [nb for nb in notebooks if nb not in index_contents]

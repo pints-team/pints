@@ -100,7 +100,7 @@ class XNES(pints.PopulationBasedOptimiser):
         """
         Initialises the optimiser for the first iteration.
         """
-        assert(not self._running)
+        assert not self._running
 
         # Shorthands
         d = self._n_parameters
