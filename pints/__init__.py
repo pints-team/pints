@@ -278,4 +278,4 @@ from . import noise
 #
 # Remove any imported modules, so we don't expose them as part of pints
 #
-del(os, sys)
+del os, sys

@@ -409,7 +409,7 @@ class OptimisationController(object):
             self._function = function
         else:
             self._function = pints.ProbabilityBasedError(function)
-        del(function)
+        del function
 
         # Create optimiser
         if method is None:
