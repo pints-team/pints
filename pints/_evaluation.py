@@ -248,7 +248,7 @@ multiprocessing.html#all-platforms>`_ for details).
             if w.exitcode is not None:  # pragma: no cover
                 w.join()
                 cleaned += 1
-                del(self._workers[k], w)
+                del self._workers[k], w
         if cleaned:     # pragma: no cover
             gc.collect()
         return cleaned
