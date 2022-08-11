@@ -131,7 +131,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_eta(x[0])
-        self.set_sigma_scale((x[1], x[2]))
+        self.set_sigma_scale(x[1:3])
 
     def set_sigma_scale(self, scales):
         """
@@ -139,10 +139,10 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         covariance matrices. Must be of the form ``[scale_1, scale_2]``.
         """
         if len(scales) != 2:
-            raise ValueError("Scales must be of length 2.")
+            raise ValueError('Scales must be of length 2.')
         for scale in scales:
             if scale <= 0:
-                raise ValueError("Scales must be positive.")
+                raise ValueError('Scales must be positive.')
         self._sigma_scale = [scales[0], scales[1]]
         self._sigma = [self._sigma_scale[i] * self._sigma_base
                        for i in range(self._n_kernels)]

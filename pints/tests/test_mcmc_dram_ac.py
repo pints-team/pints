@@ -155,8 +155,11 @@ class TestDramACMC(unittest.TestCase):
         scale = mcmc.sigma_scale()
         self.assertTrue(np.array_equal(scale, scale1))
 
-        self.assertEqual(mcmc.name(), (
-            'Delayed Rejection Adaptive Metropolis (Dram) MCMC'))
+        self.assertRaisesRegex(ValueError, 'must be of length 2',
+                               mcmc.set_sigma_scale, [1])
+
+        self.assertEqual(mcmc.name(),
+                         'Delayed Rejection Adaptive Metropolis (Dram) MCMC')
 
     def test_logging(self):
 
