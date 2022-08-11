@@ -665,19 +665,31 @@ class TestTransformedWrappers(unittest.TestCase):
         txi = [-3.9120230054281460, 0.0099503308531681]
         xo = [10., 50.]
         txo = [2.3025850929940459, 3.9120230054281460]
-        tr = [1.6094379124341001, 0.1000834585569826]
 
         # Test before and after transformed give the same result
         self.assertEqual(tb.check(txi), b.check(xi))
         self.assertEqual(tb.check(txo), b.check(xo))
         self.assertEqual(tb.n_parameters(), b.n_parameters())
 
-        # Test transformed range
-        self.assertTrue(np.allclose(tb.range(), tr))
-
         # Test invalid transform
         self.assertRaises(ValueError, pints.TransformedBoundaries, b,
                           pints.LogTransformation(3))
+
+        # Test sampling from transformed space
+        np.random.seed(1)
+        x1 = b.sample(1)
+        x2 = b.sample(3)
+        self.assertEqual(len(x1), 1)
+        self.assertEqual(len(x2), 3)
+        np.random.seed(1)
+        y1 = tb.sample(1)
+        y2 = tb.sample(3)
+        self.assertEqual(len(y1), 1)
+        self.assertEqual(len(y2), 3)
+        self.assertEqual(list(t.to_search(x1[0])), list(y1[0]))
+        self.assertEqual(list(t.to_search(x2[0])), list(y2[0]))
+        self.assertEqual(list(t.to_search(x2[1])), list(y2[1]))
+        self.assertEqual(list(t.to_search(x2[2])), list(y2[2]))
 
     def test_transformed_error_measure(self):
         # Test TransformedErrorMeasure class
