@@ -62,7 +62,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         super(DramACMC, self).__init__(x0, sigma0)
 
         self._log_lambda = 0
-        self._n_kernels = 2 # This is fixed!
+        self._n_kernels = 2  # This is fixed!
         self._proposal_count = 0
         self._sigma_base = np.copy(self._sigma)
         self._Y_log_pdf = np.zeros(self._n_kernels)
