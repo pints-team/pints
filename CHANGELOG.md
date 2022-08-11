@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - [#1420](https://github.com/pints-team/pints/pull/1420) The `Optimiser` class now distinguishes between a best-visited point (`x_best`, with score `f_best`) and a best-guessed point (`x_guessed`, with approximate score `f_guessed`). For most optimisers, the two values are equivalent. The `OptimisationController` still tracks `x_best` and `f_best` by default, but this can be modified using the methods `set_f_guessed_tracking` and `f_guessed_tracking`.
 - [#1417](https://github.com/pints-team/pints/pull/1417) Added a module `toy.stochastic` for stochastic models. In particular, `toy.stochastic.MarkovJumpModel` implements Gillespie's algorithm for easier future implementation of stochastic models.
 - [#1413](https://github.com/pints-team/pints/pull/1413) Added classes `pints.ABCController` and `pints.ABCSampler` for Approximate Bayesian computation (ABC) samplers. Added `pints.RejectionABC` which implements a simple rejection ABC sampling algorithm.
+- [#1378](https://github.com/pints-team/pints/pull/1378) Added a class `pints.LogNormalLogLikelihood`.
 
 ### Changed
 - [#1445](https://github.com/pints-team/pints/pull/1445) Allowed multiple LogPDFs to be supplied to the MCMCController (one for each MCMC chain), and added an evaluator which evaluates each position on a separate callable.
@@ -25,6 +26,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - []() Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
 - [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.
+- [#1399](https://github.com/pints-team/pints/pull/1339) Fixed a bug in `DramACMC`, and fixed the number of proposal kernels to 2.
 
 
 ## [0.4.0] - 2021-12-07

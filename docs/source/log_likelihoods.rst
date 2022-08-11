@@ -24,6 +24,7 @@ Overview:
 - :class:`GaussianKnownSigmaLogLikelihood`
 - :class:`GaussianLogLikelihood`
 - :class:`KnownNoiseLogLikelihood`
+- :class:`LogNormalLogLikelihood`
 - :class:`MultiplicativeGaussianLogLikelihood`
 - :class:`ScaledLogLikelihood`
 - :class:`StudentTLogLikelihood`
@@ -46,6 +47,8 @@ Overview:
 
 .. autoclass:: KnownNoiseLogLikelihood
 
+.. autoclass:: LogNormalLogLikelihood
+
 .. autoclass:: MultiplicativeGaussianLogLikelihood
 
 .. autoclass:: ScaledLogLikelihood
@@ -53,4 +56,3 @@ Overview:
 .. autoclass:: StudentTLogLikelihood
 
 .. autoclass:: UnknownNoiseLogLikelihood
-
