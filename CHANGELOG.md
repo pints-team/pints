@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.
+- [#1399](https://github.com/pints-team/pints/pull/1339) Fixed a bug in `DramACMC`, and fixed the number of proposal kernels to 2.
 
 
 ## [0.4.0] - 2021-12-07
