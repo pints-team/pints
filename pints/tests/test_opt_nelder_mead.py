@@ -18,12 +18,6 @@ from shared import StreamCapture
 debug = False
 method = pints.NelderMead
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestNelderMead(unittest.TestCase):
     """
@@ -72,8 +66,10 @@ class TestNelderMead(unittest.TestCase):
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
-        self.assertEqual(list(opt.xbest()), list(x))
-        self.assertEqual(opt.fbest(), float('inf'))
+        self.assertEqual(list(opt.x_best()), list(x))
+        self.assertEqual(list(opt.x_guessed()), list(x))
+        self.assertEqual(opt.f_best(), float('inf'))
+        self.assertEqual(opt.f_guessed(), float('inf'))
 
         # Not running
         self.assertFalse(opt.running())
@@ -174,33 +170,33 @@ class TestNelderMead(unittest.TestCase):
             'Minimising error measure',
             'Using Nelder-Mead',
             'Running in sequential mode.',
-            'Iter. Eval. Best      Time m:s',
-            '0     3      865.9531   0:00.0',
-            '1     4      832.5452   0:00.0',
-            '2     5      832.5452   0:00.0',
-            '3     6      628.243    0:00.0',
-            '20    23     4.95828    0:00.0',
-            '40    43     3.525867   0:00.0',
-            '60    63     2.377579   0:00.0',
-            '80    83     1.114115   0:00.0',
-            '100   103    0.551      0:00.0',
-            '120   123    0.237      0:00.0',
-            '140   143    0.0666     0:00.0',
-            '160   163    0.00181    0:00.0',
-            '180   183    6.96e-06   0:00.0',
-            '200   203    2.66e-08   0:00.0',
-            '220   223    5.06e-11   0:00.0',
-            '240   243    2.43e-15   0:00.0',
-            '260   263    5.58e-18   0:00.0',
-            '280   283    7.74e-20   0:00.0',
-            '300   303    6.66e-23   0:00.0',
-            '320   323    1.86e-25   0:00.0',
-            '340   343    3.16e-28   0:00.0',
-            '360   364    3.08e-31   0:00.0',
-            '380   390    0          0:00.0',
-            '400   416    0          0:00.0',
-            '420   443    0          0:00.0',
-            '422   444    0          0:00.0',
+            'Iter. Eval. Best      Current   Time m:s',
+            '0     3      865.9531  865.9531   0:00.0',
+            '1     4      832.5452  832.5452   0:00.0',
+            '2     5      832.5452  832.5452   0:00.0',
+            '3     6      628.243   628.243    0:00.0',
+            '20    23     4.95828   4.95828    0:00.0',
+            '40    43     3.525867  3.525867   0:00.0',
+            '60    63     2.377579  2.377579   0:00.0',
+            '80    83     1.114115  1.114115   0:00.0',
+            '100   103    0.551     0.551      0:00.0',
+            '120   123    0.237     0.237      0:00.0',
+            '140   143    0.0666    0.0666     0:00.0',
+            '160   163    0.00181   0.00181    0:00.0',
+            '180   183    6.96e-06  6.96e-06   0:00.0',
+            '200   203    2.66e-08  2.66e-08   0:00.0',
+            '220   223    5.06e-11  5.06e-11   0:00.0',
+            '240   243    2.43e-15  2.43e-15   0:00.0',
+            '260   263    5.58e-18  5.58e-18   0:00.0',
+            '280   283    7.74e-20  7.74e-20   0:00.0',
+            '300   303    6.66e-23  6.66e-23   0:00.0',
+            '320   323    1.86e-25  1.86e-25   0:00.0',
+            '340   343    3.16e-28  3.16e-28   0:00.0',
+            '360   364    3.08e-31  3.08e-31   0:00.0',
+            '380   390    0         0          0:00.0',
+            '400   416    0         0          0:00.0',
+            '420   443    0         0          0:00.0',
+            '428   452    0         0          0:00.0',
             'Halting: No significant change for 200 iterations.',
         )
 
@@ -209,8 +205,7 @@ class TestNelderMead(unittest.TestCase):
         self.assertEqual(len(log_lines), len(exp_lines))
 
         # Compare log lines, ignoring time bit (unles it's way too slow)
-        for i, line1 in enumerate(log_lines):
-            line2 = exp_lines[i]
+        for line1, line2 in zip(log_lines, exp_lines):
             if line2[-6:] == '0:00.0':
                 line1 = line1[:-6]
                 line2 = line2[:-6]

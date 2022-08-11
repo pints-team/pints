@@ -6,9 +6,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 from ._toy_classes import ToyLogPDF, ToyModel, ToyODEModel
 
 from ._annulus import AnnulusLogPDF
@@ -35,5 +32,3 @@ from ._sho_model import SimpleHarmonicOscillatorModel
 from ._simple_egg_box import SimpleEggBoxLogPDF
 from ._sir_model import SIRModel
 from ._twisted_gaussian_banana import TwistedGaussianLogPDF
-from ._stochastic_degradation_model import StochasticDegradationModel
-from ._stochastic_logistic_model import StochasticLogisticModel

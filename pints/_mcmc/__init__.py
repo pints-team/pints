@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import os
 import pints
 import numpy as np
@@ -276,7 +274,10 @@ class MCMCController(object):
     ----------
     log_pdf : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
-        space.
+        space, or a list of :class:`LogPDF` of the same length as `chains`. If
+        multiple LogPDFs are provided, each chain will call only its
+        corresponding LogPDF. Note that if multiple LogPDFs are provided,
+        parallel running is not possible.
     chains : int
         The number of MCMC chains to generate.
     x0
@@ -290,7 +291,7 @@ class MCMCController(object):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameter space) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
-    transform : pints.Transformation
+    transformation : pints.Transformation
         An optional :class:`pints.Transformation` to allow the sampler to work
         in a transformed parameter space. If used, points shown or returned to
         the user will first be detransformed back to the original space.
@@ -300,27 +301,56 @@ class MCMCController(object):
     """
 
     def __init__(
-            self, log_pdf, chains, x0, sigma0=None, transform=None,
+            self, log_pdf, chains, x0, sigma0=None, transformation=None,
             method=None):
 
-        # Check function
-        if not isinstance(log_pdf, pints.LogPDF):
-            raise ValueError('Given function must extend pints.LogPDF')
+        if isinstance(log_pdf, pints.LogPDF):
+            self._multi_logpdf = False
+
+        else:
+            self._multi_logpdf = True
+            try:
+                if len(log_pdf) != chains:
+                    raise ValueError(
+                        '`log_pdf` must either extend pints.LogPDF, '
+                        'or be a list of objects which extend '
+                        'pints.LogPDF of the same length as `chains`')
+            except TypeError:
+                raise TypeError('`log_pdf` must either extend pints.LogPDF, '
+                                'or be a list of objects which extend '
+                                'pints.LogPDF')
+
+            first_n_params = log_pdf[0].n_parameters()
+            for pdf in log_pdf:
+                # Check function
+                if not isinstance(pdf, pints.LogPDF):
+                    raise ValueError('Elements of `log_pdf` must extend '
+                                     'pints.LogPDF')
+                if pdf.n_parameters() != first_n_params:
+                    raise ValueError('All log_pdfs must have the same number '
+                                     'of parameters.')
 
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
         # nothing about the model parameter space.
-        if transform is not None:
+        if transformation is not None:
             # Convert log pdf
-            log_pdf = transform.convert_log_pdf(log_pdf)
+            if self._multi_logpdf:
+                log_pdf = [transformation.convert_log_pdf(pdf)
+                           for pdf in log_pdf]
+            else:
+                log_pdf = transformation.convert_log_pdf(log_pdf)
 
             # Convert initial positions
-            x0 = [transform.to_search(x) for x in x0]
+            x0 = [transformation.to_search(x) for x in x0]
 
             # Convert sigma0, if provided
             if sigma0 is not None:
                 sigma0 = np.asarray(sigma0)
-                n_parameters = log_pdf.n_parameters()
+                if not self._multi_logpdf:
+                    n_parameters = log_pdf.n_parameters()
+                else:
+                    n_parameters = log_pdf[0].n_parameters()
                 # Make sure sigma0 is a (covariance) matrix
                 if np.product(sigma0.shape) == n_parameters:
                     # Convert from 1d array
@@ -331,18 +361,22 @@ class MCMCController(object):
                     raise ValueError(
                         'sigma0 must be either a (d, d) matrix or a (d, ) '
                         'vector, where d is the number of parameters.')
-                sigma0 = transform.convert_covariance_matrix(sigma0, x0[0])
+                sigma0 = transformation.convert_covariance_matrix(sigma0,
+                                                                  x0[0])
 
-        # Store transform for later detransformation: if using a transform, any
-        # parameters logged to the filesystem or printed to screen should be
-        # detransformed first!
-        self._transform = transform
+        # Store transformation for later detransformation: if using a
+        # transformation, any parameters logged to the filesystem or printed to
+        # screen should be detransformed first!
+        self._transformation = transformation
 
         # Store function
         self._log_pdf = log_pdf
 
         # Get number of parameters
-        self._n_parameters = self._log_pdf.n_parameters()
+        if not self._multi_logpdf:
+            self._n_parameters = self._log_pdf.n_parameters()
+        else:
+            self._n_parameters = self._log_pdf[0].n_parameters()
 
         # Check number of chains
         self._n_chains = int(chains)
@@ -529,15 +563,24 @@ class MCMCController(object):
         # Choose method to evaluate
         f = self._log_pdf
         if self._needs_sensitivities:
-            f = f.evaluateS1
+            if not self._multi_logpdf:
+                f = f.evaluateS1
+            else:
+                f = [pdf.evaluateS1 for pdf in f]
 
         # Create evaluator object
         if self._parallel:
-            # Use at most n_workers workers
-            n_workers = min(self._n_workers, self._n_chains)
-            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
+            if not self._multi_logpdf:
+                # Use at most n_workers workers
+                n_workers = min(self._n_workers, self._n_chains)
+                evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
+            else:
+                raise ValueError('Cannot run multiple logpdfs in parallel')
         else:
-            evaluator = pints.SequentialEvaluator(f)
+            if not self._multi_logpdf:
+                evaluator = pints.SequentialEvaluator(f)
+            else:
+                evaluator = pints.MultiSequentialEvaluator(f)
 
         # Initial phase
         if self._needs_initial_phase:
@@ -626,7 +669,7 @@ class MCMCController(object):
 
         # Pre-allocate arrays for chain storage
         # Note: we store the inverse transformed (to model space) parameters
-        # only if transform is provided.
+        #       only if transformation is provided.
         if self._chains_in_memory:
             # Store full chains
             samples = np.zeros(
@@ -692,10 +735,10 @@ class MCMCController(object):
                         # Unpack reply into position, evaluation, and status
                         y, fy, accepted = reply
 
-                        # Inverse transform to model space if transform is
+                        # Inverse transform to model space if transformation is
                         # provided
-                        if self._transform:
-                            y_store = self._transform.to_model(y)
+                        if self._transformation:
+                            y_store = self._transformation.to_model(y)
                         else:
                             y_store = y
 
@@ -751,11 +794,12 @@ class MCMCController(object):
                     # Unpack reply into positions, evaluations, and status
                     ys, fys, accepted = reply
 
-                    # Inverse transform to model space if transform is provided
-                    if self._transform:
+                    # Inverse transform to model space if transformation is
+                    # provided
+                    if self._transformation:
                         ys_store = np.zeros(ys.shape)
                         for i, y in enumerate(ys):
-                            ys_store[i] = self._transform.to_model(y)
+                            ys_store[i] = self._transformation.to_model(y)
                     else:
                         ys_store = ys
 
@@ -1041,6 +1085,9 @@ class MCMCController(object):
         than 0.
         Parallelisation can be disabled by setting ``parallel`` to ``0`` or
         ``False``.
+
+        Parallel evaluation is only supported when a single LogPDF has been
+        provided to the MCMC controller.
         """
         if parallel is True:
             self._parallel = True
@@ -1063,17 +1110,19 @@ class MCMCController(object):
 class MCMCSampling(MCMCController):
     """ Deprecated alias for :class:`MCMCController`. """
 
-    def __init__(self, log_pdf, chains, x0, sigma0=None, method=None):
+    def __init__(self, log_pdf, chains, x0, sigma0=None, transformation=None,
+                 method=None):
         # Deprecated on 2019-02-06
         import warnings
         warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
         super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
-                                           method=method)
+                                           transformation, method=method)
 
 
-def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
+def mcmc_sample(log_pdf, chains, x0, sigma0=None, transformation=None,
+                method=None):
     """
     Sample from a :class:`pints.LogPDF` using a Markov Chain Monte Carlo
     (MCMC) method.
@@ -1096,9 +1145,13 @@ def mcmc_sample(log_pdf, chains, x0, sigma0=None, method=None):
         Can be specified as a ``(d, d)`` matrix (where ``d`` is the dimension
         of the parameterspace) or as a ``(d, )`` vector, in which case
         ``diag(sigma0)`` will be used.
+    transformation : pints.Transformation
+        An optional :class:`pints.Transformation` to allow the sampler to work
+        in a transformed parameter space. If used, points shown or returned to
+        the user will first be detransformed back to the original space.
     method : class
         The class of :class:`MCMCSampler` to use. If no method is specified,
         :class:`HaarioBardenetACMC` is used.
     """
     return MCMCController(    # pragma: no cover
-        log_pdf, chains, x0, sigma0, method=method).run()
+        log_pdf, chains, x0, sigma0, transformation, method=method).run()

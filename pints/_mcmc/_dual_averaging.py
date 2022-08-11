@@ -6,8 +6,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import numpy as np
 
 
@@ -91,6 +89,7 @@ class DualAveragingAdaption(object):
         self._epsilon = init_epsilon    # The adapted step size
         self._mass_matrix = None        # The adapted mass matrix (set below)
         self._inv_mass_matrix = None    # The inverse adapted mass matrix
+        self._use_dense_mass_matrix = None
 
         self._mu = np.log(10 * self._epsilon)
         self._log_epsilon_bar = np.log(1)
@@ -209,6 +208,7 @@ class DualAveragingAdaption(object):
         if inv_mass_matrix.ndim == 1:
             self._mass_matrix = 1.0 / inv_mass_matrix
             self._inv_mass_matrix = inv_mass_matrix
+            self._use_dense_mass_matrix = False
         else:
             try:
                 self._mass_matrix = np.linalg.inv(inv_mass_matrix)
@@ -216,6 +216,7 @@ class DualAveragingAdaption(object):
                 print('WARNING: adapted mass matrix is ill-conditioned')
                 return
             self._inv_mass_matrix = inv_mass_matrix
+            self._use_dense_mass_matrix = True
 
     def step(self, x, accept_prob):
         """
@@ -259,3 +260,22 @@ class DualAveragingAdaption(object):
             #self._epsilon = self.final_epsilon()
 
         return False
+
+    def target_accept_prob(self):
+        """
+        Returns the target acceptance probability.
+        """
+        return self._target_accept_prob
+
+    def use_dense_mass_matrix(self):
+        """
+        Returns a boolean flag whether the adaption algorithm uses a dense
+        (``True``) or a diagonal (``False``) mass matrix.
+        """
+        return self._use_dense_mass_matrix
+
+    def warmup_steps(self):
+        """
+        Returns the number of warm up iterations.
+        """
+        return self._warmup_steps

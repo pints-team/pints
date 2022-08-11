@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import numpy as np
 import scipy.stats
 
@@ -21,7 +19,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         p(x_1, x_2, x_3, ..., x_n) \\propto
             \\pi(\\phi(x_1, x_2, x_2, ..., x_n))
 
-    where pi is the multivariate normal density with covariance matrix
+    where pi is the multivariate Gaussian density with covariance matrix
     :math:`\\Sigma=\\text{diag}(100, 1, 1, ..., 1)` and
 
     .. math::
@@ -114,9 +112,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
                 'Given samples must have length ' + str(self._n_parameters))
 
         # Untwist the given samples, making them Gaussian again
-        y = np.array(samples, copy=True, dtype='float')
-        y[:, 0] /= np.sqrt(self._V)
-        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+        y = self.untwist(samples)
 
         # Calculate the Kullback-Leibler divergence between the given samples
         # and the multivariate Gaussian distribution underlying this banana.
@@ -162,3 +158,15 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         # based on independent sampling think the following hard bounds are ok
         bounds = [[-50, 50], [-100, 100]]
         return np.transpose(bounds).tolist()
+
+    def untwist(self, samples):
+        """
+        De-transforms (or "untwists") a list of ``samples`` from the twisted
+        distribution, which should result in a simple multivariate Gaussian
+        again.
+        """
+        y = np.array(samples, copy=True, dtype='float')
+        y[:, 0] /= np.sqrt(self._V)
+        y[:, 1] += self._b * ((samples[:, 0] ** 2) - self._V)
+        return y
+

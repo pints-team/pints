@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
@@ -279,7 +277,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         energy = float(energy)
         gradient = pints.vector(gradient)
-        assert(gradient.shape == (self._n_parameters, ))
+        assert gradient.shape == (self._n_parameters, )
 
         # Energy = -log_pdf, so flip both signs!
         energy = -energy

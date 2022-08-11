@@ -90,21 +90,9 @@ Class names are CamelCase, and start with an upper case letter, for example `Sup
 
 To be consistent with the work so far, all PINTS material in the repository (code, comments, docstrings, documentation, etc.) should be written in UK english, the only exception being when quoting other sources, e.g. titles of scientific articles in references.
 
-### Python 2 and 3
+### Supported Python versions.
 
-Python is currently in a long, long transition phase from Python 2 to Python 3. PINTS supports both Python 2 (version 2.7 and upwards) and Python 3 (version 3.4 and upwards).
-The easiest way to write code that works on both versions is to write for Python 3, (avoiding the more spectacular new features) and [then test on both versions](#testing).
-
-In addition, most scripts start with these lines:
-
-```
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-```
-
-These [future imports](https://docs.python.org/2/library/__future__.html) are ignored by Python 3, but tell Python 2 to mimmick some of its features. Notably, the ``division`` package changes the result of ``3 / 2`` from ``1`` to ``1.5`` (this means you can write ``1 / x`` instead of ``1.0 / x``).
-
-
+As of July 2021, PINTS no longer supports Python 2.
 
 ## Dependencies and reusing code
 
@@ -166,17 +154,6 @@ Guidelines for writing unit tests:
 3. There are hundreds of unit tests, and good developers run all of them several times a day. Therefore, unit tests should be _fast_.
 4. If you're testing something stochastic, seed the number generator as part of the test, i.e. with `np.random.seed(1)`.
 
-### Running more tests
-
-If you want to check your tests on Python 2 and 3, use
-
-```
-$ python2 run-tests.py --unit
-$ python3 run-tests.py --unit
-```
-
-When you commit anything to PINTS, these checks will also be run automatically (see [infrastructure](#infrastructure)).
-
 ### Testing notebooks
 
 To test all example notebooks, use
@@ -213,41 +190,41 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
 
 3. If the class is a subclass of some other PINTS type, it may be good to
    mention this here. For example:
-   
+
         Extends :class:`SingleChainMCMC`.
 
 4. Simple arguments can be described textually. For example, a docstring could
    be a single line "Sets the width parameter to `w`.". For complicated
    functions or methods it may be good to include a parameters section:
-   
+
         Parameters
         ----------
         x : int
             A variable `x` that should be an integer
         y
             A variable without a type hint
-            
+
    This syntax can also be used for constructor arguments.
    Note that default values for any arguments are already displayed
    automatically in the function/method/constructor signature.
-   
+
 5. Simple return types can be described textually, but complicated return types
    (which are not encouraged) can use the syntax:
-   
+
         Returns
         -------
         samples
             A list of samples.
         likelihoods
             A list of their corresponding log-likelihoods
-            
+
 6. References to literature are highly encouraged, and go near the bottom of
    the docstring:
-   
+
         Adaptive covariance MCMC based on Haario et al. [1]_, [2]_.
-        
+
         (rest of the docstring goes here)
-   
+
         References
         ----------
         .. [1] Johnstone, Chang, Bardenet, de Boer, Gavaghan, Pathmanathan,
@@ -256,14 +233,14 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
                Journal of Molecular and Cellular Cardiology.
                https://10.1016/j.yjmcc.2015.11.018
 
-        .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis 
+        .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis
                algorithm". Bernoulli.
                https://doi.org/10.2307/3318737
 
    There is no standard format (e.g. APA style), but authors, titles, years,
    and journals are recommended, as well as a link based on a
    [DOI](https://www.doi.org/).
-   
+
 7. Longer code snippets can go at the very end of a docstring
 
         Examples
@@ -274,14 +251,14 @@ Using [Sphinx](http://www.sphinx-doc.org/en/stable/) the documentation in `docs`
                 pints.MeanSquaredError(problem1),
                 pints.MeanSquaredError(problem2),
             ]
-            
+
             # Equally weighted
             e1 = pints.SumOfErrors(errors)
 
             # Differrent weights:
             weights = [
                 1.0,
-                2.7,
+                2.6,
             ]
             e2 = pints.SumOfErrors(errors, weights)
 
@@ -292,24 +269,24 @@ Longer code snippets can be started using this form:
 
     """
     An example follows here::
-    
+
         print('Hello world')
 
-    """        
+    """
 
 ### Using Maths in documentation
 
 LaTeX expressions can be embedded in docstrings by using the syntax ```:math:`expression```` for inline mathematics, or a longer form for multi-line strings:
 
     r"""
-        Defines a :math:`\gamma` (log) prior with given shape parameter ``a`` 
+        Defines a :math:`\gamma` (log) prior with given shape parameter ``a``
         and rate parameter ``b``, with pdf
 
         .. math::
             f(x|a,b)=\frac{b^a x^{a-1} e^{-bx}}{\mathrm{\Gamma}(a)}
-    
+
     """
-    
+
 Note that when using maths, it is best to define the docstring in a *raw string*, i.e. by writing ```r""" your stuff here """```. This will allow you to write e.g. `1 + \tau` instead of `1 + \\tau` and will stop flake8 from complaining about invalid escape sequences. See https://github.com/pints-team/pints/issues/735.
 
 ### Building the documentation
@@ -411,6 +388,18 @@ Unit tests and flake8 testing is done for every commit. A nightly cronjob also t
 ### Codecov
 
 Code coverage (how much of our code is actually seen by the (linux) unit tests) is tested using [Codecov](https://docs.codecov.io/), a report is visible on https://codecov.io/gh/pints-team/pints.
+
+It is possible to measure code coverage locally using [coverage.py](https://coverage.readthedocs.io/en/coverage-5.5/). To run a particular test file (below `test_mcmc_adaptive.py`) and record coverage, run:
+
+```
+coverage run -m unittest test_mcmc_adaptive.py
+```
+
+To see the coverage for a particular file (below `_adaptive_covariance.py`) triggered by this test, run:
+
+```
+coverage report -m _adaptive_covariance.py
+```
 
 Configuration files:
 

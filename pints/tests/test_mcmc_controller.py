@@ -6,22 +6,16 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import os
 import pints
 import pints.io
 import pints.toy
 import unittest
+import unittest.mock
 import numpy as np
+import numpy.testing as npt
 
 from shared import StreamCapture, TemporaryDirectory
-
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
 
 
 debug = False
@@ -88,6 +82,17 @@ class TestMCMCController(unittest.TestCase):
         cls.log_posterior = pints.LogPosterior(
             cls.log_likelihood, cls.log_prior)
 
+        # Create another log-likelihood with two noise parameters
+        cls.log_likelihood_2 = pints.AR1LogLikelihood(problem)
+        cls.log_prior_2 = pints.UniformLogPrior(
+            [0.01, 400, 0.0, 0.0],
+            [0.02, 600, 100, 1]
+        )
+
+        # Create an un-normalised log-posterior (log-likelihood + log-prior)
+        cls.log_posterior_2 = pints.LogPosterior(
+            cls.log_likelihood_2, cls.log_prior_2)
+
     def test_single(self):
         # Test with a SingleChainMCMC method.
 
@@ -122,7 +127,7 @@ class TestMCMCController(unittest.TestCase):
         def f(x):
             return x
         self.assertRaisesRegex(
-            ValueError, 'extend pints.LogPDF', pints.MCMCController,
+            TypeError, 'extend pints.LogPDF', pints.MCMCController,
             f, n_chains, xs)
 
         # Test x0 and chain argument
@@ -160,12 +165,12 @@ class TestMCMCController(unittest.TestCase):
         # Test transformation
         logt = pints.LogTransformation(n_parameters)
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
-                                    transform=logt)
+                                    transformation=logt)
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         chains = mcmc.run()
         # Test chains inverse transformed
-        # log-transform of the parameter in [0.01, 0.02] will always be
+        # log-transformation of the parameter in [0.01, 0.02] will always be
         # negative values, so checking it larger than zero make sure it's
         # transformed back to the model space.
         self.assertTrue(np.all(chains > 0))
@@ -174,25 +179,25 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[2], n_parameters)
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                             transform=logt)
+                             transformation=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                             transform=logt)
+                             transformation=logt)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
-            transform=logt)
+            transformation=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
-            transform=logt)
+            transformation=logt)
         sigma0 = np.arange(16).reshape(2, 2, 2, 2)
         self.assertRaises(
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
-            transform=logt)
+            transformation=logt)
 
         # Test multi-chain with single-chain mcmc
 
@@ -339,7 +344,7 @@ class TestMCMCController(unittest.TestCase):
         # Test transformation
         logt = pints.LogTransformation(n_parameters)
         mcmc = pints.MCMCController(self.log_posterior, n_chains, xs,
-                                    method=meth, transform=logt)
+                                    method=meth, transformation=logt)
         self.assertEqual(len(mcmc.samplers()), 1)
         mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
@@ -348,26 +353,120 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(chains.shape[1], n_iterations)
         self.assertEqual(chains.shape[2], n_parameters)
         # Test chains inverse transformed
-        # log-transform of the parameter in [0.01, 0.02] will always be
+        # log-transformation of the parameter in [0.01, 0.02] will always be
         # negative values, so checking it larger than zero make sure it's
         # transformed back to the model space.
         self.assertTrue(np.all(chains > 0))
         sigma0 = [0.005, 100, 0.5 * self.noise]
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                             method=meth, transform=logt)
+                             method=meth, transformation=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise])
         pints.MCMCController(self.log_posterior, n_chains, xs, sigma0,
-                             method=meth, transform=logt)
+                             method=meth, transformation=logt)
         sigma0 = [0.005, 100, 0.5 * self.noise, 10]
         self.assertRaises(
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
-            method=meth, transform=logt)
+            method=meth, transformation=logt)
         sigma0 = np.diag([0.005, 100, 0.5 * self.noise, 10])
         self.assertRaises(
             ValueError,
             pints.MCMCController, self.log_posterior, n_chains, xs, sigma0,
-            method=meth, transform=logt)
+            method=meth, transformation=logt)
+
+    def test_multi_logpdf(self):
+        # Test with multiple logpdfs
+
+        # 2 chains
+        x0 = np.array(self.real_parameters) * 1.1
+        x1 = np.array(self.real_parameters) * 1.15
+        xs = [x0, x1]
+
+        # Not iterable
+        with self.assertRaises(TypeError):
+            mcmc = pints.MCMCController(1, 3, xs)
+
+        # Wrong number of logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior], 3, xs)
+
+        # List does not contain logpdfs
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, 'abc'], 2, xs)
+
+        # Pdfs have different numbers of n_parameters
+        with self.assertRaises(ValueError):
+            mcmc = pints.MCMCController(
+                [self.log_posterior, self.log_posterior_2], 2, xs)
+
+        # Correctly configured inputs
+        n_chains = len(xs)
+        n_parameters = len(x0)
+        n_iterations = 10
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # With sensitivities needed
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01],
+            method=pints.HamiltonianMCMC)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+        self.assertEqual(chains.shape[0], n_chains)
+        self.assertEqual(chains.shape[1], n_iterations)
+        self.assertEqual(chains.shape[2], n_parameters)
+        self.assertIs(chains, mcmc.chains())
+
+        # Parallel (currently raises error)
+        mcmc = pints.MCMCController(
+            [self.log_posterior, self.log_posterior],
+            n_chains,
+            xs,
+            transformation=pints.LogTransformation(n_parameters),
+            sigma0=[1, 0.1, 0.01])
+        mcmc.set_parallel(True)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        with self.assertRaises(ValueError):
+            chains = mcmc.run()
+
+        # Test that both logpdfs are called
+        logpdf1 = unittest.mock.MagicMock(
+            return_value=-1.0, spec=self.log_posterior)
+        logpdf2 = unittest.mock.MagicMock(
+            return_value=-2.0, spec=self.log_posterior)
+        attrs = {'n_parameters.return_value': 3}
+        logpdf1.configure_mock(**attrs)
+        logpdf2.configure_mock(**attrs)
+        mcmc = pints.MCMCController([logpdf1, logpdf2], n_chains, xs)
+        mcmc.set_max_iterations(n_iterations)
+        mcmc.set_log_to_screen(False)
+        chains = mcmc.run()
+
+        logpdf1.assert_called()
+        logpdf2.assert_called()
+
+        # Check that they got called with the corresponding x0 at the start
+        npt.assert_allclose(logpdf1.call_args_list[0][0][0], xs[0])
+        npt.assert_allclose(logpdf2.call_args_list[0][0][0], xs[1])
 
     def test_stopping(self):
         # Test different stopping criteria.
@@ -851,7 +950,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
         # Test transformation
         logt = pints.LogTransformation(len(self.xs[0]))
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
-                                    transform=logt)
+                                    transformation=logt)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -897,9 +996,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                 self.assertTrue(np.all(chains1 == chains2))
 
                 # Test files contain inverse transformed samples
-                # log-transform of the parameter in [0.01, 0.02] will always
-                # be negative values, so checking it larger than zero make sure
-                # it's transformed back to the model space.
+                # log-transformation of the parameter in [0.01, 0.02] will
+                # always be negative values, so checking it larger than zero
+                # make sure it's transformed back to the model space.
                 self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()
@@ -971,7 +1070,7 @@ class TestMCMCControllerLogging(unittest.TestCase):
         # Test transformation
         logt = pints.LogTransformation(len(self.xs[0]))
         mcmc = pints.MCMCController(self.log_posterior, self.nchains, self.xs,
-                                    transform=logt)
+                                    transformation=logt)
         mcmc.set_initial_phase_iterations(5)
         mcmc.set_max_iterations(20)
         mcmc.set_log_to_screen(True)
@@ -1022,9 +1121,9 @@ class TestMCMCControllerLogging(unittest.TestCase):
                     chains2.shape, (self.nchains, 20, len(self.xs)))
 
                 # Test files contain inverse transformed samples
-                # log-transform of the parameter in [0.01, 0.02] will always
-                # be negative values, so checking it larger than zero make sure
-                # it's transformed back to the model space.
+                # log-transformation of the parameter in [0.01, 0.02] will
+                # always be negative values, so checking it larger than zero
+                # make sure it's transformed back to the model space.
                 self.assertTrue(np.all(chains2 > 0))
 
             text = c.text()

@@ -31,7 +31,7 @@ Experimental data sets in PINTS are defined simply as lists (or arrays) of `time
 If you have this kind of data, and if [your model (or model wrapper)](https://github.com/pints-team/pints/blob/master/examples/stats/custom-model.ipynb) implements the two methods above, then you are ready to start using PINTS to infer parameter values using [optimisation](https://github.com/pints-team/pints/blob/master/examples/optimisation/first-example.ipynb) or [sampling](https://github.com/pints-team/pints/blob/master/examples/sampling/first-example.ipynb).
 
 A brief example is shown below:  
-![An example of using PINTS in an optimisation](https://raw.githubusercontent.com/pints-team/pints/f2e28d09a2668f883a7358ae7aaad4b4572554eb/example.svg)  
+![An example of using PINTS in an optimisation](https://raw.githubusercontent.com/pints-team/pints/master/example.svg)  
 _(Left)_ A noisy experimental time series and a computational forward model.
 _(Right)_ Example code for an optimisation problem.
 The full code can be [viewed here](https://github.com/pints-team/pints/blob/master/examples/sampling/readme-example.ipynb) but a friendlier, more elaborate, introduction can be found on the [examples page](https://github.com/pints-team/pints/blob/master/examples/README.md).
@@ -53,7 +53,7 @@ $ pip install --upgrade pip
 $ pip install pints
 ```
 
-Note that you'll need Python 3.5+ (preferred), or failing that, Python 2.7.
+Note that you'll need Python 3.6 or newer.
 
 If you prefer to have the latest cutting-edge version, you can instead install from the repository, by typing
 

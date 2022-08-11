@@ -5,9 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import warnings
 
 from distutils.version import LooseVersion
@@ -54,9 +51,8 @@ def pairwise(samples,
         Shows only the middle n-th percentiles of the distribution.
         Default shows all samples in ``samples``.
     parameter_names
-        A list of parameter names, which will be displayed on the x-axis of the
-        trace subplots. If no names are provided, the parameters are
-        enumerated.
+        A list of parameter names, which will be displayed on the axes of the
+        subplots. If no names are provided, the parameters are enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for

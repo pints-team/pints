@@ -18,12 +18,6 @@ from shared import StreamCapture
 debug = False
 method = pints.CMAES
 
-# Consistent unit testing in Python 2 and 3
-try:
-    unittest.TestCase.assertRaisesRegex
-except AttributeError:
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
-
 
 class TestCMAES(unittest.TestCase):
     """
@@ -118,12 +112,18 @@ class TestCMAES(unittest.TestCase):
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
         r, x, s, b = self.problem()
-        opt = method(x)
+        opt = method(x, boundaries=b)
 
         # Stop called when not running
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
+        self.assertEqual(list(opt.x_best()), list(x))
+        self.assertEqual(list(opt.x_guessed()), list(x))
+        self.assertEqual(opt.f_best(), float('inf'))
+        self.assertEqual(opt.f_guessed(), float('inf'))
+
+        # Test deprecated xbest and fbest
         self.assertEqual(list(opt.xbest()), list(x))
         self.assertEqual(opt.fbest(), float('inf'))
 

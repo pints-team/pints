@@ -1,10 +1,9 @@
 #
 # Pints setuptools script
 #
-# This file is part of PINTS.
-#  Copyright (c) 2017-2018, University of Oxford.
-#  For licensing information, see the LICENSE file distributed with the PINTS
-#  software package.
+# This file is part of PINTS (https://github.com/pints-team/pints/) which is
+# released under the BSD 3-clause license. See accompanying LICENSE.md for
+# copyright notice and full license details.
 #
 from setuptools import setup, find_packages
 
@@ -42,9 +41,16 @@ setup(
     # Maintainer information
     # author='',
     # author_email='',
-    maintainer='Michael Clerx',
-    maintainer_email='michael.clerx@cs.ox.ac.uk',
+    maintainer='PINTS Team',
+    maintainer_email='pints@maillist.ox.ac.uk',
     url='https://github.com/pints-team/pints',
+
+    # Project URLs
+    project_urls={
+        'Bug Tracker': 'https://github.com/pints-team/pints/issues',
+        'Documentation': 'https://pints.readthedocs.io',
+        'Source Code': 'https://github.com/pints-team/pints',
+    },
 
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
@@ -62,6 +68,7 @@ setup(
         # outside of plot() methods.
         'matplotlib>=1.5',
         'tabulate',
+        'threadpoolctl',
     ],
     extras_require={
         'docs': [
@@ -74,8 +81,8 @@ setup(
             'traitlets',
         ],
         'stan': [
-            'pystan==2.19.1.1',
+            'pystan>=3',
         ]
     },
-    python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3,!=3.4',
+    python_requires='>=3.5',
 )

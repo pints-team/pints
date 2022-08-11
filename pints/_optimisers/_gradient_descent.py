@@ -5,9 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import pints
 
 
@@ -24,8 +21,8 @@ class GradientDescent(pints.Optimiser):
         self._ready_for_tell = False
 
         # Best solution found
-        self._xbest = self._x0
-        self._fbest = float('inf')
+        self._x_best = self._x0
+        self._f_best = float('inf')
 
         # Learning rate
         self._eta = 0.01
@@ -49,9 +46,9 @@ class GradientDescent(pints.Optimiser):
         # Return proposed points (just the one)
         return [self._proposed]
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        return self._fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._f_best
 
     def learning_rate(self):
         """ Returns this optimiser's learning rate. """
@@ -115,12 +112,12 @@ class GradientDescent(pints.Optimiser):
         self._proposed = self._current - self._eta * dfx
         self._proposed.setflags(write=False)
 
-        # Update xbest and fbest
-        if self._fbest > fx:
-            self._fbest = fx
-            self._xbest = self._current
+        # Update x_best and f_best
+        if self._f_best > fx:
+            self._f_best = fx
+            self._x_best = self._current
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        return self._xbest
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        return self._x_best
 

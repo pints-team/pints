@@ -5,9 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 from distutils.version import LooseVersion
 
 import numpy as np
@@ -58,6 +55,8 @@ def histogram(
     # arguments
     bins = 40
     alpha = 0.5
+
+    samples = np.asarray(samples)
     n_list = len(samples)
     _, n_param = samples[0].shape
 
@@ -89,33 +88,38 @@ def histogram(
         squeeze=False,    # Tell matlab to always return a 2d axes object
     )
 
+    # Find ranges across all samples
+    stacked_chains = np.vstack(samples)
+    if n_percentiles is None:
+        xmin = np.min(stacked_chains, axis=0)
+        xmax = np.max(stacked_chains, axis=0)
+    else:
+        xmin = np.percentile(stacked_chains,
+                             50 - n_percentiles / 2.,
+                             axis=0)
+        xmax = np.percentile(stacked_chains,
+                             50 + n_percentiles / 2.,
+                             axis=0)
+    xbins = np.linspace(xmin, xmax, bins)
+
     # Plot first samples
     for i in range(n_param):
         for j_list, samples_j in enumerate(samples):
             # Add histogram subplot
             axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
-            if n_percentiles is None:
-                xmin = np.min(samples_j[:, i])
-                xmax = np.max(samples_j[:, i])
-            else:
-                xmin = np.percentile(samples_j[:, i],
-                                     50 - n_percentiles / 2.)
-                xmax = np.percentile(samples_j[:, i],
-                                     50 + n_percentiles / 2.)
-            xbins = np.linspace(xmin, xmax, bins)
             if use_old_matplotlib:  # pragma: no cover
                 axes[i, 0].hist(
-                    samples_j[:, i], bins=xbins, alpha=alpha, normed=True,
-                    label='Samples ' + str(1 + j_list))
+                    samples_j[:, i], bins=xbins[:, i], alpha=alpha,
+                    normed=True, label='Samples ' + str(1 + j_list))
             else:
                 axes[i, 0].hist(
-                    samples_j[:, i], bins=xbins, alpha=alpha, density=True,
-                    label='Samples ' + str(1 + j_list))
+                    samples_j[:, i], bins=xbins[:, i], alpha=alpha,
+                    density=True, label='Samples ' + str(1 + j_list))
 
             # Add kde plot
             if kde:
-                x = np.linspace(xmin, xmax, 100)
+                x = np.linspace(xmin[i], xmax[i], 100)
                 axes[i, 0].plot(x, stats.gaussian_kde(samples_j[:, i])(x))
 
         # Add reference parameters if given
@@ -131,4 +135,3 @@ def histogram(
 
     plt.tight_layout()
     return fig, axes[:, 0]
-

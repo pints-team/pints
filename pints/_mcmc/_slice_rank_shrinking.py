@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 import pints
 import numpy as np
 
@@ -202,7 +200,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         fx = float(fx)
         grad = pints.vector(grad)
-        assert(grad.shape == (self._n_parameters, ))
+        assert grad.shape == (self._n_parameters, )
 
         # Very first call
         if self._current is None:

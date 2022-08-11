@@ -11,9 +11,6 @@
 # The code to plot voronoi regions was based on an example shown here:
 # http://stackoverflow.com/a/20678647/423420
 #
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import numpy as np
 
 import pints
@@ -63,7 +60,7 @@ def surface(points, values, boundaries=None, markers='+', figsize=None):
     # Extract x and y points
     x = points[:, 0]
     y = points[:, 1]
-    del(points)
+    del points
 
     # Check boundaries
     if boundaries is None:
@@ -140,10 +137,6 @@ def _voronoi_regions(x, y, f, xlim, ylim):
     ``f[i]``.
     """
     from scipy.spatial import Voronoi
-    try:
-        from itertools import izip  # Python 2's izip acts like Python 3's zip
-    except ImportError:
-        izip = zip
 
     # Don't check x, y, f: handled by calling method
     n = len(x)
@@ -183,7 +176,7 @@ def _voronoi_regions(x, y, f, xlim, ylim):
 
     # Create a list containing the set of vertices defining each region
     regions = [set() for i in range(n)]
-    for (p1, p2), (v1, v2) in izip(vor.ridge_points, vor.ridge_vertices):
+    for (p1, p2), (v1, v2) in zip(vor.ridge_points, vor.ridge_vertices):
         # Order the edges: if one of the edges extends to infinity, the value
         # v1/v2 will be -1. By ordering here we ensure that only v1 can ever be
         # negative, so we don't need to check for v2 < 0 in the code below.
