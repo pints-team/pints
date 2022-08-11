@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - []() Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
+- [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.
 
 
 ## [0.4.0] - 2021-12-07

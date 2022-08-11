@@ -7,7 +7,9 @@
 # copyright notice and full license details.
 #
 import unittest
+
 import numpy as np
+
 from pints.toy.stochastic import DegradationModel
 
 
@@ -67,21 +69,28 @@ class TestDegradationModel(unittest.TestCase):
 
     def test_errors(self):
         model = DegradationModel(20)
+
         # parameters, times cannot be negative
         times = np.linspace(0, 100, 101)
         parameters = [-0.1]
-        self.assertRaises(ValueError, model.mean, parameters, times)
-        self.assertRaises(ValueError, model.variance, parameters, times)
+        self.assertRaisesRegex(ValueError, 'constant must be positive',
+                               model.mean, parameters, times)
+        self.assertRaisesRegex(ValueError, 'constant must be positive',
+                               model.variance, parameters, times)
 
         times_2 = np.linspace(-10, 10, 21)
         parameters_2 = [0.1]
-        self.assertRaises(ValueError, model.mean, parameters_2, times_2)
-        self.assertRaises(ValueError, model.variance, parameters_2, times_2)
+        self.assertRaisesRegex(ValueError, 'Negative times',
+                               model.mean, parameters_2, times_2)
+        self.assertRaisesRegex(ValueError, 'Negative times',
+                               model.variance, parameters_2, times_2)
 
         # this model should have 1 parameter
         parameters_3 = [0.1, 1]
-        self.assertRaises(ValueError, model.mean, parameters_3, times)
-        self.assertRaises(ValueError, model.variance, parameters_3, times)
+        self.assertRaisesRegex(ValueError, 'only 1 parameter',
+                               model.mean, parameters_3, times)
+        self.assertRaisesRegex(ValueError, 'only 1 parameter',
+                               model.variance, parameters_3, times)
 
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ class TestOptimisationController(unittest.TestCase):
             csv = np.genfromtxt(p, delimiter=',', skip_header=1)[:-1]
             lb = csv[:, 2]
             lg = csv[:, 3]
-            del(csv)
+            del csv
 
         fb, fg = np.array(fb), np.array(fg)
 

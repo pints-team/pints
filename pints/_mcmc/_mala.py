@@ -230,7 +230,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         fx = float(fx)
         log_gradient = pints.vector(log_gradient)
-        assert(log_gradient.shape == (self._n_parameters, ))
+        assert log_gradient.shape == (self._n_parameters, )
 
         # First point?
         if self._current is None:
