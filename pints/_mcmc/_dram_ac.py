@@ -20,9 +20,10 @@ class DramACMC(pints.AdaptiveCovarianceMC):
     typically from a narrower (i.e. more conservative) proposal kernel than was
     used for the first proposal.
 
+    The number of proposal kernels is fixed to 2.
+
     In this approach, in each iteration, the following steps return the next
-    state of the Markov chain (assuming the current state is ``theta_0`` and
-    that there are 2 proposal kernels)::
+    state of the Markov chain (assuming the current state is ``theta_0``)::
 
         theta_1 ~ N(theta_0, lambda * scale_1 * sigma)
         alpha_1(theta_0, theta_1) = min(1, p(theta_1|X) / p(theta_0|X))
@@ -63,7 +64,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
         super(DramACMC, self).__init__(x0, sigma0)
 
         self._log_lambda = 0
-        self._n_kernels = 2
+        self._n_kernels = 2 # This is fixed!
         self._proposal_count = 0
         self._sigma_base = np.copy(self._sigma)
         self._Y_log_pdf = np.zeros(self._n_kernels)
@@ -111,7 +112,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
 
     def n_hyper_parameters(self):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
-        return 2
+        return 3
 
     def _r_log(self):
         """
@@ -122,19 +123,17 @@ class DramACMC(pints.AdaptiveCovarianceMC):
                 self._current_log_pdf, self._Y_log_pdf[0])
         else:
             r_log = self._alpha_2_log(
-                self._current_log_pdf, self._Y_log_pdf[0],
-                self._Y_log_pdf[1]
-            )
+                self._current_log_pdf, self._Y_log_pdf[0], self._Y_log_pdf[1])
         return r_log
 
     def set_hyper_parameters(self, x):
         """
-        The hyper-parameter vector is ``[eta, sigma_scale]``.
+        The hyper-parameter vector is ``[eta, sigma_scale_1, sigma_scale_2]``.
 
         See :meth:`TunableMethod.set_hyper_parameters()`.
         """
         self.set_eta(x[0])
-        self.set_sigma_scale(x[1])
+        self.set_sigma_scale((x[1], x[2]))
 
     def set_sigma_scale(self, scales):
         """

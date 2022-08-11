@@ -149,16 +149,11 @@ class TestDramACMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_target_acceptance_rate, 1.00001)
 
         # test hyperparameter setters and getters
-        self.assertEqual(mcmc.n_hyper_parameters(), 2)
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1,
-                                                                  [1, 3]])
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5,
-                                                                  [0, 3]])
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5,
-                                                                  [1, -1]])
-        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5,
-                                                                  [1]])
-        mcmc.set_hyper_parameters([0.1, [4, 3]])
+        self.assertEqual(mcmc.n_hyper_parameters(), 3)
+        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1, 1, 3])
+        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5, 0, 3])
+        self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5, 1, -1])
+        mcmc.set_hyper_parameters([0.1, 4, 3])
         self.assertEqual(mcmc.eta(), 0.1)
         mcmc.ask()
         scale1 = [2, 3]
