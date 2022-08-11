@@ -104,7 +104,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
 
         # Run Gillespie SSA, calculating time until next reaction, deciding
         # which reaction, and applying it
-        mol_count = [np.copy(x)]
+        mol_count = [np.array(x)]
         time = [t]
         while prop_sum > 0 and t <= max_time:
             r_1, r_2 = np.random.uniform(0, 1), np.random.uniform(0, 1)
@@ -116,12 +116,13 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
                 r += 1
             x += self._V[r - 1]
 
+            # Calculate new current propensities
+            current_propensities = self._propensities(x, rates)
+            prop_sum = np.sum(current_propensities)
+
             # Store new values
             time.append(t)
-            mol_count.append(np.array(x))
-
-            # Calculate stopping criterion
-            prop_sum = np.sum(self._propensities(x, rates))
+            mol_count.append(np.copy(x))
 
         return np.array(time), np.array(mol_count)
 
@@ -131,14 +132,22 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         values at output_times
         """
         # Interpolate as step function, decreasing mol_count by 1 at each
-        # reaction time point
+        # reaction time point.
+        # Note: Can't use fill_value='extrapolate' here as:
+        #  1. This require scipy >= 0.17
+        #  2. There seems to be a bug in some scipy versions
+        #
         interp_func = scipy.interpolate.interp1d(
             time, mol_count, kind='previous', axis=0, fill_value=0,
             bounds_error=False)
 
         # Compute molecule count values at given time points using f1
-        # at any time beyond the last reaction, molecule count = 0
-        return interp_func(output_times)
+        values = interp_func(output_times)
+
+        # At any point past the final time, repeat the last value
+        values[output_times >= time[-1]] = mol_count[-1]
+
+        return values
 
     def simulate(self, parameters, times):
         """ See :meth:`pints.ForwardModel.simulate()`. """

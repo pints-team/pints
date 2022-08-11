@@ -28,7 +28,7 @@ class TestMarkovJumpModel(unittest.TestCase):
     def test_start_with_twenty(self):
         # Run small simulation
         model = DegradationModel(20)
-        times = [0, 1, 2, 100, 1000]
+        times = [0, 1, 2, 100, 1000, 10000]
         parameters = [0.1]
         values = model.simulate(parameters, times)
         self.assertEqual(len(values), len(times))
