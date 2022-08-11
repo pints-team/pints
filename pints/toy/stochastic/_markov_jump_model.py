@@ -91,7 +91,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         """ Returns raw times, mol counts when reactions occur. """
         if len(rates) != self.n_parameters():
             raise ValueError(
-                'This model should have only ' + str(self.n_parameters())
+                'This model should have ' + str(self.n_parameters())
                 + ' parameter(s).')
 
         # Setting the current propensities and summing them up
@@ -131,21 +131,34 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         Takes raw times and inputs and mol counts and outputs interpolated
         values at output_times
         """
+        if len(time) == 0:
+            raise ValueError('At least one time must be given.')
+        if len(time) != len(mol_count):
+            raise ValueError(
+                'The number of entries in time must match mol_count')
+
+        # Check output times
+        output_times = np.asarray(output_times)
+        if not np.all(output_times[1:] >= output_times[:-1]):
+            raise ValueError('The output_times must be non-decreasing.')
+
         # Interpolate as step function, decreasing mol_count by 1 at each
         # reaction time point.
-        # Note: Can't use fill_value='extrapolate' here as:
-        #  1. This require scipy >= 0.17
-        #  2. There seems to be a bug in some scipy versions
-        #
-        interp_func = scipy.interpolate.interp1d(
-            time, mol_count, kind='previous', axis=0, fill_value=0,
-            bounds_error=False)
-
-        # Compute molecule count values at given time points using f1
-        values = interp_func(output_times)
+        if len(time) == 1:
+            # Need at least 2 values to interpolate
+            return np.ones(len(output_times)) * mol_count[0]
+        else:
+            # Note: Can't use fill_value='extrapolate' here as:
+            #  1. This require scipy >= 0.17
+            #  2. There seems to be a bug in some scipy versions
+            interp_func = scipy.interpolate.interp1d(
+                time, mol_count, kind='previous', axis=0, fill_value=np.nan,
+                bounds_error=False)
+            values = interp_func(output_times)
 
         # At any point past the final time, repeat the last value
         values[output_times >= time[-1]] = mol_count[-1]
+        values[output_times < time[0]] = mol_count[0]
 
         return values
 
@@ -158,10 +171,6 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
         # Run Gillespie algorithm
         time, mol_count = self.simulate_raw(parameters, max(times))
 
-        # Interpolate
-        if len(time) < 2:
-            time = np.append(time, time[0])
-            mol_count = np.append(mol_count, mol_count[0])
-
+        # Interpolate and return
         return self.interpolate_mol_counts(time, mol_count, times)
 

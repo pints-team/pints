@@ -19,7 +19,7 @@ class DegradationModel(MarkovJumpModel):
     .. math::
         A \xrightarrow{k} 0
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.MarkovJumpModel`.
 
     Parameters
     ----------
@@ -29,14 +29,12 @@ class DegradationModel(MarkovJumpModel):
     def __init__(self, initial_molecule_count=20):
         V = [[-1]]
         init_list = [initial_molecule_count]
-        super(DegradationModel, self).__init__(init_list,
-                                               V, self._propensities)
+        super(DegradationModel, self).__init__(
+            init_list, V, self._propensities)
 
     @staticmethod
     def _propensities(xs, ks):
-        return [
-            xs[0] * ks[0],
-        ]
+        return [xs[0] * ks[0]]
 
     def mean(self, parameters, times):
         r"""
