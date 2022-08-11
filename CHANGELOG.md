@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
 
 ### Fixed
+- [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.
 
 
 ## [0.4.0] - 2021-12-07
