@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
 
 ### Fixed
+- []() Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
 
 
 ## [0.4.0] - 2021-12-07

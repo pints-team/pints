@@ -915,13 +915,10 @@ class TransformedBoundaries(pints.Boundaries):
         """ See :meth:`Boundaries.n_parameters()`. """
         return self._n_parameters
 
-    def range(self):
-        """
-        Returns the size of the search space (i.e. ``upper - lower``).
-        """
-        upper = self._transform.to_search(self._boundaries.upper())
-        lower = self._transform.to_search(self._boundaries.lower())
-        return upper - lower
+    def sample(self, n=1):
+        """ See :meth:`Boundaries.sample()`. """
+        return [
+            self._transform.to_search(p) for p in self._boundaries.sample(n)]
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
