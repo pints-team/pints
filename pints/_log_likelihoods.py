@@ -799,7 +799,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
         \mathbb{E}(y(t)) = f(\theta, t) \exp(\sigma^2 / 2)
 
     As such, the optional parameter `mean_adjust` (if true) adjusts the
-    mean of the distribution so that its expectation is ``f(\theta, t)``. This
+    mean of the distribution so that its expectation is :math:`f(\theta, t)`. This
     shifted distribution is of the form:
 
     .. math::
