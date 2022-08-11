@@ -135,7 +135,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Ask all inner samplers for first point, which should be x0
         for chain in self._chains:
             x0 = chain.ask()
-            assert(np.all(x0 == self._x0))
+            assert np.all(x0 == self._x0)
 
         # Update sampler state
         self._running = True
@@ -337,3 +337,29 @@ class PopulationMCMC(pints.SingleChainMCMC):
         distribution is ``p(theta|data) ^ (1 - T)``.
         """
         return self._schedule
+
+    def n_hyper_parameters(self):
+        """ See :meth:`TunableMethod.n_hyper_parameters()`. """
+        return 1
+
+    def set_hyper_parameters(self, x):
+        """
+        The hyper-parameter vector is ``[n_temperatures]``, where
+        ``n_temperatures`` is an integer that will be passed to
+        :meth:`set_temperature_schedule`.
+
+        Note that, since the hyper-parameter vector should be 1d (without
+        nesting), setting an explicit temperature schedule is not supported via
+        the hyper-parameter interface.
+
+        See :meth:`TunableMethod.set_hyper_parameters()`.
+        """
+        try:
+            n_temperatures = int(x[0])
+        except TypeError:
+            raise ValueError(
+                'First hyper-parameter must be (convertible to) an integer'
+                ' (setting an explicit schedule is not supported through the'
+                ' hyper-parameter interface).')
+
+        self.set_temperature_schedule(n_temperatures)

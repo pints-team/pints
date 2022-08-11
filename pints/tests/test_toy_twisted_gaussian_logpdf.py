@@ -47,6 +47,7 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         samples3 = log_pdf3.sample(n)
 
         # Compare calculated divergences
+        # This also tests the "untwist" method.
         s11 = log_pdf1.kl_divergence(samples1)
         s12 = log_pdf1.kl_divergence(samples2)
         s13 = log_pdf1.kl_divergence(samples3)

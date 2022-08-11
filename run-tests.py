@@ -154,14 +154,14 @@ def doctest_examples_readme():
 
     # Index file is in ./examples/README.md
     index_file = os.path.join('examples', 'README.md')
-    assert(os.path.isfile(index_file))
+    assert os.path.isfile(index_file)
 
     with open(index_file, 'r') as f:
         index_contents = f.read()
 
     # Get a list of all notebooks in the examples directory
     notebooks = [x[9:] for x in list_notebooks('examples')]
-    assert(len(notebooks) > 10)
+    assert len(notebooks) > 10
 
     # Find which are not indexed
     not_indexed = [nb for nb in notebooks if nb not in index_contents]
@@ -194,13 +194,22 @@ def doctest_rst_and_public_interface():
     import pints.io
     import pints.noise
     import pints.plot
+    import pints.residuals_diagnostics
     import pints.toy
+    import pints.toy.stochastic
 
     # If any modules other than these are exposed it may indicate that a module
     # has been inadvertently exposed in a public context, or that a new module
     # has been added to pints and should be imported above and included in this
     # list.
-    pints_submodules = ['pints.io', 'pints.noise', 'pints.plot', 'pints.toy']
+    pints_submodules = [
+        'pints.io',
+        'pints.noise',
+        'pints.plot',
+        'pints.residuals_diagnostics',
+        'pints.toy',
+        'pints.toy.stochastic',
+    ]
 
     doc_symbols = get_all_documented_symbols()
 
@@ -208,7 +217,9 @@ def doctest_rst_and_public_interface():
     check_exposed_symbols(pints.io, [], doc_symbols)
     check_exposed_symbols(pints.noise, [], doc_symbols)
     check_exposed_symbols(pints.plot, [], doc_symbols)
-    check_exposed_symbols(pints.toy, [], doc_symbols)
+    check_exposed_symbols(pints.residuals_diagnostics, [], doc_symbols)
+    check_exposed_symbols(pints.toy, ['pints.toy.stochastic'], doc_symbols)
+    check_exposed_symbols(pints.toy.stochastic, [], doc_symbols)
 
     print('All classes and methods are documented in an RST file, and all '
           'public interfaces are clean.')
@@ -245,7 +256,7 @@ def check_exposed_symbols(module, submodule_names, doc_symbols):
     if len(unexpected_modules) > 0:
         print('The following modules are unexpectedly exposed in the public '
               'interface of %s:' % module.__name__)
-        for m in sorted(unexpected_modules):
+        for m in sorted(unexpected_modules, key=lambda x: x.__name__):
             print('  unexpected module: ' + m.__name__)
 
         print('For python modules such as numpy you may need to confine the '

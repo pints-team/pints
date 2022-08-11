@@ -91,7 +91,7 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         l, dl = f.evaluateS1([-1, -7])
         self.assertEqual(l, f([-1, -7]))
         self.assertAlmostEqual(l, -46.269777289511559)
-        self.assertEqual(dl[0], -4.6662126879796366)
+        self.assertAlmostEqual(dl[0], -4.6662126879796366)
         self.assertAlmostEqual(dl[1], -2.6666666666666639)
         self.assertTrue(np.array_equal(f.suggested_bounds(),
                                        [[-30.0, -30.0], [30.0, 30.0]]))

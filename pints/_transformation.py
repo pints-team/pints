@@ -778,7 +778,7 @@ class RectangularBoundariesTransformation(Transformation):
 
         # Cache dimension
         self._n_parameters = boundaries.n_parameters()
-        del(boundaries)
+        del boundaries
 
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """

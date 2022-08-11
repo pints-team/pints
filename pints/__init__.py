@@ -157,6 +157,7 @@ from ._evaluation import (
     Evaluator,
     ParallelEvaluator,
     SequentialEvaluator,
+    MultiSequentialEvaluator,
 )
 
 
@@ -171,7 +172,6 @@ from ._optimisers import (
     optimise,
     Optimiser,
     PopulationBasedOptimiser,
-    TriangleWaveTransform,
 )
 from ._optimisers._cmaes import CMAES
 from ._optimisers._cmaes_bare import BareCMAES
@@ -239,6 +239,21 @@ from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
+# ABC
+#
+from ._abc import ABCSampler
+from ._abc import ABCController
+from ._abc._abc_rejection import RejectionABC
+from ._abc._abc_smc import ABCSMC
+
+
+#
+# Sampling initialising
+#
+from ._sample_initial_points import sample_initial_points
+
+
+#
 # Transformations
 #
 from ._transformation import (
@@ -264,4 +279,4 @@ from . import noise
 #
 # Remove any imported modules, so we don't expose them as part of pints
 #
-del(os, sys)
+del os, sys

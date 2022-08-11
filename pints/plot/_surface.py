@@ -60,7 +60,7 @@ def surface(points, values, boundaries=None, markers='+', figsize=None):
     # Extract x and y points
     x = points[:, 0]
     y = points[:, 1]
-    del(points)
+    del points
 
     # Check boundaries
     if boundaries is None:

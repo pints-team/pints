@@ -12,6 +12,7 @@ Overview:
 - :class:`Timer`
 - :func:`matrix2d`
 - :func:`vector`
+- :func:`sample_initial_points`
 
 .. autofunction:: strfloat
 
@@ -26,3 +27,4 @@ Overview:
 
 .. autofunction:: vector
 
+.. autofunction:: sample_initial_points
