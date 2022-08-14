@@ -835,7 +835,7 @@ class RectangularBoundariesTransformation(Transformation):
 class ScalingTransformation(Transformation):
     """
     Scaling transformation scales the input parameters by multiplying with an
-    array ``scalings``, element-wisely.
+    array ``scalings``.
 
     The transformation from model to search parameters is performed as::
 
