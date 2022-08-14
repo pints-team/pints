@@ -835,15 +835,21 @@ class RectangularBoundariesTransformation(Transformation):
 class ScalingTransformation(Transformation):
     """
     Scaling transformation scales the input parameters by multiplying with an
-    array ``scalings`` element-wisely. And its Jacobian matrix is a diagonal
-    matrix with the values of ``1 / scalings`` on the diagonal.
+    array ``scalings``, element-wisely.
+
+    The transformation from model to search parameters is performed as::
+
+        x_search = x_model * scalings
+
+    Its Jacobian matrix is a diagonal matrix with ``1 / scalings`` on the
+    diagonal.
 
     Extends :class:`Transformation`.
     """
     def __init__(self, scalings):
-        self.s = pints.vector(scalings)
-        self.inv_s = 1. / self.s
-        self._n_parameters = len(self.s)
+        self._s = pints.vector(scalings)
+        self._inv_s = 1. / self._s
+        self._n_parameters = len(self._s)
 
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """
@@ -851,7 +857,7 @@ class ScalingTransformation(Transformation):
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
-        return np.diag(self.inv_s)
+        return np.diag(self._inv_s)
 
     def jacobian_S1(self, q):
         """ See :meth:`Transformation.jacobian_S1()`. """
@@ -860,7 +866,7 @@ class ScalingTransformation(Transformation):
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
-        return np.sum(np.log(np.abs(self.inv_s)))
+        return np.sum(np.log(np.abs(self._inv_s)))
 
     def log_jacobian_det_S1(self, q):
         """ See :meth:`Transformation.log_jacobian_det_S1()`. """
@@ -873,12 +879,12 @@ class ScalingTransformation(Transformation):
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
         q = pints.vector(q)
-        return self.inv_s * q
+        return self._inv_s * q
 
     def to_search(self, p):
         """ See :meth:`Transformation.to_search()`. """
         p = pints.vector(p)
-        return self.s * p
+        return self._s * p
 
 
 class TransformedBoundaries(pints.Boundaries):
