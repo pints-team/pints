@@ -834,12 +834,12 @@ class RectangularBoundariesTransformation(Transformation):
 
 class ScalingTransformation(Transformation):
     """
-    Scaling transformation scales the input parameters by multiplying with an
-    array ``scalings``.
+    Scales the input parameters by multiplying with an array ``scalings``.
 
-    The transformation from model to search parameters is performed as::
+    The transformation from model parameters ``p`` to search parameters ``q``
+    is performed as::
 
-        x_search = x_model * scalings
+        q = p * scalings
 
     Its Jacobian matrix is a diagonal matrix with ``1 / scalings`` on the
     diagonal.
