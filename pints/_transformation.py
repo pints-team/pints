@@ -900,34 +900,6 @@ class ScalingTransformation(Transformation):
         return self._s * p
 
 
-class UnitCubeTransformation(ScalingTransformation):
-    """
-    Maps a parameter space onto the unit (hyper)cube.
-
-    Transformations from model parameters ``p`` to search parameters ``q`` are
-    made as::
-
-        q = (p - lower) / (upper - lower)
-
-    Extends :class:`ScalingTransformation`.
-    """
-    def __init__(self, lower, upper):
-
-        # Check input
-        self._lower = pints.vector(lower)
-        self._upper = pints.vector(upper)
-        self._n_parameters = len(lower)
-        del lower, upper
-
-        if len(self._upper) != self._n_parameters:
-            raise ValueError(
-                'Lower and upper bounds must have the same length.')
-        if not np.all(self._upper > self._lower):
-            raise ValueError('Upper bounds must exceed lower bounds.')
-
-        super().__init__(1 / (self._upper - self._lower), -self._lower)
-
-
 class TransformedBoundaries(pints.Boundaries):
     """
     A :class:`pints.Boundaries` that accepts parameters in a transformed
@@ -1175,3 +1147,32 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         for i, p in enumerate(ps):
             qs[i, :] = self._transform.to_search(p)
         return qs
+
+
+class UnitCubeTransformation(ScalingTransformation):
+    """
+    Maps a parameter space onto the unit (hyper)cube.
+
+    Transformations from model parameters ``p`` to search parameters ``q`` are
+    made as::
+
+        q = (p - lower) / (upper - lower)
+
+    Extends :class:`ScalingTransformation`.
+    """
+    def __init__(self, lower, upper):
+
+        # Check input
+        self._lower = pints.vector(lower)
+        self._upper = pints.vector(upper)
+        self._n_parameters = len(lower)
+        del lower, upper
+
+        if len(self._upper) != self._n_parameters:
+            raise ValueError(
+                'Lower and upper bounds must have the same length.')
+        if not np.all(self._upper > self._lower):
+            raise ValueError('Upper bounds must exceed lower bounds.')
+
+        super().__init__(1 / (self._upper - self._lower), -self._lower)
+
