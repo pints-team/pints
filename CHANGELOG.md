@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
 
 ### Fixed
+- [#1455](https://github.com/pints-team/pints/pull/1455) The `s` and `inv_s` properties of `ScalingTransformation` have been replaced with private properties `_s` and `_inv_s`.
 - [#1450](https://github.com/pints-team/pints/pull/1450) Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
 - [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.
 - [#1399](https://github.com/pints-team/pints/pull/1339) Fixed a bug in `DramACMC`, and fixed the number of proposal kernels to 2.
