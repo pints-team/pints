@@ -740,20 +740,28 @@ class TestUnitCubeTransformation(unittest.TestCase):
 
     def test_creation(self):
         # Tests creation options (at the moment just errors)
-        pints.ScalingTransformation(self.lower, self.upper)
-        pints.ScalingTransformation(self.lower, [10, 10, 10])
-        pints.ScalingTransformation((-10, -20, -30), self.upper)
+        pints.UnitCubeTransformation(self.lower, self.upper)
+        pints.UnitCubeTransformation(self.lower, [10, 10, 10])
+        pints.UnitCubeTransformation((-10, -20, -30), self.upper)
 
         self.assertRaisesRegex(
             ValueError, 'same length',
-            pints.ScalingTransformation, (1, 2), [3])
+            pints.UnitCubeTransformation, (1, 2), [3])
         self.assertRaisesRegex(
             ValueError, 'same length',
-            pints.ScalingTransformation, [3, 4, 5], (10, 10, 10, 10))
-        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (0, 3))
-        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (3, 1))
-        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (1, 3))
-        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (3, 2))
+            pints.UnitCubeTransformation, [3, 4, 5], (10, 10, 10, 10))
+        self.assertRaisesRegex(
+            ValueError, 'must exceed',
+            pints.UnitCubeTransformation, (1, 2), (0, 3))
+        self.assertRaisesRegex(
+            ValueError, 'must exceed',
+            pints.UnitCubeTransformation, (1, 2), (3, 1))
+        self.assertRaisesRegex(
+            ValueError, 'must exceed',
+            pints.UnitCubeTransformation, (1, 2), (1, 3))
+        self.assertRaisesRegex(
+            ValueError, 'must exceed',
+            pints.UnitCubeTransformation, (1, 2), (3, 2))
 
     def test_to_search(self):
         # Test forward transform
