@@ -834,22 +834,31 @@ class RectangularBoundariesTransformation(Transformation):
 
 class ScalingTransformation(Transformation):
     """
-    Scales the input parameters by multiplying with an array ``scalings``.
+    Scales the input parameters by multiplying with an array ``scalings`` and
+    adding an optional array ``translation``.
 
     The transformation from model parameters ``p`` to search parameters ``q``
     is performed as::
 
-        q = p * scalings
+        q = (p + translation) * scalings
 
     Its Jacobian matrix is a diagonal matrix with ``1 / scalings`` on the
     diagonal.
 
     Extends :class:`Transformation`.
     """
-    def __init__(self, scalings):
+    def __init__(self, scalings, translation=None):
         self._s = pints.vector(scalings)
         self._inv_s = 1. / self._s
         self._n_parameters = len(self._s)
+
+        self._translation = None
+        if translation is not None:
+            self._translation = pints.vector(translation)
+            if len(self._translation) != self._n_parameters:
+                raise ValueError(
+                    'Translation must be None or be a vector of the same'
+                    ' length as the scalings.')
 
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """
@@ -878,13 +887,45 @@ class ScalingTransformation(Transformation):
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
-        q = pints.vector(q)
-        return self._inv_s * q
+        p = self._inv_s * pints.vector(q)
+        if self._translation is not None:
+            p -= self._translation
+        return p
 
     def to_search(self, p):
         """ See :meth:`Transformation.to_search()`. """
         p = pints.vector(p)
+        if self._translation is not None:
+            p = p + self._translation
         return self._s * p
+
+
+class UnitCubeTransformation(ScalingTransformation):
+    """
+    Maps a parameter space onto the unit (hyper)cube.
+
+    Transformations from model parameters ``p`` to search parameters ``q`` are
+    made as::
+
+        q = (p - lower) / (upper - lower)
+
+    Extends :class:`ScalingTransformation`.
+    """
+    def __init__(self, lower, upper):
+
+        # Check input
+        self._lower = pints.vector(lower)
+        self._upper = pints.vector(upper)
+        self._n_parameters = len(lower)
+        del lower, upper
+
+        if len(self._upper) != self._n_parameters:
+            raise ValueError(
+                'Lower and upper bounds must have the same length.')
+        if not np.all(self._upper > self._lower):
+            raise ValueError('Upper bounds must exceed lower bounds.')
+
+        super().__init__(1 / (self._upper - self._lower), -self._lower)
 
 
 class TransformedBoundaries(pints.Boundaries):

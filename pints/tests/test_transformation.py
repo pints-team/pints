@@ -594,7 +594,7 @@ class TestRectangularBoundariesTransformation(unittest.TestCase):
 
 
 class TestScalingTransformation(unittest.TestCase):
-    # Test ScalingTransformation class
+    """ Tests the ScalingTransformation class, without a translation. """
 
     @classmethod
     def setUpClass(cls):
@@ -651,6 +651,119 @@ class TestScalingTransformation(unittest.TestCase):
     def test_elementwise(self):
         # Test is elementwise
         self.assertTrue(self.t.elementwise())
+
+
+class TestScalingTransformationWithTranslation(unittest.TestCase):
+    """ Tests the ScalingTransformation class, with a translation. """
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.p = np.array([-77, 0.333, 5, 66.66])
+        cls.o = np.array([-100, 0, 5, 33.33])
+        cls.s = np.array([-177, 0.333, 10., 99.99])
+        cls.t = pints.ScalingTransformation(1 / cls.s, cls.o)
+        cls.x = [1., 1., 1., 1.]
+        cls.j = np.diag(cls.s)
+        cls.j_s1 = np.zeros((4, 4, 4))
+        cls.log_j_det = 10.9841922175539395
+        cls.log_j_det_s1 = np.zeros(4)
+
+    def test_creation(self):
+        # Tests creation options (at the moment just errors)
+        pints.ScalingTransformation(1 / self.s, None)
+        pints.ScalingTransformation(1 / self.s, list(self.o))
+        self.assertRaisesRegex(
+            ValueError, 'same length',
+            pints.ScalingTransformation, self.s, self.o[:-1])
+        self.assertRaisesRegex(
+            ValueError, 'same length',
+            pints.ScalingTransformation, self.s, [1, 2, 3, 4, 5])
+
+    def test_to_search(self):
+        # Test forward transform
+        self.assertTrue(np.allclose(self.t.to_search(self.p), self.x))
+
+    def test_to_model(self):
+        # Test inverse transform
+        self.assertTrue(np.allclose(self.t.to_model(self.x), self.p))
+
+    def test_n_parameters(self):
+        # Test n_parameters
+        self.assertEqual(self.t.n_parameters(), 4)
+
+    def test_jacobian(self):
+        # Test Jacobian
+        self.assertTrue(np.allclose(self.t.jacobian(self.x), self.j))
+
+    def test_jacobian_S1(self):
+        # Test Jacobian derivatives
+        calc_mat, calc_deriv = self.t.jacobian_S1(self.x)
+        self.assertTrue(np.allclose(calc_mat, self.j))
+        self.assertTrue(np.allclose(calc_deriv, self.j_s1))
+
+    def test_log_jacobian_det(self):
+        # Test log-Jacobian determinant
+        self.assertEqual(self.t.log_jacobian_det(self.x), self.log_j_det)
+
+    def test_log_jacobian_det_S1(self):
+        # Test log-Jacobian determinant derivatives
+        calc_val, calc_deriv = self.t.log_jacobian_det_S1(self.x)
+        self.assertEqual(calc_val, self.log_j_det)
+        self.assertTrue(np.all(np.equal(calc_deriv, self.log_j_det_s1)))
+
+    def test_retransform(self):
+        # Test forward transform the inverse transform
+        self.assertTrue(
+            np.allclose(self.p, self.t.to_model(self.t.to_search(self.p))))
+        self.assertTrue(
+            np.allclose(self.x, self.t.to_search(self.t.to_model(self.x))))
+
+    def test_elementwise(self):
+        # Test is elementwise
+        self.assertTrue(self.t.elementwise())
+
+
+class TestUnitCubeTransformation(unittest.TestCase):
+    """
+    Tests the UnitCubeTransformation class.
+
+    Most methods are tested in the ScalingTransformation tests
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Transformation class
+        cls.lower = np.array([-1, 2, -3])
+        cls.upper = np.array([0, 4, -1])
+        cls.t = pints.UnitCubeTransformation(cls.lower, cls.upper)
+
+    def test_creation(self):
+        # Tests creation options (at the moment just errors)
+        pints.ScalingTransformation(self.lower, self.upper)
+        pints.ScalingTransformation(self.lower, [10, 10, 10])
+        pints.ScalingTransformation((-10, -20, -30), self.upper)
+
+        self.assertRaisesRegex(
+            ValueError, 'same length',
+            pints.ScalingTransformation, (1, 2), [3])
+        self.assertRaisesRegex(
+            ValueError, 'same length',
+            pints.ScalingTransformation, [3, 4, 5], (10, 10, 10, 10))
+        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (0, 3))
+        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (3, 1))
+        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (1, 3))
+        self.assertRaisesRegex(ValueError, 'must exceed', (1, 2), (3, 2))
+
+    def test_to_search(self):
+        # Test forward transform
+        self.assertTrue(np.allclose(self.t.to_search(self.lower), [0, 0, 0]))
+        self.assertTrue(np.allclose(self.t.to_search(self.upper), [1, 1, 1]))
+
+    def test_to_model(self):
+        # Test inverse transform
+        self.assertTrue(np.allclose(self.t.to_model([0, 0, 0]), self.lower))
+        self.assertTrue(np.allclose(self.t.to_model([1, 1, 1]), self.upper))
 
 
 class TestTransformedWrappers(unittest.TestCase):
