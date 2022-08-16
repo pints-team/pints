@@ -1131,6 +1131,6 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
         # Deprecated on 2019-02-06
         import warnings
         warnings.warn(
-            'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
+            'The class `pints.UnknownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)
