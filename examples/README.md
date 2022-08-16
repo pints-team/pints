@@ -39,7 +39,7 @@ relevant code.
 
 ### Local optimisers
 - [Gradient descent](./optimisation/gradient-descent.ipynb)
-- [iRprop-](./optimsation/irpropmin.ipynb)
+- [iRprop-](./optimisation/irpropmin.ipynb)
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
 
 ### Further optimisation
