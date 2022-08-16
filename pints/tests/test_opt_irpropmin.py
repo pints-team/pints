@@ -12,6 +12,8 @@ import numpy as np
 import pints
 import pints.toy
 
+from shared import StreamCapture
+
 
 debug = False
 method = pints.IRPropMin
@@ -74,6 +76,31 @@ class TestIRPropMin(unittest.TestCase):
         # Tests the hyper parameter interface for this optimiser.
         opt = method([0])
         self.assertEqual(opt.n_hyper_parameters(), 0)
+
+    def test_logging(self):
+
+        # Test with logpdf
+        r, x, s = self.problem()
+        opt = pints.OptimisationController(r, x, s, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(2)
+        with StreamCapture() as c:
+            opt.run()
+        lines = c.text().splitlines()
+        self.assertEqual(lines[0], 'Minimising error measure')
+        self.assertEqual(
+            lines[1], 'Using ' + opt.optimiser().name())
+        self.assertEqual(lines[2], 'Running in sequential mode.')
+        self.assertEqual(
+            lines[3],
+            'Iter. Eval. Best      Current   Min. step Max. step Time m:s')
+        self.assertEqual(
+            lines[4][:-3],
+             '0     1      0.02      0.02      0.1       0.1        0:0')
+        self.assertEqual(
+            lines[5][:-3],
+             '1     2      0.02      0.02      0.12      0.12       0:0')
 
     def test_name(self):
         # Test the name() method.
