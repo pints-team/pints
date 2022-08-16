@@ -12,8 +12,6 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import CircularBoundaries
-
 
 debug = False
 method = pints.GradientDescent
@@ -22,52 +20,33 @@ method = pints.GradientDescent
 class TestGradientDescent(unittest.TestCase):
     """
     Tests the basic methods of the gradient descent optimiser.
+
+    This method requires gradients & does not respect boundaries.
     """
     def setUp(self):
         """ Called before every test """
         np.random.seed(1)
 
     def problem(self):
-        """ Returns a test problem, starting point, sigma, and boundaries. """
+        """ Returns a test problem, starting point and sigma. """
         r = pints.toy.ParabolicError()
         x = [0.1, 0.1]
         s = 0.1
-        b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        return r, x, s, b
+        return r, x, s
 
-    def test_unbounded(self):
-        # Runs an optimisation without boundaries.
-        r, x, s, b = self.problem()
+    def test_without_sigma(self):
+        # Runs an optimisation without sigma.
+        r, x, s = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
         self.assertTrue(found_solution < 1e-3)
 
-    def test_bounded(self):
-        # Runs an optimisation with boundaries.
-        r, x, s, b = self.problem()
-
-        # Rectangular boundaries
-        b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
-        opt.set_log_to_screen(debug)
-        found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-3)
-
-        # Circular boundaries
-        # Start near edge, to increase chance of out-of-bounds occurring.
-        b = CircularBoundaries([0, 0], 1)
-        x = [0.99, 0]
-        opt = pints.OptimisationController(r, x, boundaries=b, method=method)
-        opt.set_log_to_screen(debug)
-        found_parameters, found_solution = opt.run()
-        self.assertTrue(found_solution < 1e-3)
-
-    def test_bounded_and_sigma(self):
-        # Runs an optimisation without boundaries and sigma.
-        r, x, s, b = self.problem()
-        opt = pints.OptimisationController(r, x, s, b, method=method)
+    def test_with_sigma(self):
+        # Runs an optimisation with a sigma.
+        r, x, s = self.problem()
+        opt = pints.OptimisationController(r, x, s, method=method)
         opt.set_threshold(1e-3)
         opt.set_log_to_screen(debug)
         found_parameters, found_solution = opt.run()
@@ -75,7 +54,7 @@ class TestGradientDescent(unittest.TestCase):
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
-        r, x, s, b = self.problem()
+        r, x, s = self.problem()
         opt = method(x)
 
         # Stop called when not running
@@ -100,7 +79,7 @@ class TestGradientDescent(unittest.TestCase):
 
     def test_hyper_parameter_interface(self):
         # Tests the hyper parameter interface for this optimiser.
-        r, x, s, b = self.problem()
+        r, x, s = self.problem()
         opt = pints.OptimisationController(r, x, method=method)
         m = opt.optimiser()
         self.assertEqual(m.n_hyper_parameters(), 1)
