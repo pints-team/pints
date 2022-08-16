@@ -11,6 +11,11 @@ import pints
 class GradientDescent(pints.Optimiser):
     """
     Gradient-descent method with a fixed learning rate.
+
+    The initial learning rate is set as ``min(sigma0)``, but this can be
+    changed at any time with :meth:`set_learning_rate()`.
+
+    This is an unbounded methods: Any ``boundaries`` will be ignored.
     """
 
     def __init__(self, x0, sigma0=0.1, boundaries=None):
@@ -25,7 +30,7 @@ class GradientDescent(pints.Optimiser):
         self._f_best = float('inf')
 
         # Learning rate
-        self._eta = 0.01
+        self._eta = min(self._sigma0)
 
         # Current point, score, and gradient
         self._current = self._x0
