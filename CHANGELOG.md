@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1462](https://github.com/pints-team/pints/pull/1461) The `OptimisationController` now has a stopping criterion `max_evaluations`.
 - [#1460](https://github.com/pints-team/pints/pull/1460) Added the `Adam` local optimiser.
 - [#1459](https://github.com/pints-team/pints/pull/1459) Added the `iRprop-` local optimiser.
 - [#1456](https://github.com/pints-team/pints/pull/1456) Added an optional `translation` to `ScalingTransform` and added a `UnitCubeTransformation` class.
