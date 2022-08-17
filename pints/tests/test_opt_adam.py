@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the API of the iRprop- optimiser.
+# Tests the API of the Adam optimiser.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -16,12 +16,12 @@ from shared import StreamCapture
 
 
 debug = False
-method = pints.IRPropMin
+method = pints.Adam
 
 
-class TestIRPropMin(unittest.TestCase):
+class TestAdam(unittest.TestCase):
     """
-    Tests the API of the iRprop- optimiser.
+    Tests the API of the Adam optimiser.
     """
     def setUp(self):
         """ Called before every test """
@@ -44,8 +44,8 @@ class TestIRPropMin(unittest.TestCase):
 
         # True solution is (0, 0) with error 0
         self.assertTrue(found_solution < 1e-9)
-        self.assertLess(abs(found_parameters[0]), 1e-4)
-        self.assertLess(abs(found_parameters[1]), 1e-4)
+        self.assertLess(abs(found_parameters[0]), 1e-8)
+        self.assertLess(abs(found_parameters[1]), 1e-8)
 
     def test_ask_tell(self):
         # Tests ask-and-tell related error handling.
@@ -90,22 +90,22 @@ class TestIRPropMin(unittest.TestCase):
         lines = c.text().splitlines()
         self.assertEqual(lines[0], 'Minimising error measure')
         self.assertEqual(
-            lines[1], 'Using ' + opt.optimiser().name())
+            lines[1], 'Using Adam')
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(
             lines[3],
-            'Iter. Eval. Best      Current   Min. step Max. step Time m:s')
+            'Iter. Eval. Best      Current   Time m:s')
         self.assertEqual(
             lines[4][:-3],
-            '0     1      0.02      0.02      0.12      0.12       0:0')
+            '0     1      0.02      0.02       0:0')
         self.assertEqual(
             lines[5][:-3],
-            '1     2      0.0008    0.0008    0.06      0.06       0:0')
+            '1     2      5e-17     5e-17      0:0')
 
     def test_name(self):
         # Test the name() method.
         opt = method(np.array([0]))
-        self.assertEqual(opt.name(), 'iRprop-')
+        self.assertEqual(opt.name(), 'Adam')
         self.assertTrue(opt.needs_sensitivities())
 
 
