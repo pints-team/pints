@@ -457,7 +457,6 @@ class OptimisationController(object):
 
         # Maximum evaluations
         self._max_evaluations = None
-        self.set_max_evaluations()
 
         # Threshold value
         self._threshold = None
