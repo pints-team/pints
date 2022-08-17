@@ -44,6 +44,7 @@ Overview:
 - :class:`TransformedErrorMeasure`
 - :class:`TransformedLogPDF`
 - :class:`TransformedLogPrior`
+- :class:`UnitCubeTransformation`
 
 
 .. autoclass:: ComposedTransformation
@@ -67,3 +68,6 @@ Overview:
 .. autoclass:: TransformedLogPDF
 
 .. autoclass:: TransformedLogPrior
+
+.. autoclass:: UnitCubeTransformation
+

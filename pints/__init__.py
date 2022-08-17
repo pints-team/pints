@@ -269,6 +269,7 @@ from ._transformation import (
     TransformedErrorMeasure,
     TransformedLogPDF,
     TransformedLogPrior,
+    UnitCubeTransformation,
 )
 
 
