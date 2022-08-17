@@ -15,7 +15,7 @@ class GradientDescent(pints.Optimiser):
     The initial learning rate is set as ``min(sigma0)``, but this can be
     changed at any time with :meth:`set_learning_rate()`.
 
-    This is an unbounded methods: Any ``boundaries`` will be ignored.
+    This is an unbounded method: Any ``boundaries`` will be ignored.
     """
 
     def __init__(self, x0, sigma0=0.1, boundaries=None):

@@ -42,7 +42,7 @@ class IRPropMin(pints.Optimiser):
     the increase (0.5) & decrease factors (1.2) are fixed, and a minimum step
     size of ``1e-3 * min(sigma0)`` is enforced.
 
-    This is an unbounded methods: Any ``boundaries`` will be ignored.
+    This is an unbounded method: Any ``boundaries`` will be ignored.
 
     The name "iRprop-" was introduced by [1]_, and is a variation on the
     "Resilient backpropagation (Rprop)" optimiser introduced in [2]_.
@@ -71,7 +71,6 @@ class IRPropMin(pints.Optimiser):
 
         # Minimum and maximum step sizes
         self._step_min = 1e-3 * np.min(self._sigma0)
-        #self._step_max = None
 
         # Current point, score, and gradient
         self._current = self._x0
@@ -156,6 +155,9 @@ class IRPropMin(pints.Optimiser):
         # Get product of new and previous gradient
         dprod = dfx * self._current_df
 
+        # Note: Could implement boundaries here by setting all dprod to < 0 if
+        # the point is out of bounds?
+
         # Adapt step sizes
         self._step_size[dprod > 0] *= self._eta_max
         self._step_size[dprod < 0] *= self._eta_min
@@ -163,8 +165,7 @@ class IRPropMin(pints.Optimiser):
         # Bound step sizes
         if self._step_min is not None:
             self._step_size = np.maximum(self._step_size, self._step_min)
-        #if self._step_max is not None:
-        #    self._step_size = np.minimum(self._step_size, self._step_max)
+        # Note: Could implement step_max here if desired
 
         # Remove "weight backtracking"
         # This step ensures that, for each i where dprod < 0:
@@ -181,8 +182,6 @@ class IRPropMin(pints.Optimiser):
         # Take step in direction indicated by current gradient
         self._proposed = self._current - self._step_size * np.sign(dfx)
         self._proposed.setflags(write=False)
-
-        # TODO: Could handle boundaries here, by reducing step size?
 
         # Update x_best and f_best
         if self._f_best > fx:
