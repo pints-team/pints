@@ -205,7 +205,7 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         opt.set_max_evaluations(10)
         self.assertEqual(opt.max_evaluations(), 10)
-        self.assertRaises(ValueError, opt.set_max_iterations, -1)
+        self.assertRaises(ValueError, opt.set_max_evaluations, -1)
         with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: Maximum number of evaluations', c.text())
