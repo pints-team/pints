@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1461](https://github.com/pints-team/pints/pull/1461) The `OptimisationController` now has a stopping criterion `max_evaluations`.
 - [#1459](https://github.com/pints-team/pints/pull/1459) Added the `iRprop-` local optimiser.
 - [#1456](https://github.com/pints-team/pints/pull/1456) Added an optional `translation` to `ScalingTransform` and added a `UnitCubeTransformation` class.
 - [#1432](https://github.com/pints-team/pints/pull/1432) Added 2 new stochastic models: production and degradation model, Schlogl's system of chemical reactions. Moved the stochastic logistic model into `pints.stochastic` to take advantage of the `MarkovJumpModel`.

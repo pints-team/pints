@@ -193,6 +193,23 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(x.shape, (2, ))
         self.assertTrue(b.check(x))
 
+    def test_stopping_max_evaluations(self):
+        # Runs an optimisation with the max_fevals stopping criterion.
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_evaluations(10)
+        self.assertEqual(opt.max_evaluations(), 10)
+        self.assertRaises(ValueError, opt.set_max_iterations, -1)
+        with StreamCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of evaluations', c.text())
+
     def test_stopping_max_iterations(self):
         # Runs an optimisation with the max_iter stopping criterion.
 
