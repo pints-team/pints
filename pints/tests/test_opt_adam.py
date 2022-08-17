@@ -100,7 +100,7 @@ class TestAdam(unittest.TestCase):
             '0     1      0.02      0.02       0:0')
         self.assertEqual(
             lines[5][:-3],
-            '1     2      0.02      0.02       0:0')
+            '1     2      5e-17     5e-17      0:0')
 
     def test_name(self):
         # Test the name() method.
