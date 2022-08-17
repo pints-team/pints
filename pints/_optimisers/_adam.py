@@ -39,7 +39,7 @@ class Adam(pints.Optimiser):
 
         # Best solution found
         self._x_best = self._x0
-        self._f_best = float('inf')
+        self._f_best = np.inf
 
         # Current point, score, and gradient
         self._current = self._x0
@@ -54,10 +54,6 @@ class Adam(pints.Optimiser):
         self._m = np.zeros(self._x0.shape)
         self._v = np.zeros(self._x0.shape)
 
-        # Powers of decay rates
-        self._b1t = None
-        self._b2t = None
-
         # Exponential decay rates for the moment estimates
         self._b1 = 0.9    # 0 < b1 <= 1
         self._b2 = 0.999  # 0 < b2 <= 1
@@ -67,6 +63,10 @@ class Adam(pints.Optimiser):
 
         # Small number added to avoid divide-by-zero
         self._eps = 1e-8
+
+        # Powers of decay rates
+        self._b1t = 1
+        self._b2t = 1
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -113,22 +113,14 @@ class Adam(pints.Optimiser):
         # Unpack reply
         fx, dfx = reply[0]
 
-        # First iteration
-        if self._current_df is None:
-            self._current_f = fx
-            self._current_df = dfx
-            self._f_best = fx
-            self._x_best = self._current
-
-            # Set bxt to bx^1 for 1st "proper" iteration
-            self._b1t = self._b1
-            self._b2t = self._b2
-            return
-
         # Update current point
         self._current = self._proposed
         self._current_f = fx
         self._current_df = dfx
+
+        # Update bx^t
+        self._b1t *= self._b1
+        self._b2t *= self._b2
 
         # "Update biased first moment estimate"
         self._m = self._b1 * self._m + (1 - self._b1) * dfx
@@ -138,11 +130,9 @@ class Adam(pints.Optimiser):
 
         # "Compute bias-corrected first moment estimate"
         m = self._m / (1 - self._b1t)
-        self._b1t *= self._b1
 
         # "Compute bias-corrected second raw moment estimate"
         v = self._v / (1 - self._b2t)
-        self._b2t *= self._b2
 
         # Take step
         self._proposed = (

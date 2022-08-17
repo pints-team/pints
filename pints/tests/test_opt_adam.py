@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Tests the API of the iRprop- optimiser.
+# Tests the API of the Adam optimiser.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -19,9 +19,9 @@ debug = False
 method = pints.Adam
 
 
-class TestIRPropMin(unittest.TestCase):
+class TestAdam(unittest.TestCase):
     """
-    Tests the API of the iRprop- optimiser.
+    Tests the API of the Adam optimiser.
     """
     def setUp(self):
         """ Called before every test """
