@@ -33,12 +33,13 @@ relevant code.
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
 - [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
-- [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
 - [XNES](./optimisation/xnes.ipynb)
 
 ### Local optimisers
+- [Gradient descent](./optimisation/gradient-descent.ipynb)
+- [iRprop-](./optimisation/irpropmin.ipynb)
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
 
 ### Further optimisation

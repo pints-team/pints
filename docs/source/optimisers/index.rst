@@ -19,6 +19,7 @@ or the :class:`OptimisationController` class.
     cmaes_bare
     cmaes
     gradient_descent
+    irpropmin
     nelder_mead
     pso
     snes
