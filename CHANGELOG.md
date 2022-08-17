@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1459](https://github.com/pints-team/pints/pull/1459) Added the `iRprop-` local optimiser.
 - [#1456](https://github.com/pints-team/pints/pull/1456) Added an optional `translation` to `ScalingTransform` and added a `UnitCubeTransformation` class.
 - [#1432](https://github.com/pints-team/pints/pull/1432) Added 2 new stochastic models: production and degradation model, Schlogl's system of chemical reactions. Moved the stochastic logistic model into `pints.stochastic` to take advantage of the `MarkovJumpModel`.
 - [#1420](https://github.com/pints-team/pints/pull/1420) The `Optimiser` class now distinguishes between a best-visited point (`x_best`, with score `f_best`) and a best-guessed point (`x_guessed`, with approximate score `f_guessed`). For most optimisers, the two values are equivalent. The `OptimisationController` still tracks `x_best` and `f_best` by default, but this can be modified using the methods `set_f_guessed_tracking` and `f_guessed_tracking`.
@@ -13,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - [#1378](https://github.com/pints-team/pints/pull/1378) Added a class `pints.LogNormalLogLikelihood`.
 
 ### Changed
+- [#1458](https://github.com/pints-team/pints/pull/1458) The `GradientDescent` optimiser now sets its default learning rate as `min(sigma0)` (it can still be changed afterwards with `set_learning_rate()`).
 - [#1445](https://github.com/pints-team/pints/pull/1445) Allowed multiple LogPDFs to be supplied to the MCMCController (one for each MCMC chain), and added an evaluator which evaluates each position on a separate callable.
 - [#1439](https://github.com/pints-team/pints/pull/1439), [#1433](https://github.com/pints-team/pints/pull/1433) PINTS is no longer tested on Python 3.5. Testing for Python 3.10 has been added.
 - [#1435](https://github.com/pints-team/pints/pull/1435) The optional Stan interface now uses (and requires) pystan 3 or newer. The ``update_data`` method has been remove (model compilation is now cached so that there is no performance benefit to using this method).
@@ -25,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
 
 ### Fixed
+- [#1457](https://github.com/pints-team/pints/pull/1457) Fixed typo in deprecation warning for `UnknownNoiseLikelihood`.
 - [#1455](https://github.com/pints-team/pints/pull/1455) The `s` and `inv_s` properties of `ScalingTransformation` have been replaced with private properties `_s` and `_inv_s`.
 - [#1450](https://github.com/pints-team/pints/pull/1450) Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
 - [#1449](https://github.com/pints-team/pints/pull/1449) Fixed a bug in `MarkovJumpModel.interpolate_mol_counts`.

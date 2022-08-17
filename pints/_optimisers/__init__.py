@@ -947,10 +947,10 @@ def optimise(
         :class:`PSO`) or indirectly (for example as the center of a
         distribution in :class:`XNES`).
     sigma0
-        An optional initial standard deviation around ``x0``. Can be specified
-        either as a scalar value (one standard deviation for all coordinates)
-        or as an array with one entry per dimension. Not all methods will use
-        this information.
+        An optional initial standard deviation around ``x0``, or a parameter
+        representing the "scale" of the parameters. Can be specified either as
+        a scalar value (same value for all dimensions) or as an array with one
+        entry per dimension. Not all methods will use this information.
     boundaries
         An optional set of boundaries on the parameter space.
     transformation
