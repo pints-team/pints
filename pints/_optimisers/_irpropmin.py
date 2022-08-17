@@ -146,11 +146,9 @@ class IRPropMin(pints.Optimiser):
 
         # First iteration
         if self._current_df is None:
+            self._current = self._proposed
             self._current_f = fx
             self._current_df = dfx
-            self._f_best = fx
-            self._x_best = self._current
-            return
 
         # Get product of new and previous gradient
         dprod = dfx * self._current_df
@@ -174,7 +172,7 @@ class IRPropMin(pints.Optimiser):
         #     the step size set in the current iteration
         dfx[dprod < 0] = 0
 
-        # "Accept" proposed point
+        # Update current position
         self._current = self._proposed
         self._current_f = fx
         self._current_df = dfx

@@ -16,6 +16,7 @@ or the :class:`OptimisationController` class.
     running
     base_classes
     convenience_methods
+    adam
     cmaes_bare
     cmaes
     gradient_descent

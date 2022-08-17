@@ -38,6 +38,7 @@ relevant code.
 - [XNES](./optimisation/xnes.ipynb)
 
 ### Local optimisers
+- [Adam](./optimisation/adam.ipynb)
 - [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [iRprop-](./optimisation/irpropmin.ipynb)
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
