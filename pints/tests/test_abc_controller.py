@@ -11,7 +11,47 @@ import pints.toy
 import pints.toy.stochastic
 import unittest
 import numpy as np
-from shared import StreamCapture
+
+from shared import StreamCapture, TemporaryDirectory
+
+
+LOG_SCREEN_1 = [
+    'Using Rejection ABC',
+    'Running in sequential mode.',
+    'Iter. Eval. Acceptance rate Time m:s',
+    '1     127    0.00787401575    0:00.0',
+    '2     167    0.0119760479     0:00.0',
+    '3     209    0.014354067      0:00.0',
+    'Halting: Target number of samples (3) reached.',
+]
+
+LOG_SCREEN_2 = [
+    'Using Rejection ABC',
+    'Running in parallel with 2 worker processess.',
+    'Iter. Eval. Acceptance rate Time m:s',
+    '1     20     0.05             0:00.0',
+    '2     22     0.0909090909     0:00.0',
+    '3     144    0.0208333333     0:00.0',
+    '6     308    0.0194805195     0:00.0',
+    'Halting: Maximum number of iterations (6) reached. Only 6 samples were'
+    ' obtained.',
+]
+
+LOG_FILE = [
+    'Iter. Eval. Acceptance rate Time m:s',
+    '1     127    0.00787401575    0:00.0',
+    '2     167    0.0119760479     0:00.0',
+    '3     209    0.014354067      0:00.0',
+    '6     369    0.0162601626     0:00.0',
+]
+
+LOG_FILE_CSV = [
+    '"Iter.","Eval.","Acceptance rate","Time m:s"',
+    '1,127,7.87401574803149595e-03,0:00.0',
+    '2,167,0.0119760479,0:00.0',
+    '3,209,0.014354067,0:00.0',
+    '6,369,0.0162601626,0:00.0',
+]
 
 
 class TestABCController(unittest.TestCase):
@@ -24,6 +64,7 @@ class TestABCController(unittest.TestCase):
         """ Prepare problem for tests. """
 
         # Create toy model
+        np.random.seed(1)
         cls.model = pints.toy.stochastic.DegradationModel()
         cls.real_parameters = [0.1]
         cls.times = np.linspace(0, 10, 10)
@@ -115,57 +156,124 @@ class TestABCController(unittest.TestCase):
         # Tests logging to screen
 
         # No output
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_max_iterations(10)
+        abc.set_n_samples(3)
+        abc.set_log_to_screen(False)
+        self.assertIsNone(abc.log_filename())
+        abc.set_log_to_file(False)
+        self.assertIsNone(abc.log_filename())
         with StreamCapture() as capture:
-            abc = pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.RejectionABC)
-            abc.set_max_iterations(10)
-            abc.set_log_to_screen(False)
-            abc.set_log_to_file(False)
             abc.run()
         self.assertEqual(capture.text(), '')
 
         # With output to screen
         np.random.seed(1)
         with StreamCapture() as capture:
-            pints.ABCController(
+            abc = pints.ABCController(
                 self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_max_iterations(10)
+            abc.set_n_samples(3)
             abc.set_log_to_screen(True)
-            abc.set_log_to_file(False)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
+        for i, line in enumerate(lines):
+            self.assertLess(i, len(LOG_SCREEN_1))
+            # Chop off time bit before comparison
+            if LOG_SCREEN_1[i][-6:] == '0:00.0':
+                self.assertEqual(line[:-6], LOG_SCREEN_1[i][:-6])
+            else:
+                self.assertEqual(line, LOG_SCREEN_1[i])
+        self.assertEqual(len(lines), len(LOG_SCREEN_1))
 
-        # With output to screen
+        # With output to screen: in parallel and with other stopping crit
         np.random.seed(1)
-        with StreamCapture() as capture:
-            pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.RejectionABC)
-            abc.set_max_iterations(10)
-            abc.set_log_to_screen(False)
-            abc.set_log_to_file(True)
-            abc.run()
-        lines = capture.text().splitlines()
-        self.assertTrue(len(lines) == 0)
-
-        # Invalid log interval
-        self.assertRaises(ValueError, abc.set_log_interval, 0)
-
-        abc = pints.ABCController(
-            self.error_measure, self.log_prior, method=pints.RejectionABC)
-        abc.set_log_to_file("temp_file")
-        self.assertEqual(abc.log_filename(), "temp_file")
-
-        # tests logging to screen with parallel
         with StreamCapture() as capture:
             abc = pints.ABCController(
                 self.error_measure, self.log_prior, method=pints.RejectionABC)
+            abc.set_max_iterations(6)
+            abc.set_log_interval(6, 3)
             abc.set_parallel(2)
-            abc.set_max_iterations(10)
-            abc.set_log_to_screen(False)
-            abc.set_log_to_file(False)
+            abc.set_log_to_screen(True)
             abc.run()
-        self.assertEqual(capture.text(), '')
+        lines = capture.text().splitlines()
+        self.assertTrue(len(lines) > 0)
+        for i, line in enumerate(lines):
+            self.assertLess(i, len(LOG_SCREEN_2))
+            # Chop off time bit before comparison
+            if LOG_SCREEN_2[i][-6:] == '0:00.0':
+                self.assertEqual(line[:-6], LOG_SCREEN_2[i][:-6])
+            else:
+                self.assertEqual(line, LOG_SCREEN_2[i])
+        self.assertEqual(len(lines), len(LOG_SCREEN_2))
+
+        # With output to file
+        np.random.seed(1)
+        with TemporaryDirectory() as d:
+            filename = d.path('test.txt')
+            abc = pints.ABCController(
+                self.error_measure,
+                self.log_prior,
+                method=pints.RejectionABC)
+            abc.set_max_iterations(6)
+            abc.set_log_interval(6, 3)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(filename)
+            self.assertEqual(abc.log_filename(), filename)
+
+            with StreamCapture() as capture:
+                abc.run()
+            self.assertEqual(capture.text(), '')
+
+            with open(filename, 'r') as f:
+                lines = f.read().splitlines()
+            for i, line in enumerate(lines):
+                self.assertLess(i, len(LOG_FILE))
+                # Chop off time bit before comparison
+                if LOG_FILE[i][-6:] == '0:00.0':
+                    self.assertEqual(line[:-6], LOG_FILE[i][:-6])
+                else:
+                    self.assertEqual(line, LOG_FILE[i])
+                self.assertEqual(line[:-6], LOG_FILE[i][:-6])
+            self.assertEqual(len(lines), len(LOG_FILE))
+
+        # With output to CSV file
+        np.random.seed(1)
+        with TemporaryDirectory() as d:
+            filename = d.path('test.txt')
+            abc = pints.ABCController(
+                self.error_measure,
+                self.log_prior,
+                method=pints.RejectionABC)
+            abc.set_max_iterations(6)
+            abc.set_log_interval(6, 3)
+            abc.set_log_to_screen(False)
+            abc.set_log_to_file(filename, csv=True)
+            self.assertEqual(abc.log_filename(), filename)
+
+            with StreamCapture() as capture:
+                abc.run()
+            self.assertEqual(capture.text(), '')
+
+            with open(filename, 'r') as f:
+                lines = f.read().splitlines()
+
+            for line1, line2 in zip(lines, LOG_FILE_CSV):
+                if line2.startswith('"'):
+                    self.assertEqual(line1, line2)
+                else:
+                    parts1 = line1.split(',')
+                    parts2 = line2.split(',')
+                    self.assertEqual(len(parts1), len(parts2))
+                    self.assertEqual(parts1[0], parts2[0])
+                    self.assertEqual(parts1[1], parts2[1])
+                    self.assertAlmostEqual(float(parts1[2]), float(parts2[2]))
+            self.assertEqual(len(lines), len(LOG_FILE_CSV))
+
+        # Invalid log interval
+        self.assertRaises(ValueError, abc.set_log_interval, 0)
 
     def test_controller_extra(self):
         # Tests various controller aspects
