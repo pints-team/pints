@@ -23,9 +23,6 @@ class TestIRPropMin(unittest.TestCase):
     """
     Tests the API of the iRprop- optimiser.
     """
-    def setUp(self):
-        """ Called before every test """
-        np.random.seed(1)
 
     def problem(self):
         """ Returns a test problem, starting point, and sigma. """
@@ -72,10 +69,90 @@ class TestIRPropMin(unittest.TestCase):
         # Now we should be running
         self.assertTrue(opt.running())
 
+    def test_boundaries(self):
+        # Tests boundary support
+
+        # First, set up a test case in which boundaries are breached
+        error = pints.toy.ParabolicError()
+        x0 = [1.8, -0.8]
+        b1 = pints.RectangularBoundaries([-0.1, -0.9], [1.9, 0.9])
+
+        # Test the test: Check that 5 steps is enough to get a boundary breach
+        checks = []
+        opt = pints.IRPropMin(x0, 1.2)
+        for i in range(5):
+            xs = opt.ask()
+            fs = [error.evaluateS1(x) for x in xs]
+            opt.tell(fs)
+            checks.append(b1.check(xs[0]))
+        self.assertEqual(checks, [True, True, False, False, False])
+
+        # Test with rectangular boundaries
+        checks = []
+        opt = pints.IRPropMin(x0, 1.2, boundaries=b1)
+        for i in range(5):
+            xs = opt.ask()
+            fs = [error.evaluateS1(x) for x in xs]
+            opt.tell(fs)
+            checks.append(b1.check(xs[0]))
+        self.assertEqual(checks, [True, True, True, True, True])
+
+        # Test with custom boundaries
+        class CustomBoundaries(pints.Boundaries):
+            lo = np.array([-0.1, -0.9])
+            up = np.array([1.9, 0.9])
+
+            def n_parameters(self):
+                return 2
+
+            def check(self, x):
+                return not np.any((x < self.lo) | (x >= self.up))
+
+        b2 = CustomBoundaries()
+        checks1 = []
+        checks2 = []
+        opt = pints.IRPropMin(x0, 1.2, boundaries=b2)
+        for i in range(5):
+            xs = opt.ask()
+            fs = [error.evaluateS1(x) for x in xs]
+            opt.tell(fs)
+            checks1.append(b1.check(xs[0]))
+            checks2.append(b2.check(xs[0]))
+        self.assertEqual(checks1, [True, True, True, True, True])
+        self.assertEqual(checks2, [True, True, True, True, True])
+
+    def test_step_sizes(self):
+        # Tests step sizes can be set and obtained
+        opt = method([0], sigma0=123)
+        self.assertEqual(opt.min_step_size(), 123 * 1e-3)
+        self.assertIsNone(opt.max_step_size())
+
+        opt.set_min_step_size(12)
+        self.assertEqual(opt.min_step_size(), 12)
+        self.assertIsNone(opt.max_step_size())
+
+        opt.set_max_step_size(13)
+        self.assertEqual(opt.min_step_size(), 12)
+        self.assertEqual(opt.max_step_size(), 13)
+
+        opt.set_min_step_size(None)
+        self.assertIsNone(opt.min_step_size())
+        self.assertEqual(opt.max_step_size(), 13)
+
+        opt.set_max_step_size(None)
+        self.assertIsNone(opt.min_step_size())
+        self.assertIsNone(opt.max_step_size())
+
     def test_hyper_parameter_interface(self):
         # Tests the hyper parameter interface for this optimiser.
         opt = method([0])
-        self.assertEqual(opt.n_hyper_parameters(), 0)
+        self.assertEqual(opt.n_hyper_parameters(), 2)
+        opt.set_hyper_parameters([123, 456])
+        self.assertEqual(opt.min_step_size(), 123)
+        self.assertEqual(opt.max_step_size(), 456)
+        opt.set_hyper_parameters([234, None])
+        self.assertEqual(opt.min_step_size(), 234)
+        self.assertEqual(opt.max_step_size(), None)
 
     def test_logging(self):
 
