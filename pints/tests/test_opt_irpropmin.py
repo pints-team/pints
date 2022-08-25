@@ -19,6 +19,27 @@ debug = False
 method = pints.IRPropMin
 
 
+log_1 = '''
+Minimising error measure
+Using iRprop-
+Running in sequential mode.
+Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time m:s
+0     1      0.02      0.02      0.12      0.12                   0:00.0
+1     2      0.0008    0.0008    0.06      0.06                   0:00.0
+'''.strip()
+
+log_2 = '''
+Minimising error measure
+Using iRprop-
+Running in sequential mode.
+Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time m:s
+0     1      0.02      0.02      0.11      0.11                   0:00.0
+1     2      0.0002    0.0002    0.055     0.055                  0:00.0
+2     3      0.0002    0.0002    0.055     0.055                  0:00.0
+3     4      0.0002    0.00405   0.03      0.03                   0:00.0
+'''.strip()
+
+
 class TestIRPropMin(unittest.TestCase):
     """
     Tests the API of the iRprop- optimiser.
@@ -165,19 +186,13 @@ class TestIRPropMin(unittest.TestCase):
         with StreamCapture() as c:
             opt.run()
         lines = c.text().splitlines()
-        self.assertEqual(lines[0], 'Minimising error measure')
-        self.assertEqual(
-            lines[1], 'Using ' + opt.optimiser().name())
-        self.assertEqual(lines[2], 'Running in sequential mode.')
-        self.assertEqual(
-            lines[3],
-            'Iter. Eval. Best      Current   Min. step Max. step Time m:s')
-        self.assertEqual(
-            lines[4][:-3],
-            '0     1      0.02      0.02      0.12      0.12       0:0')
-        self.assertEqual(
-            lines[5][:-3],
-            '1     2      0.0008    0.0008    0.06      0.06       0:0')
+        exp = log_1.splitlines()
+        self.assertEqual(lines[0], exp[0])
+        self.assertEqual(lines[1], exp[1])
+        self.assertEqual(lines[2], exp[2])
+        self.assertEqual(lines[3], exp[3])
+        self.assertEqual(lines[4][:-3], exp[4][:-3])
+        self.assertEqual(lines[5][:-3], lines[5][:-3])
 
         # Test with min and max steps
         r, x, s = self.problem()
@@ -191,25 +206,15 @@ class TestIRPropMin(unittest.TestCase):
         with StreamCapture() as c:
             opt.run()
         lines = c.text().splitlines()
-        self.assertEqual(lines[0], 'Minimising error measure')
-        self.assertEqual(
-            lines[1], 'Using ' + opt.optimiser().name())
-        self.assertEqual(lines[2], 'Running in sequential mode.')
-        self.assertEqual(
-            lines[3],
-            'Iter. Eval. Best      Current   Min. step Max. step Time m:s')
-        self.assertEqual(
-            lines[4][:-3],
-            '0     1      0.02      0.02      0.11      0.11       0:0')
-        self.assertEqual(
-            lines[5][:-3],
-            '1     2      0.0002    0.0002    0.055     0.055      0:0')
-        self.assertEqual(
-            lines[6][:-3],
-            '2     3      0.0002    0.0002    0.055     0.055      0:0')
-        self.assertEqual(
-            lines[7][:-3],
-            '3     4      0.0002    0.00405   0.03      0.03       0:0')
+        exp = log_2.splitlines()
+        self.assertEqual(lines[0], exp[0])
+        self.assertEqual(lines[1], exp[1])
+        self.assertEqual(lines[2], exp[2])
+        self.assertEqual(lines[3], exp[3])
+        self.assertEqual(lines[4][:-3], exp[4][:-3])
+        self.assertEqual(lines[5][:-3], lines[5][:-3])
+        self.assertEqual(lines[6][:-3], exp[6][:-3])
+        self.assertEqual(lines[7][:-3], lines[7][:-3])
 
     def test_name(self):
         # Test the name() method.

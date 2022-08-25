@@ -49,20 +49,19 @@ class IRPropMin(pints.Optimiser):
     hyper-parameter interface.
 
     If boundaries are provided, an extra step is added at the end of the
-    algorithm::
+    algorithm that reduces the step size where boundary constraints are not
+    met. For :class:`RectangularBoundaries` this works on a per-dimension
+    basis::
 
-        while not boundaries.check(p[i]):
-            step_size[i] *= 0.5
-            p[i] = p[i] - sign(df[i]) * step_size[i]
+        while p_j[i] < lower or p_j[i] >= upper:
+            step_size_j[i] *= 0.5
+            p_j[i] = p_j[i] - sign(df_j[i]) * step_size_j[i]
 
-    For :class:`RectangularBoundaries` this check is carried out seperately for
-    each dimension, so that step size is only reduced in the directions that
-    violate the boundaries. For the general case, step sizes in all directions
-    are reduced until the boundary constraints are met. Note that these
-    boundary checks are not part of the standard algorithm, and can cause step
-    sizes to (temporarily) go below the minimum step size. In pathological
-    cases where the gradient points towards the boundaries it may cause the
-    method to get stuck.
+    For general boundaries a more complex heuristic is used: First, the step
+    size in all dimensions is reduced until the boundary constraints are met.
+    Next, this reduction is undone for each dimension in turn: if the
+    constraint is still met without the reduction the step size in this
+    dimension is left unchanged.
 
     The numbers 0.5 and 1.2 shown in the (main and boundary) pseudo-code are
     technically hyper-parameters, but are fixed in this implementation.
@@ -116,6 +115,9 @@ class IRPropMin(pints.Optimiser):
             self._lower = self._boundaries.lower()
             self._upper = self._boundaries.upper()
 
+        # Reduced step sizes due to boundary violations
+        self._breaches = []
+
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
 
@@ -138,11 +140,13 @@ class IRPropMin(pints.Optimiser):
         """ See :meth:`Loggable._log_init()`. """
         logger.add_float('Min. step')
         logger.add_float('Max. step')
+        logger.add_string('Bound corr.', 11)
 
     def _log_write(self, logger):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(np.min(self._step_size))
         logger.log(np.max(self._step_size))
+        logger.log(','.join([str(x) for x in self._breaches]))
 
     def max_step_size(self):
         """ Returns the maximum step size (or ``None`` if not set). """
@@ -234,25 +238,50 @@ class IRPropMin(pints.Optimiser):
         self._current_df = dfx
 
         # Take step in direction indicated by current gradient
-        self._proposed = self._current - self._step_size * np.sign(dfx)
+        p = self._current - self._step_size * np.sign(dfx)
 
         # Allow boundaries to reduce step size
         if self._lower is not None:
-            out = np.logical_or(
-                self._proposed < self._lower, self._proposed >= self._upper)
+            # Rectangular boundaries: reduce individual step sizes until OK
+            out = np.logical_or(p < self._lower, p >= self._upper)
+            self._breaches = np.flatnonzero(out)
+            sign = np.sign(dfx)
             while np.any(out):
                 self._step_size[out] *= self._eta_min
-                self._proposed = self._current - self._step_size * np.sign(dfx)
-                out = np.logical_or(
-                    self._proposed < self._lower,
-                    self._proposed >= self._upper)
+                p = self._current - self._step_size * sign
+                out = np.logical_or(p < self._lower, p >= self._upper)
 
-        elif self._boundaries is not None:
-            while not self._boundaries.check(self._proposed):
-                self._step_size *= self._eta_min
-                self._proposed = self._current - self._step_size * np.sign(dfx)
+        elif self._boundaries is not None and not self._boundaries.check(p):
+            # General boundaries: reduce all step sizes until OK
+            s = np.copy(self._step_size)
+            sign = np.sign(dfx)
+            while not self._boundaries.check(p):
+                s *= self._eta_min
+                p = self._current - s * sign
+
+            # Attempt restoring one-by-one
+            self._breaches = []
+            for i, s_big in enumerate(self._step_size):
+                small = s[i]
+                s[i] = s_big
+                if not self._boundaries.check(self._current - s * sign):
+                    s[i] = small
+                    self._breaches.append(i)
+            self._step_size = s
+            p = self._current - s * sign
+
+            # An alternative method would be to reduce each dimension's step
+            # size one at a time, and check if that restores the boundaries.
+            # However, if that doesn't work we then need to test all tuples of
+            # dimenions, then triples, etc. The method above looks clumsy, but
+            # avoids these combinatorics.
+
+        elif self._breaches:
+            # No boundary breaces: empty list (if needed)
+            self._breaches = []
 
         # Store proposed as read-only, so that it can be passed to user
+        self._proposed = p
         self._proposed.setflags(write=False)
 
         # Update x_best and f_best
