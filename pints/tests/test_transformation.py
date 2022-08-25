@@ -860,6 +860,12 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertEqual(list(tb.lower()), [np.log(0.01), np.log(0.95)])
         self.assertEqual(list(tb.upper()), [np.log(0.05), np.log(1.05)])
 
+        # Test that boundaries get swapped if needed
+        t2 = pints.ScalingTransformation([4, -2])
+        tb = pints.TransformedRectangularBoundaries(b, t2)
+        self.assertEqual(list(tb.lower()), [0.04, -2.1])
+        self.assertEqual(list(tb.upper()), [0.20, -1.9])
+
         # Wrong number of parameters
         self.assertRaisesRegex(
             ValueError, 'Number of parameters for boundaries and transfo',

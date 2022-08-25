@@ -984,8 +984,10 @@ class TransformedRectangularBoundaries(pints.RectangularBoundaries):
                              'transformation must match.')
 
         # Transform upper and lower boundaries
-        points = zip(boundaries.lower(), boundaries.upper())
-        lower, upper = zip(*[transformation.to_search(x) for x in points])
+        a = transformation.to_search(boundaries.lower())
+        b = transformation.to_search(boundaries.upper())
+        lower = np.minimum(a, b)
+        upper = np.maximum(a, b)
 
         # Pass transformed boundaries to RectangularBoundaries
         super().__init__(lower, upper)
