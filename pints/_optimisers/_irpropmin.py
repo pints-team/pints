@@ -58,8 +58,11 @@ class IRPropMin(pints.Optimiser):
     For :class:`RectangularBoundaries` this check is carried out seperately for
     each dimension, so that step size is only reduced in the directions that
     violate the boundaries. For the general case, step sizes in all directions
-    are reduced until the boundary constraints are met. (Note that these
-    boundary checks are not part of the standard algorithm.)
+    are reduced until the boundary constraints are met. Note that these
+    boundary checks are not part of the standard algorithm, and can cause step
+    sizes to (temporarily) go below the minimum step size. In pathological
+    cases where the gradient points towards the boundaries it may cause the
+    method to get stuck.
 
     The numbers 0.5 and 1.2 shown in the (main and boundary) pseudo-code are
     technically hyper-parameters, but are fixed in this implementation.
