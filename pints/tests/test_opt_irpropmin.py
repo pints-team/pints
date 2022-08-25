@@ -179,6 +179,38 @@ class TestIRPropMin(unittest.TestCase):
             lines[5][:-3],
             '1     2      0.0008    0.0008    0.06      0.06       0:0')
 
+        # Test with min and max steps
+        r, x, s = self.problem()
+        opt = pints.OptimisationController(r, x, s, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(4)
+        opt.set_log_interval(1)
+        opt.optimiser().set_min_step_size(0.03)
+        opt.optimiser().set_max_step_size(0.11)
+        with StreamCapture() as c:
+            opt.run()
+        lines = c.text().splitlines()
+        self.assertEqual(lines[0], 'Minimising error measure')
+        self.assertEqual(
+            lines[1], 'Using ' + opt.optimiser().name())
+        self.assertEqual(lines[2], 'Running in sequential mode.')
+        self.assertEqual(
+            lines[3],
+            'Iter. Eval. Best      Current   Min. step Max. step Time m:s')
+        self.assertEqual(
+            lines[4][:-3],
+            '0     1      0.02      0.02      0.11      0.11       0:0')
+        self.assertEqual(
+            lines[5][:-3],
+            '1     2      0.0002    0.0002    0.055     0.055      0:0')
+        self.assertEqual(
+            lines[6][:-3],
+            '2     3      0.0002    0.0002    0.055     0.055      0:0')
+        self.assertEqual(
+            lines[7][:-3],
+            '3     4      0.0002    0.00405   0.03      0.03       0:0')
+
     def test_name(self):
         # Test the name() method.
         opt = method(np.array([0]))
