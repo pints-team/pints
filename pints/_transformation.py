@@ -999,7 +999,7 @@ class TransformedRectangularBoundaries(pints.RectangularBoundaries):
     def sample(self, n=1):
         """ See :meth:`Boundaries.sample()`. """
         # Sample from the original boundaries, but transform to new space
-        return [self._transformation.to_search(p) 
+        return [self._transformation.to_search(p)
                 for p in self._boundaries.sample(n)]
 
 
