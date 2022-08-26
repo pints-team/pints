@@ -270,6 +270,7 @@ from ._transformation import (
     TransformedErrorMeasure,
     TransformedLogPDF,
     TransformedLogPrior,
+    TransformedRectangularBoundaries,
     UnitCubeTransformation,
 )
 
