@@ -47,6 +47,11 @@ Overview:
 - :class:`UnitCubeTransformation`
 
 
+Transformation types
+********************
+
+.. autoclass:: Transformation
+
 .. autoclass:: ComposedTransformation
 
 .. autoclass:: IdentityTransformation
@@ -59,7 +64,10 @@ Overview:
 
 .. autoclass:: ScalingTransformation
 
-.. autoclass:: Transformation
+.. autoclass:: UnitCubeTransformation
+
+Transformed objects
+*******************
 
 .. autoclass:: TransformedBoundaries
 
@@ -69,5 +77,5 @@ Overview:
 
 .. autoclass:: TransformedLogPrior
 
-.. autoclass:: UnitCubeTransformation
+.. autoclass:: TransformedRectangularBoundaries
 
