@@ -993,13 +993,14 @@ class TransformedRectangularBoundaries(pints.RectangularBoundaries):
         super().__init__(lower, upper)
 
         # Store input
-        self._bound = boundaries
-        self._trans = transformation
+        self._boundaries = boundaries
+        self._transformation = transformation
 
     def sample(self, n=1):
         """ See :meth:`Boundaries.sample()`. """
         # Sample from the original boundaries, but transform to new space
-        return [self._trans.to_search(p) for p in self._bound.sample(n)]
+        return [self._transformation.to_search(p) 
+                for p in self._boundaries.sample(n)]
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
