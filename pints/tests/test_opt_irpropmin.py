@@ -164,6 +164,15 @@ class TestIRPropMin(unittest.TestCase):
         self.assertIsNone(opt.min_step_size())
         self.assertIsNone(opt.max_step_size())
 
+        # Delayed error
+        opt.set_min_step_size(10)
+        opt.set_max_step_size(5)
+        opt.set_min_step_size(1)
+        opt.set_max_step_size(0)
+        opt.set_min_step_size(8)
+        self.assertRaisesRegex(
+            Exception, 'Max step size must be larger than min', opt.ask)
+
     def test_hyper_parameter_interface(self):
         # Tests the hyper parameter interface for this optimiser.
         opt = method([0])

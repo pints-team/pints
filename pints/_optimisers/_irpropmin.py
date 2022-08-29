@@ -121,9 +121,18 @@ class IRPropMin(pints.Optimiser):
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
 
-        # Running, and ready for tell now
+        # First call
+        if not self._running:
+            if (self._step_min is not None and self._step_max is not None
+                    and self._step_min >= self._step_max):
+                raise Exception(
+                    'Max step size must be larger than min step size (current'
+                    ' settings: min_step_size = ' + str(self._step_min) + ', '
+                    ' max_step_size = ' + str(self._step_max) + ').')
+            self._running = True
+
+        # Ready for tell now
         self._ready_for_tell = True
-        self._running = True
 
         # Return proposed points (just the one)
         return [self._proposed]
