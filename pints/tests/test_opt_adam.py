@@ -19,6 +19,17 @@ debug = False
 method = pints.Adam
 
 
+log_1 = '''
+Minimising error measure
+Using Adam
+Running in sequential mode.
+Iter. Eval. Best      Current   b1        b2        Time m:s
+0     1      0.02      0.02      0.9       0.999      0:00.0
+1     2      5e-17     5e-17     0.81      0.998001   0:00.0
+2     3      5e-17     0.00898   0.729     0.997003   0:00.0
+'''.strip()
+
+
 class TestAdam(unittest.TestCase):
     """
     Tests the API of the Adam optimiser.
@@ -84,23 +95,19 @@ class TestAdam(unittest.TestCase):
         opt = pints.OptimisationController(r, x, s, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_unchanged_iterations(None)
-        opt.set_max_iterations(2)
+        opt.set_max_iterations(3)
         with StreamCapture() as c:
             opt.run()
         lines = c.text().splitlines()
-        self.assertEqual(lines[0], 'Minimising error measure')
-        self.assertEqual(
-            lines[1], 'Using Adam')
-        self.assertEqual(lines[2], 'Running in sequential mode.')
-        self.assertEqual(
-            lines[3],
-            'Iter. Eval. Best      Current   Time m:s')
-        self.assertEqual(
-            lines[4][:-3],
-            '0     1      0.02      0.02       0:0')
-        self.assertEqual(
-            lines[5][:-3],
-            '1     2      5e-17     5e-17      0:0')
+        exp = log_1.splitlines()
+        self.assertEqual(lines[0], exp[0])
+        self.assertEqual(lines[1], exp[1])
+        self.assertEqual(lines[2], exp[2])
+        self.assertEqual(lines[3], exp[3])
+        self.assertEqual(lines[4][:-3], exp[4][:-3])
+        self.assertEqual(lines[5][:-3], exp[5][:-3])
+        self.assertEqual(lines[6][:-3], exp[6][:-3])
+        #self.assertEqual(len(lines), len(exp))
 
     def test_name(self):
         # Test the name() method.

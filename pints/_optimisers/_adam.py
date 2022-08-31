@@ -12,16 +12,36 @@ import numpy as np
 
 class Adam(pints.Optimiser):
     """
-    Adam optimiser (adaptive moment estimation), as described in [1]_.
+    Adam optimiser (adaptive moment estimation), as described in [1]_ (see
+    Algorithm 1).
 
     This method is a variation on gradient descent that maintains two
     "moments", allowing it to overshoot and go against the gradient for a short
-    time. This property can make it more robust against noisy gradients. Full
-    pseudo-code is given in [1]_ (Algorithm 1).
+    time. This property can make it more robust against noisy gradients.
 
-    This implementation uses a fixed step size, set as `` min(sigma0)``. Note
-    that the adaptivity in this method comes from the changing moments, not
-    the step size.
+    Pseudo-code is given below. Here the value of the j-th parameter at
+    iteration i is given as ``p_j[i]`` and the corresponding derivative is
+    denoted ``g_j[i]``::
+
+        b1[i] = b1[i - 1] * beta1
+        b2[i] = b2[i - 1] * beta2
+
+        m_j[i] = b1[i] * m_j[i - 1] + (1 - b1[i]) * g_j[i]
+        v_j[i] = b2[i] * v_j[i - 1] + (1 - b2[i]) * g_j[i]**2
+
+        m_j' = m_j[i] / (1 - b1[i])
+        v_j' = v_j[i] / (1 - b2[i])
+
+        p_j[i] = p_j[i - 1] - alpha * m_j' / (sqrt(v_j') + eps)
+
+    The initial values of the moments are 1: ``m_j[0] = v_j[0] = 1``. The step
+    size ``alpha``, ``beta1`` and ``beta2`` are decay parameters, and ``eps``
+    is a small constant used to avoid division by zero.
+
+    In this implementation ``beta1 = 0.9``, ``beta2 = 0.999`` and
+    ``eps = 1e-8``. The step size ``alpha`` is set as ``min(sigma0)``.
+
+    This is an unbounded method: Any ``boundaries`` will be ignored.
 
     References
     ----------
@@ -85,6 +105,16 @@ class Adam(pints.Optimiser):
     def f_guessed(self):
         """ See :meth:`Optimiser.f_guessed()`. """
         return self._current_f
+
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('b1')
+        logger.add_float('b2')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        logger.log(self._b1t)
+        logger.log(self._b2t)
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
