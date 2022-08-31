@@ -26,7 +26,7 @@ class AdaDelta(pints.Optimiser):
     Here ``v_j[0] = 0`` and ``w_j[0] = 0, ``rho`` is a constant decay rate,
     and ``eps`` is a small number used to avoid numerical errors.
 
-    In this implementation, ``eps = 1e-8`` and ``rho = 0.95``. Note that there
+    In this implementation, ``eps = 1e-6`` and ``rho = 0.95``. Note that there
     is no learning rate hyperparameter in this algorithm.
 
     Note: Boundaries and the value of ``sigma0`` are ignored.
