@@ -107,7 +107,6 @@ class TestAdam(unittest.TestCase):
         self.assertEqual(lines[4][:-3], exp[4][:-3])
         self.assertEqual(lines[5][:-3], exp[5][:-3])
         self.assertEqual(lines[6][:-3], exp[6][:-3])
-        #self.assertEqual(len(lines), len(exp))
 
     def test_name(self):
         # Test the name() method.
