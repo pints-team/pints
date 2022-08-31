@@ -7,9 +7,14 @@
 # copyright notice and full license details.
 #
 import unittest
+import warnings
+
+import numpy as np
+
 import pints
 import pints.toy
-import numpy as np
+
+from shared import CircularBoundaries, SwappingTransformation
 
 
 class TestTransformation(pints.Transformation):
@@ -473,8 +478,9 @@ class TestLogTransformation(unittest.TestCase):
 
     def test_invalid_inputs(self):
         # Test invalid inputs
-        self.assertTrue(np.isnan(self.t1.to_search(-1.)))
-        self.assertTrue(np.isinf(self.t1.to_search(0)))
+        with warnings.catch_warnings(record=True):
+            self.assertTrue(np.isnan(self.t1.to_search(-1.)))
+            self.assertTrue(np.isinf(self.t1.to_search(0)))
 
     def test_retransform(self):
         # Test forward transform the inverse transform
@@ -775,13 +781,16 @@ class TestUnitCubeTransformation(unittest.TestCase):
 
 
 class TestTransformedWrappers(unittest.TestCase):
+    """
+    Tests the wrapped boundaries, error, logpdf, and logprior classes.
+    """
 
     def test_transformed_boundaries(self):
-        # Test TransformedBoundaries class
+        # Test the TransformedBoundaries class
 
         t = pints.LogTransformation(2)
         b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
-        tb = t.convert_boundaries(b)
+        tb = pints.TransformedBoundaries(b, t)
         xi = [0.02, 1.01]
         txi = [-3.9120230054281460, 0.0099503308531681]
         xo = [10., 50.]
@@ -792,11 +801,12 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertEqual(tb.check(txo), b.check(xo))
         self.assertEqual(tb.n_parameters(), b.n_parameters())
 
-        # Test invalid transform
-        self.assertRaises(ValueError, pints.TransformedBoundaries, b,
-                          pints.LogTransformation(3))
+        # Wrong number of parameters
+        self.assertRaisesRegex(
+            ValueError, 'Number of parameters for boundaries and transfo',
+            pints.TransformedBoundaries, b, pints.LogTransformation(3))
 
-        # Test sampling from transformed space
+        # Test sampling from untransformed space (but converted to transformed)
         np.random.seed(1)
         x1 = b.sample(1)
         x2 = b.sample(3)
@@ -811,6 +821,80 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertEqual(list(t.to_search(x2[0])), list(y2[0]))
         self.assertEqual(list(t.to_search(x2[1])), list(y2[1]))
         self.assertEqual(list(t.to_search(x2[2])), list(y2[2]))
+
+    def test_transformed_rectangular_boundaries(self):
+        # Test the TransformedRectangularBoundaries class
+
+        # Test automatic creation
+        t = pints.LogTransformation(2)
+        b = pints.RectangularBoundaries([0.01, 0.95], [0.05, 1.05])
+        tb = t.convert_boundaries(b)
+        self.assertIsInstance(tb, pints.TransformedRectangularBoundaries)
+
+        # Test before and after transformed give the same result
+        xi = [0.02, 1.01]
+        txi = [-3.9120230054281460, 0.0099503308531681]
+        xo = [10., 50.]
+        txo = [2.3025850929940459, 3.9120230054281460]
+        self.assertEqual(tb.check(txi), b.check(xi))
+        self.assertEqual(tb.check(txo), b.check(xo))
+        self.assertEqual(tb.n_parameters(), b.n_parameters())
+
+        # Test sampling still happens in untransformed space
+        np.random.seed(1)
+        x1 = b.sample(1)
+        x2 = b.sample(3)
+        self.assertEqual(len(x1), 1)
+        self.assertEqual(len(x2), 3)
+        np.random.seed(1)
+        y1 = tb.sample(1)
+        y2 = tb.sample(3)
+        self.assertEqual(len(y1), 1)
+        self.assertEqual(len(y2), 3)
+        self.assertEqual(list(t.to_search(x1[0])), list(y1[0]))
+        self.assertEqual(list(t.to_search(x2[0])), list(y2[0]))
+        self.assertEqual(list(t.to_search(x2[1])), list(y2[1]))
+        self.assertEqual(list(t.to_search(x2[2])), list(y2[2]))
+
+        # Test (a few) rectangular boundary methods
+        self.assertEqual(list(tb.lower()), [np.log(0.01), np.log(0.95)])
+        self.assertEqual(list(tb.upper()), [np.log(0.05), np.log(1.05)])
+
+        # Test that boundaries get swapped if needed
+        t2 = pints.ScalingTransformation([4, -2])
+        tb = pints.TransformedRectangularBoundaries(b, t2)
+        self.assertEqual(list(tb.lower()), [0.04, -2.1])
+        self.assertEqual(list(tb.upper()), [0.20, -1.9])
+
+        # Wrong number of parameters
+        self.assertRaisesRegex(
+            ValueError, 'Number of parameters for boundaries and transfo',
+            pints.TransformedRectangularBoundaries, b,
+            pints.LogTransformation(3))
+
+        # Not rectangular boundaries
+        cb = CircularBoundaries([0, 0])
+        tcb = t.convert_boundaries(cb)
+        self.assertIsInstance(tcb, pints.TransformedBoundaries)
+        self.assertNotIsInstance(tcb, pints.TransformedRectangularBoundaries)
+        self.assertRaisesRegex(
+            ValueError, 'can only be created from a RectangularBoundaries obj',
+            pints.TransformedRectangularBoundaries, cb, t)
+
+        # Not an elementwise transformation
+        cb = CircularBoundaries([0, 0])
+        tcb = t.convert_boundaries(cb)
+        self.assertIsInstance(tcb, pints.TransformedBoundaries)
+        self.assertNotIsInstance(tcb, pints.TransformedRectangularBoundaries)
+        self.assertRaisesRegex(
+            ValueError, 'can only be created from a RectangularBoundaries obj',
+            pints.TransformedRectangularBoundaries, cb, t)
+
+        # Not a piecewise transformation
+        t2 = SwappingTransformation(2)
+        self.assertRaisesRegex(
+            ValueError, 'can only be created from an element-wise trans',
+            pints.TransformedRectangularBoundaries, b, t2)
 
     def test_transformed_error_measure(self):
         # Test TransformedErrorMeasure class

@@ -99,9 +99,8 @@ class MeanSquaredError(ProblemErrorMeasure):
         self._weights = np.asarray([float(w) for w in weights])
 
     def __call__(self, x):
-        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
-                               axis=0) * self._weights) * self._ninv),
-                      axis=0)
+        return self._ninv * np.sum(self._weights * np.sum(
+            (self._problem.evaluate(x) - self._values)**2, axis=0), axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """

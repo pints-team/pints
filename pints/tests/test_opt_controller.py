@@ -6,10 +6,13 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import unittest
+import warnings
+
+import numpy as np
+
 import pints
 import pints.toy
-import unittest
-import numpy as np
 
 from shared import StreamCapture, TemporaryDirectory
 
@@ -169,7 +172,8 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         t = pints.RectangularBoundariesTransformation(b)
-        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -181,17 +185,33 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
         s = 0.1
         t = pints.RectangularBoundariesTransformation(b)
-        pints.OptimisationController(r, x0, boundaries=b, transformation=t,
-                                     method=method)
-        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         x, _ = opt.run()
 
-        # Test output are detransformed
+        # Test output is detransformed
         self.assertEqual(x.shape, (2, ))
         self.assertTrue(b.check(x))
+
+    def test_stopping_max_evaluations(self):
+        # Runs an optimisation with the max_fevals stopping criterion.
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_evaluations(10)
+        self.assertEqual(opt.max_evaluations(), 10)
+        self.assertRaises(ValueError, opt.set_max_evaluations, -1)
+        with StreamCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of evaluations', c.text())
 
     def test_stopping_max_iterations(self):
         # Runs an optimisation with the max_iter stopping criterion.
@@ -401,7 +421,11 @@ class TestOptimisationController(unittest.TestCase):
         r = pints.toy.RosenbrockError()
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        self.assertEqual(len(w), 1)
+        self.assertIn('deprecated', str(w[-1].message))
         self.assertIsInstance(opt, pints.OptimisationController)
 
     def test_post_run_statistics(self):
