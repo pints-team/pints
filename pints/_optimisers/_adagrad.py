@@ -12,10 +12,20 @@ import numpy as np
 
 class AdaGrad(pints.Optimiser):
     """
-    AdaGrad optimiser by [1]_, as given in [2]_.
+    AdaGrad optimiser (diagonal version) by [1]_, as given in [2, 3]_.
 
+    Pseudo code is given below. Here, ``p_j[i]`` denotes the j-th parameter at
+    iteration i, while ``g_j[i]`` is the gradient with respect to parameter j.
 
+        v_j[i] = v_j[i - 1] + g_j[i] ** 2
+        p_j[i] = p_j[i - 1] - alpha * g_j[i] / sqrt(g_j[i] + eps)
 
+    Here ``v_j[0] = 0``, ``alpha`` is a fixed learning rate, and ``eps`` is a
+    small number used to avoid dividing by zero.
+
+    In this implementation, ``eps = 1e-8`` and ``alpha = min(sigma0)``. The
+    algorithm's adaptivity is said to "[eliminate] the need to manually tune
+    the learning rate [alpha]" [3]_.
 
     References
     ----------
@@ -24,7 +34,13 @@ class AdaGrad(pints.Optimiser):
            Journal of Machine Learning Research
            https://dl.acm.org/doi/10.5555/1953048.2021068
 
-    .. [2] Defossez, Bottou, Bach, Usunier (2020) A Simple Convergence Proof of Adam and Adagrad
+    .. [2] A Simple Convergence Proof of Adam and Adagrad
+           Defossez, Bottou, Bach, and Usunier, 2020. arXiv.
+           https://arxiv.org/abs/2003.02395
+
+    .. [3] An overview of gradient descent optimization algorithms.
+           Ruder, 2016. arXiv
+           https://arxiv.org/abs/1609.04747
 
     """
 
