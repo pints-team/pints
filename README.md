@@ -77,8 +77,11 @@ To see what's changed in the latest release, see the [CHANGELOG](https://github.
 
 ## Contributing to PINTS
 
-If you'd like to help us develop PINTS by adding new methods, writing documentation, or fixing embarassing bugs, please have a look at these [guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) first.
+There are lots of ways to contribute to PINTS development, and anyone is free to join in!
+For example, you can report problems or make feature requests on the [issues](https://github.com/pints-team/pints/issues) pages.
 
+Similarly, if you want to contribute documentation or code you can tell us your idea on this page, and then provide a pull request for review.
+Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code -- but don't worry, this will become clear during review.
 
 ## License
 
