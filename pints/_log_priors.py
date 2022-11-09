@@ -163,7 +163,7 @@ class BinomialLogPrior(pints.LogPrior):
         value = self(x)
         _x = x[0]
 
-        if _x < 0.0 or _x > self._trials:
+        if _x < 0.0 or _x > self._trials or not float(_x).is_integer():
             return value, np.asarray([0.])
         else:
             return value, np.asarray(
@@ -1131,7 +1131,7 @@ class NegBinomialLogPrior(pints.LogPrior):
         value = self(x)
         _x = x[0]
 
-        if _x < 0.0:
+        if _x < 0.0 or not float(_x).is_integer():
             return value, np.asarray([0.])
         else:
             return value, np.asarray(

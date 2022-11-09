@@ -113,7 +113,7 @@ class TestPrior(unittest.TestCase):
         p1 = pints.BinomialLogPrior(5, 0.34)
         p2 = pints.BinomialLogPrior(10.0, 0.56)
 
-        points = [0, 1., 2, 3, 4, 5.]
+        points = [-2, 0, 1., 2, 3, 4, 5., 12., 6.3]
 
         # Test means
         self.assertAlmostEqual(p1.mean(), 1.7)
@@ -147,13 +147,15 @@ class TestPrior(unittest.TestCase):
                 places=9)
 
         # Test derivatives
-        p1_derivs = [1.620039115923069, 0.420039115923069,
+        p1_derivs = [0., 1.620039115923069, 0.420039115923069,
                      -0.329960884076930, -0.996627550743597,
-                     -1.746627550743597, -2.946627550743597]
+                     -1.746627550743597, -2.946627550743597,
+                     0., 0.]
 
-        p2_derivs = [3.170130310785142, 2.070130310785142,
+        p2_derivs = [0., 3.170130310785142, 2.070130310785142,
                      1.459019199674030, 1.000685866340697,
-                     0.607828723483554, 0.241162056816888]
+                     0.607828723483554, 0.241162056816888,
+                     0., 0.]
 
         for point, deriv in zip(points, p1_derivs):
             calc_val, calc_deriv = p1.evaluateS1([point])
@@ -911,7 +913,7 @@ class TestPrior(unittest.TestCase):
         p1 = pints.NegBinomialLogPrior(5, 0.34)
         p2 = pints.NegBinomialLogPrior(10.0, 0.56)
 
-        points = [0, 1, 3, 6., 10, 50.]
+        points = [-4, 0, 1, 3, 6., 10, 50., 4.5]
 
         # Test means
         self.assertAlmostEqual(p1.mean(), 9.70588235294)
@@ -945,13 +947,13 @@ class TestPrior(unittest.TestCase):
                 places=9)
 
         # Test derivatives
-        p1_derivs = [1.667817889371667, 0.867817889371667,
+        p1_derivs = [0, 1.667817889371667, 0.867817889371667,
                      0.344008365562143, 0.063452810006588,
-                     -0.092921371367593, -0.339290388546821]
+                     -0.092921371367593, -0.339290388546821, 0]
 
-        p2_derivs = [2.007987701898423, 1.107987701898423,
+        p2_derivs = [0, 2.007987701898423, 1.107987701898423,
                      0.448896792807514, 0.047248441159163,
-                     -0.202209148894402, -0.656982144114184]
+                     -0.202209148894402, -0.656982144114184, 0]
 
         for point, deriv in zip(points, p1_derivs):
             calc_val, calc_deriv = p1.evaluateS1([point])
