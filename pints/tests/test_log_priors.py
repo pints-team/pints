@@ -986,9 +986,9 @@ class TestPrior(unittest.TestCase):
     def test_student_t_prior(self):
         # Test two specific function values
         p1 = pints.StudentTLogPrior(0, 2, 10)
-        self.assertEqual(p1([0]), -3.342305863833964)
+        self.assertAlmostEqual(p1([0]), -3.342305863833964)
         p2 = pints.StudentTLogPrior(10, 5, 10)
-        self.assertEqual(p2([10]), -3.27120468204877)
+        self.assertAlmostEqual(p2([10]), -3.27120468204877)
 
         # Test exceptions
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 0, 10)

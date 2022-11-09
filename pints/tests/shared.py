@@ -375,3 +375,23 @@ class CircularBoundaries(pints.Boundaries):
         """ See :meth:`pints.Boundaries.n_parameters()`. """
         return self._n_parameters
 
+
+class SwappingTransformation(pints.Transformation):
+    """
+    Transformation that swaps the parameters around (as a very simple example
+    of a transformation that isn't elementwise).
+    """
+    def __init__(self, n_parameters):
+        self._n_parameters = int(n_parameters)
+
+    def elementwise(self):
+        return False
+
+    def n_parameters(self):
+        return self._n_parameters
+
+    def to_model(self, q):
+        return q[::-1]
+
+    def to_search(self, p):
+        return p[::-1]

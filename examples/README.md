@@ -33,12 +33,14 @@ relevant code.
 ### Particle-based methods
 - [CMA-ES](./optimisation/cmaes.ipynb)
 - [CMA-ES (bare bones version)](./optimisation/cmaes-bare.ipynb)
-- [Gradient descent](./optimisation/gradient-descent.ipynb)
 - [PSO](./optimisation/pso.ipynb)
 - [SNES](./optimisation/snes.ipynb)
 - [XNES](./optimisation/xnes.ipynb)
 
 ### Local optimisers
+- [Adam](./optimisation/adam.ipynb)
+- [Gradient descent](./optimisation/gradient-descent.ipynb)
+- [iRprop-](./optimisation/irpropmin.ipynb)
 - [Nelder-Mead](./optimisation/nelder-mead.ipynb)
 
 ### Further optimisation
@@ -77,6 +79,10 @@ relevant code.
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
+### ABC
+- [ABC-SMC sampling](./sampling/abc-smc.ipynb)
+- [Rejection ABC sampling](./sampling/rejection-abc.ipynb)
+
 ### Analysing sampling results
 - [Autocorrelation](./plotting/mcmc-autocorrelation.ipynb)
 - [Customise analysis plots](./plotting/customise-pints-plots.ipynb)
@@ -103,7 +109,7 @@ relevant code.
 
 ## Toy problems
 
-### Models
+### Deterministic Models
 - [Beeler-Reuter action potential model](./toy/model-beeler-reuter-ap.ipynb)
 - [Constant model](./toy/model-constant.ipynb)
 - [Fitzhugh-Nagumo model](./toy/model-fitzhugh-nagumo.ipynb)
@@ -115,8 +121,13 @@ relevant code.
 - [Repressilator model](./toy/model-repressilator.ipynb)
 - [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy/model-sir.ipynb)
+
+### Stochastic Models
 - [Stochastic Degradation model](./toy/model-stochastic-degradation.ipynb)
 - [Stochastic Logistic model](./toy/model-stochastic-logistic-growth.ipynb)
+- [Stochastic Michaelis Menten model](./toy/model-stochastic-michaelis-menten.ipynb)
+- [Stochastic Production Degradation model](toy/model-stochastic-production-degradation.ipynb)
+- [Stochastic Schlogl model](toy/model-stochastic-schlogl.ipynb)
 
 ### Distributions
 - [Annulus](./toy/distribution-annulus.ipynb)

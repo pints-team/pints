@@ -42,9 +42,8 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._running = False
         self._ready_for_tell = False
 
-        # Best solution found
-        self._xbest = pints.vector(x0)
-        self._fbest = float('inf')
+        # Estimated f(x_guessed)
+        self._f_guessed = float('inf')
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -72,18 +71,20 @@ class CMAES(pints.PopulationBasedOptimiser):
         self._user_xs.setflags(write=False)
         return self._user_xs
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        if not self._running:
-            return float('inf')
-        f = self._es.result.fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        f = self._es.result.fbest if self._running else None
         return float('inf') if f is None else f
+
+    def f_guessed(self):
+        """ See :meth:`Optimiser.f_guessed()`. """
+        return self._f_guessed
 
     def _initialise(self):
         """
         Initialises the optimiser for the first iteration.
         """
-        assert(not self._running)
+        assert not self._running
 
         # Import cma (may fail!)
         # Only the first time this is called in a running program incurs
@@ -200,9 +201,18 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Tell CMA-ES
         self._es.tell(self._xs, fx)
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        if self._running:
-            x = self._es.result.xbest
-            return np.array(self._x0 if x is None else x, copy=True)
-        return np.array(self._x0, copy=True)
+        # Update f_guessed, on the assumption that the best value in our
+        # current set of points is a reasonable approximation of f(mu). This
+        # will become more true as the optimiser progresses.
+        self._f_guessed = np.min(fx)
+
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        x = self._es.result.xbest if self._running else None
+        return np.array(self._x0 if x is None else x)
+
+    def x_guessed(self):
+        """ See :meth:`Optimiser.x_guessed()`. """
+        x = self._es.result.xfavorite if self._running else None
+        return np.array(self._x0 if x is None else x)
+
