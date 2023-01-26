@@ -1,11 +1,10 @@
-[![Unit tests on multiple python versions](https://github.com/pints-team/pints/workflows/Unit%20tests%20on%20multiple%20python%20versions/badge.svg)](https://github.com/pints-team/pints/actions)
-[![Unit tests on multiple operating systems](https://github.com/pints-team/pints/workflows/Unit%20tests%20on%20multiple%20operating%20systems/badge.svg)](https://github.com/pints-team/pints/actions)
+[![Unit tests on multiple python versions](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions)
+[![Unit tests on multiple operating systems](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/master/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
 [![Functional testing code](https://raw.githubusercontent.com/pints-team/functional-testing/master/badge-code.svg)](https://github.com/pints-team/functional-testing)
 [![Functional testing results](https://raw.githubusercontent.com/pints-team/functional-testing/master/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
-[![BCH compliance](https://bettercodehub.com/edge/badge/pints-team/pints?branch=master)](https://bettercodehub.com/results/pints-team/pints)
 
 # What is Pints?
 
