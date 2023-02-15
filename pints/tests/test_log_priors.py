@@ -202,7 +202,10 @@ class TestPrior(unittest.TestCase):
         p2 = pints.UniformLogPrior(m2, c2)
 
         p = pints.ComposedLogPrior(p1, p2)
-        self.assertTrue(np.array_equal(p.mean(), [10, 0]))
+        mean = p.mean()
+        self.assertEqual(len(mean), 2)
+        self.assertEqual(mean[0], 10)
+        self.assertEqual(mean[1][0], 0)
 
     def test_composed_prior_cdf_icdf(self):
         p1 = pints.GaussianLogPrior(-3, 7)
