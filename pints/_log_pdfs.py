@@ -206,7 +206,7 @@ class PooledLogPDF(LogPDF):
                 'as the number of parameters of the individual log-pdfs.')
 
         # Check that pooled contains only booleans
-        if self._pooled.dtype != np.bool:
+        if self._pooled.dtype != np.dtype('bool'):
             raise ValueError(
                 'The array-like input `pooled` passed to PooledLogPDFs '
                 'has to contain booleans exclusively.')
