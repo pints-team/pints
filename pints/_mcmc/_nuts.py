@@ -250,7 +250,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
 
         if np.isnan(hamiltonian_dash):
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian0
         n_dash = comparison
@@ -341,7 +341,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
     hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
     if np.isnan(hamiltonian_dash):
-        comparison = float('-inf')
+        comparison = -np.inf
     else:
         comparison = hamiltonian_dash - hamiltonian
 
@@ -355,7 +355,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
             yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
         if np.isnan(hamiltonian_dash):  # pragma: no cover
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian
     return epsilon

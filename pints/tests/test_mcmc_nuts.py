@@ -191,7 +191,7 @@ class TestNutsMCMC(unittest.TestCase):
         mcmc = pints.NoUTurnMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
 
     def test_pickle(self):
         # Test I: make sure pickling state does not alter behaviour of sampler

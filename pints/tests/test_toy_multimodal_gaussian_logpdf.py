@@ -32,7 +32,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertTrue(f3 < f1)
         f4 = f([0, -0.1])
         self.assertTrue(f4 < f1)
-        self.assertEqual(f([1e6, 1e6]), -float('inf'))
+        self.assertEqual(f([1e6, 1e6]), -np.inf)
         # Note: This is very basic testing, real tests are done in scipy!
 
         # Single mode, 3d, standard covariance

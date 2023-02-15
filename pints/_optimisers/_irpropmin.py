@@ -86,7 +86,7 @@ class IRPropMin(pints.Optimiser):
 
         # Best solution found
         self._x_best = self._x0
-        self._f_best = float('inf')
+        self._f_best = np.inf
 
         # Minimum and maximum step sizes
         self._step_min = 1e-3 * np.min(self._sigma0)
@@ -94,7 +94,7 @@ class IRPropMin(pints.Optimiser):
 
         # Current point, score, and gradient
         self._current = self._x0
-        self._current_f = float('inf')
+        self._current_f = np.inf
         self._current_df = None
 
         # Proposed next point (read-only, so can be passed to user)

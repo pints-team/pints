@@ -472,7 +472,7 @@ class TestPrior(unittest.TestCase):
     def test_half_cauchy_prior(self):
         # Test two specific function values
         p1 = pints.HalfCauchyLogPrior(0, 10)
-        self.assertEqual(p1([0]), -float('Inf'))
+        self.assertEqual(p1([0]), -np.inf)
         self.assertAlmostEqual(p1([10]), -3.447314978843445)
         p2 = pints.HalfCauchyLogPrior(10, 5)
         self.assertAlmostEqual(p2([10]), -2.594487638427916)
@@ -1064,7 +1064,7 @@ class TestPrior(unittest.TestCase):
 
         # Test normal construction
         p = pints.UniformLogPrior(lower, upper)
-        m = float('-inf')
+        m = -np.inf
         self.assertEqual(p([0, 0]), m)
         self.assertEqual(p([0, 5]), m)
         self.assertEqual(p([0, 19]), m)
@@ -1093,7 +1093,7 @@ class TestPrior(unittest.TestCase):
         # Test from rectangular boundaries object
         b = pints.RectangularBoundaries(lower, upper)
         p = pints.UniformLogPrior(b)
-        m = float('-inf')
+        m = -np.inf
         self.assertEqual(p([0, 0]), m)
         self.assertEqual(p([0, 5]), m)
         self.assertEqual(p([0, 19]), m)
@@ -1133,7 +1133,7 @@ class TestPrior(unittest.TestCase):
 
         b = CircleBoundaries(5, 5, 2)
         p = pints.UniformLogPrior(b)
-        minf = -float('inf')
+        minf = -np.inf
         self.assertTrue(p([0, 0]) == minf)
         self.assertTrue(p([4, 4]) > minf)
 

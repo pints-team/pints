@@ -375,7 +375,7 @@ class LogPosterior(LogPDF):
         self._log_likelihood = log_likelihood
 
         # Store -inf, for later use
-        self._minf = -float('inf')
+        self._minf = -np.inf
 
     def __call__(self, x):
         # Evaluate log-prior first, assuming this is very cheap
