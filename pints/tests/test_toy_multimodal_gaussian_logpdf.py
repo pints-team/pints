@@ -95,8 +95,9 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
                 covariances=[
                     [1, 1, 1, 1],
                     [1, 1, 1, 1],
-                    [1, 1, 1, 1]]
-                )
+                    [1, 1, 1, 1]
+                ]
+            )
 
     def test_sensitivities(self):
         # Tests sensitivities.
