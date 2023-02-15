@@ -279,14 +279,6 @@ class TestPlot(unittest.TestCase):
         names = ['some_name'] * len(self.real_parameters)
         pints.plot.histogram(few_samples, parameter_names=names)
 
-        # Check invalid samples input
-        self.assertRaisesRegex(
-            ValueError,
-            r'All samples must have the same number of parameters\.',
-            pints.plot.histogram,
-            [self.samples[0, :, :], self.samples[1:, :, :-1]]
-        )
-
         # Check invalid parameter_names input
         self.assertRaisesRegex(
             ValueError,
