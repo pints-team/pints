@@ -89,6 +89,15 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             ValueError, pints.toy.MultimodalGaussianLogPDF,
             [[1, 0], [1, 0]], [[[1, 0], [0, 1]], [[1, 1.1], [1.1, 1]]])
 
+        with self.assertRaisesRegex(ValueError, 'Covariance matrices must'):
+            pints.toy.MultimodalGaussianLogPDF(
+                modes=[[10, 1], [10, 1], [10, 1]],
+                covariances=[
+                    [1, 1, 1, 1],
+                    [1, 1, 1, 1],
+                    [1, 1, 1, 1]]
+                )
+
     def test_sensitivities(self):
         # Tests sensitivities.
 
