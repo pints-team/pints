@@ -291,7 +291,7 @@ class NestedController(object):
         self._marginal_log_likelihood_threshold = 0.5
 
         # Initial marginal difference
-        self._diff = np.float('-Inf')
+        self._diff = np.float64('-Inf')
 
         # By default use ellipsoidal sampling
         if method is None:
