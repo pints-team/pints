@@ -144,7 +144,7 @@ class LogPDFBoundaries(Boundaries):
         A threshold to determine whether a given log-prior value counts as
         within bounds. Anything _above_ the threshold counts as within bounds.
     """
-    def __init__(self, log_pdf, threshold=-float('inf')):
+    def __init__(self, log_pdf, threshold=-np.inf):
         super(LogPDFBoundaries, self).__init__()
 
         # Check log pdf

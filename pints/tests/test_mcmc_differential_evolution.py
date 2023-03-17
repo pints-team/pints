@@ -120,7 +120,7 @@ class TestDifferentialEvolutionMCMC(unittest.TestCase):
         # Bad starting point
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
         # Use uniform error
         mcmc = pints.DifferentialEvolutionMCMC(n, x0)

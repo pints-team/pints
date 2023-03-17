@@ -189,7 +189,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         Auxillary kinetic energy cumulative density defined in [1]_.
         """
         return integrate.quad(lambda p1: self._pdf(p1, a, c, m, z),
-                              -float('Inf'), p)[0]
+                              -np.inf, p)[0]
 
     def divergent_iterations(self):
         """
@@ -223,7 +223,7 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
         """
         z = integrate.quad(
             lambda p: np.exp(-self._K_indiv(p, self._a, self._c, self._m)),
-            -float('Inf'), float('Inf'))[0]
+            -np.inf, np.inf)[0]
         self._f = self._inverse_cdf_calculator(self._a, self._c,
                                                self._m, z)
 

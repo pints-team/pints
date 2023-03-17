@@ -50,7 +50,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
 
         # Best solution found
         self._x_best = pints.vector(x0)
-        self._f_best = float('inf')
+        self._f_best = np.inf
 
         # Number of iterations run
         self._iterations = 0
@@ -59,7 +59,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._mu = np.copy(self._x0)
 
         # Approximate value at self._mu
-        self._f_guessed = float('inf')
+        self._f_guessed = np.inf
 
         # Step size
         self._eta = np.min(self._sigma0)
@@ -267,7 +267,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Boundaries? Then reconstruct full fx vector
         if self._boundaries is not None and len(fx) < npo:
             user_fx = fx
-            fx = np.ones((npo, )) * float('inf')
+            fx = np.ones((npo, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Order the points from best to worst score

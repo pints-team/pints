@@ -101,9 +101,7 @@ class TestABCSMC(unittest.TestCase):
                 fxs = [self.error_measure(x) for x in xs]
                 sample = abc.tell(fxs)
             samples.append(sample)
-
-        samples = np.array(samples)
-        self.assertEqual(samples.shape[0], 3 * niter)
+        self.assertEqual(len(samples), 3 * niter)
 
     def test_errors(self):
         # test errors in abc rejection

@@ -7,7 +7,6 @@
 #
 import _pickle as cPickle
 
-import asyncio
 import pints
 import numpy as np
 
@@ -207,7 +206,6 @@ def kinetic_energy(r, inv_mass_matrix):
 # see main coroutine function ``nuts_sampler`` for more details
 
 
-@asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     """
     performs a leapfrog step using a step_size ``epsilon`` and an inverse mass
@@ -227,7 +225,6 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     return L_new, grad_L_new, theta_new, r_new
 
 
-@asyncio.coroutine
 def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     """
     Implicitly build up a subtree of depth ``j`` for the NUTS sampler.
@@ -253,7 +250,7 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
 
         if np.isnan(hamiltonian_dash):
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian0
         n_dash = comparison
@@ -283,7 +280,6 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         return state_dash
 
 
-@asyncio.coroutine
 def initialise_adaptor(
         theta, L, grad_L, num_adaption_steps, delta, sigma0,
         use_dense_mass_matrix):
@@ -316,7 +312,6 @@ def initialise_adaptor(
         num_adaption_steps, delta, epsilon, init_inv_mass_matrix)
 
 
-@asyncio.coroutine
 def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
@@ -346,7 +341,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
     hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
     if np.isnan(hamiltonian_dash):
-        comparison = float('-inf')
+        comparison = -np.inf
     else:
         comparison = hamiltonian_dash - hamiltonian
 
@@ -360,13 +355,12 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
             yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
         if np.isnan(hamiltonian_dash):  # pragma: no cover
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
 
-@asyncio.coroutine
 def nuts_sampler(
         x0, adaptor, sigma0, hamiltonian_threshold, max_tree_depth):
     """
