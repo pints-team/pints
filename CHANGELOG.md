@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no tested on Python 3.6.
+- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6.
 
 ### Added
 - [#1466](https://github.com/pints-team/pints/pull/1466) Added a `TransformedRectangularBoundaries` class that preserves the `RectangularBoundaries` methods after transformation.
