@@ -206,7 +206,7 @@ class PooledLogPDF(LogPDF):
                 'as the number of parameters of the individual log-pdfs.')
 
         # Check that pooled contains only booleans
-        if self._pooled.dtype != np.bool:
+        if self._pooled.dtype != np.dtype('bool'):
             raise ValueError(
                 'The array-like input `pooled` passed to PooledLogPDFs '
                 'has to contain booleans exclusively.')
@@ -375,7 +375,7 @@ class LogPosterior(LogPDF):
         self._log_likelihood = log_likelihood
 
         # Store -inf, for later use
-        self._minf = -float('inf')
+        self._minf = -np.inf
 
     def __call__(self, x):
         # Evaluate log-prior first, assuming this is very cheap

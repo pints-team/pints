@@ -132,7 +132,7 @@ class TestDramACMC(unittest.TestCase):
         x0 = self.real_parameters
         mcmc = pints.DramACMC(x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, -float('inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
