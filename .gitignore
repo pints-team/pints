@@ -29,8 +29,8 @@ examples/interfaces/build
 studies
 
 # Virtual environments
-venv*
-env*
+venv/*
+env/*
 
 # Build artifacts
 build/*
