@@ -1,5 +1,5 @@
-[![Unit tests on multiple python versions](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions)
-[![Unit tests on multiple operating systems](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions)
+[![Unit tests on multiple python versions](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml)
+[![Unit tests on multiple operating systems](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/master/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
 [![Functional testing code](https://raw.githubusercontent.com/pints-team/functional-testing/master/badge-code.svg)](https://github.com/pints-team/functional-testing)
 [![Functional testing results](https://raw.githubusercontent.com/pints-team/functional-testing/master/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
