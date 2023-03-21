@@ -23,25 +23,23 @@ class Adam(pints.Optimiser):
     iteration i is given as ``p_j[i]`` and the corresponding derivative is
     denoted ``g_j[i]``::
 
-        b1[i] = b1[i - 1] * beta1
-        b2[i] = b2[i - 1] * beta2
+        m_j[i] = beta1 * m_j[i - 1] + (1 - beta1) * g_j[i]
+        v_j[i] = beta2 * v_j[i - 1] + (1 - beta2) * g_j[i]**2
 
-        m_j[i] = b1[i] * m_j[i - 1] + (1 - b1[i]) * g_j[i]
-        v_j[i] = b2[i] * v_j[i - 1] + (1 - b2[i]) * g_j[i]**2
-
-        m_j' = m_j[i] / (1 - b1[i])
-        v_j' = v_j[i] / (1 - b2[i])
+        m_j' = m_j[i] / (1 - beta1**(1 + i))
+        v_j' = v_j[i] / (1 - beta2**(1 + i))
 
         p_j[i] = p_j[i - 1] - alpha * m_j' / (sqrt(v_j') + eps)
 
-    The initial values ``b1[0] = b2[0] = 1``, after which they decay with rates
-    ``beta1`` and ``beta2``. In this implementation ``beta1 = 0.9`` and
-    ``beta2 = 0.999``.
+    The initial values of the moments are ``m_j[0] = v_j[0] = 0``, after which
+    they decay with rates ``beta1`` and ``beta2``. In this implementation,
+    ``beta1 = 0.9`` and ``beta2 = 0.999``.
 
-    The initial values of the moments are ``m_j[0] = v_j[0] = 0``.
+    The terms ``m_j'`` and ``v_j'`` are "initialisation bias corrected"
+    versions of ``m_j`` and ``v_j`` (see section 3 of the paper).
 
-    The parameter ``alpha`` determines a step size, and is set as
-    ``min(sigma0)`` in this implementation.
+    The parameter ``alpha`` is a step size, which is set as ``min(sigma0)`` in
+    this implementation.
 
     Finally, ``eps`` is a small constant used to avoid division by zero, set to
     ``eps = 1e-8`` in this implementation.
