@@ -12,16 +12,39 @@ import numpy as np
 
 class Adam(pints.Optimiser):
     """
-    Adam optimiser (adaptive moment estimation), as described in [1]_.
+    Adam optimiser (adaptive moment estimation), as described in [1]_ (see
+    Algorithm 1).
 
     This method is a variation on gradient descent that maintains two
     "moments", allowing it to overshoot and go against the gradient for a short
-    time. This property can make it more robust against noisy gradients. Full
-    pseudo-code is given in [1]_ (Algorithm 1).
+    time. This property can make it more robust against noisy gradients.
 
-    This implementation uses a fixed step size, set as `` min(sigma0)``. Note
-    that the adaptivity in this method comes from the changing moments, not
-    the step size.
+    Pseudo-code is given below. Here the value of the j-th parameter at
+    iteration i is given as ``p_j[i]`` and the corresponding derivative is
+    denoted ``g_j[i]``::
+
+        m_j[i] = beta1 * m_j[i - 1] + (1 - beta1) * g_j[i]
+        v_j[i] = beta2 * v_j[i - 1] + (1 - beta2) * g_j[i]**2
+
+        m_j' = m_j[i] / (1 - beta1**(1 + i))
+        v_j' = v_j[i] / (1 - beta2**(1 + i))
+
+        p_j[i] = p_j[i - 1] - alpha * m_j' / (sqrt(v_j') + eps)
+
+    The initial values of the moments are ``m_j[0] = v_j[0] = 0``, after which
+    they decay with rates ``beta1`` and ``beta2``. In this implementation,
+    ``beta1 = 0.9`` and ``beta2 = 0.999``.
+
+    The terms ``m_j'`` and ``v_j'`` are "initialisation bias corrected"
+    versions of ``m_j`` and ``v_j`` (see section 3 of the paper).
+
+    The parameter ``alpha`` is a step size, which is set as ``min(sigma0)`` in
+    this implementation.
+
+    Finally, ``eps`` is a small constant used to avoid division by zero, set to
+    ``eps = 1e-8`` in this implementation.
+
+    This is an unbounded method: Any ``boundaries`` will be ignored.
 
     References
     ----------
@@ -85,6 +108,16 @@ class Adam(pints.Optimiser):
     def f_guessed(self):
         """ See :meth:`Optimiser.f_guessed()`. """
         return self._current_f
+
+    def _log_init(self, logger):
+        """ See :meth:`Loggable._log_init()`. """
+        logger.add_float('b1')
+        logger.add_float('b2')
+
+    def _log_write(self, logger):
+        """ See :meth:`Loggable._log_write()`. """
+        logger.log(self._b1t)
+        logger.log(self._b2t)
 
     def name(self):
         """ See :meth:`Optimiser.name()`. """
