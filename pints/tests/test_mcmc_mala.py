@@ -99,7 +99,7 @@ class TestMALAMCMC(unittest.TestCase):
         mcmc = pints.MALAMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
 
         # Test initialisation twice
         mcmc = pints.MALAMCMC(x0)

@@ -56,7 +56,7 @@ def histogram(
     bins = 40
     alpha = 0.5
 
-    samples = np.asarray(samples)
+    samples = np.array(samples)
     n_list = len(samples)
     _, n_param = samples[0].shape
 
@@ -67,13 +67,6 @@ def histogram(
         raise ValueError(
             'Length of `parameter_names` must be same as number of'
             ' parameters.')
-
-    # Check number of parameters
-    for samples_j in samples:
-        if n_param != samples_j.shape[1]:
-            raise ValueError(
-                'All samples must have the same number of parameters.'
-            )
 
     # Check reference parameters
     if ref_parameters is not None:

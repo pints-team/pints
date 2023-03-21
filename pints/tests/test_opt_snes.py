@@ -94,8 +94,8 @@ class TestSNES(unittest.TestCase):
         # Best position and score called before run
         self.assertEqual(list(opt.x_best()), list(x))
         self.assertEqual(list(opt.x_guessed()), list(x))
-        self.assertEqual(opt.f_best(), float('inf'))
-        self.assertEqual(opt.f_guessed(), float('inf'))
+        self.assertEqual(opt.f_best(), np.inf)
+        self.assertEqual(opt.f_guessed(), np.inf)
 
         # Tell before ask
         self.assertRaisesRegex(
@@ -105,8 +105,8 @@ class TestSNES(unittest.TestCase):
         opt.tell([r(p) for p in opt.ask()])
         self.assertNotEqual(list(opt.x_best()), list(x))
         self.assertNotEqual(list(opt.x_guessed()), list(x))
-        self.assertNotEqual(opt.f_best(), float('inf'))
-        self.assertNotEqual(opt.f_guessed(), float('inf'))
+        self.assertNotEqual(opt.f_best(), np.inf)
+        self.assertNotEqual(opt.f_guessed(), np.inf)
 
     def test_name(self):
         # Test the name() method.

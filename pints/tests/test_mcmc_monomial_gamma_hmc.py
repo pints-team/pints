@@ -98,7 +98,7 @@ class TestMonomialGammaHamiltonianMCMC(unittest.TestCase):
         mcmc = pints.MonomialGammaHamiltonianMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
 
     def test_kinetic_energy(self):
         # Tests kinetic energy values and derivatives

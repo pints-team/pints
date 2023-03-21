@@ -97,7 +97,7 @@ class PSO(pints.PopulationBasedOptimiser):
 
     def f_best(self):
         """ See :meth:`Optimiser.f_best()`. """
-        return self._fg if self._running else float('inf')
+        return self._fg if self._running else np.inf
 
     def _initialise(self):
         """
@@ -137,11 +137,11 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial scores and local best
         for i in range(self._population_size):
-            self._fl.append(float('inf'))
+            self._fl.append(np.inf)
             self._pl.append(self._xs[i])
 
         # Set global best position and score
-        self._fg = float('inf')
+        self._fg = np.inf
         self._pg = self._xs[0]
 
         # Boundaries? Then filter out out-of-bounds points from xs
@@ -226,7 +226,7 @@ class PSO(pints.PopulationBasedOptimiser):
         # Boundaries? Then reconstruct full fx vector
         if self._boundaries is not None and len(fx) < self._population_size:
             user_fx = fx
-            fx = np.ones((self._population_size, )) * float('inf')
+            fx = np.ones((self._population_size, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Update particles

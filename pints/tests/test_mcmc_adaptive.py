@@ -82,7 +82,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         # Bad starting point
         mcmc = pints.HaarioACMC(x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
         # Tell without ask
         mcmc = pints.HaarioACMC(x0)
@@ -91,7 +91,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         # Bad starting point
         mcmc = pints.HaarioACMC(x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
     def test_eta(self):
         # Test eta getting and setting

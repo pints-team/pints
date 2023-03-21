@@ -35,7 +35,7 @@ class NestedSampler(pints.TunableMethod):
         self._log_prior = log_prior
 
         # Current value of the threshold log-likelihood value
-        self._running_log_likelihood = -float('inf')
+        self._running_log_likelihood = -np.inf
         self._proposed = None
 
         # Initialise active point containers
@@ -291,7 +291,7 @@ class NestedController(object):
         self._marginal_log_likelihood_threshold = 0.5
 
         # Initial marginal difference
-        self._diff = np.float('-Inf')
+        self._diff = np.inf
 
         # By default use ellipsoidal sampling
         if method is None:

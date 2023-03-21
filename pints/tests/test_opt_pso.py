@@ -84,8 +84,8 @@ class TestPSO(unittest.TestCase):
         # Best position and score called before run
         self.assertEqual(list(opt.x_best()), list(x))
         self.assertEqual(list(opt.x_guessed()), list(x))
-        self.assertEqual(opt.f_best(), float('inf'))
-        self.assertEqual(opt.f_guessed(), float('inf'))
+        self.assertEqual(opt.f_best(), np.inf)
+        self.assertEqual(opt.f_guessed(), np.inf)
 
         # Tell before ask
         self.assertRaisesRegex(

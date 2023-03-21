@@ -52,6 +52,9 @@ class Transformation(object):
         """
         Returns a transformed boundaries class.
         """
+        if isinstance(boundaries, pints.RectangularBoundaries):
+            if self.elementwise():
+                return TransformedRectangularBoundaries(boundaries, self)
         return TransformedBoundaries(boundaries, self)
 
     def convert_covariance_matrix(self, C, q):
@@ -756,6 +759,8 @@ class RectangularBoundariesTransformation(Transformation):
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
         transformation = pints.RectangularBoundariesTransformation(boundaries)
 
+    Not to be confused with :class:`pints.TransformedRectangularBoundaries`.
+
     Extends :class:`Transformation`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
@@ -938,6 +943,64 @@ class TransformedBoundaries(pints.Boundaries):
         """ See :meth:`Boundaries.sample()`. """
         return [
             self._transform.to_search(p) for p in self._boundaries.sample(n)]
+
+
+class TransformedRectangularBoundaries(pints.RectangularBoundaries):
+    """
+    A :class:`pints.RectangularBoundaries` that accepts parameters in a
+    transformed search space.
+
+    This transformation handles the special case where:
+
+    - the boundaries being transformed are :class:`pints.RectangularBoundaries`
+    - the transformation is element-wise.
+
+    When these conditions are met, the lower and upper boundaries can simply be
+    transformed and methods like :meth:`lower()` and :meth:`range()` can be
+    provided.
+
+    Not to be confused with :class:`pints.RectangularBoundariesTransformation`.
+
+    Extends :class:`pints.RectangularBoundaries`.
+
+    Parameters
+    ----------
+    boundaries
+        A :class:`pints.RectangularBoundaries` object.
+    transformation
+        An element-wise transformation.
+    """
+    def __init__(self, boundaries, transformation):
+
+        # Check input
+        if not isinstance(boundaries, pints.RectangularBoundaries):
+            raise ValueError('A TransformedRectangularBoundaries can only be'
+                             ' created from a RectangularBoundaries object.')
+        if not transformation.elementwise():
+            raise ValueError('A TransformedRectangularBoundaries can only be'
+                             ' created from an element-wise transformation.')
+        if transformation.n_parameters() != boundaries.n_parameters():
+            raise ValueError('Number of parameters for boundaries and '
+                             'transformation must match.')
+
+        # Transform upper and lower boundaries
+        a = transformation.to_search(boundaries.lower())
+        b = transformation.to_search(boundaries.upper())
+        lower = np.minimum(a, b)
+        upper = np.maximum(a, b)
+
+        # Pass transformed boundaries to RectangularBoundaries
+        super().__init__(lower, upper)
+
+        # Store input
+        self._boundaries = boundaries
+        self._transformation = transformation
+
+    def sample(self, n=1):
+        """ See :meth:`Boundaries.sample()`. """
+        # Sample from the original boundaries, but transform to new space
+        return [self._transformation.to_search(p)
+                for p in self._boundaries.sample(n)]
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):

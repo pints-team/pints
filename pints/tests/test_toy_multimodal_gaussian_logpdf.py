@@ -32,7 +32,7 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertTrue(f3 < f1)
         f4 = f([0, -0.1])
         self.assertTrue(f4 < f1)
-        self.assertEqual(f([1e6, 1e6]), -float('inf'))
+        self.assertEqual(f([1e6, 1e6]), -np.inf)
         # Note: This is very basic testing, real tests are done in scipy!
 
         # Single mode, 3d, standard covariance
@@ -88,6 +88,16 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.MultimodalGaussianLogPDF,
             [[1, 0], [1, 0]], [[[1, 0], [0, 1]], [[1, 1.1], [1.1, 1]]])
+
+        with self.assertRaisesRegex(ValueError, 'Covariance matrices must'):
+            pints.toy.MultimodalGaussianLogPDF(
+                modes=[[10, 1], [10, 1], [10, 1]],
+                covariances=[
+                    [1, 1, 1, 1],
+                    [1, 1, 1, 1],
+                    [1, 1, 1, 1]
+                ]
+            )
 
     def test_sensitivities(self):
         # Tests sensitivities.

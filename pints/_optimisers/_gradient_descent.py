@@ -6,6 +6,7 @@
 # copyright notice and full license details.
 #
 import pints
+import numpy as np
 
 
 class GradientDescent(pints.Optimiser):
@@ -27,7 +28,7 @@ class GradientDescent(pints.Optimiser):
 
         # Best solution found
         self._x_best = self._x0
-        self._f_best = float('inf')
+        self._f_best = np.inf
 
         # Learning rate
         self._eta = min(self._sigma0)

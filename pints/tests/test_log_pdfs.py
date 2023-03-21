@@ -33,8 +33,8 @@ class TestLogPosterior(unittest.TestCase):
         p = pints.LogPosterior(log_likelihood, log_prior)
         self.assertEqual(p(x), log_likelihood(x) + log_prior(x))
         y = [-1, 500]
-        self.assertEqual(log_prior(y), -float('inf'))
-        self.assertEqual(p(y), -float('inf'))
+        self.assertEqual(log_prior(y), -np.inf)
+        self.assertEqual(p(y), -np.inf)
         self.assertEqual(p(y), log_prior(y))
 
         # Test derivatives

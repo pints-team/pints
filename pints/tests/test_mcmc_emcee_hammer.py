@@ -118,7 +118,7 @@ class TestEmceeHammerMCMC(unittest.TestCase):
         # Bad starting point
         mcmc = pints.EmceeHammerMCMC(n, x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
     def test_set_hyper_parameters(self):
         # Tests the parameter and hyper-parameter interfaces for this sampler.
