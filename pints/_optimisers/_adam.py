@@ -34,12 +34,17 @@ class Adam(pints.Optimiser):
 
         p_j[i] = p_j[i - 1] - alpha * m_j' / (sqrt(v_j') + eps)
 
-    The initial values of the moments are 1: ``m_j[0] = v_j[0] = 1``. The step
-    size ``alpha``, ``beta1`` and ``beta2`` are decay parameters, and ``eps``
-    is a small constant used to avoid division by zero.
+    The initial values ``b1[0] = b2[0] = 1``, after which they decay with rates
+    ``beta1`` and ``beta2``. In this implementation ``beta1 = 0.9`` and
+    ``beta2 = 0.999``.
 
-    In this implementation ``beta1 = 0.9``, ``beta2 = 0.999`` and
-    ``eps = 1e-8``. The step size ``alpha`` is set as ``min(sigma0)``.
+    The initial values of the moments are ``m_j[0] = v_j[0] = 0``.
+
+    The parameter ``alpha`` determines a step size, and is set as
+    ``min(sigma0)`` in this implementation.
+
+    Finally, ``eps`` is a small constant used to avoid division by zero, set to
+    ``eps = 1e-8`` in this implementation.
 
     This is an unbounded method: Any ``boundaries`` will be ignored.
 
