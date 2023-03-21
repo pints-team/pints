@@ -170,12 +170,12 @@ class TestABCController(unittest.TestCase):
 
         # With output to screen
         np.random.seed(1)
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_max_iterations(10)
+        abc.set_n_samples(3)
+        abc.set_log_to_screen(True)
         with StreamCapture() as capture:
-            abc = pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.RejectionABC)
-            abc.set_max_iterations(10)
-            abc.set_n_samples(3)
-            abc.set_log_to_screen(True)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
@@ -190,13 +190,13 @@ class TestABCController(unittest.TestCase):
 
         # With output to screen: in parallel and with other stopping crit
         np.random.seed(1)
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_max_iterations(6)
+        abc.set_log_interval(6, 3)
+        abc.set_parallel(2)
+        abc.set_log_to_screen(True)
         with StreamCapture() as capture:
-            abc = pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.RejectionABC)
-            abc.set_max_iterations(6)
-            abc.set_log_interval(6, 3)
-            abc.set_parallel(2)
-            abc.set_log_to_screen(True)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
@@ -244,9 +244,7 @@ class TestABCController(unittest.TestCase):
         with TemporaryDirectory() as d:
             filename = d.path('test.txt')
             abc = pints.ABCController(
-                self.error_measure,
-                self.log_prior,
-                method=pints.RejectionABC)
+                self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_max_iterations(6)
             abc.set_log_interval(6, 3)
             abc.set_log_to_screen(False)
@@ -302,12 +300,12 @@ class TestABCController(unittest.TestCase):
         abc.set_parallel(False)
         self.assertEqual(abc.parallel(), 0)
 
+        abc = pints.ABCController(
+            self.error_measure, self.log_prior, method=pints.RejectionABC)
+        abc.set_parallel(4)
+        abc.sampler().set_threshold(100)
+        abc.set_n_samples(1)
         with StreamCapture() as capture:
-            abc = pints.ABCController(
-                self.error_measure, self.log_prior, method=pints.RejectionABC)
-            abc.set_parallel(4)
-            abc.sampler().set_threshold(100)
-            abc.set_n_samples(1)
             abc.run()
         lines = capture.text().splitlines()
         self.assertTrue(len(lines) > 0)
