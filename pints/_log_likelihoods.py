@@ -479,7 +479,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
-    :math:`\sigma` _in the logarithmic transformed space_.
+    :math:`\sigma` in the logarithmic transformed space.
     This is also known as Jeffrey's prior, as the standard deviation is a scale
     parameter, as discussed here: https://doi.org/10.1093/gji/ggaa168.
 
