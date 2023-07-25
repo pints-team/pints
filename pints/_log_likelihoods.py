@@ -534,7 +534,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
         n = self._nt
         self._n_over_2 = n / 2
         self._log_gamma = scipy.special.gammaln(self._n_over_2)
-        self._constant_1 = -(n - 2) / 2 * np.log(2)
+        self._constant_1 = -np.log(2) * (n - 2) / 2
         self._constant = self._constant_1 + self._log_gamma
 
     def __call__(self, x):
@@ -550,23 +550,12 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
     at each time point where :math:`\sigma\sim U(a,b)` has been integrated out
-    of the joint posterior of :math:`p(\theta,\sigma|X)`,
-
-    .. math::
-        \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
-        \mathrm{d}\sigma\\
-        &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
-        \mathrm{d}\sigma,\end{align}
+    of the joint posterior of :math:`p(\theta,\sigma|X)` in the same way as in
+    :class:`pints.GaussianIntegratedLogUniformLogLikelihood`.
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
     :math:`\sigma`.
-
-    A possible advantage of this log-likelihood compared with using a
-    :class:`pints.GaussianLogLikelihood`, is that it has one fewer parameters
-    (:math:`sigma`) which may speed up convergence to the posterior
-    distribution, especially for multi-output problems which will have
-    ``n_outputs`` fewer parameter dimensions.
 
     The log-likelihood is given in terms of the sum of squared errors:
 
