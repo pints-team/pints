@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6.
 
 ### Added
+- [#1484](https://github.com/pints-team/pints/pull/1484) Added a `GaussianIntegratedLogUniformLogLikelihood` class that calculates the log-likelihood with its Gaussian noise integrated out with an uninformative prior in log-space.
 - [#1466](https://github.com/pints-team/pints/pull/1466) Added a `TransformedRectangularBoundaries` class that preserves the `RectangularBoundaries` methods after transformation.
 - [#1462](https://github.com/pints-team/pints/pull/1461) The `OptimisationController` now has a stopping criterion `max_evaluations`.
 - [#1460](https://github.com/pints-team/pints/pull/1460) [#1468](https://github.com/pints-team/pints/pull/1468) Added the `Adam` local optimiser.
