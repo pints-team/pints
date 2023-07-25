@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6.
-
 ### Added
 - [#1466](https://github.com/pints-team/pints/pull/1466) Added a `TransformedRectangularBoundaries` class that preserves the `RectangularBoundaries` methods after transformation.
 - [#1462](https://github.com/pints-team/pints/pull/1461) The `OptimisationController` now has a stopping criterion `max_evaluations`.
@@ -19,6 +17,8 @@ All notable changes to this project will be documented in this file.
 - [#1378](https://github.com/pints-team/pints/pull/1378) Added a class `pints.LogNormalLogLikelihood`.
 
 ### Changed
+- [#1485](https://github.com/pints-team/pints/pull/1485) PINTS is no longer tested on Ubuntu 18.04 LTS.
+- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6.
 - [#1479](https://github.com/pints-team/pints/pull/1479) The `asyncio.coroutine` decorators have been removed from all of NUTS's coroutines in order to be compatible with Python 3.11.
 - [#1466](https://github.com/pints-team/pints/pull/1466) `Transformation.convert_boundaries` will now return a `TransformedRectangularBoundaries` object if the transformation is element-wise and the given boundaries extend `RectangularBoundaries`.
 - [#1458](https://github.com/pints-team/pints/pull/1458) The `GradientDescent` optimiser now sets its default learning rate as `min(sigma0)` (it can still be changed afterwards with `set_learning_rate()`).
