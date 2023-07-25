@@ -414,6 +414,7 @@ Documentation is built using https://readthedocs.org/ and published on http://pi
 Configuration files:
 
 ```
+.readthedocs.yaml
 .requirements-docs.txt
 ```
 
