@@ -43,7 +43,7 @@ def pairwise(samples,
     heatmap
         Set to ``True`` to plot heatmap for the pairwise plots.
         Cannot be used together with ``kde``.
-    Opacity
+    opacity
         This value can be used to manually set the opacity of the
         points in the scatter plots (when ``kde=False`` and ``heatmap=False``
         only).
