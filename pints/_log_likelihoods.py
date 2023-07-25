@@ -532,9 +532,9 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
 
         # Pre-calculate
         n = self._nt
-        self._n_over_2 = n / 2.0
+        self._n_over_2 = n / 2
         self._log_gamma = scipy.special.gammaln(self._n_over_2)
-        self._constant_1 = - (n - 2.0) / 2.0 * np.log(2.0)
+        self._constant_1 = -(n - 2) / 2 * np.log(2)
         self._constant = self._constant_1 + self._log_gamma
 
     def __call__(self, x):
