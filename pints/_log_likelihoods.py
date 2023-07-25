@@ -475,7 +475,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
         \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
         \mathrm{d}\sigma\\
         &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
-        \mathrm{d}\sigma,\end{align}
+        \mathrm{d}\sigma.\end{align}
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
@@ -492,7 +492,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
     The log-likelihood is given in terms of the sum of squared errors:
 
     .. math::
-        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2
+        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2,
 
     and is given up to a normalisation constant by:
 
@@ -501,7 +501,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
         \text{log} L =
             & - n / 2 \text{log}(SSE) \\
             & - (n - 2) / 2 \text{log}(2) \\
-            & + \text{log}\left[\Gamma(n / 2)\right]
+            & + \text{log}\left[\Gamma(n / 2)\right],
         \end{align}
 
     where :math:`\Gamma(a)` is the incomplete gamma function.
@@ -557,7 +557,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
         \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
         \mathrm{d}\sigma\\
         &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
-        \mathrm{d}\sigma,\end{align}
+        \mathrm{d}\sigma.\end{align}
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
@@ -573,7 +573,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     The log-likelihood is given in terms of the sum of squared errors:
 
     .. math::
-        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2
+        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2,
 
     and is given up to a normalisation constant by:
 
@@ -584,11 +584,11 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             & - \text{log}(2 (b - a) \sqrt(2)) \\
             & + (1 / 2 - n / 2) \text{log}(SSE) \\
             & + \text{log}\left[\Gamma((n - 1) / 2, \frac{SSE}{2 b^2}) -
-                \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right]
+                \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right],
         \end{align}
 
     where :math:`\Gamma(u,v)` is the upper incomplete gamma function as defined
-    here: https://en.wikipedia.org/wiki/Incomplete_gamma_function
+    here: https://en.wikipedia.org/wiki/Incomplete_gamma_function.
 
     This log-likelihood is inherently a Bayesian method since it assumes a
     uniform prior on :math:`\sigma\sim U(a,b)`. However using this likelihood
