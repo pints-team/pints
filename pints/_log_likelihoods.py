@@ -551,11 +551,24 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
     at each time point where :math:`\sigma\sim U(a,b)` has been integrated out
     of the joint posterior of :math:`p(\theta,\sigma|X)` in the same way as in
-    :class:`pints.GaussianIntegratedLogUniformLogLikelihood`.
+    :class:`pints.GaussianIntegratedLogUniformLogLikelihood`,
+
+    .. math::
+        \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
+        \mathrm{d}\sigma\\
+        &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
+        \mathrm{d}\sigma,\end{align}
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
     :math:`\sigma`.
+
+    Similar to :class:`pints.GaussianIntegratedLogUniformLogLikelihood`, a
+    possible advantage of this log-likelihood compared with using a
+    :class:`pints.GaussianLogLikelihood`, is that it has one fewer parameters
+    (:math:`sigma`) which may speed up convergence to the posterior
+    distribution, especially for multi-output problems which will have
+    ``n_outputs`` fewer parameter dimensions.
 
     The log-likelihood is given in terms of the sum of squared errors:
 
