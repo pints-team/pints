@@ -115,6 +115,7 @@ from ._log_likelihoods import (
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
     ConstantAndMultiplicativeGaussianLogLikelihood,
+    GaussianIntegratedLogUniformLogLikelihood,
     GaussianIntegratedUniformLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
