@@ -543,10 +543,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate
         sse = pints.vector(sse)
-        return np.sum(
-            self._constant -
-            self._n_over_2 * np.log(sse)
-        )
+        return np.sum(self._constant - self._n_over_2 * np.log(sse))
 
 
 class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
