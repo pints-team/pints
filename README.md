@@ -1,7 +1,7 @@
 [![Unit tests on multiple python versions](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml)
 [![Unit tests on multiple operating systems](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/main/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
-[![Change-point testing code](https://raw.githubusercontent.com/pints-team/change-point-testing/main/badge-code.svg)](https://github.com/pints-team/change-point-testingg)
+[![Change-point testing code](https://raw.githubusercontent.com/pints-team/change-point-testing/main/badge-code.svg)](https://github.com/pints-team/change-point-testing)
 [![Change-point testing results](https://raw.githubusercontent.com/pints-team/change-point-testing/main/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/main?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
