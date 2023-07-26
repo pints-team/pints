@@ -1,8 +1,8 @@
 [![Unit tests on multiple python versions](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-python-coverage.yml)
 [![Unit tests on multiple operating systems](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml/badge.svg)](https://github.com/pints-team/pints/actions/workflows/unit-test-os-coverage.yml)
 [![codecov](https://codecov.io/gh/pints-team/pints/branch/main/graph/badge.svg)](https://codecov.io/gh/pints-team/pints)
-[![Functional testing code](https://raw.githubusercontent.com/pints-team/functional-testing/main/badge-code.svg)](https://github.com/pints-team/functional-testing)
-[![Functional testing results](https://raw.githubusercontent.com/pints-team/functional-testing/main/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
+[![Change-point testing code](https://raw.githubusercontent.com/pints-team/change-point-testing/main/badge-code.svg)](https://github.com/pints-team/change-point-testingg)
+[![Change-point testing results](https://raw.githubusercontent.com/pints-team/change-point-testing/main/badge-results.svg)](https://www.cs.ox.ac.uk/projects/PINTS/functional-testing)
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/main?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
 
@@ -29,7 +29,7 @@ simulate(parameters, times) --> Returns a vector of model evaluations at
 Experimental data sets in PINTS are defined simply as lists (or arrays) of `times` and corresponding experimental `values`.
 If you have this kind of data, and if [your model (or model wrapper)](https://github.com/pints-team/pints/blob/main/examples/stats/custom-model.ipynb) implements the two methods above, then you are ready to start using PINTS to infer parameter values using [optimisation](https://github.com/pints-team/pints/blob/main/examples/optimisation/first-example.ipynb) or [sampling](https://github.com/pints-team/pints/blob/main/examples/sampling/first-example.ipynb).
 
-A brief example is shown below:  
+A brief example is shown below:
 ![An example of using PINTS in an optimisation](https://raw.githubusercontent.com/pints-team/pints/main/example.svg)
 _(Left)_ A noisy experimental time series and a computational forward model.
 _(Right)_ Example code for an optimisation problem.
