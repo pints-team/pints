@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+
+## [0.5.0] - 2023-07-27
+
+### Added
 - [#1484](https://github.com/pints-team/pints/pull/1484) Added a `GaussianIntegratedLogUniformLogLikelihood` class that calculates the log-likelihood with its Gaussian noise integrated out with an uninformative prior in log-space.
 - [#1466](https://github.com/pints-team/pints/pull/1466) Added a `TransformedRectangularBoundaries` class that preserves the `RectangularBoundaries` methods after transformation.
 - [#1462](https://github.com/pints-team/pints/pull/1461) The `OptimisationController` now has a stopping criterion `max_evaluations`.
@@ -18,8 +27,8 @@ All notable changes to this project will be documented in this file.
 - [#1378](https://github.com/pints-team/pints/pull/1378) Added a class `pints.LogNormalLogLikelihood`.
 
 ### Changed
-- [#1485](https://github.com/pints-team/pints/pull/1485) PINTS is no longer tested on Ubuntu 18.04 LTS.
-- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6.
+- [#1485](https://github.com/pints-team/pints/pull/1485) PINTS is no longer tested on Ubuntu 18.04 LTS, but on 20.04 LTS and 22.04 LTS.
+- [#1479](https://github.com/pints-team/pints/pull/1479) PINTS is no longer tested on Python 3.6. Testing for Python 3.11 has been added.
 - [#1479](https://github.com/pints-team/pints/pull/1479) The `asyncio.coroutine` decorators have been removed from all of NUTS's coroutines in order to be compatible with Python 3.11.
 - [#1466](https://github.com/pints-team/pints/pull/1466) `Transformation.convert_boundaries` will now return a `TransformedRectangularBoundaries` object if the transformation is element-wise and the given boundaries extend `RectangularBoundaries`.
 - [#1458](https://github.com/pints-team/pints/pull/1458) The `GradientDescent` optimiser now sets its default learning rate as `min(sigma0)` (it can still be changed afterwards with `set_learning_rate()`).
@@ -28,8 +37,6 @@ All notable changes to this project will be documented in this file.
 - [#1435](https://github.com/pints-team/pints/pull/1435) The optional Stan interface now uses (and requires) pystan 3 or newer. The ``update_data`` method has been remove (model compilation is now cached so that there is no performance benefit to using this method).
 - [#1424](https://github.com/pints-team/pints/pull/1424) Fixed a bug in PSO that caused it to use more particles than advertised.
 - [#1424](https://github.com/pints-team/pints/pull/1424) xNES, SNES, PSO, and BareCMAES no longer use a `TriangleWaveTransform` to handle rectangular boundaries (this was found to lead to optimisers diverging in some cases).
-
-### Deprecated
 
 ### Removed
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
