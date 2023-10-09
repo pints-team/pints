@@ -1125,7 +1125,7 @@ class _CurveFitError(pints.ErrorMeasure):
         self.d = dimension
         self.x = x
         self.y = y
-        self.n = 1 / np.product(y.shape)    # Total number of points in data
+        self.n = 1 / np.prod(y.shape)    # Total number of points in data
 
     def n_parameters(self):
         return self.d
