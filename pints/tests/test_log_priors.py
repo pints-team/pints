@@ -1081,7 +1081,7 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([10, 10]), m)
         self.assertEqual(p([5, 20]), m)
 
-        w = -np.log(np.product(upper - lower))
+        w = -np.log(np.prod(upper - lower))
         self.assertEqual(p([1, 2]), w)
         self.assertEqual(p([1, 5]), w)
         self.assertEqual(p([1, 20 - 1e-14]), w)
@@ -1110,7 +1110,7 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([10, 10]), m)
         self.assertEqual(p([5, 20]), m)
 
-        w = -np.log(np.product(upper - lower))
+        w = -np.log(np.prod(upper - lower))
         self.assertEqual(p([1, 2]), w)
         self.assertEqual(p([1, 5]), w)
         self.assertEqual(p([1, 20 - 1e-14]), w)

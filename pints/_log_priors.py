@@ -1245,7 +1245,7 @@ class UniformLogPrior(pints.LogPrior):
         # Use normalised value (1/area) for rectangular boundaries,
         # otherwise just use 1.
         if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._value = -np.log(np.product(self._boundaries.range()))
+            self._value = -np.log(np.prod(self._boundaries.range()))
         else:
             self._value = 1
 

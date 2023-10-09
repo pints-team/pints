@@ -90,7 +90,7 @@ class SingleChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._n_parameters:
+            if np.prod(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
@@ -192,7 +192,7 @@ class MultiChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._n_parameters:
+            if np.prod(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
@@ -352,7 +352,7 @@ class MCMCController(object):
                 else:
                     n_parameters = log_pdf[0].n_parameters()
                 # Make sure sigma0 is a (covariance) matrix
-                if np.product(sigma0.shape) == n_parameters:
+                if np.prod(sigma0.shape) == n_parameters:
                     # Convert from 1d array
                     sigma0 = sigma0.reshape((n_parameters,))
                     sigma0 = np.diag(sigma0)

@@ -1120,7 +1120,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         self._log_likelihood = log_likelihood
 
         # Pre-calculate parts
-        self._f = 1.0 / np.product(self._values.shape)
+        self._f = 1.0 / np.prod(self._values.shape)
 
     def __call__(self, x):
         return self._f * self._log_likelihood(x)
