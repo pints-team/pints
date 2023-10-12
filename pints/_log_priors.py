@@ -1344,3 +1344,34 @@ class UniformLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return self._boundaries.sample(n)
+    
+class LogUniformLogPrior(pints.LogPrior):
+    def __init__(self, a, b):
+        self._a = a
+        self._b = b
+        #constant for S1 evaluation
+        self._c = np.divide(1, np.log(np.divide(b, a)))
+
+    def __call__(self, x):
+        return scipy.stats.loguniform.logpdf(x, self._a, self._b)
+
+    def cdf(self, x):
+        return scipy.stats.loguniform.cdf(x, self._a, self._b)
+
+    def icdf(self, p):
+        return scipy.stats.loguniform.ppf(p, self._a, self._b)
+
+    def evaluateS1(self, x):
+        dp = - self._c * np.power(x, -2)
+        # Set values outside limits to nan
+        dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
+        return self(x), dp
+
+    def mean(self):
+        return scipy.stats.loguniform.mean(self._a, self._b)
+
+    def n_parameters(self):
+        return 1
+
+    def sample(self, n=1):
+        return scipy.stats.loguniform.rvs(self._a, self._b, size=(n, 1))
