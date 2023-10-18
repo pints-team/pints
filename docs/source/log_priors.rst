@@ -28,6 +28,7 @@ Overview:
 - :class:`StudentTLogPrior`
 - :class:`TruncatedGaussianLogPrior`
 - :class:`UniformLogPrior`
+- :class:`LogUniformLogPrior`
 
 
 .. autoclass:: BetaLogPrior
@@ -57,3 +58,5 @@ Overview:
 .. autoclass:: TruncatedGaussianLogPrior
 
 .. autoclass:: UniformLogPrior
+
+.. autoclass:: LogUniformLogPrior

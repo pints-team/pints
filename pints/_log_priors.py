@@ -1346,6 +1346,31 @@ class UniformLogPrior(pints.LogPrior):
         return self._boundaries.sample(n)
     
 class LogUniformLogPrior(pints.LogPrior):
+    r"""
+    Defines a log-uniform prior over a given range.
+
+    The range includes the lower and upper boundaries, so that any
+    point ``x`` with a non-zero prior must have ``a <= x < b``.
+
+    In 1D this has pdf
+
+    .. math::
+        f(x|a,b)=\begin{cases}0,&\text{if }x\not\in
+        [a,b]\\\frac{1}{x \log(\frac{b}{a})}
+        ,&\text{if }x\in[a,b]\end{cases}.
+
+    A random variable :math:`X` distributed according to this pdf has
+    expectation
+
+    .. math::
+        \mathrm{E}(X)=\frac{b-a}{\log(b/a)}.
+
+    For example, to create a prior with :math:`x\in[1e-2,1e2]`, use either::
+
+        p = pints.LogUniformLogPrior(1e-2, 1e2)
+
+    Extends :class:`LogPrior`.
+    """
     def __init__(self, a, b):
         if a <= 0:
             raise ValueError("a must be > 0")
@@ -1361,12 +1386,15 @@ class LogUniformLogPrior(pints.LogPrior):
         return scipy.stats.loguniform.logpdf(x, self._a, self._b)
 
     def cdf(self, x):
+        """ See :meth:`LogPrior.cdf()`. """
         return scipy.stats.loguniform.cdf(x, self._a, self._b)
 
     def icdf(self, p):
+        """ See :meth:`LogPrior.icdf()`. """
         return scipy.stats.loguniform.ppf(p, self._a, self._b)
 
     def evaluateS1(self, x):
+        """ See :meth:`LogPrior.evaluateS1()`. """
         dpdfdx = - self._c * np.power(x, -2)
         dlogdx = 1/scipy.stats.loguniform.pdf(x, self._a, self._b)
         dp = np.array(dpdfdx*dlogdx)
@@ -1375,10 +1403,13 @@ class LogUniformLogPrior(pints.LogPrior):
         return self(x), dp
 
     def mean(self):
+        """ See :meth:`LogPrior.mean()`. """
         return scipy.stats.loguniform.mean(self._a, self._b)
 
     def n_parameters(self):
+        """ See :meth:`LogPrior.n_parameters()`. """
         return 1
 
     def sample(self, n=1):
+        """ See :meth:`LogPrior.sample()`. """
         return scipy.stats.loguniform.rvs(self._a, self._b, size=(n, 1))
