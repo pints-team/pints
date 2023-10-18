@@ -1344,7 +1344,8 @@ class UniformLogPrior(pints.LogPrior):
     def sample(self, n=1):
         """ See :meth:`LogPrior.sample()`. """
         return self._boundaries.sample(n)
-    
+
+
 class LogUniformLogPrior(pints.LogPrior):
     r"""
     Defines a log-uniform prior over a given range.
@@ -1395,9 +1396,9 @@ class LogUniformLogPrior(pints.LogPrior):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPrior.evaluateS1()`. """
-        dpdfdx = - self._c * np.power(x, -2)
-        dlogdx = 1/scipy.stats.loguniform.pdf(x, self._a, self._b)
-        dp = np.array(dpdfdx*dlogdx)
+        dpdfdx = - self._c * np.power(x, - 2)
+        dlogdx = 1 / scipy.stats.loguniform.pdf(x, self._a, self._b)
+        dp = np.array(dpdfdx * dlogdx)
         # Set values outside limits to nan
         dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
         return self(x), dp

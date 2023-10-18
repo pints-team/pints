@@ -594,7 +594,7 @@ class TestPrior(unittest.TestCase):
         # roughly the case, to ensure the parameterisation is correct
         mean = np.mean(samples1).item()
         self.assertTrue(9. < mean < 11.)
-    
+
     def test_log_uniform_prior(self):
 
         #Test input parameters
@@ -605,7 +605,7 @@ class TestPrior(unittest.TestCase):
         b = 1e2
 
         p = pints.LogUniformLogPrior(a, b)
-        
+
         #all values below were calculated separately (not by scipy)
         self.assertAlmostEqual(p.mean(), 10.856276311376536)
 
@@ -622,7 +622,6 @@ class TestPrior(unittest.TestCase):
             self.assertEqual(test_val_1, test_val_2)
             self.assertAlmostEqual(test_val_1, val)
             self.assertAlmostEqual(test_dval, dval)
-
 
     def test_log_normal_prior(self):
 
@@ -685,14 +684,14 @@ class TestPrior(unittest.TestCase):
 
             self.assertAlmostEqual(pints_val, scipy_val)
             self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
-    
+
     def test_log_uniform_prior_cdf_icdf(self):
         p1 = pints.LogUniformLogPrior(1e-2, 1e2)
         self.assertAlmostEqual(p1.cdf(0.1), 0.25)
         self.assertAlmostEqual(p1.cdf(10), 0.75)
         self.assertAlmostEqual(p1.icdf(0.25), 0.1)
         self.assertAlmostEqual(p1.icdf(0.75), 10.0)
-    
+
     def test_log_uniform_prior_sampling(self):
         p1 = pints.LogUniformLogPrior(1e-2, 1e2)
         samples = p1.sample(1000000)
