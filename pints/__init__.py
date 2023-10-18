@@ -105,6 +105,7 @@ from ._log_priors import (
     StudentTLogPrior,
     TruncatedGaussianLogPrior,
     UniformLogPrior,
+    LogUniformLogPrior
 )
 
 #

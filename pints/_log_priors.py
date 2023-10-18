@@ -1347,6 +1347,11 @@ class UniformLogPrior(pints.LogPrior):
     
 class LogUniformLogPrior(pints.LogPrior):
     def __init__(self, a, b):
+        if a <= 0:
+            raise ValueError("a must be > 0")
+        if b <= a:
+            raise ValueError("b must be > a > 0")
+
         self._a = a
         self._b = b
         #constant for S1 evaluation
@@ -1362,7 +1367,9 @@ class LogUniformLogPrior(pints.LogPrior):
         return scipy.stats.loguniform.ppf(p, self._a, self._b)
 
     def evaluateS1(self, x):
-        dp = - self._c * np.power(x, -2)
+        dpdfdx = - self._c * np.power(x, -2)
+        dlogdx = 1/scipy.stats.loguniform.pdf(x, self._a, self._b)
+        dp = np.array(dpdfdx*dlogdx)
         # Set values outside limits to nan
         dp[(np.asarray(x) < self._a) | (np.asarray(x) > self._b)] = np.nan
         return self(x), dp
