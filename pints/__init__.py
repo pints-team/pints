@@ -118,6 +118,7 @@ from ._log_likelihoods import (
     GaussianIntegratedUniformLogLikelihood,
     GaussianKnownSigmaLogLikelihood,
     GaussianLogLikelihood,
+    CensoredGaussianLogLikelihood,
     KnownNoiseLogLikelihood,
     LogNormalLogLikelihood,
     MultiplicativeGaussianLogLikelihood,

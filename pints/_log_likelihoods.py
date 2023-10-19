@@ -8,6 +8,7 @@
 import pints
 import numpy as np
 import scipy.special
+import scipy.stats
 
 
 class AR1LogLikelihood(pints.ProblemLogLikelihood):
@@ -770,8 +771,205 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
         dL = np.sum(
             (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
 
+        print((r.T * dy.T).T,"inside sum")
+
         # Calculate derivative wrt sigma
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
+        dL = np.concatenate((dL, np.array(list(dsigma))))
+
+        # Return
+        return L, dL
+
+
+class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
+    r""" TO DO
+    """
+
+    def __init__(self, problem, lower=None, upper=None, verbose=True):
+        super(CensoredGaussianLogLikelihood, self).__init__(problem)
+        if verbose:
+            print("Data is this and censored values are ...")
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + self._no
+        a = lower
+        if a is not None:
+            if np.isscalar(a):
+                a = np.ones(self._no) * float(a)
+            else:
+                a = pints.vector(a)
+                if len(a) != self._no:
+                    raise ValueError(
+                        'Lower limit of detection must be a ' +
+                        ' scalar or a vector of length n_outputs.')
+        b = upper
+        if b is not None:
+            if np.isscalar(b):
+                b = np.ones(self._no) * float(b)
+            else:
+                b = pints.vector(b)
+                if len(b) != self._no:
+                    raise ValueError(
+                        'Upper limit of detection must be a ' +
+                        ' scalar or a vector of length n_outputs.')
+
+        if (a is not None) and (b is not None):
+            diff = b - a
+            if np.any(diff <= 0):
+                raise ValueError('Upper limit of detection ' +
+                                 'must exceed lower limit.')
+        self._a = a
+        self._b = b
+
+        # Define the condition for whether a point is not censored
+        if (self._a is not None) and (self._b is not None):
+            self._condition = (self._a < self._values
+                               ) & (self._values < self._b)
+        elif (self._a is not None) and (self._b is None):
+            self._condition = self._a < self._values
+        elif (self._a is None) and (self._b is not None):
+            self._condition = self._values < self._b
+        else:
+            raise ValueError("Not a censored likelihood")
+
+        # Number of points that aren't censored
+        self._n_not_censored = (self._condition).sum()
+
+        # Pre-calculate parts
+        self._logn = 0.5 * self._n_not_censored * np.log(2 * np.pi)
+
+    def __call__(self, x):
+        sigma = np.asarray(x[-self._no:])
+        if any(sigma <= 0):
+            return -np.inf
+
+        squared_error = np.sum((self._values -
+                                self._problem.evaluate(x[:-self._no]))**2,
+                               axis=0, where=self._condition)
+
+        # Calculate part of the likelihood corresponding to the censored data
+        # Q: Should these be summed like for the bit that isn't censored?
+        lower_censored_sum = np.sum(np.log(
+            scipy.stats.norm.cdf(x=self._values,
+                                 loc=self._problem.evaluate(x[:-self._no]),
+                                 scale=sigma)),
+            where=self._values == self._a)
+        upper_censored_sum = np.sum(
+            np.log(1 - scipy.stats.norm.
+                   cdf(x=self._values,
+                       loc=self._problem.evaluate(x[:-self._no]),
+                       scale=sigma)),
+            where=self._values == self._b)
+
+        # Calculate part of the likelihood corresponding to
+        # the data that isn't censored
+        non_censored_sum = np.sum(- self._logn -
+                                  self._n_not_censored * np.log(sigma)
+                                  - squared_error / (2 * sigma**2))
+
+        # print("lower", lower_censored_sum)
+        # print("upper", upper_censored_sum)
+        # print("non-censored", non_censored_sum)
+
+        return lower_censored_sum + upper_censored_sum + non_censored_sum
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        sigma = np.asarray(x[-self._no:])
+
+        # Calculate log-likelihood
+        L = self.__call__(x)
+        if np.isneginf(L):
+            return L, np.tile(np.nan, self._n_parameters)
+
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x[:-self._no])
+
+        # Reshape dy, in case we're working with a single-output problem
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
+        print("START")
+        print(np.sum(
+            (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T).T).T, axis=0))
+        print(self._condition)
+        print(np.shape((((self._values - y).T * dy.T).T)),"hi")
+        print(np.sum(((self._values - y).T * dy.T).T,
+                                    where=self._condition))
+        # print(np.sum(((self._values - y).T * dy.T), 
+        #                             where=self._condition).T, "here")
+
+        # 1. Parts of the derivative corresponding to the data that
+        # isn't censored
+        # Calculate derivatives in the model parameters
+        not_censored_dL = np.sum(
+            (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T,
+                                    where=self._condition).T).T, axis=0)
+
+        # Calculate derivative wrt sigma
+        not_censored_dsigma = -self._n_not_censored / sigma + sigma**(-3.0) *\
+            np.sum((self._values - y)**2, axis=0, where=self._condition)
+
+        # 2. Parts of the derivative corresponding to the data that is
+        # censored
+
+        # Calculate derivatives in the model parameters
+        lower_censored_dL = -np.sum(
+            (sigma**(-1) *
+             np.sum(((scipy.stats.
+                      norm.pdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T * dy.T) /
+                     (scipy.stats.
+                      norm.cdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T)).T,
+                    where=self._values == self._a).T), axis=0)
+
+        upper_censored_dL = np.sum(
+            (sigma**(-1) *
+             np.sum(((scipy.stats.
+                      norm.pdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T * dy.T) /
+                    (1 - scipy.stats.
+                     norm.cdf(x=self._values,
+                              loc=self._problem.evaluate(x[:-self._no]),
+                              scale=sigma).T)).T,
+                    where=self._values == self._b).T), axis=0)
+
+        # Calculate derivative wrt sigma
+        lower_censored_dsigma = np.sum(
+            (- sigma**(-2) *
+             np.sum(((scipy.stats.
+                      norm.pdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T *
+                     (self._values - y).T) /
+                     (scipy.stats.
+                      norm.cdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T)).T,
+                    where=self._values == self._a).T), axis=0)
+
+        upper_censored_dsigma = np.sum(
+            (sigma**(-2) *
+             np.sum(((scipy.stats.
+                      norm.pdf(x=self._values,
+                               loc=self._problem.evaluate(x[:-self._no]),
+                               scale=sigma).T *
+                      (self._values - y).T) /
+                    (1 - scipy.stats.
+                     norm.cdf(x=self._values,
+                              loc=self._problem.evaluate(x[:-self._no]),
+                              scale=sigma).T)).T,
+                    where=self._values == self._a).T), axis=0)
+
+        dL = not_censored_dL + lower_censored_dL + upper_censored_dL
+        dsigma = not_censored_dsigma + lower_censored_dsigma + \
+            upper_censored_dsigma
         dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return

@@ -1419,6 +1419,838 @@ class TestGaussianLogLikelihood(unittest.TestCase):
             self.assertTrue(np.isnan(dl))
 
 
+class TestCensoredGaussianLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(3)
+
+        # Generate test data
+        cls.times = np.array([1, 2, 3, 4, 5, 6])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.array([1, 1, 2, 3, 4, 4]) / 5.0
+        cls.data_single_all_censored = np.array([1, 1, 1, 1, 1, 1]) / 5.0
+        cls.data_multi = np.array([
+            [10.7, 3.5, 3.8],
+            [1.1, 3.2, -1.4],
+            [9.3, 0.0, 4.5],
+            [1.2, -3, -10]])
+        cls.sigma = 0.1
+
+    def test_call_list_none_censored(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with and without censored data
+        # (in the censored case set the lower limit so that no points
+        # are censored)
+        log_likelihood_censored = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=-np.inf, upper=np.inf)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that score between censored and standard likelihoods agree
+        self.assertAlmostEqual(
+            log_likelihood(test_parameters),
+            log_likelihood_censored(test_parameters))
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -685.6981206412637)
+
+    def test_call_list_lower_censored(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the lower limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -696.090160262271)
+
+    def test_call_list_upper_censored(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -544.4654137608424)
+
+    def test_call_list_lower_and_upper_censored(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -554.8574533818497)
+
+    def test_call_list_all_lower_censored(self):
+        # Convert data to list
+        values = self.data_single_all_censored.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -994.8742395042852)
+
+    def test_call_list_all_upper_censored(self):
+        # Convert data to list
+        values = self.data_single_all_censored.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, 0)
+
+    def test_call_one_dim_array_none_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with and without censored data
+        # (in the censored case set the lower limit so that no points
+        # are censored)
+        log_likelihood_censored = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=-np.inf, upper=np.inf)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that score between censored and standard likelihoods agree
+        self.assertAlmostEqual(
+            log_likelihood(test_parameters),
+            log_likelihood_censored(test_parameters))
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -685.6981206412637)
+
+    def test_call_one_dim_array_lower_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the lower limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -696.090160262271)
+
+    def test_call_one_dim_array_upper_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -544.4654137608424)
+
+    def test_call_one_dim_array_lower_and_upper_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -554.8574533818497)
+
+    def test_call_one_dim_array_all_lower_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single_all_censored, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -994.8742395042852)
+
+    def test_call_one_dim_array_all_upper_censored(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single_all_censored, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, 0)
+
+    def test_call_two_dim_array_single_none_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with and without censored data
+        # (in the censored case set the lower limit so that no points
+        # are censored)
+        log_likelihood_censored = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=-np.inf, upper=np.inf)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that score between censored and standard likelihoods agree
+        self.assertAlmostEqual(
+            log_likelihood(test_parameters),
+            log_likelihood_censored(test_parameters))
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -685.6981206412637)
+
+    def test_call_two_dim_array_single_lower_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the lower limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -696.090160262271)
+
+    def test_call_two_dim_array_single_upper_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -544.4654137608424)
+
+    def test_call_two_dim_array_single_lower_and_upper_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -554.8574533818497)
+
+    def test_call_two_dim_array_single_all_lower_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single_all_censored, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -994.8742395042852)
+
+    def test_call_two_dim_array_single_all_upper_censored(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single_all_censored, (self.n_times, 1))
+
+        import scipy.stats
+
+        # print(-3 * np.log(2 * np.pi * (0.1**2)) - (0.5 * (1/(0.1**2))* np.sum((2 - self.data_single)**2)),"L")
+        # print(-2 * np.log(2 * np.pi * (0.1**2)) - (0.5 * (1/(0.1**2))* np.sum((2 - self.data_single[2:])**2)) + 2 * np.log(scipy.stats.norm.cdf(-1.8/0.1)),"L")
+        # print(2 * np.log(scipy.stats.norm.cdf(-1.8/0.1)), "censored")
+        # print(-2 * np.log(2 * np.pi * (0.1**2)) - (0.5 * (1/(0.1**2))* np.sum((2 - self.data_single[:-2])**2)) + 2 * np.log(1 - scipy.stats.norm.cdf(-1.2/0.1)),"L")
+        # print(2 * np.log(1 - scipy.stats.norm.cdf(-1.2/0.1)),"censored")
+        # print(-1 * np.log(2 * np.pi * (0.1**2)) - (0.5 * (1/(0.1**2))* np.sum((2 - self.data_single[2:-2])**2)) + 2 * np.log(1 - scipy.stats.norm.cdf(-1.2/0.1)) + 2 * np.log(scipy.stats.norm.cdf(-1.8/0.1)),"L")
+        print(6 * np.log(1 - scipy.stats.norm.cdf(-1.8/0.1)),"L")
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create censored log_likelihood (with the upper limit so that points
+        # are censored)
+        log_likelihood = pints.\
+            CensoredGaussianLogLikelihood(problem, upper=0.2)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, 0)
+
+    def test_evaluateS1_list_none_censored(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihoods with and without censored data
+        # (in the censored case set the lower limit so that no points
+        # are censored)
+        log_likelihood_censored = pints.\
+            CensoredGaussianLogLikelihood(problem, lower=-np.inf, upper=np.inf)
+        log_likelihood = pints.GaussianLogLikelihood(problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [2, self.sigma]
+        score, deriv = log_likelihood_censored.evaluateS1(test_parameters)
+
+        # Check that score between censored and standard likelihoods agree
+        self.assertAlmostEqual(
+            score, log_likelihood.evaluateS1(test_parameters)[0])
+
+        # Check that partials between censored and standard likelihoods agree
+        self.assertAlmostEqual(
+            deriv[0], log_likelihood.evaluateS1(test_parameters)[1][0])
+        self.assertAlmostEqual(
+            deriv[1], log_likelihood.evaluateS1(test_parameters)[1][1])
+
+        # Check that score is computed correctly
+        self.assertAlmostEqual(score, log_likelihood_censored(test_parameters))
+
+        # Check that partials have the correct shape
+        self.assertEqual(deriv.shape, (2, ))
+
+        # Check that partials are computed correctly
+        self.assertAlmostEqual(deriv[0], -6.436770793841281)
+        self.assertAlmostEqual(deriv[1], 18.75242861278283)
+
+    # def test_call_one_dim_array(self):
+    #     # Convert data to array of shape (n_times,)
+    #     values = np.reshape(self.data_single, (self.n_times,))
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create log_likelihoods with and without censored data
+    #     # (in the censored case set the lower limit so that no points
+    #     # are censored)
+    #     log_likelihood_censored = pints.\
+    #         CensoredGaussianLogLikelihood(problem, lower=-10**(8))
+    #     log_likelihood = pints.GaussianLogLikelihood(problem)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [2, self.sigma]
+    #     score = log_likelihood(test_parameters)
+
+    #     # Check that score between censored and standard likelihoods agree
+    #     self.assertAlmostEqual(
+    #         log_likelihood(test_parameters),
+    #         log_likelihood_censored(test_parameters))
+
+    #     # Check that likelihood returns expected value
+    #     self.assertAlmostEqual(score, -421.8952711914118)
+
+#     def test_call_two_dim_array_single(self):
+#         # Convert data to array of shape (n_times, 1)
+#         values = np.reshape(self.data_single, (self.n_times, 1))
+
+#         # Create an object with links to the model and time series
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, values)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+#         log_likelihood_known = pints.GaussianKnownSigmaLogLikelihood(
+#             problem, self.sigma)
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [2, self.sigma]
+#         score = log_likelihood(test_parameters)
+
+#         # Check that score between known and unknown sigma likelihoods agree
+#         self.assertAlmostEqual(
+#             log_likelihood(test_parameters),
+#             log_likelihood_known(test_parameters[:-1]))
+
+#         # Check that likelihood returns expected value
+#         self.assertAlmostEqual(score, -421.8952711914118)
+
+#     def test_call_two_dim_array_multi(self):
+#         # Create an object with links to the model and time series
+#         problem = pints.MultiOutputProblem(
+#             self.model_multi, self.times, self.data_multi)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+#         log_likelihood_known = pints.GaussianKnownSigmaLogLikelihood(
+#             problem, self.sigma)
+
+#         # Check that score between known and unknown sigma likelihoods agree
+#         self.assertAlmostEqual(
+#             log_likelihood([0, 0, 0, 0.1, 0.1, 0.1]),
+#             log_likelihood_known([0, 0, 0]))
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [0, 0, 0, 3.5, 1, 12]
+#         score = log_likelihood(test_parameters)
+
+#         # Check that likelihood returns expected value
+#         self.assertAlmostEqual(score, -50.75425117450455)
+
+#     def test_evaluateS1_list(self):
+#         # Convert data to list
+#         values = self.data_single.tolist()
+
+#         # Create an object with links to the model and time series
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, values)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [7, 2.0]
+#         score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+#         # Check that score is computed correctly
+#         self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+#         # Check that partials have the correct shape
+#         self.assertEqual(deriv.shape, (2, ))
+
+#         # Check that partials are comuted correctly
+#         self.assertAlmostEqual(deriv[0], -6.436770793841281)
+#         self.assertAlmostEqual(deriv[1], 18.75242861278283)
+
+#     def test_evaluateS1_one_dim_array(self):
+#         # Convert data to array of shape (n_times,)
+#         values = np.reshape(self.data_single, (self.n_times,))
+
+#         # Create an object with links to the model and time series
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, values)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [7, 2.0]
+#         score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+#         # Check that score is computed correctly
+#         self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+#         # Check that partials have the correct shape
+#         self.assertEqual(deriv.shape, (2, ))
+
+#         # Check that partials are comuted correctly
+#         self.assertAlmostEqual(deriv[0], -6.436770793841281)
+#         self.assertAlmostEqual(deriv[1], 18.75242861278283)
+
+#     def test_evaluateS1_two_dim_array_single(self):
+#         # Convert data to array of shape (n_times, 1)
+#         values = np.reshape(self.data_single, (self.n_times, 1))
+
+#         # Create an object with links to the model and time series
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, values)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [7, 2.0]
+#         score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+#         # Check that score is computed correctly
+#         self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+#         # Check that partials have the correct shape
+#         self.assertEqual(deriv.shape, (2, ))
+
+#         # Check that partials are comuted correctly
+#         self.assertAlmostEqual(deriv[0], -6.436770793841281)
+#         self.assertAlmostEqual(deriv[1], 18.75242861278283)
+
+#     def test_evaluateS1_two_dim_array_multi(self):
+#         # Create an object with links to the model and time series
+#         problem = pints.MultiOutputProblem(
+#             self.model_multi, self.times, self.data_multi)
+
+#         # Create log_likelihoods with known and unknown sigma
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+
+#         # Evaluate likelihood for test parameters
+#         test_parameters = [0, 0, 0, 3.5, 1, 12]
+#         score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+#         # Check that score is computed correctly
+#         self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+#         # Check that partials have the correct shape
+#         self.assertEqual(deriv.shape, (6, ))
+
+#         # Check that partials are comuted correctly
+#         self.assertAlmostEqual(deriv[0], 1.8053598646282394)
+#         self.assertAlmostEqual(deriv[1], 6.821148214206516)
+#         self.assertAlmostEqual(deriv[2], -0.06083031749704496)
+#         self.assertAlmostEqual(deriv[3], 3.5690214591801)
+#         self.assertAlmostEqual(deriv[4], 28.09526594310443)
+#         self.assertAlmostEqual(deriv[5], -0.25285170370039783)
+
+#     def test_deprecated_alias(self):
+#         # Create an object with links to the model and time series
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, self.data_single)
+
+#         # Create deprecated alias
+#         log_likelihood = pints.UnknownNoiseLogLikelihood(problem)
+
+#         # Check inheritance from current class
+#         self.assertIsInstance(
+#             log_likelihood, pints.GaussianLogLikelihood)
+
+#     def test_negative_sd(self):
+#         # tests about negative sd handling
+
+#         problem = pints.SingleOutputProblem(
+#             self.model_single, self.times, self.data_single)
+
+#         # Create log_likelihood
+#         log_likelihood = pints.GaussianLogLikelihood(problem)
+#         self.assertEqual(log_likelihood([1, 0]), -np.inf)
+
+#         L, dL = log_likelihood.evaluateS1([1, 0])
+#         self.assertEqual(L, -np.inf)
+#         for dl in dL:
+#             self.assertTrue(np.isnan(dl))
+
+    # def test_call_list(self):
+    #     # Convert data to list
+    #     values = self.data_single.tolist()
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [-1]
+    #     score = log_likelihood(test_parameters)
+
+    #     # Check that likelihood returns expected value
+    #     self.assertAlmostEqual(score, -7.3420590096957925)
+
+    # def test_call_one_dim_array(self):
+    #     # Convert data to array of shape (n_times,)
+    #     values = np.reshape(self.data_single, (self.n_times,))
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [-1]
+    #     score = log_likelihood(test_parameters)
+
+    #     # Check that likelihood returns expected value
+    #     self.assertAlmostEqual(score, -7.3420590096957925)
+
+    # def test_call_two_dim_array_single(self):
+    #     # Convert data to array of shape (n_times, 1)
+    #     values = np.reshape(self.data_single, (self.n_times, 1))
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [-1]
+    #     score = log_likelihood(test_parameters)
+
+    #     # Check that likelihood returns expected value
+    #     self.assertAlmostEqual(score, -7.3420590096957925)
+
+    # def test_call_two_dim_array_multi(self):
+    #     # Create an object with links to the model and time series
+    #     problem = pints.MultiOutputProblem(
+    #         self.model_multi, self.times, self.data_multi)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+
+    #     # Evaluate likelihood for test parameters
+    #     test_parameters = [0, 0, 0]
+    #     score = log_likelihood(test_parameters)
+
+    #     # Check that likelihood returns expected value
+    #     self.assertAlmostEqual(score, -196.9122623984561)
+
+    # def test_evaluateS1_list(self):
+    #     # Convert data to list
+    #     values = self.data_single.tolist()
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create a scaled and not scaled log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Compute derivatives for scaled and unscaled likelihood
+    #     test_parameters = [3]
+    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+    #     # Check that score is computed correctly
+    #     self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+    #     # Check that partials have the correct shape
+    #     self.assertEqual(deriv.shape, (1, ))
+
+    #     # Check that partials are comuted correctly
+    #     self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    # def test_evaluateS1_one_dim_array(self):
+    #     # Convert data to array of shape (n_times,)
+    #     values = np.reshape(self.data_single, (self.n_times,))
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create a scaled and not scaled log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Compute derivatives for scaled and unscaled likelihood
+    #     test_parameters = [3]
+    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+    #     # Check that score is computed correctly
+    #     self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+    #     # Check that partials have the correct shape
+    #     self.assertEqual(deriv.shape, (1, ))
+
+    #     # Check that partials are comuted correctly
+    #     self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    # def test_evaluateS1_two_dim_array_single(self):
+    #     # Convert data to array of shape (n_times, 1)
+    #     values = np.reshape(self.data_single, (self.n_times, 1))
+
+    #     # Create an object with links to the model and time series
+    #     problem = pints.SingleOutputProblem(
+    #         self.model_single, self.times, values)
+
+    #     # Create a scaled and not scaled log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+
+    #     # Compute derivatives for scaled and unscaled likelihood
+    #     test_parameters = [3]
+    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+    #     # Check that score is computed correctly
+    #     self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+    #     # Check that partials have the correct shape
+    #     self.assertEqual(deriv.shape, (1, ))
+
+    #     # Check that partials are comuted correctly
+    #     self.assertAlmostEqual(deriv[0], -4.444444444444445)
+
+    # def test_evaluateS1_two_dim_array_multi(self):
+    #     # Create an object with links to the model and time series
+    #     problem = pints.MultiOutputProblem(
+    #         self.model_multi, self.times, self.data_multi)
+
+    #     # Create log_likelihood
+    #     log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1)
+
+    #     # Compute derivatives for scaled and unscaled likelihood
+    #     test_parameters = [0, 0, 0]
+    #     score, deriv = log_likelihood.evaluateS1(test_parameters)
+
+    #     # Check that score is computed correctly
+    #     self.assertAlmostEqual(score, log_likelihood(test_parameters))
+
+    #     # Check that partials have the correct shape
+    #     self.assertEqual(deriv.shape, (3, ))
+
+    #     # Check that partials are comuted correctly
+    #     self.assertAlmostEqual(deriv[0], 22.3)
+    #     self.assertAlmostEqual(deriv[1], 2 * 3.7000000000000002)
+    #     self.assertAlmostEqual(deriv[2], -9.3)
+
+    def test_negative_sd(self):
+        # tests about negative sd handling
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+
+        # Create log_likelihood
+        log_likelihood = pints.CensoredGaussianLogLikelihood(problem, lower=0.5)
+        self.assertEqual(log_likelihood([1, 0]), -np.inf)
+
+        L, dL = log_likelihood.evaluateS1([1, 0])
+        self.assertEqual(L, -np.inf)
+        for dl in dL:
+            self.assertTrue(np.isnan(dl))
+
+
 class TestKnownNoiseLogLikelihood(unittest.TestCase):
 
     def test_known_noise_gaussian_single_and_multi(self):
