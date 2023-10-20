@@ -1366,7 +1366,7 @@ class LogUniformLogPrior(pints.LogPrior):
     .. math::
         \mathrm{E}(X)=\frac{b-a}{\log(b/a)}.
 
-    For example, to create a prior with :math:`x\in[1e-2,1e2]`, use either::
+    For example, to create a prior with :math:`x\in[1e-2,1e2]`, use::
 
         p = pints.LogUniformLogPrior(1e-2, 1e2)
 
