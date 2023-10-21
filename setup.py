@@ -84,5 +84,5 @@ setup(
             'pystan>=3',
         ]
     },
-    python_requires='>=3.5',
+    python_requires='>=3.7',
 )

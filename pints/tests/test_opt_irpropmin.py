@@ -77,8 +77,8 @@ class TestIRPropMin(unittest.TestCase):
         # Best position and score called before run
         self.assertEqual(list(opt.x_best()), list(x))
         self.assertEqual(list(opt.x_guessed()), list(x))
-        self.assertEqual(opt.f_best(), float('inf'))
-        self.assertEqual(opt.f_guessed(), float('inf'))
+        self.assertEqual(opt.f_best(), np.inf)
+        self.assertEqual(opt.f_guessed(), np.inf)
 
         # Tell before ask
         self.assertRaisesRegex(
@@ -201,7 +201,7 @@ class TestIRPropMin(unittest.TestCase):
         self.assertEqual(lines[2], exp[2])
         self.assertEqual(lines[3], exp[3])
         self.assertEqual(lines[4][:-3], exp[4][:-3])
-        self.assertEqual(lines[5][:-3], lines[5][:-3])
+        self.assertEqual(lines[5][:-3], exp[5][:-3])
 
         # Test with min and max steps
         r, x, s = self.problem()
@@ -221,9 +221,9 @@ class TestIRPropMin(unittest.TestCase):
         self.assertEqual(lines[2], exp[2])
         self.assertEqual(lines[3], exp[3])
         self.assertEqual(lines[4][:-3], exp[4][:-3])
-        self.assertEqual(lines[5][:-3], lines[5][:-3])
+        self.assertEqual(lines[5][:-3], exp[5][:-3])
         self.assertEqual(lines[6][:-3], exp[6][:-3])
-        self.assertEqual(lines[7][:-3], lines[7][:-3])
+        self.assertEqual(lines[7][:-3], exp[7][:-3])
 
     def test_name(self):
         # Test the name() method.

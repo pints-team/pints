@@ -43,7 +43,7 @@ You now have everything you need to start making changes!
 11. If you added a major new feature, perhaps it should be showcased in an [example notebook](#example-notebooks).
 12. When you feel your code is finished, or at least warrants serious discussion, run the [pre-commit checks](#pre-commit-checks) and then create a [pull request](https://help.github.com/articles/about-pull-requests/) (PR) on [PINTS' GitHub page](https://github.com/pints-team/pints).
 13. Update `CHANGELOG.md`, following the guidelines in the [changelog](#changelog) section.
-14. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into PINTS master repository.
+14. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into PINTS main repository.
 
 Finally, if you really, really, _really_ love developing PINTS, have a look at the current [project infrastructure](#infrastructure).
 
@@ -414,12 +414,13 @@ Documentation is built using https://readthedocs.org/ and published on http://pi
 Configuration files:
 
 ```
+.readthedocs.yaml
 .requirements-docs.txt
 ```
 
 ### Binder
 
-Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at https://mybinder.org/v2/gh/pints-team/pints/master?filepath=examples.
+Editable notebooks are made available using [Binder](mybinder.readthedocs.io) at https://mybinder.org/v2/gh/pints-team/pints/main?filepath=examples.
 
 Configuration files:
 

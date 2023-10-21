@@ -99,7 +99,7 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
 
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
-        return -float('inf') if f == 0 else np.log(f)
+        return -np.inf if f == 0 else np.log(f)
 
     def distance(self, samples):
         """
@@ -146,7 +146,7 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
         best_mode = np.zeros(samples.shape[0])
         for i in range(samples.shape[0]):
             a_sample = samples[i, :]
-            a_log_pdf = -float('Inf')
+            a_log_pdf = -np.inf
             a_max_index = -1
             for j, var in enumerate(self._vars):
                 a_test_log_pdf = var.logpdf(a_sample)

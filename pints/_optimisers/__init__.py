@@ -581,13 +581,13 @@ class OptimisationController(object):
             evaluator = pints.SequentialEvaluator(f)
 
         # Keep track of current best and best-guess scores.
-        fb = fg = float('inf')
+        fb = fg = np.inf
 
         # Internally we always minimise! Keep a 2nd value to show the user.
         fb_user, fg_user = (fb, fg) if self._minimising else (-fb, -fg)
 
         # Keep track of the last significant change
-        f_sig = float('inf')
+        f_sig = np.inf
 
         # Set up progress reporting
         next_message = 0
@@ -1125,7 +1125,7 @@ class _CurveFitError(pints.ErrorMeasure):
         self.d = dimension
         self.x = x
         self.y = y
-        self.n = 1 / np.product(y.shape)    # Total number of points in data
+        self.n = 1 / np.prod(y.shape)    # Total number of points in data
 
     def n_parameters(self):
         return self.d

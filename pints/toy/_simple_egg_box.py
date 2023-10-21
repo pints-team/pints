@@ -62,7 +62,7 @@ class SimpleEggBoxLogPDF(ToyLogPDF):
 
     def __call__(self, x):
         f = np.sum([var.pdf(x) for var in self._vars])
-        return -float('inf') if f == 0 else np.log(f)
+        return -np.inf if f == 0 else np.log(f)
 
     def distance(self, samples):
         """

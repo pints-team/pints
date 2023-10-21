@@ -289,12 +289,12 @@ class ABCController(object):
             if iteration >= self._max_iterations:
                 running = False
                 halt_message = ('Halting: Maximum number of iterations ('
-                                + str(iteration) + ') reached. Only ('
-                                + str(accepted_count) + ') sample were '
-                                + 'obtained')
+                                + str(iteration) + ') reached. Only '
+                                + str(accepted_count) + ' samples were '
+                                + 'obtained.')
             elif accepted_count >= self._n_samples:
                 running = False
-                halt_message = ('Halting: target number of samples ('
+                halt_message = ('Halting: Target number of samples ('
                                 + str(accepted_count) + ') reached.')
 
         # Log final state and show halt message
@@ -309,8 +309,7 @@ class ABCController(object):
 
     def log_filename(self):
         """
-        Returns the file name in which all the logs related to the
-        ABC routine will be stored.
+        Returns the path to the controller log, or ``None`` if not set.
         """
         return self._log_filename
 

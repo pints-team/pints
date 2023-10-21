@@ -99,7 +99,7 @@ class TestRelativisticMCMC(unittest.TestCase):
         mcmc = pints.RelativisticMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
 
     def test_kinetic_energy(self):
         # Tests kinetic energy values

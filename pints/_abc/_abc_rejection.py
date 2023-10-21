@@ -70,8 +70,7 @@ class RejectionABC(pints.ABCSampler):
         if not np.any(accepted):
             return None
         else:
-            return [self._xs[c].tolist() for c, x in
-                    enumerate(accepted) if x]
+            return [self._xs[c].tolist() for c, x in enumerate(accepted) if x]
 
     def threshold(self):
         """

@@ -88,7 +88,7 @@ class MeanSquaredError(ProblemErrorMeasure):
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
-        self._ninv = 1.0 / np.product(self._values.shape)
+        self._ninv = 1.0 / np.prod(self._values.shape)
 
         if weights is None:
             weights = [1] * self._n_outputs

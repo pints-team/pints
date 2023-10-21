@@ -3,7 +3,7 @@ name: Unit tests (python versions)
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     # Run workflow when PR is changed, or when changed from draft to ready
     types: [opened, synchronize, reopened, ready_for_review]
@@ -21,13 +21,14 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        # Note: Latest version is tested by coverage test and os tests
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64

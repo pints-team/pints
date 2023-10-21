@@ -52,11 +52,11 @@ class XNES(pints.PopulationBasedOptimiser):
 
         # Best solution seen
         self._x_best = pints.vector(x0)
-        self._f_best = float('inf')
+        self._f_best = np.inf
 
         # Best guess of the solution is mu
         # We don't have f(mu), so we approximate it by min f(sample)
-        self._f_guessed = float('inf')
+        self._f_guessed = np.inf
 
     def ask(self):
         """ See :meth:`Optimiser.ask()`. """
@@ -150,7 +150,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Boundaries? Then reconstruct full fx vector
         if self._boundaries is not None and len(fx) < self._population_size:
             bounded_fx = fx
-            fx = np.ones((self._population_size, )) * float('inf')
+            fx = np.ones((self._population_size, )) * np.inf
             fx[self._bounded_ids] = bounded_fx
 
         # Order the normalized samples according to the scores
