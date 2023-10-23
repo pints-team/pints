@@ -100,6 +100,7 @@ from ._log_priors import (
     HalfCauchyLogPrior,
     InverseGammaLogPrior,
     LogNormalLogPrior,
+    LogUniformLogPrior,
     MultivariateGaussianLogPrior,
     NormalLogPrior,
     StudentTLogPrior,
