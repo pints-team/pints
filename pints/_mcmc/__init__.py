@@ -666,7 +666,7 @@ class MCMCController(object):
             for sampler in self._samplers:
                 sampler._log_init(logger)
             # Note: deleted time units from header, see
-            # https://github.com/pints-team/pints/issues/1467                
+            # https://github.com/pints-team/pints/issues/1467
             logger.add_time('Time')
 
         # Pre-allocate arrays for chain storage

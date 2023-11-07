@@ -130,7 +130,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(
             lines[2], 'Running in parallel with 4 worker processes.')
         self.assertEqual(lines[3], 'Population size: 6')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Current   Time m:s')
+        self.assertEqual(lines[4], 'Iter. Eval. Best      Current   Time    ')
 
         pint = '[0-9]+[ ]+'
         pflt = '[0-9.-]+[ ]+'
@@ -158,7 +158,7 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(
             lines[0],
             'Iter. Eval. Best      Current   f0        f1        f2        '
-            'f3        f4        f5        Time m:s'
+            'f3        f4        f5        Time    '
         )
 
         pattern = re.compile(pint * 2 + pflt * 8 + ptim)

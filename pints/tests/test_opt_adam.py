@@ -19,15 +19,15 @@ debug = False
 method = pints.Adam
 
 
-log_1 = '''
-Minimising error measure
-Using Adam
-Running in sequential mode.
-Iter. Eval. Best      Current   b1        b2        Time m:s
-0     1      0.02      0.02      0.9       0.999      0:00.0
-1     2      5e-17     5e-17     0.81      0.998001   0:00.0
-2     3      5e-17     0.00898   0.729     0.997003   0:00.0
-'''.strip()
+log_1 = '\n'.join((
+    'Minimising error measure',
+    'Using Adam',
+    'Running in sequential mode.',
+    'Iter. Eval. Best      Current   b1        b2        Time    ',
+    '0     1      0.02      0.02      0.9       0.999      0:00.0',
+    '1     2      5e-17     5e-17     0.81      0.998001   0:00.0',
+    '2     3      5e-17     0.00898   0.729     0.997003   0:00.0',
+))
 
 
 class TestAdam(unittest.TestCase):

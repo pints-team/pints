@@ -170,7 +170,7 @@ class TestNelderMead(unittest.TestCase):
             'Minimising error measure',
             'Using Nelder-Mead',
             'Running in sequential mode.',
-            'Iter. Eval. Best      Current   Time m:s',
+            'Iter. Eval. Best      Current   Time',
             '0     3      865.9531  865.9531   0:00.0',
             '1     4      832.5452  832.5452   0:00.0',
             '2     5      832.5452  832.5452   0:00.0',
