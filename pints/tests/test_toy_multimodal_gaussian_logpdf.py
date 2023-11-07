@@ -65,6 +65,11 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
             [1, 1], [1.5, 1.5], [3, 0], [0, 3.5]
         ])
 
+        # Bad calls to function
+        f = pints.toy.MultimodalGaussianLogPDF([[1, 1, 1]])
+        self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
     def test_bad_constructors(self):
         # Tests bad Constructors.
 
