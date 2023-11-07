@@ -665,7 +665,9 @@ class MCMCController(object):
             logger.add_counter('Eval.', max_value=max_eval_guess)
             for sampler in self._samplers:
                 sampler._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: deleted time units from header, see
+            # https://github.com/pints-team/pints/issues/1467                
+            logger.add_time('Time')
 
         # Pre-allocate arrays for chain storage
         # Note: we store the inverse transformed (to model space) parameters
