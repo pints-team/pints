@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
+- [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 ### Changed
 ### Deprecated
 ### Removed
