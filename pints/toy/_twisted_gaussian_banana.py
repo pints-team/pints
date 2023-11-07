@@ -66,6 +66,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         y = np.array(x, copy=True, dtype='float')
         y[0] = float(y[0]) / np.sqrt(self._V)
         y[1] += self._b * ((x[0] ** 2) - self._V)
+        y = y.reshape(self._n_parameters)
         return self._phi.logpdf(y)
 
     def distance(self, samples):
