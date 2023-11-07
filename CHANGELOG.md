@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 ### Removed
 ### Fixed
+- [#1503](https://github.com/pints-team/pints/pull/1503) Stopped showing time units in controller logs to fix occassional errors.
 
 
 ## [0.5.0] - 2023-07-27
