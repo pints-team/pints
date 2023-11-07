@@ -58,8 +58,8 @@ class GaussianLogPDF(ToyLogPDF):
         self._sigma_inv = np.linalg.inv(self._sigma)
 
     def __call__(self, x):
-        x = pints.vector(x).reshape(self._n_parameters)
-        return self._phi.logpdf(x)
+        y = pints.vector(x).reshape(self._n_parameters)
+        return self._phi.logpdf(y)
 
     def distance(self, samples):
         """
