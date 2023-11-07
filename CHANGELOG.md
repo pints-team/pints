@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
 ### Changed
 ### Deprecated
 ### Removed
