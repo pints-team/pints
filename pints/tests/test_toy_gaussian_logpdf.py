@@ -46,6 +46,11 @@ class TestGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.GaussianLogPDF, [1, 2, 3], [1, 2, 3, 4])
 
+        # Bad calls to function
+        f = pints.toy.GaussianLogPDF([1, 2, 3], [1, 1, 1])
+        self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
     def test_sampling_and_kl_divergence(self):
         # Test GaussianLogPDF.kl_divergence() and .sample().
 
