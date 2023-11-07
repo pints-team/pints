@@ -66,21 +66,21 @@ FLOAT_FORMAT = '{: .17e}'
 #
 # Core classes
 #
-from ._core import ForwardModel, ForwardModelS1  # noqa
-from ._core import TunableMethod  # noqa
-from ._core import SingleOutputProblem, MultiOutputProblem  # noqa
+from ._core import ForwardModel, ForwardModelS1
+from ._core import TunableMethod
+from ._core import SingleOutputProblem, MultiOutputProblem
 
 #
 # Utility classes and methods
 #
-from ._util import strfloat, vector, matrix2d  # noqa
-from ._util import Timer  # noqa
-from ._logger import Logger, Loggable  # noqa
+from ._util import strfloat, vector, matrix2d
+from ._util import Timer
+from ._logger import Logger, Loggable
 
 #
 # Logs of probability density functions (not necessarily normalised)
 #
-from ._log_pdfs import (  # noqa
+from ._log_pdfs import (
     LogPDF,
     LogPrior,
     LogPosterior,
@@ -92,7 +92,7 @@ from ._log_pdfs import (  # noqa
 #
 # Log-priors
 #
-from ._log_priors import (  # noqa
+from ._log_priors import (
     BetaLogPrior,
     BinomialLogPrior,
     CauchyLogPrior,
@@ -114,7 +114,7 @@ from ._log_priors import (  # noqa
 #
 # Log-likelihoods
 #
-from ._log_likelihoods import (  # noqa
+from ._log_likelihoods import (
     AR1LogLikelihood,
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
@@ -133,7 +133,7 @@ from ._log_likelihoods import (  # noqa
 #
 # Boundaries
 #
-from ._boundaries import (  # noqa
+from ._boundaries import (
     Boundaries,
     LogPDFBoundaries,
     RectangularBoundaries,
@@ -142,7 +142,7 @@ from ._boundaries import (  # noqa
 #
 # Error measures
 #
-from ._error_measures import (  # noqa
+from ._error_measures import (
     ErrorMeasure,
     MeanSquaredError,
     NormalisedRootMeanSquaredError,
@@ -156,7 +156,7 @@ from ._error_measures import (  # noqa
 #
 # Parallel function evaluation
 #
-from ._evaluation import (  # noqa
+from ._evaluation import (
     evaluate,
     Evaluator,
     ParallelEvaluator,
@@ -168,7 +168,7 @@ from ._evaluation import (  # noqa
 #
 # Optimisation
 #
-from ._optimisers import (  # noqa
+from ._optimisers import (
     curve_fit,
     fmin,
     Optimisation,
@@ -192,7 +192,7 @@ from ._optimisers._xnes import XNES
 #
 # Diagnostics
 #
-from ._diagnostics import (  # noqa
+from ._diagnostics import (
     effective_sample_size,
     rhat,
     rhat_all_params,
@@ -202,7 +202,7 @@ from ._diagnostics import (  # noqa
 #
 #  MCMC
 #
-from ._mcmc import (  # noqa
+from ._mcmc import (
     mcmc_sample,
     MCMCController,
     MCMCSampler,
@@ -211,38 +211,38 @@ from ._mcmc import (  # noqa
     SingleChainMCMC,
 )
 # base classes first
-from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC  # noqa
+from ._mcmc._adaptive_covariance import AdaptiveCovarianceMC
 
 # methods
-from ._mcmc._differential_evolution import DifferentialEvolutionMCMC  # noqa
-from ._mcmc._dram_ac import DramACMC  # noqa
-from ._mcmc._dream import DreamMCMC  # noqa
-from ._mcmc._dual_averaging import DualAveragingAdaption  # noqa
-from ._mcmc._emcee_hammer import EmceeHammerMCMC  # noqa
-from ._mcmc._haario_ac import HaarioACMC  # noqa
-from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC  # noqa
-from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC  # noqa
-from ._mcmc._hamiltonian import HamiltonianMCMC  # noqa
-from ._mcmc._mala import MALAMCMC  # noqa
-from ._mcmc._metropolis import MetropolisRandomWalkMCMC  # noqa
-from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC  # noqa
-from ._mcmc._nuts import NoUTurnMCMC  # noqa
-from ._mcmc._population import PopulationMCMC  # noqa
-from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC  # noqa
-from ._mcmc._relativistic import RelativisticMCMC  # noqa
-from ._mcmc._slice_doubling import SliceDoublingMCMC  # noqa
-from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC  # noqa
-from ._mcmc._slice_stepout import SliceStepoutMCMC  # noqa
-from ._mcmc._summary import MCMCSummary  # noqa
+from ._mcmc._differential_evolution import DifferentialEvolutionMCMC
+from ._mcmc._dram_ac import DramACMC
+from ._mcmc._dream import DreamMCMC
+from ._mcmc._dual_averaging import DualAveragingAdaption
+from ._mcmc._emcee_hammer import EmceeHammerMCMC
+from ._mcmc._haario_ac import HaarioACMC
+from ._mcmc._haario_bardenet_ac import HaarioBardenetACMC
+from ._mcmc._haario_bardenet_ac import AdaptiveCovarianceMCMC
+from ._mcmc._hamiltonian import HamiltonianMCMC
+from ._mcmc._mala import MALAMCMC
+from ._mcmc._metropolis import MetropolisRandomWalkMCMC
+from ._mcmc._monomial_gamma_hamiltonian import MonomialGammaHamiltonianMCMC
+from ._mcmc._nuts import NoUTurnMCMC
+from ._mcmc._population import PopulationMCMC
+from ._mcmc._rao_blackwell_ac import RaoBlackwellACMC
+from ._mcmc._relativistic import RelativisticMCMC
+from ._mcmc._slice_doubling import SliceDoublingMCMC
+from ._mcmc._slice_rank_shrinking import SliceRankShrinkingMCMC
+from ._mcmc._slice_stepout import SliceStepoutMCMC
+from ._mcmc._summary import MCMCSummary
 
 
 #
 # Nested samplers
 #
-from ._nested import NestedSampler  # noqa
-from ._nested import NestedController  # noqa
-from ._nested._rejection import NestedRejectionSampler  # noqa
-from ._nested._ellipsoid import NestedEllipsoidSampler  # noqa
+from ._nested import NestedSampler
+from ._nested import NestedController
+from ._nested._rejection import NestedRejectionSampler
+from ._nested._ellipsoid import NestedEllipsoidSampler
 
 
 #
@@ -257,13 +257,13 @@ from ._abc._abc_smc import ABCSMC
 #
 # Sampling initialising
 #
-from ._sample_initial_points import sample_initial_points  # noqa
+from ._sample_initial_points import sample_initial_points
 
 
 #
 # Transformations
 #
-from ._transformation import (  # noqa
+from ._transformation import (
     ComposedTransformation,
     IdentityTransformation,
     LogitTransformation,
@@ -283,7 +283,7 @@ from ._transformation import (  # noqa
 #
 # Noise generators (always import!)
 #
-from . import noise  # noqa
+from . import noise
 
 #
 # Remove any imported modules, so we don't expose them as part of pints
