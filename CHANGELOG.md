@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 ### Removed
 ### Fixed
+- [#1505](https://github.com/pints-team/pints/pull/1505) Fixed issues with toy problems that accept invalid inputs.
 
 
 ## [0.5.0] - 2023-07-27
