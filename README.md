@@ -13,7 +13,6 @@ PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisa
 PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252), and can be cited using the information given in our [CITATION file](https://github.com/pints-team/pints/blob/main/CITATION).
 More information about PINTS papers can be found in the [papers directory](https://github.com/pints-team/pints/tree/main/papers).
 
-
 ## Using PINTS
 
 PINTS can work with any model that implements the [pints.ForwardModel](http://pints.readthedocs.io/en/latest/core_classes_and_methods.html#forward-model) interface.
@@ -34,6 +33,8 @@ A brief example is shown below:
 _(Left)_ A noisy experimental time series and a computational forward model.
 _(Right)_ Example code for an optimisation problem.
 The full code can be [viewed here](https://github.com/pints-team/pints/blob/main/examples/sampling/readme-example.ipynb) but a friendlier, more elaborate, introduction can be found on the [examples page](https://github.com/pints-team/pints/blob/main/examples/README.md).
+
+Beyond time-series models, PINTS can be used on any error function or log-likelihood that takes real-valued, continuous parameters.
 
 A graphical overview of the methods included in PINTS can be [viewed here](https://pints-team.github.io/pints-methods-overview/).
 

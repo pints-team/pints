@@ -17,7 +17,8 @@ class ErrorMeasure(object):
 
     ErrorMeasures are callable objects: If ``e`` is an instance of an
     :class:`ErrorMeasure` class you can calculate the error by calling ``e(p)``
-    where ``p`` is a point in parameter space.
+    where ``p`` is a point in parameter space. In PINTS, all parameters must be
+    continuous and real.
     """
     def __call__(self, x):
         raise NotImplementedError
