@@ -5,8 +5,9 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_max_unmoved_iterations` that allows methods to stop after 1 or more iterations with no significant movement in parameter space.
+- [#1506](https://github.com/pints-team/pints/pull/1506) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
-- [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 ### Changed
 ### Deprecated
 ### Removed
