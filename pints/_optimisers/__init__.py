@@ -442,29 +442,90 @@ class OptimisationController(object):
         # :meth:`run` can only be called once
         self._has_run = False
 
-        #
-        # Stopping criteria
-        #
-
-        # Maximum iterations
-        self._max_iterations = None
-        self.set_max_iterations()
-
-        # Maximum unchanged iterations
-        self._unchanged_max_iterations = None  # n_iter w/o change until stop
-        self._unchanged_threshold = 1          # smallest significant f change
-        self.set_max_unchanged_iterations()
-
-        # Maximum evaluations
-        self._max_evaluations = None
-
-        # Threshold value
-        self._threshold = None
-
         # Post-run statistics
         self._evaluations = None
         self._iterations = None
         self._time = None
+
+        #
+        # Stopping criteria
+        # Note that we always minimise: likelihoods are wrapped in an Error
+        # class that multiplies by -1
+        #
+
+        # Maximum iterations
+        self._max_iterations = None
+        self.set_max_iterations()   # Enable, with default arguments
+
+        # Maximum number of iterations where f did not change significantly
+        self._unchanged_max_iterations = None  # n_iter w/o change until stop
+        self._unchanged_threshold = 1          # smallest significant f change
+        self.set_max_unchanged_iterations()    # Enable, with default arguments
+
+        # Maximum number of iterations where x did not change significantly
+        self._unmoved_max_iterations = None     # n iter w/o change
+        self._unmoved_threshold = None  # smallest sig. x change, per parameter
+
+        # Maximum evaluations
+        self._max_evaluations = None
+
+        # Function threshold: stop if f(x) < threshold
+        self._threshold = None
+
+    def _check_stopping_criteria(self, iterations, unchanged_iterations,
+                                 unmoved_iterations, evaluations, f_new):
+        """
+        Checks the stopping criteria, returns either ``None`` or a string
+        explaining why to stop.
+
+        Note: The 'error in optimiser' criterion is not checked here.
+
+        Parameters
+        ----------
+        iterations
+            The current number of iterations.
+        unchanged_iterations
+            The current number of iterations without a change in f (best or
+            guessed).
+        unmoved_iterations
+            The current number of iterations without a change in x (best or
+            guessed).
+        evaluations
+            The current number of function evaluations.
+        f_new
+            The current function value (best or guessed).
+
+        """
+        # Maximum number of iterations
+        if (self._max_iterations is not None and
+                iterations >= self._max_iterations):
+            return f'Maximum number of iterations ({iterations}) reached.'
+
+        # Maximum number of iterations without significant change in f
+        if (self._unchanged_max_iterations is not None and
+                unchanged_iterations >= self._unchanged_max_iterations):
+            return (f'No significant change for {unchanged_iterations}'
+                    ' iterations.')
+
+        # Maximum number of iterations without significant change in x
+        if (self._unmoved_max_iterations is not None and
+                unmoved_iterations >= self._unmoved_max_iterations):
+            return ('No significant change in position for'
+                    f' {unmoved_iterations} iterations.')
+
+        # Maximum number of evaluations
+        if (self._max_evaluations is not None and
+                evaluations >= self._max_evaluations):
+            return (f'Maximum number of evaluations ({self._max_evaluations})'
+                    ' reached.')
+
+        # Threshold function value
+        if self._threshold is not None and f_new < self._threshold:
+            return ('Objective function crossed threshold ('
+                    f'{self._threshold}).')
+
+        # All ok
+        return None
 
     def evaluations(self):
         """
@@ -489,6 +550,16 @@ class OptimisationController(object):
         See also :meth:`set_f_guessed_tracking`.
         """
         return self._use_f_guessed
+
+    def _has_stopping_criterion(self):
+        """ Returns ``True`` iff a stopping criterion has been set. """
+        return any((
+            self._max_iterations is not None,
+            self._unchanged_max_iterations is not None,
+            self._unmoved_max_iterations is not None,
+            self._max_evaluations is not None,
+            self._threshold is not None,
+        ))
 
     def iterations(self):
         """
@@ -517,6 +588,16 @@ class OptimisationController(object):
             return (None, None)
         return (self._unchanged_max_iterations, self._unchanged_threshold)
 
+    def max_unmoved_iterations(self):
+        """
+        Returns a tuple ``(iterations, threshold)`` specifying a maximum
+        iterations without movement stopping criterion, or ``(None, None)`` if
+        no such criterion is set.
+        """
+        if self._unmoved_max_iterations is None:
+            return (None, None)
+        return (self._unmoved_max_iterations, self._unmoved_threshold)
+
     def optimiser(self):
         """
         Returns the underlying optimiser object, allowing detailed
@@ -533,7 +614,12 @@ class OptimisationController(object):
 
     def run(self):
         """
-        Runs the optimisation, returns a tuple ``(x_best, f_best)``.
+        Runs the optimisation, returns a tuple ``(x, f)``.
+
+        The returned ``x`` and ``f`` correspond to either the best ``f`` seen
+        during the optimisation, or to the best guessed ``f``, depending on the
+        setting for :meth:`set_f_guessed_tracking()`. See
+        :meth:Optimiser.f_guessed()` for details.
 
         An optional ``callback`` function can be passed in that will be called
         at the end of every iteration. The callback should take the arguments
@@ -545,22 +631,17 @@ class OptimisationController(object):
             raise RuntimeError("Controller is valid for single use only")
         self._has_run = True
 
-        # Check stopping criteria
-        has_stopping_criterion = False
-        has_stopping_criterion |= (self._max_iterations is not None)
-        has_stopping_criterion |= (self._unchanged_max_iterations is not None)
-        has_stopping_criterion |= (self._max_evaluations is not None)
-        has_stopping_criterion |= (self._threshold is not None)
-        if not has_stopping_criterion:
+        # Check if any stopping criteria have been set
+        if not self._has_stopping_criterion():
             raise ValueError('At least one stopping criterion must be set.')
 
         # Iterations and function evaluations
         iteration = 0
         evaluations = 0
 
-        # Unchanged iterations count (used for stopping or just for
-        # information)
+        # Unchanged and unmoved iteration count
         unchanged_iterations = 0
+        unmoved_iterations = 0
 
         # Choose method to evaluate
         f = self._function
@@ -586,8 +667,9 @@ class OptimisationController(object):
         # Internally we always minimise! Keep a 2nd value to show the user.
         fb_user, fg_user = (fb, fg) if self._minimising else (-fb, -fg)
 
-        # Keep track of the last significant change
+        # Keep track of the last significant change in f and x
         f_sig = np.inf
+        x_sig = np.ones(self._function.n_parameters()) * np.inf
 
         # Set up progress reporting
         next_message = 0
@@ -655,14 +737,29 @@ class OptimisationController(object):
                 fb = self._optimiser.f_best()
                 fg = self._optimiser.f_guessed()
                 fb_user, fg_user = (fb, fg) if self._minimising else (-fb, -fg)
-
-                # Check for significant changes
                 f_new = fg if self._use_f_guessed else fb
-                if np.abs(f_new - f_sig) >= self._unchanged_threshold:
-                    unchanged_iterations = 0
-                    f_sig = f_new
-                else:
-                    unchanged_iterations += 1
+
+                # Check for significant changes in f or in x
+                if self._unchanged_max_iterations:
+                    if np.abs(f_new - f_sig) >= self._unchanged_threshold:
+                        unchanged_iterations = 0
+                        # Note: f_sig is only updated after a change, so that a
+                        # slow drift that becomes significant over multiple
+                        # iterations is still detected.
+                        f_sig = f_new
+                    else:
+                        unchanged_iterations += 1
+
+                if self._unmoved_max_iterations:
+                    x_new = (self._optimiser.x_guessed() if self._use_f_guessed
+                             else self._optimiser.x_best())
+                    if np.any(np.abs(x_new - x_sig)
+                              >= self._unmoved_threshold):
+                        unmoved_iterations = 0
+                        # Note: Only update here (see above)
+                        x_sig = x_new
+                    else:
+                        unmoved_iterations += 1
 
                 # Update evaluation count
                 evaluations += len(fs)
@@ -684,40 +781,11 @@ class OptimisationController(object):
                 # Update iteration count
                 iteration += 1
 
-                #
-                # Check stopping criteria
-                #
-
-                # Maximum number of iterations
-                if (self._max_iterations is not None and
-                        iteration >= self._max_iterations):
-                    running = False
-                    halt_message = ('Maximum number of iterations ('
-                                    + str(iteration) + ') reached.')
-
-                # Maximum number of iterations without significant change
-                halt = (self._unchanged_max_iterations is not None and
-                        unchanged_iterations >= self._unchanged_max_iterations)
-                if running and halt:
-                    running = False
-                    halt_message = ('No significant change for ' +
-                                    str(unchanged_iterations) + ' iterations.')
-
-                # Maximum number of evaluations
-                if (self._max_evaluations is not None and
-                        evaluations >= self._max_evaluations):
-                    running = False
-                    halt_message = (
-                        'Maximum number of evaluations ('
-                        + str(self._max_evaluations) + ') reached.')
-
-                # Threshold value
-                halt = (self._threshold is not None
-                        and f_new < self._threshold)
-                if running and halt:
-                    running = False
-                    halt_message = ('Objective function crossed threshold: '
-                                    + str(self._threshold) + '.')
+                # Check stopping criteria, set message if stopping
+                halt_message = self._check_stopping_criteria(
+                    iteration, unchanged_iterations, unmoved_iterations,
+                    evaluations, f_new)
+                running = halt_message is None
 
                 # Error in optimiser
                 error = self._optimiser.stop()
@@ -801,7 +869,8 @@ class OptimisationController(object):
         :meth:`pints.Optimiser.f_guessed()` or
         :meth:`pints.Optimiser.f_best()` (default).
 
-        The tracked ``f`` value is used to evaluate stopping criteria.
+        The tracked ``f`` (and/or ``x``) value is used to evaluate stopping
+        criteria, and is the one returned from :method:`run`.
         """
         self._use_f_guessed = bool(use_f_guessed)
 
@@ -811,9 +880,9 @@ class OptimisationController(object):
 
         Parameters
         ----------
-        ``interval``
+        interval
             A log message will be shown every ``iters`` iterations.
-        ``warm_up``
+        warm_up
             A log message will be shown every iteration, for the first
             ``warm_up`` iterations.
         """
@@ -849,8 +918,8 @@ class OptimisationController(object):
 
     def set_max_evaluations(self, evaluations=None):
         """
-        Adds a stopping criterion, allowing the routine to halt after the
-        given number of ``evaluations``.
+        Adds a stopping criterion so that the routine halts after the given
+        number of ``evaluations``.
 
         This criterion is disabled by default. To enable, pass in any positive
         integer. To disable again, use ``set_max_evaluations(None)``.
@@ -864,8 +933,8 @@ class OptimisationController(object):
 
     def set_max_iterations(self, iterations=10000):
         """
-        Adds a stopping criterion, allowing the routine to halt after the
-        given number of ``iterations``.
+        Adds a stopping criterion so that the routine halts after the given
+        number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
         ``set_max_iterations(None)``.
@@ -879,12 +948,15 @@ class OptimisationController(object):
 
     def set_max_unchanged_iterations(self, iterations=200, threshold=1e-11):
         """
-        Adds a stopping criterion, allowing the routine to halt if the
-        objective function doesn't change by more than ``threshold`` for the
-        given number of ``iterations``.
+        Adds a stopping criterion so that the routine halts if the objective
+        function does not change by more than ``threshold`` for the given
+        number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
         ``set_max_unchanged_iterations(None)``.
+
+        Note that this can be used to implement an absolute "ftol" stopping
+        criteria, by calling ``set_max_unchanged_iterations(1, ftol)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -898,6 +970,47 @@ class OptimisationController(object):
 
         self._unchanged_max_iterations = iterations
         self._unchanged_threshold = threshold
+
+    def set_max_unmoved_iterations(self, iterations=200, threshold=1e-11):
+        """
+        Adds a stopping criterion so that the routine halts if the position in
+        parameter space does not change by more ``threshold`` for the given
+        number of ``iterations``.
+
+        Thresholds can be defined per parameter, or a single scalar value can
+        be passed in. The position is deemed to have moved if
+        ``np.any(np.abs(x_new - x_sig) >= self._unmoved_threshold)``, where
+        ``x_sig`` is the last position at which a significant move was
+        detected.
+
+        This criterion is disabled by default. Once enabled, it can be disabled
+        again by calling ``set_max_unmoved_iterations(None)``.
+
+        Note that this can be used to implement an absolute "xtol" stopping
+        criteria, by calling ``set_max_unmoved_iterations(1, xtol)``.
+        """
+        if iterations is not None:
+            iterations = int(iterations)
+            if iterations < 0:
+                raise ValueError(
+                    'Maximum number of iterations cannot be negative.')
+
+        # Test threshold size, convert scalar if needed, check sign
+        np = self._function.n_parameters()
+        if np.isscalar(threshold):
+            threshold = np.ones(np) * float(threshold)
+        elif len(threshold) == np:
+            threshold = pints.vector(threshold)
+        else:
+            raise ValueError(
+                'Minimum significant parameter change must be a scalar or have'
+                f' length {np}, got {len(threshold)}.')
+        if np.any(threshold < 0):
+            raise ValueError(
+                'Minimum significant parameter change cannot be negative.')
+
+        self._unmoved_max_iterations = iterations
+        self._unmoved_threshold = threshold
 
     def set_parallel(self, parallel=False):
         """
@@ -922,7 +1035,8 @@ class OptimisationController(object):
 
     def set_threshold(self, threshold):
         """
-        Adds a stopping criterion, allowing the routine to halt once the
+        Adds a stopping criterion causing the routine to stop once the
+        objective function is less than the given ``threshold`` (when maximi
         objective function goes below a set ``threshold``.
 
         This criterion is disabled by default, but can be enabled by calling
