@@ -145,7 +145,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
         self.assertIn('Accept.', text)
         self.assertIn('Eval.', text)
         self.assertIn('Iter.', text)
-        self.assertIn('Time m:s', text)
+        self.assertIn('Time', text)
 
     def test_replace(self):
         # Tests the replace() method

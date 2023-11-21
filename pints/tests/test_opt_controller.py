@@ -251,7 +251,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 6')
         self.assertEqual(lines[4],
-                         'Iter. Eval. Best      Current   Time m:s')
+                         'Iter. Eval. Best      Current   Time    ')
         self.assertEqual(lines[5][:-3],
                          '0     3     -4.140462 -4.140462   0:0')
         self.assertEqual(lines[6][:-3],
@@ -290,7 +290,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 4')
         self.assertEqual(lines[4],
-                         'Iter. Eval. Best      Current   Time m:s')
+                         'Iter. Eval. Best      Current   Time    ')
         self.assertEqual(lines[5][:-3],
                          '0     4      6.471867  6.471867   0:0')
         self.assertEqual(lines[6][:-3],

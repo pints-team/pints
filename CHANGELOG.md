@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 ### Changed
+- [#1503](https://github.com/pints-team/pints/pull/1503) Stopped showing time units in controller logs, because the units change depending on the output type (see #1467).
 ### Deprecated
 ### Removed
 ### Fixed

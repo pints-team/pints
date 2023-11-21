@@ -19,25 +19,25 @@ debug = False
 method = pints.IRPropMin
 
 
-log_1 = '''
-Minimising error measure
-Using iRprop-
-Running in sequential mode.
-Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time m:s
-0     1      0.02      0.02      0.12      0.12                   0:00.0
-1     2      0.0008    0.0008    0.06      0.06                   0:00.0
-'''.strip()
+log_1 = '\n'.join((
+    'Minimising error measure',
+    'Using iRprop-',
+    'Running in sequential mode.',
+    'Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time    ',
+    '0     1      0.02      0.02      0.12      0.12                   0:00.0',
+    '1     2      0.0008    0.0008    0.06      0.06                   0:00.0',
+))
 
-log_2 = '''
-Minimising error measure
-Using iRprop-
-Running in sequential mode.
-Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time m:s
-0     1      0.02      0.02      0.11      0.11                   0:00.0
-1     2      0.0002    0.0002    0.055     0.055                  0:00.0
-2     3      0.0002    0.0002    0.055     0.055                  0:00.0
-3     4      0.0002    0.00405   0.03      0.03                   0:00.0
-'''.strip()
+log_2 = '\n'.join((
+    'Minimising error measure',
+    'Using iRprop-',
+    'Running in sequential mode.',
+    'Iter. Eval. Best      Current   Min. step Max. step Bound corr. Time    ',
+    '0     1      0.02      0.02      0.11      0.11                   0:00.0',
+    '1     2      0.0002    0.0002    0.055     0.055                  0:00.0',
+    '2     3      0.0002    0.0002    0.055     0.055                  0:00.0',
+    '3     4      0.0002    0.00405   0.03      0.03                   0:00.0',
+))
 
 
 class TestIRPropMin(unittest.TestCase):
