@@ -79,6 +79,7 @@ def annulus(n_iterations=10000, n_warmup=1000):
     }
 
 
+
 _method = pints.DifferentialEvolutionMCMC
 _change_point_tests = [
     annulus,
