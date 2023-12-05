@@ -9,7 +9,6 @@
 import pints
 import pints.cptests as cpt
 
-
 def two_dim_gaussian(n_iterations=1000, n_warmup=200):
     """
     Tests :class:`pints.NoUTurnMCMC`
@@ -26,17 +25,17 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
         'mean-ess': problem.estimate_mean_ess()
     }
 
-
-def banana(n_iterations=2000, n_warmup=500):
+def correlated_gaussian(n_iterations=2000, n_warmup=500):
     """
     Tests :class:`pints.NoUTurnMCMC`
-    on a two-dimensional "twisted Gaussian" distribution with true solution
-    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
+    on a six-dimensional highly correlated Gaussian distribution with true
+    solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
+    ``kld`` and ``mean-ess``.
 
     For details of the solved problem, see
-    :class:`pints.cptests.RunMcmcMethodOnBanana`.
+    :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
     """
-    problem = cpt.RunMcmcMethodOnBanana(
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
         _method, 4, n_iterations, n_warmup)
     return {
         'kld': problem.estimate_kld(),
@@ -44,7 +43,24 @@ def banana(n_iterations=2000, n_warmup=500):
     }
 
 
-def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
+def annulus(n_iterations=2000, n_warmup=500):
+    """
+    Tests :class:`pints.NoUTurnMCMC`
+    on a two-dimensional annulus distribution with radius 10, and returns a
+    dictionary with entries ``distance`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.cptests.RunMcmcMethodOnAnnulus`.
+    """
+    problem = cpt.RunMcmcMethodOnAnnulus(
+        _method, 4, n_iterations, n_warmup)
+    return {
+        'distance': problem.estimate_distance(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def high_dim_gaussian(n_iterations=2000, n_warmup=500):
     """
      Tests :class:`pints.NoUTurnMCMC`
     on a 20-dimensional Gaussian distribution centered at the origin, and
@@ -60,10 +76,10 @@ def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
         'mean-ess': problem.estimate_mean_ess()
     }
 
-
 _method = pints.NoUTurnMCMC
 _change_point_tests = [
-    banana,
+    annulus,
+    correlated_gaussian,
     high_dim_gaussian,
     two_dim_gaussian,
 ]
