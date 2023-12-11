@@ -771,10 +771,16 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
         dL = np.sum(
             (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
 
-        print((r.T * dy.T).T,"inside sum")
+        # print((r.T * dy.T).T, "inside sum")
+        print(dL, "dLgaussian")
+        print(r, "r original")
+        print((sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0)),
+               "inner sum original")
+        print((self._values, y), "(self._values, y) original")
 
         # Calculate derivative wrt sigma
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
+        # print(dsigma, "dsigmagaussian")
         dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return
@@ -851,6 +857,9 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                                 self._problem.evaluate(x[:-self._no]))**2,
                                axis=0, where=self._condition)
 
+        print(np.shape((self._values - self._problem.evaluate(x[:-self._no]))**2),
+              "(self._values -self._problem.evaluate(x[:-self._no]))**2")
+
         # Calculate part of the likelihood corresponding to the censored data
         # Q: Should these be summed like for the bit that isn't censored?
         lower_censored_sum = np.sum(np.log(
@@ -891,22 +900,49 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
-        print("START")
-        print(np.sum(
-            (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T).T).T, axis=0))
-        print(self._condition)
-        print(np.shape((((self._values - y).T * dy.T).T)),"hi")
-        print(np.sum(((self._values - y).T * dy.T).T,
-                                    where=self._condition))
-        # print(np.sum(((self._values - y).T * dy.T), 
+        
+        # Note: Must be (data - simulation), sign now matters!
+        r = self._values - y
+        
+        # print("START")
+        # print(self._values - y, "r")
+        # print(dy, "dy")
+        # print(np.sum(
+        #     (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T).T).T, axis=0))
+        # print(self._condition.reshape((6, 1, 1)))
+        # print(np.shape((((self._values - y).T * dy.T).T)), "hi")
+        # print(np.shape(np.reshape((((self._values - y).T * dy.T).T), (6,))), "hello")
+        # print(np.shape(self._condition), "self.condition")
+        # print(np.sum(np.reshape(((self._values - y).T * dy.T).T, (6,)), where=self._condition, axis=0), "this")
+
+        # print(np.sum(((self._values - y).T * dy.T),
         #                             where=self._condition).T, "here")
 
         # 1. Parts of the derivative corresponding to the data that
         # isn't censored
         # Calculate derivatives in the model parameters
+        # not_censored_dL = np.sum(
+        #     (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T,
+        #                             where=self._condition).T).T, axis=0)
+        shape_array = (r.T * dy.T).T
         not_censored_dL = np.sum(
-            (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T,
-                                    where=self._condition).T).T, axis=0)
+            (sigma**(-2.0) * np.sum(np.reshape((r.T * dy.T).T, (4,)),
+                                    where=self._condition).T).T, axis=0)  
+        print(r, "r censored")
+        print((sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0)),
+               "inner sum censored ")
+        print((self._values, y), "(self._values, y) censored")
+        # print(self._condition, "Self.condition")
+        dLabove = np.sum(
+            (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
+        
+        print(((self._values - y).T * dy.T).T, "arg0")
+        print(np.reshape(((self._values - y).T * dy.T).T, (4,)), "arg1")
+        print((r.T * dy.T).T, "arg2")
+
+        print(dLabove, "dlabove")
+
+        print(not_censored_dL, "not)censored_dL")
 
         # Calculate derivative wrt sigma
         not_censored_dsigma = -self._n_not_censored / sigma + sigma**(-3.0) *\
@@ -918,26 +954,26 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Calculate derivatives in the model parameters
         lower_censored_dL = -np.sum(
             (sigma**(-1) *
-             np.sum(((scipy.stats.
+             np.sum( np.reshape(((scipy.stats.
                       norm.pdf(x=self._values,
                                loc=self._problem.evaluate(x[:-self._no]),
                                scale=sigma).T * dy.T) /
                      (scipy.stats.
                       norm.cdf(x=self._values,
                                loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T)).T,
+                               scale=sigma).T)).T, (4,)),
                     where=self._values == self._a).T), axis=0)
 
         upper_censored_dL = np.sum(
             (sigma**(-1) *
-             np.sum(((scipy.stats.
+             np.sum( np.reshape(((scipy.stats.
                       norm.pdf(x=self._values,
                                loc=self._problem.evaluate(x[:-self._no]),
                                scale=sigma).T * dy.T) /
                     (1 - scipy.stats.
                      norm.cdf(x=self._values,
                               loc=self._problem.evaluate(x[:-self._no]),
-                              scale=sigma).T)).T,
+                              scale=sigma).T)).T, (4,)),
                     where=self._values == self._b).T), axis=0)
 
         # Calculate derivative wrt sigma
@@ -966,11 +1002,17 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                               loc=self._problem.evaluate(x[:-self._no]),
                               scale=sigma).T)).T,
                     where=self._values == self._a).T), axis=0)
-
+        # print("HI")
+        # print(not_censored_dL, "not-censored_dL")
         dL = not_censored_dL + lower_censored_dL + upper_censored_dL
         dsigma = not_censored_dsigma + lower_censored_dsigma + \
             upper_censored_dsigma
-        dL = np.concatenate((dL, np.array(list(dsigma))))
+        # print(lower_censored_dL, "lower_censored_dL")
+        # print(upper_censored_dL, "upper_censored_dL")
+        # print(dL, "dL")
+        # print(dsigma, "d-sigma")
+
+        dL = np.concatenate(([dL], np.array(list(dsigma))))
 
         # Return
         return L, dL
