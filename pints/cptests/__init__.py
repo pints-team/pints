@@ -36,6 +36,7 @@ from . import (     # noqa
     population_mcmc,
     relativistic_mcmc,
     slice_stepout_mcmc,
+    slice_doubling_mcmc,
 )
 
 
