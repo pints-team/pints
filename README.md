@@ -81,7 +81,7 @@ There are lots of ways to contribute to PINTS development, and anyone is free to
 For example, you can report problems or make feature requests on the [issues](https://github.com/pints-team/pints/issues) pages.
 
 Similarly, if you want to contribute documentation or code you can tell us your idea on this page, and then provide a pull request for review.
-Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code -- but don't worry, this will become clear during review.
+Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code — but don't worry, this will become clear during review.
 
 ## License
 
