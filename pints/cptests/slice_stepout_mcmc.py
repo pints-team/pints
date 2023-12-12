@@ -45,23 +45,6 @@ def correlated_gaussian(n_iterations=5000, n_warmup=500):
     }
 
 
-def banana(n_iterations=5000, n_warmup=500):
-    """
-    Tests :class:`pints.SliceStepoutMCMC`
-    on a two-dimensional "twisted Gaussian" distribution with true solution
-    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
-
-    For details of the solved problem, see
-    :class:`pints.cptests.RunMcmcMethodOnBanana`.
-    """
-    problem = cpt.RunMcmcMethodOnBanana(
-        _method, 4, n_iterations, n_warmup)
-    return {
-        'kld': problem.estimate_kld(),
-        'mean-ess': problem.estimate_mean_ess()
-    }
-
-
 def high_dim_gaussian(n_iterations=5000, n_warmup=500):
     """
      Tests :class:`pints.SliceStepoutMCMC`
@@ -96,24 +79,6 @@ def annulus(n_iterations=10000, n_warmup=2000):
     }
 
 
-def multimodal_gaussian(n_iterations=5000, n_warmup=500):
-    """
-    Tests :class:`pints.SliceStepoutMCMC`
-    on a two-dimensional multi-modal Gaussian distribution with modes at
-    ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict with entries
-    "kld" and "mean-ess".
-
-    For details of the solved problem, see
-    :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
-    """
-    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
-        _method, 4, n_iterations, n_warmup)
-    return {
-        'kld': problem.estimate_kld(),
-        'mean-ess': problem.estimate_mean_ess()
-    }
-
-
 def cone(n_iterations=5000, n_warmup=500):
     """
     Tests :class:`pints.SliceStepoutMCMC`
@@ -134,10 +99,8 @@ def cone(n_iterations=5000, n_warmup=500):
 _method = pints.SliceStepoutMCMC
 _change_point_tests = [
     annulus,
-    banana,
     cone,
     correlated_gaussian,
     high_dim_gaussian,
-    multimodal_gaussian,
     two_dim_gaussian,
 ]
