@@ -5,7 +5,8 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import asyncio
+import _pickle as cPickle
+
 import pints
 import numpy as np
 
@@ -155,7 +156,6 @@ class NutsState(object):
 
         # accept a new point based on the weighting of the two trees
         p = min(1, np.exp(other_state.n - self.n))
-
         if p > 0.0 and np.random.uniform() < p:
             self.theta = other_state.theta
             self.L = other_state.L
@@ -206,7 +206,6 @@ def kinetic_energy(r, inv_mass_matrix):
 # see main coroutine function ``nuts_sampler`` for more details
 
 
-@asyncio.coroutine
 def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     """
     performs a leapfrog step using a step_size ``epsilon`` and an inverse mass
@@ -226,7 +225,6 @@ def leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix):
     return L_new, grad_L_new, theta_new, r_new
 
 
-@asyncio.coroutine
 def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
     """
     Implicitly build up a subtree of depth ``j`` for the NUTS sampler.
@@ -247,20 +245,20 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         L_dash, grad_L_dash, theta_dash, r_dash = \
             yield from leapfrog(theta, L, grad_L, r, v * adaptor.get_epsilon(),
                                 adaptor.get_inv_mass_matrix())
+
         hamiltonian_dash = L_dash \
             - kinetic_energy(r_dash, adaptor.get_inv_mass_matrix())
 
         if np.isnan(hamiltonian_dash):
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian0
         n_dash = comparison
         alpha_dash = min(1.0, np.exp(comparison))
-
         divergent = -comparison > hamiltonian_threshold
         s_dash = int(not divergent)
-
         n_alpha_dash = 1
+
         return NutsState(
             theta_dash, r_dash, L_dash, grad_L_dash, n_dash, s_dash,
             alpha_dash, n_alpha_dash, divergent,
@@ -282,7 +280,38 @@ def build_tree(state, v, j, adaptor, hamiltonian0, hamiltonian_threshold):
         return state_dash
 
 
-@asyncio.coroutine
+def initialise_adaptor(
+        theta, L, grad_L, num_adaption_steps, delta, sigma0,
+        use_dense_mass_matrix):
+    """
+    Creates a generator that terminates by returning an instance of the
+    pints.DualAveragingAdaption.
+
+    Initialisation of the adaptor requires a 'reasonable' epsilon which
+    is in turn also a generator. The find_reasonable_epsilon generator
+    terminates with return of a 'reasonable' epsilon. Intermediate returns
+    are the current position of the leapfrog integrator.
+    """
+
+    # pick the initial inverse mass matrix as the provided sigma0.
+    # reduce to a diagonal matrix if not using a dense mass matrix
+    if use_dense_mass_matrix:
+        init_inv_mass_matrix = sigma0
+        init_inv_mass_matrix = 1e-3 * np.eye(len(theta))
+    else:
+        init_inv_mass_matrix = np.diag(sigma0)
+        init_inv_mass_matrix = 1e-3 * np.ones(len(theta))
+
+    # find a good value to start epsilon at (this will later be refined so that
+    # the acceptance probability matches delta)
+    epsilon = yield from find_reasonable_epsilon(
+        theta, L, grad_L, init_inv_mass_matrix)
+
+    # create adaption for epsilon and mass matrix
+    return pints.DualAveragingAdaption(
+        num_adaption_steps, delta, epsilon, init_inv_mass_matrix)
+
+
 def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
     """
     Pick a reasonable value of epsilon close to when the acceptance
@@ -312,7 +341,7 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
         yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
     hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
     if np.isnan(hamiltonian_dash):
-        comparison = float('-inf')
+        comparison = -np.inf
     else:
         comparison = hamiltonian_dash - hamiltonian
 
@@ -326,16 +355,14 @@ def find_reasonable_epsilon(theta, L, grad_L, inv_mass_matrix):
             yield from leapfrog(theta, L, grad_L, r, epsilon, inv_mass_matrix)
         hamiltonian_dash = L_dash - kinetic_energy(r_dash, inv_mass_matrix)
         if np.isnan(hamiltonian_dash):  # pragma: no cover
-            comparison = float('-inf')
+            comparison = -np.inf
         else:
             comparison = hamiltonian_dash - hamiltonian
     return epsilon
 
 
-@asyncio.coroutine
-def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
-                 hamiltonian_threshold, max_tree_depth,
-                 use_dense_mass_matrix):
+def nuts_sampler(
+        x0, adaptor, sigma0, hamiltonian_threshold, max_tree_depth):
     """
     The dual averaging NUTS mcmc sampler given in Algorithm 6 of [1]_.
     Implements the multinomial sampling suggested in [2]_. Implements a mass
@@ -352,20 +379,15 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
 
     Arguments
     ---------
-
     x0: ndarray
         starting point
-    delta: float
-        target acceptance probability (Dual Averaging scheme)
-    num_adaption_steps: int
-        number of adaption steps (Dual Averaging scheme)
+    adaptor: list or pints.DualAveragingAdaption
+        list with properties of the averaging algorithm [num_adaption_steps,
+        delta, use_dense_mass_matrix] or instance of averaging algorithm.
     hamiltonian_threshold: float
         threshold to test divergent iterations
     max_tree_depth: int
         maximum tree depth
-    use_dense_mass_matrix: bool
-        if False, use a diagonal mass matrix, if True use a fully dense mass
-        matrix
 
     References
     ----------
@@ -386,31 +408,20 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         raise ValueError(
             'Initial point for MCMC must have finite logpdf.')
 
-    # pick the initial inverse mass matrix as the provided sigma0.
-    # reduce to a diagonal matrix if not using a dense mass matrix
-    if use_dense_mass_matrix:
-        init_inv_mass_matrix = sigma0
-        init_inv_mass_matrix = 1e-3 * np.eye(len(x0))
-    else:
-        init_inv_mass_matrix = np.diag(sigma0)
-        init_inv_mass_matrix = 1e-3 * np.ones(len(x0))
-
-    # find a good value to start epsilon at (this will later be refined so that
-    # the acceptance probability matches delta)
-    epsilon = yield from find_reasonable_epsilon(theta, L, grad_L,
-                                                 init_inv_mass_matrix)
-
-    # create adaption for epsilon and mass matrix
-    adaptor = pints.DualAveragingAdaption(
-        num_adaption_steps, delta, epsilon, init_inv_mass_matrix)
-
-    # start at iteration 1
-    m = 1
+    # If adaptor is not yet created, initialise it with the provided
+    # properties.
+    if isinstance(adaptor, list):
+        # Adaptor does currently not exist and is only specified by a list
+        # of properties.
+        num_adaption_steps, delta, use_dense_mass_matrix = adaptor
+        adaptor = yield from initialise_adaptor(
+            theta, L, grad_L, num_adaption_steps, delta, sigma0,
+            use_dense_mass_matrix)
 
     # provide an infinite generator of mcmc steps....
     while True:
         # randomly sample momentum
-        if use_dense_mass_matrix:
+        if adaptor.use_dense_mass_matrix():
             r0 = np.random.multivariate_normal(
                 np.zeros(len(theta)), adaptor.get_mass_matrix())
         else:
@@ -428,7 +439,6 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
         # build up an integration path with 2^j points, stopping when we either
         # encounter a U-Turn, or reach a max number of points 2^max_tree_depth
         while j < max_tree_depth and state.s == 1:
-
             # pick a random direction to integrate in
             # (to maintain detailed balance)
             if np.random.randint(0, 2):
@@ -440,7 +450,6 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
             state_dash = yield from \
                 build_tree(state, vj, j, adaptor,
                            hamiltonian0, hamiltonian_threshold)
-
             state.update(state_dash, direction=vj, root=True)
 
             j += 1
@@ -466,10 +475,8 @@ def nuts_sampler(x0, delta, num_adaption_steps, sigma0,
                grad_L,
                state.alpha / state.n_alpha,
                state.n_alpha,
-               state.divergent)
-
-        # next step
-        m += 1
+               state.divergent,
+               adaptor)
 
 
 class NoUTurnMCMC(pints.SingleChainMCMC):
@@ -509,11 +516,12 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         super(NoUTurnMCMC, self).__init__(x0, sigma0)
 
         # hyperparameters
-        self._num_adaption_steps = 500
-        self._delta = 0.8
-        self._step_size = None
+        self._adaptor = [
+            500,           # Number of adaption steps
+            0.8,           # Target acceptance ratio (delta)
+            False,         # Uses dense mass matrix
+        ]
         self._max_tree_depth = 10
-        self._use_dense_mass_matrix = False
 
         # Default threshold for Hamiltonian divergences
         # (currently set to match Stan)
@@ -521,6 +529,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # coroutine nuts sampler
         self._nuts = None
+        self._nuts_state = None
 
         # number of mcmc iterations
         self._mcmc_iteration = 0
@@ -552,12 +561,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
         # Initialise on first call
         if not self._running:
-            self._nuts = nuts_sampler(self._x0, self._delta,
-                                      self._num_adaption_steps,
-                                      self._sigma0,
-                                      self._hamiltonian_threshold,
-                                      self._max_tree_depth,
-                                      self._use_dense_mass_matrix)
+            self._nuts = nuts_sampler(
+                self._x0, self._adaptor, self._sigma0,
+                self._hamiltonian_threshold, self._max_tree_depth)
+
             # coroutine will ask for self._x0
             self._next = next(self._nuts)
             self._running = True
@@ -569,7 +576,12 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Returns delta used in leapfrog algorithm.
         """
-        return self._delta
+        try:
+            # When adaptor has not been initialised
+            return self._adaptor[1]
+        except TypeError:
+            # Adaptor has been initialised
+            return self._adaptor.target_accept_prob()
 
     def divergent_iterations(self):
         """
@@ -602,6 +614,39 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._n_leapfrog = 0
         self._last_log_write = self._mcmc_iteration
 
+    def load_state(self, file):
+        """
+        Loads sampler state from a .pickle file and returns sampler.
+
+        Arguments
+        ---------
+        file: str
+            Path to file.
+        """
+        with open(file, "rb") as input_file:
+            method = cPickle.load(input_file)
+
+        # Recreate NUTS sampler state
+        method._nuts = nuts_sampler(
+            method._current, method._adaptor, method._sigma0,
+            method._hamiltonian_threshold, method._max_tree_depth)
+
+        # NOTE: This nuts_sampler still differs from before pickling, because
+        # before returning the mcmc proposal the nuts sampler starts the next
+        # leapfrog trajectory by sampling a new momentum and using the
+        # current gradient information to perform the first leapfrog step. We
+        # can't do this here, because we don't have the gradient information
+        # anymore.
+        # BUT we can prepare the ask method such that it returns the current
+        # position, such that after one more ask-tell cycle we have caught up
+        # with the sampler before pickling. Since this ask-tell cycle does not
+        # return anything to the user, this effectively reconstructs the
+        # sampler state. The momentum will however be resampled, which is ok
+        # since it's the start of a new trajectory.
+        method._next = next(method._nuts)
+
+        return method
+
     def max_tree_depth(self):
         """
         Returns the maximum tree depth ``D`` for the algorithm. For each
@@ -626,7 +671,31 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """
         Returns number of adaption steps used in the NUTS algorithm.
         """
-        return self._num_adaption_steps
+        try:
+            # When adaptor has not been initialised
+            return self._adaptor[0]
+        except TypeError:
+            # Adaptor has been initialised
+            return self._adaptor.warmup_steps()
+
+    def save_state(self, file):
+        """
+        Saves sampler state to pickle file.
+
+        Arguments
+        ---------
+        file: str
+            Path to file.
+        """
+        # Remove nuts_sampler generator
+        nuts = self._nuts
+        self._nuts = None
+        with open(file, "wb") as output_file:
+            cPickle.dump(self, output_file)
+
+        # Put generator back, in case the sampler is used further after
+        # pickling
+        self._nuts = nuts
 
     def set_delta(self, delta):
         """
@@ -638,7 +707,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             raise RuntimeError('cannot set delta while sampler is running')
         if delta < 0 or delta > 1:
             raise ValueError('delta must be in [0, 1]')
-        self._delta = delta
+        self._adaptor[1] = delta
 
     def set_hamiltonian_threshold(self, hamiltonian_threshold):
         """
@@ -679,7 +748,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
                 'cannot set number of adaption steps while sampler is running')
         if n < 0:
             raise ValueError('number of adaption steps must be non-negative')
-        self._num_adaption_steps = int(n)
+        self._adaptor[0] = int(n)
 
     def set_use_dense_mass_matrix(self, use_dense_mass_matrix):
         """
@@ -687,7 +756,10 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         matrix for the mass matrix. If True then a fully dense mass matrix is
         used.
         """
-        self._use_dense_mass_matrix = bool(use_dense_mass_matrix)
+        if self._running:
+            raise RuntimeError(
+                'cannot set number of adaption steps while sampler is running')
+        self._adaptor[2] = bool(use_dense_mass_matrix)
 
     def tell(self, reply):
         """ See :meth:`pints.SingleChainMCMC.tell()`. """
@@ -696,7 +768,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         self._ready_for_tell = False
 
         # send log likelihood and gradient to nuts coroutine,
-        # return value is the next theta to evaluate at
+        # return value is the next theta to evaluate at but not necessarily the
+        # proposed mcmc step. Final mcmc proposal is distinguished from
+        # intermediate steps by tuple type.
         self._next = self._nuts.send(reply)
 
         # coroutine signals end of current step by sending a tuple of
@@ -711,6 +785,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             current_acceptance = self._next[3]
             current_n_leapfrog = self._next[4]
             divergent = self._next[5]
+            self._adaptor = self._next[6]
 
             # Increase iteration count
             self._mcmc_iteration += 1
@@ -749,4 +824,9 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         Returns if the algorithm uses a dense (True) or diagonal (False) mass
         matrix.
         """
-        return self._use_dense_mass_matrix
+        try:
+            # When adaptor has not been initialised
+            return self._adaptor[2]
+        except TypeError:
+            # Adaptor has been initialised
+            return self._adaptor.use_dense_mass_matrix()

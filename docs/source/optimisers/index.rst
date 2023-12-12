@@ -16,10 +16,11 @@ or the :class:`OptimisationController` class.
     running
     base_classes
     convenience_methods
-    boundary_transformations
+    adam
     cmaes_bare
     cmaes
     gradient_descent
+    irpropmin
     nelder_mead
     pso
     snes

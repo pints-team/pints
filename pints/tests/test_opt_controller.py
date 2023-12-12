@@ -6,12 +6,15 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import pints
-import pints.toy
 import unittest
+import warnings
+
 import numpy as np
 
-from shared import StreamCapture
+import pints
+import pints.toy
+
+from shared import StreamCapture, TemporaryDirectory
 
 debug = False
 method = pints.XNES
@@ -25,6 +28,128 @@ class TestOptimisationController(unittest.TestCase):
     def setUp(self):
         """ Called before every test """
         np.random.seed(1)
+
+    def test_best_vs_guessed(self):
+        # Tests tracking and logging of best and guessed values
+
+        # Set up a problem
+        model = pints.toy.LogisticModel()
+        real = model.suggested_parameters()
+        times = model.suggested_times()
+        values = model.simulate(real, times)
+        values += np.random.normal(0, 10, values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+        f = pints.SumOfSquaresError(problem)
+        b = pints.RectangularBoundaries([0, 200], [1, 1000])
+        x = [0, 700]
+
+        # Check getting and setting tracking method
+        np.random.seed(123)
+        opt = pints.OptimisationController(
+            f, x, boundaries=b, method=pints.SNES)
+        self.assertFalse(opt.f_guessed_tracking())
+        opt.set_f_guessed_tracking(True)
+        self.assertTrue(opt.f_guessed_tracking())
+        opt.set_f_guessed_tracking(False)
+        self.assertFalse(opt.f_guessed_tracking())
+
+        # Check f_best and f_guessed with callback
+        fb, fg = [], []
+
+        def cb(i, opt):
+            fb.append(opt.f_best())
+            fg.append(opt.f_guessed())
+
+        # Run and check the logged values
+        opt.set_callback(cb)
+        opt.set_log_to_screen(False)
+        opt.set_log_interval(1)
+        with TemporaryDirectory() as d:
+            p = d.path('out.csv')
+            opt.set_log_to_file(p, csv=True)
+            x1, f1 = opt.run()
+            csv = np.genfromtxt(p, delimiter=',', skip_header=1)[:-1]
+            lb = csv[:, 2]
+            lg = csv[:, 3]
+            del csv
+
+        fb, fg = np.array(fb), np.array(fg)
+
+        if debug:
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.semilogy()
+            plt.plot(fb, label='best, callback')
+            plt.plot(fg, label='guessed, callback')
+            plt.plot(lb, '--', label='best, logged')
+            plt.plot(lg, '--', label='guessed, logged')
+            plt.legend()
+            plt.show()
+
+        self.assertTrue(np.all(fb == lb))
+        self.assertTrue(np.all(fg == lg))
+        self.assertFalse(np.all(lb == lg))
+
+        # Run again, but checking on f_guessed
+        np.random.seed(123)
+        opt2 = pints.OptimisationController(
+            f, x, boundaries=b, method=pints.SNES)
+        opt2.set_log_to_screen(False)
+        opt2.set_f_guessed_tracking(True)
+        x2, f2 = opt2.run()
+        self.assertNotEqual(opt.iterations(), opt2.iterations())
+        self.assertAlmostEqual(f1, f2)
+
+    def test_callback(self):
+        # Tests running with a callback method
+
+        # Define callback that just stores the argument(s) it was called with
+        args = []
+
+        def cb(*arg):
+            args.append(arg)
+
+        # Set up a controller
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x0 = np.array([0, 1.01])
+        s = 0.01
+        opt = pints.OptimisationController(r, x0, s, method=method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+
+        # Pass in an invalid value
+        self.assertRaisesRegex(
+            ValueError, 'None or a callable', opt.set_callback, 3)
+
+        # Now test using it correctly
+        opt.set_callback(None)
+        opt.set_callback(cb)
+        opt.run()
+
+        # Ensure callback was called at each iteration
+        self.assertEqual(len(args), opt.iterations())
+
+        # Ensure first argument was iteration count
+        a = np.array([arg[0] for arg in args])
+        self.assertTrue(np.all(a == np.arange(opt.iterations())))
+
+        # Ensure second argument was always the optimisation method
+        b = tuple(set([arg[1] for arg in args]))
+        self.assertEqual(len(b), 1)
+        self.assertIs(b[0], opt.optimiser())
+
+        # Check unsetting works
+        args.clear()
+        self.assertEqual(len(args), 0)
+        opt = pints.OptimisationController(r, x0, s, method=method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_iterations(10)
+        opt.set_callback(cb)
+        opt.set_callback(None)
+        opt.run()
+        self.assertEqual(len(args), 0)
 
     def test_optimise(self):
         # Tests :meth: `pints.optimise()`.
@@ -47,7 +172,8 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         t = pints.RectangularBoundariesTransformation(b)
-        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
@@ -59,17 +185,33 @@ class TestOptimisationController(unittest.TestCase):
         b = pints.RectangularBoundaries([-1, -1], [1, 1])
         s = 0.1
         t = pints.RectangularBoundariesTransformation(b)
-        pints.OptimisationController(r, x0, boundaries=b, transformation=t,
-                                     method=method)
-        opt = pints.OptimisationController(r, x0, s, b, t, method)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         x, _ = opt.run()
 
-        # Test output are detransformed
+        # Test output is detransformed
         self.assertEqual(x.shape, (2, ))
         self.assertTrue(b.check(x))
+
+    def test_stopping_max_evaluations(self):
+        # Runs an optimisation with the max_fevals stopping criterion.
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_iterations(None)
+        opt.set_max_evaluations(10)
+        self.assertEqual(opt.max_evaluations(), 10)
+        self.assertRaises(ValueError, opt.set_max_evaluations, -1)
+        with StreamCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of evaluations', c.text())
 
     def test_stopping_max_iterations(self):
         # Runs an optimisation with the max_iter stopping criterion.
@@ -108,14 +250,22 @@ class TestOptimisationController(unittest.TestCase):
             lines[1], 'Using Exponential Natural Evolution Strategy (xNES)')
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 6')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
-        self.assertEqual(lines[5][:-3], '0     6     -4.140462   0:0')
-        self.assertEqual(lines[6][:-3], '1     12    -4.140462   0:0')
-        self.assertEqual(lines[7][:-3], '2     18    -4.140462   0:0')
-        self.assertEqual(lines[8][:-3], '3     24    -4.140462   0:0')
-        self.assertEqual(lines[9][:-3], '6     42    -4.140462   0:0')
-        self.assertEqual(lines[10][:-3], '9     60    -4.140462   0:0')
-        self.assertEqual(lines[11][:-3], '10    60    -4.140462   0:0')
+        self.assertEqual(lines[4],
+                         'Iter. Eval. Best      Current   Time    ')
+        self.assertEqual(lines[5][:-3],
+                         '0     3     -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[6][:-3],
+                         '1     6     -4.140462 -4.140465   0:0')
+        self.assertEqual(lines[7][:-3],
+                         '2     11    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[8][:-3],
+                         '3     16    -4.140462 -4.140466   0:0')
+        self.assertEqual(lines[9][:-3],
+                         '6     33    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[10][:-3],
+                         '9     51    -4.140462 -4.140462   0:0')
+        self.assertEqual(lines[11][:-3],
+                         '10    51    -4.140462 -4.140462   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
@@ -139,14 +289,22 @@ class TestOptimisationController(unittest.TestCase):
             lines[1], 'Using Seperable Natural Evolution Strategy (SNES)')
         self.assertEqual(lines[2], 'Running in sequential mode.')
         self.assertEqual(lines[3], 'Population size: 4')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
-        self.assertEqual(lines[5][:-3], '0     4      6.471867   0:0')
-        self.assertEqual(lines[6][:-3], '1     8      6.471867   0:0')
-        self.assertEqual(lines[7][:-3], '2     12     0.0949     0:0')
-        self.assertEqual(lines[8][:-3], '3     16     0.0949     0:0')
-        self.assertEqual(lines[9][:-3], '4     20     0.0949     0:0')
-        self.assertEqual(lines[10][:-3], '8     36     0.0165     0:0')
-        self.assertEqual(lines[11][:-3], '11    44     0.0165     0:0')
+        self.assertEqual(lines[4],
+                         'Iter. Eval. Best      Current   Time    ')
+        self.assertEqual(lines[5][:-3],
+                         '0     4      6.471867  6.471867   0:0')
+        self.assertEqual(lines[6][:-3],
+                         '1     8      6.471867  14.54646   0:0')
+        self.assertEqual(lines[7][:-3],
+                         '2     12     0.0949    0.0949     0:0')
+        self.assertEqual(lines[8][:-3],
+                         '3     16     0.0949    0.288      0:0')
+        self.assertEqual(lines[9][:-3],
+                         '4     20     0.0949    0.11       0:0')
+        self.assertEqual(lines[10][:-3],
+                         '8     36     0.0165    5.504433   0:0')
+        self.assertEqual(lines[11][:-3],
+                         '11    44     0.0165    3.601763   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (11) reached.')
 
@@ -263,7 +421,11 @@ class TestOptimisationController(unittest.TestCase):
         r = pints.toy.RosenbrockError()
         x = np.array([1.1, 1.1])
         b = pints.RectangularBoundaries([0.5, 0.5], [1.5, 1.5])
-        opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            opt = pints.Optimisation(r, x, boundaries=b, method=method)
+        self.assertEqual(len(w), 1)
+        self.assertIn('deprecated', str(w[-1].message))
         self.assertIsInstance(opt, pints.OptimisationController)
 
     def test_post_run_statistics(self):
@@ -277,8 +439,6 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_log_to_screen(False)
         opt.set_max_unchanged_iterations(50, 1e-11)
 
-        np.random.seed(123)
-
         # Before run methods return None
         self.assertIsNone(opt.iterations())
         self.assertIsNone(opt.evaluations())
@@ -288,8 +448,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.run()
         t_upper = t.time()
 
-        self.assertEqual(opt.iterations(), 75)
-        self.assertEqual(opt.evaluations(), 450)
+        self.assertEqual(opt.iterations(), 84)
+        self.assertEqual(opt.evaluations(), 495)
 
         # Time after run is greater than zero
         self.assertIsInstance(opt.time(), float)
@@ -308,9 +468,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
-        with self.assertRaisesRegex(RuntimeError,
-                                    "Controller is valid for single use only"):
-            opt.run()
+        self.assertRaisesRegex(
+            RuntimeError, 'Controller is valid for single use only', opt.run)
 
 
 if __name__ == '__main__':

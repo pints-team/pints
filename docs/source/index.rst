@@ -1,7 +1,7 @@
 .. Root of all pints docs
 
 .. _GitHub: https://github.com/pints-team/pints
-.. _Detailed examples: https://github.com/pints-team/pints/blob/master/examples/README.md
+.. _Detailed examples: https://github.com/pints-team/pints/blob/main/examples/README.md
 
 Welcome to the pints documentation
 ==================================
@@ -23,6 +23,7 @@ Contents
 
 .. toctree::
 
+    abc_samplers/index
     boundaries
     core_classes_and_methods
     diagnostics
@@ -39,6 +40,7 @@ Contents
     optimisers/index
     noise_model_diagnostics
     toy/index
+    toy/stochastic/index
     transformations
     utilities
 
@@ -77,10 +79,12 @@ Sampling
 
    - SMC
 
-#. Likelihood free sampling (Need distance between data and states, e.g. least squares?)
+#. :class:`ABC sampling<ABCSampler>`
 
-   - ABC-MCMC
-   - ABC-SMC
+   - :class:`ABCSMC`, requires a :class:`LogPrior` that can be sampled from
+     from and an :class:`ErrorMeasure`.
+   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
+     from and an :class:`ErrorMeasure`.
 
 #. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
 

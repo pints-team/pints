@@ -4,8 +4,10 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import numpy as np
+import os
 import unittest
+
+import numpy as np
 
 import pints
 import pints.toy
@@ -182,11 +184,115 @@ class TestNutsMCMC(unittest.TestCase):
         # Cannot set number of adpation steps while running
         self.assertRaises(RuntimeError, mcmc.set_number_adaption_steps, 500)
 
+        # Cannot change density of mass matrix while running
+        self.assertRaises(RuntimeError, mcmc.set_use_dense_mass_matrix, True)
+
         # Bad starting point
         mcmc = pints.NoUTurnMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
+
+    def test_pickle(self):
+        # Test I: make sure pickling state does not alter behaviour of sampler
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
+        x0 = np.array([2, 2])
+
+        # Run sampler until first mcmc step is proposed and accepted
+        mcmc = pints.NoUTurnMCMC(x0)
+        np.random.seed(1)
+        # Needs exactly 15 ask-tell cycles for this seed
+        for _ in range(15):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            mcmc.tell(reply)
+
+        np.random.seed(2)
+        for _ in range(1):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            ref_proposal1 = mcmc.tell(reply)
+        for _ in range(6):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            ref_proposal2 = mcmc.tell(reply)
+
+        # Repeat the same and pickle the sampler in between MCMC steps
+        mcmc = pints.NoUTurnMCMC(x0)
+        np.random.seed(1)
+        for _ in range(15):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            mcmc.tell(reply)
+
+        # Pickle state
+        mcmc.save_state('temp.pickle')
+        np.random.seed(2)
+        for _ in range(1):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            proposal1 = mcmc.tell(reply)
+        for _ in range(6):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            proposal2 = mcmc.tell(reply)
+
+        self.assertTrue(np.all(proposal1[0] == ref_proposal1[0]))
+        self.assertTrue(np.all(proposal2[0] == ref_proposal2[0]))
+
+        # Test II: Make sure that the adaptor from the pickled state
+        # is the same as the original sampler
+        mcmc = pints.NoUTurnMCMC(x0)
+        np.random.seed(1)
+        for _ in range(15):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            mcmc.tell(reply)
+        ref_adaptor = mcmc._adaptor
+
+        # Load sampler state
+        loaded_mcmc = mcmc.load_state('temp.pickle')
+        adaptor = loaded_mcmc._adaptor
+
+        self.assertTrue(np.all(
+            adaptor.final_epsilon() == ref_adaptor.final_epsilon()))
+        self.assertTrue(
+            np.all(adaptor.get_epsilon() == ref_adaptor.get_epsilon()))
+        self.assertTrue(np.all(
+            adaptor.get_inv_mass_matrix() ==
+            ref_adaptor.get_inv_mass_matrix()))
+        self.assertTrue(
+            np.all(adaptor.get_mass_matrix() == ref_adaptor.get_mass_matrix()))
+        self.assertEqual(
+            adaptor.target_accept_prob(), ref_adaptor.target_accept_prob())
+        self.assertEqual(
+            adaptor.use_dense_mass_matrix(),
+            ref_adaptor.use_dense_mass_matrix())
+        self.assertEqual(adaptor.warmup_steps(), ref_adaptor.warmup_steps())
+        self.assertEqual(adaptor._counter, ref_adaptor._counter)
+
+        # Test case III: Check that the loaded sampler proposes the same steps
+        # as the original sampler when the random seed is controlled
+
+        # Make sure that numpy seed is the same
+        mcmc = pints.NoUTurnMCMC(x0)
+        np.random.seed(1)
+        for _ in range(14):
+            reply = log_pdf.evaluateS1(mcmc.ask())
+            mcmc.tell(reply)
+        np.random.uniform()
+
+        # Need one cycle of ask-tell to catch up with state prior to pickling
+        reply = log_pdf.evaluateS1(loaded_mcmc.ask())
+        loaded_mcmc.tell(reply)
+
+        # Propose next steps with loaded sampler
+        np.random.seed(2)
+        for _ in range(1):
+            reply = log_pdf.evaluateS1(loaded_mcmc.ask())
+            proposal1 = loaded_mcmc.tell(reply)
+        for _ in range(6):
+            reply = log_pdf.evaluateS1(loaded_mcmc.ask())
+            proposal2 = loaded_mcmc.tell(reply)
+
+        self.assertTrue(np.all(proposal1[0] == ref_proposal1[0]))
+        self.assertTrue(np.all(proposal2[0] == ref_proposal2[0]))
+
+        # Delete pickled sampler
+        os.remove('temp.pickle')
 
     def test_set_hyper_parameters(self):
         # Tests the parameter interface for this sampler.
@@ -229,8 +335,19 @@ class TestNutsMCMC(unittest.TestCase):
 
         # hyper param interface
         self.assertEqual(mcmc.n_hyper_parameters(), 1)
-        mcmc.set_hyper_parameters([2])
-        self.assertEqual(mcmc.number_adaption_steps(), 2)
+        mcmc.set_hyper_parameters([300])
+        self.assertEqual(mcmc.number_adaption_steps(), 300)
+
+        # Test when sampler is running
+        # (Need a MCMC proposal before adaptor is updated, which needs 10
+        # ask-tell cycles here.)
+        log_pdf = pints.toy.GaussianLogPDF([5, 5], [[4, 1], [1, 3]])
+        for _ in range(10):
+            x = mcmc.ask()
+            mcmc.tell(log_pdf.evaluateS1(x))
+        self.assertEqual(mcmc.delta(), 0.5)
+        self.assertEqual(mcmc.number_adaption_steps(), 300)
+        self.assertTrue(mcmc.use_dense_mass_matrix())
 
     def test_other_setters(self):
         # Tests other setters and getters.

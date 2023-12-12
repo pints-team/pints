@@ -135,7 +135,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         # Ask all inner samplers for first point, which should be x0
         for chain in self._chains:
             x0 = chain.ask()
-            assert(np.all(x0 == self._x0))
+            assert np.all(x0 == self._x0)
 
         # Update sampler state
         self._running = True

@@ -29,7 +29,8 @@ class ParabolicError(pints.ErrorMeasure):
         self._n = len(self._c)
 
     def __call__(self, x):
-        return np.sum((self._c - x)**2)
+        y = pints.vector(x).reshape(self._n)
+        return np.sum((self._c - y)**2)
 
     def evaluateS1(self, x):
         """ See :meth:`pints.ErrorMeasure.evaluateS1()`. """

@@ -53,6 +53,43 @@ class TestEvaluators(unittest.TestCase):
         # Args must be a sequence
         self.assertRaises(ValueError, pints.SequentialEvaluator, f_args, 1)
 
+    def test_multi_sequential(self):
+
+        # Create test data
+        xs = np.random.normal(0, 10, 100)
+        ys = [f(x) for x in xs]
+
+        # Test sequential evaluator with multiple functions
+        e = pints.MultiSequentialEvaluator([f for _ in range(100)])
+        self.assertTrue(np.all(ys == e.evaluate(xs)))
+
+        # check errors
+
+        # not iterable
+        with self.assertRaises(TypeError):
+            e = pints.MultiSequentialEvaluator(3)
+
+        # not callable
+        with self.assertRaises(ValueError):
+            e = pints.MultiSequentialEvaluator([f, 4])
+
+        e = pints.MultiSequentialEvaluator([f for _ in range(100)])
+        # Argument must be sequence
+        with self.assertRaises(ValueError):
+            e.evaluate(1)
+
+        # wrong number of arguments
+        with self.assertRaises(ValueError):
+            e.evaluate([1 for _ in range(99)])
+
+        # Test args
+        e = pints.MultiSequentialEvaluator([f_args, f_args_plus1], [10, 20])
+        self.assertEqual(e.evaluate([1, 1]), [31, 32])
+
+        # Args must be a sequence
+        self.assertRaises(
+            ValueError, pints.MultiSequentialEvaluator, [f_args], 1)
+
     def test_parallel(self):
 
         # Create test data
@@ -210,6 +247,10 @@ def f(x):
 
 def f_args(x, y, z):
     return x + y + z
+
+
+def f_args_plus1(x, y, z):
+    return x + y + z + 1
 
 
 def ioerror_on_five(x):

@@ -44,7 +44,13 @@ Overview:
 - :class:`TransformedErrorMeasure`
 - :class:`TransformedLogPDF`
 - :class:`TransformedLogPrior`
+- :class:`UnitCubeTransformation`
 
+
+Transformation types
+********************
+
+.. autoclass:: Transformation
 
 .. autoclass:: ComposedTransformation
 
@@ -58,7 +64,10 @@ Overview:
 
 .. autoclass:: ScalingTransformation
 
-.. autoclass:: Transformation
+.. autoclass:: UnitCubeTransformation
+
+Transformed objects
+*******************
 
 .. autoclass:: TransformedBoundaries
 
@@ -67,3 +76,6 @@ Overview:
 .. autoclass:: TransformedLogPDF
 
 .. autoclass:: TransformedLogPrior
+
+.. autoclass:: TransformedRectangularBoundaries
+

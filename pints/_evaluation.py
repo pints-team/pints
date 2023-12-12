@@ -248,7 +248,7 @@ multiprocessing.html#all-platforms>`_ for details).
             if w.exitcode is not None:  # pragma: no cover
                 w.join()
                 cleaned += 1
-                del(self._workers[k], w)
+                del self._workers[k], w
         if cleaned:     # pragma: no cover
             gc.collect()
         return cleaned
@@ -413,6 +413,47 @@ multiprocessing.html#all-platforms>`_ for details).
         return errors
 
 
+class MultiSequentialEvaluator(Evaluator):
+    """
+    Evaluates a list of functions (or callable objects) for a list of input
+    values of the same length, and returns a list containing the calculated
+    function evaluations.
+
+    This evaluator should be used in the case where each position (for example,
+    corresponding to each chain) needs to be evaluated on a separate function.
+    In this way, it differs from :class:`SequentialEvaluator` and
+    :class:`ParallelEvaluator`, which evaluate multiple positions on a single
+    callable function.
+
+    Extends :class:`Evaluator`.
+
+    Parameters
+    ----------
+    functions : list of callable
+        The functions to evaluate.
+    args : sequence
+        An optional tuple containing extra arguments to each element in
+        functions, ``f``. If ``args`` is specified, ``f`` will be called as
+        ``f(x, *args)``.
+    """
+    def __init__(self, functions, args=None):
+        super(MultiSequentialEvaluator, self).__init__(functions[0], args)
+
+        # Check functions
+        for function in functions:
+            if not callable(function):
+                raise ValueError('The given functions must be callable.')
+        self._functions = functions
+        self._n_functions = len(functions)
+
+    def _evaluate(self, positions):
+        if len(positions) != self._n_functions:
+            raise ValueError('Number of positions does not equal number of '
+                             'functions.')
+
+        return [f(x, *self._args) for f, x in zip(self._functions, positions)]
+
+
 class SequentialEvaluator(Evaluator):
     """
     Evaluates a function (or callable object) for a list of input values, and
@@ -522,4 +563,3 @@ class _Worker(multiprocessing.Process):
         except (Exception, KeyboardInterrupt, SystemExit):
             self._errors.put((self.pid, traceback.format_exc()))
             self._error.set()
-

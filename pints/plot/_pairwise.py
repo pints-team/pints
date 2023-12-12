@@ -43,7 +43,7 @@ def pairwise(samples,
     heatmap
         Set to ``True`` to plot heatmap for the pairwise plots.
         Cannot be used together with ``kde``.
-    Opacity
+    opacity
         This value can be used to manually set the opacity of the
         points in the scatter plots (when ``kde=False`` and ``heatmap=False``
         only).
@@ -51,9 +51,8 @@ def pairwise(samples,
         Shows only the middle n-th percentiles of the distribution.
         Default shows all samples in ``samples``.
     parameter_names
-        A list of parameter names, which will be displayed on the x-axis of the
-        trace subplots. If no names are provided, the parameters are
-        enumerated.
+        A list of parameter names, which will be displayed on the axes of the
+        subplots. If no names are provided, the parameters are enumerated.
     ref_parameters
         A set of parameters for reference in the plot. For example,
         if true values of parameters are known, they can be passed in for

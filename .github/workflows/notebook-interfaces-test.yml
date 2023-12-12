@@ -12,13 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v1
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.9
-          architecture: x64
+          python-version: '3.11'
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
       # that have some code in pints/interfaces. Dependencies that are not used

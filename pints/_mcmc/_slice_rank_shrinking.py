@@ -200,7 +200,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         # Check reply, copy gradient
         fx = float(fx)
         grad = pints.vector(grad)
-        assert(grad.shape == (self._n_parameters, ))
+        assert grad.shape == (self._n_parameters, )
 
         # Very first call
         if self._current is None:

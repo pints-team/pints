@@ -98,7 +98,7 @@ class TestHamiltonianMCMC(unittest.TestCase):
         mcmc = pints.HamiltonianMCMC(x0)
         mcmc.ask()
         self.assertRaises(
-            ValueError, mcmc.tell, (float('-inf'), np.array([1, 1])))
+            ValueError, mcmc.tell, (-np.inf, np.array([1, 1])))
 
     def test_set_hyper_parameters(self):
         # Tests the parameter interface for this sampler.

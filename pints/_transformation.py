@@ -52,6 +52,9 @@ class Transformation(object):
         """
         Returns a transformed boundaries class.
         """
+        if isinstance(boundaries, pints.RectangularBoundaries):
+            if self.elementwise():
+                return TransformedRectangularBoundaries(boundaries, self)
         return TransformedBoundaries(boundaries, self)
 
     def convert_covariance_matrix(self, C, q):
@@ -756,6 +759,8 @@ class RectangularBoundariesTransformation(Transformation):
         boundaries = pints.RectangularBoundaries([0, 1, 2], [4, 5, 6])
         transformation = pints.RectangularBoundariesTransformation(boundaries)
 
+    Not to be confused with :class:`pints.TransformedRectangularBoundaries`.
+
     Extends :class:`Transformation`.
     """
     def __init__(self, lower_or_boundaries, upper=None):
@@ -778,7 +783,7 @@ class RectangularBoundariesTransformation(Transformation):
 
         # Cache dimension
         self._n_parameters = boundaries.n_parameters()
-        del(boundaries)
+        del boundaries
 
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """
@@ -834,16 +839,31 @@ class RectangularBoundariesTransformation(Transformation):
 
 class ScalingTransformation(Transformation):
     """
-    Scaling transformation scales the input parameters by multiplying with an
-    array ``scalings`` element-wisely. And its Jacobian matrix is a diagonal
-    matrix with the values of ``1 / scalings`` on the diagonal.
+    Scales the input parameters by multiplying with an array ``scalings`` and
+    adding an optional array ``translation``.
+
+    The transformation from model parameters ``p`` to search parameters ``q``
+    is performed as::
+
+        q = (p + translation) * scalings
+
+    Its Jacobian matrix is a diagonal matrix with ``1 / scalings`` on the
+    diagonal.
 
     Extends :class:`Transformation`.
     """
-    def __init__(self, scalings):
-        self.s = pints.vector(scalings)
-        self.inv_s = 1. / self.s
-        self._n_parameters = len(self.s)
+    def __init__(self, scalings, translation=None):
+        self._s = pints.vector(scalings)
+        self._inv_s = 1. / self._s
+        self._n_parameters = len(self._s)
+
+        self._translation = None
+        if translation is not None:
+            self._translation = pints.vector(translation)
+            if len(self._translation) != self._n_parameters:
+                raise ValueError(
+                    'Translation must be None or be a vector of the same'
+                    ' length as the scalings.')
 
     def elementwise(self):
         """ See :meth:`Transformation.elementwise()`. """
@@ -851,7 +871,7 @@ class ScalingTransformation(Transformation):
 
     def jacobian(self, q):
         """ See :meth:`Transformation.jacobian()`. """
-        return np.diag(self.inv_s)
+        return np.diag(self._inv_s)
 
     def jacobian_S1(self, q):
         """ See :meth:`Transformation.jacobian_S1()`. """
@@ -860,7 +880,7 @@ class ScalingTransformation(Transformation):
 
     def log_jacobian_det(self, q):
         """ See :meth:`Transformation.log_jacobian_det()`. """
-        return np.sum(np.log(np.abs(self.inv_s)))
+        return np.sum(np.log(np.abs(self._inv_s)))
 
     def log_jacobian_det_S1(self, q):
         """ See :meth:`Transformation.log_jacobian_det_S1()`. """
@@ -872,13 +892,17 @@ class ScalingTransformation(Transformation):
 
     def to_model(self, q):
         """ See :meth:`Transformation.to_model()`. """
-        q = pints.vector(q)
-        return self.inv_s * q
+        p = self._inv_s * pints.vector(q)
+        if self._translation is not None:
+            p -= self._translation
+        return p
 
     def to_search(self, p):
         """ See :meth:`Transformation.to_search()`. """
         p = pints.vector(p)
-        return self.s * p
+        if self._translation is not None:
+            p = p + self._translation
+        return self._s * p
 
 
 class TransformedBoundaries(pints.Boundaries):
@@ -915,13 +939,68 @@ class TransformedBoundaries(pints.Boundaries):
         """ See :meth:`Boundaries.n_parameters()`. """
         return self._n_parameters
 
-    def range(self):
-        """
-        Returns the size of the search space (i.e. ``upper - lower``).
-        """
-        upper = self._transform.to_search(self._boundaries.upper())
-        lower = self._transform.to_search(self._boundaries.lower())
-        return upper - lower
+    def sample(self, n=1):
+        """ See :meth:`Boundaries.sample()`. """
+        return [
+            self._transform.to_search(p) for p in self._boundaries.sample(n)]
+
+
+class TransformedRectangularBoundaries(pints.RectangularBoundaries):
+    """
+    A :class:`pints.RectangularBoundaries` that accepts parameters in a
+    transformed search space.
+
+    This transformation handles the special case where:
+
+    - the boundaries being transformed are :class:`pints.RectangularBoundaries`
+    - the transformation is element-wise.
+
+    When these conditions are met, the lower and upper boundaries can simply be
+    transformed and methods like :meth:`lower()` and :meth:`range()` can be
+    provided.
+
+    Not to be confused with :class:`pints.RectangularBoundariesTransformation`.
+
+    Extends :class:`pints.RectangularBoundaries`.
+
+    Parameters
+    ----------
+    boundaries
+        A :class:`pints.RectangularBoundaries` object.
+    transformation
+        An element-wise transformation.
+    """
+    def __init__(self, boundaries, transformation):
+
+        # Check input
+        if not isinstance(boundaries, pints.RectangularBoundaries):
+            raise ValueError('A TransformedRectangularBoundaries can only be'
+                             ' created from a RectangularBoundaries object.')
+        if not transformation.elementwise():
+            raise ValueError('A TransformedRectangularBoundaries can only be'
+                             ' created from an element-wise transformation.')
+        if transformation.n_parameters() != boundaries.n_parameters():
+            raise ValueError('Number of parameters for boundaries and '
+                             'transformation must match.')
+
+        # Transform upper and lower boundaries
+        a = transformation.to_search(boundaries.lower())
+        b = transformation.to_search(boundaries.upper())
+        lower = np.minimum(a, b)
+        upper = np.maximum(a, b)
+
+        # Pass transformed boundaries to RectangularBoundaries
+        super().__init__(lower, upper)
+
+        # Store input
+        self._boundaries = boundaries
+        self._transformation = transformation
+
+    def sample(self, n=1):
+        """ See :meth:`Boundaries.sample()`. """
+        # Sample from the original boundaries, but transform to new space
+        return [self._transformation.to_search(p)
+                for p in self._boundaries.sample(n)]
 
 
 class TransformedErrorMeasure(pints.ErrorMeasure):
@@ -1131,3 +1210,32 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         for i, p in enumerate(ps):
             qs[i, :] = self._transform.to_search(p)
         return qs
+
+
+class UnitCubeTransformation(ScalingTransformation):
+    """
+    Maps a parameter space onto the unit (hyper)cube.
+
+    Transformations from model parameters ``p`` to search parameters ``q`` are
+    made as::
+
+        q = (p - lower) / (upper - lower)
+
+    Extends :class:`ScalingTransformation`.
+    """
+    def __init__(self, lower, upper):
+
+        # Check input
+        self._lower = pints.vector(lower)
+        self._upper = pints.vector(upper)
+        self._n_parameters = len(lower)
+        del lower, upper
+
+        if len(self._upper) != self._n_parameters:
+            raise ValueError(
+                'Lower and upper bounds must have the same length.')
+        if not np.all(self._upper > self._lower):
+            raise ValueError('Upper bounds must exceed lower bounds.')
+
+        super().__init__(1 / (self._upper - self._lower), -self._lower)
+

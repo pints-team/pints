@@ -20,10 +20,12 @@ Overview:
 - :class:`ARMA11LogLikelihood`
 - :class:`CauchyLogLikelihood`
 - :class:`ConstantAndMultiplicativeGaussianLogLikelihood`
+- :class:`GaussianIntegratedLogUniformLogLikelihood`
 - :class:`GaussianIntegratedUniformLogLikelihood`
 - :class:`GaussianKnownSigmaLogLikelihood`
 - :class:`GaussianLogLikelihood`
 - :class:`KnownNoiseLogLikelihood`
+- :class:`LogNormalLogLikelihood`
 - :class:`MultiplicativeGaussianLogLikelihood`
 - :class:`ScaledLogLikelihood`
 - :class:`StudentTLogLikelihood`
@@ -38,6 +40,8 @@ Overview:
 
 .. autoclass:: ConstantAndMultiplicativeGaussianLogLikelihood
 
+.. autoclass:: GaussianIntegratedLogUniformLogLikelihood
+
 .. autoclass:: GaussianIntegratedUniformLogLikelihood
 
 .. autoclass:: GaussianKnownSigmaLogLikelihood
@@ -46,6 +50,8 @@ Overview:
 
 .. autoclass:: KnownNoiseLogLikelihood
 
+.. autoclass:: LogNormalLogLikelihood
+
 .. autoclass:: MultiplicativeGaussianLogLikelihood
 
 .. autoclass:: ScaledLogLikelihood
@@ -53,4 +59,3 @@ Overview:
 .. autoclass:: StudentTLogLikelihood
 
 .. autoclass:: UnknownNoiseLogLikelihood
-
