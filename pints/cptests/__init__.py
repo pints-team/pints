@@ -28,6 +28,8 @@ from ._problems import (    # noqa
 # they can be addressed as e.g.
 # pints.cptests.dram_acmc.two_dim_gaussian().
 from . import (     # noqa
+    cmaes,
+    cmaes_bare,
     differential_evolution_mcmc,
     dram_acmc,
     dream_mcmc,

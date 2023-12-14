@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Change point tests for CMAES.
+# Change point tests for bare-bones CMAES reimplementation.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
@@ -12,8 +12,8 @@ import pints.cptests as cpt
 
 def bounded_fitzhugh_nagumo(n_iterations=100):
     """
-    Tests :class:`pints.CMAES` on a bounded Fitzhugh-Nagumo model, and returns
-    a dictionary with ``error`` and ``distance``.
+    Tests :class:`pints.BareCMAES` on a bounded Fitzhugh-Nagumo model, and
+    returns a dictionary with ``error`` and ``distance``.
 
     For details of the solved problem, see
     :class:`pints.cptests.RunOptimiserOnBoundedUntransformedLogistic`.
@@ -28,7 +28,7 @@ def bounded_fitzhugh_nagumo(n_iterations=100):
 
 def bounded_untransformed_logistic(n_iterations=300):
     """
-    Tests :class:`pints.CMAES` on a bounded logistic model without
+    Tests :class:`pints.BareCMAES` on a bounded logistic model without
     transformations, and returns a dictionary with ``error`` and ``distance``.
 
     For details of the solved problem, see
@@ -44,8 +44,8 @@ def bounded_untransformed_logistic(n_iterations=300):
 
 def rosenbrock(n_iterations=100):
     """
-    Tests :class:`pints.CMAES` on a Rosenbrock error and returns a dictionary
-    with ``error`` and ``distance``.
+    Tests :class:`pints.BareCMAES` on a Rosenbrock error and returns a
+    dictionary with ``error`` and ``distance``.
 
     For details of the solved problem, see
     :class:`pints.cptests.RunOptimiserOnRosenbrockError`.
@@ -59,8 +59,8 @@ def rosenbrock(n_iterations=100):
 
 def two_dim_parabola(n_iterations=50):
     """
-    Tests :class:`pints.CMAES` on a two-dimensional parabolic error and returns
-    a dictionary with entries ``error`` and ``distance``.
+    Tests :class:`pints.BareCMAES` on a two-dimensional parabolic error and
+    returns a dictionary with entries ``error`` and ``distance``.
 
     For details of the solved problem, see
     :class:`pints.cptests.RunOptimiserOnTwoDimParabola`.
@@ -72,7 +72,7 @@ def two_dim_parabola(n_iterations=50):
     }
 
 
-_method = pints.CMAES
+_method = pints.BareCMAES
 _fguess = True
 _change_point_tests = [
     bounded_fitzhugh_nagumo,

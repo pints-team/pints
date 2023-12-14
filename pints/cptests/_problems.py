@@ -308,7 +308,7 @@ class RunOptimiserOnBoundedFitzhughNagumo(RunOptimiserOnProblem):
 
         # Choose starting point. The loss surface does not suggest any sensible
         # way to do this, so just sampling in a small sphere around a chosen x.
-        x0 = [1, 1.5, 3]                    # Center
+        x0 = [0.75, 1.5, 3]                 # Center
         r = np.random.uniform(0, 0.2)       # Sphere radius
         t = np.random.uniform(0, 2 * np.pi)
         p = np.random.uniform(0, 2 * np.pi)
