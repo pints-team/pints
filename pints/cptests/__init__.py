@@ -15,7 +15,13 @@ from ._problems import (    # noqa
     RunMcmcMethodOnCorrelatedGaussian,
     RunMcmcMethodOnHighDimensionalGaussian,
     RunMcmcMethodOnMultimodalGaussian,
+    RunMcmcMethodOnProblem,
     RunMcmcMethodOnTwoDimGaussian,
+    RunOptimiserOnBoundedFitzhughNagumo,
+    RunOptimiserOnBoundedUntransformedLogistic,
+    RunOptimiserOnProblem,
+    RunOptimiserOnRosenbrockError,
+    RunOptimiserOnTwoDimParabola,
 )
 
 # Import all test modules (not methods!) directly into this method, so that
