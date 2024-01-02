@@ -279,6 +279,8 @@ class RunOptimiserOnProblem(object):
         controller.set_max_iterations(n_iterations)
         controller.set_max_unchanged_iterations(None)
         controller.set_log_to_screen(False)
+        if use_guessed:
+            controller.set_f_guessed_tracking(True)
         if method_hyper_parameters is not None:
             controller.optimiser().set_hyperparameters(method_hyper_parameters)
         self._x, self._f = controller.run()
