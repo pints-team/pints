@@ -166,10 +166,10 @@ class XNES(pints.PopulationBasedOptimiser):
         # Update root of covariance matrix
         # Note that this is equation 11 (for the eta-sigma=eta-B case), not the
         # more general equations 9&10 version given in Algorithm 1
-        Gm = 0.5 * np.sum([
-            u * (np.outer(z, z.T) - self._I)
-            for u, z in zip(self._us, self._zs)], axis=0)
-        self._A = np.dot(self._A, scipy.linalg.expm(self._eta_A * Gm))
+        Gm = np.dot(
+            np.array([np.outer(z, z).T - self._I for z in self._zs]).T,
+            self._us)
+        self._A = np.dot(self._A, scipy.linalg.expm(0.5 * self._eta_A * Gm))
 
         # Update f_guessed on the assumption that the lowest value in our
         # sample approximates f(mu)
