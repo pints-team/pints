@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 ### Removed
 ### Fixed
+- [#1517](https://github.com/pints-team/pints/pull/1517) Fixed a major bug in the covariance matrix update for xNES.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Fixed issues with toy problems that accept invalid inputs.
 
 
