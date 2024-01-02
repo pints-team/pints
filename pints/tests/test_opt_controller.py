@@ -233,6 +233,7 @@ class TestOptimisationController(unittest.TestCase):
     def test_logging(self):
 
         # Test with logpdf
+        np.random.seed(1)
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
@@ -255,17 +256,17 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[5][:-3],
                          '0     3     -4.140462 -4.140462   0:0')
         self.assertEqual(lines[6][:-3],
-                         '1     6     -4.140462 -4.140465   0:0')
+                         '1     6     -4.140462 -4.140482   0:0')
         self.assertEqual(lines[7][:-3],
-                         '2     11    -4.140462 -4.140462   0:0')
+                         '2     9     -4.140462 -4.140465   0:0')
         self.assertEqual(lines[8][:-3],
-                         '3     16    -4.140462 -4.140466   0:0')
+                         '3     14    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[9][:-3],
-                         '6     33    -4.140462 -4.140462   0:0')
+                         '6     30    -4.140462 -4.140462   0:0')
         self.assertEqual(lines[10][:-3],
-                         '9     51    -4.140462 -4.140462   0:0')
+                         '9     47    -4.140462 -4.140463   0:0')
         self.assertEqual(lines[11][:-3],
-                         '10    51    -4.140462 -4.140462   0:0')
+                         '10    47    -4.140462 -4.140463   0:0')
         self.assertEqual(
             lines[12], 'Halting: Maximum number of iterations (10) reached.')
 
@@ -448,8 +449,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.run()
         t_upper = t.time()
 
-        self.assertEqual(opt.iterations(), 84)
-        self.assertEqual(opt.evaluations(), 495)
+        self.assertEqual(opt.iterations(), 125)
+        self.assertEqual(opt.evaluations(), 734)
 
         # Time after run is greater than zero
         self.assertIsInstance(opt.time(), float)
