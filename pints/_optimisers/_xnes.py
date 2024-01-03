@@ -108,13 +108,13 @@ class XNES(pints.PopulationBasedOptimiser):
         d = self._n_parameters
         n = self._population_size
 
-        # Learning rates, see Table 1
+        # Learning rates, see Table 1 in [1]
         # TODO Allow changing before run() with method call
         self._eta_mu = 1
         # TODO Allow changing before run() with method call
         self._eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
 
-        # Pre-calculated utilities, see Table 1
+        # Pre-calculated utilities, see Table 1 in [1]
         self._us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
         self._us /= np.sum(self._us)
         self._us -= 1 / n
