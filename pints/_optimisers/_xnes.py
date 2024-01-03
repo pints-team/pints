@@ -32,7 +32,7 @@ class XNES(pints.PopulationBasedOptimiser):
 
     .. [2] PyBrain: The Python machine learning library
            http://pybrain.org
-           This library is co-auhtored by xNES' authors.
+           PyBrain is co-authored by xNES' authors.
 
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
