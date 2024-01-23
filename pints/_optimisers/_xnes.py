@@ -32,6 +32,8 @@ class XNES(pints.PopulationBasedOptimiser):
 
     .. [2] PyBrain: The Python machine learning library
            http://pybrain.org
+           PyBrain is co-authored by xNES' authors.
+
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(XNES, self).__init__(x0, sigma0, boundaries)
@@ -47,7 +49,7 @@ class XNES(pints.PopulationBasedOptimiser):
         self._bounded_ids = None  # Indices of those xs
 
         # Normalisation / distribution
-        self._mu = np.array(self._x0)   # Mean
+        self._mu = pints.vector(x0)     # Mean
         self._A = None                  # Covariance
 
         # Best solution seen
@@ -106,13 +108,13 @@ class XNES(pints.PopulationBasedOptimiser):
         d = self._n_parameters
         n = self._population_size
 
-        # Learning rates
+        # Learning rates, see Table 1 in [1]
         # TODO Allow changing before run() with method call
         self._eta_mu = 1
         # TODO Allow changing before run() with method call
         self._eta_A = 0.6 * (3 + np.log(d)) * d ** -1.5
 
-        # Pre-calculated utilities
+        # Pre-calculated utilities, see Table 1 in [1]
         self._us = np.maximum(0, np.log(n / 2 + 1) - np.log(1 + np.arange(n)))
         self._us /= np.sum(self._us)
         self._us -= 1 / n
@@ -162,10 +164,12 @@ class XNES(pints.PopulationBasedOptimiser):
         self._mu += self._eta_mu * np.dot(self._A, Gd)
 
         # Update root of covariance matrix
+        # Note that this is equation 11 (for the eta-sigma=eta-B case), not the
+        # more general equations 9&10 version given in Algorithm 1
         Gm = np.dot(
             np.array([np.outer(z, z).T - self._I for z in self._zs]).T,
             self._us)
-        self._A *= scipy.linalg.expm(np.dot(0.5 * self._eta_A, Gm))
+        self._A = np.dot(self._A, scipy.linalg.expm(0.5 * self._eta_A * Gm))
 
         # Update f_guessed on the assumption that the lowest value in our
         # sample approximates f(mu)
