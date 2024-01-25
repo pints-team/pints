@@ -105,6 +105,7 @@ relevant code.
 - [Multiplicative Gaussian noise](./stats/multiplicative-gaussian-errors.ipynb)
 - [Pooling parameters](./stats/pooling.ipynb)
 - [Student-t noise model](./stats/student-t-sampling-error.ipynb)
+- [Wragged output model](./stats/multiple_wragged_outputs.ipynb)
 
 
 ## Toy problems
