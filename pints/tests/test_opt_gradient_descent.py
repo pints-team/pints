@@ -94,6 +94,38 @@ class TestGradientDescent(unittest.TestCase):
         opt = method(np.array([0, 1.01]))
         self.assertIn('radient descent', opt.name())
 
+    def test_step(self):
+        # Numerically test that it takes the correct step
+
+        # Create a gradient descent optimiser starting at 0
+        x0 = np.zeros(8)
+        opt = pints.GradientDescent(x0)
+        opt.set_learning_rate(1)
+
+        # Check that it starts at 0
+        xs = opt.ask()
+        self.assertEqual(len(xs), 1)
+        # Cast to list gives nicest message if any elements don't match
+        self.assertEqual(list(xs[0]), list(x0))
+
+        # If we pass in gradient -g, we should move to g
+        g = np.array([1, 2, 3, 4, 8, -7, 6, 5])
+        opt.tell([(0, -g)])
+        ys = opt.ask()
+        self.assertEqual(list(ys[0]), list(g))
+
+        # If we halve the learning rate and pass in +g, we should retrace half
+        # a step
+        opt.set_learning_rate(0.5)
+        opt.tell([(0, g)])
+        ys = opt.ask()
+        self.assertEqual(list(ys[0]), list(0.5 * g))
+
+        # And if we pass in +g again we should be back at 0
+        opt.tell([(0, g)])
+        ys = opt.ask()
+        self.assertEqual(list(ys[0]), list(x0))
+
 
 if __name__ == '__main__':
     print('Add -v for more debug output')
