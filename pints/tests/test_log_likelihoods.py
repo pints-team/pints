@@ -10,6 +10,8 @@ import unittest
 import pints
 import pints.toy
 import numpy as np
+import io
+import unittest.mock
 
 
 class TestAR1LogLikelihood(unittest.TestCase):
@@ -2829,27 +2831,25 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             ValueError, pints.CensoredGaussianLogLikelihood, problem,
             upper=0.7)
 
-    # def test_stdout(self):
-    #     # Check print correct output when verbose true
+    def test_stdout(self):
+        # Check prints correct output when verbose=True
 
-    #     import io
-    #     import unittest.mock
+        with unittest.mock.patch('sys.stdout',
+                                 new_callable=io.StringIO) as mock_stdout:
 
-    #     with unittest.mock.patch('sys.stdout',
-    #                              new_callable=io.StringIO) as mock_stdout:
+            problem = pints.SingleOutputProblem(
+                self.model_single, self.times, self.data_single)
 
-    #         problem = pints.SingleOutputProblem(
-    #             self.model_single, self.times, self.data_single)
+            # Create log_likelihood
+            pints.CensoredGaussianLogLikelihood(problem, lower=0.2,
+                                                upper=0.8, verbose=True)
 
-    #         # Create log_likelihood
-    #         pints.CensoredGaussianLogLikelihood(problem, lower=0.2,
-    #                                             upper=0.8, verbose=True)
-
-    #     self.assertEqual(
-    #         mock_stdout.getvalue(), "The data are [0.2 0.2 0.4 0.6 0.8 0.8]."
-    #         " \n The lower censored values"
-    #         " are [0.2 0.2]. \n The upper censored values"
-    #         " are [0.8 0.8].")
+        # Add \n at end due to how print statements work in Python
+        self.assertEqual(
+            mock_stdout.getvalue(), "The data are [0.2 0.2 0.4 0.6 0.8 0.8]."
+            " \n The lower censored values"
+            " are [0.2 0.2]. \n The upper censored values"
+            " are [0.8 0.8].\n")
 
 
 class TestKnownNoiseLogLikelihood(unittest.TestCase):
