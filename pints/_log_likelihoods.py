@@ -771,16 +771,8 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
         dL = np.sum(
             (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
 
-        # print((r.T * dy.T).T, "inside sum")
-        print(dL, "dLgaussian")
-        print(r, "r original")
-        print((sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0)),
-               "inner sum original")
-        print((self._values, y), "(self._values, y) original")
-
         # Calculate derivative wrt sigma
         dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(r**2, axis=0)
-        # print(dsigma, "dsigmagaussian")
         dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return
@@ -788,13 +780,90 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
 
 
 class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
-    r""" TO DO
+    r""" Calculates a log-likelihood assuming independent Gaussian noise at
+    each time point, and that data above and below certain limits are censored.
+    In other words, any data values less than the lower limit are recorded as
+    equal to it; and any values greater than the upper limit are recorded as
+    equal to it. This likelihood is useful for censored data - see for
+    instance [3]_.The parameter sigma represents the standard deviation
+    of the noise on each output.
+
+    For a noise level of ``sigma'', and left and right censoring (below the
+    ``lower'' limit cutoff and above the ``upper'' limit), the likelihood
+    becomes:
+
+    .. math::
+        \begin{multline}
+                L(\theta, \sigma|\boldsymbol{x})
+                    = p(\boldsymbol{x} | \theta, \sigma)
+                    = \prod_{\text{lower} < x_j < \text{upper}}
+                    \phi \left(\frac{x_j - f_j(\theta)}{\sigma} \right)
+                    \prod_{x_j = \text{lower}} \Phi \left(\frac{\text{lower}
+                    - f_j(\theta)}{\sigma} \right)
+                    \prod_{x_j = \text{upper}}  \left(1 -
+                    \Phi \left(\frac{\text{upper} - f_j(\theta)}{\sigma}
+                    \right) \right),
+        \end{multline}
+
+    where $x_j$ is the sampled data at time $j$ and $f_j$ is the simulated
+    data at time $j$. The functions $\phi$ and $\Phi$ are the standard normal
+    distribution probability density function and cumulative distribution
+    function respectively.
+
+    This leads to a log-likelihood of:
+
+    .. math::
+        \begin{align}
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+        &   \sum_{\text{lower} < x_j < \text{upper}}{ \left( -\frac{1}{2}
+        \log{2\pi}
+            -\log{\sigma} -\frac{1}{2\sigma^2}(x_j - f_j(\theta))^2 \right)} \\
+            &  + \sum_{x_j = \text{lower}} \log \left( \Phi
+            \left(\frac{\text{lower} - f_j(\theta)}{\sigma} \right) \right) \\
+            &    + \sum_{x_j = \text{upper}}  \log\left(1 - \Phi
+            \left(\frac{\text{upper} - f_j(\theta)}{\sigma} \right) \right)
+        \end{align}
+
+    For a system with $n_o$ outputs, this becomes
+
+    .. math::
+        \begin{align}
+        \log{L(\theta, \sigma|\boldsymbol{x})} =
+        &   \sum_{\substack{\text{lower}_i < x_{ij} < \text{upper}_i \\ 1
+        \leq i \leq n_t \\ 1 \leq j \leq n_o}}{ \left( -\frac{1}{2} \log{2\pi}
+            -\log{\sigma_{i}} -\frac{1}{2\sigma_{i}^2}(x_{ij} - f_j(t_i,
+            \theta ))^2 \right)} \\
+            &  + \sum_{\substack{x_{ij} = \text{lower}_{i} \\1 \leq i \leq n_t
+            \\ 1 \leq j \leq n_o}} \log \left( \Phi
+            \left(\frac{\text{lower}_{i} - f_j(t_i, \theta)}{\sigma_{i}}
+            \right) \right) \\
+            &    + \sum_{\substack{x_{ij} = \text{upper}_{i} \\1 \leq i
+            \leq n_t \\ 1 \leq j \leq n_o}}  \log\left(1 -
+            \Phi \left(\frac{\text{upper}_{i} - f_j(t_i, \theta)}{\sigma_{i}}
+            \right) \right)
+        \end{align}
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
+    lower
+        The lower limit for censoring.
+    upper
+        The upper limit for censoring.
+    verbose
+        The input data and the values that are censored are printed.
+    References
+    ----------
+    .. [3] Beal, S. L. (2001). Ways to fit a PK model with some data
+    below the quantification limit. Journal of pharmacokinetics and
+    pharmacodynamics 28, pp. 481-504.
     """
 
     def __init__(self, problem, lower=None, upper=None, verbose=True):
         super(CensoredGaussianLogLikelihood, self).__init__(problem)
-        if verbose:
-            print("Data is this and censored values are ...")
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -810,7 +879,7 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                 a = pints.vector(a)
                 if len(a) != self._no:
                     raise ValueError(
-                        'Lower limit of detection must be a ' +
+                        'Lower limit must be a ' +
                         ' scalar or a vector of length n_outputs.')
         b = upper
         if b is not None:
@@ -820,13 +889,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                 b = pints.vector(b)
                 if len(b) != self._no:
                     raise ValueError(
-                        'Upper limit of detection must be a ' +
+                        'Upper limit must be a ' +
                         ' scalar or a vector of length n_outputs.')
 
         if (a is not None) and (b is not None):
             diff = b - a
             if np.any(diff <= 0):
-                raise ValueError('Upper limit of detection ' +
+                raise ValueError('Upper limit ' +
                                  'must exceed lower limit.')
         self._a = a
         self._b = b
@@ -842,8 +911,41 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         else:
             raise ValueError("Not a censored likelihood")
 
-        # Number of points that aren't censored
-        self._n_not_censored = (self._condition).sum()
+        # Check that none of the values are less than the lower
+        # limit or greater than the upper limit
+        if self._values.ndim == 1:
+            for i in range(np.shape(self._values)[0]):
+                if a is not None:
+                    if self._values[i] < self._a[0]:
+                        raise ValueError("A value is below the lower limit.")
+                if b is not None:
+                    if self._values[i] > self._b[0]:
+                        raise ValueError("A value is above the upper limit.")
+        else:
+            for i in range(np.shape(self._values)[1]):
+                for j in range(np.shape(self._values)[0]):
+                    if a is not None:
+                        if self._values[j, i] < self._a[i]:
+                            raise ValueError(
+                                "A value is below the lower limit.")
+                    if b is not None:
+                        if self._values[j, i] > self._b[i]:
+                            raise ValueError(
+                                "A value is above the upper limit.")
+
+        # Print data and values that are censored
+        if verbose:
+            print("The data are {}. \n The lower censored values"
+                  " are {}. \n The upper censored values"
+                  " are {}.".format(self._values,
+                                    np.extract(self._values == self._a,
+                                               self._values),
+                                    np.extract(self._values == self._b,
+                                               self._values)))
+
+        # Number of points that aren't censored (for each observation
+        # in the multioutput case)
+        self._n_not_censored = np.sum(self._condition, axis=0)
 
         # Pre-calculate parts
         self._logn = 0.5 * self._n_not_censored * np.log(2 * np.pi)
@@ -856,9 +958,6 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         squared_error = np.sum((self._values -
                                 self._problem.evaluate(x[:-self._no]))**2,
                                axis=0, where=self._condition)
-
-        print(np.shape((self._values - self._problem.evaluate(x[:-self._no]))**2),
-              "(self._values -self._problem.evaluate(x[:-self._no]))**2")
 
         # Calculate part of the likelihood corresponding to the censored data
         # Q: Should these be summed like for the bit that isn't censored?
@@ -880,10 +979,6 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                                   self._n_not_censored * np.log(sigma)
                                   - squared_error / (2 * sigma**2))
 
-        # print("lower", lower_censored_sum)
-        # print("upper", upper_censored_sum)
-        # print("non-censored", non_censored_sum)
-
         return lower_censored_sum + upper_censored_sum + non_censored_sum
 
     def evaluateS1(self, x):
@@ -900,49 +995,39 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
-        
+
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
-        
-        # print("START")
-        # print(self._values - y, "r")
-        # print(dy, "dy")
-        # print(np.sum(
-        #     (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T).T).T, axis=0))
-        # print(self._condition.reshape((6, 1, 1)))
-        # print(np.shape((((self._values - y).T * dy.T).T)), "hi")
-        # print(np.shape(np.reshape((((self._values - y).T * dy.T).T), (6,))), "hello")
-        # print(np.shape(self._condition), "self.condition")
-        # print(np.sum(np.reshape(((self._values - y).T * dy.T).T, (6,)), where=self._condition, axis=0), "this")
-
-        # print(np.sum(((self._values - y).T * dy.T),
-        #                             where=self._condition).T, "here")
 
         # 1. Parts of the derivative corresponding to the data that
         # isn't censored
         # Calculate derivatives in the model parameters
-        # not_censored_dL = np.sum(
-        #     (sigma**(-2.0) * np.sum(((self._values - y).T * dy.T).T,
-        #                             where=self._condition).T).T, axis=0)
-        shape_array = (r.T * dy.T).T
+
+        lower_condition = self._values == self._a
+        upper_condition = self._values == self._b
+
+        # Make condition into 3D arrays
+        if self._values.ndim == 1:
+            where_condition = np.reshape(
+                self._condition, newshape=(np.shape(self._condition)[0], 1, 1))
+            lower_where_condition = np.reshape(
+                lower_condition, newshape=(np.shape(lower_condition)[0], 1, 1))
+            upper_where_condition = np.reshape(
+                upper_condition, newshape=(np.shape(upper_condition)[0], 1, 1))
+        else:
+            where_condition = np.repeat(self._condition[:, :, np.newaxis],
+                                        np.shape(self._condition)[-1], axis=2)
+            lower_where_condition = np.repeat(
+                lower_condition[:, :, np.newaxis],
+                np.shape(lower_condition)[-1], axis=2)
+            upper_where_condition = np.repeat(
+                upper_condition[:, :, np.newaxis],
+                np.shape(upper_condition)[-1], axis=2)
+
+        inner_deriv = (r.T * dy.T).T
+        inner_sum = np.sum(inner_deriv, where=where_condition, axis=0)
         not_censored_dL = np.sum(
-            (sigma**(-2.0) * np.sum(np.reshape((r.T * dy.T).T, (4,)),
-                                    where=self._condition).T).T, axis=0)  
-        print(r, "r censored")
-        print((sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0)),
-               "inner sum censored ")
-        print((self._values, y), "(self._values, y) censored")
-        # print(self._condition, "Self.condition")
-        dLabove = np.sum(
-            (sigma**(-2.0) * np.sum((r.T * dy.T).T, axis=0).T).T, axis=0)
-        
-        print(((self._values - y).T * dy.T).T, "arg0")
-        print(np.reshape(((self._values - y).T * dy.T).T, (4,)), "arg1")
-        print((r.T * dy.T).T, "arg2")
-
-        print(dLabove, "dlabove")
-
-        print(not_censored_dL, "not)censored_dL")
+            (sigma**(-2.0) * inner_sum.T).T, axis=0)
 
         # Calculate derivative wrt sigma
         not_censored_dsigma = -self._n_not_censored / sigma + sigma**(-3.0) *\
@@ -952,67 +1037,67 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # censored
 
         # Calculate derivatives in the model parameters
-        lower_censored_dL = -np.sum(
-            (sigma**(-1) *
-             np.sum( np.reshape(((scipy.stats.
-                      norm.pdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T * dy.T) /
-                     (scipy.stats.
-                      norm.cdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T)).T, (4,)),
-                    where=self._values == self._a).T), axis=0)
+        # Use pdf(x-loc/scale) rather than pdf(x, loc, scale) as
+        # pdf(x-loc/scale)= pdf(x, loc, scale) * scale
+        # (whereas cdf(x-loc/scale) = cdf(x, loc, scale))
+        lower_inner_val = (
+            (scipy.stats.
+             norm.pdf((self._values -
+                       self._problem.evaluate(x[:-self._no])) / sigma).T
+             * dy.T) /
+            (scipy.stats.
+             norm.cdf(x=self._values,
+                      loc=self._problem.evaluate(x[:-self._no]),
+                      scale=sigma).T)).T
+        lower_inner_sum = np.sum(lower_inner_val, where=lower_where_condition,
+                                 axis=0)
+        lower_censored_dL = -np.sum((sigma**(-1) * lower_inner_sum).T, axis=0)
 
-        upper_censored_dL = np.sum(
-            (sigma**(-1) *
-             np.sum( np.reshape(((scipy.stats.
-                      norm.pdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T * dy.T) /
-                    (1 - scipy.stats.
-                     norm.cdf(x=self._values,
-                              loc=self._problem.evaluate(x[:-self._no]),
-                              scale=sigma).T)).T, (4,)),
-                    where=self._values == self._b).T), axis=0)
+        upper_inner_val = (
+            (scipy.stats.
+             norm.pdf((self._values -
+                       self._problem.evaluate(x[:-self._no])) / sigma).T
+             * dy.T) /
+            (1 - scipy.stats.
+             norm.cdf(x=self._values,
+                      loc=self._problem.evaluate(x[:-self._no]),
+                      scale=sigma).T)).T
+        upper_inner_sum = np.sum(upper_inner_val, where=upper_where_condition,
+                                 axis=0)
+        upper_censored_dL = np.sum((sigma**(-1) * upper_inner_sum).T, axis=0)
 
         # Calculate derivative wrt sigma
-        lower_censored_dsigma = np.sum(
-            (- sigma**(-2) *
-             np.sum(((scipy.stats.
-                      norm.pdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T *
-                     (self._values - y).T) /
-                     (scipy.stats.
-                      norm.cdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T)).T,
-                    where=self._values == self._a).T), axis=0)
+        lower_dsigma_inner_val = (
+            scipy.stats.
+            norm.pdf((self._values -
+                      self._problem.evaluate(x[:-self._no])) / sigma).T *
+                    (self._values - y).T) / (
+                        scipy.stats.
+                        norm.cdf(x=self._values,
+                                 loc=self._problem.evaluate(x[:-self._no]),
+                                 scale=sigma).T)
+        lower_censored_dsigma = - sigma**(-2) *\
+            np.sum(lower_dsigma_inner_val.T,
+                   where=self._values == self._a, axis=0).T
 
-        upper_censored_dsigma = np.sum(
-            (sigma**(-2) *
-             np.sum(((scipy.stats.
-                      norm.pdf(x=self._values,
-                               loc=self._problem.evaluate(x[:-self._no]),
-                               scale=sigma).T *
-                      (self._values - y).T) /
-                    (1 - scipy.stats.
-                     norm.cdf(x=self._values,
-                              loc=self._problem.evaluate(x[:-self._no]),
-                              scale=sigma).T)).T,
-                    where=self._values == self._a).T), axis=0)
-        # print("HI")
-        # print(not_censored_dL, "not-censored_dL")
+        upper_dsigma_inner_val = (
+            scipy.stats.
+            norm.pdf((self._values -
+                      self._problem.evaluate(x[:-self._no])) / sigma).T *
+                    (self._values - y).T) / (
+                        1 - scipy.stats.
+                        norm.cdf(x=self._values,
+                                 loc=self._problem.evaluate(x[:-self._no]),
+                                 scale=sigma).T)
+        upper_censored_dsigma = sigma**(-2) *\
+            np.sum(upper_dsigma_inner_val.T,
+                   where=self._values == self._b, axis=0).T
+
         dL = not_censored_dL + lower_censored_dL + upper_censored_dL
         dsigma = not_censored_dsigma + lower_censored_dsigma + \
             upper_censored_dsigma
-        # print(lower_censored_dL, "lower_censored_dL")
-        # print(upper_censored_dL, "upper_censored_dL")
-        # print(dL, "dL")
-        # print(dsigma, "d-sigma")
 
-        dL = np.concatenate(([dL], np.array(list(dsigma))))
+        dL = np.concatenate((dL, np.array(list(dsigma))))
 
         # Return
         return L, dL
