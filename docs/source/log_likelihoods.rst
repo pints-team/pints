@@ -24,6 +24,7 @@ Overview:
 - :class:`GaussianIntegratedUniformLogLikelihood`
 - :class:`GaussianKnownSigmaLogLikelihood`
 - :class:`GaussianLogLikelihood`
+- :class:`CensoredGaussianLogLikelihood`
 - :class:`KnownNoiseLogLikelihood`
 - :class:`LogNormalLogLikelihood`
 - :class:`MultiplicativeGaussianLogLikelihood`
@@ -47,6 +48,8 @@ Overview:
 .. autoclass:: GaussianKnownSigmaLogLikelihood
 
 .. autoclass:: GaussianLogLikelihood
+
+.. autoclass:: CensoredGaussianLogLikelihood
 
 .. autoclass:: KnownNoiseLogLikelihood
 
