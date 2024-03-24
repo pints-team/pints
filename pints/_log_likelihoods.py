@@ -854,7 +854,8 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
     upper
         The upper limit for censoring.
     verbose
-        The input data and the values that are censored are printed.
+        When True, the input data and the values that are censored are printed.
+
     References
     ----------
     .. [3] Beal, S. L. (2001). Ways to fit a PK model with some data
@@ -960,7 +961,6 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                                axis=0, where=self._condition)
 
         # Calculate part of the likelihood corresponding to the censored data
-        # Q: Should these be summed like for the bit that isn't censored?
         lower_censored_sum = np.sum(np.log(
             scipy.stats.norm.cdf(x=self._values,
                                  loc=self._problem.evaluate(x[:-self._no]),
@@ -999,14 +999,12 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
 
-        # 1. Parts of the derivative corresponding to the data that
-        # isn't censored
-        # Calculate derivatives in the model parameters
+        # Make conditions for where data isn't censored and is lower/upper
+        # censored into 3D arrays
 
         lower_condition = self._values == self._a
         upper_condition = self._values == self._b
 
-        # Make condition into 3D arrays
         if self._values.ndim == 1:
             where_condition = np.reshape(
                 self._condition, newshape=(np.shape(self._condition)[0], 1, 1))
@@ -1024,10 +1022,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                 upper_condition[:, :, np.newaxis],
                 np.shape(upper_condition)[-1], axis=2)
 
+        # 1. Parts of the derivative corresponding to the data that
+        # isn't censored
+
+        # Calculate derivatives in the model parameters
         inner_deriv = (r.T * dy.T).T
         inner_sum = np.sum(inner_deriv, where=where_condition, axis=0)
-        not_censored_dL = np.sum(
-            (sigma**(-2.0) * inner_sum.T).T, axis=0)
+        not_censored_dL = np.sum((sigma**(-2.0) * inner_sum.T).T, axis=0)
 
         # Calculate derivative wrt sigma
         not_censored_dsigma = -self._n_not_censored / sigma + sigma**(-3.0) *\
@@ -1036,59 +1037,50 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # 2. Parts of the derivative corresponding to the data that is
         # censored
 
-        # Calculate derivatives in the model parameters
         # Use pdf(x-loc/scale) rather than pdf(x, loc, scale) as
         # pdf(x-loc/scale)= pdf(x, loc, scale) * scale
         # (whereas cdf(x-loc/scale) = cdf(x, loc, scale))
-        lower_inner_val = (
-            (scipy.stats.
-             norm.pdf((self._values -
-                       self._problem.evaluate(x[:-self._no])) / sigma).T
-             * dy.T) /
-            (scipy.stats.
-             norm.cdf(x=self._values,
-                      loc=self._problem.evaluate(x[:-self._no]),
-                      scale=sigma).T)).T
+
+        lower_pdf = scipy.stats.norm.pdf(
+            (self._values -
+             self._problem.evaluate(x[:-self._no])) / sigma)
+        lower_cdf = scipy.stats.norm.cdf(
+            x=self._values,
+            loc=self._problem.evaluate(x[:-self._no]),
+            scale=sigma)
+
+        upper_pdf = scipy.stats.norm.pdf(
+            (self._values -
+             self._problem.evaluate(x[:-self._no])) / sigma)
+        upper_cdf = scipy.stats.norm.cdf(
+            x=self._values,
+            loc=self._problem.evaluate(x[:-self._no]),
+            scale=sigma)
+
+        # Calculate derivatives in the model parameters
+        lower_numerator = lower_pdf.T * dy.T
+        lower_denominator = lower_cdf.T
+        lower_inner_val = (lower_numerator / lower_denominator).T
         lower_inner_sum = np.sum(lower_inner_val, where=lower_where_condition,
                                  axis=0)
         lower_censored_dL = -np.sum((sigma**(-1) * lower_inner_sum).T, axis=0)
 
-        upper_inner_val = (
-            (scipy.stats.
-             norm.pdf((self._values -
-                       self._problem.evaluate(x[:-self._no])) / sigma).T
-             * dy.T) /
-            (1 - scipy.stats.
-             norm.cdf(x=self._values,
-                      loc=self._problem.evaluate(x[:-self._no]),
-                      scale=sigma).T)).T
+        upper_numerator = upper_pdf.T * dy.T
+        upper_denominator = 1 - upper_cdf.T
+        upper_inner_val = (upper_numerator / upper_denominator).T
         upper_inner_sum = np.sum(upper_inner_val, where=upper_where_condition,
                                  axis=0)
         upper_censored_dL = np.sum((sigma**(-1) * upper_inner_sum).T, axis=0)
 
         # Calculate derivative wrt sigma
-        lower_dsigma_inner_val = (
-            scipy.stats.
-            norm.pdf((self._values -
-                      self._problem.evaluate(x[:-self._no])) / sigma).T *
-                    (self._values - y).T) / (
-                        scipy.stats.
-                        norm.cdf(x=self._values,
-                                 loc=self._problem.evaluate(x[:-self._no]),
-                                 scale=sigma).T)
+        lower_dsigma_inner_val = (lower_pdf.T *
+                                  (self._values - y).T) / (lower_cdf.T)
         lower_censored_dsigma = - sigma**(-2) *\
             np.sum(lower_dsigma_inner_val.T,
                    where=self._values == self._a, axis=0).T
 
-        upper_dsigma_inner_val = (
-            scipy.stats.
-            norm.pdf((self._values -
-                      self._problem.evaluate(x[:-self._no])) / sigma).T *
-                    (self._values - y).T) / (
-                        1 - scipy.stats.
-                        norm.cdf(x=self._values,
-                                 loc=self._problem.evaluate(x[:-self._no]),
-                                 scale=sigma).T)
+        upper_dsigma_inner_val = (upper_pdf.T *
+                                  (self._values - y).T) / (1 - upper_cdf.T)
         upper_censored_dsigma = sigma**(-2) *\
             np.sum(upper_dsigma_inner_val.T,
                    where=self._values == self._b, axis=0).T
