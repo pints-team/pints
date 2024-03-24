@@ -1423,7 +1423,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Create test single output test model
+        # Create test single output and multiple output test models
         cls.model_single = pints.toy.ConstantModel(1)
         cls.model_multi = pints.toy.ConstantModel(3)
 
@@ -1523,8 +1523,8 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
-        # are censored)
+        # Create censored log_likelihood (with the lower and upper limits
+        # so that points are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -1543,7 +1543,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
+        # Create censored log_likelihood (with the lower limit so that points
         # are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
@@ -1650,8 +1650,8 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
-        # are censored)
+        # Create censored log_likelihood (with the lower and upper limits
+        # so that points are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -1670,7 +1670,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
+        # Create censored log_likelihood (with the lower limit so that points
         # are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
@@ -1777,8 +1777,8 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
-        # are censored)
+        # Create censored log_likelihood (with the lower and upper limits
+        # so that points are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -1797,7 +1797,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create censored log_likelihood (with the upper limit so that points
+        # Create censored log_likelihood (with the lower limit so that points
         # are censored)
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
@@ -1904,7 +1904,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi)
 
         # Create log_likelihood with censored data
-        # (set the upper limit so that
+        # (set the lower and upper limits so that
         # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(
@@ -1925,7 +1925,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             self.model_multi, self.times, self.data_multi_all_censored)
 
         # Create log_likelihoods with censored data
-        # (set the upper limit so that
+        # (set the lower limit so that
         # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(
@@ -2008,9 +2008,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2036,9 +2036,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.8)
 
@@ -2064,9 +2064,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower and upper limits so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -2092,9 +2092,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2120,9 +2120,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.2)
 
@@ -2187,9 +2187,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2215,9 +2215,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.8)
 
@@ -2243,9 +2243,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower and upper limits so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -2271,9 +2271,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2299,9 +2299,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.2)
 
@@ -2366,9 +2366,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2394,9 +2394,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so
-        # that no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.8)
 
@@ -2422,9 +2422,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower and upper limits so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2, upper=0.8)
 
@@ -2450,9 +2450,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the lower limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, lower=0.2)
 
@@ -2478,9 +2478,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, values)
 
-        # Create log_likelihoods with and without censored data
-        # (in the censored case set the lower and upper limits so that
-        # no points are censored)
+        # Create log_likelihoods with censored data
+        # (set the upper limit so that
+        # points are censored)
         log_likelihood_censored = pints.\
             CensoredGaussianLogLikelihood(problem, upper=0.2)
 
@@ -2503,7 +2503,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(
             self.model_multi, self.times, self.data_multi)
 
-        # Create log_likelihood without censored data
+        # Create log_likelihoods with and without censored data
         log_likelihood = pints.\
             CensoredGaussianLogLikelihood(
                 problem,
@@ -2529,7 +2529,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # Check that partials have the correct shape
         self.assertEqual(deriv.shape, (6, ))
 
-        # Check that partials are comuted correctly
+        # Check that partials are computed correctly
         self.assertAlmostEqual(deriv[0], 1.273469387755102)
         self.assertAlmostEqual(deriv[1], -44.0)
         self.assertAlmostEqual(deriv[2], 0.8791666666666667)
@@ -2550,15 +2550,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # Evaluate likelihood for test parameters
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         score, deriv = log_likelihood.evaluateS1(test_parameters)
-
-        # Check that score between censored and standard likelihoods agree
-        self.assertAlmostEqual(
-            score, log_likelihood.evaluateS1(test_parameters)[0])
-
-        # Check that partials between censored and standard likelihoods agree
-        for i in range(6):
-            self.assertAlmostEqual(
-                deriv[i], log_likelihood.evaluateS1(test_parameters)[1][i])
 
         # Check that score is computed correctly
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
@@ -2590,15 +2581,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         score, deriv = log_likelihood.evaluateS1(test_parameters)
 
-        # Check that score between censored and standard likelihoods agree
-        self.assertAlmostEqual(
-            score, log_likelihood.evaluateS1(test_parameters)[0])
-
-        # Check that partials between censored and standard likelihoods agree
-        for i in range(6):
-            self.assertAlmostEqual(
-                deriv[i], log_likelihood.evaluateS1(test_parameters)[1][i])
-
         # Check that score is computed correctly
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
@@ -2626,15 +2608,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # Evaluate likelihood for test parameters
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         score, deriv = log_likelihood.evaluateS1(test_parameters)
-
-        # Check that score between censored and standard likelihoods agree
-        self.assertAlmostEqual(
-            score, log_likelihood.evaluateS1(test_parameters)[0])
-
-        # Check that partials between censored and standard likelihoods agree
-        for i in range(6):
-            self.assertAlmostEqual(
-                deriv[i], log_likelihood.evaluateS1(test_parameters)[1][i])
 
         # Check that score is computed correctly
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
@@ -2664,15 +2637,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         score, deriv = log_likelihood.evaluateS1(test_parameters)
 
-        # Check that score between censored and standard likelihoods agree
-        self.assertAlmostEqual(
-            score, log_likelihood.evaluateS1(test_parameters)[0])
-
-        # Check that partials between censored and standard likelihoods agree
-        for i in range(6):
-            self.assertAlmostEqual(
-                deriv[i], log_likelihood.evaluateS1(test_parameters)[1][i])
-
         # Check that score is computed correctly
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
@@ -2701,15 +2665,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         score, deriv = log_likelihood.evaluateS1(test_parameters)
 
-        # Check that score between censored and standard likelihoods agree
-        self.assertAlmostEqual(
-            score, log_likelihood.evaluateS1(test_parameters)[0])
-
-        # Check that partials between censored and standard likelihoods agree
-        for i in range(6):
-            self.assertAlmostEqual(
-                deriv[i], log_likelihood.evaluateS1(test_parameters)[1][i])
-
         # Check that score is computed correctly
         self.assertAlmostEqual(score, log_likelihood(test_parameters))
 
@@ -2730,7 +2685,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.SingleOutputProblem(
             self.model_single, self.times, self.data_single)
 
-        # Create log_likelihood
+        # Create censored log_likelihood
         log_likelihood = pints.CensoredGaussianLogLikelihood(problem,
                                                              lower=0.2)
         self.assertEqual(log_likelihood([1, 0]), -np.inf)
@@ -2776,7 +2731,6 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         problem = pints.MultiOutputProblem(
             self.model_multi, self.times, self.data_multi)
 
-        # First for 1D data
         self.assertRaises(
             ValueError, pints.CensoredGaussianLogLikelihood, problem,
             lower=0.3)
