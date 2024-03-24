@@ -868,30 +868,30 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
     In other words, any data values less than the lower limit are recorded as
     equal to it; and any values greater than the upper limit are recorded as
     equal to it. This likelihood is useful for censored data - see for
-    instance [3]_.The parameter sigma represents the standard deviation
+    instance [3]_. The parameter sigma represents the standard deviation
     of the noise on each output.
 
-    For a noise level of ``sigma'', and left and right censoring (below the
-    ``lower'' limit cutoff and above the ``upper'' limit), the likelihood
+    For a noise level of ``sigma``, and left and right censoring (below the
+    ``lower`` limit cutoff and above the ``upper`` limit), the likelihood
     becomes:
 
     .. math::
-        \begin{multline}
+        \begin{align}
                 L(\theta, \sigma|\boldsymbol{x})
                     = p(\boldsymbol{x} | \theta, \sigma)
-                    = \prod_{\text{lower} < x_j < \text{upper}}
+                    =& \prod_{\text{lower} < x_j < \text{upper}}
                     \phi \left(\frac{x_j - f_j(\theta)}{\sigma} \right)
-                    \prod_{x_j = \text{lower}} \Phi \left(\frac{\text{lower}
-                    - f_j(\theta)}{\sigma} \right)
-                    \prod_{x_j = \text{upper}}  \left(1 -
+                    \prod_{x_j = \text{lower}} \Phi \left(\frac{\text{lower} -
+                    f_j(\theta)}{\sigma} \right)
+                    \\ &\times   \prod_{x_j = \text{upper}} \left(1 -
                     \Phi \left(\frac{\text{upper} - f_j(\theta)}{\sigma}
                     \right) \right),
-        \end{multline}
+        \end{align}
 
-    where $x_j$ is the sampled data at time $j$ and $f_j$ is the simulated
-    data at time $j$. The functions $\phi$ and $\Phi$ are the standard normal
-    distribution probability density function and cumulative distribution
-    function respectively.
+    where :math:`x_j` is the sampled data at time :math:`j` and :math:`f_j` is
+    the simulated data at time :math:`j`. The functions :math:`\phi` and
+    :math:`\Phi` are the standard normal distribution probability density
+    function and cumulative distribution function respectively.
 
     This leads to a log-likelihood of:
 
@@ -907,21 +907,21 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
             \left(\frac{\text{upper} - f_j(\theta)}{\sigma} \right) \right)
         \end{align}
 
-    For a system with $n_o$ outputs, this becomes
+    For a system with :math:`n_o` outputs, this becomes
 
     .. math::
         \begin{align}
         \log{L(\theta, \sigma|\boldsymbol{x})} =
-        &   \sum_{\substack{\text{lower}_i < x_{ij} < \text{upper}_i \\ 1
-        \leq i \leq n_t \\ 1 \leq j \leq n_o}}{ \left( -\frac{1}{2} \log{2\pi}
+        &   \sum_{\substack{\text{lower}_i < x_{ij} < \text{upper}_i, \\ 1
+        \leq i \leq n_t, \\ 1 \leq j \leq n_o}}{ \left( -\frac{1}{2} \log{2\pi}
             -\log{\sigma_{i}} -\frac{1}{2\sigma_{i}^2}(x_{ij} - f_j(t_i,
             \theta ))^2 \right)} \\
-            &  + \sum_{\substack{x_{ij} = \text{lower}_{i} \\1 \leq i \leq n_t
+            & + \sum_{\substack{x_{ij} = \text{lower}_{i}, \\1 \leq i \leq n_t,
             \\ 1 \leq j \leq n_o}} \log \left( \Phi
             \left(\frac{\text{lower}_{i} - f_j(t_i, \theta)}{\sigma_{i}}
             \right) \right) \\
-            &    + \sum_{\substack{x_{ij} = \text{upper}_{i} \\1 \leq i
-            \leq n_t \\ 1 \leq j \leq n_o}}  \log\left(1 -
+            & + \sum_{\substack{x_{ij} = \text{upper}_{i}, \\1 \leq i
+            \leq n_t, \\ 1 \leq j \leq n_o}}  \log\left(1 -
             \Phi \left(\frac{\text{upper}_{i} - f_j(t_i, \theta)}{\sigma_{i}}
             \right) \right)
         \end{align}
@@ -941,9 +941,10 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     References
     ----------
-    .. [3] Beal, S. L. (2001). Ways to fit a PK model with some data
-    below the quantification limit. Journal of pharmacokinetics and
-    pharmacodynamics 28, pp. 481-504.
+    .. [3] Beal, S. L. (2001). Ways to fit a PK model with some data below the
+           quantification limit. Journal of pharmacokinetics and
+           pharmacodynamics 28, pp. 481-504.
+
     """
 
     def __init__(self, problem, lower=None, upper=None, verbose=True):
