@@ -28,6 +28,11 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         self.assertRaises(ValueError, pints.toy.TwistedGaussianLogPDF, 1)
         self.assertRaises(ValueError, pints.toy.TwistedGaussianLogPDF, b=-1)
 
+        # Bad calls to function
+        f = pints.toy.TwistedGaussianLogPDF(3)
+        self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
     def test_sampling_and_kl_divergence(self):
         # Test TwistedGaussianLogPDF.kl_divergence() and .sample().
 

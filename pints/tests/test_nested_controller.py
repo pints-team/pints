@@ -160,7 +160,7 @@ class TestNestedController(unittest.TestCase):
         self.assertEqual(lines[1], 'Number of active points: 400')
         self.assertEqual(lines[2], 'Total number of iterations: 20')
         self.assertEqual(lines[3], 'Total number of posterior samples: 2')
-        self.assertEqual(lines[4], ('Iter. Eval. Time m:s Delta_log(z) ' +
+        self.assertEqual(lines[4], ('Iter. Eval. Time     Delta_log(z) ' +
                                     'Acceptance rate'))
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:
@@ -182,7 +182,7 @@ class TestNestedController(unittest.TestCase):
                     lines = f.read().splitlines()
             self.assertEqual(c.text(), '')
         self.assertEqual(len(lines), 23)
-        self.assertEqual(lines[0], ('Iter. Eval. Time m:s Delta_log(z) ' +
+        self.assertEqual(lines[0], ('Iter. Eval. Time     Delta_log(z) ' +
                                     'Acceptance rate'))
         pattern = re.compile('[0-9]+[ ]+[0-9]+[ ]+[0-9]{1}:[0-9]{2}.[0-9]{1}')
         for line in lines[5:]:

@@ -49,6 +49,11 @@ class TestParabolicError(unittest.TestCase):
         self.assertAlmostEqual(dfx[1], 0)
         self.assertAlmostEqual(dfx[2], -0.4)
 
+        # Bad calls to function
+        f = pints.toy.ParabolicError([1, 1, 1])
+        self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
 
 if __name__ == '__main__':
     unittest.main()

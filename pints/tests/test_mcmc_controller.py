@@ -14,6 +14,7 @@ import unittest
 import unittest.mock
 import numpy as np
 import numpy.testing as npt
+import warnings
 
 from shared import StreamCapture, TemporaryDirectory
 
@@ -24,7 +25,7 @@ LOG_SCREEN = [
     'Using Haario-Bardenet adaptive covariance MCMC',
     'Generating 3 chains.',
     'Running in sequential mode.',
-    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
+    'Iter. Eval. Accept.   Accept.   Accept.   Time    ',
     '0     3      0         0         0          0:00.0',
     '1     6      0         0         0.5        0:00.0',
     '2     9      0         0         0.333      0:00.0',
@@ -35,7 +36,7 @@ LOG_SCREEN = [
 ]
 
 LOG_FILE = [
-    'Iter. Eval. Accept.   Accept.   Accept.   Time m:s',
+    'Iter. Eval. Accept.   Accept.   Accept.   Time    ',
     '0     3      0         0         0          0:00.0',
     '1     6      0         0         0.5        0:00.0',
     '2     9      0         0         0.333      0:00.0',
@@ -791,8 +792,11 @@ class TestMCMCController(unittest.TestCase):
 
     def test_deprecated_alias(self):
 
-        mcmc = pints.MCMCSampling(
-            self.log_posterior, 1, [self.real_parameters])
+        with warnings.catch_warnings(record=True) as w:
+            mcmc = pints.MCMCSampling(
+                self.log_posterior, 1, [self.real_parameters])
+        self.assertEqual(len(w), 1)
+        self.assertIn('deprecated', str(w[-1].message))
         self.assertIsInstance(mcmc, pints.MCMCController)
 
     def test_exception_on_multi_use(self):

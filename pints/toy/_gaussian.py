@@ -9,6 +9,7 @@ import numpy as np
 import scipy.stats
 
 from . import ToyLogPDF
+from .. import vector
 
 
 class GaussianLogPDF(ToyLogPDF):
@@ -58,7 +59,8 @@ class GaussianLogPDF(ToyLogPDF):
         self._sigma_inv = np.linalg.inv(self._sigma)
 
     def __call__(self, x):
-        return self._phi.logpdf(x)
+        y = vector(x).reshape(self._n_parameters)
+        return self._phi.logpdf(y)
 
     def distance(self, samples):
         """

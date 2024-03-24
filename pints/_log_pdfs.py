@@ -16,7 +16,8 @@ class LogPDF(object):
     All :class:`LogPDF` types are callable: when called with a vector argument
     ``p`` they return some value ``log(f(p))`` where ``f(p)`` is an
     unnormalised PDF. The size of the argument ``p`` is given by
-    :meth:`n_parameters()`.
+    :meth:`n_parameters()`. In PINTS, all parameters must be continuous and
+    real.
     """
     def __call__(self, x):
         raise NotImplementedError

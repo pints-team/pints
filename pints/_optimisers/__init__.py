@@ -635,7 +635,9 @@ class OptimisationController(object):
             logger.add_float('Best')
             logger.add_float('Current')
             self._optimiser._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: No units shown in time field, for the reason why see
+            # https://github.com/pints-team/pints/issues/1467
+            logger.add_time('Time')
 
         # Start searching
         timer = pints.Timer()
@@ -1125,7 +1127,7 @@ class _CurveFitError(pints.ErrorMeasure):
         self.d = dimension
         self.x = x
         self.y = y
-        self.n = 1 / np.product(y.shape)    # Total number of points in data
+        self.n = 1 / np.prod(y.shape)    # Total number of points in data
 
     def n_parameters(self):
         return self.d

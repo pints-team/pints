@@ -235,7 +235,9 @@ class ABCController(object):
             logger.add_counter('Eval.', max_value=max_eval_guess)
             logger.add_float('Acceptance rate')
             self._sampler._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: removed units from time field, see
+            # https://github.com/pints-team/pints/issues/1467
+            logger.add_time('Time')
 
         # Start sampling
         timer = pints.Timer()

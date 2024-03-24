@@ -63,7 +63,7 @@ class TwistedGaussianLogPDF(ToyLogPDF):
             np.zeros(self._n_parameters), self._sigma)
 
     def __call__(self, x):
-        y = np.array(x, copy=True, dtype='float')
+        y = np.array(x, copy=True, dtype='float').reshape(self._n_parameters)
         y[0] = float(y[0]) / np.sqrt(self._V)
         y[1] += self._b * ((x[0] ** 2) - self._V)
         return self._phi.logpdf(y)

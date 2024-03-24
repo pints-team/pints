@@ -20,6 +20,7 @@ Overview:
 - :class:`ARMA11LogLikelihood`
 - :class:`CauchyLogLikelihood`
 - :class:`ConstantAndMultiplicativeGaussianLogLikelihood`
+- :class:`GaussianIntegratedLogUniformLogLikelihood`
 - :class:`GaussianIntegratedUniformLogLikelihood`
 - :class:`GaussianKnownSigmaLogLikelihood`
 - :class:`GaussianLogLikelihood`
@@ -38,6 +39,8 @@ Overview:
 .. autoclass:: CauchyLogLikelihood
 
 .. autoclass:: ConstantAndMultiplicativeGaussianLogLikelihood
+
+.. autoclass:: GaussianIntegratedLogUniformLogLikelihood
 
 .. autoclass:: GaussianIntegratedUniformLogLikelihood
 

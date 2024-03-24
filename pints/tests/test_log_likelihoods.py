@@ -802,6 +802,97 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.assertTrue(np.isnan(dl))
 
 
+class TestGaussianIntegratedLogUniformLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.0, -10.7, 15.5])
+        cls.data_multi = np.asarray([
+            [3.4, 4.3, 22.0, -7.3],
+            [11.1, 12.2, 13.9, 5.0],
+            [-0.4, -12.3, -8.3, -1.2]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0, 0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -34.36281460402985)
+
+
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
     @classmethod

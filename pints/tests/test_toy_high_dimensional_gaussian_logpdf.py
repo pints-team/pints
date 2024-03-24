@@ -106,6 +106,11 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
         self.assertRaises(
             ValueError, pints.toy.HighDimensionalGaussianLogPDF, 11, -0.11)
 
+        # Bad calls to function
+        f = pints.toy.HighDimensionalGaussianLogPDF(3)
+        self.assertRaises(ValueError, f.__call__, [1, 2])
+        self.assertRaises(ValueError, f.__call__, [1, 2, 3, 4, 5])
+
     def test_sensitivities(self):
         # tests that sensitivities are correct
 

@@ -98,7 +98,8 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
             np.linalg.inv(self._covs[i]) for i, mode in enumerate(self._modes)]
 
     def __call__(self, x):
-        f = np.sum([var.pdf(x) for var in self._vars])
+        y = pints.vector(x).reshape(self._n_parameters)
+        f = np.sum([var.pdf(y) for var in self._vars])
         return -np.inf if f == 0 else np.log(f)
 
     def distance(self, samples):
