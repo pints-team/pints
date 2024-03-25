@@ -119,6 +119,7 @@ relevant code.
 - [Logistic growth model](./toy/model-logistic.ipynb)
 - [Lotka-Volterra predator-prey model](./toy/model-lotka-volterra.ipynb)
 - [Repressilator model](./toy/model-repressilator.ipynb)
+- [Rt estimation Renewal Equation model](./toy/model-rt-estimation-renewal-equation.ipynb)
 - [Simple Harmonic Oscillator model](./toy/model-simple-harmonic-oscillator.ipynb)
 - [SIR Epidemiology model](./toy/model-sir.ipynb)
 
