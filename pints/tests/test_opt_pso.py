@@ -82,8 +82,10 @@ class TestPSO(unittest.TestCase):
         self.assertFalse(opt.stop())
 
         # Best position and score called before run
-        self.assertEqual(list(opt.xbest()), list(x))
-        self.assertEqual(opt.fbest(), float('inf'))
+        self.assertEqual(list(opt.x_best()), list(x))
+        self.assertEqual(list(opt.x_guessed()), list(x))
+        self.assertEqual(opt.f_best(), np.inf)
+        self.assertEqual(opt.f_guessed(), np.inf)
 
         # Tell before ask
         self.assertRaisesRegex(
@@ -128,12 +130,12 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(
             lines[2], 'Running in parallel with 4 worker processes.')
         self.assertEqual(lines[3], 'Population size: 6')
-        self.assertEqual(lines[4], 'Iter. Eval. Best      Time m:s')
+        self.assertEqual(lines[4], 'Iter. Eval. Best      Current   Time    ')
 
         pint = '[0-9]+[ ]+'
         pflt = '[0-9.-]+[ ]+'
         ptim = '[0-9]{1}:[0-9]{2}.[0-9]{1}'
-        pattern = re.compile(pint * 2 + pflt + ptim)
+        pattern = re.compile(pint * 2 + 2 * pflt + ptim)
         for line in lines[5:-1]:
             self.assertTrue(pattern.match(line))
         self.assertEqual(
@@ -155,11 +157,11 @@ class TestPSO(unittest.TestCase):
         self.assertEqual(len(lines), 6)
         self.assertEqual(
             lines[0],
-            'Iter. Eval. Best      f0        f1        f2        f3       '
-            ' f4        f5        Time m:s'
+            'Iter. Eval. Best      Current   f0        f1        f2        '
+            'f3        f4        f5        Time    '
         )
 
-        pattern = re.compile(pint * 2 + pflt * 7 + ptim)
+        pattern = re.compile(pint * 2 + pflt * 8 + ptim)
         for line in lines[1:]:
             self.assertTrue(pattern.match(line))
 
@@ -177,12 +179,12 @@ class TestPSO(unittest.TestCase):
 
         # Test rounding
         n = opt.suggested_population_size() + 1
-        self.assertEquals(opt.suggested_population_size(n), n)
-        self.assertEquals(opt.suggested_population_size(2) % 2, 0)
-        self.assertEquals(opt.suggested_population_size(3) % 3, 0)
-        self.assertEquals(opt.suggested_population_size(5) % 5, 0)
-        self.assertEquals(opt.suggested_population_size(7) % 7, 0)
-        self.assertEquals(opt.suggested_population_size(11) % 11, 0)
+        self.assertEqual(opt.suggested_population_size(n), n)
+        self.assertEqual(opt.suggested_population_size(2) % 2, 0)
+        self.assertEqual(opt.suggested_population_size(3) % 3, 0)
+        self.assertEqual(opt.suggested_population_size(5) % 5, 0)
+        self.assertEqual(opt.suggested_population_size(7) % 7, 0)
+        self.assertEqual(opt.suggested_population_size(11) % 11, 0)
 
     def test_creation(self):
 

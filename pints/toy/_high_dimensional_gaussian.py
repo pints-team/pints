@@ -9,6 +9,7 @@ import numpy as np
 import scipy.stats
 
 from . import ToyLogPDF
+from .. import vector
 
 
 class HighDimensionalGaussianLogPDF(ToyLogPDF):
@@ -61,7 +62,8 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
         self._var = scipy.stats.multivariate_normal(self._mean, self._cov)
 
     def __call__(self, x):
-        return self._var.logpdf(x)
+        y = vector(x).reshape(self._n_parameters)
+        return self._var.logpdf(y)
 
     def distance(self, samples):
         """

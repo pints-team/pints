@@ -802,6 +802,97 @@ class TestConstantAndMultiplicativeGaussianLogLikelihood(unittest.TestCase):
             self.assertTrue(np.isnan(dl))
 
 
+class TestGaussianIntegratedLogUniformLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Create test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multi = pints.toy.ConstantModel(4)
+
+        # Generate test data
+        cls.times = np.asarray([1, 2, 3])
+        cls.n_times = len(cls.times)
+        cls.data_single = np.asarray([1.0, -10.7, 15.5])
+        cls.data_multi = np.asarray([
+            [3.4, 4.3, 22.0, -7.3],
+            [11.1, 12.2, 13.9, 5.0],
+            [-0.4, -12.3, -8.3, -1.2]])
+
+    def test_call_list(self):
+        # Convert data to list
+        values = self.data_single.tolist()
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_one_dim_array(self):
+        # Convert data to array of shape (n_times,)
+        values = np.reshape(self.data_single, (self.n_times,))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_two_dim_array_single(self):
+        # Convert data to array of shape (n_times, 1)
+        values = np.reshape(self.data_single, (self.n_times, 1))
+
+        # Create an object with links to the model and time series
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, values)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -9.278656018336216)
+
+    def test_call_two_dim_array_multi(self):
+        # Create an object with links to the model and time series
+        problem = pints.MultiOutputProblem(
+            self.model_multi, self.times, self.data_multi)
+
+        # Create log_likelihood
+        log_likelihood = pints.GaussianIntegratedLogUniformLogLikelihood(
+            problem)
+
+        # Evaluate likelihood for test parameters
+        test_parameters = [0, 0, 0, 0]
+        score = log_likelihood(test_parameters)
+
+        # Check that likelihood returns expected value
+        self.assertAlmostEqual(score, -34.36281460402985)
+
+
 class TestGaussianIntegratedUniformLogLikelihood(unittest.TestCase):
 
     @classmethod
@@ -1465,6 +1556,150 @@ class TestKnownNoiseLogLikelihood(unittest.TestCase):
 
         # Check if we get the right output
         self.assertAlmostEqual(log1(0) + log2(0), log3(0))
+
+
+class TestLogNormalLogLikelihood(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # sreate test single output test model
+        cls.model_single = pints.toy.ConstantModel(1)
+        cls.model_multiple = pints.toy.ConstantModel(2)
+        cls.times = [1, 2, 3, 4]
+        cls.data_single = [3, 4, 5.5, 7.2]
+        cls.data_multiple = [[3, 1.1],
+                             [4, 3.2],
+                             [5.5, 4.5],
+                             [7.2, 10.1]]
+        cls.problem_single = pints.SingleOutputProblem(
+            cls.model_single, cls.times, cls.data_single)
+        cls.problem_multiple = pints.MultiOutputProblem(
+            cls.model_multiple, cls.times, cls.data_multiple)
+        cls.log_likelihood = pints.LogNormalLogLikelihood(cls.problem_single)
+        cls.log_likelihood_adj = pints.LogNormalLogLikelihood(
+            cls.problem_single, mean_adjust=True)
+        cls.log_likelihood_multiple = pints.LogNormalLogLikelihood(
+            cls.problem_multiple)
+        cls.log_likelihood_multiple_adj = pints.LogNormalLogLikelihood(
+            cls.problem_multiple, mean_adjust=True)
+
+    def test_bad_constructor(self):
+        # tests that bad data types result in error
+        data = [0, 4, 5.5, 7.2]
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, data)
+        self.assertRaises(ValueError, pints.LogNormalLogLikelihood,
+                          problem)
+
+    def test_call(self):
+        # test calls of log-likelihood
+
+        # single output problem
+        sigma = 1
+        mu = 3.7
+        log_like = self.log_likelihood([mu, sigma])
+        self.assertAlmostEqual(log_like, -10.164703123713256)
+        log_like_adj = self.log_likelihood_adj([mu, sigma])
+        self.assertAlmostEqual(log_like_adj, -11.129905368437115)
+
+        sigma = -1
+        log_like = self.log_likelihood([mu, sigma])
+        self.assertEqual(log_like, -np.inf)
+        log_like = self.log_likelihood([-1, sigma])
+
+        mu = -1
+        sigma = 1
+        log_like = self.log_likelihood([-1, sigma])
+        self.assertEqual(log_like, -np.inf)
+
+        # two dim output problem
+        mu1 = 1.5
+        mu2 = 3.4 / 2
+        sigma1 = 3
+        sigma2 = 1.2
+        log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertAlmostEqual(log_like, -24.906992140695426)
+
+        # adjusts mean
+        log_like = self.log_likelihood_multiple_adj([mu1, mu2, sigma1, sigma2])
+        self.assertAlmostEqual(log_like, -32.48791585037583)
+
+        sigma1 = -1
+        log_like = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(log_like, -np.inf)
+
+    def test_evaluateS1(self):
+        # tests sensitivity
+
+        # single output problem
+        sigma = 1
+        mu = 3.7
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(len(dL), 2)
+        y_call = self.log_likelihood([mu, sigma])
+        self.assertEqual(y, y_call)
+        correct_vals = [0.2514606728237081, -3.3495735543077423]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        # mean-adjustment
+        y, dL = self.log_likelihood_adj.evaluateS1([mu, sigma])
+        self.assertEqual(len(dL), 2)
+        y_call = self.log_likelihood_adj([mu, sigma])
+        self.assertEqual(y, y_call)
+        correct_vals = [0.7920012133642484, -4.349573554307744]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        sigma = -1
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(y, -np.inf)
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
+
+        mu = -1
+        sigma = 1
+        y, dL = self.log_likelihood.evaluateS1([mu, sigma])
+        self.assertEqual(y, -np.inf)
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
+
+        # two dim output problem
+        mu1 = 1.5
+        mu2 = 3.4 / 2
+        sigma1 = 3
+        sigma2 = 1.2
+        y, dL = self.log_likelihood_multiple.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(len(dL), 4)
+        y_call = self.log_likelihood_multiple([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, y_call)
+        # note that 2x needed for second output due to df / dtheta for
+        # constant model
+        correct_vals = [0.33643521004561316, 0.03675900403289047 * 2,
+                        -1.1262529182124121, -1.8628028462558714]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        # mean-adjustment
+        y, dL = self.log_likelihood_multiple_adj.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(len(dL), 4)
+        y_call = self.log_likelihood_multiple_adj([mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, y_call)
+        # note that 2x needed for second output due to df / dtheta for
+        # constant model
+        correct_vals = [1.6697685433789466, 0.6249942981505375 * 2,
+                        -4.126252918212412, -3.062802846255874]
+        for i in range(len(dL)):
+            self.assertAlmostEqual(dL[i], correct_vals[i])
+
+        sigma2 = -2
+        y, dL = self.log_likelihood_multiple.evaluateS1(
+            [mu1, mu2, sigma1, sigma2])
+        self.assertEqual(y, -np.inf)
+        for dl in dL:
+            self.assertTrue(np.isnan(dL[i]))
 
 
 class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):

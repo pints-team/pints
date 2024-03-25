@@ -150,7 +150,7 @@ class TestDreamMCMC(unittest.TestCase):
         # Bad starting point
         mcmc = pints.DreamMCMC(n, x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, float('-inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
     def test_set_hyper_parameters(self):
         # Tests the hyper-parameter interface for this optimiser.

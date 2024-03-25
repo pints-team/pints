@@ -41,9 +41,16 @@ setup(
     # Maintainer information
     # author='',
     # author_email='',
-    maintainer='Michael Clerx',
-    maintainer_email='michael.clerx@cs.ox.ac.uk',
+    maintainer='PINTS Team',
+    maintainer_email='pints@maillist.ox.ac.uk',
     url='https://github.com/pints-team/pints',
+
+    # Project URLs
+    project_urls={
+        'Bug Tracker': 'https://github.com/pints-team/pints/issues',
+        'Documentation': 'https://pints.readthedocs.io',
+        'Source Code': 'https://github.com/pints-team/pints',
+    },
 
     # Packages to include
     packages=find_packages(include=('pints', 'pints.*')),
@@ -74,8 +81,8 @@ setup(
             'traitlets',
         ],
         'stan': [
-            'pystan==2.19.1.1',
+            'pystan>=3',
         ]
     },
-    python_requires='>=3.5',
+    python_requires='>=3.7',
 )

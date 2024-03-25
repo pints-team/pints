@@ -6,11 +6,17 @@
 # copyright notice and full license details.
 #
 import pints
+import numpy as np
 
 
 class GradientDescent(pints.Optimiser):
     """
     Gradient-descent method with a fixed learning rate.
+
+    The initial learning rate is set as ``min(sigma0)``, but this can be
+    changed at any time with :meth:`set_learning_rate()`.
+
+    This is an unbounded method: Any ``boundaries`` will be ignored.
     """
 
     def __init__(self, x0, sigma0=0.1, boundaries=None):
@@ -21,11 +27,11 @@ class GradientDescent(pints.Optimiser):
         self._ready_for_tell = False
 
         # Best solution found
-        self._xbest = self._x0
-        self._fbest = float('inf')
+        self._x_best = self._x0
+        self._f_best = np.inf
 
         # Learning rate
-        self._eta = 0.01
+        self._eta = min(self._sigma0)
 
         # Current point, score, and gradient
         self._current = self._x0
@@ -46,9 +52,9 @@ class GradientDescent(pints.Optimiser):
         # Return proposed points (just the one)
         return [self._proposed]
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        return self._fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._f_best
 
     def learning_rate(self):
         """ Returns this optimiser's learning rate. """
@@ -112,12 +118,12 @@ class GradientDescent(pints.Optimiser):
         self._proposed = self._current - self._eta * dfx
         self._proposed.setflags(write=False)
 
-        # Update xbest and fbest
-        if self._fbest > fx:
-            self._fbest = fx
-            self._xbest = self._current
+        # Update x_best and f_best
+        if self._f_best > fx:
+            self._f_best = fx
+            self._x_best = self._current
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        return self._xbest
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        return self._x_best
 

@@ -465,21 +465,23 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
         return L, dL
 
 
-class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
+class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates a log-likelihood assuming independent Gaussian-distributed noise
-    at each time point where :math:`\sigma\sim U(a,b)` has been integrated out
-    of the joint posterior of :math:`p(\theta,\sigma|X)`,
+    at each time point where :math:`p(\sigma)\propto 1/\sigma` has been
+    integrated out of the joint posterior of :math:`p(\theta,\sigma|X)`,
 
     .. math::
         \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
         \mathrm{d}\sigma\\
         &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
-        \mathrm{d}\sigma,\end{align}
+        \mathrm{d}\sigma.\end{align}
 
     Note that this is exactly the same statistical model as
     :class:`pints.GaussianLogLikelihood` with a uniform prior on
-    :math:`\sigma`.
+    :math:`\sigma` in the logarithmic transformed space.
+    This is also known as Jeffrey's prior, as the standard deviation is a scale
+    parameter, as discussed here: https://doi.org/10.1093/gji/ggaa168.
 
     A possible advantage of this log-likelihood compared with using a
     :class:`pints.GaussianLogLikelihood`, is that it has one fewer parameters
@@ -490,7 +492,88 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     The log-likelihood is given in terms of the sum of squared errors:
 
     .. math::
-        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2
+        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2,
+
+    and is given up to a normalisation constant by:
+
+    .. math::
+        \begin{align}
+        \text{log} L =
+            & - n / 2 \text{log}(SSE) \\
+            & - (n - 2) / 2 \text{log}(2) \\
+            & + \text{log}\left[\Gamma(n / 2)\right],
+        \end{align}
+
+    where :math:`\Gamma(a)` is the incomplete gamma function.
+
+    This log-likelihood is inherently a Bayesian method since it assumes a
+    uniform prior on :math:`\sigma` _in the logarithmic transformed space.
+    However using this likelihood in optimisation routines should yield the
+    same estimates as the full :class:`pints.GaussianLogLikelihood`.
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`.
+    """
+
+    def __init__(self, problem):
+        super(GaussianIntegratedLogUniformLogLikelihood,
+              self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters()
+
+        # Pre-calculate
+        n = self._nt
+        self._n_over_2 = n / 2
+        self._log_gamma = scipy.special.gammaln(self._n_over_2)
+        self._constant_1 = -np.log(2) * (n - 2) / 2
+        self._constant = self._constant_1 + self._log_gamma
+
+    def __call__(self, x):
+        error = self._values - self._problem.evaluate(x)
+        sse = np.sum(error**2, axis=0)
+
+        # Calculate
+        sse = pints.vector(sse)
+        return np.sum(self._constant - self._n_over_2 * np.log(sse))
+
+
+class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent Gaussian-distributed noise
+    at each time point where :math:`\sigma\sim U(a,b)` has been integrated out
+    of the joint posterior of :math:`p(\theta,\sigma|X)` in the same way as in
+    :class:`pints.GaussianIntegratedLogUniformLogLikelihood`,
+
+    .. math::
+        \begin{align} p(\theta|X) &= \int_{0}^{\infty} p(\theta, \sigma|X)
+        \mathrm{d}\sigma\\
+        &\propto \int_{0}^{\infty} p(X|\theta, \sigma) p(\theta, \sigma)
+        \mathrm{d}\sigma.\end{align}
+
+    Note that this is exactly the same statistical model as
+    :class:`pints.GaussianLogLikelihood` with a uniform prior on
+    :math:`\sigma`.
+
+    Similar to :class:`pints.GaussianIntegratedLogUniformLogLikelihood`, a
+    possible advantage of this log-likelihood compared with using a
+    :class:`pints.GaussianLogLikelihood`, is that it has one fewer parameters
+    (:math:`sigma`) which may speed up convergence to the posterior
+    distribution, especially for multi-output problems which will have
+    ``n_outputs`` fewer parameter dimensions.
+
+    The log-likelihood is given in terms of the sum of squared errors:
+
+    .. math::
+        SSE = \sum_{i=1}^n (f_i(\theta) - y_i)^2,
 
     and is given up to a normalisation constant by:
 
@@ -501,11 +584,11 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
             & - \text{log}(2 (b - a) \sqrt(2)) \\
             & + (1 / 2 - n / 2) \text{log}(SSE) \\
             & + \text{log}\left[\Gamma((n - 1) / 2, \frac{SSE}{2 b^2}) -
-                \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right]
+                \Gamma((n - 1) / 2, \frac{SSE}{2 a^2}) \right],
         \end{align}
 
     where :math:`\Gamma(u,v)` is the upper incomplete gamma function as defined
-    here: https://en.wikipedia.org/wiki/Incomplete_gamma_function
+    here: https://en.wikipedia.org/wiki/Incomplete_gamma_function.
 
     This log-likelihood is inherently a Bayesian method since it assumes a
     uniform prior on :math:`\sigma\sim U(a,b)`. However using this likelihood
@@ -790,6 +873,123 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
         super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
 
 
+class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
+    r"""
+    Calculates a log-likelihood assuming independent log-normal noise at each
+    time point, and adds a parameter representing the standard deviation
+    (sigma) of the noise on the log scale for each output.
+
+    Specifically, the sampling distribution takes the form:
+
+    .. math::
+        y(t) \sim \text{log-Normal}(\log f(\theta, t), \sigma)
+
+    which can alternatively be written:
+
+    .. math::
+        \log y(t) \sim \text{Normal}(\log f(\theta, t), \sigma)
+
+    Important to note is that:
+
+    .. math::
+        \mathbb{E}(y(t)) = f(\theta, t) \exp(\sigma^2 / 2)
+
+    As such, the optional parameter `mean_adjust` (if true) adjusts the mean of
+    the distribution so that its expectation is :math:`f(\theta, t)`. This
+    shifted distribution is of the form:
+
+    .. math::
+        y(t) \sim \text{log-Normal}(\log f(\theta, t) - \sigma^2/2, \sigma)
+
+    Extends :class:`ProblemLogLikelihood`.
+
+    Parameters
+    ----------
+    problem
+        A :class:`SingleOutputProblem` or :class:`MultiOutputProblem`. For a
+        single-output problem a single parameter is added, for a multi-output
+        problem ``n_outputs`` parameters are added.
+    mean_adjust
+        A Boolean. Adjusts the distribution so that its mean corresponds to the
+        function value. By default, this parameter if False.
+    """
+
+    def __init__(self, problem, mean_adjust=False):
+        super(LogNormalLogLikelihood, self).__init__(problem)
+
+        # Get number of times, number of outputs
+        self._nt = len(self._times)
+        self._no = problem.n_outputs()
+
+        # Add parameters to problem
+        self._n_parameters = problem.n_parameters() + self._no
+
+        # Pre-calculate parts
+        self._logn = 0.5 * self._nt * np.log(2 * np.pi)
+
+        # For a log-normal sampling distribution any data points being below
+        # zero would mean that the log-likelihood is always -infinity
+        vals = np.asarray(self._values)
+        if np.any(vals <= 0):
+            raise ValueError('All data points must exceed zero.')
+        self._log_values = np.log(self._values)
+
+        self._mean_adjust = mean_adjust
+
+    def __call__(self, x):
+        sigma = np.asarray(x[-self._no:])
+        if any(sigma < 0):
+            return -np.inf
+
+        soln = self._problem.evaluate(x[:-self._no])
+        if np.any(soln < 0):
+            return -np.inf
+
+        error = np.log(self._values) - np.log(soln)
+        if self._mean_adjust:
+            error += 0.5 * sigma**2
+        return np.sum(- self._logn - self._nt * np.log(sigma)
+                      - np.sum(self._log_values, axis=0)
+                      - np.sum(error**2, axis=0) / (2 * sigma**2))
+
+    def evaluateS1(self, x):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+        # Calculate log-likelihood and when log-prob is infinite, gradients are
+        # not defined
+        L = self.__call__(x)
+        if L == -np.inf:
+            return L, np.tile(np.nan, self._n_parameters)
+
+        sigma = np.asarray(x[-self._no:])
+
+        # Evaluate, and get residuals
+        y, dy = self._problem.evaluateS1(x[:-self._no])
+
+        # Reshape dy, in case we're working with a single-output problem
+        dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
+
+        # Note: Must be (np.log(data) - simulation), sign matters now since it
+        # must match that of the partial derivative below
+        error = np.log(self._values) - np.log(y)
+        if self._mean_adjust:
+            error += 0.5 * sigma**2
+
+        # Calculate derivatives in the model parameters
+        dL = np.sum(
+            (sigma**(-2.0) * np.sum((error.T * dy.T / y.T).T, axis=0).T).T,
+            axis=0)
+
+        # Calculate derivative wrt sigma
+        dsigma = -self._nt / sigma + sigma**(-3.0) * np.sum(error**2, axis=0)
+        if self._mean_adjust:
+            dsigma -= 1 / sigma * np.sum(error, axis=0)
+
+        dL = np.concatenate((dL, np.array(list(dsigma))))
+
+        # Return
+        return L, dL
+
+
 class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     r"""
     Calculates the log-likelihood for a time-series model assuming a
@@ -920,7 +1120,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         self._log_likelihood = log_likelihood
 
         # Pre-calculate parts
-        self._f = 1.0 / np.product(self._values.shape)
+        self._f = 1.0 / np.prod(self._values.shape)
 
     def __call__(self, x):
         return self._f * self._log_likelihood(x)
@@ -1014,6 +1214,6 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
         # Deprecated on 2019-02-06
         import warnings
         warnings.warn(
-            'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
+            'The class `pints.UnknownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super(UnknownNoiseLogLikelihood, self).__init__(problem)

@@ -17,7 +17,8 @@ class ErrorMeasure(object):
 
     ErrorMeasures are callable objects: If ``e`` is an instance of an
     :class:`ErrorMeasure` class you can calculate the error by calling ``e(p)``
-    where ``p`` is a point in parameter space.
+    where ``p`` is a point in parameter space. In PINTS, all parameters must be
+    continuous and real.
     """
     def __call__(self, x):
         raise NotImplementedError
@@ -88,7 +89,7 @@ class MeanSquaredError(ProblemErrorMeasure):
     """
     def __init__(self, problem, weights=None):
         super(MeanSquaredError, self).__init__(problem)
-        self._ninv = 1.0 / np.product(self._values.shape)
+        self._ninv = 1.0 / np.prod(self._values.shape)
 
         if weights is None:
             weights = [1] * self._n_outputs
@@ -99,9 +100,8 @@ class MeanSquaredError(ProblemErrorMeasure):
         self._weights = np.asarray([float(w) for w in weights])
 
     def __call__(self, x):
-        return np.sum(((np.sum((self._problem.evaluate(x) - self._values)**2,
-                               axis=0) * self._weights) * self._ninv),
-                      axis=0)
+        return self._ninv * np.sum(self._weights * np.sum(
+            (self._problem.evaluate(x) - self._values)**2, axis=0), axis=0)
 
     def evaluateS1(self, x):
         """ See :meth:`ErrorMeasure.evaluateS1()`. """

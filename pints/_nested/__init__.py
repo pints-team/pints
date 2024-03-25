@@ -35,7 +35,7 @@ class NestedSampler(pints.TunableMethod):
         self._log_prior = log_prior
 
         # Current value of the threshold log-likelihood value
-        self._running_log_likelihood = -float('inf')
+        self._running_log_likelihood = -np.inf
         self._proposed = None
 
         # Initialise active point containers
@@ -291,7 +291,7 @@ class NestedController(object):
         self._marginal_log_likelihood_threshold = 0.5
 
         # Initial marginal difference
-        self._diff = np.float('-Inf')
+        self._diff = np.inf
 
         # By default use ellipsoidal sampling
         if method is None:
@@ -409,7 +409,9 @@ class NestedController(object):
             # Add fields to log
             self._logger.add_counter('Iter.', max_value=self._iterations)
             self._logger.add_counter('Eval.', max_value=self._iterations * 10)
-            self._logger.add_time('Time m:s')
+            # Note: removed units from time field, see
+            # https://github.com/pints-team/pints/issues/1467
+            self._logger.add_time('Time')
             self._logger.add_float('Delta_log(z)')
             self._logger.add_float('Acceptance rate')
 

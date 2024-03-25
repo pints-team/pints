@@ -202,7 +202,10 @@ class TestPrior(unittest.TestCase):
         p2 = pints.UniformLogPrior(m2, c2)
 
         p = pints.ComposedLogPrior(p1, p2)
-        self.assertTrue(np.array_equal(p.mean(), [10, 0]))
+        mean = p.mean()
+        self.assertEqual(len(mean), 2)
+        self.assertEqual(mean[0], 10)
+        self.assertEqual(mean[1][0], 0)
 
     def test_composed_prior_cdf_icdf(self):
         p1 = pints.GaussianLogPrior(-3, 7)
@@ -472,7 +475,7 @@ class TestPrior(unittest.TestCase):
     def test_half_cauchy_prior(self):
         # Test two specific function values
         p1 = pints.HalfCauchyLogPrior(0, 10)
-        self.assertEqual(p1([0]), -float('Inf'))
+        self.assertEqual(p1([0]), -np.inf)
         self.assertAlmostEqual(p1([10]), -3.447314978843445)
         p2 = pints.HalfCauchyLogPrior(10, 5)
         self.assertAlmostEqual(p2([10]), -2.594487638427916)
@@ -592,6 +595,34 @@ class TestPrior(unittest.TestCase):
         mean = np.mean(samples1).item()
         self.assertTrue(9. < mean < 11.)
 
+    def test_log_uniform_prior(self):
+
+        #Test input parameters
+        self.assertRaises(ValueError, pints.LogUniformLogPrior, 0, 1)
+        self.assertRaises(ValueError, pints.LogUniformLogPrior, 1, 1)
+
+        a = 1e-2
+        b = 1e2
+
+        p = pints.LogUniformLogPrior(a, b)
+
+        #all values below were calculated separately (not by scipy)
+        self.assertAlmostEqual(p.mean(), 10.856276311376536)
+
+        #test n_parameters
+        self.assertEqual(p.n_parameters(), 1)
+
+        points = [0.1, 63.0]
+        vals = [0.08225828662619909, -6.36346153275938]
+        dvals = [-10.0, -0.015873015873015872]
+
+        for point, val, dval in zip(points, vals, dvals):
+            test_val_1, test_dval = p.evaluateS1(point)
+            test_val_2 = p(point)
+            self.assertEqual(test_val_1, test_val_2)
+            self.assertAlmostEqual(test_val_1, val)
+            self.assertAlmostEqual(test_dval, dval)
+
     def test_log_normal_prior(self):
 
         # Test input parameters
@@ -653,6 +684,21 @@ class TestPrior(unittest.TestCase):
 
             self.assertAlmostEqual(pints_val, scipy_val)
             self.assertAlmostEqual(pints_deriv[0], hand_calc_deriv)
+
+    def test_log_uniform_prior_cdf_icdf(self):
+        p1 = pints.LogUniformLogPrior(1e-2, 1e2)
+        self.assertAlmostEqual(p1.cdf(0.1), 0.25)
+        self.assertAlmostEqual(p1.cdf(10), 0.75)
+        self.assertAlmostEqual(p1.icdf(0.25), 0.1)
+        self.assertAlmostEqual(p1.icdf(0.75), 10.0)
+
+    def test_log_uniform_prior_sampling(self):
+        p1 = pints.LogUniformLogPrior(1e-2, 1e2)
+        samples = p1.sample(1000000)
+        mean = p1.mean()
+        sample_mean = np.mean(samples)
+        self.assertEqual(len(samples), 1000000)
+        self.assertLessEqual(np.abs(sample_mean - mean), 0.1)
 
     def test_log_normal_prior_cdf_icdf(self):
         p1 = pints.LogNormalLogPrior(-3.5, 7.7)
@@ -824,9 +870,9 @@ class TestPrior(unittest.TestCase):
     def test_student_t_prior(self):
         # Test two specific function values
         p1 = pints.StudentTLogPrior(0, 2, 10)
-        self.assertEqual(p1([0]), -3.342305863833964)
+        self.assertAlmostEqual(p1([0]), -3.342305863833964)
         p2 = pints.StudentTLogPrior(10, 5, 10)
-        self.assertEqual(p2([10]), -3.27120468204877)
+        self.assertAlmostEqual(p2([10]), -3.27120468204877)
 
         # Test exceptions
         self.assertRaises(ValueError, pints.StudentTLogPrior, 0, 0, 10)
@@ -1064,7 +1110,7 @@ class TestPrior(unittest.TestCase):
 
         # Test normal construction
         p = pints.UniformLogPrior(lower, upper)
-        m = float('-inf')
+        m = -np.inf
         self.assertEqual(p([0, 0]), m)
         self.assertEqual(p([0, 5]), m)
         self.assertEqual(p([0, 19]), m)
@@ -1078,7 +1124,7 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([10, 10]), m)
         self.assertEqual(p([5, 20]), m)
 
-        w = -np.log(np.product(upper - lower))
+        w = -np.log(np.prod(upper - lower))
         self.assertEqual(p([1, 2]), w)
         self.assertEqual(p([1, 5]), w)
         self.assertEqual(p([1, 20 - 1e-14]), w)
@@ -1093,7 +1139,7 @@ class TestPrior(unittest.TestCase):
         # Test from rectangular boundaries object
         b = pints.RectangularBoundaries(lower, upper)
         p = pints.UniformLogPrior(b)
-        m = float('-inf')
+        m = -np.inf
         self.assertEqual(p([0, 0]), m)
         self.assertEqual(p([0, 5]), m)
         self.assertEqual(p([0, 19]), m)
@@ -1107,7 +1153,7 @@ class TestPrior(unittest.TestCase):
         self.assertEqual(p([10, 10]), m)
         self.assertEqual(p([5, 20]), m)
 
-        w = -np.log(np.product(upper - lower))
+        w = -np.log(np.prod(upper - lower))
         self.assertEqual(p([1, 2]), w)
         self.assertEqual(p([1, 5]), w)
         self.assertEqual(p([1, 20 - 1e-14]), w)
@@ -1133,7 +1179,7 @@ class TestPrior(unittest.TestCase):
 
         b = CircleBoundaries(5, 5, 2)
         p = pints.UniformLogPrior(b)
-        minf = -float('inf')
+        minf = -np.inf
         self.assertTrue(p([0, 0]) == minf)
         self.assertTrue(p([4, 4]) > minf)
 

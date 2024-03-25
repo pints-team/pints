@@ -16,7 +16,8 @@ class LogPDF(object):
     All :class:`LogPDF` types are callable: when called with a vector argument
     ``p`` they return some value ``log(f(p))`` where ``f(p)`` is an
     unnormalised PDF. The size of the argument ``p`` is given by
-    :meth:`n_parameters()`.
+    :meth:`n_parameters()`. In PINTS, all parameters must be continuous and
+    real.
     """
     def __call__(self, x):
         raise NotImplementedError
@@ -206,7 +207,7 @@ class PooledLogPDF(LogPDF):
                 'as the number of parameters of the individual log-pdfs.')
 
         # Check that pooled contains only booleans
-        if self._pooled.dtype != np.bool:
+        if self._pooled.dtype != np.dtype('bool'):
             raise ValueError(
                 'The array-like input `pooled` passed to PooledLogPDFs '
                 'has to contain booleans exclusively.')
@@ -375,7 +376,7 @@ class LogPosterior(LogPDF):
         self._log_likelihood = log_likelihood
 
         # Store -inf, for later use
-        self._minf = -float('inf')
+        self._minf = -np.inf
 
     def __call__(self, x):
         # Evaluate log-prior first, assuming this is very cheap

@@ -95,9 +95,6 @@ class TestDramACMC(unittest.TestCase):
         x0 = self.real_parameters * 1.1
         mcmc = pints.DramACMC(x0)
 
-        # Configure
-        mcmc.set_n_kernels(4)
-
         # Perform short run
         rate = []
         chain = []
@@ -135,7 +132,7 @@ class TestDramACMC(unittest.TestCase):
         x0 = self.real_parameters
         mcmc = pints.DramACMC(x0)
         mcmc.ask()
-        self.assertRaises(ValueError, mcmc.tell, -float('inf'))
+        self.assertRaises(ValueError, mcmc.tell, -np.inf)
 
         self.assertNotEqual(mcmc.target_acceptance_rate(), 0.5)
         mcmc.set_target_acceptance_rate(0.5)
@@ -150,21 +147,19 @@ class TestDramACMC(unittest.TestCase):
         self.assertRaises(ValueError, mcmc.set_hyper_parameters, [-0.1, 1, 3])
         self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5, 0, 3])
         self.assertRaises(ValueError, mcmc.set_hyper_parameters, [0.5, 1, -1])
-        mcmc.set_hyper_parameters([0.1, 4, 3.5])
+        mcmc.set_hyper_parameters([0.1, 4, 3])
         self.assertEqual(mcmc.eta(), 0.1)
-        self.assertEqual(mcmc.n_kernels(), 4)
-        self.assertEqual(mcmc.upper_scale(), 3.5)
         mcmc.ask()
-        mcmc.set_sigma_scale()
+        scale1 = [2, 3]
+        mcmc.set_sigma_scale(scale1)
         scale = mcmc.sigma_scale()
-        a_min = np.log10(1)
-        a_max = np.log10(3.5)
-        scale1 = 10**np.linspace(a_min, a_max, 4)
-        scale1 = scale1[::-1]
         self.assertTrue(np.array_equal(scale, scale1))
 
-        self.assertEqual(mcmc.name(), (
-            'Delayed Rejection Adaptive Metropolis (Dram) MCMC'))
+        self.assertRaisesRegex(ValueError, 'must be of length 2',
+                               mcmc.set_sigma_scale, [1])
+
+        self.assertEqual(mcmc.name(),
+                         'Delayed Rejection Adaptive Metropolis (Dram) MCMC')
 
     def test_logging(self):
 

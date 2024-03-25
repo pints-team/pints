@@ -49,14 +49,17 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._ready_for_tell = False
 
         # Best solution found
-        self._xbest = pints.vector(x0)
-        self._fbest = float('inf')
+        self._x_best = pints.vector(x0)
+        self._f_best = np.inf
 
         # Number of iterations run
         self._iterations = 0
 
         # Mean of the proposal distribution
         self._mu = np.copy(self._x0)
+
+        # Approximate value at self._mu
+        self._f_guessed = np.inf
 
         # Step size
         self._eta = np.min(self._sigma0)
@@ -100,19 +103,14 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Samples from N(mu, eta**2 * C)
         self._xs = np.array([self._mu + self._eta * y for y in self._ys])
 
-        # Apply boundaries; creating safe points for evaluation
-        # Rectangular boundaries? Then perform boundary transform
-        if self._boundary_transform is not None:
-            self._xs = self._boundary_transform(self._xs)
-
-        # Manual boundaries? Then pass only xs that are within bounds
-        if self._manual_boundaries:
+        # Boundaries? Then only pass user xs that are within bounds
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
-                warnings.warn('All points requested by CMA-ES are outside the'
-                              ' boundaries.')
+                warnings.warn('All points requested by BareCMAES are outside'
+                              ' the boundaries.')
         else:
             self._user_xs = self._xs
 
@@ -135,30 +133,25 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         else:
             return np.copy(self._C)
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        return self._fbest
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._f_best
+
+    def f_guessed(self):
+        """ See :meth:`Optimiser.f_guessed()`. """
+        return self._f_guessed
 
     def mean(self):
         """
         Returns the current mean of the proposal distribution.
         """
-        return np.copy(self._mu)
+        return self.x_guessed()
 
     def _initialise(self):
         """
         Initialises the optimiser for the first iteration.
         """
         assert (not self._running)
-
-        # Create boundary transform, or use manual boundary checking
-        self._manual_boundaries = False
-        self._boundary_transform = None
-        if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._boundary_transform = pints.TriangleWaveTransform(
-                self._boundaries)
-        elif self._boundaries is not None:
-            self._manual_boundaries = True
 
         # Parent generation population size
         # The parameter parent_pop_size is the mu in the papers. It represents
@@ -271,17 +264,17 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         npo = self._population_size
         npa = self._parent_pop_size
 
-        # Manual boundaries? Then reconstruct full fx vector
-        if self._manual_boundaries and len(fx) < npo:
+        # Boundaries? Then reconstruct full fx vector
+        if self._boundaries is not None and len(fx) < npo:
             user_fx = fx
-            fx = np.ones((npo, )) * float('inf')
+            fx = np.ones((npo, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Order the points from best to worst score
         order = np.argsort(fx)
-        xs = np.array(self._xs[order])
-        zs = np.array(self._zs[order])
-        ys = np.array(self._ys[order])
+        xs = self._xs[order]
+        zs = self._zs[order]
+        ys = self._ys[order]
 
         # Update the mean
         self._mu += self._cm * np.sum(
@@ -353,17 +346,19 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         self._S = np.sqrt(np.diag(eig[0]))
         self._R = eig[1]
 
-        # Update xbest and fbest
-        # Note: The stored values are based on particles, not on the mean of
-        # all particles! This has the advantage that we don't require an extra
-        # evaluation at mu to get a pair (mu, f(mu)). The downside is that
-        # xbest isn't the very best point. However, xbest and mu seem to
-        # converge quite quickly, so that this difference disappears.
-        if self._fbest > fx[order[0]]:
-            self._fbest = fx[order[0]]
-            self._xbest = xs[0]
+        # Update f_guessed on the assumption that the lowest value in our
+        # sample approximates f(mu)
+        self._f_guessed = fx[order[0]]
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
-        return self._xbest
+        # Update x_best and f_best
+        if self._f_guessed < self._f_best:
+            self._f_best = self._f_guessed
+            self._x_best = np.array(xs[0], copy=True)
 
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
+        return self._x_best
+
+    def x_guessed(self):
+        """ See :meth:`Optimiser.x_guessed()`. """
+        return np.array(self._mu, copy=True)

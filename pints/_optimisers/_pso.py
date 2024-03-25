@@ -95,17 +95,15 @@ class PSO(pints.PopulationBasedOptimiser):
         # the user can store the points without us modifying them).
         return np.copy(self._user_xs)
 
-    def fbest(self):
-        """ See :meth:`Optimiser.fbest()`. """
-        if self._running:
-            return self._fg
-        return float('inf')
+    def f_best(self):
+        """ See :meth:`Optimiser.f_best()`. """
+        return self._fg if self._running else np.inf
 
     def _initialise(self):
         """
         Initialises the optimiser for the first iteration.
         """
-        assert(not self._running)
+        assert not self._running
 
         # Initialize swarm
         self._xs = []     # Particle coordinate vectors
@@ -115,19 +113,22 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial positions
         self._xs.append(np.array(self._x0, copy=True))
+
+        # Attempt to sample n - 1 points from the boundaries
         if self._boundaries is not None:
-            # Attempt to sample n - 1 points from the boundaries
             try:
                 self._xs.extend(
                     self._boundaries.sample(self._population_size - 1))
             except NotImplementedError:
-                # Not all boundaries implement sampling
+                # Not all boundaries implement sampling.
                 pass
+
         # If we couldn't sample from the boundaries, use gaussian sampling
         # around x0.
-        for i in range(1, self._population_size):
-            self._xs.append(np.random.normal(self._x0, self._sigma0))
-        self._xs = np.array(self._xs, copy=True)
+        if len(self._xs) < self._population_size:
+            for i in range(self._population_size - 1):
+                self._xs.append(np.random.normal(self._x0, self._sigma0))
+        self._xs = np.array(self._xs)
 
         # Set initial velocities
         for i in range(self._population_size):
@@ -136,36 +137,22 @@ class PSO(pints.PopulationBasedOptimiser):
 
         # Set initial scores and local best
         for i in range(self._population_size):
-            self._fl.append(float('inf'))
+            self._fl.append(np.inf)
             self._pl.append(self._xs[i])
 
         # Set global best position and score
-        self._fg = float('inf')
+        self._fg = np.inf
         self._pg = self._xs[0]
 
-        # Create boundary transform, or use manual boundary checking
-        self._manual_boundaries = False
-        self._boundary_transform = None
-        if isinstance(self._boundaries, pints.RectangularBoundaries):
-            self._boundary_transform = pints.TriangleWaveTransform(
-                self._boundaries)
-        elif self._boundaries is not None:
-            self._manual_boundaries = True
-
-        # Create safe xs to pass to user
-        if self._boundary_transform is not None:
-            # Rectangular boundaries? Then apply transform to xs
-            self._xs = self._boundary_transform(self._xs)
-        if self._manual_boundaries:
-            # Manual boundaries? Then filter out out-of-bounds points from xs
+        # Boundaries? Then filter out out-of-bounds points from xs
+        self._user_xs = self._xs
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
                 warnings.warn(
                     'All initial PSO particles are outside the boundaries.')
-        else:
-            self._user_xs = self._xs
 
         # Set local/global exploration balance
         self.set_local_global_balance()
@@ -196,8 +183,8 @@ class PSO(pints.PopulationBasedOptimiser):
     def set_local_global_balance(self, r=0.5):
         """
         Set the balance between local and global exploration for each particle,
-        using a parameter `r` such that `r = 1` is a fully local search and
-        `r = 0` is a fully global search.
+        using a parameter ``r`` such that ``r = 1`` is a fully local search and
+        ``r = 0`` is a fully global search.
         """
         if self._running:
             raise Exception('Cannot change settings during run.')
@@ -236,10 +223,10 @@ class PSO(pints.PopulationBasedOptimiser):
             raise Exception('ask() not called before tell()')
         self._ready_for_tell = False
 
-        # Manual boundaries? Then reconstruct full fx vector
-        if self._manual_boundaries and len(fx) < self._population_size:
+        # Boundaries? Then reconstruct full fx vector
+        if self._boundaries is not None and len(fx) < self._population_size:
             user_fx = fx
-            fx = np.ones((self._population_size, )) * float('inf')
+            fx = np.ones((self._population_size, )) * np.inf
             fx[self._user_ids] = user_fx
 
         # Update particles
@@ -267,19 +254,14 @@ class PSO(pints.PopulationBasedOptimiser):
             # Update position
             self._xs[i] += self._vs[i]
 
-        # Create safe xs to pass to user
-        if self._boundary_transform is not None:
-            # Rectangular boundaries? Then apply transform to xs
-            self._user_xs = self._xs = self._boundary_transform(self._xs)
-        elif self._manual_boundaries:
-            # Manual boundaries? Then filter out out-of-bounds points from xs
+        # Boundaries? Then filter out out-of-bounds points from xs
+        self._user_xs = self._xs
+        if self._boundaries is not None:
             self._user_ids = np.nonzero(
                 [self._boundaries.check(x) for x in self._xs])
             self._user_xs = self._xs[self._user_ids]
             if len(self._user_xs) == 0:     # pragma: no cover
                 warnings.warn('All PSO particles are outside the boundaries.')
-        else:
-            self._user_xs = self._xs
 
         # Update global best score
         i = np.argmin(self._fl)
@@ -287,8 +269,9 @@ class PSO(pints.PopulationBasedOptimiser):
             self._fg = self._fl[i]
             self._pg = np.array(self._pl[i], copy=True)
 
-    def xbest(self):
-        """ See :meth:`Optimiser.xbest()`. """
+    def x_best(self):
+        """ See :meth:`Optimiser.x_best()`. """
         if self._running:
             return np.array(self._pg, copy=True)
         return np.array(self._x0, copy=True)
+

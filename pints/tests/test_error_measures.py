@@ -63,7 +63,7 @@ class BigMiniProblem(MiniProblem):
 
 
 class BadMiniProblem(MiniProblem):
-    def __init__(self, bad_value=float('inf')):
+    def __init__(self, bad_value=np.inf):
         super(BadMiniProblem, self).__init__()
         self._v = pints.vector([bad_value, 2, -3])
 
@@ -72,7 +72,7 @@ class BadMiniProblem(MiniProblem):
 
 
 class BadErrorMeasure(pints.ErrorMeasure):
-    def __init__(self, bad_value=float('-inf')):
+    def __init__(self, bad_value=-np.inf):
         super(BadErrorMeasure, self).__init__()
         self._v = bad_value
 
@@ -628,24 +628,24 @@ class TestSumOfErrors(unittest.TestCase):
             e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [10, 1, 1, 1, 1, 1])
             self.assertEqual(e.n_parameters(), 3)
-            self.assertEqual(e(x), float('inf'))
+            self.assertEqual(e(x), np.inf)
             e = pints.SumOfErrors(
                 [e4, e1, e1, e1, e1, e1], [0, 2, 0, 2, 0, 2])
             self.assertEqual(e.n_parameters(), 3)
             self.assertTrue(e(x), 6 * e1(x))
-            e5 = pints.SumOfSquaresError(BadMiniProblem(float('-inf')))
+            e5 = pints.SumOfSquaresError(BadMiniProblem(-np.inf))
             e = pints.SumOfErrors([e1, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isinf(e(x)))
             e = pints.SumOfErrors([e4, e5, e1], [2.1, 3.4, 6.5])
             self.assertTrue(np.isinf(e(x)))
             e5 = pints.SumOfSquaresError(BadMiniProblem(float('nan')))
             e = pints.SumOfErrors(
-                [BadErrorMeasure(float('inf')), BadErrorMeasure(float('inf'))],
+                [BadErrorMeasure(np.inf), BadErrorMeasure(np.inf)],
                 [1, 1])
-            self.assertEqual(e(x), float('inf'))
+            self.assertEqual(e(x), np.inf)
             e = pints.SumOfErrors(
-                [BadErrorMeasure(float('inf')),
-                 BadErrorMeasure(float('-inf'))],
+                [BadErrorMeasure(np.inf),
+                 BadErrorMeasure(-np.inf)],
                 [1, 1])
             self.assertTrue(np.isnan(e(x)))
             e = pints.SumOfErrors(

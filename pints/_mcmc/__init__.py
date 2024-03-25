@@ -90,7 +90,7 @@ class SingleChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._n_parameters:
+            if np.prod(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
@@ -192,7 +192,7 @@ class MultiChainMCMC(MCMCSampler):
             self._sigma0 = np.diag(0.01 * self._sigma0)
         else:
             self._sigma0 = np.array(sigma0, copy=True)
-            if np.product(self._sigma0.shape) == self._n_parameters:
+            if np.prod(self._sigma0.shape) == self._n_parameters:
                 # Convert from 1d array
                 self._sigma0 = self._sigma0.reshape((self._n_parameters,))
                 self._sigma0 = np.diag(self._sigma0)
@@ -274,7 +274,10 @@ class MCMCController(object):
     ----------
     log_pdf : pints.LogPDF
         A :class:`LogPDF` function that evaluates points in the parameter
-        space.
+        space, or a list of :class:`LogPDF` of the same length as `chains`. If
+        multiple LogPDFs are provided, each chain will call only its
+        corresponding LogPDF. Note that if multiple LogPDFs are provided,
+        parallel running is not possible.
     chains : int
         The number of MCMC chains to generate.
     x0
@@ -301,16 +304,42 @@ class MCMCController(object):
             self, log_pdf, chains, x0, sigma0=None, transformation=None,
             method=None):
 
-        # Check function
-        if not isinstance(log_pdf, pints.LogPDF):
-            raise ValueError('Given function must extend pints.LogPDF')
+        if isinstance(log_pdf, pints.LogPDF):
+            self._multi_logpdf = False
+
+        else:
+            self._multi_logpdf = True
+            try:
+                if len(log_pdf) != chains:
+                    raise ValueError(
+                        '`log_pdf` must either extend pints.LogPDF, '
+                        'or be a list of objects which extend '
+                        'pints.LogPDF of the same length as `chains`')
+            except TypeError:
+                raise TypeError('`log_pdf` must either extend pints.LogPDF, '
+                                'or be a list of objects which extend '
+                                'pints.LogPDF')
+
+            first_n_params = log_pdf[0].n_parameters()
+            for pdf in log_pdf:
+                # Check function
+                if not isinstance(pdf, pints.LogPDF):
+                    raise ValueError('Elements of `log_pdf` must extend '
+                                     'pints.LogPDF')
+                if pdf.n_parameters() != first_n_params:
+                    raise ValueError('All log_pdfs must have the same number '
+                                     'of parameters.')
 
         # Apply a transformation (if given). From this point onward the MCMC
         # sampler will see only the transformed search space and will know
         # nothing about the model parameter space.
         if transformation is not None:
             # Convert log pdf
-            log_pdf = transformation.convert_log_pdf(log_pdf)
+            if self._multi_logpdf:
+                log_pdf = [transformation.convert_log_pdf(pdf)
+                           for pdf in log_pdf]
+            else:
+                log_pdf = transformation.convert_log_pdf(log_pdf)
 
             # Convert initial positions
             x0 = [transformation.to_search(x) for x in x0]
@@ -318,9 +347,12 @@ class MCMCController(object):
             # Convert sigma0, if provided
             if sigma0 is not None:
                 sigma0 = np.asarray(sigma0)
-                n_parameters = log_pdf.n_parameters()
+                if not self._multi_logpdf:
+                    n_parameters = log_pdf.n_parameters()
+                else:
+                    n_parameters = log_pdf[0].n_parameters()
                 # Make sure sigma0 is a (covariance) matrix
-                if np.product(sigma0.shape) == n_parameters:
+                if np.prod(sigma0.shape) == n_parameters:
                     # Convert from 1d array
                     sigma0 = sigma0.reshape((n_parameters,))
                     sigma0 = np.diag(sigma0)
@@ -341,7 +373,10 @@ class MCMCController(object):
         self._log_pdf = log_pdf
 
         # Get number of parameters
-        self._n_parameters = self._log_pdf.n_parameters()
+        if not self._multi_logpdf:
+            self._n_parameters = self._log_pdf.n_parameters()
+        else:
+            self._n_parameters = self._log_pdf[0].n_parameters()
 
         # Check number of chains
         self._n_chains = int(chains)
@@ -528,15 +563,24 @@ class MCMCController(object):
         # Choose method to evaluate
         f = self._log_pdf
         if self._needs_sensitivities:
-            f = f.evaluateS1
+            if not self._multi_logpdf:
+                f = f.evaluateS1
+            else:
+                f = [pdf.evaluateS1 for pdf in f]
 
         # Create evaluator object
         if self._parallel:
-            # Use at most n_workers workers
-            n_workers = min(self._n_workers, self._n_chains)
-            evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
+            if not self._multi_logpdf:
+                # Use at most n_workers workers
+                n_workers = min(self._n_workers, self._n_chains)
+                evaluator = pints.ParallelEvaluator(f, n_workers=n_workers)
+            else:
+                raise ValueError('Cannot run multiple logpdfs in parallel')
         else:
-            evaluator = pints.SequentialEvaluator(f)
+            if not self._multi_logpdf:
+                evaluator = pints.SequentialEvaluator(f)
+            else:
+                evaluator = pints.MultiSequentialEvaluator(f)
 
         # Initial phase
         if self._needs_initial_phase:
@@ -621,7 +665,9 @@ class MCMCController(object):
             logger.add_counter('Eval.', max_value=max_eval_guess)
             for sampler in self._samplers:
                 sampler._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: deleted time units from header, see
+            # https://github.com/pints-team/pints/issues/1467
+            logger.add_time('Time')
 
         # Pre-allocate arrays for chain storage
         # Note: we store the inverse transformed (to model space) parameters
@@ -1041,6 +1087,9 @@ class MCMCController(object):
         than 0.
         Parallelisation can be disabled by setting ``parallel`` to ``0`` or
         ``False``.
+
+        Parallel evaluation is only supported when a single LogPDF has been
+        provided to the MCMC controller.
         """
         if parallel is True:
             self._parallel = True

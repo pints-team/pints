@@ -23,6 +23,7 @@ Overview:
 - :class:`HalfCauchyLogPrior`
 - :class:`InverseGammaLogPrior`
 - :class:`LogNormalLogPrior`
+- :class:`LogUniformLogPrior`
 - :class:`MultivariateGaussianLogPrior`
 - :class:`NormalLogPrior`
 - :class:`StudentTLogPrior`
@@ -47,6 +48,8 @@ Overview:
 .. autoclass:: InverseGammaLogPrior
 
 .. autoclass:: LogNormalLogPrior
+
+.. autoclass:: LogUniformLogPrior
 
 .. autoclass:: MultivariateGaussianLogPrior
 
