@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1500](https://github.com/pints-team/pints/pull/1500) Added a `CensoredGaussianLogLikelihood` class that calculates the censored Gaussian log-likelihood.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
 ### Changed
