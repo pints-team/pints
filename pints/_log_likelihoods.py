@@ -956,110 +956,92 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Add parameters to problem
         self._n_parameters = problem.n_parameters() + self._no
-        a = lower
-        if a is not None:
-            if np.isscalar(a):
-                a = np.ones(self._no) * float(a)
-            else:
-                a = pints.vector(a)
-                if len(a) != self._no:
-                    raise ValueError(
-                        'Lower limit must be a ' +
-                        ' scalar or a vector of length n_outputs.')
-        b = upper
-        if b is not None:
-            if np.isscalar(b):
-                b = np.ones(self._no) * float(b)
-            else:
-                b = pints.vector(b)
-                if len(b) != self._no:
-                    raise ValueError(
-                        'Upper limit must be a ' +
-                        ' scalar or a vector of length n_outputs.')
 
-        if (a is not None) and (b is not None):
-            diff = b - a
-            if np.any(diff <= 0):
-                raise ValueError('Upper limit ' +
-                                 'must exceed lower limit.')
+        # Convert the lower and upper limits to the correct type
+        a = self._convert_type(lower, limit_type="lower")
+        b = self._convert_type(upper, limit_type="upper")
+
+        if len(a) != self._no:
+            raise ValueError(
+                'Lower limit must be a ' +
+                ' scalar or a vector of length n_outputs.')
+
+        if len(b) != self._no:
+            raise ValueError(
+                'Upper limit must be a ' +
+                ' scalar or a vector of length n_outputs.')
+
+        diff = b - a
+        if np.any(diff <= 0):
+            raise ValueError('Upper limit ' +
+                             'must exceed lower limit.')
         self._a = a
         self._b = b
 
         # Define the condition for whether a point is not censored
-        if (self._a is not None) and (self._b is not None):
-            self._condition = (self._a < self._values
-                               ) & (self._values < self._b)
-        elif (self._a is not None) and (self._b is None):
-            self._condition = self._a < self._values
-        elif (self._a is None) and (self._b is not None):
-            self._condition = self._values < self._b
-        else:
-            raise ValueError("Not a censored likelihood")
-
-        # Check that none of the values are less than the lower
-        # limit or greater than the upper limit
-        if self._values.ndim == 1:
-            for i in range(np.shape(self._values)[0]):
-                if a is not None:
-                    if self._values[i] < self._a[0]:
-                        raise ValueError("A value is below the lower limit.")
-                if b is not None:
-                    if self._values[i] > self._b[0]:
-                        raise ValueError("A value is above the upper limit.")
-        else:
-            for i in range(np.shape(self._values)[1]):
-                for j in range(np.shape(self._values)[0]):
-                    if a is not None:
-                        if self._values[j, i] < self._a[i]:
-                            raise ValueError(
-                                "A value is below the lower limit.")
-                    if b is not None:
-                        if self._values[j, i] > self._b[i]:
-                            raise ValueError(
-                                "A value is above the upper limit.")
-
-        # Print data and values that are censored
-        if verbose:
-            print("The data are {}. \n The lower censored values"
-                  " are {}. \n The upper censored values"
-                  " are {}.".format(self._values,
-                                    np.extract(self._values == self._a,
-                                               self._values),
-                                    np.extract(self._values == self._b,
-                                               self._values)))
+        self._condition = (self._a < self._values
+                           ) & (self._values < self._b)
 
         # Number of points that aren't censored (for each observation
         # in the multioutput case)
         self._n_not_censored = np.sum(self._condition, axis=0)
 
-        # Pre-calculate parts
-        self._logn = 0.5 * self._n_not_censored * np.log(2 * np.pi)
+    def _convert_type(self, limit, limit_type="lower"):
+
+        # If no lower or upper limit is supplied set it equal to
+        # -/+ infinity
+        if limit is None:
+            if limit_type == "lower":
+                limit = - np.inf
+            elif limit_type == "upper":
+                limit = np.inf
+
+        # Convert the limit to an object of the correct type
+        if limit is not None:
+            if np.isscalar(limit):
+                limit = np.ones(self._no) * float(limit)
+            else:
+                limit = pints.vector(limit)
+
+        return limit
+
+    def print_censored_values(self):
+
+        # Print data and values that are censored
+        print("The data are {}. \n The lower censored values"
+              " are {}. \n The upper censored values"
+              " are {}.".format(self._values,
+                                np.extract(self._values <= self._a,
+                                           self._values),
+                                np.extract(self._values >= self._b,
+                                           self._values)))
 
     def __call__(self, x):
+        theta = np.asarray(x[:-self._no])
         sigma = np.asarray(x[-self._no:])
         if any(sigma <= 0):
             return -np.inf
 
-        squared_error = np.sum((self._values -
-                                self._problem.evaluate(x[:-self._no]))**2,
+        # Evaluate the problem output - do this only once as this is usually
+        # the most expensive step in inference, especially for ODE models
+        output = self._problem.evaluate(theta)
+
+        squared_error = np.sum((self._values - output)**2,
                                axis=0, where=self._condition)
 
         # Calculate part of the likelihood corresponding to the censored data
         lower_censored_sum = np.sum(np.log(
-            scipy.stats.norm.cdf(x=self._values,
-                                 loc=self._problem.evaluate(x[:-self._no]),
-                                 scale=sigma)),
-            where=self._values == self._a)
+            scipy.stats.norm.cdf(x=self._a, loc=output, scale=sigma)),
+            where=self._values <= self._a)
         upper_censored_sum = np.sum(
             np.log(1 - scipy.stats.norm.
-                   cdf(x=self._values,
-                       loc=self._problem.evaluate(x[:-self._no]),
-                       scale=sigma)),
-            where=self._values == self._b)
+                   cdf(x=self._b, loc=output, scale=sigma)),
+            where=self._values >= self._b)
 
         # Calculate part of the likelihood corresponding to
         # the data that isn't censored
-        non_censored_sum = np.sum(- self._logn -
+        non_censored_sum = np.sum(- 0.5 * self._n_not_censored *
+                                  np.log(2 * np.pi) -
                                   self._n_not_censored * np.log(sigma)
                                   - squared_error / (2 * sigma**2))
 
@@ -1067,6 +1049,7 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
+        theta = np.asarray(x[:-self._no])
         sigma = np.asarray(x[-self._no:])
 
         # Calculate log-likelihood
@@ -1075,7 +1058,7 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
             return L, np.tile(np.nan, self._n_parameters)
 
         # Evaluate, and get residuals
-        y, dy = self._problem.evaluateS1(x[:-self._no])
+        y, dy = self._problem.evaluateS1(theta)
 
         # Reshape dy, in case we're working with a single-output problem
         dy = dy.reshape(self._nt, self._no, self._n_parameters - self._no)
@@ -1083,11 +1066,15 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # Note: Must be (data - simulation), sign now matters!
         r = self._values - y
 
+        # Evaluate the problem output - do this only once as this is usually
+        # the most expensive step in inference, especially for ODE models
+        output = self._problem.evaluate(theta)
+
         # Make conditions for where data isn't censored and is lower/upper
         # censored into 3D arrays
 
-        lower_condition = self._values == self._a
-        upper_condition = self._values == self._b
+        lower_condition = self._values <= self._a
+        upper_condition = self._values >= self._b
 
         if self._values.ndim == 1:
             where_condition = np.reshape(
@@ -1125,21 +1112,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # pdf(x-loc/scale)= pdf(x, loc, scale) * scale
         # (whereas cdf(x-loc/scale) = cdf(x, loc, scale))
 
-        lower_pdf = scipy.stats.norm.pdf(
-            (self._values -
-             self._problem.evaluate(x[:-self._no])) / sigma)
-        lower_cdf = scipy.stats.norm.cdf(
-            x=self._values,
-            loc=self._problem.evaluate(x[:-self._no]),
-            scale=sigma)
+        lower_pdf = scipy.stats.norm.pdf((self._a - output) / sigma)
+        lower_cdf = scipy.stats.norm.cdf(x=self._a, loc=output,
+                                         scale=sigma)
 
-        upper_pdf = scipy.stats.norm.pdf(
-            (self._values -
-             self._problem.evaluate(x[:-self._no])) / sigma)
-        upper_cdf = scipy.stats.norm.cdf(
-            x=self._values,
-            loc=self._problem.evaluate(x[:-self._no]),
-            scale=sigma)
+        upper_pdf = scipy.stats.norm.pdf((self._b - output) / sigma)
+        upper_cdf = scipy.stats.norm.cdf(x=self._b, loc=output,
+                                         scale=sigma)
 
         # Calculate derivatives in the model parameters
         lower_numerator = lower_pdf.T * dy.T
@@ -1161,13 +1140,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
                                   (self._values - y).T) / (lower_cdf.T)
         lower_censored_dsigma = - sigma**(-2) *\
             np.sum(lower_dsigma_inner_val.T,
-                   where=self._values == self._a, axis=0).T
+                   where=self._values <= self._a, axis=0).T
 
         upper_dsigma_inner_val = (upper_pdf.T *
                                   (self._values - y).T) / (1 - upper_cdf.T)
         upper_censored_dsigma = sigma**(-2) *\
             np.sum(upper_dsigma_inner_val.T,
-                   where=self._values == self._b, axis=0).T
+                   where=self._values >= self._b, axis=0).T
 
         dL = not_censored_dL + lower_censored_dL + upper_censored_dL
         dsigma = not_censored_dsigma + lower_censored_dsigma + \

@@ -2794,8 +2794,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             self.model_single, self.times, self.data_single)
 
         # Check wrong input parameters - lower and upper with multiple
-        # entries for single ouptut problem, not supplying either of lower or
-        # upper and upper< lower
+        # entries for single ouptut problem and upper< lower
         self.assertRaises(
             ValueError, pints.CensoredGaussianLogLikelihood, problem,
             lower=[0.1, 0.2])
@@ -2803,33 +2802,8 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             ValueError,
             pints.CensoredGaussianLogLikelihood, problem, upper=[0, 0.1, 0.3])
         self.assertRaises(
-            ValueError, pints.CensoredGaussianLogLikelihood, problem)
-        self.assertRaises(
             ValueError, pints.CensoredGaussianLogLikelihood, problem,
             lower=0.1, upper=0)
-
-        # Also test for values below the upper and lower limits
-
-        # First for 1D data
-        self.assertRaises(
-            ValueError, pints.CensoredGaussianLogLikelihood, problem,
-            lower=0.3)
-        self.assertRaises(
-            ValueError, pints.CensoredGaussianLogLikelihood, problem,
-            upper=0.7)
-
-        # Also for 2D case
-
-        # Create an object with links to the model and time series
-        problem = pints.MultiOutputProblem(
-            self.model_multi, self.times, self.data_multi)
-
-        self.assertRaises(
-            ValueError, pints.CensoredGaussianLogLikelihood, problem,
-            lower=0.3)
-        self.assertRaises(
-            ValueError, pints.CensoredGaussianLogLikelihood, problem,
-            upper=0.7)
 
     def test_stdout(self):
         # Check prints correct output when verbose=True
@@ -2841,8 +2815,10 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
                 self.model_single, self.times, self.data_single)
 
             # Create log_likelihood
-            pints.CensoredGaussianLogLikelihood(problem, lower=0.2,
-                                                upper=0.8, verbose=True)
+            log_likelihood = pints.\
+                CensoredGaussianLogLikelihood(problem, lower=0.2,
+                                              upper=0.8, verbose=True)
+            log_likelihood.print_censored_values()
 
         # Add \n at end due to how print statements work in Python
         self.assertEqual(
