@@ -2805,8 +2805,8 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             ValueError, pints.CensoredGaussianLogLikelihood, problem,
             lower=0.1, upper=0)
 
-    def test_stdout(self):
-        # Check prints correct output when verbose=True
+    def test_print_censored_values(self):
+        # Check the function print_censored_values prints the correct output
 
         with unittest.mock.patch('sys.stdout',
                                  new_callable=io.StringIO) as mock_stdout:
@@ -2817,7 +2817,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             # Create log_likelihood
             log_likelihood = pints.\
                 CensoredGaussianLogLikelihood(problem, lower=0.2,
-                                              upper=0.8, verbose=True)
+                                              upper=0.8)
             log_likelihood.print_censored_values()
 
         # Add \n at end due to how print statements work in Python
