@@ -243,6 +243,186 @@ class RunMcmcMethodOnCone(RunMcmcMethodOnProblem):
                          n_warmup, method_hyper_parameters)
 
 
+class RunOptimiserOnProblem(object):
+    """
+    Base class for tests that run an optimiser on an error function or log-PDF.
+
+    Parameters
+    ----------
+    error : pints.Error or pints.LogPDF
+        The function to opimise. Will be passed to a
+        :class:`pints.OptimisationController`.
+    x0
+        A starting point to be passed to the controller.
+    sigma0
+        An optional ``sigma0`` argument to pass to the controller.
+    method : pints.Optimiser
+        The method to test.
+    n_iterations : int
+        The number of iterations to run.
+    use_guessed : bool
+        Set to true to use ``f_guessed_tracking`` (see
+        :meth:`Optimiser.set_f_guessed_tracking`).
+    method_hyper_parameters : list
+        A list of hyperparameter values.
+
+    """
+
+    def __init__(self, error, x0, sigma0, boundaries, transformation, method,
+                 xtrue, n_iterations, use_guessed=False,
+                 method_hyper_parameters=None):
+        self._error = error
+        self._xtrue = pints.vector(xtrue)
+
+        controller = pints.OptimisationController(
+            error, x0, sigma0, boundaries, transformation, method)
+        controller.set_max_iterations(n_iterations)
+        controller.set_max_unchanged_iterations(None)
+        controller.set_log_to_screen(False)
+        if use_guessed:
+            controller.set_f_guessed_tracking(True)
+        if method_hyper_parameters is not None:
+            controller.optimiser().set_hyperparameters(method_hyper_parameters)
+        self._x, self._f = controller.run()
+
+    def distance(self):
+        """
+        Calculates the distance between the obtained solution and the true
+        solution.
+        """
+        return np.sqrt(np.sum((self._x - self._xtrue)**2))
+
+    def error(self):
+        """
+        Returns the final error.
+        """
+        return self._f
+
+
+class RunOptimiserOnBoundedFitzhughNagumo(RunOptimiserOnProblem):
+    """
+    Tests a given Optimiser on a fully observable (multi-output)
+    Fitzhugh-Nagumo model, using boundaries but no transformations (the scales
+    of the parameters are relatively similar).
+    """
+    def __init__(self, method, n_iterations, use_guessed=False,
+                 method_hyper_parameters=None):
+
+        # Choose starting point. The loss surface does not suggest any sensible
+        # way to do this, so just sampling in a small sphere around a chosen x.
+        x0 = [0.75, 1.5, 3]                 # Center
+        r = np.random.uniform(0, 0.2)       # Sphere radius
+        t = np.random.uniform(0, 2 * np.pi)
+        p = np.random.uniform(0, 2 * np.pi)
+        x0[0] += r * np.sin(t) * np.cos(p)
+        x0[1] += r * np.sin(t) * np.sin(p)
+        x0[2] += r * np.cos(t)
+        # Note that this is not a uniform sampling from the sphere!
+        sigma0 = 0.05
+
+        # Create a seeded generator to get consistent noise
+        r = np.random.default_rng(1)
+
+        # Create problem
+        model = pints.toy.FitzhughNagumoModel()
+        xtrue = model.suggested_parameters()
+        times = model.suggested_times()
+        values = model.simulate(xtrue, times)
+        values += r.normal(0, 0.25, values.shape)
+        problem = pints.MultiOutputProblem(model, times, values)
+        error = pints.SumOfSquaresError(problem)
+
+        # Add boundaries
+        boundaries = pints.RectangularBoundaries(
+            [1e-3, 1e-3, 1e-3], [2, 2, 10])
+
+        super().__init__(error, x0, sigma0, boundaries, None, method, xtrue,
+                         n_iterations, use_guessed, method_hyper_parameters)
+
+
+class RunOptimiserOnBoundedUntransformedLogistic(RunOptimiserOnProblem):
+    """
+    Tests a given Optimiser on a logistic model inference problem with
+    boundaries and very different scalings for the parameters (no sigma0
+    information is given).
+    """
+    def __init__(self, method, n_iterations, use_guessed=False,
+                 method_hyper_parameters=None):
+        # Choose starting point
+        # For the default parameters, the contours of the score function with
+        # x[1] = 15 are almost horizontal after x[0] = 0.1, so we can fix Y and
+        # vary X to get starting points with similar errors.
+        x0 = np.array([np.random.uniform(0.15, 9), 15])
+
+        # Create random generator to add consistent noise
+        r = np.random.default_rng(1)
+
+        # Create problem
+        model = pints.toy.LogisticModel()
+        xtrue = model.suggested_parameters()
+        times = model.suggested_times()
+        values = model.simulate(xtrue, times)
+        values += r.normal(0, 5, values.shape)
+        problem = pints.SingleOutputProblem(model, times, values)
+        error = pints.SumOfSquaresError(problem)
+
+        # Add boundaries
+        boundaries = pints.RectangularBoundaries([0, 0.5], [10, 100])
+
+        super().__init__(error, x0, None, boundaries, None, method, xtrue,
+                         n_iterations, use_guessed, method_hyper_parameters)
+
+
+class RunOptimiserOnRosenbrockError(RunOptimiserOnProblem):
+    """
+    Tests a given Optimiser on a Rosenbrock error, starting from a randomly
+    sampled point with error 10.
+
+    For constructor arguments, see :class:`RunOptimiserOnProblem`.
+    """
+
+    def __init__(self, method, n_iterations, use_guessed=False,
+                 method_hyper_parameters=None):
+
+        # Choose starting point
+        c = 10
+        x = np.random.uniform(-1, 3)
+        y = np.sqrt((c - (1 - x)**2) / 100) + x**2
+        x0 = np.array([x, y])
+        sigma0 = 0.1
+
+        # Create error
+        e = pints.toy.RosenbrockError()
+        x = e.optimum()
+        super().__init__(e, x0, sigma0, None, None, method, x, n_iterations,
+                         use_guessed, method_hyper_parameters)
+
+
+class RunOptimiserOnTwoDimParabola(RunOptimiserOnProblem):
+    """
+    Tests a given Optimiser on a two-dimensional parabola with mean ``[0, 0]``,
+    starting at a randomly chosen point 10 distance units away.
+
+    For constructor arguments, see :class:`RunOptimiserOnProblem`.
+    """
+
+    def __init__(self, method, n_iterations, use_guessed=False,
+                 method_hyper_parameters=None):
+        x = np.array([0, 0])
+        e = pints.toy.ParabolicError(x)
+        t = np.random.uniform(0, 2 * np.pi)
+        x0 = 10 * np.array([np.cos(t), np.sin(t)])
+        sigma0 = 1
+        super().__init__(e, x0, sigma0, None, None, method, x, n_iterations,
+                         use_guessed, method_hyper_parameters)
+
+
+def run_and_throw_away_warmup(controller, n_warmup):
+    """ Runs sampling then throws away warmup. """
+    chains = controller.run()
+    return chains[:, n_warmup:]
+
+
 def set_hyperparameters_for_any_mcmc_class(controller, method,
                                            method_hyper_parameters):
     """ Sets hyperparameters for any MCMC class. """
@@ -253,9 +433,3 @@ def set_hyperparameters_for_any_mcmc_class(controller, method,
         else:
             for sampler in controller.samplers():
                 sampler.set_hyper_parameters(method_hyper_parameters)
-
-
-def run_and_throw_away_warmup(controller, n_warmup):
-    """ Runs sampling then throws away warmup. """
-    chains = controller.run()
-    return chains[:, n_warmup:]

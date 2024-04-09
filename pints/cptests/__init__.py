@@ -15,13 +15,21 @@ from ._problems import (    # noqa
     RunMcmcMethodOnCorrelatedGaussian,
     RunMcmcMethodOnHighDimensionalGaussian,
     RunMcmcMethodOnMultimodalGaussian,
+    RunMcmcMethodOnProblem,
     RunMcmcMethodOnTwoDimGaussian,
+    RunOptimiserOnBoundedFitzhughNagumo,
+    RunOptimiserOnBoundedUntransformedLogistic,
+    RunOptimiserOnProblem,
+    RunOptimiserOnRosenbrockError,
+    RunOptimiserOnTwoDimParabola,
 )
 
 # Import all test modules (not methods!) directly into this method, so that
 # they can be addressed as e.g.
 # pints.cptests.dram_acmc.two_dim_gaussian().
 from . import (     # noqa
+    cmaes,
+    cmaes_bare,
     differential_evolution_mcmc,
     dram_acmc,
     dream_mcmc,
