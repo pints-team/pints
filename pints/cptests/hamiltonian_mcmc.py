@@ -24,7 +24,52 @@ def two_dim_gaussian(n_iterations=1000, n_warmup=200):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[20, 1]
+        method_hyper_parameters=[20, 0.5]
+    )
+    return {
+        'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def correlated_gaussian(n_iterations=2000, n_warmup=500):
+    """
+    Tests :class:`pints.HamiltonianMCMC`
+    on a six-dimensional highly correlated Gaussian distribution with true
+    solution ``[0, 0, 0, 0, 0, 0]`` and returns a dictionary with entries
+    ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.cptests.RunMcmcMethodOnCorrelatedGaussian`.
+    """
+    problem = cpt.RunMcmcMethodOnCorrelatedGaussian(
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 0.5]
+    )
+    return {
+        'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def banana(n_iterations=2000, n_warmup=1000):
+    """
+    Tests :class:`pints.HamiltonianMCMC`
+    on a two-dimensional "twisted Gaussian" distribution with true solution
+    ``[0, 0]`` and returns a dictionary with entries ``kld`` and ``mean-ess``.
+
+    For details of the solved problem, see
+    :class:`pints.cptests.RunMcmcMethodOnBanana`.
+    """
+    problem = cpt.RunMcmcMethodOnBanana(
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 0.5]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -46,7 +91,7 @@ def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
         n_chains=4,
         n_iterations=n_iterations,
         n_warmup=n_warmup,
-        method_hyper_parameters=[20, 1]
+        method_hyper_parameters=[20, 0.5]
     )
     return {
         'kld': problem.estimate_kld(),
@@ -54,7 +99,7 @@ def high_dim_gaussian(n_iterations=4000, n_warmup=1000):
     }
 
 
-def annulus(n_iterations=10000, n_warmup=1000):
+def annulus(n_iterations=5000, n_warmup=1000):
     """
     Tests :class:`pints.HamiltonianMCMC`
     on a two-dimensional annulus distribution with radius 10, and returns a
@@ -65,18 +110,69 @@ def annulus(n_iterations=10000, n_warmup=1000):
     """
     problem = cpt.RunMcmcMethodOnAnnulus(
         method=_method,
-        n_chains=10,
+        n_chains=4,
         n_iterations=n_iterations,
-        n_warmup=n_warmup)
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 0.5]
+    )
     return {
-        'kld': problem.estimate_distance(),
+        'distance': problem.estimate_distance(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def multimodal_gaussian(n_iterations=2000, n_warmup=500):
+    """
+    Tests :class:`pints.HamiltonianMCMC`
+    on a two-dimensional multi-modal Gaussian distribution with modes at
+    ``[0, 0]``, ``[5, 10]``, and ``[10, 0]``, and returns a dict with entries
+    "kld" and "mean-ess".
+
+    For details of the solved problem, see
+    :class:`pints.cptests.RunMcmcMethodOnMultimodalGaussian`.
+    """
+    problem = cpt.RunMcmcMethodOnMultimodalGaussian(
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 0.5]
+    )
+    return {
+        'kld': problem.estimate_kld(),
+        'mean-ess': problem.estimate_mean_ess()
+    }
+
+
+def cone(n_iterations=2000, n_warmup=500):
+    """
+    Tests :class:`pints.MonomialGammaHamiltonianMCMC`
+    on a two-dimensional cone distribution centered at ``[0, 0]``, and returns
+    a dict with entries "distance" and "mean-ess".
+
+    For details of the solved problem, see
+    :class:`pints.cptests.RunMcmcMethodOnCone`.
+    """
+    problem = cpt.RunMcmcMethodOnCone(
+        method=_method,
+        n_chains=4,
+        n_iterations=n_iterations,
+        n_warmup=n_warmup,
+        method_hyper_parameters=[20, 0.5]
+    )
+    return {
+        'distance': problem.estimate_distance(),
         'mean-ess': problem.estimate_mean_ess()
     }
 
 
 _method = pints.HamiltonianMCMC
 _change_point_tests = [
-    two_dim_gaussian,
-    high_dim_gaussian,
     annulus,
+    banana,
+    cone,
+    correlated_gaussian,
+    high_dim_gaussian,
+    multimodal_gaussian,
+    two_dim_gaussian,
 ]
