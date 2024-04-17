@@ -19,12 +19,12 @@ Overview:
 - :class:`AR1LogLikelihood`
 - :class:`ARMA11LogLikelihood`
 - :class:`CauchyLogLikelihood`
+- :class:`CensoredGaussianLogLikelihood`
 - :class:`ConstantAndMultiplicativeGaussianLogLikelihood`
 - :class:`GaussianIntegratedLogUniformLogLikelihood`
 - :class:`GaussianIntegratedUniformLogLikelihood`
 - :class:`GaussianKnownSigmaLogLikelihood`
 - :class:`GaussianLogLikelihood`
-- :class:`CensoredGaussianLogLikelihood`
 - :class:`KnownNoiseLogLikelihood`
 - :class:`LogNormalLogLikelihood`
 - :class:`MultiplicativeGaussianLogLikelihood`
@@ -39,6 +39,8 @@ Overview:
 
 .. autoclass:: CauchyLogLikelihood
 
+.. autoclass:: CensoredGaussianLogLikelihood
+
 .. autoclass:: ConstantAndMultiplicativeGaussianLogLikelihood
 
 .. autoclass:: GaussianIntegratedLogUniformLogLikelihood
@@ -48,8 +50,6 @@ Overview:
 .. autoclass:: GaussianKnownSigmaLogLikelihood
 
 .. autoclass:: GaussianLogLikelihood
-
-.. autoclass:: CensoredGaussianLogLikelihood
 
 .. autoclass:: KnownNoiseLogLikelihood
 
