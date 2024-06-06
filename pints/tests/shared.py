@@ -395,3 +395,26 @@ class SwappingTransformation(pints.Transformation):
 
     def to_search(self, p):
         return p[::-1]
+
+
+class UnitCircleBoundaries2D(pints.Boundaries):
+    """
+    A 2d set of circular boundaries (similar but different to the hypersphere
+    boundaries above...) with radius 1.
+    """
+    def __init__(self, mx=0, my=0):
+        self._c = np.array([mx, my])
+
+    def n_parameters(self):
+        return 2
+
+    def check(self, parameters):
+        x, y = parameters  # Let Python do exception
+        return np.sum((parameters - self._c)**2) < 1
+
+    def sample(self, n=1):
+        r = np.sqrt(np.random.uniform(0, 1, size=(n,)))
+        t = np.random.uniform(0, np.pi, size=(n, ))
+        return np.array([self._c[0] + r * np.cos(t),
+                         self._c[1] + r * np.sin(t)]).T
+
