@@ -52,6 +52,66 @@ class Boundaries(object):
         raise NotImplementedError
 
 
+class ComposedBoundaries(Boundaries):
+    r"""
+    Boundaries composed of one or more other :class:`Boundaries`.
+
+    The resulting N-dimensional :class:`Boundaries` is composed of one or more
+    :class:`Boundaries` of dimensions ``N[i] <= N`` such that the sum of all
+    ``N[i]`` equals ``N``.
+
+    The dimensionality of the individual boundaries objects does not have to be
+    the same.
+
+    The input parameters of the :class:`ComposedBoundaries` have to be ordered
+    in the same way as the individual boundaries.
+
+    Extends :class:`Boundaries`.
+    """
+
+    def __init__(self, *boundaries):
+        # Check if sub-boundaries given
+        if len(boundaries) < 1:
+            raise ValueError('Must have at least one sub-boundaries object.')
+
+        # Check if boundaries, count dimension
+        self._n_parameters = 0
+        self._n_sub = []
+        for b in boundaries:
+            if not isinstance(b, pints.Boundaries):
+                raise ValueError(
+                    'All objects in ``boundaries`` must extend'
+                    ' pints.Boundaries.')
+            n = b.n_parameters()
+            self._n_parameters += n
+            self._n_sub.append(n)
+
+        # Store
+        self._boundaries = boundaries
+
+    def check(self, x):
+        """ See :meth:`pints.Boundaries.check()`. """
+        i = 0
+        for b, n in zip(self._boundaries, self._n_sub):
+            if not b.check(x[i:i + n]):
+                return False
+            i += n
+        return True
+
+    def n_parameters(self):
+        """ See :meth:`pints.Boundaries.n_parameters()`. """
+        return self._n_parameters
+
+    def sample(self, n=1):
+        """ See :meth:`pints.Boundaries.sample()`. """
+        x = np.zeros((n, self._n_parameters))
+        i = 0
+        for b, m in zip(self._boundaries, self._n_sub):
+            x[:, i:i + m] = b.sample(n)
+            i += m
+        return x
+
+
 class RectangularBoundaries(Boundaries):
     """
     Represents a set of lower and upper boundaries for model parameters.

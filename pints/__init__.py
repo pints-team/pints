@@ -134,6 +134,7 @@ from ._log_likelihoods import (
 #
 from ._boundaries import (
     Boundaries,
+    ComposedBoundaries,
     LogPDFBoundaries,
     RectangularBoundaries,
 )

@@ -12,11 +12,14 @@ implementation of the :class:`Boundaries` interface.
 Overview:
 
 - :class:`Boundaries`
+- :class:`ComposedBoundaries`
 - :class:`LogPDFBoundaries`
 - :class:`RectangularBoundaries`
 
 
 .. autoclass:: Boundaries
+
+.. autoclass:: ComposedBoundaries
 
 .. autoclass:: LogPDFBoundaries
 
