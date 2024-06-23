@@ -77,6 +77,7 @@ relevant code.
 
 ### Nested sampling
 - [Ellipsoidal nested sampling](./sampling/nested-ellipsoidal-sampling.ipynb)
+- [MultiNest sampling](./sampling/nested-multinest.ipynb)
 - [Rejection nested sampling](./sampling/nested-rejection-sampling.ipynb)
 
 ### ABC
