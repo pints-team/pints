@@ -50,7 +50,7 @@ class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
            Clayton, Mirams (2015) "Uncertainty and variability in models of the
            cardiac action potential: Can we build trustworthy models?"
            Journal of Molecular and Cellular Cardiology.
-           https://10.1016/j.yjmcc.2015.11.018
+           https://doi.org/10.1016/j.yjmcc.2015.11.018
 
     .. [2] Haario, Saksman, Tamminen (2001) "An adaptive Metropolis algorithm"
            Bernoulli.
