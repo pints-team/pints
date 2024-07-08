@@ -8,12 +8,18 @@
 #
 import unittest
 import numpy as np
-from scipy.integrate import cumulative_trapezoid, quad
+from scipy.integrate import quad
 from scipy.interpolate import interp1d
 import pints
 import pints.toy
 
 from shared import StreamCapture
+
+# For compatibility with scipy<1.12, released 2024-01-20
+try:
+    from scipy.integrate import cumulative_trapezoid
+except ImportError:     # pragma: no cover
+    from scipy.integrate import cumtrapz as cumulative_trapezoid
 
 
 class TestRelativisticMCMC(unittest.TestCase):
