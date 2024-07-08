@@ -8,7 +8,7 @@
 #
 import unittest
 import numpy as np
-from scipy.integrate import cumtrapz, quad
+from scipy.integrate import cumulative_trapezoid, quad
 from scipy.interpolate import interp1d
 import pints
 import pints.toy
@@ -238,7 +238,8 @@ class TestRelativisticMCMC(unittest.TestCase):
         # in this test, the values of m and c are nice enough that this
         # function can be used for the comparison, and we check that the
         # results are the same.
-        cdf = cumtrapz(1 / c * pdf(integration_grid), x=integration_grid)
+        cdf = cumulative_trapezoid(
+            1 / c * pdf(integration_grid), x=integration_grid)
 
         # Interpolate to get approximate inverse
         inv_cdf = interp1d([0.0] + list(cdf), integration_grid)
