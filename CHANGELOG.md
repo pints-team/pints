@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - [#1698](https://github.com/pints-team/pints/pull/1698) CMA-ES now raises a more informative exception when an unsupported 1-d optimisation is attempted.
 - [#1503](https://github.com/pints-team/pints/pull/1503) Stopped showing time units in controller logs, because the units change depending on the output type (see #1467).
+- [#1699](https://github.com/pints-team/pints/pull/1699) PINTS is no longer tested on Python 3.7. Testing for Python 3.12 and 3.13 has been added.
 ### Deprecated
 ### Removed
 ### Fixed
