@@ -756,7 +756,10 @@ class MCMCController(object):
                         if store_evaluations:
                             # If accepted, update log_pdf and prior for logging
                             if accepted:
-                                current_logpdf[i] = fy
+                                if self._needs_sensitivities:
+                                    current_logpdf[i] = fy[0]
+                                else:
+                                    current_logpdf[i] = fy
                                 if prior is not None:
                                     current_prior[i] = prior(y)
 
@@ -820,7 +823,10 @@ class MCMCController(object):
                             # Check if accepted, if so, update log_pdf and
                             # prior to be logged
                             if accepted[i]:
-                                current_logpdf[i] = fys[i]
+                                if self._needs_sensitivities:
+                                    current_logpdf[i] = fys[i][0]
+                                else:
+                                    current_logpdf[i] = fys[i]
                                 if prior is not None:
                                     current_prior[i] = prior(ys[i])
 
