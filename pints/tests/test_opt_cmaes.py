@@ -7,6 +7,8 @@
 # copyright notice and full license details.
 #
 import unittest
+import warnings
+
 import numpy as np
 
 import pints
@@ -124,8 +126,15 @@ class TestCMAES(unittest.TestCase):
         self.assertEqual(opt.f_guessed(), np.inf)
 
         # Test deprecated xbest and fbest
-        self.assertEqual(list(opt.xbest()), list(x))
-        self.assertEqual(opt.fbest(), np.inf)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            self.assertEqual(list(opt.xbest()), list(x))
+            self.assertEqual(len(w), 1)
+            self.assertIn('xbest` is deprecated', str(w[-1].message))
+        with warnings.catch_warnings(record=True) as w:
+            self.assertEqual(opt.fbest(), np.inf)
+            self.assertEqual(len(w), 1)
+            self.assertIn('fbest` is deprecated', str(w[-1].message))
 
         # Tell before ask
         self.assertRaisesRegex(
@@ -153,6 +162,11 @@ class TestCMAES(unittest.TestCase):
         # Test the name() method.
         opt = method(np.array([0, 1.01]))
         self.assertIn('CMA-ES', opt.name())
+
+    def test_one_dimensional(self):
+        # Tests 1-d is not supported
+        self.assertRaisesRegex(
+            ValueError, '1-dimensional optimisation is', pints.CMAES, [1])
 
 
 if __name__ == '__main__':
