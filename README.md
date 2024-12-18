@@ -8,7 +8,8 @@
 
 # What is Pints?
 
-PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference on ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
+PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference.
+Although it can be used as a general-purpose inference tool, it was developed specifically for models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
 PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252), and can be cited using the information given in our [CITATION file](https://github.com/pints-team/pints/blob/main/CITATION).
 More information about PINTS papers can be found in the [papers directory](https://github.com/pints-team/pints/tree/main/papers).
