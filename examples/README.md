@@ -150,3 +150,4 @@ relevant code.
 
 ## Miscellaneous
 - [The example shown on the landing page](./sampling/readme-example.ipynb)
+- [Rt estimation Renewal Equation model](./miscellaneous/model-rt-estimation-renewal-equation.ipynb)
