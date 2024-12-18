@@ -768,6 +768,11 @@ class TestMCMCController(unittest.TestCase):
         mcmc.set_log_to_screen(False)
         mcmc.set_log_pdf_storage(True)
         chains = mcmc.run()
+        evals = mcmc.log_pdfs()
+        self.assertEqual(len(evals.shape), 3)
+        self.assertEqual(evals.shape[0], n_chains)
+        self.assertEqual(evals.shape[1], n_iterations)
+        self.assertEqual(evals.shape[2], 3)
 
         # Test with a loglikelihood
         mcmc = pints.MCMCController(
