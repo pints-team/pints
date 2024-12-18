@@ -18,6 +18,16 @@ class CMAES(pints.PopulationBasedOptimiser):
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
 
+    CMAES object is initialised with x0 (initial position), sigma0 (list of
+    initial variances), and boundaries (list of boundaries). For the
+    compatibility with the other optimization methods sigma0 can be specified
+    either as a scalar value (one standard deviation for all coordinates)
+    or as an array with one entry per dimension. However inital covariance
+    matrix corresponds n-dimensional sphere with the min(sigma0) radius. Note,
+    that if sigma0 is not provided it is initialised with
+    (1 / 6) * boundaries.range(), that means that e.g. narrow boundaries will
+    result in a slow convergence.
+
     Extends :class:`PopulationBasedOptimiser`.
 
     References
