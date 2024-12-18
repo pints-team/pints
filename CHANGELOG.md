@@ -10,12 +10,14 @@ All notable changes to this project will be documented in this file.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
 ### Changed
+- [#1698](https://github.com/pints-team/pints/pull/1698) CMA-ES now raises a more informative exception when an unsupported 1-d optimisation is attempted.
 - [#1503](https://github.com/pints-team/pints/pull/1503) Stopped showing time units in controller logs, because the units change depending on the output type (see #1467).
 ### Deprecated
 ### Removed
 ### Fixed
 - [#1517](https://github.com/pints-team/pints/pull/1517) Fixed a major bug in the covariance matrix update for xNES.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Fixed issues with toy problems that accept invalid inputs.
+
 
 
 ## [0.5.0] - 2023-07-27
