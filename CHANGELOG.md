@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1527](https://github.com/pints-team/pints/pull/1527) Added a `ComposedBoundaries` class that lets you compose multiple `Boundaries` classes into a higher dimensional one.
+- [#1500](https://github.com/pints-team/pints/pull/1500) Added a `CensoredGaussianLogLikelihood` class that calculates the censored Gaussian log-likelihood.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Added notes to `ErrorMeasure` and `LogPDF` to say parameters must be real and continuous.
 - [#1499](https://github.com/pints-team/pints/pull/1499) Added a log-uniform prior class.
 ### Changed
 - [#1503](https://github.com/pints-team/pints/pull/1503) Stopped showing time units in controller logs, because the units change depending on the output type (see #1467).
+- [#1699](https://github.com/pints-team/pints/pull/1699) PINTS is no longer tested on Python 3.7. Testing for Python 3.12 and 3.13 has been added.
 ### Deprecated
 ### Removed
 ### Fixed

@@ -186,7 +186,7 @@ class NelderMead(pints.Optimiser):
                     self._xs[1 + i][i] *= x_grow
 
             # Ask for initial points
-            return np.array(self._xs, copy=True)
+            return np.copy(self._xs)
 
         # Shrink operation
         if self._shrink:
@@ -194,7 +194,7 @@ class NelderMead(pints.Optimiser):
                 self._xs[1 + i] = \
                     self._xs[0] + self._ys * (self._xs[1 + i] - self._xs[0])
 
-            return np.array(self._xs[1:], copy=True)
+            return np.copy(self._xs[1:])
 
         # Start of normal iteration, ask for reflection point
         if self._xr is None:
@@ -240,7 +240,7 @@ class NelderMead(pints.Optimiser):
 
         # Initialise
         if self._fs is None:
-            fx = np.array(fx, copy=True)
+            fx = np.copy(fx)
             if np.prod(fx.shape) != self._n_parameters + 1:
                 raise ValueError(
                     'Expecting a vector of length (1 + n_parameters).')
@@ -251,7 +251,7 @@ class NelderMead(pints.Optimiser):
 
         # Shrink
         if self._shrink:
-            fx = np.array(fx, copy=False)
+            fx = np.asarray(fx)
             if np.prod(fx.shape) != self._n_parameters:
                 raise ValueError(
                     'Expecting a vector of length n_parameters.')

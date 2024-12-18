@@ -20,12 +20,13 @@ jobs:
     if: github.event.pull_request.draft == false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          # Testing on version that Stan currently supports
+          python-version: '3.12'
 
       - name: install pints
         run: |
