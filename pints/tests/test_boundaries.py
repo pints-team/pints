@@ -7,8 +7,12 @@
 # copyright notice and full license details.
 #
 import unittest
-import pints
+
 import numpy as np
+
+import pints
+
+from shared import UnitCircleBoundaries2D
 
 
 class TestRectangularBoundaries(unittest.TestCase):
@@ -121,6 +125,70 @@ class TestLogPDFBoundaries(unittest.TestCase):
         p.sample(2)
         b = pints.LogPDFBoundaries(p)
         b.sample(2)
+
+
+class TestComposedBoundaries(unittest.TestCase):
+    """
+    Tests boundaries composed of other boundaries.
+    """
+    def test_composed_boundaries(self):
+        p = UnitCircleBoundaries2D()
+        q = pints.RectangularBoundaries([-5, 0, 5], [-4, 2, 10])
+        r = UnitCircleBoundaries2D(30, -20)
+        b = pints.ComposedBoundaries(p, q, r)
+
+        # Test selected points
+        self.assertEqual(b.n_parameters(), 7)
+        x = [0.5, 0.5] + [-4.9, 0.1, 5.2] + [30.1, -20.8]
+        self.assertTrue(p.check(x[:2]))
+        self.assertTrue(q.check(x[2:5]))
+        self.assertTrue(r.check(x[5:]))
+        self.assertTrue(b.check(x))
+        x = [0.9, 0.5] + [-4.9, 0.1, 5.2] + [30.1, -20.8]
+        self.assertFalse(p.check(x[:2]))
+        self.assertTrue(q.check(x[2:5]))
+        self.assertTrue(r.check(x[5:]))
+        self.assertFalse(b.check(x))
+        x = [0.5, 0.5] + [-4.9, -0.1, 5.2] + [30.1, -20.8]
+        self.assertTrue(p.check(x[:2]))
+        self.assertFalse(q.check(x[2:5]))
+        self.assertTrue(r.check(x[5:]))
+        self.assertFalse(b.check(x))
+        x = [0.5, 0.5] + [-4.9, 0.1, 5.2] + [30.1, 20.8]
+        self.assertTrue(p.check(x[:2]))
+        self.assertTrue(q.check(x[2:5]))
+        self.assertFalse(r.check(x[5:]))
+        self.assertFalse(b.check(x))
+
+        # Test points sampled from the individual sub boundaries
+        xs = np.concatenate(
+            (p.sample(100), q.sample(100), r.sample(100)), axis=1)
+        for x in xs:
+            self.assertTrue(b.check(x))
+
+        # Test points sampled from the composed prior
+        for x in b.sample(100):
+            self.assertTrue(b.check(x))
+            self.assertTrue(p.check(x[:2]))
+            self.assertTrue(q.check(x[2:5]))
+            self.assertTrue(r.check(x[5:]))
+
+        # Just one boundary reduces to original
+        b = pints.ComposedBoundaries(q)
+        self.assertEqual(b.n_parameters(), 3)
+        self.assertTrue(b.check([-4.5, 1, 7]))
+        self.assertFalse(b.check([-4.5, 3, 7]))
+        for x in b.sample(100):
+            self.assertTrue(q.check(x))
+
+        # No boundaries is not allowed
+        self.assertRaisesRegex(
+            ValueError, 'at least one', pints.ComposedBoundaries)
+
+        # Components must be boundaries
+        self.assertRaisesRegex(
+            ValueError, 'must extend', pints.ComposedBoundaries,
+            p, q, pints.ExponentialLogPrior(3))
 
 
 if __name__ == '__main__':

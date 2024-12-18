@@ -329,7 +329,7 @@ class SumOfErrors(ErrorMeasure):
 
 class SumOfSquaresError(ProblemErrorMeasure):
     r"""
-     Calculates a sum of squares error:
+     Calculates the sum of squares error:
 
     .. math::
         f = \sum _i^n (y_i - x_i) ^ 2,
@@ -344,6 +344,12 @@ class SumOfSquaresError(ProblemErrorMeasure):
     problem
         A :class:`pints.SingleOutputProblem` or
         :class:`pints.MultiOutputProblem`.
+    weights
+        An optional sequence of (float) weights, exactly one per problem
+        output. If given, the error in each individual output will be
+        multiplied by the corresponding weight. If no weights are specified all
+        outputs will be weighted equally.
+
     """
     def __init__(self, problem, weights=None):
         super(SumOfSquaresError, self).__init__(problem)
