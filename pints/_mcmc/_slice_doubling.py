@@ -109,7 +109,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
     :math:`S = {x : z < g(x)}`.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, does not use sensitivities.
 
     References
     ----------

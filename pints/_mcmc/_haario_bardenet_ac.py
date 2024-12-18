@@ -42,7 +42,7 @@ class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
         log lambda = log lambda + gamma (alpha - self._target_acceptance)
         gamma = adaptation_count^-eta
 
-    Extends :class:`AdaptiveCovarianceMC`.
+    Extends :class:`AdaptiveCovarianceMC`, does not use sensitivities.
 
     References
     ----------

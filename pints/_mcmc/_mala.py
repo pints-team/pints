@@ -67,7 +67,7 @@ class MALAMCMC(pints.SingleChainMCMC):
     where :math:`\epsilon' = \epsilon \sqrt{M}` is given by the initial value
     of ``sigma0``.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, this method uses sensitivities.
 
     References
     ----------
@@ -181,7 +181,11 @@ class MALAMCMC(pints.SingleChainMCMC):
         return 'Metropolis-Adjusted Langevin Algorithm (MALA)'
 
     def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        """
+        This method requires sensitivities.
+
+        See :meth:`pints.MCMCSampler.needs_sensitivities()`.
+        """
         return True
 
     def n_hyper_parameters(self):

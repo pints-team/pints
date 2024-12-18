@@ -735,6 +735,8 @@ class MCMCController(object):
 
                     if reply is not None:
                         # Unpack reply into position, evaluation, and status
+                        # Note that evaluation is (fy, dfy) with sensitivities
+                        # enabled.
                         y, fy, accepted = reply
 
                         # Inverse transform to model space if transformation is
@@ -1034,9 +1036,10 @@ class MCMCController(object):
         Store :class:`LogPDF` evaluations in memory as they are generated.
 
         By default, evaluations of the :class:`LogPDF` are not stored. This
-        method can be used to enable storage of the evaluations for the
-        accepted samples.
-        After running, evaluations can be obtained using :meth:`evaluations()`.
+        method can be used to enable (or disable) storage for the accepted
+        samples, in memory.
+
+        After running, evaluations can be obtained using :meth:`log_pdfs()`.
         """
         self._evaluations_in_memory = bool(store_in_memory)
 

@@ -34,6 +34,8 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     ``1 / sqrt(z)`` if ``z`` is in  ``[1 / a, a]`` or to 0, otherwise (where
     ``a`` is a parameter with default value ``2``).
 
+    Extends :class:`MultiChainMCMC`, does not use sensitivities.
+
     References
     ----------
     .. [1] "emcee: The MCMC Hammer", Daniel Foreman-Mackey, David W. Hogg,
