@@ -759,12 +759,12 @@ class TestMCMCController(unittest.TestCase):
             priors = [self.log_prior(x) for x in chain]
             self.assertTrue(np.all(evals[i, :, 2] == priors))
 
-        # Test with a sensitivity-using method
+        # Test with a sensitivity-using multi-chain method
         # We don't have any of these!
         mcmc = pints.MCMCController(
             self.log_posterior, n_chains, xs,
             method=FakeMultiChainSamplerWithSensitivities)
-        mcmc.set_max_iterations(5)
+        mcmc.set_max_iterations(n_iterations)
         mcmc.set_log_to_screen(False)
         mcmc.set_log_pdf_storage(True)
         chains = mcmc.run()
@@ -773,6 +773,13 @@ class TestMCMCController(unittest.TestCase):
         self.assertEqual(evals.shape[0], n_chains)
         self.assertEqual(evals.shape[1], n_iterations)
         self.assertEqual(evals.shape[2], 3)
+        for i, chain in enumerate(chains):
+            posteriors = [self.log_posterior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 0] == posteriors))
+            likelihoods = [self.log_likelihood(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 1] == likelihoods))
+            priors = [self.log_prior(x) for x in chain]
+            self.assertTrue(np.all(evals[i, :, 2] == priors))
 
         # Test with a loglikelihood
         mcmc = pints.MCMCController(
@@ -1706,6 +1713,9 @@ class FakeMultiChainSamplerWithSensitivities(pints.MultiChainMCMC):
     def tell(self, fxs):
         self._fxs = fxs
         return self._xs, self._fxs, [True] * self._n_chains
+
+    def needs_sensitivities(self):
+        return True
 
 
 class TestMCMCControllerSingleChainStorage(unittest.TestCase):
