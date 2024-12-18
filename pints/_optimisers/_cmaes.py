@@ -18,6 +18,25 @@ class CMAES(pints.PopulationBasedOptimiser):
     CMA-ES stands for Covariance Matrix Adaptation Evolution Strategy, and is
     designed for non-linear derivative-free optimization problems.
 
+    To initialise, set an initial position ``x0``, an initial covariance
+    ``sigma0``, and optionally a set of :class:`pints.Boundaries`.
+
+    CMA-ES is designed for multivariate optimisation, so ``x0`` should have a
+    dimension of 2 or greater.
+
+    The initial covariance ``sigma0`` should be a scalar (one standard
+    deviation for all parameters), but for compatibility with other optimisers
+    an array is also accepted: in this case the smallest value in ``sigma0``
+    will be used. If no ``sigma0`` is given a guess will be made based on the
+    boundaries (if provided) or ``x0``, see :meth:`Optimiser` for details. The
+    method's authors suggest choosing ``sigma0`` such that the optimum is
+    expected to be within ``3 * sigma0`` from the initial position ``x0``.
+
+    :class:`Rectangular boundaries<pints.RectangularBoundaries>` are supported
+    by the ``cma`` module natively. Other boundary shapes are also supported
+    but will be handled by ``PINTS`` (which will pass ``nan`` to ``cma`` for
+    any point requested outside of the boundaries).
+
     Extends :class:`PopulationBasedOptimiser`.
 
     References
@@ -37,6 +56,11 @@ class CMAES(pints.PopulationBasedOptimiser):
 
     def __init__(self, x0, sigma0=None, boundaries=None):
         super(CMAES, self).__init__(x0, sigma0, boundaries)
+
+        # 1-D is not supported
+        if len(x0) < 2:
+            raise ValueError(
+                '1-dimensional optimisation is not supported by CMA-ES.')
 
         # Set initial state
         self._running = False
