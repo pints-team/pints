@@ -46,7 +46,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
     In particular, the algorithm we implement follows eqs. (4.14)-(4.16) in
     [1]_, since we allow different epsilon according to dimension.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, this method uses sensitivities.
 
     References
     ----------
@@ -190,7 +190,10 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         return 'Hamiltonian Monte Carlo'
 
     def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        """
+        This method requires sensitivities.
+
+        See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
         return True
 
     def scaled_epsilon(self):

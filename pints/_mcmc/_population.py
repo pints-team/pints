@@ -39,7 +39,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
     ``delta_T = 1 / num_temperatures``, and the chain with ``T_i = 0`` is the
     one whose target distribution we want to sample.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, does not use sensitivities.
 
     References
     ----------

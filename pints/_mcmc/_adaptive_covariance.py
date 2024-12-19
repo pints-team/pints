@@ -23,7 +23,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
     A basic implementation is provided for each, which extending methods can
     choose to override.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, does not use sensitivities.
     """
 
     def __init__(self, x0, sigma0=None):

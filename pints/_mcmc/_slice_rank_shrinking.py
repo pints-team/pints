@@ -63,7 +63,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     :math:`\epsilon \sim \text{exp}(1)` and define the slice as
     :math:`S = {x : z < log f(x)}`.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, this method uses sensitivities.
 
     References
     ----------
@@ -156,7 +156,11 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
         return 'Slice Sampling - Covariance-Adaptive: Rank Shrinking.'
 
     def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        """
+        This method requires sensitivities.
+
+        See :meth:`pints.MCMCSampler.needs_sensitivities()`.
+        """
         return True
 
     def n_hyper_parameters(self):
