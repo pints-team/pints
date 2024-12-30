@@ -26,6 +26,11 @@ jobs:
           python -m pip install .
           python -m pip install .[dev]
 
+      # Install pandas for "estimation renewal" notebook
+      - name: install pandas
+        run: |
+          python -m pip install pandas
+
       - name: run jupyter notebooks
         run: |
           python run-tests.py --books
