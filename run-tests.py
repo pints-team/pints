@@ -432,7 +432,7 @@ def list_notebooks(root, recursive=True, ignore_list=None, notebooks=None):
 
 def test_notebook(path):
     """
-    Tests a notebook in a subprocess, exists if it doesn't finish.
+    Tests a notebook in a subprocess, exits if it doesn't finish.
     """
     import nbconvert
     import pints
@@ -442,7 +442,7 @@ def test_notebook(path):
 
     # Load notebook, convert to python
     e = nbconvert.exporters.PythonExporter()
-    code, __ = e.from_filename(path)
+    code, _ = e.from_filename(path)
 
     # Remove coding statement, if present
     code = '\n'.join([x for x in code.splitlines() if x[:9] != '# coding'])
@@ -455,7 +455,8 @@ def test_notebook(path):
     cmd = [sys.executable, '-c', code]
     try:
         p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+            cwd=os.path.dirname(path)
         )
         stdout, stderr = p.communicate()
         # TODO: Use p.communicate(timeout=3600)
