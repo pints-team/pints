@@ -4,8 +4,9 @@ Core classes and methods
 
 .. currentmodule:: pints
 
-Pints provides the :class:`SingleOutputProblem` and
-:class:`MultiOutputProblem` classes to formulate
+Pints provides the :class:`SingleOutputProblem`,
+:class:`MultiOutputProblem`, :class:`ProblemCollection`
+and :class:`SubProblem` classes to formulate
 inverse problems based on time series data and
 :class:`ForwardModel`.
 
@@ -14,7 +15,9 @@ Overview:
 - :class:`ForwardModel`
 - :class:`ForwardModelS1`
 - :class:`MultiOutputProblem`
+- :class:`ProblemCollection`
 - :class:`SingleOutputProblem`
+- :class:`SubProblem`
 - :class:`TunableMethod`
 - :func:`version`
 
@@ -36,7 +39,10 @@ Forward model with sensitivities
 Problems
 ********
 
-.. autoclass:: SingleOutputProblem
-
 .. autoclass:: MultiOutputProblem
 
+.. autoclass:: ProblemCollection
+
+.. autoclass:: SingleOutputProblem
+
+.. autoclass:: SubProblem
