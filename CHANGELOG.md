@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - [#1517](https://github.com/pints-team/pints/pull/1517) Fixed a major bug in the covariance matrix update for xNES.
 - [#1505](https://github.com/pints-team/pints/pull/1505) Fixed issues with toy problems that accept invalid inputs.
-
+- [#1497](https://github.com/pints-team/pints/pull/1497) Fixed deprecation warning of `np.product` globally in PINTS.
 
 
 ## [0.5.0] - 2023-07-27
@@ -52,7 +52,6 @@ All notable changes to this project will be documented in this file.
 - [#1424](https://github.com/pints-team/pints/pull/1424) Removed the `TriangleWaveTransform` class previously used in some optimisers.
 
 ### Fixed
-- [#1497](https://github.com/pints-team/pints/pull/1497) Fixed deprecation warning of `np.product` globally in pints.
 - [#1457](https://github.com/pints-team/pints/pull/1457) Fixed typo in deprecation warning for `UnknownNoiseLikelihood`.
 - [#1455](https://github.com/pints-team/pints/pull/1455) The `s` and `inv_s` properties of `ScalingTransformation` have been replaced with private properties `_s` and `_inv_s`.
 - [#1450](https://github.com/pints-team/pints/pull/1450) Made `TransformedBoundaries` consistent with `Boundaries` by removing `range()` and adding `sample()`.
