@@ -17,7 +17,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          # Testing on version that Stan currently supports
+          python-version: '3.12'
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
       # that have some code in pints/interfaces. Dependencies that are not used
