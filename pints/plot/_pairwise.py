@@ -56,7 +56,6 @@ def pairwise(samples,
         if true values of parameters are known, they can be passed in for
         plotting.
     """
-    import matplotlib
     import matplotlib.pyplot as plt
 
     # Check options kde and heatmap
