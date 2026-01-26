@@ -180,7 +180,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
             next = np.copy(self._current)
             next_log_pdfs = np.copy(self._current_log_pdfs)
             next[self._k] = self._proposed
-            next_log_pdfs[self._k] = proposed_log_pdf
+            next_log_pdfs[self._k] = proposed_log_pdf[0]
             self._current.setflags(write=False)
             self._current_log_pdfs.setflags(write=False)
             self._current = next

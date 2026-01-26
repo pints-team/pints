@@ -180,7 +180,7 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
                     (m1 - m0) * s1_inv * (m1 - m0) -
                     np.log(s0) +
                     np.log(s1) -
-                    1)
+                    1)[0][0]
         return kl
 
     def n_parameters(self):

@@ -5,8 +5,6 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-from distutils.version import LooseVersion
-
 import numpy as np
 import scipy.stats as stats
 
@@ -44,12 +42,7 @@ def histogram(
         A set of parameters for reference in the plot. For example, if true
         values of parameters are known, they can be passed in for plotting.
     """
-    import matplotlib
     import matplotlib.pyplot as plt
-
-    # Check matplotlib version
-    use_old_matplotlib = LooseVersion(matplotlib.__version__) \
-        < LooseVersion("2.2")
 
     # If we switch to Python3 exclusively, bins and alpha can be keyword-only
     # arguments
@@ -101,14 +94,9 @@ def histogram(
             # Add histogram subplot
             axes[i, 0].set_xlabel(parameter_names[i])
             axes[i, 0].set_ylabel('Frequency')
-            if use_old_matplotlib:  # pragma: no cover
-                axes[i, 0].hist(
-                    samples_j[:, i], bins=xbins[:, i], alpha=alpha,
-                    normed=True, label='Samples ' + str(1 + j_list))
-            else:
-                axes[i, 0].hist(
-                    samples_j[:, i], bins=xbins[:, i], alpha=alpha,
-                    density=True, label='Samples ' + str(1 + j_list))
+            axes[i, 0].hist(
+                samples_j[:, i], bins=xbins[:, i], alpha=alpha,
+                density=True, label='Samples ' + str(1 + j_list))
 
             # Add kde plot
             if kde:
