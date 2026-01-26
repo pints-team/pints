@@ -7,8 +7,6 @@
 #
 import warnings
 
-from distutils.version import LooseVersion
-
 import numpy as np
 import scipy.stats as stats
 
@@ -61,10 +59,6 @@ def pairwise(samples,
     import matplotlib
     import matplotlib.pyplot as plt
 
-    # Check matplotlib version
-    use_old_matplotlib = LooseVersion(matplotlib.__version__) \
-        < LooseVersion("2.2")
-
     # Check options kde and heatmap
     if kde and heatmap:
         raise ValueError('Cannot use `kde` and `heatmap` together.')
@@ -114,10 +108,7 @@ def pairwise(samples,
                                          50 + n_percentiles / 2.)
                 xbins = np.linspace(xmin, xmax, bins)
                 axes[i, j].set_xlim(xmin, xmax)
-                if use_old_matplotlib:  # pragma: no cover
-                    axes[i, j].hist(samples[:, i], bins=xbins, normed=True)
-                else:
-                    axes[i, j].hist(samples[:, i], bins=xbins, density=True)
+                axes[i, j].hist(samples[:, i], bins=xbins, density=True)
 
                 # Add kde plot
                 if kde:
