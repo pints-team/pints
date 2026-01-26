@@ -66,7 +66,7 @@ setup(
         # Note: Matplotlib is loaded for debug plots, but to ensure pints runs
         # on systems without an attached display, it should never be imported
         # outside of plot() methods.
-        'matplotlib>=1.5',
+        'matplotlib>=2.2',
         'tabulate',
         'threadpoolctl',
     ],

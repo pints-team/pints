@@ -445,13 +445,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         if self._values.ndim == 1:
             where_condition = np.reshape(
                 self._not_censored_condition,
-                newshape=(np.shape(self._not_censored_condition)[0], 1, 1))
+                (np.shape(self._not_censored_condition)[0], 1, 1))
             lower_where_condition = np.reshape(
                 self._lower_condition,
-                newshape=(np.shape(self._lower_condition)[0], 1, 1))
+                (np.shape(self._lower_condition)[0], 1, 1))
             upper_where_condition = np.reshape(
                 self._upper_condition,
-                newshape=(np.shape(self._upper_condition)[0], 1, 1))
+                (np.shape(self._upper_condition)[0], 1, 1))
         else:
             where_condition = np.repeat(
                 self._not_censored_condition[:, :, np.newaxis],

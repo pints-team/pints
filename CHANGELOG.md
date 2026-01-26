@@ -8,9 +8,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 - [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_max_unmoved_iterations` that allows methods to stop after 1 or more iterations with no significant movement in parameter space.
 ### Changed
+- [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.
 ### Deprecated
 ### Removed
 ### Fixed
+- [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
 
 
 ## [0.5.1] - 2025-09-26
