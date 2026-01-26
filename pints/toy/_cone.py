@@ -120,8 +120,8 @@ class ConeLogPDF(ToyLogPDF):
         n = self._n_parameters
 
         # Determine empirical inverse-CDF
-        x_max = scipy.optimize.minimize(lambda x: (
-            np.abs((self.CDF(x) - 1))), 8)['x'][0] * 10
+        x_max = scipy.optimize.minimize(
+            lambda x: np.abs(self.CDF(x[0]) - 1), 8)['x'][0] * 10
         x_range = np.linspace(0, x_max, 100)
         cdf = [self.CDF(x) for x in x_range]
         f = scipy.interpolate.interp1d(cdf, x_range)
