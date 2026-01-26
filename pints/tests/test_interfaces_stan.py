@@ -36,7 +36,7 @@ class TestStanLogPDF(unittest.TestCase):
         cls.code = '''
             data {
                 int<lower=0> N;
-                real y[N];
+                array[N] real y;
             }
 
             parameters {
@@ -52,7 +52,7 @@ class TestStanLogPDF(unittest.TestCase):
         cls.code1 = '''
             data {
                 int<lower=0> N;
-                real y[N];
+                array[N] real y;
             }
 
             parameters {
@@ -71,8 +71,8 @@ class TestStanLogPDF(unittest.TestCase):
         cls.code2 = '''
             data {
               int<lower=0> J;
-              real y[J];
-              real<lower=0> sigma[J];
+              array[J] real y;
+              array[J] real<lower=0> sigma;
             }
 
             parameters {
@@ -87,7 +87,7 @@ class TestStanLogPDF(unittest.TestCase):
               // We now define the real theta_tilde[J];
               /* real_theta_tilde[J]; ? Yes!
                  We certainly define that here. */
-              real theta_tilde[J]; // This is it being defined
+              array[J] real theta_tilde; // This is it being defined
               /* Great job everyone! We defined
               real_theta_tilde[J];
               in this parameters{} block.
@@ -95,7 +95,7 @@ class TestStanLogPDF(unittest.TestCase):
             }
 
             transformed parameters {
-              real theta[J];
+              array[J] real theta;
               for (j in 1:J)
                 theta[j] = mu + tau * theta_tilde[j];
             }

@@ -50,7 +50,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
     are then adapted as ``[scale_1, scale_2] * sigma``, where the
     scale factors are set using ``set_sigma_scale``.
 
-    *Extends:* :class:`GlobalAdaptiveCovarianceMC`
+    *Extends:* :class:`GlobalAdaptiveCovarianceMC`, does not use sensitivities.
 
     References
     ----------

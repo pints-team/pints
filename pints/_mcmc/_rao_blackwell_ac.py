@@ -37,7 +37,7 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         Y_t+1 ~ N(theta_t, lambda * sigma0) rather than
             Y_t+1 ~ N(theta_t, sigma0)
 
-    Extends :class:`AdaptiveCovarianceMC`.
+    Extends :class:`AdaptiveCovarianceMC`, does not use sensitivities.
 
     References
     ----------

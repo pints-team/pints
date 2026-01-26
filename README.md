@@ -8,7 +8,8 @@
 
 # What is Pints?
 
-PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference on ODE models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
+PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference.
+Although it can be used as a general-purpose inference tool, it was developed specifically for models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
 PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252), and can be cited using the information given in our [CITATION file](https://github.com/pints-team/pints/blob/main/CITATION).
 More information about PINTS papers can be found in the [papers directory](https://github.com/pints-team/pints/tree/main/papers).
@@ -81,7 +82,7 @@ There are lots of ways to contribute to PINTS development, and anyone is free to
 For example, you can report problems or make feature requests on the [issues](https://github.com/pints-team/pints/issues) pages.
 
 Similarly, if you want to contribute documentation or code you can tell us your idea on this page, and then provide a pull request for review.
-Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code -- but don't worry, this will become clear during review.
+Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code — but don't worry, this will become clear during review.
 
 ## License
 

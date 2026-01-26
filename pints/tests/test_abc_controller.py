@@ -18,7 +18,7 @@ from shared import StreamCapture, TemporaryDirectory
 LOG_SCREEN_1 = [
     'Using Rejection ABC',
     'Running in sequential mode.',
-    'Iter. Eval. Acceptance rate Time m:s',
+    'Iter. Eval. Acceptance rate Time    ',
     '1     127    0.00787401575    0:00.0',
     '2     167    0.0119760479     0:00.0',
     '3     209    0.014354067      0:00.0',
@@ -28,7 +28,7 @@ LOG_SCREEN_1 = [
 LOG_SCREEN_2 = [
     'Using Rejection ABC',
     'Running in parallel with 2 worker processess.',
-    'Iter. Eval. Acceptance rate Time m:s',
+    'Iter. Eval. Acceptance rate Time    ',
     '1     20     0.05             0:00.0',
     '2     22     0.0909090909     0:00.0',
     '3     144    0.0208333333     0:00.0',
@@ -38,7 +38,7 @@ LOG_SCREEN_2 = [
 ]
 
 LOG_FILE = [
-    'Iter. Eval. Acceptance rate Time m:s',
+    'Iter. Eval. Acceptance rate Time    ',
     '1     127    0.00787401575    0:00.0',
     '2     167    0.0119760479     0:00.0',
     '3     209    0.014354067      0:00.0',
@@ -46,7 +46,7 @@ LOG_FILE = [
 ]
 
 LOG_FILE_CSV = [
-    '"Iter.","Eval.","Acceptance rate","Time m:s"',
+    '"Iter.","Eval.","Acceptance rate","Time"',
     '1,127,7.87401574803149595e-03,0:00.0',
     '2,167,0.0119760479,0:00.0',
     '3,209,0.014354067,0:00.0',

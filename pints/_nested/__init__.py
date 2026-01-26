@@ -409,7 +409,9 @@ class NestedController(object):
             # Add fields to log
             self._logger.add_counter('Iter.', max_value=self._iterations)
             self._logger.add_counter('Eval.', max_value=self._iterations * 10)
-            self._logger.add_time('Time m:s')
+            # Note: removed units from time field, see
+            # https://github.com/pints-team/pints/issues/1467
+            self._logger.add_time('Time')
             self._logger.add_float('Delta_log(z)')
             self._logger.add_float('Acceptance rate')
 

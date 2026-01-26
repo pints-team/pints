@@ -115,6 +115,7 @@ from ._log_likelihoods import (
     AR1LogLikelihood,
     ARMA11LogLikelihood,
     CauchyLogLikelihood,
+    CensoredGaussianLogLikelihood,
     ConstantAndMultiplicativeGaussianLogLikelihood,
     GaussianIntegratedLogUniformLogLikelihood,
     GaussianIntegratedUniformLogLikelihood,
@@ -133,6 +134,7 @@ from ._log_likelihoods import (
 #
 from ._boundaries import (
     Boundaries,
+    ComposedBoundaries,
     LogPDFBoundaries,
     RectangularBoundaries,
 )

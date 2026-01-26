@@ -499,7 +499,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
 
     Note: This sampler is only supported on Python versions 3.3 and newer.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, this method uses sensitivities.
 
     References
     ----------
@@ -664,7 +664,11 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         return 'No-U-Turn MCMC'
 
     def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        """
+        This method requires sensitivities.
+
+        See :meth:`pints.MCMCSampler.needs_sensitivities()`.
+        """
         return True
 
     def number_adaption_steps(self):

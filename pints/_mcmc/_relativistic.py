@@ -57,7 +57,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
     In particular, the algorithm we implement follows eqs. in section 2.1 of
     [1]_.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, this method uses sensitivities.
 
     References
     ----------
@@ -325,7 +325,11 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         return 'Relativistic MCMC'
 
     def needs_sensitivities(self):
-        """ See :meth:`pints.MCMCSampler.needs_sensitivities()`. """
+        """
+        This method requires sensitivities.
+
+        See :meth:`pints.MCMCSampler.needs_sensitivities()`.
+        """
         return True
 
     def _sample_momentum(self):

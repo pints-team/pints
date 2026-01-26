@@ -24,7 +24,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
 
     here Sigma is the covariance matrix of the proposal.
 
-    Extends :class:`SingleChainMCMC`.
+    Extends :class:`SingleChainMCMC`, does not use sensitivities.
 
     References
     ----------

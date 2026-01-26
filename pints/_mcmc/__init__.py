@@ -665,7 +665,9 @@ class MCMCController(object):
             logger.add_counter('Eval.', max_value=max_eval_guess)
             for sampler in self._samplers:
                 sampler._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: deleted time units from header, see
+            # https://github.com/pints-team/pints/issues/1467
+            logger.add_time('Time')
 
         # Pre-allocate arrays for chain storage
         # Note: we store the inverse transformed (to model space) parameters
@@ -733,6 +735,8 @@ class MCMCController(object):
 
                     if reply is not None:
                         # Unpack reply into position, evaluation, and status
+                        # Note that evaluation is (fy, dfy) with sensitivities
+                        # enabled.
                         y, fy, accepted = reply
 
                         # Inverse transform to model space if transformation is
@@ -752,7 +756,10 @@ class MCMCController(object):
                         if store_evaluations:
                             # If accepted, update log_pdf and prior for logging
                             if accepted:
-                                current_logpdf[i] = fy
+                                if self._needs_sensitivities:
+                                    current_logpdf[i] = fy[0]
+                                else:
+                                    current_logpdf[i] = fy
                                 if prior is not None:
                                     current_prior[i] = prior(y)
 
@@ -816,7 +823,10 @@ class MCMCController(object):
                             # Check if accepted, if so, update log_pdf and
                             # prior to be logged
                             if accepted[i]:
-                                current_logpdf[i] = fys[i]
+                                if self._needs_sensitivities:
+                                    current_logpdf[i] = fys[i][0]
+                                else:
+                                    current_logpdf[i] = fys[i]
                                 if prior is not None:
                                     current_prior[i] = prior(ys[i])
 
@@ -1032,9 +1042,10 @@ class MCMCController(object):
         Store :class:`LogPDF` evaluations in memory as they are generated.
 
         By default, evaluations of the :class:`LogPDF` are not stored. This
-        method can be used to enable storage of the evaluations for the
-        accepted samples.
-        After running, evaluations can be obtained using :meth:`evaluations()`.
+        method can be used to enable (or disable) storage for the accepted
+        samples, in memory.
+
+        After running, evaluations can be obtained using :meth:`log_pdfs()`.
         """
         self._evaluations_in_memory = bool(store_in_memory)
 

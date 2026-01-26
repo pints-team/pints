@@ -34,15 +34,23 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     Parameters
     ----------
     x0
-        A starting point for searches in the parameter space. This value may be
-        used directly (for example as the initial position of a particle in
+        A starting point for searches in the parameter space. This must be a
+        1-dimensional vector, and its length will determine the dimensionality
+        of the search space. The initial position ``x0`` may may be used
+        directly (for example as the initial position of a particle in
         :class:`PSO`) or indirectly (for example as the center of a
         distribution in :class:`XNES`).
     sigma0
         An optional initial standard deviation around ``x0``. Can be specified
         either as a scalar value (one standard deviation for all coordinates)
         or as an array with one entry per dimension. Not all methods will use
-        this information.
+        this information, and some methods will only use part of the provided
+        information (e.g. ``CMA-ES`` will only use the smallest value in
+        ``sigma0``). If no value for ``sigma0`` is provided, a guess will be
+        made. If a :meth:`range<Boundaries.range>` can be obtained from
+        provided boundaries, then 1/6th of this range will be used. If not, the
+        value will be set as ``abs(x0[i]) / 3`` for any ``i`` where
+        ``x0[i] != 0`` or as ``1`` where ``x0[i] == 0``.
     boundaries
         An optional set of boundaries on the parameter space.
 
@@ -340,17 +348,14 @@ class OptimisationController(object):
         An :class:`pints.ErrorMeasure` or a :class:`pints.LogPDF` that
         evaluates points in the parameter space.
     x0
-        The starting point for searches in the parameter space. This value may
-        be used directly (for example as the initial position of a particle in
-        :class:`PSO`) or indirectly (for example as the center of a
-        distribution in :class:`XNES`).
+        The starting point for searches in the parameter space. For details,
+        see :class:`Optimiser`.
     sigma0
-        An optional initial standard deviation around ``x0``. Can be specified
-        either as a scalar value (one standard deviation for all coordinates)
-        or as an array with one entry per dimension. Not all methods will use
-        this information.
+        An optional initial standard deviation around ``x0``. For details, see
+        :class:`Optimiser`.
     boundaries
-        An optional set of boundaries on the parameter space.
+        An optional set of boundaries on the parameter space. For details, see
+        :class:`Optimiser`.
     transformation
         An optional :class:`pints.Transformation` to allow the optimiser to
         search in a transformed parameter space. If used, points shown or
@@ -359,6 +364,7 @@ class OptimisationController(object):
     method
         The class of :class:`pints.Optimiser` to use for the optimisation.
         If no method is specified, :class:`CMAES` is used.
+
     """
 
     def __init__(
@@ -717,7 +723,9 @@ class OptimisationController(object):
             logger.add_float('Best')
             logger.add_float('Current')
             self._optimiser._log_init(logger)
-            logger.add_time('Time m:s')
+            # Note: No units shown in time field, for the reason why see
+            # https://github.com/pints-team/pints/issues/1467
+            logger.add_time('Time')
 
         # Start searching
         timer = pints.Timer()
