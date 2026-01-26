@@ -532,10 +532,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (in the censored case set the lower and upper limits
         # so that no points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-np.inf, -np.inf, -np.inf],
-                upper=[np.inf, np.inf, np.inf])
+            problem,
+            lower=[-np.inf, -np.inf, -np.inf],
+            upper=[np.inf, np.inf, np.inf])
         log_likelihood = pints.GaussianLogLikelihood(problem)
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
@@ -556,10 +555,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (set the lower limit so that
         # points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-4, -11.1, -np.inf],
-                upper=[np.inf, np.inf, np.inf])
+            problem,
+            lower=[-4, -11.1, -np.inf],
+            upper=[np.inf, np.inf, np.inf])
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
             score = log_likelihood_censored(test_parameters)
@@ -573,10 +571,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (set the upper limit so that
         # points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-np.inf, -np.inf, -np.inf],
-                upper=[np.inf, 4, np.inf])
+            problem,
+            lower=[-np.inf, -np.inf, -np.inf],
+            upper=[np.inf, 4, np.inf])
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
             score = log_likelihood_censored(test_parameters)
@@ -590,10 +587,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (set the lower and upper limits so that
         # points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-4, -np.inf, -np.inf],
-                upper=[np.inf, 4, np.inf])
+            problem,
+            lower=[-4, -np.inf, -np.inf],
+            upper=[np.inf, 4, np.inf])
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
             score = log_likelihood_censored(test_parameters)
@@ -607,10 +603,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (set the lower limit so that
         # points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[1.1, 0, -5.5],
-                upper=[np.inf, np.inf, np.inf])
+            problem,
+            lower=[1.1, 0, -5.5],
+            upper=[np.inf, np.inf, np.inf])
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
             score = log_likelihood_censored(test_parameters)
@@ -624,10 +619,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
         # (set the upper limit so that
         # points are censored)
         log_likelihood_censored = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-np.inf, -np.inf, -np.inf],
-                upper=[1.1, 0, -5.5])
+            problem,
+            lower=[-np.inf, -np.inf, -np.inf],
+            upper=[1.1, 0, -5.5])
         test_parameters = [0, 1.1, 10, 5.3, 7.1, 14]
         with np.errstate(divide='ignore'):
             score = log_likelihood_censored(test_parameters)
@@ -961,7 +955,7 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             self.assertAlmostEqual(
                 score, log_likelihood.evaluateS1(test_parameters)[0])
 
-            # Check that partials between censored and standard likelihoods agree
+            # Check partials between censored and standard likelihoods agree
             self.assertAlmostEqual(
                 deriv[0], log_likelihood.evaluateS1(test_parameters)[1][0])
             self.assertAlmostEqual(
@@ -1104,9 +1098,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
 
         # Create log_likelihoods with and without censored data
         log_likelihood = pints.CensoredGaussianLogLikelihood(
-                problem,
-                lower=[-np.inf, -np.inf, -np.inf],
-                upper=[np.inf, np.inf, np.inf])
+            problem,
+            lower=[-np.inf, -np.inf, -np.inf],
+            upper=[np.inf, np.inf, np.inf])
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         with np.errstate(divide='ignore', invalid='ignore'):
             score, deriv = log_likelihood.evaluateS1(test_parameters)
@@ -1162,10 +1156,9 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
 
         # Create log_likelihood with upper censored data
         log_likelihood = pints.CensoredGaussianLogLikelihood(
-
-                problem,
-                lower=[-np.inf, -np.inf, -np.inf],
-                upper=[np.inf, 4, np.inf])
+            problem,
+            lower=[-np.inf, -np.inf, -np.inf],
+            upper=[np.inf, 4, np.inf])
         test_parameters = [0, 2, -1, 3.5, 1, 12]
         with np.errstate(divide='ignore', invalid='ignore'):
             score, deriv = log_likelihood.evaluateS1(test_parameters)
