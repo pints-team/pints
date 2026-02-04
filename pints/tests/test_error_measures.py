@@ -496,6 +496,18 @@ class TestProbabilityBasedError(unittest.TestCase):
             pints.ProbabilityBasedError, MiniProblem())
 
 
+class TestProblemErrorMeasure(unittest.TestCase):
+    """ Tests shared methods of the ProblemErrorMeasure abstract class. """
+
+    def test_shared(self):
+        # Test underlying ProblemErrorMeasure method problem()
+
+        problem = MiniProblem()
+        error = pints.MeanSquaredError(problem)
+        self.assertIs(error.problem(), problem)
+        self.assertEqual(error.n_parameters(), problem.n_parameters())
+
+
 class TestRootMeanSquaredError(unittest.TestCase):
 
     @classmethod

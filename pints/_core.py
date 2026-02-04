@@ -170,10 +170,12 @@ class SingleOutputProblem(object):
             np.asarray(dy).reshape((self._n_times, self._n_parameters))
         )
 
+    def model(self):
+        """ Returns the :class:`ForwardModel` underlying this problem. """
+        return self._model
+
     def n_outputs(self):
-        """
-        Returns the number of outputs for this problem (always 1).
-        """
+        """ Returns the number of outputs for this problem (always 1). """
         return 1
 
     def n_parameters(self):
@@ -280,6 +282,10 @@ class MultiOutputProblem(object):
             np.asarray(dy).reshape(
                 self._n_times, self._n_outputs, self._n_parameters)
         )
+
+    def model(self):
+        """ Returns the :class:`ForwardModel` underlying this problem. """
+        return self._model
 
     def n_outputs(self):
         """

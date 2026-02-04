@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1715](https://github.com/pints-team/pints/pull/1715) Added methods `ProblemErrorMeasure.problem()`, `ProblemLogLikelihood.problem()`, `SingleOutputProblem.model()` and `MultiOutputProblem.model()`.
 - [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_max_unmoved_iterations` that allows methods to stop after 1 or more iterations with no significant movement in parameter space.
 ### Changed
 - [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.

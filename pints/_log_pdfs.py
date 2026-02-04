@@ -321,6 +321,7 @@ class ProblemLogLikelihood(LogPDF):
     ----------
     problem
         The time-series problem this log-likelihood is defined for.
+
     """
     def __init__(self, problem):
         super(ProblemLogLikelihood, self).__init__()
@@ -333,6 +334,9 @@ class ProblemLogLikelihood(LogPDF):
     def n_parameters(self):
         """ See :meth:`LogPDF.n_parameters()`. """
         return self._n_parameters
+
+    def problem(self):
+        return self._problem
 
 
 class LogPosterior(LogPDF):
