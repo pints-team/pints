@@ -49,7 +49,7 @@ class ProblemErrorMeasure(ErrorMeasure):
     :class:`single<pints.SingleOutputProblem>` or
     :class:`multi-output<pints.MultiOutputProblem>` problems.
     """
-    def __init__(self, problem=None):
+    def __init__(self, problem):
         super(ProblemErrorMeasure, self).__init__()
         self._problem = problem
         self._times = problem.times()
@@ -61,6 +61,12 @@ class ProblemErrorMeasure(ErrorMeasure):
     def n_parameters(self):
         """ See :meth:`ErrorMeasure.n_parameters()`. """
         return self._n_parameters
+
+    def problem(self):
+        """
+        Returns the problem this error measure was defined on.
+        """
+        return self._problem
 
 
 class MeanSquaredError(ProblemErrorMeasure):

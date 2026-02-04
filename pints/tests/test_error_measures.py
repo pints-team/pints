@@ -338,6 +338,14 @@ class TestMeanSquaredError(unittest.TestCase):
             'Number of weights must match number of problem outputs.',
             pints.MeanSquaredError, problem, weights)
 
+    def test_problem_access(self):
+        # Test underlying ProblemErrorMeasure method problem()
+
+        problem = pints.SingleOutputProblem(
+            self.model_single, self.times, self.data_single)
+        error = pints.MeanSquaredError(problem)
+        self.assertIs(error.problem(), problem)
+
 
 class TestNormalisedRootMeanSquaredError(unittest.TestCase):
 
