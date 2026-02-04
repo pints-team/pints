@@ -507,7 +507,7 @@ class OptimisationController(object):
         # Maximum number of iterations
         if (self._max_iterations is not None and
                 iterations >= self._max_iterations):
-            return f'Maximum number of iterations ({iterations}) reached.'
+            return f'Maximum number of iterations reached ({iterations}).'
 
         # Maximum number of iterations without significant change in f
         if (self._unchanged_f_max_iterations is not None and

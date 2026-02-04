@@ -30,27 +30,29 @@ class Mock1DError(pints.ErrorMeasure):
 
 
 class List1DOptimiser(pints.Optimiser):
-    """ Mock-up optimiser using a fixed lists of values and evaluations. """
-    xs = []
-    fs = []
+    """
+    Mock-up optimiser using a fixed lists of values and evaluations.
+    """
+    fs = np.linspace(1, 0, 100)
+    xs = np.zeros(100)
+    np = 1
 
     def __init__(self, x0, sigma0=None, boundaries=None):
         super().__init__(x0, sigma0, boundaries)
         self._i = 0
 
     def ask(self):
-        return np.array([self.xs[self._i]])
+        return np.array(self.xs[self._i: self._i + self.np])
 
     def name(self):
         return 'List1D'
 
     def tell(self, f):
-        self._i += 1
-        return self.fs[self._i - 1]
+        self._i += self.np
 
     def x_best(self):
         try:
-            return np.array([self.xs[self._i]])
+            return np.array(self.xs[self._i: self._i + self.np])
         except IndexError:
             raise Exception('List1DOptimiser has exhausted list values at'
                             f' index {self._i}')
@@ -228,7 +230,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[11][:-3],
                          '10    47    -4.140462 -4.140463   0:0')
         self.assertEqual(
-            lines[12], 'Halting: Maximum number of iterations (10) reached.')
+            lines[12], 'Halting: Maximum number of iterations reached (10).')
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
@@ -267,7 +269,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(lines[11][:-3],
                          '11    44     0.0165    3.601763   0:0')
         self.assertEqual(
-            lines[12], 'Halting: Maximum number of iterations (11) reached.')
+            lines[12], 'Halting: Maximum number of iterations reached (11).')
 
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
@@ -318,45 +320,56 @@ class TestOptimisationController(unittest.TestCase):
         self.assertTrue(b.check(x))
 
     def test_stopping_max_evaluations(self):
-        # Runs an optimisation with the max_fevals stopping criterion.
+        # Runs an optimisation with the max evaluations stopping criterion.
 
-
-
-
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
+        opt.optimiser().np = 2  # Two evaluations per iteration
         opt.set_log_to_screen(True)
+        opt.set_max_iterations(None)
         opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_evaluations(10)
-        self.assertEqual(opt.max_evaluations(), 10)
+
+        # Test getting and setting
+        self.assertIs(opt.max_evaluations(), None)
+        opt.set_max_evaluations(5)
+        self.assertEqual(opt.max_evaluations(), 5)
+        opt.set_max_evaluations(None)
+        self.assertIs(opt.max_evaluations(), None)
+        opt.set_max_evaluations(23)
+        self.assertEqual(opt.max_evaluations(), 23)
         self.assertRaises(ValueError, opt.set_max_evaluations, -1)
+
+        # Run, test result
         with StreamCapture() as c:
             opt.run()
-            self.assertIn('Halting: Maximum number of evaluations', c.text())
+        self.assertIn('Maximum number of evaluations reached (23)', c.text())
+        self.assertEqual(opt.iterations(), 12)
 
     def test_stopping_max_iterations(self):
-        # Runs an optimisation with the max_iter stopping criterion.
+        # Runs a mock optimisation with the max iterations stopping criterion.
 
-
-
-
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
+        opt.optimiser().np = 2  # Two evaluations per iteration
         opt.set_log_to_screen(True)
+        opt.set_max_iterations(None)
         opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_iterations(10)
-        self.assertEqual(opt.max_iterations(), 10)
+
+        # Test getting and setting
+        self.assertIs(opt.max_iterations(), None)
+        opt.set_max_iterations(3)
+        self.assertEqual(opt.max_iterations(), 3)
+        opt.set_max_iterations(None)
+        self.assertIs(opt.max_iterations(), None)
+        opt.set_max_iterations(15)
+        self.assertEqual(opt.max_iterations(), 15)
         self.assertRaises(ValueError, opt.set_max_iterations, -1)
+
+        # Run, test result
         with StreamCapture() as c:
             opt.run()
-            self.assertIn('Halting: Maximum number of iterations', c.text())
-
+        self.assertIn('Maximum number of iterations reached (15)', c.text())
+        self.assertEqual(opt.iterations(), 15)
 
     def test_stopping_max_unchanged_function(self):
         # Runs a mock optimisation with the max_unchanged function criterion.
@@ -412,11 +425,13 @@ class TestOptimisationController(unittest.TestCase):
 
     def test_stopping_max_unchanged_parameter(self):
         # Runs a mock optimisation with the max_unchanged parameter criterion.
+        # Test case starts with drift (each step below threshold, but total
+        # change is above), then should halt at 4
 
         e = Mock1DError()
         opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
         m = opt.optimiser()
-        m.xs = [0, 1, 1.1, 1.2, 2, 3, 4, 4.1, 4.2, 4.3, 5, 6, 7]
+        m.xs = [0, 1, 1.5, 2.0, 2.5, 3, 4, 4.1, 4.2, 4.3, 5, 6, 7]
         m.fs = [0] * len(m.xs)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
@@ -462,32 +477,39 @@ class TestOptimisationController(unittest.TestCase):
         self.assertIn('No significant change in best parameters', c.text())
         self.assertEqual(opt.iterations(), 9)
 
-    def test_stopping_threshold(self):
-        # Runs an optimisation with the threshold stopping criterion.
+    def test_stopping_function_threshold(self):
+        # Runs a mock optimisation with the function threshold stopping crit.
 
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0.008, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
+        m = opt.optimiser()
+        m.fs = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+        m.xs = [0] * len(m.fs)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_function_iterations(None)
+
+        # Test getting and setting
+        self.assertIsNone(opt.threshold())
+        opt.set_threshold(3)
+        self.assertEqual(opt.threshold(), 3)
+        opt.set_threshold(None)
+        self.assertIsNone(opt.threshold())
         opt.set_threshold(5)
         self.assertEqual(opt.threshold(), 5)
+
+        # Run, test result
         with StreamCapture() as c:
             opt.run()
-            self.assertIn(
-                'Halting: Objective function crossed threshold', c.text())
+        self.assertIn(
+            'Halting: Objective function crossed threshold (5.0)', c.text())
+        self.assertEqual(opt.iterations(), 6)
 
     def test_stopping_no_criterion(self):
         # Tries to run an optimisation with the no stopping criterion.
 
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
         opt.set_max_unchanged_function_iterations(None)
