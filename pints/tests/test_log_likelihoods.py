@@ -2572,6 +2572,22 @@ class TestMultiplicativeGaussianLogLikelihood(unittest.TestCase):
         self.assertEqual(log_likelihood([1, 1, 0]), -np.inf)
 
 
+class TestProblemLogLikelihood(unittest.TestCase):
+    """ Test shared ProblemLogLikelihood methods. """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = pints.toy.ConstantModel(1)
+        cls.times = np.array([1, 2, 3, 4])
+        cls.data = np.asarray([1.9, 2.1, 1.8, 2.2])
+
+    def test_shared_methods(self):
+        problem = pints.SingleOutputProblem(self.model, self.times, self.data)
+        log_likelihood = pints.GaussianKnownSigmaLogLikelihood(problem, 1.5)
+        self.assertEqual(log_likelihood.n_parameters(), problem.n_parameters())
+        self.assertIs(log_likelihood.problem(), problem)
+
+
 class TestScaledLogLikelihood(unittest.TestCase):
 
     @classmethod

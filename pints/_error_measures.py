@@ -63,9 +63,7 @@ class ProblemErrorMeasure(ErrorMeasure):
         return self._n_parameters
 
     def problem(self):
-        """
-        Returns the problem this error measure was defined on.
-        """
+        """ Returns the problem this error measure was defined on. """
         return self._problem
 
 

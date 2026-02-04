@@ -338,14 +338,6 @@ class TestMeanSquaredError(unittest.TestCase):
             'Number of weights must match number of problem outputs.',
             pints.MeanSquaredError, problem, weights)
 
-    def test_problem_access(self):
-        # Test underlying ProblemErrorMeasure method problem()
-
-        problem = pints.SingleOutputProblem(
-            self.model_single, self.times, self.data_single)
-        error = pints.MeanSquaredError(problem)
-        self.assertIs(error.problem(), problem)
-
 
 class TestNormalisedRootMeanSquaredError(unittest.TestCase):
 
@@ -502,6 +494,18 @@ class TestProbabilityBasedError(unittest.TestCase):
             ValueError,
             'Given log_pdf must be an instance of pints.LogPDF.',
             pints.ProbabilityBasedError, MiniProblem())
+
+
+class TestProblemErrorMeasure(unittest.TestCase):
+    """ Tests shared methods of the ProblemErrorMeasure abstract class. """
+
+    def test_shared(self):
+        # Test underlying ProblemErrorMeasure method problem()
+
+        problem = MiniProblem()
+        error = pints.MeanSquaredError(problem)
+        self.assertIs(error.problem(), problem)
+        self.assertEqual(error.n_parameters(), problem.n_parameters())
 
 
 class TestRootMeanSquaredError(unittest.TestCase):
