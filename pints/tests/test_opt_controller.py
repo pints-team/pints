@@ -460,7 +460,11 @@ class TestOptimisationController(unittest.TestCase):
         n, t = opt.max_unchanged_parameter_iterations()
         self.assertIsNone(n)
         self.assertIsNone(t)
-        opt.set_max_unchanged_parameter_iterations(3, 1)
+        opt.set_max_unchanged_parameter_iterations(3, 2)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertEqual(n, 3)
+        self.assertEqual(list(t), [2])
+        opt.set_max_unchanged_parameter_iterations(3, [1])
         n, t = opt.max_unchanged_parameter_iterations()
         self.assertEqual(n, 3)
         self.assertEqual(list(t), [1])
@@ -470,6 +474,8 @@ class TestOptimisationController(unittest.TestCase):
             ValueError, opt.set_max_unchanged_parameter_iterations, -1)
         self.assertRaises(
             ValueError, opt.set_max_unchanged_parameter_iterations, 10, -1)
+        self.assertRaises(
+            ValueError, opt.set_max_unchanged_parameter_iterations, 10, [1, 1])
 
         # Test
         with StreamCapture() as c:
